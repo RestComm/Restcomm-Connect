@@ -8,6 +8,10 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+/**
+ * @author thomas.quintana@telestax.com (Thomas Quintana)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
+ */
 public interface SmsMessagesMapper {
 
     String INSERT_SMS_MESSAGE="INSERT INTO \"restcomm_sms_messages\" (\"sid\", \"date_created\", \"date_updated\", \"date_sent\", \"account_sid\", \"sender\", \"recipient\", \"body\", \"status\", \"direction\", \"price\", \"api_version\", \"uri\") VALUES (#{sid}, #{date_created}, #{date_updated}, #{date_sent}, #{account_sid}, #{sender}, #{recipient}, #{body}, #{status}, #{direction}, #{price}, #{api_version}, #{uri})";

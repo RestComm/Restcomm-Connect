@@ -41,9 +41,11 @@ import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
 import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
 import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.mappers.ConferenceDetailRecordsMapper;
 
 /**
  * @author maria-farooq@live.com (Maria Farooq)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 @ThreadSafe
 public final class MybatisConferenceDetailRecordsDao implements ConferenceDetailRecordsDao {
@@ -59,7 +61,8 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     public void addConferenceDetailRecord(ConferenceDetailRecord cdr) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addConferenceDetailRecord", toMap(cdr));
+            ConferenceDetailRecordsMapper mapper=session.getMapper(ConferenceDetailRecordsMapper.class);
+            mapper.addConferenceDetailRecord(toMap(cdr));
             session.commit();
         } finally {
             session.close();
@@ -70,7 +73,8 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     public ConferenceDetailRecord getConferenceDetailRecord(Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + "getConferenceDetailRecord", sid.toString());
+            ConferenceDetailRecordsMapper mapper=session.getMapper(ConferenceDetailRecordsMapper.class);
+            final Map<String, Object> result = mapper.getConferenceDetailRecord(sid.toString());
             if (result != null) {
                 return toConferenceDetailRecord(result);
             } else {
@@ -86,7 +90,8 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
 
         final SqlSession session = sessions.openSession();
         try {
-            final Integer total = session.selectOne(namespace + "getTotalConferenceDetailRecordByUsingFilters", filter);
+            ConferenceDetailRecordsMapper mapper=session.getMapper(ConferenceDetailRecordsMapper.class);
+            final Integer total = mapper.getTotalConferenceDetailRecordByUsingFilters(filter);
             return total;
         } finally {
             session.close();
@@ -100,8 +105,8 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         final SqlSession session = sessions.openSession();
 
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getConferenceDetailRecordByUsingFilters",
-                    filter);
+            ConferenceDetailRecordsMapper mapper=session.getMapper(ConferenceDetailRecordsMapper.class);
+            final List<Map<String, Object>> results = mapper.getConferenceDetailRecordByUsingFilters(filter);
             final List<ConferenceDetailRecord> cdrs = new ArrayList<ConferenceDetailRecord>();
 
             if (results != null && !results.isEmpty()) {
@@ -117,29 +122,82 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
 
     @Override
     public List<ConferenceDetailRecord> getConferenceDetailRecords(final Sid accountSid) {
-        return getConferenceDetailRecords(namespace + "getConferenceDetailRecords", accountSid.toString());
+        final SqlSession session = sessions.openSession();
+        try {
+            ConferenceDetailRecordsMapper mapper=session.getMapper(ConferenceDetailRecordsMapper.class);
+            final List<Map<String, Object>> results = mapper.getConferenceDetailRecords(accountSid.toString());
+            final List<ConferenceDetailRecord> cdrs = new ArrayList<ConferenceDetailRecord>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toConferenceDetailRecord(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public List<ConferenceDetailRecord> getConferenceDetailRecordsByStatus(String status) {
-        return getConferenceDetailRecords(namespace + "getConferenceDetailRecordsByStatus", status);
+        final SqlSession session = sessions.openSession();
+        try {
+            ConferenceDetailRecordsMapper mapper=session.getMapper(ConferenceDetailRecordsMapper.class);
+            final List<Map<String, Object>> results = mapper.getConferenceDetailRecordsByStatus(status);
+            final List<ConferenceDetailRecord> cdrs = new ArrayList<ConferenceDetailRecord>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toConferenceDetailRecord(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public List<ConferenceDetailRecord> getConferenceDetailRecordsByDateCreated(final DateTime dateCreated) {
-        return getConferenceDetailRecords(namespace + "getConferenceDetailRecordsByDateCreated", dateCreated.toDate());
+        final SqlSession session = sessions.openSession();
+        try {
+            ConferenceDetailRecordsMapper mapper=session.getMapper(ConferenceDetailRecordsMapper.class);
+            final List<Map<String, Object>> results = mapper.getConferenceDetailRecordsByDateCreated(dateCreated.toDate());
+            final List<ConferenceDetailRecord> cdrs = new ArrayList<ConferenceDetailRecord>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toConferenceDetailRecord(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public List<ConferenceDetailRecord> getConferenceDetailRecordsByDateUpdated(final DateTime dateUpdated) {
-        return getConferenceDetailRecords(namespace + "getConferenceDetailRecordsByDateUpdated", dateUpdated.toDate());
+        final SqlSession session = sessions.openSession();
+        try {
+            ConferenceDetailRecordsMapper mapper=session.getMapper(ConferenceDetailRecordsMapper.class);
+            final List<Map<String, Object>> results = mapper.getConferenceDetailRecordsByDateUpdated(dateUpdated.toDate());
+            final List<ConferenceDetailRecord> cdrs = new ArrayList<ConferenceDetailRecord>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toConferenceDetailRecord(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public void updateConferenceDetailRecord(ConferenceDetailRecord cdr) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateConferenceDetailRecord", toMap(cdr));
+            ConferenceDetailRecordsMapper mapper=session.getMapper(ConferenceDetailRecordsMapper.class);
+            mapper.updateConferenceDetailRecord(toMap(cdr));
             session.commit();
         } finally {
             session.close();
@@ -156,21 +214,6 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         // TODO Add support for conference modification after basic API's as twillio's
     }
 
-    private List<ConferenceDetailRecord> getConferenceDetailRecords(final String selector, Object input) {
-        final SqlSession session = sessions.openSession();
-        try {
-            final List<Map<String, Object>> results = session.selectList(selector, input);
-            final List<ConferenceDetailRecord> cdrs = new ArrayList<ConferenceDetailRecord>();
-            if (results != null && !results.isEmpty()) {
-                for (final Map<String, Object> result : results) {
-                    cdrs.add(toConferenceDetailRecord(result));
-                }
-            }
-            return cdrs;
-        } finally {
-            session.close();
-        }
-    }
 
     private ConferenceDetailRecord toConferenceDetailRecord(final Map<String, Object> map) {
         final Sid sid = readSid(map.get("sid"));

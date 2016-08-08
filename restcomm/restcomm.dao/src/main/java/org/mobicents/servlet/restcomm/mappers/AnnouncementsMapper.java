@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 
 /**
+ * @author <a href="mailto:gvagenas@gmail.com">George Vagenas</a>
  * @author zahid.med@gmail.com (ZAHID Mohammed)
  */
 public interface AnnouncementsMapper {

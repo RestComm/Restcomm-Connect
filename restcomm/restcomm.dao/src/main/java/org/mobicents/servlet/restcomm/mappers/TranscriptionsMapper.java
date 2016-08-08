@@ -8,6 +8,10 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+/**
+ * @author thomas.quintana@telestax.com (Thomas Quintana)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
+ */
 public interface TranscriptionsMapper {
 
     String INSERT_TRANSCRIPTION="INSERT INTO \"restcomm_transcriptions\" (\"sid\", \"date_created\", \"date_updated\", \"account_sid\", \"status\", \"recording_sid\", \"duration\", \"transcription_text\", \"price\", \"uri\") VALUES (#{sid}, #{date_created}, #{date_updated}, #{account_sid}, #{status}, #{recording_sid}, #{duration}, #{transcription_text}, #{price}, #{uri})";

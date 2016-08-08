@@ -9,17 +9,18 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 /**
+ * @author thomas.quintana@telestax.com (Thomas Quintana)
  * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 public interface RegistrationsMapper {
 
     String INSERT_REGISTRATION="INSERT INTO \"restcomm_registrations\" (\"sid\", \"date_created\", \"date_updated\", "
         + "\"date_expires\", \"address_of_record\", \"display_name\",\"user_name\", \"user_agent\", \"ttl\",  "
-        + "\"location\", \"webrtc\", \"instanceid\") "
+        + "\"location\", \"webrtc\", \"instanceid\",\"isLBPresent\") "
         + "VALUES "
         + "(#{sid}, #{date_created}, #{date_updated}, "
         + "#{date_expires}, #{address_of_record}, #{display_name}, #{user_name}, #{user_agent}, #{ttl}, "
-        + "#{location}, #{webrtc}, #{instanceid})";
+        + "#{location}, #{webrtc}, #{instanceid}, #{isLBPresent})";
     String SELECT_REGISTRATIONS="SELECT * FROM \"restcomm_registrations\"";
     String SELECT_REGISTRATION="SELECT * FROM \"restcomm_registrations\" WHERE \"user_name\"=#{userName}";
     String SELECT_REGISTRATION_BY_INSTANCEID="SELECT * FROM \"restcomm_registrations\" WHERE \"user_name\"=#{user_name} AND \"instanceid\"=#{instanceid}";

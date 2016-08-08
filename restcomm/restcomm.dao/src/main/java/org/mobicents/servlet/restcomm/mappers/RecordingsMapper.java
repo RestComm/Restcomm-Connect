@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 
 /**
+ * @author thomas.quintana@telestax.com (Thomas Quintana)
  * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 public interface RecordingsMapper {
