@@ -13,7 +13,6 @@ import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter;
 /**
  * @author maria-farooq@live.com (Maria Farooq
  * @author zahid.med@gmail.com (Mohammed ZAHID)
- * 
  */
 public interface ConferenceDetailRecordsMapper {
 
