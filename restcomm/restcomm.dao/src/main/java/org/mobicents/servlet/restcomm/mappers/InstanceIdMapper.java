@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 /**
+ * @author thomas.quintana@telestax.com (Thomas Quintana)
  * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 public interface InstanceIdMapper {

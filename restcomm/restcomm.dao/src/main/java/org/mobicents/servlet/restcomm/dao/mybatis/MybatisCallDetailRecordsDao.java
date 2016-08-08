@@ -278,7 +278,20 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
 
     @Override
     public List<CallDetailRecord> getCallDetailRecordsByConferenceSid(final Sid conferenceSid) {
-        return getCallDetailRecords(namespace + "getCallDetailRecordsByConferenceSid", conferenceSid.toString());
+        final SqlSession session = sessions.openSession();
+        try {
+            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            final List<Map<String, Object>> results = mapper.getCallDetailRecordsByConferenceSid(conferenceSid.toString());
+            final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toCallDetailRecord(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
     }
 
     @Override

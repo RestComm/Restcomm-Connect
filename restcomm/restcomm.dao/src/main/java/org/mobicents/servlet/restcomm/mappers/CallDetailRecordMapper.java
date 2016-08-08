@@ -11,6 +11,7 @@ import org.apache.ibatis.annotations.Update;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
 
 /**
+ * @author thomas.quintana@telestax.com (Thomas Quintana)
  * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 public interface CallDetailRecordMapper {
@@ -25,12 +26,11 @@ public interface CallDetailRecordMapper {
         String SELECT_CALL_DETAIL_RECORD_BY_START_AND_END_TIME="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"start_time\"&gt;=#{startTime} AND \"end_time\"&lt;=#{endTime}";
         String SELECT_CALL_DETAIL_RECORD_BY_PARENT_CALL="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"parent_call_sid\"=#{parentCallSid}";
         String SELECT_CALL_DETAIL_RECORD_BY_INSTANCE_ID="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"instanceid\"=#{instanceid}";
-        String INSERT_CALL_DETAIL_RECORD="INSERT INTO \"restcomm_call_detail_records\" (\"sid\", \"instanceid\", \"parent_call_sid\", \"date_created\", \"date_updated\", \"account_sid\", \"recipient\", \"sender\", \"phone_number_sid\", \"status\", \"start_time\", \"end_time\", \"duration\", \"price\", \"direction\", \"answered_by\", \"api_version\", \"forwarded_from\", \"caller_name\", \"uri\", \"call_path\", \"ring_duration\") VALUES (#{sid}, #{instanceid}, #{parent_call_sid}, #{date_created}, #{date_updated}, #{account_sid}, #{to}, #{from}, #{phone_number_sid}, #{status}, #{start_time}, #{end_time}, #{duration}, #{price}, #{direction}, #{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path}, #{ring_duration})";
+        String SELECT_CALL_DETAIL_RECORD_BY_CONFERENCE_SID="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"conference_sid\"=#{conferenceSid}";
+        String INSERT_CALL_DETAIL_RECORD="INSERT INTO \"restcomm_call_detail_records\" (\"sid\", \"instanceid\", \"parent_call_sid\", \"date_created\", \"date_updated\", \"account_sid\", \"recipient, sender\", \"phone_number_sid\", \"status\", \"start_time\", \"end_time\", \"duration\", \"price\", \"direction\", \"answered_by\", \"api_version\", \"forwarded_from\", \"caller_name\", \"uri\", \"call_path\", \"ring_duration\", \"conference_sid\", \"muted\", \"start_conference_on_enter\", \"end_conference_on_exit\", \"on_hold\") VALUES (#{sid}, #{instanceid}, #{parent_call_sid}, #{date_created}, #{date_updated}, #{account_sid}, #{to}, #{from}, #{phone_number_sid}, #{status}, #{start_time}, #{end_time}, #{duration}, #{price}, #{direction},	#{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path}, #{ring_duration}, #{conference_sid}, #{muted}, #{start_conference_on_enter}, #{end_conference_on_exit}, #{on_hold})";
         String DELETE_CALL_DETAIL="DELETE FROM \"restcomm_call_detail_records\" WHERE \"sid\"=#{sid}";
         String DELETE_CALL_DETAILS="DELETE FROM \"restcomm_call_detail_records\" WHERE \"account_sid\"=#{account_sid}";
-        String UPDATE_CALL_DETAIL="UPDATE \"restcomm_call_detail_records\" SET \"date_updated\"=#{date_updated}, \"status\"=#{status}, "
-            + "\"start_time\"=#{start_time}, \"end_time\"=#{end_time}, \"duration\"=#{duration}, \"price\"=#{price}, \"answered_by\"=#{answered_by}, "
-            + "\"ring_duration\"=#{ring_duration} WHERE \"sid\"=#{sid}";
+        String UPDATE_CALL_DETAIL="UPDATE \"restcomm_call_detail_records\" SET \"date_updated\"=#{date_updated}, \"status\"=#{status}, \"start_time\"=#{start_time}, \"end_time\"=#{end_time}, \"duration\"=#{duration},\"price\"=#{price}, \"answered_by\"=#{answered_by}, \"ring_duration\"=#{ring_duration}, \"conference_sid\"=#{conference_sid}, \"muted\"=#{muted}, \"start_conference_on_enter\"=#{start_conference_on_enter}, \"end_conference_on_exit\"=#{end_conference_on_exit}, \"on_hold\"=#{on_hold} WHERE \"sid\"=#{sid}";
         String SELECT_TOTAL_CALL_DETAIL_RECORD_USING_FILTER="<script>"
             + "SELECT COUNT(*) FROM \"restcomm_call_detail_records\" WHERE \"account_sid\"=#{accountSid}"
             + "    <if test=\"instanceid != null\">"
@@ -113,6 +113,9 @@ public interface CallDetailRecordMapper {
 
         @Select(SELECT_CALL_DETAIL_RECORD_BY_INSTANCE_ID)
         List<Map<String, Object>> getCallDetailRecordsByInstanceId(String instanceid);
+
+        @Select(SELECT_CALL_DETAIL_RECORD_BY_CONFERENCE_SID)
+        List<Map<String, Object>> getCallDetailRecordsByConferenceSid(String conferenceSid);
 
         @Delete(DELETE_CALL_DETAIL)
         void removeCallDetailRecord(String sid);

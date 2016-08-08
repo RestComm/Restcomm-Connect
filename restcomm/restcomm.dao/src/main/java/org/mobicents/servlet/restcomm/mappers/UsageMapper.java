@@ -5,6 +5,10 @@ import java.util.Map;
 
 import org.apache.ibatis.annotations.Select;
 
+/**
+ * @author brainslog@gmail.com (Alexandre Mendonca)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
+ */
 public interface UsageMapper {
 
     String SELECT_DAILY_CALLS="SELECT"
