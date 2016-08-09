@@ -1366,6 +1366,10 @@ public final class Call extends UntypedActor {
         }
         if (is(initializing) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
             fsm.transition(message, canceling);
+        } else {
+            if(logger.isInfoEnabled()) {
+                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state());
+            }
         }
     }
 

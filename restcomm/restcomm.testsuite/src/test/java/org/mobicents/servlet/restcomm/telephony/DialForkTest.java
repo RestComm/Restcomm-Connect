@@ -807,15 +807,18 @@ public class DialForkTest {
 
         assertTrue(bobCall.listenForDisconnect());
 
-        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
         SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(50 * 1000);
-        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
-        assertNotNull(georgeCancelTransaction);
-        assertNotNull(aliceCancelTransaction);
         assertNotNull(henriqueCancelTransaction);
-        georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
-        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
         henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
+
+        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
+        assertNotNull(georgeCancelTransaction);
+        georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
+
+        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
+        assertNotNull(aliceCancelTransaction);
+        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
+
 
         assertTrue(alicePhone.unregister(aliceContact, 3600));
 
