@@ -1875,6 +1875,9 @@ public final class Call extends UntypedActor {
     @Override
     public void postStop() {
         try {
+            if (logger.isInfoEnabled()) {
+                logger.info("Call actor at postStop, path: "+self().path()+", direction: "+direction+", state: "+fsm.state()+", isTerminated: "+self().isTerminated()+", sender: "+sender());
+            }
             onStopObserving(new StopObserving(), self(), null);
             getContext().stop(msController);
         } catch (Exception exception) {
