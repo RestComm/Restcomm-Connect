@@ -61,6 +61,7 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
       },
       function () {
         // what to do on modal dismiss...
+    	  $scope.subAccountsList = accountsList;
       }
     );
   };
@@ -79,17 +80,61 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
 
 });
 
-rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService, RCommAccounts, md5, Notifications, $window, AuthService) {
+rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, RCommAccounts,Notifications) {
+	$scope.predicate = 'name';  
+    $scope.reverse = false;  
+    $scope.currentPage = 1;  
+     $scope.maxSize = 5; //pagination max size
+    $scope.entryLimit = 10; //max rows for data table
+     $scope.order = function (predicate) {  
+    $scope.reverse = ($scope.predicate === predicate) ? !$scope.reverse : false;  
+     $scope.predicate = predicate; 
+    };  
+  
+    var subAccountsList = RCommAccounts.query(function(list) {
+		// remove logged (parent) account from the list
+		var i = 0;
+		while (i < list.length) {
+			if (list[i].sid == $scope.sid )
+			  list.splice(i,1)
+			else
+			  i ++;
+		}
+      $scope.subAccountsList = list;
+      $scope.totalItems = list.length;
+    });;
+    
+    $scope.setEntryLimit = function(limit) {
+        $scope.entryLimit = limit;
+        $scope.numPerPage = Math.ceil($scope.subAccountsList.length / $scope.entryLimit);
+      }; 
+  
+    $scope.paginate = function (value) {  
+      var begin, end, index;  
+      begin = ($scope.currentPage - 1) * $scope.entryLimit;  
+      end = begin + $scope.entryLimit;  
+      index = $scope.subAccountsList.indexOf(value);  
+      return (begin <= index && index < end);  
+    };  
+  }); 
+
+
+
+rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService,AuthService, RCommAccounts, md5, Notifications, $window ) {
   //$scope.sid = SessionService.get('sid');
 
   var accountBackup;
-
-  $scope.$watch('account', function() {
-    if (!angular.equals($scope.account, accountBackup)) {
-      $scope.accountChanged = true;
-      // console.log('CHANGED: ' + $scope.accountChanged + ' => VALID:' + $scope.profileForm.$valid);
-    }
-  }, true);
+  var loggedUserAccount = AuthService.getAccount();
+  $scope.currentAccountRole = loggedUserAccount.role;
+   $scope.$watch('account', function() {
+     if (!angular.equals($scope.account, accountBackup)) {
+       $scope.accountChanged = true;
+       // console.log('CHANGED: ' + $scope.accountChanged + ' => VALID:' + $scope.profileForm.$valid);
+     }
+      if ( $scope.accountChanged  && angular.equals(accountBackup.sid, loggedUserAccount.sid)) {
+         Notifications.warn("You will loose some privileges due to this change.");
+     }
+   }, true);
 
   $scope.newPassword = $scope.newPassword2 = '';
 
@@ -116,7 +161,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
   };
 
   $scope.updateProfile = function() {
-    var params = {FriendlyName: $scope.account.friendly_name, Type: $scope.account.type, Status: $scope.account.status};
+    var params = {FriendlyName: $scope.account.friendly_name, Type: $scope.account.type, Status: $scope.account.status,Role: $scope.account.role};
 
     if($scope.newPassword != '' && $scope.profileForm.newPassword.$valid) {
       params['Auth_Token'] = md5.createHash($scope.newPassword);
@@ -187,7 +232,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
 var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, Notifications) {
 
   $scope.statuses = ['ACTIVE','UNINITIALIZED','SUSPENDED','INACTIVE','CLOSED'];
-  $scope.newAccount = {role: 'Administrator'};
+  $scope.newAccount = {role: $scope.currentAccount.role};
   $scope.createAccount = function(account) {
     if(account.email && account.password) {
       // Numbers.register({PhoneNumber:number.number});
