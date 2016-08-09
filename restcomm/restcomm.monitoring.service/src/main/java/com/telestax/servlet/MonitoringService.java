@@ -201,8 +201,14 @@ public class MonitoringService extends UntypedActor{
         callMap.remove(senderPath);
         CallInfo callInfo = callDetailsMap.remove(senderPath);
         if (callInfo.direction().equalsIgnoreCase("inbound")) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Removed inbound call from: "+callInfo.from()+"  to: "+callInfo.to());
+            }
             incomingCallDetailsMap.remove(senderPath);
         } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Removed outbound call from: "+callInfo.from()+"  to: "+callInfo.to());
+            }
             outgoingCallDetailsMap.remove(senderPath);
         }
         callStateMap.remove(senderPath);
@@ -218,9 +224,15 @@ public class MonitoringService extends UntypedActor{
         CallInfo callInfo = message.get();
         callDetailsMap.put(senderPath, callInfo);
         if (callInfo.direction().equalsIgnoreCase("inbound")) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("New inbound call from: "+callInfo.from()+"  to: "+callInfo.to());
+            }
             incomingCallDetailsMap.put(senderPath, callInfo);
             incomingCallsUpToNow.incrementAndGet();
         } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("New outbound call from: "+callInfo.from()+"  to: "+callInfo.to());
+            }
             outgoingCallDetailsMap.put(senderPath, callInfo);
             outgoingCallsUpToNow.incrementAndGet();
         }

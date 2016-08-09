@@ -958,7 +958,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         if (sender == call)
             callState = event.state();
         if(logger.isInfoEnabled()){
-            logger.info("VoiceInterpreter received CallStateChanged event: "+event.state()+ " from "+(sender == call? "call" : "outboundCall")+ ", current state: "+fsm.state());
+            logger.info("VoiceInterpreter received CallStateChanged event: "+event.state()+ " from "+(sender == call? "call" : "outboundCall")+ ", sender path: " + sender.path() +", current VI state: "+fsm.state());
         }
 
         switch (event.state()) {
@@ -971,10 +971,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 break;
             case CANCELED:
-                if (is(initializingBridge) || is(acquiringOutboundCallInfo) || is(bridging)) {
+                if (is(initializingBridge) || is(acquiringOutboundCallInfo) || is(bridging) || is(bridged)) {
                     //This is a canceled branch from a previous forking call. We need to destroy the branch
-                    removeDialBranch(message, sender);
-//                    callManager.tell(new DestroyCall(sender), self());
+//                    removeDialBranch(message, sender);
+                    callManager.tell(new DestroyCall(sender), self());
                     return;
                 } else {
                     if (sender == call) {
@@ -992,6 +992,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         return;
                     }
                 }
+                break;
             case BUSY:
                 if (is(forking)) {
                     if (sender==call) {
@@ -1086,6 +1087,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             dialBranches.remove(sender);
             sender.tell(new Cancel(), self());
             if (dialBranches.size() > 0) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("At VI removeDialBranch, will destroy call "+call.path()+" isTerminated: "+ call.isTerminated());
+                }
                 callManager.tell(new DestroyCall(sender), self());
                 //Wait to check the response from the other branches
                 return;
@@ -1105,6 +1109,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             executeDialAction(message, sender);
         }
         if (sender != outboundCall) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("At VI removeDialBranch, will destroy call "+call.path()+" isTerminated: "+ call.isTerminated());
+            }
             callManager.tell(new DestroyCall(sender), self());
         }
     }
@@ -2154,7 +2161,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     //                    }
                         branch.tell(new Cancel(), source);
                         if(logger.isInfoEnabled()) {
-                            logger.info("Canceled branch: " + branch.path());
+                            logger.info("Canceled branch: " + branch.path()+", isTerminated: "+branch.isTerminated());
                         }
                     }
                 }
@@ -2229,7 +2236,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                         dialChildren = null;
                         if (outboundCall != null) {
-                            callManager.tell(new DestroyCall(outboundCall));
+                            callManager.tell(new DestroyCall(outboundCall), self());
                             outboundCall = null;
                         } else {
                             callManager.tell(new DestroyCall(sender), self());
