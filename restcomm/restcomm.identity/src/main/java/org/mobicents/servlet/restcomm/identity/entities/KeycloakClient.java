@@ -39,6 +39,7 @@ public class KeycloakClient {
     private List<String> redirectUris;
     private List<String> webOrigins;
     private String baseUrl;
+    private List<String> defaultRoles;
 
     public String getClientId() {
         return clientId;
@@ -102,5 +103,13 @@ public class KeycloakClient {
 
     public void setRedirectUris(List<String> redirectUris) {
         this.redirectUris = redirectUris;
+    }
+
+    public List<String> getDefaultRoles() {
+        return defaultRoles;
+    }
+
+    public void setDefaultRoles(List<String> defaultRoles) {
+        this.defaultRoles = defaultRoles;
     }
 }

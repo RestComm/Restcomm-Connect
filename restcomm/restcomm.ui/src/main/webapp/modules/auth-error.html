@@ -1,0 +1,23 @@
+<rc-page-title icon="ban" title="Unauthorized"></rc-page-title>
+
+<div class="row">
+    <div class="column-md-12 form-group">
+        <p>
+            Hello {{tokenUsername}}.
+        </p>
+        <p ng-show="errorType == 'KEYCLOAK_ORGANIZATION_ACCESS_FORBIDDEN'">
+            You're not authorized to access this Restcomm organization.
+        </p>
+
+        <p ng-show="errorType == 'KEYCLOAK_NO_ACCOUNT'">
+            Authorization error. No restcomm account found for {{tokenUsername}}.
+        </p>
+
+        <p ng-show="!errorType || errorType == 'GENERIC_AUTHORIZATION_ERROR'">
+            Authorization error.
+        </p>
+    </div>
+    <div class="column-md-2">
+        <button ng-click="logoutKeycloak()" type="submit" class="btn btn-primary">Logout {{tokenUsername}}</button>
+    </div>
+</div>

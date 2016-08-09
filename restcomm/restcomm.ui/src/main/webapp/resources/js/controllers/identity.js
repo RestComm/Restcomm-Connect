@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope, $state, $location, RCommIdentityInstances, Notifications, identity) {
+angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope, $state, $location, RCommOrgIdentities, Notifications, identity) {
 
     $scope.details = {
 		RedirectUrl: parseRootUrl($location.absUrl(), $location.url()),
@@ -8,7 +8,7 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 	}
 
     $scope.submitRegistrationDetails = function (details) {
-		RCommIdentityInstances.register(details).then(function (response) {
+		RCommOrgIdentities.register(details).then(function (response) {
 		    Notifications.info('Registered Identity Instance ' + response.data.Name + ". Please refresh to enable SSO." );
 		    $state.go('restcomm.dashboard');
 		}, function (response) {
@@ -16,7 +16,7 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 				Notifications.error("Internal server error");
 			else
 			if (response.status == 409)
-				Norifications.error("Already registered!");
+				Notifications.error("Organization Identity '" + response.data.occupiedName + "' seems already registered!");
 		});
 	}
 
@@ -29,12 +29,12 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 	}
 
 })
-.controller('IdentityEditCtrl', function ($scope, $state, $location, RCommIdentityInstances, Notifications, identity, $timeout, $window) {
+.controller('IdentityEditCtrl', function ($scope, $state, $location, RCommOrgIdentities, Notifications, identity, $timeout, $window) {
     $scope.identity = identity;
     $scope.restcommDetails = {};
 
 	$scope.resetRegistrationToken = function(clientSuffix, newtoken) {
-	    RCommIdentityInstances.resetClientToken(identity.Sid, {'client-suffix':clientSuffix, token:newtoken}).then(function () {
+	    RCommOrgIdentities.resetClientToken(identity.Sid, {'client-suffix':clientSuffix, token:newtoken}).then(function () {
 	        Notifications.success("Registration token was reset for " + clientSuffixToName(clientSuffix));
 	    }, function () {
 	        Notifications.error("Registration Token reset failed for " + clientSuffixToName(clientSuffix));
@@ -42,7 +42,7 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 	}
 
 	$scope.unregisterInstance = function(identity) {
-	    RCommIdentityInstances.unregister(identity.Sid).then(function () {
+	    RCommOrgIdentities.unregister(identity.Sid).then(function () {
 	        Notifications.info("Identity has been unregistered from authorization server. SSO disabled. Will now reload page...");
 	        $state.go('restcomm.dashboard').then(function () {
                 $window.location.reload();
@@ -82,5 +82,13 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
     $scope.logoutKeycloak = function () {
         keycloakLogout(); // defined in restcomm.js
     }
-});
+})
+.controller('AuthErrorCtrl', function ($scope, AuthService, errorType) {
+    $scope.tokenUsername = AuthService.getKeycloakUsername();
+    $scope.errorType = errorType;
+    $scope.logoutKeycloak = function () {
+        keycloakLogout(); // defined in restcomm.js
+    }
+})
+;
 

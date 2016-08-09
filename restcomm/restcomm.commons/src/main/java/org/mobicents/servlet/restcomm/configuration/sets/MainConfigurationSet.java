@@ -62,6 +62,7 @@ public class MainConfigurationSet extends ConfigurationSet {
     private String identityAuthServerUrl;
     private String identityRealmPublicKey;
     private String identityRealm;
+    private String orgIdentityNamingMode; // one of: random|domain|query   - this is not yet in restcomm.xml :
 
 
     public MainConfigurationSet(ConfigurationSource source) {
@@ -120,6 +121,8 @@ public class MainConfigurationSet extends ConfigurationSet {
             this.identityRealm = identityRealm;
             this.identityRealmPublicKey = identityRealmPublicKey;
         }
+        // this is hardcoded for now
+        this.orgIdentityNamingMode = "organization"; // organization | random
     }
 
     public SslMode getSslMode() {
@@ -151,4 +154,8 @@ public class MainConfigurationSet extends ConfigurationSet {
     public String getIdentityRealmPublicKey() {return identityRealmPublicKey;}
 
     public String getIdentityRealm() {return identityRealm;}
+
+    public String getOrgIdentityNamingMode() {
+        return orgIdentityNamingMode;
+    }
 }

@@ -64,6 +64,9 @@
         "frontchannelLogout": false,
         "protocol": "openid-connect",
         "fullScopeAllowed": true
+    },
+    {
+      "clientId": "existing-client-restcomm_connect"
     }
   ]
 }

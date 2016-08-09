@@ -29,7 +29,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.log4j.Logger;
 import org.keycloak.representations.idm.ClientRepresentation;
-import org.mobicents.servlet.restcomm.entities.IdentityInstance;
+import org.mobicents.servlet.restcomm.entities.OrgIdentity;
 import org.mobicents.servlet.restcomm.identity.entities.KeycloakClient;
 import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
 import org.mobicents.servlet.restcomm.identity.exceptions.IdentityClientRegistrationError;
@@ -62,48 +62,48 @@ public class IdentityRegistrationTool {
 
     /**
      * Registers keycloak Clients for an identity instance using an Initial Access Token (iat). Returns a
-     * new IdentityInstance object on success or null on failure.
+     * new OrgIdentity object on success or null on failure.
      *
      * @param iat
      * @param redirectUrls
      * @param restcommClientSecret
-     * @return the new IdentityInstance or null
+     * @return the new OrgIdentity or null
      * @throws AuthServerAuthorizationError
      */
-    public IdentityInstance registerInstanceWithIAT(String iat, String redirectUrls, String restcommClientSecret) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
+    public OrgIdentity registerOrgIdentityWithIAT(String organizationIdentityName, String iat, String redirectUrls, String restcommClientSecret) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         if (redirectUrls != null && redirectUrls.endsWith("/"))
             redirectUrls = redirectUrls.substring(0, redirectUrls.length()-1); //trim trailing '/' character if present
-        String instanceName = generateName();
+        //String instanceName = generateName(); //
         KeycloakClient restcommClient;
         // create client application at keycloak side
-        restcommClient = registerRestcommUiClient(instanceName,iat,redirectUrls,restcommClientSecret,false,true);
+        restcommClient = registerRestcommUiClient(organizationIdentityName,iat,redirectUrls,restcommClientSecret,false,true);
         // for each client created, there is a Registration Access token that allows further modifying that client in the future. We keep that.
-        IdentityInstance identityInstance = new IdentityInstance();
-        identityInstance.setName(instanceName);
-        identityInstance.setRestcommRAT(restcommClient.getRegistrationAccessToken());
-        return identityInstance;
+        OrgIdentity orgIdentity = new OrgIdentity();
+        orgIdentity.setName(organizationIdentityName);
+        orgIdentity.setRestcommRAT(restcommClient.getRegistrationAccessToken());
+        return orgIdentity;
     }
 
-    public void unregisterInstanceWithRAT(IdentityInstance identityInstance) {
-        unregisterClient(identityInstance.getName() + "-" + RESTCOMM_CLIENT_SUFFIX, identityInstance.getRestcommRAT());
+    public void unregisterOrgIdentityWithRAT(OrgIdentity orgIdentity) {
+        unregisterClient(orgIdentity.getName() + "-" + RESTCOMM_CLIENT_SUFFIX, orgIdentity.getRestcommRAT());
     }
 
     /**
      * Updates a client specified in repr using a Registration Access Token (RAT). The refreshed RAT is returned.
-     * It also updated the IdentityInstance appropriately.
+     * It also updated the OrgIdentity appropriately.
      *
-     * Note that IdentityInstance object should be stored for future reference.
+     * Note that OrgIdentity object should be stored for future reference.
      *
      * @param repr
-     * @param identityInstance
+     * @param orgIdentity
      * @param clientSuffix
      * @return
      * @throws IdentityClientRegistrationError
      * @throws AuthServerAuthorizationError
      */
-    public KeycloakClient updateRegisteredClientWithRAT(KeycloakClient repr, IdentityInstance identityInstance,  String clientSuffix) throws IdentityClientRegistrationError, AuthServerAuthorizationError {
-        repr.setClientId(identityInstance.getName() + "-" + clientSuffix);
-        String RAT = getRATForClientSuffix(identityInstance, clientSuffix);
+    public KeycloakClient updateRegisteredClientWithRAT(KeycloakClient repr, OrgIdentity orgIdentity, String clientSuffix) throws IdentityClientRegistrationError, AuthServerAuthorizationError {
+        repr.setClientId(orgIdentity.getName() + "-" + clientSuffix);
+        String RAT = getRATForClientSuffix(orgIdentity, clientSuffix);
         try {
             Client jersey = Client.create();
             WebResource resource = jersey.resource(keycloakBaseUrl + getClientRegistrationRelativeUrl() + "/" + repr.getClientId());
@@ -115,7 +115,7 @@ public class IdentityRegistrationTool {
             if (response.getStatus() >= 200 && response.getStatus() < 300) {
                 String data = response.getEntity(String.class);
                 KeycloakClient updatedClient = gson.fromJson(data, KeycloakClient.class);
-                setRATForClientSuffix(identityInstance, clientSuffix, updatedClient.getRegistrationAccessToken());
+                setRATForClientSuffix(orgIdentity, clientSuffix, updatedClient.getRegistrationAccessToken());
                 return updatedClient;
             } else if (response.getStatus() == 403 || response.getStatus() == 401) {
                 throw new AuthServerAuthorizationError("Cannot update keycloak Client " + repr.getClientId());
@@ -129,18 +129,18 @@ public class IdentityRegistrationTool {
         }
     }
 
-    public static String getRATForClientSuffix(IdentityInstance identityInstance, String clientSuffix) {
+    public static String getRATForClientSuffix(OrgIdentity orgIdentity, String clientSuffix) {
         String RAT;
         if (clientSuffix.equals(RESTCOMM_CLIENT_SUFFIX)) {
-            RAT = identityInstance.getRestcommRAT();
+            RAT = orgIdentity.getRestcommRAT();
         } else
             throw new IllegalArgumentException("While trying to update client invalid client suffix was specified: " + clientSuffix );
         return RAT;
     }
 
-    public static void setRATForClientSuffix(IdentityInstance identityInstance, String clientSuffix, String RAT) {
+    public static void setRATForClientSuffix(OrgIdentity orgIdentity, String clientSuffix, String RAT) {
         if (clientSuffix.equals(RESTCOMM_CLIENT_SUFFIX)) {
-            identityInstance.setRestcommRAT(RAT);
+            orgIdentity.setRestcommRAT(RAT);
         } else
             throw new IllegalArgumentException("While trying to update client invalid client suffix was specified: " + clientSuffix );
     }
@@ -156,13 +156,14 @@ public class IdentityRegistrationTool {
 
     KeycloakClient registerRestcommUiClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         KeycloakClient repr = new KeycloakClient();
-        repr.setClientId(instanceName + "-" + RESTCOMM_CLIENT_SUFFIX);
+        repr.setClientId(buildKeycloakClientName(instanceName));
         repr.setProtocol("openid-connect");
         repr.setBearerOnly(bearerOnly);
         repr.setPublicClient(publicClient);
         repr.setRedirectUris(rootUrl == null ? null : Arrays.asList(new String[] {rootUrl+"/*"}));
         repr.setWebOrigins(rootUrl == null ? null : Arrays.asList(new String[] {rootUrl}));
         repr.setBaseUrl(rootUrl);
+        repr.setDefaultRoles(Arrays.asList(new String[] {buildKeycloakClientRole(instanceName)}));
         return registerClient(iat,repr);
     }
 
@@ -183,6 +184,9 @@ public class IdentityRegistrationTool {
                 return createdClient;
             } else if (response.getStatus() == 403 || response.getStatus() == 401) {
                 throw new AuthServerAuthorizationError("Cannot create keycloak Client " + repr.getClientId());
+            } else
+            if (response.getStatus() == 400) {
+                throw new IdentityClientRegistrationError("Client registration for client '" + repr.getClientId() + "' failed with status " + response.getStatus() + ". Reason: " + IdentityClientRegistrationError.Reason.CLIENT_ALREADY_THERE, IdentityClientRegistrationError.Reason.CLIENT_ALREADY_THERE);
             } else {
                 throw new IdentityClientRegistrationError("Client registration for client '" + repr.getClientId() + "' failed with status " + response.getStatus());
             }
@@ -228,5 +232,33 @@ public class IdentityRegistrationTool {
         } catch (Exception e) {
             throw new IdentityClientRegistrationError("Error updating client " + repr.getClientId(),e);
         }
+    }
+
+    /**
+     * Builds the name of the role needed to access an Organization Identity.
+     *
+     * Example
+     *
+     *  telestax-access
+     *
+     * @param orgIdentityName
+     * @return the name of the role
+     */
+    public static String buildKeycloakClientRole(String orgIdentityName) {
+        return orgIdentityName + "-access";
+    }
+
+    /**
+     * Builds the name of the Keycloak Client that corresponds to the specified
+     * Organization Identity name passed.
+     *
+     * Example
+     *  telestax-restcomm
+     *
+     * @param orgIdentityName
+     * @return the nanme of the Keycloak Client
+     */
+    public static String buildKeycloakClientName(String orgIdentityName) {
+        return orgIdentityName + "-" + RESTCOMM_CLIENT_SUFFIX;
     }
 }

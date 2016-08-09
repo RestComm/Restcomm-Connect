@@ -23,31 +23,31 @@
 <!--
   @author Orestis Tsakiridis
 -->
-<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.IdentityInstancesDao">
-    <insert id="addIdentityInstance" parameterType="map">
-        INSERT INTO "restcomm_identity_instances" ("sid", "organization_sid", "name", "date_created", "date_updated", "restcomm_rat", "restcomm_last_registration_date", "restcomm_status", "restcomm_client_secret")
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.OrgIdentityDao">
+    <insert id="addOrgIdentity" parameterType="map">
+        INSERT INTO "restcomm_org_identities" ("sid", "organization_sid", "name", "date_created", "date_updated", "restcomm_rat", "restcomm_last_registration_date", "restcomm_status", "restcomm_client_secret")
         VALUES(#{sid}, #{organization_sid}, #{name}, #{date_created}, #{date_updated}, #{restcomm_rat}, #{restcomm_last_registration_date}, #{restcomm_status}, #{restcomm_client_secret})
     </insert>
 
-    <select id="getIdentityInstance" parameterType="string" resultType="hashmap">
-        SELECT * FROM "restcomm_identity_instances" WHERE "sid"=#{sid};
+    <select id="getOrgIdentity" parameterType="string" resultType="hashmap">
+        SELECT * FROM "restcomm_org_identities" WHERE "sid"=#{sid};
     </select>
 
-    <select id="getIdentityInstanceByOrganizationSid" parameterType="string" resultType="hashmap">
-        SELECT * FROM "restcomm_identity_instances" WHERE "organization_sid"=#{organization_sid};
+    <select id="getOrgIdentityByOrganizationSid" parameterType="string" resultType="hashmap">
+        SELECT * FROM "restcomm_org_identities" WHERE "organization_sid"=#{organization_sid};
     </select>
 
-    <select id="getIdentityInstanceByName" parameterType="string" resultType="hashmap">
-        SELECT * FROM "restcomm_identity_instances" WHERE "name"=#{name};
+    <select id="getOrgIdentityByName" parameterType="string" resultType="hashmap">
+        SELECT * FROM "restcomm_org_identities" WHERE "name"=#{name};
     </select>
 
-    <update id="updateIdentityInstance" parameterType="map">
-        UPDATE "restcomm_identity_instances" SET "date_updated"=#{date_updated},
+    <update id="updateOrgIdentity" parameterType="map">
+        UPDATE "restcomm_org_identities" SET "date_updated"=#{date_updated},
         "restcomm_rat"=#{restcomm_rat}, "restcomm_status"=#{restcomm_status}
         WHERE "sid"=#{sid};
     </update>
 
-    <delete id="removeIdentityInstance" parameterType="string">
-        DELETE FROM "restcomm_identity_instances" WHERE "sid"=#{sid};
+    <delete id="removeOrgIdentity" parameterType="string">
+        DELETE FROM "restcomm_org_identities" WHERE "sid"=#{sid};
     </delete>
 </mapper>

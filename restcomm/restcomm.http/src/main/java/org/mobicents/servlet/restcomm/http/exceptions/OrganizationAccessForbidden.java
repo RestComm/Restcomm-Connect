@@ -18,34 +18,10 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.identity.exceptions;
+package org.mobicents.servlet.restcomm.http.exceptions;
 
 /**
- * Thrown when a keycloak Client registration fails for an unknown reason.
- *
- * @author Orestis Tsakiridis
+ * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
  */
-public class IdentityClientRegistrationError extends Exception {
-    public enum Reason {CLIENT_ALREADY_THERE}
-    Reason reason;
-
-    public IdentityClientRegistrationError() {
-    }
-
-    public IdentityClientRegistrationError(String s) {
-        super(s);
-    }
-
-    public IdentityClientRegistrationError(String s, Throwable throwable) {
-        super(s, throwable);
-    }
-
-    public IdentityClientRegistrationError(String s, Reason reason) {
-        super(s);
-        this.reason = reason;
-    }
-
-    public Reason getReason() {
-        return reason;
-    }
+public class OrganizationAccessForbidden extends AuthorizationException {
 }

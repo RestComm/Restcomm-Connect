@@ -29,7 +29,7 @@ import org.joda.time.DateTime;
  *
  * @author Orestis Tsakiridis
  */
-public class IdentityInstance {
+public class OrgIdentity {
 
     private Sid sid;
     private Sid organizationSid;
@@ -41,7 +41,7 @@ public class IdentityInstance {
     private Status restcommStatus;
     private String restcommClientSecret; // ++
 
-    public IdentityInstance(Sid sid, Sid organizationSid, String name, DateTime dateCreated, DateTime dateUpdated, String restcommRAT, DateTime restcommLastRegistrationDate, Status restcommStatus, String restcommClientSecret) {
+    public OrgIdentity(Sid sid, Sid organizationSid, String name, DateTime dateCreated, DateTime dateUpdated, String restcommRAT, DateTime restcommLastRegistrationDate, Status restcommStatus, String restcommClientSecret) {
         this.sid = sid;
         this.organizationSid = organizationSid;
         this.name = name;
@@ -53,11 +53,11 @@ public class IdentityInstance {
         this.restcommClientSecret = restcommClientSecret;
     }
 
-    public IdentityInstance() {
+    public OrgIdentity() {
         sid = Sid.generate(Sid.Type.IDENTITY_INSTANCE);
     }
 
-    public IdentityInstance(Sid sid) {
+    public OrgIdentity(Sid sid) {
         this.sid = sid;
     }
 

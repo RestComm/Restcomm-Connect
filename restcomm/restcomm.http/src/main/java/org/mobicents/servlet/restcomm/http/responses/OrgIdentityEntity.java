@@ -20,17 +20,17 @@
 
 package org.mobicents.servlet.restcomm.http.responses;
 
-import org.mobicents.servlet.restcomm.entities.IdentityInstance;
+import org.mobicents.servlet.restcomm.entities.OrgIdentity;
 
 /**
  * @author Orestis Tsakiridis
  */
-public class IdentityInstanceEntity {
+public class OrgIdentityEntity {
 
     private String sid;
     private String name;
 
-    public IdentityInstanceEntity(IdentityInstance instance) {
+    public OrgIdentityEntity(OrgIdentity instance) {
         this.sid = instance.getSid().toString();
         this.name = instance.getName();
     }
