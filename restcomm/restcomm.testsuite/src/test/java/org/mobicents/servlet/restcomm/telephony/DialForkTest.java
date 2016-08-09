@@ -164,7 +164,7 @@ public class DialForkTest {
             fotiniSipStack.dispose();
         }
         wireMockRule.resetRequests();
-        Thread.sleep(2000);
+        Thread.sleep(5000);
     }
 
     private String dialFork = "<Response><Dial><Client>alice</Client><Sip>sip:henrique@127.0.0.1:5092</Sip><Number>+131313</Number></Dial></Response>";
@@ -377,6 +377,7 @@ public class DialForkTest {
         // hangup.
 
         bobCall.disconnect();
+        assertTrue(bobCall.waitForAnswer(5000));
 
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
 
