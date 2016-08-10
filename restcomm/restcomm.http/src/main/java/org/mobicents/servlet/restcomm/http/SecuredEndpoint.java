@@ -94,6 +94,12 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         super();
     }
 
+    // used for testing
+    public SecuredEndpoint(ServletContext context, HttpServletRequest request) {
+        this.context = context;
+        this.request = request;
+    }
+
     protected void init(final Configuration configuration) {
         super.init(configuration);
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
