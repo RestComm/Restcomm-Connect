@@ -30,9 +30,11 @@ import org.apache.commons.configuration.Configuration;
 public class DaoManagerMock implements DaoManager {
 
     private AccountsDao accountsDao;
+    private OrganizationsDao organizationsDao;
 
-    public DaoManagerMock(AccountsDao accountsDao) {
+    public DaoManagerMock(AccountsDao accountsDao, OrganizationsDao organizationsDao) {
         this.accountsDao = accountsDao;
+        this.organizationsDao = organizationsDao;
     }
 
     @Override
@@ -128,6 +130,15 @@ public class DaoManagerMock implements DaoManager {
     @Override
     public InstanceIdDao getInstanceIdDao() {
         return null;
+    }
+
+    @Override
+    public OrgIdentityDao getOrgIdentityDao() {
+        return null;
+    }
+
+    public OrganizationsDao getOrganizationsDao() {
+        return organizationsDao;
     }
 
     @Override
