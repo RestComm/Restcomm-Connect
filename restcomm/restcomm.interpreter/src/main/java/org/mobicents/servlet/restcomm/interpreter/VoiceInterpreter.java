@@ -715,7 +715,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else {
             if (!isParserFailed) {
                 if(logger.isInfoEnabled()) {
-                    logger.info("End tag received will move to hangup the call");
+                    logger.info("End tag received will move to hangup the call, VI state: "+fsm.state());
                 }
                 fsm.transition(message, hangingUp);
             } else {
@@ -981,37 +981,100 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         //Move to finished state only if the call actor send the Cancel.
                         fsm.transition(message, finished);
                     } else {
-                        //Do nothing, this is a Cancel from a dial branch previously canceled
-                        callManager.tell(new DestroyCall(sender), self());
+                        //This is a Cancel from a dial branch previously canceled
+
                         if (dialBranches != null && dialBranches.contains(sender)) {
-                            dialBranches.remove(sender);
+                            removeDialBranch(message, sender);
                         }
-                        if (dialBranches == null || dialBranches.size() == 0) {
-                            fsm.transition(message, finished);
-                        }
-                        return;
+
+//                        if (dialBranches != null && dialBranches.contains(sender)) {
+//                            dialBranches.remove(sender);
+//                        }
+//                        if (dialBranches == null || dialBranches.size() == 0) {
+//                            dialBranches = null;
+//                            Attribute attribute = null;
+//                            if (verb != null) {
+//                                attribute = verb.attribute("action");
+//                            }
+//
+//                            if (attribute == null) {
+//                                if (logger.isInfoEnabled()) {
+//                                    logger.info("Will ask for the next verb from parser");
+//                                }
+//                                callManager.tell(new DestroyCall(sender), self());
+//                                final GetNextVerb next = GetNextVerb.instance();
+//                                parser.tell(next, self());
+//                            } else {
+//                                executeDialAction(message, sender);
+//                                callManager.tell(new DestroyCall(sender), self());
+//                            }
+//                        }
+//                        return;
+
+//                        OLD
+//                        callManager.tell(new DestroyCall(sender), self());
+//                        if (dialBranches != null && dialBranches.contains(sender)) {
+//                            dialBranches.remove(sender);
+//                        }
+//                        if (dialBranches == null || dialBranches.size() == 0) {
+//                            dialBranches = null;
+//                            Attribute attribute = null;
+//                            if (verb != null) {
+//                                attribute = verb.attribute("action");
+//                            }
+//
+//                            if (attribute == null) {
+//                                if (logger.isInfoEnabled()) {
+//                                    logger.info("Will ask for the next verb from parser");
+//                                }
+//                                final GetNextVerb next = GetNextVerb.instance();
+//                                parser.tell(next, self());
+//                            } else {
+//                                if (outboundCall != null) {
+//                                    executeDialAction(message, outboundCall);
+//                                } else {
+//                                    executeDialAction(message, null);
+//                                }
+//                            }
+//                        }
+//                        return;
                     }
                 }
                 break;
             case BUSY:
                 if (is(forking)) {
-                    if (sender==call) {
+                    if (sender == call) {
                         //Move to finishDialing to clear the call and cancel all branches
                         fsm.transition(message, finishDialing);
-                    } else if (dialBranches.contains(sender)) {
-                        removeDialBranch(message, sender);
+                    } else {
+                        if (dialBranches != null && dialBranches.contains(sender)) {
+//                            dialBranches.remove(sender);
+                            removeDialBranch(message, sender);
+                        }
                         return;
                     }
                 } else {
                     fsm.transition(message, finishDialing);
+                    return;
                 }
                 break;
             case NOT_FOUND:
                 //Do nothing
                 break;
             case NO_ANSWER:
-            case COMPLETED:
+                //NOANSWER calls should be canceled. At CANCELED event will be removed from dialBranches and will be destroyed.
+                if (is(bridging) || (is(bridged) && !sender.equals(call))) {
+                    fsm.transition(message, finishDialing);
+                } else if (is(forking)){
+                    if (!sender.equals(call)) {
+                        //One of the dial branches sent NO-ANSWER and we should ask to CANCEL
+                        sender.tell(new Cancel(), self());
+                        return;
+                    }
+                }
+                break;
             case FAILED:
+            case COMPLETED:
                 //NO_ANSWER, COMPLETED and FAILED events are handled the same
                 if (is(bridging)) {
                     fsm.transition(message, finishDialing);
@@ -1038,8 +1101,38 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             fsm.transition(message, finishDialing);
                         }
                     } else if (is(finishDialing)) {
-                        removeDialBranch(message, sender);
-                        return;
+//                        if (dialBranches != null && dialBranches.contains(sender)) {
+//                            //We are forking and one of the branches sent NO-ANSWER or COMPLETED or FAILED
+//                            //Remove this branch and wait for other branches
+//                            removeDialBranch(message, sender);
+//                            if (dialBranches.size() > 0) {
+//                                //There are more branches, return and wait for the other branches response
+//                                return;
+//                            } else if(dialBranches.size() == 0){
+//                                dialBranches = null;
+//                            }
+//                        }
+//
+//                        Attribute attribute = null;
+//                        if (verb != null) {
+//                            attribute = verb.attribute("action");
+//                        }
+//
+//                        if (attribute == null) {
+//                            if(logger.isInfoEnabled()) {
+//                                logger.info("Will ask for the next verb from parser");
+//                            }
+//                            final GetNextVerb next = GetNextVerb.instance();
+//                            parser.tell(next, self());
+//                        } else {
+//                            if (outboundCall != null) {
+//                                executeDialAction(message,outboundCall);
+//                            } else {
+//                                executeDialAction(message,null);
+//                            }
+//                        }
+//                        dialChildren = null;
+//                        return;
                     } else {
                         if (!is(finishDialing))
                             fsm.transition(message, finished);
@@ -1086,11 +1179,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             dialBranches.remove(sender);
             sender.tell(new Cancel(), self());
+            callManager.tell(new DestroyCall(sender), self());
             if (dialBranches.size() > 0) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("At VI removeDialBranch, will destroy call "+call.path()+" isTerminated: "+ call.isTerminated());
                 }
-                callManager.tell(new DestroyCall(sender), self());
                 //Wait to check the response from the other branches
                 return;
             } else {
@@ -1108,12 +1201,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (attribute != null) {
             executeDialAction(message, sender);
         }
-        if (sender != outboundCall) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("At VI removeDialBranch, will destroy call "+call.path()+" isTerminated: "+ call.isTerminated());
-            }
-            callManager.tell(new DestroyCall(sender), self());
+        if (logger.isDebugEnabled()) {
+            logger.debug("At VI removeDialBranch, will destroy call "+call.path()+" isTerminated: "+ call.isTerminated());
         }
+        callManager.tell(new DestroyCall(sender), self());
     }
 
     private void onBridgeManagerResponse(BridgeManagerResponse message, ActorRef self, ActorRef sender) throws Exception {
@@ -1486,7 +1577,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 return;
             } else if (downloadingRcml.equals(state) || downloadingFallbackRcml.equals(state) || redirecting.equals(state)
                     || finishGathering.equals(state) || finishRecording.equals(state) || sendingSms.equals(state)
-                    || finishDialing.equals(state) || finishConferencing.equals(state)) {
+                    || finishDialing.equals(state) || finishConferencing.equals(state) || is(forking)) {
                 response = ((DownloaderResponse) message).get();
                 if (parser != null) {
                     context.stop(parser);
@@ -2165,25 +2256,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                     }
                 }
-                if (dialBranches != null && dialBranches.size() > 0) {
-                    dialBranches = null;
-                }
-//                    call.tell(new StopMediaGroup(), null);
-                if (attribute == null) {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("Will ask for the next verb from parser");
-                }
-                    final GetNextVerb next = GetNextVerb.instance();
-                    parser.tell(next, source);
-                } else {
-                    if (outboundCall != null) {
-                        executeDialAction(message,outboundCall);
-                    } else {
-                        executeDialAction(message,null);
-                    }
-                }
                 dialChildren = null;
-//                outboundCall = null;
                 callback();
                 return;
             }
