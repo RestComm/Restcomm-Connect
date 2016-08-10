@@ -30,6 +30,7 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 
 import static javax.ws.rs.core.MediaType.*;
@@ -61,9 +62,7 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public abstract class AccountsEndpoint extends SecuredEndpoint {
-    @Context
-    protected ServletContext context;
+public class AccountsEndpoint extends SecuredEndpoint {
     protected Configuration configuration;
     protected Gson gson;
     protected XStream xstream;
@@ -73,8 +72,13 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         super();
     }
 
+    // used for testing
+    public AccountsEndpoint(ServletContext context, HttpServletRequest request) {
+        super(context,request);
+    }
+
     @PostConstruct
-    private void init() {
+    void init() {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
