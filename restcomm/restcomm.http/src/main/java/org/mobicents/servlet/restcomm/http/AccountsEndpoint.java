@@ -35,7 +35,6 @@ import javax.ws.rs.core.MediaType;
 
 import static javax.ws.rs.core.MediaType.*;
 
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
