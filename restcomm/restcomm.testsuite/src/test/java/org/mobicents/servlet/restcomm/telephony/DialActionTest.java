@@ -183,7 +183,7 @@ public class DialActionTest {
             georgeSipStack.dispose();
         }
         wireMockRule.resetRequests();
-        Thread.sleep(2000);
+        Thread.sleep(3000);
     }
 
     @Test
@@ -585,11 +585,7 @@ public class DialActionTest {
 
         assertTrue(bobCall.disconnect());
 
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        Thread.sleep(10000);
         
         logger.info("About to check the DialAction Requests");
         List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
