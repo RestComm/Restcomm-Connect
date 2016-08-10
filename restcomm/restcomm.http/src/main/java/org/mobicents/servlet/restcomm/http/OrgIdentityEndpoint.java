@@ -35,17 +35,13 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.OrgIdentityConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
-import org.mobicents.servlet.restcomm.identity.IdentityRegistrationTool;
-import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
-import org.mobicents.servlet.restcomm.identity.exceptions.IdentityClientRegistrationError;
 import org.mobicents.servlet.restcomm.identity.mocks.Organization;
-import org.mobicents.servlet.restcomm.identity.mocks.OrganizationDao;
+import org.mobicents.servlet.restcomm.dao.mocks.OrganizationsDaoMock;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
-import java.util.UUID;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -59,21 +55,23 @@ public class OrgIdentityEndpoint extends SecuredEndpoint {
 
     MainConfigurationSet mainConfig;
     OrgIdentityDao orgIdentityDao;
-    OrganizationDao organizationDao;
+    OrganizationsDaoMock organizationDao;
     protected Gson gson;
     protected XStream xstream;
 
-
+    public OrgIdentityEndpoint(ServletContext context, HttpServletRequest request) {
+        super(context, request);
+    }
 
     @PostConstruct
-    private void init() {
+    void init() {
         // this is needed by AbstractEndpoint
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         final DaoManager daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.orgIdentityDao = daos.getOrgIdentityDao();
-        this.organizationDao = OrganizationDao.getInstance(); // use mocks for now
+        this.organizationDao = OrganizationsDaoMock.getInstance(); // use mocks for now
         mainConfig = RestcommConfiguration.getInstance().getMain();
         // converters
         final OrgIdentityConverter converter = new OrgIdentityConverter(configuration);
@@ -114,7 +112,7 @@ public class OrgIdentityEndpoint extends SecuredEndpoint {
             // No organization info provided. Use the one from the url.
             securedOrganization = getOrganization();
         } else {
-            securedOrganization = organizationDao.getOrganizationByDomain(organizationDomain);
+            securedOrganization = organizationDao.getOrganizationByNamespace(organizationDomain);
         }
         if (securedOrganization == null)
             return Response.status(Response.Status.BAD_REQUEST).type(APPLICATION_JSON_TYPE).build();

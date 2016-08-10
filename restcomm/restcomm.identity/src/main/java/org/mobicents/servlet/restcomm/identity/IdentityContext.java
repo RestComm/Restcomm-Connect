@@ -95,7 +95,7 @@ public class IdentityContext {
         if (existingDeployment != null)
             return existingDeployment;
         else {
-            KeycloakAdapterConfBuilder confBuilder = new KeycloakAdapterConfBuilder(realmName, realmKey, authServerUrl, instance.getName(), instance.getRestcommClientSecret());
+            KeycloakAdapterConfBuilder confBuilder = new KeycloakAdapterConfBuilder(realmName, realmKey, authServerUrl, instance.getName());
             KeycloakDeployment deployment = IdentityUtils.createDeployment(confBuilder.getRestcommConfig());
             deployments.put(instance.getSid(), deployment);
             return deployment;

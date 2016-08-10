@@ -43,12 +43,9 @@ import org.mobicents.servlet.restcomm.http.exceptions.NotAuthenticated;
 import org.mobicents.servlet.restcomm.http.exceptions.OrganizationAccessForbidden;
 import org.mobicents.servlet.restcomm.http.exceptions.AccountNotLinked;
 import org.mobicents.servlet.restcomm.http.exceptions.NoMappedAccount;
-import org.mobicents.servlet.restcomm.identity.IdentityRegistrationTool;
-import org.mobicents.servlet.restcomm.identity.AuthOutcome;
-import org.mobicents.servlet.restcomm.identity.IdentityContext;
-import org.mobicents.servlet.restcomm.identity.UserIdentityContext;
+import org.mobicents.servlet.restcomm.identity.*;
 import org.mobicents.servlet.restcomm.identity.mocks.Organization;
-import org.mobicents.servlet.restcomm.identity.mocks.OrganizationDao;
+import org.mobicents.servlet.restcomm.dao.mocks.OrganizationsDaoMock;
 import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
 import org.mobicents.servlet.restcomm.identity.UserIdentityContext.AuthKind;
 
@@ -81,7 +78,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     protected UserIdentityContext userIdentityContext;
     protected AccountsDao accountsDao;
-    protected OrganizationDao organizationDao;
+    protected OrganizationsDaoMock organizationDao;
     protected IdentityContext identityContext;
     private OrgIdentity orgIdentity;
     private Organization organization;
@@ -150,8 +147,8 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      */
     protected void checkOrganizationIdentity() {
         if (userIdentityContext.getAuthKind() == AuthKind.KeycloakAuth) {
-            String neededRole = IdentityRegistrationTool.buildKeycloakClientRole(orgIdentity.getName()); // the following role should be present in the bearer token in order to allow access to the instance
-            String keycloakClientName = IdentityRegistrationTool.buildKeycloakClientName(orgIdentity.getName());
+            String neededRole = IdentityUtils.buildKeycloakClientRole(orgIdentity.getName()); // the following role should be present in the bearer token in order to allow access to the instance
+            String keycloakClientName = IdentityUtils.buildKeycloakClientName(orgIdentity.getName());
             AccessToken oauthToken = userIdentityContext.getOauthToken();
             try {
                 if (oauthToken == null) {
@@ -425,7 +422,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         return this.orgIdentity;
     }
 
-    private Organization findCurrentOrganization(HttpServletRequest request, OrganizationDao organizationDao) {
+    private Organization findCurrentOrganization(HttpServletRequest request, OrganizationsDaoMock organizationDao) {
         String domainPrefix; // for telestax.restcomm.com it would be 'telestax'
         try {
             String domain = new URL(request.getRequestURL().toString()).getHost();
@@ -433,7 +430,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         } catch (MalformedURLException e) {
             throw new RuntimeException("Cannot get domain name while trying to determine current organization");
         }
-        return organizationDao.getOrganizationByDomain(domainPrefix);
+        return organizationDao.getOrganizationByNamespace(domainPrefix);
     }
 
     protected Organization getOrganization() {
