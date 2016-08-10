@@ -29,7 +29,7 @@ import java.util.List;
  * @author Orestis Tsakiridis
  */
 public interface OrgIdentityDao {
-    void addOrgIdentity(OrgIdentity instance);
+    void addOrgIdentity(OrgIdentity orgIdentity);
 
     OrgIdentity getOrgIdentity(Sid sid);
 
@@ -41,5 +41,5 @@ public interface OrgIdentityDao {
 
     void removeOrgIdentity(Sid sid);
 
-    void updateOrgIdentity(OrgIdentity instance);
+    void updateOrgIdentity(OrgIdentity orgIdentity);
 }

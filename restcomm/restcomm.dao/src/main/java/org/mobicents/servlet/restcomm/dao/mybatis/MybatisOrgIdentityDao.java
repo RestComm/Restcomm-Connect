@@ -27,7 +27,6 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.DaoUtils;
 import org.mobicents.servlet.restcomm.dao.OrgIdentityDao;
 import org.mobicents.servlet.restcomm.entities.OrgIdentity;
-import org.mobicents.servlet.restcomm.entities.OrgIdentity.Status;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 import java.util.HashMap;
@@ -48,10 +47,10 @@ public class MybatisOrgIdentityDao implements OrgIdentityDao {
     }
 
     @Override
-    public void addOrgIdentity(final OrgIdentity instance) {
+    public void addOrgIdentity(final OrgIdentity orgIdentity) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addOrgIdentity", toMap(instance));
+            session.insert(namespace + "addOrgIdentity", toMap(orgIdentity));
             session.commit();
         } finally {
             session.close();
@@ -122,10 +121,10 @@ public class MybatisOrgIdentityDao implements OrgIdentityDao {
     }
 
     @Override
-    public void updateOrgIdentity(OrgIdentity instance) {
+    public void updateOrgIdentity(OrgIdentity orgIdentity) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateOrgIdentity", toMap(instance));
+            session.update(namespace + "updateOrgIdentity", toMap(orgIdentity));
             session.commit();
         } finally {
             session.close();
@@ -139,12 +138,7 @@ public class MybatisOrgIdentityDao implements OrgIdentityDao {
         final DateTime dateCreated = DaoUtils.readDateTime(map.get("date_created"));
         final DateTime dateUpdated = DaoUtils.readDateTime(map.get("date_updated"));
 
-        final String restcommRestRAT = DaoUtils.readString(map.get("restcomm_rat"));
-        final DateTime restcommRestLastRegistrationDate = DaoUtils.readDateTime(map.get("restcomm_last_registration_date"));
-        final Status restcommRestStatus = Status.getValueOf(DaoUtils.readString(map.get("restcomm_status")));
-        final String restcommRestClientSecret = DaoUtils.readString(map.get("restcomm_client_secret"));
-
-        return new OrgIdentity(sid,organizationSid,name, dateCreated, dateUpdated, restcommRestRAT,restcommRestLastRegistrationDate,restcommRestStatus, restcommRestClientSecret);
+        return new OrgIdentity(sid,organizationSid,name, dateCreated, dateUpdated);
     }
 
     private Map<String, Object> toMap(final OrgIdentity instance) {
@@ -154,11 +148,6 @@ public class MybatisOrgIdentityDao implements OrgIdentityDao {
         map.put("name", instance.getName());
         map.put("date_created", DaoUtils.writeDateTime(instance.getDateCreated()));
         map.put("date_updated", DaoUtils.writeDateTime(instance.getDateUpdated()));
-
-        map.put("restcomm_rat", instance.getRestcommRAT());
-        map.put("restcomm_last_registration_date", DaoUtils.writeDateTime(instance.getRestcommLastRegistrationDate()));
-        map.put("restcomm_status", instance.getRestcommStatus());
-        map.put("restcomm_client_secret", instance.getRestcommClientSecret());
 
         return map;
     }

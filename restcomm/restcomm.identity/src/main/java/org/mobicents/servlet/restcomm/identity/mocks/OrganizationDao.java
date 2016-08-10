@@ -22,7 +22,7 @@ public class OrganizationDao {
 
     public OrganizationDao() {}
 
-    Organization getOrganization(Sid organizationSid) {
+    public Organization getOrganization(Sid organizationSid) {
         for (Organization org: organizations) {
             if (org.getSid().toString().equals(organizationSid.toString()))
                 return org;
@@ -30,7 +30,7 @@ public class OrganizationDao {
         return null;
     }
 
-    Organization getOrganizationByDomain(String domain) {
+    public Organization getOrganizationByDomain(String domain) {
         for (Organization org: organizations) {
             if (org.getDomain().equals(domain)) {
                 return org;
@@ -39,7 +39,7 @@ public class OrganizationDao {
         return null;
     }
 
-    void addOrganization(Organization added) {
+    public void addOrganization(Organization added) {
         if (added == null)
             throw new IllegalArgumentException();
         for (Organization org: organizations) {
@@ -52,7 +52,7 @@ public class OrganizationDao {
     }
 
     // singleton stuff
-    static OrganizationDao instance;
+    private static OrganizationDao instance;
     public static OrganizationDao getInstance() {
         if (instance == null) {
             instance = new OrganizationDao();

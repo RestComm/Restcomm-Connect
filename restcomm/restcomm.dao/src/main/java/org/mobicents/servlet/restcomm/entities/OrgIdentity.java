@@ -36,21 +36,13 @@ public class OrgIdentity {
     private String name;
     private DateTime dateCreated;
     private DateTime dateUpdated;
-    private String restcommRAT;
-    private DateTime restcommLastRegistrationDate;
-    private Status restcommStatus;
-    private String restcommClientSecret; // ++
 
-    public OrgIdentity(Sid sid, Sid organizationSid, String name, DateTime dateCreated, DateTime dateUpdated, String restcommRAT, DateTime restcommLastRegistrationDate, Status restcommStatus, String restcommClientSecret) {
+    public OrgIdentity(Sid sid, Sid organizationSid, String name, DateTime dateCreated, DateTime dateUpdated) {
         this.sid = sid;
         this.organizationSid = organizationSid;
         this.name = name;
         this.dateCreated = dateCreated;
         this.dateUpdated = dateUpdated;
-        this.restcommRAT = restcommRAT;
-        this.restcommLastRegistrationDate = restcommLastRegistrationDate;
-        this.restcommStatus = restcommStatus;
-        this.restcommClientSecret = restcommClientSecret;
     }
 
     public OrgIdentity() {
@@ -73,18 +65,6 @@ public class OrgIdentity {
         return name;
     }
 
-    public String getRestcommRAT() {
-        return restcommRAT;
-    }
-
-    public DateTime getRestcommLastRegistrationDate() {
-        return restcommLastRegistrationDate;
-    }
-
-    public Status getRestcommStatus() {
-        return restcommStatus;
-    }
-
     public void setSid(Sid sid) {
         this.sid = sid;
     }
@@ -95,18 +75,6 @@ public class OrgIdentity {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public void setRestcommRAT(String restcommRAT) {
-        this.restcommRAT = restcommRAT;
-    }
-
-    public void setRestcommLastRegistrationDate(DateTime restcommLastRegistrationDate) {
-        this.restcommLastRegistrationDate = restcommLastRegistrationDate;
-    }
-
-    public void setRestcommStatus(Status restcommStatus) {
-        this.restcommStatus = restcommStatus;
     }
 
     public DateTime getDateCreated() {
@@ -125,23 +93,4 @@ public class OrgIdentity {
         this.dateUpdated = dateUpdated;
     }
 
-    public String getRestcommClientSecret() {
-        return restcommClientSecret;
-    }
-
-    public void setRestcommClientSecret(String restcommClientSecret) {
-        this.restcommClientSecret = restcommClientSecret;
-    }
-
-    public enum Status {
-        success, fail;
-
-        // Use this instead of direct valueOf(). It handles nulls too
-        public static Status getValueOf(String value) {
-            if ( value == null )
-                return null;
-            else
-                return Status.valueOf(value);
-        }
-    }
 }

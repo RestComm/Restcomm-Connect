@@ -81,7 +81,7 @@
 			<artifactId>restcomm.dao</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
-		</dependency>		
+		</dependency>
 		
 	</dependencies>
 </project>

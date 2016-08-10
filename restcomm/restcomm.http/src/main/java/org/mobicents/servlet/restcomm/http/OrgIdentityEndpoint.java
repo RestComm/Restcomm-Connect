@@ -38,6 +38,8 @@ import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
 import org.mobicents.servlet.restcomm.identity.IdentityRegistrationTool;
 import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
 import org.mobicents.servlet.restcomm.identity.exceptions.IdentityClientRegistrationError;
+import org.mobicents.servlet.restcomm.identity.mocks.Organization;
+import org.mobicents.servlet.restcomm.identity.mocks.OrganizationDao;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -55,12 +57,13 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
  */
 public class OrgIdentityEndpoint extends SecuredEndpoint {
 
-    @Context
-    protected ServletContext context;
     MainConfigurationSet mainConfig;
     OrgIdentityDao orgIdentityDao;
+    OrganizationDao organizationDao;
     protected Gson gson;
     protected XStream xstream;
+
+
 
     @PostConstruct
     private void init() {
@@ -70,6 +73,7 @@ public class OrgIdentityEndpoint extends SecuredEndpoint {
         super.init(configuration);
         final DaoManager daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.orgIdentityDao = daos.getOrgIdentityDao();
+        this.organizationDao = OrganizationDao.getInstance(); // use mocks for now
         mainConfig = RestcommConfiguration.getInstance().getMain();
         // converters
         final OrgIdentityConverter converter = new OrgIdentityConverter(configuration);
@@ -84,43 +88,63 @@ public class OrgIdentityEndpoint extends SecuredEndpoint {
 
     }
 
+    /**
+     * Create a new OrgIdentity entity. It also applies the logic for picking the right name for it.
+     *
+     *
+     * @param name
+     * @param redirectUrl
+     * @return
+     */
+    protected Response createOrgIdentity(String name, String organizationDomain, String redirectUrl) {
+        // TODO apply access control rules
+        OrgIdentity oi = new OrgIdentity();
 
-    protected Response registerOrgIdentityWithIAT(String initialAccessToken, String redirectUrl, String keycloakBaseUrlParam) {
-        String clientSecret = generateClientSecret();
-        // determine keycloakBaseUrl based on configuration and defaults
-        String keycloakBaseUrl = keycloakBaseUrlParam;
-        if (StringUtils.isEmpty(keycloakBaseUrl))
-            keycloakBaseUrl = mainConfig.getIdentityAuthServerUrl();
-        // is there an OrgIdentity already for this organization ?
-        if (getOrgIdentity() == null) {
-            IdentityRegistrationTool tool = new IdentityRegistrationTool(keycloakBaseUrl, mainConfig.getIdentityRealm());
-            OrgIdentity storedInstance;
-            String orgIdentityName = null;
-            try {
-                orgIdentityName = pickOrganizationIdentityName();
-                OrgIdentity instance = tool.registerOrgIdentityWithIAT(orgIdentityName, initialAccessToken, redirectUrl, clientSecret);
-                instance.setOrganizationSid(getCurrentOrganizationSid());
-                orgIdentityDao.addOrgIdentity(instance);
-                storedInstance = instance;
-            } catch (AuthServerAuthorizationError e) {
-                logger.error(e);
-                String errorResponse = "{\"error\":\"KEYCLOAK_ACCESS_ERROR\"}";
-                return Response.status(Response.Status.FORBIDDEN).entity(errorResponse).header("Content-Type", "application/json").build();
-            } catch (IdentityClientRegistrationError e) {
-                logger.error(e);
-                if (IdentityClientRegistrationError.Reason.CLIENT_ALREADY_THERE.equals(e.getReason())) {
-                    String errorResponse = "{\"error\":\""+e.getReason()+"\",\"occupiedName\":\""+orgIdentityName+"\"}";
-                    return Response.status(Response.Status.CONFLICT).entity(errorResponse).type(APPLICATION_JSON_TYPE).build();
-                } else
-                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-            }
-            if (logger.isInfoEnabled())
-                logger.info("registered NEW identity instance named '" + storedInstance.getName() + "' with sid: '" + storedInstance.getSid().toString() + "'");
-            return Response.ok(gson.toJson(storedInstance), APPLICATION_JSON).build();
-        } else
-            return Response.status(Response.Status.CONFLICT).build();
+        if ( StringUtils.isEmpty(name) ) {
+            String errorResponse = "{\"error\":\"no name specified\"}";
+            return Response.status(Response.Status.BAD_REQUEST).entity(errorResponse).type(APPLICATION_JSON_TYPE).build();
+        } else {
+            // TODO validate name here
+            oi.setName(name);
+        }
+
+        // determing the organization that will be secured
+        Organization securedOrganization;
+        if (StringUtils.isEmpty(organizationDomain)) {
+            // No organization info provided. Use the one from the url.
+            securedOrganization = getOrganization();
+        } else {
+            securedOrganization = organizationDao.getOrganizationByDomain(organizationDomain);
+        }
+        if (securedOrganization == null)
+            return Response.status(Response.Status.BAD_REQUEST).type(APPLICATION_JSON_TYPE).build();
+        oi.setOrganizationSid(securedOrganization.getSid());
+
+        // store it
+        orgIdentityDao.addOrgIdentity(oi);
+
+        return Response.ok(gson.toJson(oi), APPLICATION_JSON).build();
     }
 
+    protected Response updateOrgIdentity(String sid, String name) {
+        // TODO apply access control rules
+        if (StringUtils.isEmpty(sid) || StringUtils.isEmpty(name))
+            return Response.status(Response.Status.BAD_REQUEST).build();
+
+        Sid orgIdentitySid = new Sid(sid);
+        OrgIdentity orgIdentity = orgIdentityDao.getOrgIdentity(orgIdentitySid);
+        if (orgIdentity != null) {
+            orgIdentity.setName(name);
+            orgIdentityDao.updateOrgIdentity(orgIdentity);
+            return Response.ok(gson.toJson(orgIdentity), APPLICATION_JSON).build();
+        } else
+            return Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    /**
+     * Returns the OrgIdentity for 'current' organization if any.
+     * @return
+     */
     protected Response getCurrentOrgIdentity() {
         // TODO use a proper converter here
         if (getOrgIdentity() == null)
@@ -130,62 +154,25 @@ public class OrgIdentityEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response unregisterOrgIdentity(String sid) {
+    protected Response removeOrgIdentity(String sid) {
         if ( ! hasAccountRole(getAdministratorRole()) )
             throw new AuthorizationException();
-        Sid instanceSid;
+        Sid orgIdentitySid;
         try {
-            instanceSid = new Sid(sid);
+            orgIdentitySid = new Sid(sid);
         } catch (Exception e) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
-        OrgIdentity instance = orgIdentityDao.getOrgIdentity(instanceSid);
+        OrgIdentity instance = orgIdentityDao.getOrgIdentity(orgIdentitySid);
         if (instance != null) {
-            IdentityRegistrationTool tool = new IdentityRegistrationTool(mainConfig.getIdentityAuthServerUrl(), mainConfig.getIdentityRealm());
-            tool.unregisterOrgIdentityWithRAT(instance);
-            orgIdentityDao.removeOrgIdentity(instanceSid);
-            if (logger.isInfoEnabled())
-                logger.info("Removed identity instance " + instanceSid);
+            orgIdentityDao.removeOrgIdentity(orgIdentitySid);
             return Response.ok().build();
         } else {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
     }
 
-    protected Response updateOrgIdentityRAT(String sid, String clientSuffix, String registrationToken) {
-        if (StringUtils.isEmpty(clientSuffix) || StringUtils.isEmpty(registrationToken) || StringUtils.isEmpty(sid))
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        if (! (clientSuffix.equals(IdentityRegistrationTool.RESTCOMM_CLIENT_SUFFIX) ) )
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        Sid instanceSid = new Sid(sid);
-        OrgIdentity ii = orgIdentityDao.getOrgIdentity(instanceSid);
-        if (ii != null) {
-            IdentityRegistrationTool.setRATForClientSuffix(ii, clientSuffix, registrationToken);
-            orgIdentityDao.updateOrgIdentity(ii);
-            return Response.ok(gson.toJson(ii), APPLICATION_JSON).build();
-        } else
-            return Response.status(Response.Status.NOT_FOUND).build();
-    }
 
-    private String generateClientSecret() {
-        return UUID.randomUUID().toString();
-    }
 
-    /**
-     * Implements logic for picking a name for the OrganizationIdentity. This may vary according to whether this is
-     * a cloud or standalone installation. Usually the organization name itself is used or a random value to avoid
-     * conflicts.
-     *
-     * NOTE: The algorithm is still under construction
-     *
-     * @return
-     */
-    private String pickOrganizationIdentityName() {
-        if ("random".equals(mainConfig.getOrgIdentityNamingMode())) {
-            return UUID.randomUUID().toString().split("-")[0];
-        } else {
-            // default to "organization" setting
-            return getCurrentOrganizationName();
-        }
-    }
+
 }

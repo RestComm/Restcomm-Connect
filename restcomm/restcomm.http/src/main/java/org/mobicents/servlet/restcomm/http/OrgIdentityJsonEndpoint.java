@@ -41,17 +41,6 @@ import javax.ws.rs.core.Response;
 public class OrgIdentityJsonEndpoint extends OrgIdentityEndpoint {
 
     /**
-     *
-     * @param initialAccessToken
-     * @param redirectUrl
-     * @return
-     */
-    @POST
-    public Response registerOrgIdentity(@FormParam("InitialAccessToken") String initialAccessToken, @FormParam("RedirectUrl") String redirectUrl, @FormParam("KeycloakBaseUrl") String keycloakBaseUrl) throws AuthServerAuthorizationError {
-        return registerOrgIdentityWithIAT(initialAccessToken, redirectUrl, keycloakBaseUrl);
-    }
-
-    /**
      * Returns all Identity Instances. Only (super) administrators can access this.
      *
      * @return
@@ -63,10 +52,21 @@ public class OrgIdentityJsonEndpoint extends OrgIdentityEndpoint {
     }
 
     /**
+     * Returns a single Identity Instance. Only (super) administrators can access this.
+     * @return
+     */
+    @Path("/{identityInstanceSid}")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getOrgIdentityBySid() {
+        throw new NotImplementedException();
+    }
+
+    /**
      * Returns the current instance based the active organization specified in url (domain name). If no identity
-     * instances have been created 404 is returned. Otherwise a small subset of OrgIdentity entity is returned:
+     * instances have been created 404 is returned. Only a small subset of the whole OrgIdentity entity is returned:
      *
-     * {sid:II123123, organizationSid, name:abq1231231, dateCreated, dateUpdated}
+     * {sid:II123123, organizationSid, name:abq1231231}
      *
      * Access to this function will be public if the instance (or the organizatio) is not registered. Otherwise a bearer
      * token will be required.
@@ -79,36 +79,36 @@ public class OrgIdentityJsonEndpoint extends OrgIdentityEndpoint {
     public Response getCurrentOrgIdentity() {
         return super.getCurrentOrgIdentity();
     }
-    /**
-     * Returns a single Identity Instance. Only (super) administrators can access this.
-     * @return
-     */
-    @Path("/{identityInstanceSid}")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getOrgIdentityBySid() {
-        throw new NotImplementedException();
+
+    @POST
+    public Response createIdentityInstance(
+            @FormParam("Name") String name,
+            @FormParam("Organization") String organizationDomain,
+            //@FormParam("InitialAccessToken") String initialAccessToken, // disabled as of #1313
+            @FormParam("RedirectUrl") String redirectUrl)
+            throws AuthServerAuthorizationError {
+        return createOrgIdentity(name, organizationDomain, redirectUrl);
     }
 
     @Path("/{identityInstanceSid}")
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
-    public Response updateOrgIdentityBySid(@PathParam("identityInstanceSid") String identityInstanceId, @FormParam("client-suffix") String clientSuffix, @FormParam("token") String registrationToken) {
-        return updateOrgIdentityRAT(identityInstanceId,clientSuffix,registrationToken);
+    public Response updateOrgIdentityBySid(@PathParam("identityInstanceSid") String identityInstanceId, @FormParam("Name") String name) {
+        return updateOrgIdentity(identityInstanceId,name);
     }
 
     /**
      * Unregisters an instance. Only (super) administrators can access this.
-     * @param identityInstanceSid
+     * @param ordIdentitySid
      *
      * @return nothing
      */
     @DELETE
-    @Path("/{identityInstanceSid}")
-    public Response unregisterOrgIdentity(@PathParam("identityInstanceSid") String identityInstanceSid) {
-        if (mainConfig.getIdentityAuthServerUrl() != null)
-            return super.unregisterOrgIdentity(identityInstanceSid);
-        else
-            return Response.status(Response.Status.NOT_FOUND).build();
+    @Path("/{ordIdentitySid}")
+    public Response removeOrgIdentity(@PathParam("ordIdentitySid") String ordIdentitySid) {
+        //if (mainConfig.getIdentityAuthServerUrl() != null)
+            return super.removeOrgIdentity(ordIdentitySid);
+        //else
+        //    return Response.status(Response.Status.NOT_FOUND).build();
     }
 }

@@ -19,6 +19,8 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
@@ -45,6 +47,8 @@ import org.mobicents.servlet.restcomm.identity.IdentityRegistrationTool;
 import org.mobicents.servlet.restcomm.identity.AuthOutcome;
 import org.mobicents.servlet.restcomm.identity.IdentityContext;
 import org.mobicents.servlet.restcomm.identity.UserIdentityContext;
+import org.mobicents.servlet.restcomm.identity.mocks.Organization;
+import org.mobicents.servlet.restcomm.identity.mocks.OrganizationDao;
 import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
 import org.mobicents.servlet.restcomm.identity.UserIdentityContext.AuthKind;
 
@@ -77,8 +81,10 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     protected UserIdentityContext userIdentityContext;
     protected AccountsDao accountsDao;
+    protected OrganizationDao organizationDao;
     protected IdentityContext identityContext;
     private OrgIdentity orgIdentity;
+    private Organization organization;
     @Context
     protected ServletContext context;
     @Context
@@ -93,6 +99,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.accountsDao = storage.getAccountsDao();
         this.identityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
+        this.organization = findCurrentOrganization(request, organizationDao);
         this.orgIdentity = findCurrentOrgIdentity(request, storage.getOrgIdentityDao());
         KeycloakDeployment deployment = null;
         if (this.orgIdentity != null)
@@ -391,44 +398,39 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
 
     /**
-     * Returns an OrgIdentity for a request. If in restcomm-auth mode it returns null.
-     *
-     * It tries to determine the organization from the request and then map this organization to an
-     * OrgIdentity. Since organization support is not yet ready, all requests are mapped to
-     * a fixed organization SID by default.
+     * Returns the OrgIdentity for the active organization (determined from the request). Null, if there
+     * is no organization found or if the active organization is not secured.
      *.
      * @param request
      * @param orgIdentityDao
      * @return the OrgIdentity object mapped or null
      */
     private OrgIdentity findCurrentOrgIdentity(HttpServletRequest request, OrgIdentityDao orgIdentityDao) {
-        if (identityContext.getAuthServerUrl() != null) {
-            // TODO here determine current organization based on request, conf etc.
-            Sid organizationSid = getCurrentOrganizationSid();
-            // TODO throw an error if organizationSid is not found. There has to be one, right ?
-            // ...
-            OrgIdentity orgIdentity = orgIdentityDao.getOrgIdentityByOrganizationSid(organizationSid);
-            return orgIdentity;
-        } else
-            return null;
+        if ( getOrganization() != null ) {
+            if (identityContext.getAuthServerUrl() != null) {
+                OrgIdentity orgIdentity = orgIdentityDao.getOrgIdentityByOrganizationSid(organization.getSid());
+                return orgIdentity;
+            }
+        }
+        return null;
     }
 
     protected OrgIdentity getOrgIdentity() {
         return this.orgIdentity;
     }
 
-    protected void setOrgIdentity(OrgIdentity instance) {
-        this.orgIdentity = instance;
+    private Organization findCurrentOrganization(HttpServletRequest request, OrganizationDao organizationDao) {
+        String domainPrefix; // for telestax.restcomm.com it would be 'telestax'
+        try {
+            String domain = new URL(request.getRequestURL().toString()).getHost();
+            domainPrefix = domain.split(".")[0];
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Cannot get domain name while trying to determine current organization");
+        }
+        return organizationDao.getOrganizationByDomain(domainPrefix);
     }
 
-    protected Sid getCurrentOrganizationSid() {
-        // TODO
-        return new Sid("OR00000000000000000000000000000000");
+    protected Organization getOrganization() {
+        return this.organization;
     }
-
-    protected String getCurrentOrganizationName() {
-        // TODO replace this hardcoded value with a proper one
-        return "telestax";
-    }
-
 }
