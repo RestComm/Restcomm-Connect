@@ -178,9 +178,9 @@ public class CallLifecycleTest {
         if (georgeSipStack != null) {
             georgeSipStack.dispose();
         }
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         wireMockRule.resetRequests();
-        Thread.sleep(2000);
+        Thread.sleep(4000);
     }
 
     @Test

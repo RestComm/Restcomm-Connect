@@ -813,8 +813,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            final StartInterpreter request = (StartInterpreter) message;
-            call = request.resource();
             getAsrService().tell(new GetAsrInfo(), source);
         }
     }
