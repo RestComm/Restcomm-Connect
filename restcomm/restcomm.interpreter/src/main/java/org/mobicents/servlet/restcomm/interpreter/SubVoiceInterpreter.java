@@ -269,6 +269,8 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
         }
 
         if (StartInterpreter.class.equals(klass)) {
+            final StartInterpreter request = (StartInterpreter) message;
+            call = request.resource();
             originalInterpreter = sender;
             fsm.transition(message, acquiringAsrInfo);
         } else if (AsrResponse.class.equals(klass)) {

@@ -163,9 +163,9 @@ public class DialForkTest {
         if (fotiniSipStack != null) {
             fotiniSipStack.dispose();
         }
-        Thread.sleep(3000);
+        Thread.sleep(1000);
         wireMockRule.resetRequests();
-        Thread.sleep(2000);
+        Thread.sleep(4000);
     }
 
     private String dialFork = "<Response><Dial><Client>alice</Client><Sip>sip:henrique@127.0.0.1:5092</Sip><Number>+131313</Number></Dial></Response>";
@@ -262,7 +262,7 @@ public class DialForkTest {
 
         assertTrue(henriqueCall.waitForDisconnect(30 * 1000));
 
-        alicePhone.unregister(aliceContact, 3600);
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
 
         Thread.sleep(10 * 1000);
 
@@ -378,10 +378,11 @@ public class DialForkTest {
         // hangup.
 
         bobCall.disconnect();
+        assertTrue(bobCall.waitForAnswer(5000));
 
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
 
-        alicePhone.unregister(aliceContact, 3600);
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
 
         Thread.sleep(10 * 1000);
 
@@ -474,9 +475,13 @@ public class DialForkTest {
                 null, null));
         assertTrue(henriqueCall.waitForAck(50 * 1000));
 
+        Thread.sleep(2000);
+
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertTrue(liveCalls == 2);
         assertTrue(liveCallsArraySize == 2);
 
@@ -490,7 +495,7 @@ public class DialForkTest {
 
         assertTrue(henriqueCall.waitForDisconnect(30 * 1000));
 
-        alicePhone.unregister(aliceContact, 3600);
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
 
         Thread.sleep(10 * 1000);
 
@@ -601,7 +606,7 @@ public class DialForkTest {
 
         assertTrue(henriqueCall.waitForDisconnect(30 * 1000));
 
-        alicePhone.unregister(aliceContact, 3600);
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
 
         Thread.sleep(10 * 1000);
 
@@ -704,13 +709,15 @@ public class DialForkTest {
         aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK-2-Cancel-Alice", 3600);
         henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK-2-Cancel-Henrique", 3600);
 
-        alicePhone.unregister(aliceContact, 3600);
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
 
         Thread.sleep(10000);
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertTrue(liveCalls == 0);
         assertTrue(liveCallsArraySize == 0);
 
@@ -805,15 +812,18 @@ public class DialForkTest {
 
         assertTrue(bobCall.listenForDisconnect());
 
-        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
         SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(50 * 1000);
-        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
-        assertNotNull(georgeCancelTransaction);
-        assertNotNull(aliceCancelTransaction);
         assertNotNull(henriqueCancelTransaction);
-        georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
-        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
         henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
+
+        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
+        assertNotNull(aliceCancelTransaction);
+        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
+
+        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
+        assertNotNull(georgeCancelTransaction);
+        georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
+
 
         assertTrue(alicePhone.unregister(aliceContact, 3600));
 
@@ -823,6 +833,8 @@ public class DialForkTest {
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertTrue(liveCalls == 0);
         assertTrue(liveCallsArraySize == 0);
 
@@ -932,6 +944,8 @@ public class DialForkTest {
 
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertTrue(liveCalls == 0);
         assertTrue(liveCallsArraySize == 0);
 
@@ -1047,16 +1061,13 @@ public class DialForkTest {
         aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
         henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
 
-        Thread.sleep(500);
-
-        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        //Even though no call answered the dial forking the originated call from Bob should be still live
-        if (liveCalls != 1) {
-            logger.info("&&&&& LiveCalls :"+liveCalls);
-        }
-        assertTrue(liveCalls == 1);
-        assertTrue(liveCallsArraySize == 1);
+//        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+//        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+//        //There will be the initial call from Bob and the new call to Fotini
+//        logger.info("&&&& LiveCalls: "+liveCalls);
+//        logger.info("&&&& LiveCallsArraySize: "+liveCallsArraySize);
+//        assertTrue(liveCalls == 2);
+//        assertTrue(liveCallsArraySize == 2);
 
         assertTrue(alicePhone.unregister(aliceContact, 3600));
 
@@ -1069,8 +1080,8 @@ public class DialForkTest {
         assertTrue(fotiniCall.waitForAck(5000));
         fotiniCall.listenForDisconnect();
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 2);
 
         Thread.sleep(2000);
 
@@ -1194,11 +1205,11 @@ public class DialForkTest {
 
         assertTrue(alicePhone.unregister(aliceContact, 3600));
 
-        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        //Even though no call answered the dial forking the originated call from Bob should be still live
-        assertTrue(liveCalls == 1);
-        assertTrue(liveCallsArraySize == 1);
+//        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+//        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+//        //Even though no call answered the dial forking the originated call from Bob should be still live
+//        assertTrue(liveCalls == 1);
+//        assertTrue(liveCallsArraySize == 1);
 
         //Now Fotini should receive a call
         assertTrue(fotiniCall.waitForIncomingCall(30 * 1000));
@@ -1209,8 +1220,18 @@ public class DialForkTest {
         assertTrue(fotiniCall.waitForAck(5000));
         fotiniCall.listenForDisconnect();
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
+        Thread.sleep(1000);
+
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        //Even though no call answered the dial forking the originated call from Bob should be still live
+        logger.info("&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&& LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls == 2);
+        assertTrue(liveCallsArraySize == 2);
+
+//        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 2);
+//        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 2);
 
         Thread.sleep(2000);
 
@@ -1282,8 +1303,8 @@ public class DialForkTest {
                 null, null));
         assertTrue(aliceCall.waitForAck(5000));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 2);
 
         Thread.sleep(3000);
         bobCall.listenForDisconnect();
@@ -1293,7 +1314,7 @@ public class DialForkTest {
         assertTrue(bobCall.waitForDisconnect(5000));
         assertTrue(bobCall.respondToDisconnect());
 
-        alicePhone.unregister(aliceContact, 3600);
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
 
         Thread.sleep(10000);
 
@@ -1358,8 +1379,8 @@ public class DialForkTest {
                 null, null));
         assertTrue(aliceCall.waitForAck(5000));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 2);
 
         Thread.sleep(3000);
         bobCall.listenForDisconnect();
@@ -1369,7 +1390,7 @@ public class DialForkTest {
         assertTrue(bobCall.waitForDisconnect(5000));
         assertTrue(bobCall.respondToDisconnect());
 
-        alicePhone.unregister(aliceContact, 3600);
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
 
         Thread.sleep(10000);
 
@@ -1434,7 +1455,7 @@ public class DialForkTest {
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
 
-        alicePhone.unregister(aliceContact, 3600);
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
 
         Thread.sleep(10000);
 
@@ -1509,8 +1530,8 @@ public class DialForkTest {
 
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        assertTrue(liveCalls == 1);
-        assertTrue(liveCallsArraySize == 1);
+        assertTrue(liveCalls == 2);
+        assertTrue(liveCallsArraySize == 2);
 
         henriqueCall.listenForDisconnect();
 
@@ -1522,7 +1543,7 @@ public class DialForkTest {
 
         assertTrue(henriqueCall.waitForDisconnect(30 * 1000));
 
-        alicePhone.unregister(aliceContact, 3600);
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
 
         Thread.sleep(10 * 1000);
 
@@ -1603,8 +1624,10 @@ public class DialForkTest {
 
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        assertTrue(liveCalls == 1);
-        assertTrue(liveCallsArraySize == 1);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls == 2);
+        assertTrue(liveCallsArraySize == 2);
 
         henriqueCall.listenForDisconnect();
 
