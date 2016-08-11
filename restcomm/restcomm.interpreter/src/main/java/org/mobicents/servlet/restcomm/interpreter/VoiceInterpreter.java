@@ -990,8 +990,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                         if (dialBranches != null && dialBranches.contains(sender)) {
                             removeDialBranch(message, sender);
+                            checkDialBranch(message, sender, attribute);
                         }
-
+                    }
+                }
+                break;
 //                        if (dialBranches != null && dialBranches.contains(sender)) {
 //                            dialBranches.remove(sender);
 //                        }
@@ -1043,9 +1046,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //                            }
 //                        }
 //                        return;
-                    }
-                }
-                break;
             case BUSY:
                 if (is(forking)) {
                     if (sender == call) {
@@ -1053,9 +1053,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         fsm.transition(message, finishDialing);
                     } else {
                         if (dialBranches != null && dialBranches.contains(sender)) {
-//                            dialBranches.remove(sender);
                             removeDialBranch(message, sender);
                         }
+                        checkDialBranch(message, sender, attribute);
                         return;
                     }
                 } else {
@@ -1067,18 +1067,31 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 //Do nothing
                 break;
             case NO_ANSWER:
-                //NOANSWER calls should be canceled. At CANCELED event will be removed from dialBranches and will be destroyed.
+                //NOANSWER calls should be canceled. At CANCELED event will be removed from
+                //dialBranches and will be destroyed.
                 if (is(bridging) || (is(bridged) && !sender.equals(call))) {
                     fsm.transition(message, finishDialing);
                 } else if (is(forking)){
                     if (!sender.equals(call)) {
                         //One of the dial branches sent NO-ANSWER and we should ask to CANCEL
                         sender.tell(new Cancel(), self());
-                        return;
+                    }
+                } else if (is(finishDialing)) {
+                    if (dialBranches == null || dialBranches.size()==0) {
+                        //TODO HERE
+                        logger.info("No-Answer event received, and dialBrances is either null or 0 size, sender: "+sender.path()+", vi state: "+fsm.state());
+                        checkDialBranch(message, sender, attribute);
                     }
                 }
                 break;
             case FAILED:
+                if (!sender.equals(call)) {
+                if (dialBranches != null && dialBranches.contains(sender)) {
+                    dialBranches.remove(sender);
+                }
+                    checkDialBranch(message,sender,attribute);
+                }
+                break;
             case COMPLETED:
                 //NO_ANSWER, COMPLETED and FAILED events are handled the same
                 if (is(bridging)) {
@@ -1092,6 +1105,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             removeDialBranch(message, sender);
                             //Properly clean up FAILED or BUSY outgoing calls
                             //callManager.tell(new DestroyCall(sender), self());
+                            checkDialBranch(message,sender,attribute);
                             return;
                         } else {
                             fsm.transition(message, finishDialing);
@@ -1173,42 +1187,88 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
     }
 
+    private void checkDialBranch(Object message, ActorRef sender, Attribute attribute) {
+        CallStateChanged.State state = null;
+        if (message instanceof CallStateChanged) {
+            state = ((CallStateChanged)message).state();
+        } else if (message instanceof  ReceiveTimeout) {
+            state = CallStateChanged.State.NO_ANSWER;
+        }
+        CallStateChanged stateChanged = (CallStateChanged) message;
+        if (dialBranches == null || dialBranches.size() == 0) {
+            dialBranches = null;
+
+            if (attribute == null) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Attribute is null, will destroy call and ask for the next verb from parser");
+                }
+                callManager.tell(new DestroyCall(sender), self());
+                final GetNextVerb next = GetNextVerb.instance();
+                parser.tell(next, self());
+            } else {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Executing Dial Action and will destroy call");
+                }
+                executeDialAction(message, sender);
+                callManager.tell(new DestroyCall(sender), self());
+            }
+        } else if (state != null && (state.equals(CallStateChanged.State.BUSY) ||
+                state.equals(CallStateChanged.State.CANCELED) ||
+                state.equals(CallStateChanged.State.FAILED))) {
+            callManager.tell(new DestroyCall(sender), self());
+        }
+    }
+
     private void removeDialBranch(Object message, ActorRef sender) {
+        //Just remove the branch from dialBranches and send the CANCEL
+        //Later at onCallStateChanged.CANCEL we should ask call manager to destroy call and
+        //either execute dial action or ask parser for next verb
+        CallStateChanged.State state = null;
+        if (message instanceof CallStateChanged) {
+            state = ((CallStateChanged)message).state();
+        } else if (message instanceof  ReceiveTimeout) {
+            state = CallStateChanged.State.NO_ANSWER;
+        }
+        if(logger.isInfoEnabled()) {
+            logger.info("Dial branch new call state: " + state + " call path: " + sender().path() + " VI state: " + fsm.state());
+        }
+        sender.tell(new Cancel(), self());
+        dialBranches.remove(sender);
 //        Attribute attribute = null;
 //        if (verb != null) {
 //            attribute = verb.attribute("action");
 //        }
-        if (dialBranches != null && dialBranches.contains(sender)) {
-            if(logger.isInfoEnabled()) {
-                logger.info("Dial branch new call state: " + ((CallStateChanged) message).state().toString() + " call path: " + sender().path() + " VI state: " + fsm.state());
-            }
-            dialBranches.remove(sender);
-            sender.tell(new Cancel(), self());
-            callManager.tell(new DestroyCall(sender), self());
-            if (dialBranches.size() > 0) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("At VI removeDialBranch, will destroy call "+call.path()+" isTerminated: "+ call.isTerminated());
-                }
-                //Wait to check the response from the other branches
-                return;
-            } else {
-                dialChildren = null;
-                callback();
-                //Since there are no more branches, ask for the next RCML
-                if (attribute == null) {
-                    final GetNextVerb next = GetNextVerb.instance();
-                    parser.tell(next, self());
-                } else {
-                    executeDialAction(message,sender);
-                }
-            }
-        } else if (attribute != null) {
-            executeDialAction(message, sender);
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("At VI removeDialBranch, will destroy call "+call.path()+" isTerminated: "+ call.isTerminated());
-        }
-        callManager.tell(new DestroyCall(sender), self());
+//        if (dialBranches != null && dialBranches.contains(sender)) {
+//            if(logger.isInfoEnabled()) {
+//                logger.info("Dial branch new call state: " + ((CallStateChanged) message).state().toString() + " call path: " + sender().path() + " VI state: " + fsm.state());
+//            }
+//            dialBranches.remove(sender);
+//            sender.tell(new Cancel(), self());
+//            callManager.tell(new DestroyCall(sender), self());
+//            if (dialBranches.size() > 0) {
+//                if (logger.isDebugEnabled()) {
+//                    logger.debug("At VI removeDialBranch, will destroy call "+call.path()+" isTerminated: "+ call.isTerminated());
+//                }
+//                //Wait to check the response from the other branches
+//                return;
+//            } else {
+//                dialChildren = null;
+//                callback();
+//                //Since there are no more branches, ask for the next RCML
+//                if (attribute == null) {
+//                    final GetNextVerb next = GetNextVerb.instance();
+//                    parser.tell(next, self());
+//                } else {
+//                    executeDialAction(message,sender);
+//                }
+//            }
+//        } else if (attribute != null) {
+//            executeDialAction(message, sender);
+//        }
+//        if (logger.isDebugEnabled()) {
+//            logger.debug("At VI removeDialBranch, will destroy call "+call.path()+" isTerminated: "+ call.isTerminated());
+//        }
+//        callManager.tell(new DestroyCall(sender), self());
     }
 
 
@@ -2253,14 +2313,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     Iterator<ActorRef> dialBranchesIterator = dialBranches.iterator();
                     while (dialBranchesIterator.hasNext()) {
                         ActorRef branch = dialBranchesIterator.next();
-    //                    if (attribute != null) {
-    //                        executeDialAction(message, branch);
-    //                    }
+                        //Timeout received and Call.External is NO-ANSWER
+                        //Before asking Call to Cancel, execute Dial Action so the DialCallStatus is no-answer
+//                        if (attribute != null) {
+//                            executeDialAction(message, branch);
+//                        }
                         branch.tell(new Cancel(), source);
                         if(logger.isInfoEnabled()) {
                             logger.info("Canceled branch: " + branch.path()+", isTerminated: "+branch.isTerminated());
                         }
                     }
+                    dialBranches.clear();
                 }
                 dialChildren = null;
                 callback();
@@ -2335,50 +2398,53 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
 
-            if (sender == call) {
-                if (outboundCall != null) {
-                    outboundCall.tell(new Hangup(), self());
-                }
-            } else {
-                call.tell(new Hangup(), self());
-            }
+            //START - August 11
+//            if (sender == call) {
+//                if (outboundCall != null) {
+//                    outboundCall.tell(new Hangup(), self());
+//                }
+//            } else {
+//                call.tell(new Hangup(), self());
+//            }
+//
+//            if (recordingCall && sender == call) {
+//                recordingCall = false;
+//            }
+//
+//            // Stop the bridge. Cleanup will be handled by BridgeManager.
+//            if (bridge != null) {
+//                final StopBridge stopBridge = new StopBridge();
+//                bridge.tell(stopBridge, super.source);
+//                bridge = null;
+//            }
+//
+//            if (attribute != null) {
+//                if(logger.isInfoEnabled()) {
+//                    logger.info("Executing Dial Action url");
+//                }
+//                if (outboundCall != null) {
+//                    executeDialAction(message, outboundCall);
+//                } else {
+//                    if(logger.isInfoEnabled()) {
+//                        logger.info("Executing Dial Action url");
+//                    }
+//                    executeDialAction(message, null);
+//                }
+//                callback();
+//                return;
+//            } else if(logger.isInfoEnabled()) {
+//                logger.info("Action attribute is null.");
+//            }
+//
+//            // Ask the parser for the next action to take.
+//            final GetNextVerb next = GetNextVerb.instance();
+//            if (parser != null) {
+//                parser.tell(next, source);
+//            }
+//
+//            dialChildren = null;
+            //END - August 11
 
-            if (recordingCall && sender == call) {
-                recordingCall = false;
-            }
-
-            // Stop the bridge. Cleanup will be handled by BridgeManager.
-            if (bridge != null) {
-                final StopBridge stopBridge = new StopBridge();
-                bridge.tell(stopBridge, super.source);
-                bridge = null;
-            }
-
-            if (attribute != null) {
-                if(logger.isInfoEnabled()) {
-                    logger.info("Executing Dial Action url");
-                }
-                if (outboundCall != null) {
-                    executeDialAction(message, outboundCall);
-                } else {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("Executing Dial Action url");
-                    }
-                    executeDialAction(message, null);
-                }
-                callback();
-                return;
-            } else if(logger.isInfoEnabled()) {
-                logger.info("Action attribute is null.");
-            }
-
-            // Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
-            if (parser != null) {
-                parser.tell(next, source);
-            }
-
-            dialChildren = null;
 //            fsm.transition(message, finished);
 //            callManager.tell(new DestroyCall(outboundCall));
 //            outboundCall = null;

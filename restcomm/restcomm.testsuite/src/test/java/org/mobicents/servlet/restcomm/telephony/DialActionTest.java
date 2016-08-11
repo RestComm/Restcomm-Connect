@@ -20,30 +20,9 @@
 
 package org.mobicents.servlet.restcomm.telephony;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.sip.address.SipURI;
-import javax.sip.header.Header;
-import javax.sip.message.Response;
-
-import com.google.gson.JsonArray;
-import org.apache.commons.lang.ArrayUtils;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -65,10 +44,26 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-import com.google.gson.JsonObject;
+import javax.sip.address.SipURI;
+import javax.sip.header.Header;
+import javax.sip.message.Response;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for Dial Action attribute. Reference: https://www.twilio.com/docs/api/twiml/dial#attributes-action The 'action'
@@ -182,8 +177,9 @@ public class DialActionTest {
         if (georgeSipStack != null) {
             georgeSipStack.dispose();
         }
+        Thread.sleep(1000);
         wireMockRule.resetRequests();
-        Thread.sleep(3000);
+        Thread.sleep(4000);
     }
 
     @Test
@@ -593,7 +589,8 @@ public class DialActionTest {
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
         if (!requestBody.contains("DialCallStatus=no-answer")) {
-            logger.info("requestBody: \n"+requestBody );
+            String msgToPrint = requestBody.replaceAll("&", "\n");
+            logger.info("requestBody: \n"+"\n ---------------------- \n"+msgToPrint+"\n---------------------- ");
         }
         assertTrue(requestBody.contains("DialCallStatus=no-answer"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
@@ -748,7 +745,7 @@ public class DialActionTest {
         assertTrue(requests.size() == 1);
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=null"));
+        assertTrue(requestBody.contains("DialCallStatus=completed"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
