@@ -961,6 +961,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             logger.info("VoiceInterpreter received CallStateChanged event: "+event.state()+ " from "+(sender == call? "call" : "outboundCall")+ ", sender path: " + sender.path() +", current VI state: "+fsm.state());
         }
 
+        Attribute attribute = null;
+        if (verb != null) {
+            attribute = verb.attribute("action");
+        }
+
         switch (event.state()) {
             case QUEUED:
                 //Do nothing
@@ -1169,10 +1174,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     private void removeDialBranch(Object message, ActorRef sender) {
-        Attribute attribute = null;
-        if (verb != null) {
-            attribute = verb.attribute("action");
-        }
+//        Attribute attribute = null;
+//        if (verb != null) {
+//            attribute = verb.attribute("action");
+//        }
         if (dialBranches != null && dialBranches.contains(sender)) {
             if(logger.isInfoEnabled()) {
                 logger.info("Dial branch new call state: " + ((CallStateChanged) message).state().toString() + " call path: " + sender().path() + " VI state: " + fsm.state());
@@ -1188,7 +1193,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 return;
             } else {
                 dialChildren = null;
-//                outboundCall = null;
                 callback();
                 //Since there are no more branches, ask for the next RCML
                 if (attribute == null) {
@@ -1206,6 +1210,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
         callManager.tell(new DestroyCall(sender), self());
     }
+
+
 
     private void onBridgeManagerResponse(BridgeManagerResponse message, ActorRef self, ActorRef sender) throws Exception {
         if (is(creatingBridge)) {
