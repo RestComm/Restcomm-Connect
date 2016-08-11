@@ -96,7 +96,7 @@ public final class MybatisMediaResourceBrokerDao implements MediaResourceBrokerD
 
         try {
             final List<Map<String, Object>> results = session.selectList(namespace + "getUnConnectedSlaveEntitiesByConfSid",
-                    conferenceSid);
+                    conferenceSid.toString());
             final List<MediaResourceBrokerEntity> entities = new ArrayList<MediaResourceBrokerEntity>();
 
             if (results != null && !results.isEmpty()) {

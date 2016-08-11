@@ -51,7 +51,6 @@ import org.mobicents.servlet.restcomm.mgcp.OpenLink;
 import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
 import org.mobicents.servlet.restcomm.mgcp.UpdateLink;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartBridgeConnector;
-import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartSlaveBridgeConnector;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
@@ -499,8 +498,9 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 //TODO: yahan pay koi job laga do jo db me dekhti rahay slave bridges ki appearance
                 //TODO: as soon as they come modify connection with their sdp and change isbridge to true;
                 while(keepLookingForSlaves){
+                    logger.info("keep Looking For Slaves");
                     List<MediaResourceBrokerEntity> slaveEntities = searchForUnConnectedSlaves();
-                    if(slaveEntities != null && slaveEntities.size()>0){
+                    if(slaveEntities != null && slaveEntities.size() > 0){
                         for(MediaResourceBrokerEntity e : slaveEntities){
                             final ConnectionDescriptor descriptor = new ConnectionDescriptor(e.getSlaveMsSDP());
                             final UpdateConnection update = new UpdateConnection(descriptor);
@@ -509,9 +509,16 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     }
                 }
             }else{
-                ActorRef slaveBridgeConnector = getSlaveBridgeConnector();
+                ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
+                cdr = dao.getConferenceDetailRecord(cdr.getSid());
+                logger.info("cdr.getSid(): "+cdr.getSid()+"cdr.status: "+cdr.getStatus());
+                
+                final ConnectionDescriptor descriptor = new ConnectionDescriptor(cdr.getMasterMsSDP());
+                final UpdateConnection update = new UpdateConnection(descriptor);
+                connectionWithLocalBridgeEndpoint.tell(update, source);
+                /*ActorRef slaveBridgeConnector = getSlaveBridgeConnector();
                 slaveBridgeConnector.tell(new Observe(self), self);
-                slaveBridgeConnector.tell(new StartSlaveBridgeConnector(), self);
+                slaveBridgeConnector.tell(new StartSlaveBridgeConnector(), self);*/
             }
         }
     }
