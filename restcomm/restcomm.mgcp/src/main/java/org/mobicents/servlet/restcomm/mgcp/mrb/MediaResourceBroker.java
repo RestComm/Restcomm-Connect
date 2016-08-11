@@ -66,6 +66,8 @@ public class MediaResourceBroker extends UntypedActor{
     private final ClassLoader loader;
     private final ActorRef mediaGateway;
     private String msId;
+    private String localIpAdressForMediaGateway;
+    private int localPortAdressForMediaGateway;
 
     private final Map<String, ActorRef> mediaGatewayMap;
     //private final MediaServerRouter msRouter;
@@ -85,7 +87,7 @@ public class MediaResourceBroker extends UntypedActor{
         // Observers
         this.observers = new ArrayList<ActorRef>(1);
 
-        uoloadLocalMediaServersInDataBase();
+        uploadLocalMediaServersInDataBase();
 
         this.mediaGatewayMap = turnOnMediaGateways();
         this.mediaGateway = mediaGatewayMap.get(this.msId);
@@ -114,9 +116,12 @@ public class MediaResourceBroker extends UntypedActor{
             final PowerOnMediaGateway.Builder builder = PowerOnMediaGateway.builder();
             builder.setName(configuration.getString("mgcp-servers[@name]"));
 
-            builder.setLocalIP(InetAddress.getByName(mse.getLocalIpAddress()));
+            if(logger.isInfoEnabled())
+            	logger.info("localIpAdressForMediaGateway: "+localIpAdressForMediaGateway+" localPortAdressForMediaGateway: "+localPortAdressForMediaGateway);
 
-            builder.setLocalPort(mse.getLocalPort());
+            builder.setLocalIP(InetAddress.getByName(localIpAdressForMediaGateway));
+
+            builder.setLocalPort(localPortAdressForMediaGateway++); //incremented port so that next mgcp stack binding is with new port.
 
             builder.setRemoteIP(InetAddress.getByName(mse.getRemoteIpAddress()));
 
@@ -259,13 +264,13 @@ public class MediaResourceBroker extends UntypedActor{
         return sid;
     }
 
-    private void uoloadLocalMediaServersInDataBase() {
+    private void uploadLocalMediaServersInDataBase() {
 
         List<Object> mgcpMediaServers = configuration.getList("mgcp-servers.mgcp-server.local-address");
         int mgcpMediaServerListSize = mgcpMediaServers.size();
 
         //TODO remove this log line after completion
-        logger.info("Available Media gateways are: "+mgcpMediaServerListSize);
+        logger.info("Available Media Servers are: "+mgcpMediaServerListSize);
 
         for (int count = 0; count < mgcpMediaServerListSize; count++) {
 
@@ -274,16 +279,16 @@ public class MediaResourceBroker extends UntypedActor{
 
             if(relativeMS != null && Boolean.parseBoolean(relativeMS)){
 
-                String localIpAddress = configuration.getString("mgcp-servers.mgcp-server(" + count + ").local-address");
-                int localPort = Integer.parseInt(configuration.getString("mgcp-servers.mgcp-server(" + count + ").local-port"));
+            	localIpAdressForMediaGateway = configuration.getString("mgcp-servers.mgcp-server(" + count + ").local-address");
+            	localPortAdressForMediaGateway = Integer.parseInt(configuration.getString("mgcp-servers.mgcp-server(" + count + ").local-port"));
                 String remoteIpAddress = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-address");
                 int remotePort = Integer.parseInt(configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-port"));
                 String responseTimeout = configuration.getString("mgcp-servers.mgcp-server(" + count + ").response-timeout");
                 String externalAddress = configuration.getString("mgcp-servers.mgcp-server(" + count + ").external-address");
 
                 final MediaServerEntity.Builder builder = MediaServerEntity.builder();
-                builder.setLocalIpAddress(localIpAddress);
-                builder.setLocalPort(localPort);
+                builder.setLocalIpAddress(localIpAdressForMediaGateway);
+                builder.setLocalPort(localPortAdressForMediaGateway);
                 builder.setRemoteIpAddress(remoteIpAddress);
                 builder.setRemotePort(remotePort);
                 builder.setResponseTimeout(responseTimeout);
@@ -301,7 +306,7 @@ public class MediaResourceBroker extends UntypedActor{
                     this.msId = existingMediaServersForSameIP.get(0).getMsId()+"";
                     dao.updateMediaServer(freshMediaServerEntity);
                     if(existingMediaServersForSameIP.size()>1)
-                        logger.error("in DB: there are multiple media servers registered for same IP addres");
+                        logger.error("in DB: there are multiple media servers registered for same IP address");
                 }
             }
         }
