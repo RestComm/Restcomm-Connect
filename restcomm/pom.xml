@@ -149,6 +149,7 @@
 		<module>restcomm.testsuite</module>
 		<module>restcomm.ui</module>
 		<module>restcomm.rvd</module>
+		<module>restcomm.rvd.testsuite</module>
 		<module>restcomm.tts.att</module>
 		<module>restcomm.ussd</module>
 		<module>restcomm.routing</module>
@@ -554,12 +555,14 @@
 			<version>${hsqldb.version}</version>
 		</dependency>
 
+		<!--
 		<dependency>
 			<groupId>org.mobicents.arquillian.container</groupId>
 			<artifactId>mss-tomcat-embedded-7</artifactId>
 			<version>${mss.arquillian.version}</version>
 			<scope>test</scope>
 		</dependency>
+		-->
 
 		<dependency>
 			<groupId>org.jboss.arquillian.junit</groupId>

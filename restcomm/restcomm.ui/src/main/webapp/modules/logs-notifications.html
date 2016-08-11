@@ -70,7 +70,11 @@
                 </form>
             </td>
             <td colspan="99">
-                <pagination class="pagination pagination-sm pull-right" total-items="notificationsLogsList.length" items-per-page="entryLimit" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>
+            <pagination total-items="notificationsLogsList.length"
+						ng-model="currentPage" max-size="maxSize" boundary-links="true"
+						items-per-page="entryLimit"
+						class="pagination pagination-sm pull-right"></pagination>
+               <!--<pagination class="pagination pagination-sm pull-right" total-items="notificationsLogsList.length" items-per-page="entryLimit" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>  --> 
             </td>
             </tfoot>
         </table>
