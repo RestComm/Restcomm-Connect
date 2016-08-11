@@ -238,5 +238,11 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>2.0.99-beta</version>
+		</dependency>
+
 	</dependencies>
 </project>
