@@ -592,6 +592,9 @@ public class DialActionTest {
         assertTrue(requests.size() == 1);
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
+        if (!requestBody.contains("DialCallStatus=no-answer")) {
+            logger.info("requestBody: \n"+requestBody );
+        }
         assertTrue(requestBody.contains("DialCallStatus=no-answer"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
@@ -665,6 +668,9 @@ public class DialActionTest {
         assertTrue(requests.size() == 1);
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
+        if (!requestBody.contains("DialCallStatus=busy")) {
+            logger.info("requestBody: \n"+requestBody);
+        }
         assertTrue(requestBody.contains("DialCallStatus=busy"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
