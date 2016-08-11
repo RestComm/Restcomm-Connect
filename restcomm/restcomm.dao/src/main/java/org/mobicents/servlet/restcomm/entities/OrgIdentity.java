@@ -46,7 +46,7 @@ public class OrgIdentity {
     }
 
     public OrgIdentity() {
-        sid = Sid.generate(Sid.Type.IDENTITY_INSTANCE);
+        sid = Sid.generate(Sid.Type.ORG_IDENTITY);
     }
 
     public OrgIdentity(Sid sid) {

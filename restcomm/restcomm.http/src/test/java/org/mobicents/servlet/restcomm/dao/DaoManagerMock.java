@@ -31,6 +31,7 @@ public class DaoManagerMock implements DaoManager {
 
     private AccountsDao accountsDao;
     private OrganizationsDao organizationsDao;
+    private OrgIdentityDao orgIdentityDao;
 
     public DaoManagerMock(AccountsDao accountsDao, OrganizationsDao organizationsDao) {
         this.accountsDao = accountsDao;
@@ -134,9 +135,10 @@ public class DaoManagerMock implements DaoManager {
 
     @Override
     public OrgIdentityDao getOrgIdentityDao() {
-        return null;
+        return orgIdentityDao;
     }
 
+    @Override
     public OrganizationsDao getOrganizationsDao() {
         return organizationsDao;
     }
@@ -144,6 +146,18 @@ public class DaoManagerMock implements DaoManager {
     @Override
     public void configure(Configuration configuration) {
 
+    }
+
+    public void setAccountsDao(AccountsDao accountsDao) {
+        this.accountsDao = accountsDao;
+    }
+
+    public void setOrganizationsDao(OrganizationsDao organizationsDao) {
+        this.organizationsDao = organizationsDao;
+    }
+
+    public void setOrgIdentityDao(OrgIdentityDao orgIdentityDao) {
+        this.orgIdentityDao = orgIdentityDao;
     }
 
     @Override

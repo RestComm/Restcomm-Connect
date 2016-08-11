@@ -34,7 +34,7 @@ public final class Sid {
     private final String id;
 
     public enum Type {
-        ACCOUNT, APPLICATION, ANNOUNCEMENT, CALL, CLIENT, CONFERENCE, GATEWAY, INVALID, NOTIFICATION, PHONE_NUMBER, RECORDING, REGISTRATION, SHORT_CODE, SMS_MESSAGE, TRANSCRIPTION, INSTANCE, IDENTITY_INSTANCE, ORGANIZATION
+        ACCOUNT, APPLICATION, ANNOUNCEMENT, CALL, CLIENT, CONFERENCE, GATEWAY, INVALID, NOTIFICATION, PHONE_NUMBER, RECORDING, REGISTRATION, SHORT_CODE, SMS_MESSAGE, TRANSCRIPTION, INSTANCE, ORG_IDENTITY, ORGANIZATION
     };
 
     private static final Sid INVALID_SID = new Sid("IN00000000000000000000000000000000");
@@ -130,8 +130,8 @@ public final class Sid {
             case INSTANCE: {
                 return new Sid("ID" + uuid);
             }
-            case IDENTITY_INSTANCE: {
-                return new Sid("II" + uuid);
+            case ORG_IDENTITY: {
+                return new Sid("OI" + uuid);
             }
             case ORGANIZATION: {
                 return new Sid("OR" + uuid);

@@ -38,7 +38,11 @@ public class OrgIdentityDaoMock implements OrgIdentityDao {
 
     @Override
     public void addOrgIdentity(OrgIdentity orgIdentity) {
-        throw new NotImplementedException();
+        for (OrgIdentity oi: orgIdentities) {
+            if (oi.getSid().toString().equals(orgIdentity.getSid().toString()) || oi.getName().equals(orgIdentity.getName()))
+                throw new RuntimeException("OrgIdentity already exists wuth such name or sid");
+        }
+        orgIdentities.add(orgIdentity);
     }
 
     @Override
@@ -52,8 +56,11 @@ public class OrgIdentityDaoMock implements OrgIdentityDao {
 
     @Override
     public OrgIdentity getOrgIdentityByName(String name) {
-        throw new NotImplementedException();
-    }
+        for (OrgIdentity oi: orgIdentities) {
+            if (oi.getName().equals(name))
+                return oi;
+        }
+        return null;    }
 
     @Override
     public OrgIdentity getOrgIdentityByOrganizationSid(Sid organizationSid) {
@@ -71,11 +78,22 @@ public class OrgIdentityDaoMock implements OrgIdentityDao {
 
     @Override
     public void removeOrgIdentity(Sid sid) {
-        throw new NotImplementedException();
+        for (OrgIdentity oi: orgIdentities) {
+            if (oi.getSid().toString().equals(sid.toString())) {
+                orgIdentities.remove(oi);
+                return;
+            }
+        }
     }
 
     @Override
     public void updateOrgIdentity(OrgIdentity orgIdentity) {
-        throw new NotImplementedException();
+        for (OrgIdentity oi: orgIdentities) {
+            if (oi.getSid().toString().equals(orgIdentity.getSid().toString())) {
+                orgIdentities.remove(oi);
+                orgIdentities.add(orgIdentity);
+                return;
+            }
+        }
     }
 }

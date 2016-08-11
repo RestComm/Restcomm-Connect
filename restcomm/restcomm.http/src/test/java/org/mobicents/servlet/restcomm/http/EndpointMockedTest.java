@@ -23,6 +23,7 @@ package org.mobicents.servlet.restcomm.http;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.AccountsDaoMock;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -53,30 +54,35 @@ import static org.mockito.Mockito.when;
  */
 public class EndpointMockedTest {
 
+    String restcommXmlResourcePath;
     Configuration conf;
     ServletContext servletContext;
     List<Account> accounts;
     AccountsDao accountsDao;
-    DaoManager daoManager;
+    DaoManagerMock daoManager;
     HttpServletRequest request;
+    RestcommConfiguration restcommConfiguration;
 
 
     void init() {
-        String restcommXmlPath = AccountsEndpointMockedTest.class.getResource("/restcomm.xml").getFile();
+        if (restcommXmlResourcePath == null)
+            restcommXmlResourcePath = "/restcomm.xml";
+        String restcommXmlPath = AccountsEndpointMockedTest.class.getResource(restcommXmlResourcePath).getFile();
         try {
             conf = getConfiguration(restcommXmlPath, "/restcomm", "http://localhost:8080");
         } catch (ConfigurationException e) {
             throw new RuntimeException();
         }
+        restcommConfiguration = new RestcommConfiguration(conf);
         // create ServletContext mock
         servletContext = Mockito.mock(ServletContext.class);
         when(servletContext.getAttribute(Configuration.class.getName())).thenReturn(conf);
         // mock accountsDao
         accounts = new ArrayList<Account>();
-        accounts.add(new Account(new Sid("AC00000000000000000000000000000000"),null,null,"administrator@company.com","Administrator",null,null,null,"77f8c12cc7b8f8423e5c38b035249166",null,null, true));
+        accounts.add(new Account(new Sid("AC00000000000000000000000000000000"),null,null,"administrator@company.com","Administrator",null,null,null,"77f8c12cc7b8f8423e5c38b035249166","Administrator",null, true));
         accountsDao = new AccountsDaoMock(accounts);
         // mock DaoManager
-        daoManager = new DaoManagerMock(accountsDao);
+        daoManager = new DaoManagerMock(accountsDao,null);
         when(servletContext.getAttribute(DaoManager.class.getName())).thenReturn(daoManager);
         // createt request mock
         request = Mockito.mock(HttpServletRequest.class);
@@ -96,4 +102,7 @@ public class EndpointMockedTest {
         return xml;
     }
 
+    public void setRestcommXmlResourcePath(String restcommXmlResourcePath) {
+        this.restcommXmlResourcePath = restcommXmlResourcePath;
+    }
 }

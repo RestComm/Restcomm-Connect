@@ -27,11 +27,32 @@ import java.util.Properties;
 import org.apache.commons.configuration.Configuration;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-import org.mobicents.servlet.restcomm.dao.*;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
+import org.mobicents.servlet.restcomm.dao.AnnouncementsDao;
+import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
+import org.mobicents.servlet.restcomm.dao.AvailablePhoneNumbersDao;
+import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.restcomm.dao.ClientsDao;
+import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.GatewaysDao;
+import org.mobicents.servlet.restcomm.dao.HttpCookiesDao;
+import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
+import org.mobicents.servlet.restcomm.dao.InstanceIdDao;
+import org.mobicents.servlet.restcomm.dao.NotificationsDao;
+import org.mobicents.servlet.restcomm.dao.OrgIdentityDao;
+import org.mobicents.servlet.restcomm.dao.OrganizationsDao;
+import org.mobicents.servlet.restcomm.dao.OutgoingCallerIdsDao;
+import org.mobicents.servlet.restcomm.dao.RecordingsDao;
+import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
+import org.mobicents.servlet.restcomm.dao.ShortCodesDao;
+import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
+import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
+import org.mobicents.servlet.restcomm.dao.UsageDao;
 import org.mobicents.servlet.restcomm.amazonS3.S3AccessTool;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.mocks.OrganizationsDaoMock;
-import org.mobicents.servlet.restcomm.entities.Organization;
+
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -175,7 +196,8 @@ public final class MybatisDaoManager implements DaoManager {
         return orgIdentityDao;
     }
 
-    public OrganizationsDao getOrganization() { return organizationsDao; }
+    @Override
+    public OrganizationsDao getOrganizationsDao() { return organizationsDao; }
 
     @Override
     public void shutdown() {

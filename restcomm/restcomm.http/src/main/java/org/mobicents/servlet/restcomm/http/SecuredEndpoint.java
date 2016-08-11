@@ -34,8 +34,10 @@ import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.OrgIdentityDao;
+import org.mobicents.servlet.restcomm.dao.OrganizationsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.OrgIdentity;
+import org.mobicents.servlet.restcomm.entities.Organization;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
 import org.mobicents.servlet.restcomm.http.exceptions.InsufficientPermission;
@@ -43,9 +45,10 @@ import org.mobicents.servlet.restcomm.http.exceptions.NotAuthenticated;
 import org.mobicents.servlet.restcomm.http.exceptions.OrganizationAccessForbidden;
 import org.mobicents.servlet.restcomm.http.exceptions.AccountNotLinked;
 import org.mobicents.servlet.restcomm.http.exceptions.NoMappedAccount;
-import org.mobicents.servlet.restcomm.identity.*;
-import org.mobicents.servlet.restcomm.identity.mocks.Organization;
-import org.mobicents.servlet.restcomm.dao.mocks.OrganizationsDaoMock;
+import org.mobicents.servlet.restcomm.identity.AuthOutcome;
+import org.mobicents.servlet.restcomm.identity.IdentityContext;
+import org.mobicents.servlet.restcomm.identity.IdentityUtils;
+import org.mobicents.servlet.restcomm.identity.UserIdentityContext;
 import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
 import org.mobicents.servlet.restcomm.identity.UserIdentityContext.AuthKind;
 
@@ -66,7 +69,7 @@ import javax.ws.rs.core.Context;
  *
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  */
-public abstract class SecuredEndpoint extends AbstractEndpoint {
+public class SecuredEndpoint extends AbstractEndpoint {
 
     // types of secured resources used to apply different policies to applications, numbers etc.
     public enum SecuredType {
@@ -78,7 +81,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     protected UserIdentityContext userIdentityContext;
     protected AccountsDao accountsDao;
-    protected OrganizationsDaoMock organizationDao;
+    protected OrganizationsDao organizationDao;
     protected IdentityContext identityContext;
     private OrgIdentity orgIdentity;
     private Organization organization;
@@ -101,6 +104,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         super.init(configuration);
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.accountsDao = storage.getAccountsDao();
+        this.organizationDao = storage.getOrganizationsDao();
         this.identityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
         this.organization = findCurrentOrganization(request, organizationDao);
         this.orgIdentity = findCurrentOrgIdentity(request, storage.getOrgIdentityDao());
@@ -408,7 +412,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @param orgIdentityDao
      * @return the OrgIdentity object mapped or null
      */
-    private OrgIdentity findCurrentOrgIdentity(HttpServletRequest request, OrgIdentityDao orgIdentityDao) {
+    protected OrgIdentity findCurrentOrgIdentity(HttpServletRequest request, OrgIdentityDao orgIdentityDao) {
         if ( getOrganization() != null ) {
             if (identityContext.getAuthServerUrl() != null) {
                 OrgIdentity orgIdentity = orgIdentityDao.getOrgIdentityByOrganizationSid(organization.getSid());
@@ -422,15 +426,27 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         return this.orgIdentity;
     }
 
-    private Organization findCurrentOrganization(HttpServletRequest request, OrganizationsDaoMock organizationDao) {
+    /**
+     * Resolves request domain name to an organization entity and returns it. It takes into account hardcoded
+     * values for the 'default' organization. If the organization is not resolved it returns null
+     *
+     * @param request
+     * @param organizationDao
+     * @return a valid organization entity or null
+     */
+    static Organization findCurrentOrganization(HttpServletRequest request, OrganizationsDao organizationDao) {
         String domainPrefix; // for telestax.restcomm.com it would be 'telestax'
         try {
             String domain = new URL(request.getRequestURL().toString()).getHost();
-            domainPrefix = domain.split(".")[0];
+            // is this the default organization ?
+            if (domain.startsWith("192.") || domain.equals("localhost") || domain.startsWith("127.0")) {
+                domainPrefix = "default";
+            } else
+                domainPrefix = domain.split("\\.")[0];
         } catch (MalformedURLException e) {
             throw new RuntimeException("Cannot get domain name while trying to determine current organization");
         }
-        return organizationDao.getOrganizationByNamespace(domainPrefix);
+        return organizationDao.getOrganization(domainPrefix);
     }
 
     protected Organization getOrganization() {

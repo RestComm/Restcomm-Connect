@@ -25,18 +25,16 @@ import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
-import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
-import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.OrgIdentityDao;
+import org.mobicents.servlet.restcomm.dao.OrganizationsDao;
 import org.mobicents.servlet.restcomm.entities.OrgIdentity;
+import org.mobicents.servlet.restcomm.entities.Organization;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.OrgIdentityConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
-import org.mobicents.servlet.restcomm.identity.mocks.Organization;
-import org.mobicents.servlet.restcomm.dao.mocks.OrganizationsDaoMock;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -52,27 +50,35 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
  * @author Orestis Tsakiridis
  */
 public class OrgIdentityEndpoint extends SecuredEndpoint {
-
-    MainConfigurationSet mainConfig;
+    //MainConfigurationSet mainConfig;
     OrgIdentityDao orgIdentityDao;
-    OrganizationsDaoMock organizationDao;
+    OrganizationsDao organizationDao;
     protected Gson gson;
     protected XStream xstream;
 
-    public OrgIdentityEndpoint(ServletContext context, HttpServletRequest request) {
-        super(context, request);
+    // retrieve deps from context, singletons etc.
+    public OrgIdentityEndpoint() {
+        this.configuration = ((Configuration) context.getAttribute(Configuration.class.getName())).subset("runtime-settings");
+        final DaoManager daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        //mainConfig = RestcommConfiguration.getInstance().getMain();
+
+        this.orgIdentityDao = daos.getOrgIdentityDao();
+        this.organizationDao = daos.getOrganizationsDao();
+    }
+
+    // used for manually bootstrapping the endpoint when tested
+    public OrgIdentityEndpoint(ServletContext context, HttpServletRequest request, Configuration rootConfiguration, DaoManager daoManager) {
+        super(context,request);
+        this.configuration = rootConfiguration.subset("runtime-settings");
+        //mainConfig = restcommConfiguration.getMain();
+
+        this.orgIdentityDao = daoManager.getOrgIdentityDao();
+        this.organizationDao = daoManager.getOrganizationsDao();
     }
 
     @PostConstruct
     void init() {
-        // this is needed by AbstractEndpoint
-        configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-        configuration = configuration.subset("runtime-settings");
-        super.init(configuration);
-        final DaoManager daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
-        this.orgIdentityDao = daos.getOrgIdentityDao();
-        this.organizationDao = OrganizationsDaoMock.getInstance(); // use mocks for now
-        mainConfig = RestcommConfiguration.getInstance().getMain();
+        super.init(configuration); // this is needed by AbstractEndpoint
         // converters
         final OrgIdentityConverter converter = new OrgIdentityConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
@@ -83,7 +89,6 @@ public class OrgIdentityEndpoint extends SecuredEndpoint {
         xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(converter);
         xstream.registerConverter(new RestCommResponseConverter(configuration));
-
     }
 
     /**
@@ -112,11 +117,15 @@ public class OrgIdentityEndpoint extends SecuredEndpoint {
             // No organization info provided. Use the one from the url.
             securedOrganization = getOrganization();
         } else {
-            securedOrganization = organizationDao.getOrganizationByNamespace(organizationDomain);
+            securedOrganization = organizationDao.getOrganization(organizationDomain);
         }
         if (securedOrganization == null)
             return Response.status(Response.Status.BAD_REQUEST).type(APPLICATION_JSON_TYPE).build();
         oi.setOrganizationSid(securedOrganization.getSid());
+
+        // check if it's already there
+        if ( orgIdentityDao.getOrgIdentityByName(name) != null)
+            return Response.status(Response.Status.CONFLICT).build();
 
         // store it
         orgIdentityDao.addOrgIdentity(oi);
@@ -138,6 +147,7 @@ public class OrgIdentityEndpoint extends SecuredEndpoint {
         } else
             return Response.status(Response.Status.NOT_FOUND).build();
     }
+
 
     /**
      * Returns the OrgIdentity for 'current' organization if any.
