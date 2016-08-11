@@ -1,6 +1,8 @@
 package org.mobicents.servlet.restcomm.telephony;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -18,6 +20,8 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mobicents.servlet.restcomm.http.RestcommConferenceParticipantsTool;
+import org.mobicents.servlet.restcomm.http.RestcommConferenceTool;
 
 import javax.sip.message.Response;
 import java.net.URL;
@@ -139,6 +143,22 @@ public class DialConferenceTest {
         Thread.sleep(2000);
     }
 
+    private int getConferencesSize() {
+        JsonObject conferences = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        JsonArray conferenceArray = conferences.getAsJsonArray("conferences");
+        return conferenceArray.size();
+    }
+
+    private int getParticipantsSize() {
+        JsonObject conferences = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        JsonArray conferenceArray = conferences.getAsJsonArray("conferences");
+        String confSid = conferenceArray.get(0).getAsJsonObject().get("sid").getAsString();
+        JsonObject participants = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid, adminAuthToken, confSid);
+        JsonArray participantsArray = participants.getAsJsonArray("calls");
+        return participantsArray.size();
+    }
+
+
     private String dialConfernceRcmlWithTimeLimit = "<Response><Dial timeLimit=\"50\"><Conference>test</Conference></Dial></Response>";
     @Test //This is expected to fail because of https://github.com/RestComm/Restcomm-Connect/issues/1081
     public synchronized void testDialConferenceClientsWaitForDisconnect() throws InterruptedException {
@@ -182,12 +202,19 @@ public class DialConferenceTest {
         georgeCall.sendInviteOkAck();
         assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
 
+        assertTrue(getConferencesSize()==1);
+        assertTrue(getParticipantsSize()==2);
+
         // Wait for the media to play and the call to hangup.
         bobCall.listenForDisconnect();
         georgeCall.listenForDisconnect();
 
-        assertTrue(georgeCall.waitForDisconnect(30 * 1000));
-        assertTrue(bobCall.waitForDisconnect(30 * 1000));
+        assertTrue(bobCall.waitForDisconnect(50 * 1000));
+        assertTrue(georgeCall.waitForDisconnect(50 * 1000));
+
+        Thread.sleep(1000);
+        assertTrue(getConferencesSize()==1);
+        assertTrue(getParticipantsSize()==0);
     }
 
     private String dialConfernceRcml = "<Response><Dial><Conference>test</Conference></Dial></Response>";
@@ -233,11 +260,19 @@ public class DialConferenceTest {
         georgeCall.sendInviteOkAck();
         assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
 
+        Thread.sleep(1000);
+
+        assertTrue(getConferencesSize()>=1);
+        assertTrue(getParticipantsSize()==2);
 
         Thread.sleep(3000);
 
         georgeCall.disconnect();
         bobCall.disconnect();
+
+        Thread.sleep(1000);
+        assertTrue(getConferencesSize()>=1);
+        assertTrue(getParticipantsSize()==0);
     }
 
     private String dialConfernceRcmlWithWaitUrl = "<Response><Dial><Conference startConferenceOnEnter=\"false\" waitUrl=\"http://127.0.0.1:8090/waitUrl\" waitMethod=\"GET\">testConfRoom</Conference></Dial></Response>";
@@ -273,6 +308,12 @@ public class DialConferenceTest {
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
+        Thread.sleep(1000);
+        assertTrue(getConferencesSize()>=1);
+        int numOfParticipants = getParticipantsSize();
+        logger.info("Number of participants: "+numOfParticipants);
+        assertTrue(numOfParticipants==1);
+
 //        final SipCall georgeCall = georgePhone.createSipCall();
 //        georgeCall.initiateOutgoingCall(georgeContact, dialRestcomm, null, body, "application", "sdp", null, null);
 //        assertLastOperationSuccess(georgeCall);
@@ -295,6 +336,66 @@ public class DialConferenceTest {
 
 //        georgeCall.disconnect();
         bobCall.disconnect();
+
+        Thread.sleep(1000);
+        assertTrue(getConferencesSize()>=1);
+        assertTrue(getParticipantsSize()==0);
+    }
+
+    @Test
+    public synchronized void testDialConferenceClientsDestroy() throws InterruptedException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialConfernceRcml)));
+
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.initiateOutgoingCall(georgeContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(georgeCall);
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        int responseGeorge = georgeCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseGeorge == Response.TRYING || responseGeorge == Response.RINGING);
+
+        if (responseGeorge == Response.TRYING) {
+            assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, georgeCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, georgeCall.getLastReceivedResponse().getStatusCode());
+        georgeCall.sendInviteOkAck();
+        assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        Thread.sleep(1000);
+        assertTrue(getConferencesSize()>=1);
+        assertTrue(getParticipantsSize()==2);
+
+        Thread.sleep(3000);
+
+        georgeCall.disposeNoBye();
+        bobCall.disposeNoBye();
+
+        Thread.sleep(1000);
+        assertTrue(getConferencesSize()>=1);
+        assertTrue(getParticipantsSize()==0);
     }
 
     @Deployment(name = "DialConferenceTest", managed = true, testable = false)
