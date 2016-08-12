@@ -11,8 +11,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.FileUtils;
-import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
-import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
@@ -30,11 +28,10 @@ import org.mobicents.servlet.restcomm.rvd.model.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
-import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
-import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.upgrade.UpgradeService;
+import org.mobicents.servlet.restcomm.rvd.upgrade.UpgradeService.UpgradabilityStatus;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.utils.Unzipper;
 
@@ -55,6 +52,10 @@ public class ProjectService {
 
     static final Logger logger = Logger.getLogger(ProjectService.class.getName());
 
+    public enum Status {
+        OK, UNKNOWN_VERSION, BAD, TOO_OLD, SHOULD_UPGRADE
+    }
+
     private ServletContext servletContext; // TODO we have to find way other that directly through constructor parameter.
 
     RvdConfiguration settings;
@@ -69,6 +70,9 @@ public class ProjectService {
         this.workspaceStorage = workspaceStorage;
     }
 
+    // Used for testing. TODO create a ProjectService interface, ProjectServiceBuilder and separate implementation
+    public ProjectService() {
+    }
 
     /**
      * Builds the startUrl for an application based on the application name and the incoming httpRequest. It is depending on the
@@ -129,40 +133,6 @@ public class ProjectService {
     }
 
     /**
-     * Populates a list of ProjectItems each representing a project. The project kind property defaults to
-     * 'voice' if it does not exist.
-     * @throws StorageException
-     */
-    public static List<ProjectItem> getAvailableProjects(WorkspaceStorage workspaceStorage) throws StorageException {
-
-        List<ProjectItem> items = new ArrayList<ProjectItem>();
-        for (String entry : FsProjectStorage.listProjectNames(workspaceStorage) ) {
-
-            String kind = "voice";
-            try {
-                //StateHeader header = projectStorage.loadStateHeader(entry);
-                StateHeader header = FsProjectStorage.loadStateHeader(entry, workspaceStorage);
-                kind = header.getProjectKind();
-            } catch ( BadProjectHeader e ) {
-                // for old projects
-                JsonParser parser = new JsonParser();
-                //JsonObject root_element = parser.parse(projectStorage.loadProjectState(entry)).getAsJsonObject();
-                JsonObject root_element = parser.parse(FsProjectStorage.loadProjectString(entry,  workspaceStorage)).getAsJsonObject();
-                JsonElement projectKind_element = root_element.get("projectKind");
-                if ( projectKind_element != null ) {
-                    kind = projectKind_element.getAsString();
-                }
-            }
-
-            ProjectItem item = new ProjectItem();
-            item.setName(entry);
-            item.setKind(kind);
-            items.add(item);
-        }
-        return items;
-    }
-
-    /**
      * Returns the projects owned by ownerFilter (in addition to those that belong to none and are freely accessible). If ownerFilter is null only
      * freely accessible projectds are returned.
      * @param ownerFilter
@@ -175,9 +145,11 @@ public class ProjectService {
 
             String kind = "voice";
             String owner = null;
+            ProjectItem item = new ProjectItem();
+            item.setName(entry);
             try {
-                //StateHeader header = projectStorage.loadStateHeader(entry);
                 StateHeader header = FsProjectStorage.loadStateHeader(entry, workspaceStorage);
+                item.setStatus(ProjectService.projectStatus(header));
                 kind = header.getProjectKind();
                 owner = header.getOwner();
             } catch ( BadProjectHeader e ) {
@@ -189,18 +161,15 @@ public class ProjectService {
                 if ( projectKind_element != null ) {
                     kind = projectKind_element.getAsString();
                 }
+                item.setStatus(Status.BAD);
             }
 
             if ( ownerFilter != null ) {
                 if ( owner == null || owner.equals(ownerFilter) ) {
-                    ProjectItem item = new ProjectItem();
-                    item.setName(entry);
                     item.setKind(kind);
                     items.add(item);
                 }
             } else {
-                ProjectItem item = new ProjectItem();
-                item.setName(entry);
                 item.setKind(kind);
                 items.add(item);
             }
@@ -208,27 +177,25 @@ public class ProjectService {
         return items;
     }
 
-    public String openProject(String projectName) throws ProjectDoesNotExist, StorageException, IncompatibleProjectVersion, InvalidProjectVersion {
-        if ( !projectExists(projectName) )
-            throw new ProjectDoesNotExist();
-
+    static Status projectStatus(StateHeader header) {
+        if (header == null || header.getVersion() == null)
+            return Status.BAD;
         try {
-            //StateHeader header = projectStorage.loadStateHeader(projectName);
-            StateHeader header = FsProjectStorage.loadStateHeader(projectName, workspaceStorage);
-            //if ( ! header.getVersion().equals(RvdConfiguration.getRvdProjectVersion()) )
-            if ( ! UpgradeService.checkBackwardCompatible(header.getVersion(), RvdConfiguration.getRvdProjectVersion() )  )
-                throw new IncompatibleProjectVersion("Error loading project '" + projectName + "'. Project version: " + header.getVersion() + " - RVD project version: " + RvdConfiguration.getRvdProjectVersion() );
-        } catch ( BadProjectHeader e ) {
-            throw new IncompatibleProjectVersion("Bad or missing project header for project '" + projectName + "'");
+            UpgradabilityStatus upgradable = UpgradeService.checkUpgradability(header.getVersion(), RvdConfiguration.getRvdProjectVersion());
+            if (upgradable == UpgradabilityStatus.NOT_NEEDED)
+                return Status.OK;
+            else
+            if (upgradable == UpgradabilityStatus.UPGRADABLE)
+                return Status.SHOULD_UPGRADE;
+            else
+            if (upgradable == UpgradabilityStatus.NOT_SUPPORTED)
+                return Status.UNKNOWN_VERSION;
+            else
+                return Status.BAD; // this should not happen
+
+        } catch (Exception e) {
+            return Status.UNKNOWN_VERSION;
         }
-
-        //return projectStorage.loadProjectState(projectName);
-        return FsProjectStorage.loadProjectString(projectName, workspaceStorage);
-    }
-
-    public boolean projectExists(String projectName) throws BadWorkspaceDirectoryStructure {
-        //return projectStorage.projectExists(projectName);
-        return FsProjectStorage.projectExists(projectName, workspaceStorage);
     }
 
     public ProjectState createProject(String projectName, String kind, String owner) throws StorageException, InvalidServiceParameters {
@@ -251,29 +218,6 @@ public class ProjectService {
         FsProjectStorage.storeProject(true, state, projectName, workspaceStorage);
         return state;
     }
-
-    /**
-     * Runs project validation on the request body. Throws ValidationException for normal validation errors. Returns the state loaded from the request in case it is needed or further processing
-     * @return
-     * @throws RvdException
-     */
-    /*
-    public String validateProject(HttpServletRequest request) throws RvdException {
-        String stateData;
-        try {
-            stateData = IOUtils.toString(request.getInputStream());
-            ProjectValidator validator = new ProjectValidator();
-            ValidationResult result = validator.validate(stateData);
-            if (!result.isSuccess())
-                throw new ValidationException(result,stateData);
-            return stateData;
-        } catch (IOException e) {
-            throw new RvdException("Internal error while validating raw project",e);
-        } catch (ProcessingException e) {
-            throw new ValidationFrameworkException("Error while validating raw project",e);
-        }
-    }
-    */
 
     public ValidationResult validateProject(String stateData) throws RvdException {
         try {
@@ -308,16 +252,6 @@ public class ProjectService {
         if ( !validationResult.isSuccess() ) {
             throw new ValidationException(validationResult);
         }
-    }
-
-    public void renameProject(String projectName, String newProjectName) throws ProjectDoesNotExist, StorageException {
-        if (  ! FsProjectStorage.projectExists(projectName, workspaceStorage) ) {
-            throw new ProjectDoesNotExist();
-        } else if ( FsProjectStorage.projectExists(newProjectName,workspaceStorage) ) {
-            throw new ProjectDirectoryAlreadyExists();
-        }
-        //projectStorage.renameProject(projectName, newProjectName);
-        FsProjectStorage.renameProject(projectName, newProjectName, workspaceStorage);
     }
 
     public void deleteProject(String projectName) throws ProjectDoesNotExist, StorageException {
