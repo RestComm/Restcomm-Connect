@@ -25,7 +25,7 @@ package org.mobicents.servlet.restcomm.telephony;
  */
 public final class ConferenceStateChanged {
     public static enum State {
-        INITIALIZING, RUNNING_MODERATOR_ABSENT, RUNNING_MODERATOR_PRESENT, COMPLETED, FAILED
+        RUNNING_INITIALIZING, RUNNING_MODERATOR_ABSENT, RUNNING_MODERATOR_PRESENT, COMPLETED, FAILED
     };
 
     private final String name;

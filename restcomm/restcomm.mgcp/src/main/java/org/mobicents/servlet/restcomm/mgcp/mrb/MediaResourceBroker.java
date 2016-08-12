@@ -117,7 +117,7 @@ public class MediaResourceBroker extends UntypedActor{
             builder.setName(configuration.getString("mgcp-servers[@name]"));
 
             if(logger.isInfoEnabled())
-            	logger.info("localIpAdressForMediaGateway: "+localIpAdressForMediaGateway+" localPortAdressForMediaGateway: "+localPortAdressForMediaGateway);
+                logger.info("localIpAdressForMediaGateway: "+localIpAdressForMediaGateway+" localPortAdressForMediaGateway: "+localPortAdressForMediaGateway);
 
             builder.setLocalIP(InetAddress.getByName(localIpAdressForMediaGateway));
 
@@ -219,26 +219,23 @@ public class MediaResourceBroker extends UntypedActor{
                     final String accountSid = cnfNameAndAccount[0];
                     final String friendlyName = cnfNameAndAccount[1];
 
-                    ConferenceDetailRecordFilter filter = new ConferenceDetailRecordFilter(accountSid, null, null, null, friendlyName, 1, 0);
+                    ConferenceDetailRecordFilter filter = new ConferenceDetailRecordFilter(accountSid, "RUNNING%", null, null, friendlyName, 1, 0);
+                    logger.info("ConferenceDetailRecordFilter: "+filter.toString());
                     List<ConferenceDetailRecord> records = dao.getConferenceDetailRecords(filter);
-                    boolean isConferenceRunningOnAnotherInstance = false;
 
-                    for (ConferenceDetailRecord cdr : records){
-                        if( !(cdr.getStatus().equalsIgnoreCase("COMPLETED") || cdr.getStatus().equalsIgnoreCase("FAILED")) ){
-                            isConferenceRunningOnAnotherInstance = true;
-                            break;
-                        }
-                    }
-
-                    // this is first record of this conference on all instances of
-                    if(!isConferenceRunningOnAnotherInstance){
+                    if(records != null && records.size()>0){
+                        final ConferenceDetailRecord cdr = records.get(0);
+                        sid = cdr.getSid();
+                        logger.info("A conference with same name is running. According to database record. given SID is: "+sid);
+                    }else{
+                        // this is first record of this conference on all instances of
                         final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
                         sid = Sid.generate(Sid.Type.CONFERENCE);
                         conferenceBuilder.setSid(sid);
                         conferenceBuilder.setDateCreated(DateTime.now());
 
                         conferenceBuilder.setAccountSid(new Sid(accountSid));
-                        conferenceBuilder.setStatus(ConferenceStateChanged.State.INITIALIZING.toString());
+                        conferenceBuilder.setStatus(ConferenceStateChanged.State.RUNNING_INITIALIZING.toString());
                         conferenceBuilder.setApiVersion(callRecord.getApiVersion());
                         final StringBuilder UriBuffer = new StringBuilder();
                         UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountSid).append("/Conferences/");
@@ -251,8 +248,6 @@ public class MediaResourceBroker extends UntypedActor{
                         ConferenceDetailRecord cdr = conferenceBuilder.build();
                         dao.addConferenceDetailRecord(cdr);
                         logger.info("addConferenceDetailRecord: SID: "+sid+" NAME: "+conferenceInfo.name()+" STATE: "+conferenceInfo.state());
-                    }else{
-                        logger.info("A conference with same name is running. According to database record.");
                     }
                 }else{
                     logger.info("call record is null");
@@ -279,8 +274,8 @@ public class MediaResourceBroker extends UntypedActor{
 
             if(relativeMS != null && Boolean.parseBoolean(relativeMS)){
 
-            	localIpAdressForMediaGateway = configuration.getString("mgcp-servers.mgcp-server(" + count + ").local-address");
-            	localPortAdressForMediaGateway = Integer.parseInt(configuration.getString("mgcp-servers.mgcp-server(" + count + ").local-port"));
+                localIpAdressForMediaGateway = configuration.getString("mgcp-servers.mgcp-server(" + count + ").local-address");
+                localPortAdressForMediaGateway = Integer.parseInt(configuration.getString("mgcp-servers.mgcp-server(" + count + ").local-port"));
                 String remoteIpAddress = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-address");
                 int remotePort = Integer.parseInt(configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-port"));
                 String responseTimeout = configuration.getString("mgcp-servers.mgcp-server(" + count + ").response-timeout");

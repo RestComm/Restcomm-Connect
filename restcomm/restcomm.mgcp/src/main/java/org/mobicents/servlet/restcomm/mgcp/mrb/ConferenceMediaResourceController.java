@@ -512,7 +512,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
                 cdr = dao.getConferenceDetailRecord(cdr.getSid());
                 logger.info("cdr.getSid(): "+cdr.getSid()+"cdr.status: "+cdr.getStatus());
-                
+
                 final ConnectionDescriptor descriptor = new ConnectionDescriptor(cdr.getMasterMsSDP());
                 final UpdateConnection update = new UpdateConnection(descriptor);
                 connectionWithLocalBridgeEndpoint.tell(update, source);
