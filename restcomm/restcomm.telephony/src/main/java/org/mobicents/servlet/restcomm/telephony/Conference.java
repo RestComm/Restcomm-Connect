@@ -477,7 +477,7 @@ public final class Conference extends UntypedActor {
         ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
         ConferenceDetailRecordFilter filter;
         try {
-            filter = new ConferenceDetailRecordFilter(accountSid, ConferenceStateChanged.State.RUNNING_INITIALIZING.toString(), null, null, friendlyName, 100, 0);
+            filter = new ConferenceDetailRecordFilter(accountSid, "RUNNING%", null, null, friendlyName, 1, 0);
             List<ConferenceDetailRecord> records = dao.getConferenceDetailRecords(filter);
             if(records == null || records.size() == 0){
                 logger.warning("this conference is in trouble bcz we did not get its record..");
