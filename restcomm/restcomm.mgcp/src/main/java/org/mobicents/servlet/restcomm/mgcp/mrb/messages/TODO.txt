@@ -1,3 +1,5 @@
+- add start, stop capability in MRB.
+- schedule MRB to see newly added/removed/updated media gateways.
 - we dont need local ip and port in media server its personal to every RC instance.
 - change msid to auto-increament
 - remove callsid from mrb table

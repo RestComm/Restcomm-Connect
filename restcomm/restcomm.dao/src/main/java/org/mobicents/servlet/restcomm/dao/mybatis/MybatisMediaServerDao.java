@@ -72,7 +72,7 @@ public final class MybatisMediaServerDao implements MediaServersDao {
     public List<MediaServerEntity> getMediaServerEntityByIP(final String msIPAddress) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getMediaServers", msIPAddress);
+            final List<Map<String, Object>> results = session.selectList(namespace + "getMediaServerEntityByIP", msIPAddress);
             final List<MediaServerEntity> msList = new ArrayList<MediaServerEntity>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
