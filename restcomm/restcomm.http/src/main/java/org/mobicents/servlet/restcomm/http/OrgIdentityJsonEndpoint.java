@@ -83,31 +83,29 @@ public class OrgIdentityJsonEndpoint extends OrgIdentityEndpoint {
     @POST
     public Response createIdentityInstance(
             @FormParam("Name") String name,
-            @FormParam("Organization") String organizationDomain,
-            //@FormParam("InitialAccessToken") String initialAccessToken, // disabled as of #1313
-            @FormParam("RedirectUrl") String redirectUrl)
+            @FormParam("Organization") String organizationDomain)
             throws AuthServerAuthorizationError {
-        return createOrgIdentity(name, organizationDomain, redirectUrl);
+        return createOrgIdentity(name, organizationDomain);
     }
 
-    @Path("/{identityInstanceSid}")
+    @Path("/{OrgIdentitySid}")
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
-    public Response updateOrgIdentityBySid(@PathParam("identityInstanceSid") String identityInstanceId, @FormParam("Name") String name) {
-        return updateOrgIdentity(identityInstanceId,name);
+    public Response updateOrgIdentityBySid(@PathParam("OrgIdentitySid") String orgIdentitySid, @FormParam("Name") String name) {
+        return updateOrgIdentity(orgIdentitySid,name);
     }
 
     /**
      * Unregisters an instance. Only (super) administrators can access this.
-     * @param ordIdentitySid
+     * @param orgIdentitySid
      *
      * @return nothing
      */
     @DELETE
-    @Path("/{ordIdentitySid}")
-    public Response removeOrgIdentity(@PathParam("ordIdentitySid") String ordIdentitySid) {
+    @Path("/{OrgIdentitySid}")
+    public Response removeOrgIdentity(@PathParam("OrgIdentitySid") String orgIdentitySid) {
         //if (mainConfig.getIdentityAuthServerUrl() != null)
-            return super.removeOrgIdentity(ordIdentitySid);
+            return super.removeOrgIdentity(orgIdentitySid);
         //else
         //    return Response.status(Response.Status.NOT_FOUND).build();
     }

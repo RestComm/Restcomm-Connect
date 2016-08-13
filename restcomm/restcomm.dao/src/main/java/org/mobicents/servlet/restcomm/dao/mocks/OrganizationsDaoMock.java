@@ -42,6 +42,13 @@ public class OrganizationsDaoMock implements OrganizationsDao {
 
     public OrganizationsDaoMock() {}
 
+    // use this creation method until a proper DB backend is in place
+    public static OrganizationsDao createWithDefaultOrg() {
+        List<Organization> organizations = new ArrayList<Organization>();
+        organizations.add(new Organization(new Sid("OR00000000000000000000000000000000"),null,null,"Default organization","default",null,null));
+        return new OrganizationsDaoMock(organizations);
+    }
+
     public Organization getOrganization(Sid organizationSid) {
         for (Organization org: organizations) {
             if (org.getSid().toString().equals(organizationSid.toString()))
@@ -86,14 +93,5 @@ public class OrganizationsDaoMock implements OrganizationsDao {
                 throw new RuntimeException("Organization domain already exists: " + added.getNamespace());
         }
         organizations.add(added);
-    }
-
-    // singleton stuff
-    private static OrganizationsDaoMock instance;
-    public static OrganizationsDaoMock getInstance() {
-        if (instance == null) {
-            instance = new OrganizationsDaoMock();
-        }
-        return instance;
     }
 }

@@ -21,9 +21,7 @@
 package org.mobicents.servlet.restcomm.http;
 
 import junit.framework.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.mobicents.servlet.restcomm.dao.OrgIdentityDao;
 import org.mobicents.servlet.restcomm.dao.OrgIdentityDaoMock;
 import org.mobicents.servlet.restcomm.dao.mocks.OrganizationsDaoMock;
 import org.mobicents.servlet.restcomm.entities.OrgIdentity;
@@ -72,11 +70,11 @@ public class OrgIdentityEndpointMockedTest extends EndpointMockedTest {
         OrgIdentityEndpoint endpoint = new OrgIdentityEndpoint(servletContext,request);
         endpoint.init();
         // if the organization does not exist should get a 400 back and not store any orgIdentity
-        Response response = endpoint.createOrgIdentity("newOrgIdentity", "non-existent-org","http://127.0.0.1:8080/");
+        Response response = endpoint.createOrgIdentity("newOrgIdentity", "non-existent-org");
         Assert.assertEquals(400, response.getStatus());
         Assert.assertNull(orgIdentitiesDao.getOrgIdentityByName("newOrgIdentity"));
         // test OrgIdentity creation with explicit organization namespace use
-        response = endpoint.createOrgIdentity("random123", "orestis","http://127.0.0.1:8080/");
+        response = endpoint.createOrgIdentity("random123", "orestis");
         Assert.assertEquals(200, response.getStatus());
         OrgIdentity created = orgIdentitiesDao.getOrgIdentityByName("random123");
         Assert.assertNotNull(created);
@@ -85,12 +83,28 @@ public class OrgIdentityEndpointMockedTest extends EndpointMockedTest {
         endpoint.updateOrgIdentity(created.getSid().toString(),"random321");
         Assert.assertEquals("random321",orgIdentitiesDao.getOrgIdentity(created.getSid()).getName());
         // if no organization defined as query param, use domain name to determine it
-        response = endpoint.createOrgIdentity("newOrgIdentity", null,"http://127.0.0.1:8080/");
+        response = endpoint.createOrgIdentity("newOrgIdentity", null);
         Assert.assertEquals(200, response.getStatus());
         Assert.assertNotNull(orgIdentitiesDao.getOrgIdentityByName("newOrgIdentity"));
         // Try to create again. should get a conflict.
-        response = endpoint.createOrgIdentity("newOrgIdentity", null,"http://127.0.0.1:8080/");
+        response = endpoint.createOrgIdentity("newOrgIdentity", null);
         Assert.assertEquals(409, response.getStatus());
+    }
+
+    @Test
+    public void updateOrgIdentity() {
+        setRestcommXmlResourcePath("/restcomm_keycloak.xml");
+        before();
+        orgs.add(new Organization(new Sid("OR00000000000000000000000000000000"),null,null,"Foo organization","fooorg",null,null));
+        orgIdentities.add(new OrgIdentity(new Sid("OI00000000000000000000000000000000"),new Sid("OR00000000000000000000000000000000"),"random123",null,null));
+
+        when(request.getRequestURL()).thenReturn(new StringBuffer("http://127.0.0.1:8080/"));
+        OrgIdentityEndpoint endpoint = new OrgIdentityEndpoint(servletContext,request);
+        endpoint.init();
+
+        endpoint.updateOrgIdentity("OI00000000000000000000000000000000","updated");
+        Assert.assertEquals("updated", orgIdentitiesDao.getOrgIdentity(new Sid("OI00000000000000000000000000000000")).getName());
+
     }
 
     @Test

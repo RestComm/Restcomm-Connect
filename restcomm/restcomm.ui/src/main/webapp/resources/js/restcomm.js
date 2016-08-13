@@ -121,7 +121,7 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
         authorize: function (AuthService) {
             return AuthService.evaluateAccess().then(function (accessStatus) {
                 if (accessStatus != 'LOGGED_ACCOUNT')
-                    throw accessStatus;
+                    return accessStatus;
             });
         },
         identity: function (IdentityConfig) {

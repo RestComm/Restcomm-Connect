@@ -267,6 +267,6 @@ public final class MybatisDaoManager implements DaoManager {
         gatewaysDao = new MybatisGatewaysDao(sessions);
         instanceIdDao = new MybatisInstanceIdDao(sessions);
         orgIdentityDao = new MybatisOrgIdentityDao(sessions);
-        organizationsDao = OrganizationsDaoMock.getInstance(); // TODO replace that with MybatisOrganizationDao when ready
+        organizationsDao = OrganizationsDaoMock.createWithDefaultOrg(); // TODO replace that with MybatisOrganizationDao when ready
     }
 }

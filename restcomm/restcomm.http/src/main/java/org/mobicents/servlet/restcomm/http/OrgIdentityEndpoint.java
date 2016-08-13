@@ -90,10 +90,9 @@ public class OrgIdentityEndpoint extends SecuredEndpoint {
      *
      *
      * @param name
-     * @param redirectUrl
      * @return
      */
-    protected Response createOrgIdentity(String name, String organizationDomain, String redirectUrl) {
+    protected Response createOrgIdentity(String name, String organizationDomain) {
         // TODO apply access control rules
         OrgIdentity oi = new OrgIdentity();
 

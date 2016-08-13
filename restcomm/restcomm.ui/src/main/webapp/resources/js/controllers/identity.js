@@ -3,11 +3,11 @@
 angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope, $state, $location, RCommOrgIdentities, Notifications, identity) {
 
     $scope.details = {
-		RedirectUrl: parseRootUrl($location.absUrl(), $location.url()),
-		InitialAccessToken: ""
+		Name:""
+		//,Organization: ""
 	}
 
-    $scope.submitRegistrationDetails = function (details) {
+    $scope.submitOrgIdentityDetails = function (details) {
 		RCommOrgIdentities.register(details).then(function (response) {
 		    Notifications.info('Registered Identity Instance ' + response.data.Name + ". Please refresh to enable SSO." );
 		    $state.go('restcomm.dashboard');
