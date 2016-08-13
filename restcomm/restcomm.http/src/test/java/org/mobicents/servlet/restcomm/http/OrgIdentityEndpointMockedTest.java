@@ -69,7 +69,7 @@ public class OrgIdentityEndpointMockedTest extends EndpointMockedTest {
         orgs.add(new Organization(new Sid("OR11111111111111111111111111111111"),null,null,"Orestis organization","orestis",null,null));
 
         when(request.getRequestURL()).thenReturn(new StringBuffer("http://127.0.0.1:8080/"));
-        OrgIdentityEndpoint endpoint = new OrgIdentityEndpoint(servletContext,request,conf,daoManager);
+        OrgIdentityEndpoint endpoint = new OrgIdentityEndpoint(servletContext,request);
         endpoint.init();
         // if the organization does not exist should get a 400 back and not store any orgIdentity
         Response response = endpoint.createOrgIdentity("newOrgIdentity", "non-existent-org","http://127.0.0.1:8080/");
@@ -91,7 +91,6 @@ public class OrgIdentityEndpointMockedTest extends EndpointMockedTest {
         // Try to create again. should get a conflict.
         response = endpoint.createOrgIdentity("newOrgIdentity", null,"http://127.0.0.1:8080/");
         Assert.assertEquals(409, response.getStatus());
-
     }
 
     @Test
@@ -102,7 +101,7 @@ public class OrgIdentityEndpointMockedTest extends EndpointMockedTest {
         orgIdentities.add(new OrgIdentity(new Sid("OI00000000000000000000000000000000"),new Sid("OR00000000000000000000000000000000"),"random123",null,null));
 
         when(request.getRequestURL()).thenReturn(new StringBuffer("http://127.0.0.1:8080/"));
-        OrgIdentityEndpoint endpoint = new OrgIdentityEndpoint(servletContext,request,conf,daoManager);
+        OrgIdentityEndpoint endpoint = new OrgIdentityEndpoint(servletContext,request);
         endpoint.init();
 
         endpoint.removeOrgIdentity("OI00000000000000000000000000000000");

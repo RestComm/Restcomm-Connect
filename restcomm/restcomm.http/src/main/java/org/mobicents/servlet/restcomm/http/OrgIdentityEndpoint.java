@@ -56,28 +56,22 @@ public class OrgIdentityEndpoint extends SecuredEndpoint {
     protected Gson gson;
     protected XStream xstream;
 
-    // retrieve deps from context, singletons etc.
     public OrgIdentityEndpoint() {
-        this.configuration = ((Configuration) context.getAttribute(Configuration.class.getName())).subset("runtime-settings");
-        final DaoManager daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
-        //mainConfig = RestcommConfiguration.getInstance().getMain();
-
-        this.orgIdentityDao = daos.getOrgIdentityDao();
-        this.organizationDao = daos.getOrganizationsDao();
     }
 
-    // used for manually bootstrapping the endpoint when tested
-    public OrgIdentityEndpoint(ServletContext context, HttpServletRequest request, Configuration rootConfiguration, DaoManager daoManager) {
+    // used for testing
+    public OrgIdentityEndpoint(ServletContext context, HttpServletRequest request) {
         super(context,request);
-        this.configuration = rootConfiguration.subset("runtime-settings");
-        //mainConfig = restcommConfiguration.getMain();
-
-        this.orgIdentityDao = daoManager.getOrgIdentityDao();
-        this.organizationDao = daoManager.getOrganizationsDao();
     }
 
     @PostConstruct
     void init() {
+        this.configuration = ((Configuration) context.getAttribute(Configuration.class.getName())).subset("runtime-settings");
+        final DaoManager daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        //mainConfig = RestcommConfiguration.getInstance().getMain();
+        this.orgIdentityDao = daos.getOrgIdentityDao();
+        this.organizationDao = daos.getOrganizationsDao();
+
         super.init(configuration); // this is needed by AbstractEndpoint
         // converters
         final OrgIdentityConverter converter = new OrgIdentityConverter(configuration);

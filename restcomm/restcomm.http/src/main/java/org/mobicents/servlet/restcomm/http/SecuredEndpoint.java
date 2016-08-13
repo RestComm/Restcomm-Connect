@@ -100,8 +100,8 @@ public class SecuredEndpoint extends AbstractEndpoint {
         this.request = request;
     }
 
-    protected void init(final Configuration configuration) {
-        super.init(configuration);
+    protected void init(final Configuration runtimeConfiguration) {
+        super.init(runtimeConfiguration);
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.accountsDao = storage.getAccountsDao();
         this.organizationDao = storage.getOrganizationsDao();

@@ -84,6 +84,8 @@ public class EndpointMockedTest {
         // mock DaoManager
         daoManager = new DaoManagerMock(accountsDao,null);
         when(servletContext.getAttribute(DaoManager.class.getName())).thenReturn(daoManager);
+        // mock root Configuration
+        when(servletContext.getAttribute(Configuration.class.getName())).thenReturn(conf);
         // createt request mock
         request = Mockito.mock(HttpServletRequest.class);
         when(request.getHeader("Authorization")).thenReturn("Basic YWRtaW5pc3RyYXRvckBjb21wYW55LmNvbTo3N2Y4YzEyY2M3YjhmODQyM2U1YzM4YjAzNTI0OTE2Ng==");
