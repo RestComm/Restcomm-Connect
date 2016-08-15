@@ -1,10 +1,11 @@
-To make Restcomm fully Secure, you need to configure both the Web Part (HTTP Connector) and the SIP Part (SIP Over WebSockets Secure Connector) :
+The configuration guide will show you how to create a keystore and activate SSL for HTTPS connection.
+
 
 [[enable-https-secure-connector]]
 Enable HTTPs Secure Connector
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Restcomm uses port 8080 on HTTP connector by default. The following instruction will guide you through the steps required to configured SSL and enable HTTPS.
+By default, Restcomm uses port 8080 for HTTP connector. The following instruction will guide you through the steps required to configure SSL and enable HTTPS.
 
 Make sure you are testing using the latest Restcomm. 
 
@@ -12,10 +13,13 @@ Make sure you are testing using the latest Restcomm.
 [[step-1]]
 Step 1 - Keystore by Certificate Authority (CA)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If you will be using a self-signed certificate, you may skip the step and go to Step 2
 
+If you are using a Certificate Authority (CA), create the keystore as instructed by the CA provider and copy the keystore to $RESTCOMM_HOME/standalone/configuration/ directory. 
+Next, go to step 3.
 
-Create a certificate keystore for the SSL connector. 
-If you are using a Certificate Authority (CA), create the keystore following the instruction from your supplied by the provider CA.
+Here is a link for a free Certificate Authority (CA). https://letsencrypt.org/
+
 
 [[step-2]]
 Step 2 - Self-signed Certificate Keystore
@@ -96,7 +100,7 @@ TRUSTSTORE_ALIAS='restcomm' #The certificate alias
 If you are using a self-signed certificate, change the SSL_MODE value to SSL_MODE='allowall'
 [source,lang:default,decode:true]
 ----
-SSL_MODE='strict' #Control whether or not Restcomm will accept self-signed certificates. Values allowall=allow self-signed certificates, strict=don't allow self signed certificates
+SSL_MODE='allowall' #Control whether or not Restcomm will accept self-signed certificates. Values allowall=allow self-signed certificates, strict=don't allow self signed certificates
 ----
 
 Go to the Restcomm Admin UI at the following URL
