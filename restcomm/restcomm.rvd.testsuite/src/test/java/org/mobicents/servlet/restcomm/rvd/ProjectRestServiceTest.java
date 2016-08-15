@@ -47,9 +47,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
  * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
  */
 @RunWith(Arquillian.class)
-public class ProjectServiceTest {
+public class ProjectRestServiceTest {
 
-    private final static Logger logger = Logger.getLogger(ProjectServiceTest.class);
+    private final static Logger logger = Logger.getLogger(ProjectRestServiceTest.class);
     private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
 
     static final String username = "administrator@company.com";
@@ -161,7 +161,7 @@ public class ProjectServiceTest {
 
     }
 
-    @Deployment(name = "ProjectServiceTest", managed = true, testable = false)
+    @Deployment(name = "ProjectRestServiceTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         logger.info("version");
