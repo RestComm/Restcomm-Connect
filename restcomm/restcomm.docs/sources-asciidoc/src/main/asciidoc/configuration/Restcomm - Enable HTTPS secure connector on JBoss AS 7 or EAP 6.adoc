@@ -11,7 +11,7 @@ Make sure you are testing using the latest Restcomm.
 
 [[step-1]]
 Step 1 - Keystore by Certificate Authority (CA)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Create a certificate keystore for the SSL connector. 
@@ -19,14 +19,14 @@ If you are using a Certificate Authority (CA), create the keystore following the
 
 [[step-2]]
 Step 2 - Self-signed Certificate Keystore
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 
 
 To create a self-signed certificate keystore, perform the following steps:
 
 [source,lang:default,decode:true]
 ----
-$JAVA_HOME/bin/keytool -genkey -alias restcomm -keyalg RSA -keystore $RESTCOMM_HOME/standalone/configuration/restcomm.keystore
+$JAVA_HOME/bin/keytool -genkey -alias restcomm -keyalg RSA -keystore $RESTCOMM_HOME/standalone/configuration/restcomm.jks
 ----
 
 For this example, we shall use the password, "changeit". 
@@ -62,13 +62,13 @@ Copy the generated self-signed keystore to the configuration directory as shown 
 
 [source,lang:default,decode:true]
 ----
-$RESTCOMM_HOME/standalone/configuration/restcomm.keystore
+$RESTCOMM_HOME/standalone/configuration/restcomm.jks
 ----
 
 
 [[step-3]]
 Step 3 - Configure Restcomm Configuration Files
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [source,lang:default,decode:true]
 ----
@@ -103,7 +103,7 @@ Go to the Restcomm Admin UI at the following URL
 
 [source,lang:default,decode:true]
 ----
-http://RESTCOMM_IP_ADDRESS:8443/
+https://RESTCOMM_IP_ADDRESS:8443/
 ----
 
 If you want to access HTTPS using the default port 443 instead of Restcomm' default 8443, change the following options in the $RESTCOMM_HOME/bin/restcomm/restcomm.conf file.
@@ -116,6 +116,7 @@ HTTPS_PORT='8443' #Port used for HTTPS. Default 8443
 
 ----
 
+Restcomm will now be accessible using the following URL : https://RESTCOMM_IP_ADDRESS/
 
 
 
