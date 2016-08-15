@@ -30,7 +30,7 @@ To create a self-signed certificate keystore, perform the following steps:
 
 [source,lang:default,decode:true]
 ----
-$JAVA_HOME/bin/keytool -genkey -alias restcomm -keyalg RSA -keystore $RESTCOMM_HOME/standalone/configuration/restcomm.jks
+$JAVA_HOME/bin/keytool -genkey -alias restcomm -keyalg RSA -keystore  restcomm.jks
 ----
 
 For this example, we shall use the password, "changeit". 
@@ -62,7 +62,7 @@ Enter key password for <restcomm>
 
 * HOSTNAME : Must match content of the  "/etc/hostname or /etc/hosts" file. 
 
-Copy the generated self-signed keystore to the configuration directory as shown below
+Copy the generated self-signed keystore restcomm.jks to the configuration directory as shown below
 
 [source,lang:default,decode:true]
 ----
