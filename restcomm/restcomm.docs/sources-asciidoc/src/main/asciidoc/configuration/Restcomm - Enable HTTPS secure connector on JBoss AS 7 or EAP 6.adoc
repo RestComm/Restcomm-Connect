@@ -123,6 +123,22 @@ HTTPS_PORT='8443' #Port used for HTTPS. Default 8443
 Restcomm will now be accessible using the following URL : https://RESTCOMM_IP_ADDRESS/
 
 
+[[exception-download-rcml]]
+Error - Exception while trying to download RCML
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you get the above message in the Restcomm server logs when making a call with HTTPS activated, you need to modify the restcomm.conf file by updating the following parameter:
+
+[source,lang:default,decode:true]
+----
+#hostname of the server to be used at restcomm.xml. If not set the STATIC_ADDRESS will be used.
+RESTCOMM_HOSTNAME='YOUR_HOST_NAME'
+
+----
+
+
+The above hostname must match the one in the /etc/hosts file and must also be the same hostname in your SSL certificate.
+
 
 
 For any questions or suggestions, please use the following channels:
