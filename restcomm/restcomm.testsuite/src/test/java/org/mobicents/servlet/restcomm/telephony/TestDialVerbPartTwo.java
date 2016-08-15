@@ -263,8 +263,6 @@ public class TestDialVerbPartTwo {
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
         assertTrue(aliceCall.respondToDisconnect());
 
-        Thread.sleep(10000);
-
         bobCall.listenForMessage();
         assertTrue(bobCall.waitForMessage(60 * 1000));
         assertTrue(bobCall.sendMessageResponse(200, "OK-Message Received", 3600));

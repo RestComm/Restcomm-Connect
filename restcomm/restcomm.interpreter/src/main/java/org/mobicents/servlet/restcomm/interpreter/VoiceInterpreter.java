@@ -1152,6 +1152,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //                        }
 //                        dialChildren = null;
 //                        return;
+                    } else if (is(conferencing) || is(finishConferencing)) {
+                        //If the CallStateChanged.Completed event from the Call arrived before the ConferenceStateChange.Completed
+                        //event, then return and wait for the FinishConferencing to deal with the event (either execute dial action or
+                        //get next verb from parser
+                        if (logger.isInfoEnabled()) {
+                            logger.info("VoiceInterpreter received CallStateChanged.Completed VI in: " + fsm.state() + " state, will return and wait for ConferenceStateChanged.Completed event");
+                        }
+                        return;
                     } else {
                         if (!is(finishDialing))
                             fsm.transition(message, finished);
