@@ -28,10 +28,10 @@
   
   <update id="updateMediaResource" parameterType="map">
     UPDATE media_resource_broker_entity 
-    	SET slave_ms_bridge_ep_id="#{slave_ms_bridge_ep_id}, 
-    		slave_ms_cnf_ep_id="#{slave_ms_cnf_ep_id}, is_bridged_together=#{is_bridged_together}, 
+    	SET slave_ms_bridge_ep_id=#{slave_ms_bridge_ep_id}, 
+    		slave_ms_cnf_ep_id=#{slave_ms_cnf_ep_id}, is_bridged_together=#{is_bridged_together}, 
     		slave_ms_sdp=#{slave_ms_sdp} 
-    WHERE conference_sid="#{conference_sid} AND slave_ms_id="#{slave_ms_id};
+    WHERE conference_sid=#{conference_sid} AND slave_ms_id=#{slave_ms_id};
   </update>
 
 </mapper>

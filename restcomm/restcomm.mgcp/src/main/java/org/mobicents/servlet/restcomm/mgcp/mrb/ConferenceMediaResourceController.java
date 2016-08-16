@@ -505,6 +505,10 @@ public class ConferenceMediaResourceController extends UntypedActor{
                             final ConnectionDescriptor descriptor = new ConnectionDescriptor(e.getSlaveMsSDP());
                             final UpdateConnection update = new UpdateConnection(descriptor);
                             connectionWithLocalBridgeEndpoint.tell(update, source);
+                            logger.info("^^^^^^^^^^^^^^^^ Slave Found Breaking the search. ^^^^^^^^^^^^^^^^^^");
+                            //TODO this is temporary stuf hope to connect only two participants from 2 RMS.
+                            keepLookingForSlaves = false;
+                            break;
                         }
                     }
                 }
