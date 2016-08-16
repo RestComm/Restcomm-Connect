@@ -159,8 +159,12 @@ public final class Downloader extends UntypedActor {
                 logger.error("Exception while trying to download RCML, exception: "+exception);
                 response = new DownloaderResponse(exception, "Exception while trying to download RCML");
             }
-            if (sender != null) {
+            if (sender != null && !sender.isTerminated()) {
                 sender.tell(response, self);
+            } else {
+                if (logger.isInfoEnabled()) {
+                    logger.info("DownloaderResponse wont be send because sender is :"+ (sender.isTerminated() ? "terminated" : "null"));
+                }
             }
         }
     }
