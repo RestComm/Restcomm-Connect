@@ -21,6 +21,9 @@
 			<div ng-repeat="projectItem in filteredProjectList = (projectList | filter:{kind:projectKind})" class='row rvd-project-item' >
 				<div class="row">
 					<div class="col-md-12 text-center" ng-show="projectItem.viewMode=='view'" >
+						<i ng-show="projectItem.status == 'BAD'" class="fa fa-warning" title="Project seems broken"></i>
+						<i ng-show="projectItem.status == 'SHOULD_UPGRADE'" class="fa fa-warning" title="Project is outdated"></i>
+						<i ng-show="projectItem.status == 'UNKNOWN_VERSION'" class="fa fa-warning" title="Unknown project version."></i>
 						<a href="#/designer/{{projectItem.applicationSid}}={{projectItem.name}}" ng-click="openProject(projectItem.applicationSid)" style="margin-right:10px" title="{{projectItem.applicationSid}}">{{projectItem.name}}</a>
 						<i ng-click="editProjectName(projectItem)" class="fa fa-pencil rvd-clickable" ></i>
 						<a href ng-click='download(projectItem.applicationSid, projectItem.name)'><i class="fa fa-download rvd-clickable" ></i></a>

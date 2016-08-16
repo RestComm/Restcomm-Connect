@@ -156,8 +156,9 @@ public final class MybatisUsageDao implements UsageDao {
       case CALLS_CLIENT:
       case CALLS_SIP:
         params.put("tableName", "restcomm_call_detail_records");
-//        params.put("usageExpr", "CAST(COALESCE(SUM(\"duration\"),0) AS SIGNED)");
-      params.put("usageExpr", "COALESCE(SUM(\"duration\"),0)");
+        params.put("usageExprPre", "COALESCE(SUM(");
+        params.put("usageExprCol", "duration");
+        params.put("usageExprSuf", "),0)");
         break;
       case SMS:
       case SMS_INBOUND:
@@ -167,7 +168,9 @@ public final class MybatisUsageDao implements UsageDao {
       case SMS_OUTBOUND_SHORTCODE:
       case SMS_OUTBOUND_LONGCODE:
         params.put("tableName", "restcomm_sms_messages");
-        params.put("usageExpr", "COUNT(1)");
+        params.put("usageExprPre", "COUNT(");
+        params.put("usageExprCol", "sid");
+        params.put("usageExprSuf", ")");
         break;
       case PHONENUMBERS:
       case PHONENUMBERS_TOLLFREE:
@@ -183,8 +186,9 @@ public final class MybatisUsageDao implements UsageDao {
       case TOTALPRICE:
       default:
         params.put("tableName", "restcomm_call_detail_records");
-//        params.put("usageExpr", "CAST(COALESCE(SUM(\"duration\"),0) AS SIGNED)");
-      params.put("usageExpr", "COALESCE(SUM(\"duration\"),0)");
+        params.put("usageExprPre", "COALESCE(SUM(");
+        params.put("usageExprCol", "duration");
+        params.put("usageExprSuf", "),0)");
         break;
     }
     return params;

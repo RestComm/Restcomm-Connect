@@ -650,8 +650,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     } else if (finishDialing.equals(state)) {
                         removeDialBranch(message, sender);
                         return;
-                    } else {
-                        if (!finishDialing.equals(state))
+                    } else if (is(conferencing) || is(finishConferencing)) {
+                        //If the CallStateChanged.Completed event from the Call arrived before the ConferenceStateChange.Completed
+                        //event, then return and wait for the FinishConferencing to deal with the event (either execute dial action or
+                        //get next verb from parser
+                        if (logger.isInfoEnabled()) {
+                            logger.info("VoiceInterpreter received CallStateChanged.Completed VI in: " + state + " state, will return and wait for ConferenceStateChanged.Completed event");
+                        }
+                        return;
+                    }
+                    else {
+                        if (!finishDialing.equals(state)) // || (is(conferencing) && dialActionExecuted))
                             fsm.transition(message, finished);
                     }
             } else if (CallStateChanged.State.BUSY == event.state()) {
@@ -2588,6 +2597,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (message instanceof ConferenceStateChanged) {
                 // Destroy conference if state changed to completed (last participant in call)
                 ConferenceStateChanged confStateChanged = (ConferenceStateChanged) message;
+                if (logger.isInfoEnabled()) {
+                    logger.info("ConferenceStateChanged received, event: "+confStateChanged.state().toString());
+                }
                 if (ConferenceStateChanged.State.COMPLETED.equals(confStateChanged.state())) {
                     DestroyConference destroyConference = new DestroyConference(conferenceInfo.name());
                     conferenceManager.tell(destroyConference, super.source);
@@ -2643,6 +2655,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final List<NameValuePair> parameters = parameters();
                     request = new HttpRequestDescriptor(uri, method, parameters);
                     downloader.tell(request, source);
+                    dialActionExecuted = true;
                     return;
                 }
             }
