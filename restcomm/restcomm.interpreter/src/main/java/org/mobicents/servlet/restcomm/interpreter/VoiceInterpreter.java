@@ -2342,7 +2342,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if(logger.isInfoEnabled()) {
                     logger.info("CallStateChanged state: "+((CallStateChanged)message).state().toString()+" ,sender: "+sender().path());
                 }
-                if (forking.equals(state) || finishDialing.equals(state)) {
+                if (forking.equals(state) || finishDialing.equals(state) || is(bridged)) {
                     if (sender.equals(call)) {
                         //Initial call wants to finish dialing
                         if(logger.isInfoEnabled()) {
