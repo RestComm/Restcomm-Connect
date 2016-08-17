@@ -14,46 +14,46 @@ import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
  * @author thomas.quintana@telestax.com (Thomas Quintana)
  * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
-public interface CallDetailRecordMapper {
+public interface CallDetailRecordsMapper {
 
         String SELECT_CALL_DETAIL_RECORD="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"sid\"=#{sid}";
         String SELECT_CALL_DETAIL_RECORDS="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"account_sid\"=#{accountSid}";
         String SELECT_CALL_DETAIL_RECORD_BY_RECIPIENT="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"recipient\"=#{to}";
         String SELECT_CALL_DETAIL_RECORD_BY_SENDER="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"sender\"=#{from}";
         String SELECT_CALL_DETAIL_RECORD_BY_STATUS="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"status\"=#{status}";
-        String SELECT_CALL_DETAIL_RECORD_BY_START_TIME="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"start_time\"&gt;=#{startTime} AND \"start_time\"&lt;DATE_ADD(#{startTime},INTERVAL 1 DAY)";
-        String SELECT_CALL_DETAIL_RECORD_BY_END_TIME="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"end_time\"&gt;=#{endTime} AND \"end_time\"&lt;DATE_ADD(#{endTime},INTERVAL 1 DAY)";
-        String SELECT_CALL_DETAIL_RECORD_BY_START_AND_END_TIME="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"start_time\"&gt;=#{startTime} AND \"end_time\"&lt;=#{endTime}";
+        String SELECT_CALL_DETAIL_RECORD_BY_START_TIME="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"start_time\" >=#{startTime} AND \"start_time\" < DATE_ADD(#{startTime},INTERVAL 1 DAY)";
+        String SELECT_CALL_DETAIL_RECORD_BY_END_TIME="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"end_time\">=#{endTime} AND \"end_time\" < DATE_ADD(#{endTime},INTERVAL 1 DAY)";
+        String SELECT_CALL_DETAIL_RECORD_BY_START_AND_END_TIME="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"start_time\" >=#{startTime} AND \"end_time\" <=#{endTime}";
         String SELECT_CALL_DETAIL_RECORD_BY_PARENT_CALL="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"parent_call_sid\"=#{parentCallSid}";
         String SELECT_CALL_DETAIL_RECORD_BY_INSTANCE_ID="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"instanceid\"=#{instanceid}";
         String SELECT_CALL_DETAIL_RECORD_BY_CONFERENCE_SID="SELECT * FROM \"restcomm_call_detail_records\" WHERE \"conference_sid\"=#{conferenceSid}";
-        String INSERT_CALL_DETAIL_RECORD="INSERT INTO \"restcomm_call_detail_records\" (\"sid\", \"instanceid\", \"parent_call_sid\", \"date_created\", \"date_updated\", \"account_sid\", \"recipient, sender\", \"phone_number_sid\", \"status\", \"start_time\", \"end_time\", \"duration\", \"price\", \"direction\", \"answered_by\", \"api_version\", \"forwarded_from\", \"caller_name\", \"uri\", \"call_path\", \"ring_duration\", \"conference_sid\", \"muted\", \"start_conference_on_enter\", \"end_conference_on_exit\", \"on_hold\") VALUES (#{sid}, #{instanceid}, #{parent_call_sid}, #{date_created}, #{date_updated}, #{account_sid}, #{to}, #{from}, #{phone_number_sid}, #{status}, #{start_time}, #{end_time}, #{duration}, #{price}, #{direction}, #{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path}, #{ring_duration}, #{conference_sid}, #{muted}, #{start_conference_on_enter}, #{end_conference_on_exit}, #{on_hold})";
+        String INSERT_CALL_DETAIL_RECORD="INSERT INTO \"restcomm_call_detail_records\" (\"sid\", \"instanceid\", \"parent_call_sid\", \"date_created\", \"date_updated\", \"account_sid\", \"recipient\",\"sender\", \"phone_number_sid\", \"status\", \"start_time\", \"end_time\", \"duration\", \"price\", \"direction\", \"answered_by\", \"api_version\", \"forwarded_from\", \"caller_name\", \"uri\", \"call_path\", \"ring_duration\", \"conference_sid\", \"muted\", \"start_conference_on_enter\", \"end_conference_on_exit\", \"on_hold\") VALUES (#{sid}, #{instanceid}, #{parent_call_sid}, #{date_created}, #{date_updated}, #{account_sid}, #{to}, #{from}, #{phone_number_sid}, #{status}, #{start_time}, #{end_time}, #{duration}, #{price}, #{direction}, #{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path}, #{ring_duration}, #{conference_sid}, #{muted}, #{start_conference_on_enter}, #{end_conference_on_exit}, #{on_hold})";
         String DELETE_CALL_DETAIL="DELETE FROM \"restcomm_call_detail_records\" WHERE \"sid\"=#{sid}";
         String DELETE_CALL_DETAILS="DELETE FROM \"restcomm_call_detail_records\" WHERE \"account_sid\"=#{account_sid}";
         String UPDATE_CALL_DETAIL="UPDATE \"restcomm_call_detail_records\" SET \"date_updated\"=#{date_updated}, \"status\"=#{status}, \"start_time\"=#{start_time}, \"end_time\"=#{end_time}, \"duration\"=#{duration},\"price\"=#{price}, \"answered_by\"=#{answered_by}, \"ring_duration\"=#{ring_duration}, \"conference_sid\"=#{conference_sid}, \"muted\"=#{muted}, \"start_conference_on_enter\"=#{start_conference_on_enter}, \"end_conference_on_exit\"=#{end_conference_on_exit}, \"on_hold\"=#{on_hold} WHERE \"sid\"=#{sid}";
-        String SELECT_TOTAL_CALL_DETAIL_RECORD_USING_FILTER="<script>"
-            + "SELECT COUNT(*) FROM \"restcomm_call_detail_records\" WHERE \"account_sid\"=#{accountSid}"
+        String SELECT_TOTAL_CALL_DETAIL_RECORD_USING_FILTER="<script>\n"
+            + "SELECT COUNT(*) FROM \"restcomm_call_detail_records\" WHERE \"account_sid\"=#{accountSid}\n"
             + "    <if test=\"instanceid != null\">"
             + "        AND \"instanceid\" like #{instanceid}"
-            + "    </if>"
+            + "    </if>\n"
             + "    <if test=\"recipient != null\">"
             + "        AND \"recipient\" like #{recipient}"
-            + "    </if>"
+            + "    </if>\n"
             + "    <if test=\"sender != null\">"
             + "        AND \"sender\" like #{sender}"
-            + "    </if>"
+            + "    </if>\n"
             + "    <if test=\"status != null\">"
             + "        AND \"status\" like #{status}"
-            + "    </if>"
+            + "    </if>\n"
             + "    <if test=\"parentCallSid != null\">"
             + "        AND \"parent_call_sid\" like #{parentCallSid}"
-            + "    </if>"
+            + "    </if>\n"
             + "    <if test=\"startTime != null\">"
-            + "        AND \"start_time\" >= #{startTime}"
-            + "    </if>"
-            + "    <if test=\"endTime != null\">"
-            + "        AND \"end_time\" =< DATE_ADD(#{endTime},INTERVAL 1 DAY)"
-            + "    </if>"
+            + "        AND \"start_time\" &gt;= #{startTime}"
+            + "    </if>\n"
+            + "    <if test=\"endTime != null\" >"
+            + "        AND \"end_time\" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)"
+            + "    </if>\n"
             + "</script>";
     String SELECT_CAAL_DETAIL_RECORD_USING_FILTER="<script>"
         + "    SELECT * FROM \"restcomm_call_detail_records\" AS restcomm_call_detail_records WHERE \"account_sid\"=#{accountSid}"
@@ -73,10 +73,10 @@ public interface CallDetailRecordMapper {
         + "        AND \"parent_call_sid\" like #{parentCallSid}"
         + "    </if>"
         + "    <if test=\"startTime != null\">"
-        + "        AND \"start_time\" >= #{startTime}"
+        + "        AND \"start_time\" &gt;= #{startTime}"
         + "    </if>"
         + "    <if test=\"endTime != null\">"
-        + "        AND \"end_time\" =< DATE_ADD(#{endTime},INTERVAL 1 DAY) order by \"start_time\""
+        + "        AND \"end_time\" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY) order by \"start_time\""
         + "    </if>"
         + "    LIMIT #{limit} OFFSET #{offset}"
         + "</script>";
@@ -106,7 +106,7 @@ public interface CallDetailRecordMapper {
         List<Map<String, Object>> getCallDetailRecordsByEndTime(Date endTime);
 
         @Select(SELECT_CALL_DETAIL_RECORD_BY_START_AND_END_TIME)
-        List<Map<String, Object>> getCallDetailRecordsByStarTimeAndEndTime(Date startTime,Date endTime);
+        List<Map<String, Object>> getCallDetailRecordsByStarTimeAndEndTime(Map map);//Date startTime,Date endTime);
 
         @Select(SELECT_CALL_DETAIL_RECORD_BY_PARENT_CALL)
         List<Map<String, Object>> getCallDetailRecordsByParentCall(String parentCallSid);

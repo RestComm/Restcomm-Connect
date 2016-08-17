@@ -172,9 +172,9 @@ public class IncomingPhoneNumbersDaoTest {
         List<IncomingPhoneNumber> phoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
         Assert.assertEquals("Only a single phone number expected",1, phoneNumbers.size());
         IncomingPhoneNumber number = phoneNumbers.get(0);
-        Assert.assertEquals(number.getVoiceApplicationName(), "app0");
-        Assert.assertEquals(number.getSmsApplicationName(), "app1");
-        Assert.assertEquals(number.getUssdApplicationName(), "app2");
+        Assert.assertEquals("app0",number.getVoiceApplicationName());
+        Assert.assertEquals("app1",number.getSmsApplicationName());
+        Assert.assertEquals( "app2",number.getUssdApplicationName());
     }
 
     @Test
