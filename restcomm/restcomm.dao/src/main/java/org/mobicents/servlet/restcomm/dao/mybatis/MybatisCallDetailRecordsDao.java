@@ -48,7 +48,7 @@ import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.mappers.CallDetailRecordMapper;
+import org.mobicents.servlet.restcomm.mappers.CallDetailRecordsMapper;
 
 
 /**
@@ -69,7 +69,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public void addCallDetailRecord(final CallDetailRecord cdr) {
         final SqlSession session = sessions.openSession();
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
             mapper.addCallDetailRecord(toMap(cdr));
             session.commit();
         } finally {
@@ -81,7 +81,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public CallDetailRecord getCallDetailRecord(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
             final Map<String, Object> result = mapper.getCallDetailRecord(sid.toString());
             if (result != null) {
                 return toCallDetailRecord(result);
@@ -99,7 +99,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
 
         final SqlSession session = sessions.openSession();
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
             final Integer total = mapper.getTotalCallDetailRecordByUsingFilters(filter);
             return total;
         } finally {
@@ -116,7 +116,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         final SqlSession session = sessions.openSession();
 
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
             final List<Map<String, Object>> results = mapper.getCallDetailRecordByUsingFilters(
                     filter);
             final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
@@ -136,7 +136,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public List<CallDetailRecord> getCallDetailRecords(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
             final List<Map<String, Object>> results = mapper.getCallDetailRecords(accountSid.toString());
             final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
             if (results != null && !results.isEmpty()) {
@@ -154,7 +154,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public List<CallDetailRecord> getCallDetailRecordsByRecipient(final String recipient) {
         final SqlSession session = sessions.openSession();
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
             final List<Map<String, Object>> results = mapper.getCallDetailRecordsByRecipient(recipient);
             final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
             if (results != null && !results.isEmpty()) {
@@ -172,7 +172,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public List<CallDetailRecord> getCallDetailRecordsBySender(final String sender) {
         final SqlSession session = sessions.openSession();
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
             final List<Map<String, Object>> results = mapper.getCallDetailRecordsBySender(sender);
             final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
             if (results != null && !results.isEmpty()) {
@@ -190,7 +190,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public List<CallDetailRecord> getCallDetailRecordsByStatus(final String status) {
         final SqlSession session = sessions.openSession();
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
             final List<Map<String, Object>> results = mapper.getCallDetailRecordsByStatus(status);
             final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
             if (results != null && !results.isEmpty()) {
@@ -208,7 +208,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public List<CallDetailRecord> getCallDetailRecordsByStartTime(final DateTime startTime) {
         final SqlSession session = sessions.openSession();
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
             final List<Map<String, Object>> results = mapper.getCallDetailRecordsByStartTime(startTime.toDate());
             final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
             if (results != null && !results.isEmpty()) {
@@ -226,7 +226,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public List<CallDetailRecord> getCallDetailRecordsByEndTime(final DateTime endTime) {
         final SqlSession session = sessions.openSession();
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
             final List<Map<String, Object>> results = mapper.getCallDetailRecordsByEndTime(endTime.toDate());
             final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
             if (results != null && !results.isEmpty()) {
@@ -244,8 +244,11 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public List<CallDetailRecord> getCallDetailRecordsByStarTimeAndEndTime(final DateTime startTime,final DateTime endTime) {
         final SqlSession session = sessions.openSession();
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
-            final List<Map<String, Object>> results = mapper.getCallDetailRecordsByStarTimeAndEndTime(startTime.toDate(), endTime.toDate());
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            Map<String,Object> map= new HashMap<>();
+            map.put("startTime", startTime.toDate());
+            map.put("endTime", endTime.toDate());
+            final List<Map<String, Object>> results = mapper.getCallDetailRecordsByStarTimeAndEndTime(map);
             final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -262,7 +265,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public List<CallDetailRecord> getCallDetailRecordsByParentCall(final Sid parentCallSid) {
         final SqlSession session = sessions.openSession();
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
             final List<Map<String, Object>> results = mapper.getCallDetailRecordsByParentCall(parentCallSid.toString());
             final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
             if (results != null && !results.isEmpty()) {
@@ -280,7 +283,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public List<CallDetailRecord> getCallDetailRecordsByConferenceSid(final Sid conferenceSid) {
         final SqlSession session = sessions.openSession();
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
             final List<Map<String, Object>> results = mapper.getCallDetailRecordsByConferenceSid(conferenceSid.toString());
             final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
             if (results != null && !results.isEmpty()) {
@@ -298,7 +301,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public List<CallDetailRecord> getCallDetailRecordsByInstanceId(final Sid instanceId) {
         final SqlSession session = sessions.openSession();
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
             final List<Map<String, Object>> results = mapper.getCallDetailRecordsByInstanceId(instanceId.toString());
             final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
             if (results != null && !results.isEmpty()) {
@@ -316,7 +319,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public void removeCallDetailRecord(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
             mapper.removeCallDetailRecord(sid.toString());
             session.commit();
         } finally {
@@ -328,7 +331,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public void removeCallDetailRecords(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
             mapper.removeCallDetailRecord(accountSid.toString());
             session.commit();
         } finally {
@@ -340,7 +343,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public void updateCallDetailRecord(final CallDetailRecord cdr) {
         final SqlSession session = sessions.openSession();
         try {
-            CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
             mapper.updateCallDetailRecord(toMap(cdr));
             session.commit();
         } finally {
