@@ -2351,13 +2351,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         final UntypedActorContext context = getContext();
                         context.setReceiveTimeout(Duration.Undefined());
 
-                        Iterator<ActorRef> dialBranchesIterator = dialBranches.iterator();
-                        while (dialBranchesIterator.hasNext()) {
-                            ActorRef branch = dialBranchesIterator.next();
+                        if (dialBranches != null) {
+                            Iterator<ActorRef> dialBranchesIterator = dialBranches.iterator();
+                            while (dialBranchesIterator.hasNext()) {
+                                ActorRef branch = dialBranchesIterator.next();
 //                            if (attribute != null) {
 //                                executeDialAction(message, branch);
 //                            }
-                            branch.tell(new Cancel(), source);
+                                branch.tell(new Cancel(), source);
+                            }
                         }
 //                        if (dialBranches.size() > 0) {
 //                            dialBranches = null;
