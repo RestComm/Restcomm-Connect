@@ -17,13 +17,10 @@ import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.cache.*;
 import org.mobicents.servlet.restcomm.email.EmailService;
 import org.mobicents.servlet.restcomm.api.EmailRequest;
 import org.mobicents.servlet.restcomm.api.Mail;
-import org.mobicents.servlet.restcomm.cache.DiskCache;
-import org.mobicents.servlet.restcomm.cache.DiskCacheRequest;
-import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
-import org.mobicents.servlet.restcomm.cache.HashGenerator;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
@@ -266,7 +263,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new DiskCache(path, uri, true);
+                return new DiskCacheFactory(configuration).getDiskCache(path, uri);
             }
         }));
     }

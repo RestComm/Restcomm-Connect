@@ -21,28 +21,22 @@
 		<rvd-workspace-migration-enabled>true</rvd-workspace-migration-enabled>
 
 		<!-- The location where the audio prompts are located. -->
-		<prompts-uri>/restcomm/audio</prompts-uri>
-
-		<!-- Conference audio files, these will be played when a participant joins or leaves the conference -->
-		<conference-entry-audio>beep.wav</conference-entry-audio>
-		<conference-exit-audio>alert.wav</conference-exit-audio>
+		<prompts-uri>http://127.0.0.1:8080/restcomm/audio</prompts-uri>
 
 		<!-- Cache settings. -->
 		<cache-path>${restcomm:home}/cache</cache-path>
-		<cache-uri>/restcomm/cache</cache-uri>
+		<cache-uri>http://127.0.0.1:8080/restcomm/cache</cache-uri>
 
-		<!-- If set to true RestComm will NOT use cache for *.wav files playback.
-			If set to false RestComm will use cache for *.wav files playback. 
-			Default: false
-		-->
-		<cache-no-wav>false</cache-no-wav>
+		<!-- If set to true RestComm will not use cache for *.wav files playback.
+			If set to false RestComm will use use cache for *.wav files playback. -->
+		<cache-no-wav>true</cache-no-wav>
 
 		<!-- The path where recordings made by the <Record> verb are stored. -->
 		<recordings-path>file://${restcomm:home}/recordings</recordings-path>
-		<recordings-uri>/restcomm/recordings</recordings-uri>
+		<recordings-uri>http://127.0.0.1:8080/restcomm/recordings</recordings-uri>
 
 		<!-- The URL to the errors dictionary. -->
-		<error-dictionary-uri>/restcomm/errors</error-dictionary-uri>
+		<error-dictionary-uri>http://127.0.0.1:8080/restcomm/errors</error-dictionary-uri>
 
 		<!-- The IP to use for out-bound SIP REGISTER requests. This is useful 
 			when you want to report a different IP than the one RestComm picked by default. -->
@@ -62,9 +56,6 @@
 			from those users -->
 		<authenticate>true</authenticate>
 
-		<!-- Interval time in seconds that Restcomm will send keepalive messages (OPTIONS) to registered clients -->
-		<ping-interval>60</ping-interval>
-
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) 
 			when creating an outbound call -->
 		<normalize-numbers-for-outbound-calls>false</normalize-numbers-for-outbound-calls>
@@ -79,21 +70,8 @@
 		<!-- Default value: true -->
 		<patch-for-nat-b2bua-sessions>true</patch-for-nat-b2bua-sessions>
 
-		<!-- If set to true, when calling clients Restcomm will bypass LB or Proxy if set.
-		     Default value false so call are routed through LB-->
+		<!-- If set to true, when calling clients Restcomm will bypass LB or Proxy if set-->
 		<bypass-lb-for-clients>false</bypass-lb-for-clients>
-
-		<!-- Set to true so Restcomm will send 100 Trying on initial Request-->
-		<!-- Used only for testing. !!! Don't enable this for production -->
-		<send-trying-for-initial-requests>false</send-trying-for-initial-requests>
-
-		<!--Play background music for conference rooms with 1 participant even if startConference=true? Music will stop after the second participant joins-->
-		<!--Default value: false -->
-		<play-music-for-conference>false</play-music-for-conference>
-
-		<!-- Set to true so Restcomm won't patch the SDP answer answered received trying to cope with NAT -->
-		<!-- Default value: false -->
-		<disable-sdp-patching-on-updating-mediasession>false</disable-sdp-patching-on-updating-mediasession>
 
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
@@ -126,7 +104,6 @@
 			<allow-fallback-to-primary>true</allow-fallback-to-primary>
 		</outbound-proxy>
 
-		<!--Depreciated -->
 		<telestax-proxy>
 			<enabled>false</enabled>
 			<login>restcomm</login>
@@ -164,8 +141,6 @@
 				<permission>RestComm:Read:SmsMessages</permission>
 				<permission>RestComm:Read:Transcriptions</permission>
 				<permission>RestComm:*:OutboundProxies</permission>
-				<permission>RestComm:*:EmailMessages</permission>
-				<permission>RestComm:*:Usage</permission>
 			</role>
 		</security-roles>
 	</runtime-settings>
@@ -232,7 +207,6 @@
 			<api-key></api-key>
 			<api-secret></api-secret>
 			<uri>https://rest.nexmo.com/</uri>
-			<smpp-system-type></smpp-system-type>
 		</nexmo>
 		<voxbone>
 			<username></username>
@@ -245,7 +219,6 @@
 		<host></host>
 		<user></user>
 		<password></password>
-		<port></port>
 		<!-- Default mail address used to report issues related to Restcomm management,
 		mostly associated with bootstrap executions, like workspace migration, etc. -->
 		<default-email-address></default-email-address>
@@ -255,7 +228,6 @@
 		<host></host>
 		<user></user>
 		<password></password>
-		<port></port>
 	</smtp-service>
 
 	<dao-manager class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
@@ -273,7 +245,6 @@
 		<reduced-redundancy>false</reduced-redundancy>
 		<days-to-retain-public-url>180</days-to-retain-public-url>
 		<remove-original-file>true</remove-original-file>
-		<bucket-region>us-east-1</bucket-region>
 	</amazon-s3>
 
 	<!-- Defines how RestComm communicates with the Media Server Control layer. 
@@ -335,55 +306,6 @@
 		<outbound-prefix></outbound-prefix>
 		<outbound-endpoint>127.0.0.1:5070</outbound-endpoint>
 	</sms-aggregator>
-
-
-    <!-- by default activateSmppConnection is set to false -->
-     
-    <smpp class="org.mobicents.servlet.restcomm.smpp.SmppService" activateSmppConnection ="false">
-        <connections>
-            <connection activateAddressMapping="false" sourceAddressMap="" destinationAddressMap="" tonNpiValue="1">
-				<!-- Name must be unique for each connection -->
-				<name>test</name>
-				<systemid>test</systemid>
-				<peerip>127.0.0.1</peerip>
-				<peerport>2776</peerport>
-				<bindtype>TRANSCEIVER</bindtype>
-				<!-- These are optional params -->
-				<password>test</password>
-				<systemtype>sms</systemtype>
-				<!-- byte value for interface version 0x34 is 3.4, 0x33 is 3.3 and 0x50 
-					is 5.0 -->
-				<interfaceversion>0x34</interfaceversion>
-				<ton>-1</ton>
-				<npi>-1</npi>
-				<range></range>
-				<!-- Default value is 1. The window size is the amount of unacknowledged 
-					requests that are permitted to be outstanding/unacknowledged at any given 
-					time. If more requests are added, the underlying stack will throw an exception. -->
-				<windowsize>1</windowsize>
-				<!-- Default value is 60000 milli seconds. This parameter is used to 
-					specify the time to wait until a slot opens up in the 'sendWindow'. -->
-				<windowwaittimeout>60000</windowwaittimeout>
-				<!-- BIND request must be sent within configured timeout in ms -->
-				<connecttimeout>10000</connecttimeout>
-				<!-- Set the amount of time to wait for an endpoint to respond to a request 
-					before it expires. Defaults to disabled (-1). -->
-				<requestexpirytimeout>30000</requestexpirytimeout>
-				<!-- Sets the amount of time between executions of monitoring the window 
-					for requests that expire. It's recommended that this generally either matches 
-					or is half the value of requestExpiryTimeout. Therefore, at worst a request 
-					would could take up 1.5X the requestExpiryTimeout to clear out. -->
-				<windowmonitorinterval>15000</windowmonitorinterval>
-				<logbytes>true</logbytes>
-				<countersenabled>true</countersenabled>
-				<!-- Default value is 30000 milli seconds. When SMPP connects to a remote 
-					server, it sends an 'ENQUIRE_LINK' after every configured enquire-link-delay. 
-					If no response received for 3 consecutive requests, connection will be killed 
-					and attempted to connect again -->
-				<enquirelinkdelay>30000</enquirelinkdelay>
-			</connection>
-		</connections>
-	</smpp>
 
 	<!-- The Fax Service is used to send and receive faxes on behalf of RestComm. -->
 	<fax-service class="org.mobicents.servlet.restcomm.fax.InterfaxService">
