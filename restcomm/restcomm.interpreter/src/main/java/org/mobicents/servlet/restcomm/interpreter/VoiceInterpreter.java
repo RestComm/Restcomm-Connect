@@ -1152,6 +1152,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //                        }
 //                        dialChildren = null;
 //                        return;
+                        fsm.transition(message, finished);
+                        break;
                     } else if (is(conferencing) || is(finishConferencing)) {
                         //If the CallStateChanged.Completed event from the Call arrived before the ConferenceStateChange.Completed
                         //event, then return and wait for the FinishConferencing to deal with the event (either execute dial action or
@@ -2332,6 +2334,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                     }
                     dialBranches.clear();
+                } else if (outboundCall != null) {
+                    outboundCall.tell(new Cancel(), source);
                 }
                 dialChildren = null;
                 callback();
@@ -2360,6 +2364,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //                            }
                                 branch.tell(new Cancel(), source);
                             }
+                        } else if (outboundCall != null) {
+                            outboundCall.tell(new Cancel(), source);
                         }
 //                        if (dialBranches.size() > 0) {
 //                            dialBranches = null;

@@ -1361,11 +1361,16 @@ public final class Call extends UntypedActor {
     }
 
     private void onCancel(Cancel message, ActorRef self, ActorRef sender) throws Exception {
-        if(logger.isInfoEnabled()) {
-            logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state());
-        }
         if (is(initializing) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
+            if(logger.isInfoEnabled()) {
+                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state()+", will Cancel the call");
+            }
             fsm.transition(message, canceling);
+        } else if (is(inProgress)) {
+            if(logger.isInfoEnabled()) {
+                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state()+", will Hangup the call");
+            }
+            onHangup(new Hangup(), self(), sender());
         } else {
             if(logger.isInfoEnabled()) {
                 logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state());
