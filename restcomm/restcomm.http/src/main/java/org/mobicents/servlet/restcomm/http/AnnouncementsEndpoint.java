@@ -22,6 +22,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.http.annotation.NotThreadSafe;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.cache.DiskCache;
+import org.mobicents.servlet.restcomm.cache.DiskCacheFactory;
 import org.mobicents.servlet.restcomm.cache.DiskCacheRequest;
 import org.mobicents.servlet.restcomm.entities.Announcement;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -179,7 +180,7 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
 
             @Override
             public Actor create() throws Exception {
-                return new DiskCache(path, uri, true);
+                return new DiskCacheFactory(configuration).getDiskCache(path, uri);
             }
         }));
     }
