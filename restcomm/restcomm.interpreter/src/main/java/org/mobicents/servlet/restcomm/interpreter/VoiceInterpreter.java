@@ -571,6 +571,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     private void onConferenceResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        if (logger.isInfoEnabled()) {
+            logger.info("VoiceInterpreter received ConferenceResponse from Conference: "+sender().path()+", VI state: "+fsm.state());
+        }
+        final ConferenceResponse<ConferenceInfo> response = (ConferenceResponse<ConferenceInfo>) message;
+        conferenceInfo = response.get();
         if (is(acquiringConferenceInfo)) {
             fsm.transition(message, joiningConference);
         }
@@ -2476,7 +2481,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         public void execute(final Object message) throws Exception {
             final ConferenceCenterResponse response = (ConferenceCenterResponse) message;
             conference = response.get();
-            final GetConferenceInfo request = new GetConferenceInfo();
             conference.tell(new Observe(source), source);
             conference.tell(new GetConferenceInfo(), source);
         }
@@ -2490,8 +2494,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-            final ConferenceResponse<ConferenceInfo> response = (ConferenceResponse<ConferenceInfo>) message;
-            conferenceInfo = response.get();
             conferenceState = conferenceInfo.state();
             final Tag child = conference(verb);
 
