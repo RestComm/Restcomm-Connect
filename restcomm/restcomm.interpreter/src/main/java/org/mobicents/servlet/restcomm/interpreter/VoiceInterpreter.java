@@ -1157,7 +1157,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //                        }
 //                        dialChildren = null;
 //                        return;
-                        fsm.transition(message, finished);
+                        if (sender.equals(call)) {
+                            fsm.transition(message, finished);
+                        } else {
+                            checkDialBranch(message, sender(), attribute);
+                        }
                         break;
                     } else if (is(conferencing) || is(finishConferencing)) {
                         //If the CallStateChanged.Completed event from the Call arrived before the ConferenceStateChange.Completed
@@ -2085,6 +2089,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     private void record(ActorRef target) {
+        if(logger.isInfoEnabled()) {
+            logger.info("Start recording of the call: "+target.path()+", VI state: "+fsm.state());
+        }
         Configuration runtimeSettings = configuration.subset("runtime-settings");
         recordingSid = Sid.generate(Sid.Type.RECORDING);
         String path = runtimeSettings.getString("recordings-path");
