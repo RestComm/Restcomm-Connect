@@ -746,6 +746,9 @@ public final class Call extends UntypedActor {
                     final SipServletRequest cancel = invite.createCancel();
                     addCustomHeaders(cancel);
                     cancel.send();
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Sent CANCEL for Call: "+self().path()+", state: "+fsm.state()+", direction: "+direction);
+                    }
                 }
             } catch (Exception e) {
                 StringBuffer strBuffer = new StringBuffer();

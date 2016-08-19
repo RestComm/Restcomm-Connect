@@ -747,16 +747,17 @@ public class CallLifecycleTest {
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
         assertTrue(bobCall.sendInviteOkAck());
 
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
+
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
         assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
-        assertTrue(georgeCall.waitForIncomingCall(5000));
-        assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
         assertTrue(georgeCall.listenForCancel());
-        SipTransaction cancelTransaction = georgeCall.waitForCancel(50 * 1000);
+        SipTransaction cancelTransaction = georgeCall.waitForCancel(100 * 1000);
         assertNotNull(cancelTransaction);
         assertTrue(georgeCall.respondToCancel(cancelTransaction, Response.OK, "George-OK-2-Cancel", 3600));
 
