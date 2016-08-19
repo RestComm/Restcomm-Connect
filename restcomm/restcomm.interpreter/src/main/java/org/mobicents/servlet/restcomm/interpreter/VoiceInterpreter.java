@@ -1082,7 +1082,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         sender.tell(new Cancel(), self());
                     }
                 } else if (is(finishDialing)) {
-                    if (dialBranches == null || dialBranches.size()==0) {
+                    if ((dialBranches == null || dialBranches.size()==0) && sender.equals(call)) {
                         //TODO HERE
                         logger.info("No-Answer event received, and dialBrances is either null or 0 size, sender: "+sender.path()+", vi state: "+fsm.state());
                         checkDialBranch(message, sender, attribute);
