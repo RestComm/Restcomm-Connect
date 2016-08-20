@@ -23,6 +23,7 @@
     <mapper class="org.mobicents.servlet.restcomm.mappers.ApplicationsMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.AvailablePhoneNumberMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.CallDetailRecordsMapper" />
+    <mapper class="org.mobicents.servlet.restcomm.mappers.ConferenceDetailRecordsMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.ClientsMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.GatewaysMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.HttpCookiesMapper" />
