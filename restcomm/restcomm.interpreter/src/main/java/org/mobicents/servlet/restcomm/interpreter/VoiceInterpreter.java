@@ -771,7 +771,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (pause.equals(verb.name())) {
             fsm.transition(message, pausing);
         } else if (hangup.equals(verb.name())) {
-            fsm.transition(message, hangingUp);
+            if (is(finishDialing)) {
+                fsm.transition(message, finished);
+            } else {
+                fsm.transition(message, hangingUp);
+            }
         } else if (redirect.equals(verb.name())) {
             fsm.transition(message, redirecting);
         } else if (record.equals(verb.name())) {
@@ -1125,38 +1129,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             fsm.transition(message, finishDialing);
                         }
                     } else if (is(finishDialing)) {
-//                        if (dialBranches != null && dialBranches.contains(sender)) {
-//                            //We are forking and one of the branches sent NO-ANSWER or COMPLETED or FAILED
-//                            //Remove this branch and wait for other branches
-//                            removeDialBranch(message, sender);
-//                            if (dialBranches.size() > 0) {
-//                                //There are more branches, return and wait for the other branches response
-//                                return;
-//                            } else if(dialBranches.size() == 0){
-//                                dialBranches = null;
-//                            }
-//                        }
-//
-//                        Attribute attribute = null;
-//                        if (verb != null) {
-//                            attribute = verb.attribute("action");
-//                        }
-//
-//                        if (attribute == null) {
-//                            if(logger.isInfoEnabled()) {
-//                                logger.info("Will ask for the next verb from parser");
-//                            }
-//                            final GetNextVerb next = GetNextVerb.instance();
-//                            parser.tell(next, self());
-//                        } else {
-//                            if (outboundCall != null) {
-//                                executeDialAction(message,outboundCall);
-//                            } else {
-//                                executeDialAction(message,null);
-//                            }
-//                        }
-//                        dialChildren = null;
-//                        return;
                         if (sender.equals(call)) {
                             fsm.transition(message, finished);
                         } else {
@@ -1213,7 +1185,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (message instanceof  ReceiveTimeout) {
             state = CallStateChanged.State.NO_ANSWER;
         }
-        CallStateChanged stateChanged = (CallStateChanged) message;
+
         if (dialBranches == null || dialBranches.size() == 0) {
             dialBranches = null;
 
@@ -1221,7 +1193,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (logger.isInfoEnabled()) {
                     logger.info("Attribute is null, will destroy call and ask for the next verb from parser");
                 }
-                callManager.tell(new DestroyCall(sender), self());
+                if (sender != null && !sender.equals(call)) {
+                    callManager.tell(new DestroyCall(sender), self());
+                }
                 final GetNextVerb next = GetNextVerb.instance();
                 parser.tell(next, self());
             } else {
@@ -1229,7 +1203,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     logger.info("Executing Dial Action and will destroy call");
                 }
                 executeDialAction(message, sender);
-                callManager.tell(new DestroyCall(sender), self());
+                if (sender != null && !sender.equals(call)) {
+                    callManager.tell(new DestroyCall(sender), self());
+                }
+            }
+            if (bridge != null) {
+                // Stop the bridge
+                bridge.tell(new StopBridge(), self());
+                bridge = null;
             }
         } else if (state != null && (state.equals(CallStateChanged.State.BUSY) ||
                 state.equals(CallStateChanged.State.CANCELED) ||
@@ -2351,6 +2332,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 dialChildren = null;
                 callback();
+                checkDialBranch(message, null, attribute);
                 return;
             }
 
@@ -2358,7 +2340,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if(logger.isInfoEnabled()) {
                     logger.info("CallStateChanged state: "+((CallStateChanged)message).state().toString()+" ,sender: "+sender().path());
                 }
-                if (forking.equals(state) || finishDialing.equals(state) || is(bridged)) {
+                if (forking.equals(state) || finishDialing.equals(state) || is(bridged) || is(bridging) ) {
                     if (sender.equals(call)) {
                         //Initial call wants to finish dialing
                         if(logger.isInfoEnabled()) {
@@ -2398,6 +2380,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         removeDialBranch(message, sender);
                         return;
                     } else {
+                        // At this point !sender.equal(call)
                         // Ask the parser for the next action to take.
                         final GetNextVerb next = GetNextVerb.instance();
                         if (parser != null) {
@@ -2413,12 +2396,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                         return;
                     }
-                } else if (bridged.equals(state)) {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("finishDialing state=bridged, will hangup outboundCall");
-                    }
-                    outboundCall.tell(new Hangup(), source);
-                } else {
+                }
+                //August 20 START
+//                else if (bridged.equals(state)) {
+//                    if(logger.isInfoEnabled()) {
+//                        logger.info("finishDialing state=bridged, will hangup outboundCall");
+//                    }
+//                    outboundCall.tell(new Hangup(), source);
+//                }
+//              //August 20 END
+                else {
 //                    logger.debug("FinishDialing, State: " + state);
 //                    logger.debug("State is not FORKING and not Bridged");
 //                    logger.debug("Sender is initial call: " + sender.equals(call));
@@ -2968,6 +2955,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             if (!liveCallModification) {
                 // Destroy the Call(s).
+                if (call!= null && !call.isTerminated()) {
+                    call.tell(new Hangup(), self());
+                }
+                if (outboundCall != null &&!outboundCall.isTerminated()) {
+                    outboundCall.tell(new Hangup(), self());
+                }
                 callManager.tell(new DestroyCall(call), super.source);
                 if (outboundCall != null) {
                     callManager.tell(new DestroyCall(outboundCall), super.source);
