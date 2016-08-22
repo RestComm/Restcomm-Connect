@@ -144,7 +144,7 @@ public class MediaResourceBroker extends UntypedActor{
         return gateways;
     }
 
-    private ActorRef getBridgeConnector() {
+    private ActorRef getConferenceMediaResourceController() {
         return system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
@@ -167,7 +167,7 @@ public class MediaResourceBroker extends UntypedActor{
         if (GetMediaGateway.class.equals(klass)) {
             onGetMediaGateway((GetMediaGateway) message, self, sender);
         } else if (GetConferenceMediaResourceController.class.equals(klass)){
-            sender.tell(new MediaResourceBrokerResponse<ActorRef>(getBridgeConnector()), self);
+            sender.tell(new MediaResourceBrokerResponse<ActorRef>(getConferenceMediaResourceController()), self);
         }
     }
 
