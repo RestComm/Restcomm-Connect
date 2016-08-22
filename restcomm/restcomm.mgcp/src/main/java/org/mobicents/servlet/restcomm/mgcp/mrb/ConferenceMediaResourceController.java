@@ -51,6 +51,7 @@ import org.mobicents.servlet.restcomm.mgcp.OpenLink;
 import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
 import org.mobicents.servlet.restcomm.mgcp.UpdateLink;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartBridgeConnector;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopLookingForSlaves;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
@@ -203,6 +204,8 @@ public class ConferenceMediaResourceController extends UntypedActor{
             onConnectionStateChanged((ConnectionStateChanged) message, self, sender);
         } else if (LinkStateChanged.class.equals(klass)) {
             onLinkStateChanged((LinkStateChanged) message, self, sender);
+        } else if(StopLookingForSlaves.class.equals(klass)) {
+        	this.keepLookingForSlaves = false;
         }
     }
 
@@ -495,6 +498,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
 
             if(isThisMasterBridgeConnector){
+            	//TODO: create a new actor ask it to do this
                 //TODO: yahan pay koi job laga do jo db me dekhti rahay slave bridges ki appearance
                 //TODO: as soon as they come modify connection with their sdp and change isbridge to true;
                 while(keepLookingForSlaves){
@@ -506,7 +510,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                             final UpdateConnection update = new UpdateConnection(descriptor);
                             connectionWithLocalBridgeEndpoint.tell(update, source);
                             logger.info("^^^^^^^^^^^^^^^^ Slave Found Breaking the search. ^^^^^^^^^^^^^^^^^^");
-                            //TODO this is temporary stuf hope to connect only two participants from 2 RMS.
+                            //TODO this is temporary stuff hope to connect only two participants from 2 RMS.
                             keepLookingForSlaves = false;
                             break;
                         }

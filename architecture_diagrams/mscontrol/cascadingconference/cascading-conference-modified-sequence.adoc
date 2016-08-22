@@ -1,0 +1,58 @@
+[plantuml, cascading-conference-mrb-sequence-modified, png]     
+....
+title cascading-conference-mrb-sequence
+box "RC1 Master" #LightGreen
+	participant CnfController1
+	participant MRB1
+	participant CMRC1
+	participant RMS1
+end box
+box "Database" #LightBlue
+	participant DAO
+end box
+box "RC2 Slave" #LightPink
+	participant RMS2
+	participant CMRC2
+	participant MRB2
+	participant CnfController2
+end box
+==1st participant (aka Master) enters on RC1==
+CnfController1 -> MRB1: GetMediaGateway\n(cnf name)
+MRB1 -> CnfController1: MediaGateway to RMS1
+alt If there is no conf\nin 'Running' state\nin DB with same name
+MRB1 -> DAO: generate Sid\nsave conferencerecord
+end
+CnfController1 -> MRB1: Get\nCnfMediaResourceCntroler
+MRB1 -> CnfController1:  new actor\nCMRC1
+CnfController1->CnfController1:onJoinComplete
+CnfController1->CMRC1: StartBridgeConnecting Process
+CMRC1<->DAO:get Cnf Data
+CMRC1->RMS1:(CRCX)\ncreate bridge
+RMS1->CMRC1: success/SDP
+CMRC1->DAO:save bridge ep\nnumber in DB
+CMRC1->RMS1:(CRCX)\n connect bridge and conference ep
+RMS1->CMRC1: success
+==2nd participant (aka Slave) enters on RC2==
+CnfController2 -> MRB2: GetMediaGateway\n(cnf name)
+MRB2 -> CnfController2: MediaGateway to RMS2
+CnfController2 -> MRB2: Get\nCnfMediaResourceCntroler
+MRB2 -> CnfController2: new actor\nCMRC2
+CnfController2->CMRC2: StartBridgeConnecting Process
+CMRC2<->DAO:get Cnf Data
+CMRC2->RMS2:(CRCX)\ncreate bridge
+RMS2->CMRC2: success/SDP
+CMRC2->RMS2:(CRCX)\n connect bridge and conference ep
+RMS2->CMRC2: success
+==Slave Thread creates connection with master RMS on bridge where Master Participant is connected==
+CMRC2->RMS1:(MGCP/SDP - CRCX)\n also pass SDP\nfrom RMS2 bridge connection
+RMS1->CMRC2: success/SDP
+CMRC2->RMS2:(MGCP/SDP - MDCX)\nmodify with sdp from RMS1.
+RMS2->CMRC2: success
+==Stop MOH and Unmute Master participant==
+RMS1<->RMS2: RTP
+CMRC2->RMS1:Stop Music on Hold\nStill need to identify command and parameters
+RMS1->CMRC2:success.
+CMRC2->RMS1:UnMute\nStill need to identify command and parameters
+RMS1->CMRC2:success.
+RMS1<->RMS2: RTP
+....
