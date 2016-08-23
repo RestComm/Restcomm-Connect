@@ -142,13 +142,13 @@ public final class MmsConferenceController extends MediaServerController {
         // Initialize the transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, getMediaGatewayFromMRB));
-        transitions.add(new Transition(getMediaGatewayFromMRB, gettingCnfMediaResourceController));
-        transitions.add(new Transition(gettingCnfMediaResourceController, acquiringMediaSession));
+        transitions.add(new Transition(getMediaGatewayFromMRB, acquiringMediaSession));
         transitions.add(new Transition(acquiringMediaSession, acquiringEndpoint));
         transitions.add(new Transition(acquiringMediaSession, inactive));
         transitions.add(new Transition(acquiringEndpoint, creatingMediaGroup));
         transitions.add(new Transition(acquiringEndpoint, inactive));
-        transitions.add(new Transition(creatingMediaGroup, active));
+        transitions.add(new Transition(creatingMediaGroup, gettingCnfMediaResourceController));
+        transitions.add(new Transition(gettingCnfMediaResourceController, active));
         transitions.add(new Transition(creatingMediaGroup, stopping));
         transitions.add(new Transition(creatingMediaGroup, failed));
         transitions.add(new Transition(active, stopping));
@@ -269,11 +269,11 @@ public final class MmsConferenceController extends MediaServerController {
             MediaGatewayForConference mgc = (MediaGatewayForConference) message.get();
             mediaGateway = mgc.mediaGateway();
             this.conferenceSid = mgc.conferenceSid();
-            fsm.transition(message, gettingCnfMediaResourceController);
+            fsm.transition(message, acquiringMediaSession);
         }else if(is(gettingCnfMediaResourceController)){
             conferenceMediaResourceController = (ActorRef) message.get();
             conferenceMediaResourceController.tell(new Observe(self), self);
-            fsm.transition(message, acquiringMediaSession);
+            fsm.transition(message, active);
         }
     }
 
@@ -316,7 +316,7 @@ public final class MmsConferenceController extends MediaServerController {
         switch (message.state()) {
             case ACTIVE:
                 if (is(creatingMediaGroup)) {
-                    fsm.transition(message, active);
+                    fsm.transition(message, gettingCnfMediaResourceController);
                 }
                 break;
 
@@ -444,7 +444,7 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("MMSConferenceController: GettingCnfMediaResourceController: conferenceName = "+conferenceName+" conferenceSid: "+conferenceSid);
+            logger.info("MMSConferenceController: GettingCnfMediaResourceController: conferenceName = "+conferenceName+" conferenceSid: "+conferenceSid+" cnfenpointID: "+cnfEndpoint);
             mrb.tell(new GetConferenceMediaResourceController(conferenceName, conferenceSid), self());
         }
     }

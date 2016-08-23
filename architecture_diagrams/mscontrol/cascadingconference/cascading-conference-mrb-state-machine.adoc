@@ -1,18 +1,12 @@
-[plantuml, cascading-conference-mrb-state-machine, svg]     
+[plantuml, cascading-conference-cmrc-state-machine, svg]     
 ....
-title MediaResourceBroker FSM
-[*] --> uninitialized
-uninitialized-->active
-active-->inactive
-active-->acquiringMediaGatewayInfo
-acquiringMediaGatewayInfo-->initiateBridging
-initiateBridging-->acquiringBridge
-acquiringBridge-->acquiringRemoteConnection
-acquiringRemoteConnection-->initializingRemoteConnection
-initializingRemoteConnection-->openingRemoteConnection
-openingRemoteConnection-->BridgingComplete
-BridgingComplete-->updatingRemoteConnection
-updatingRemoteConnection-->closingRemoteConnection
-closingRemoteConnection-->inactive
-inactive--> [*]
+title Conference Media Resource Controller FSM
+
+[*] -->uninitialized
+uninitialized-->gettingConferenceInfoFromDB
+
+
+gettingConferenceInfoFromDB-->Failed
+Failed-->inactive
+inactive-->[*]
 ....

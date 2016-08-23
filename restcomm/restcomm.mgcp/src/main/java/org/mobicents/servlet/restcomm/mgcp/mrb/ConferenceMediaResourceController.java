@@ -72,7 +72,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     // Finite State Machine
     private final FiniteStateMachine fsm;
     private final State uninitialized;
-    private final State initializing;
+    private final State gettingConferenceInfoFromDB;
     private final State creatingBridgeEndpoint;
     private final State acquiringRemoteConnection;
     private final State initializingRemoteConnection;
@@ -94,7 +94,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
     private String localMsId;
     private String masterMsId;
-    private boolean isThisMasterBridgeConnector = false;
+    private boolean isThisMaster = false;
     private String localMediaServerSdp;
     private String remoteMediaServerSdp;
     private MediaSession mediaSession;
@@ -122,7 +122,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         final ActorRef source = self();
         // Initialize the states for the FSM.
         this.uninitialized = new State("uninitialized", null, null);
-        this.initializing = new State("initializing", new Initializing(source), null);
+        this.gettingConferenceInfoFromDB = new State("getting Conference Info From DB", new GettingConferenceInfoFromDB(source), null);
         this.creatingBridgeEndpoint = new State("creating bridge endpoint", new CreatingBridgeEndpoint(source), null);
         this.acquiringRemoteConnection = new State("acquiring connection", new AcquiringRemoteConnection(source), null);
         this.initializingRemoteConnection = new State("initializing connection", new InitializingRemoteConnection(source), null);
@@ -142,8 +142,8 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
-        transitions.add(new Transition(uninitialized, initializing));
-        transitions.add(new Transition(initializing, creatingBridgeEndpoint));
+        transitions.add(new Transition(uninitialized, gettingConferenceInfoFromDB));
+        transitions.add(new Transition(gettingConferenceInfoFromDB, creatingBridgeEndpoint));
         transitions.add(new Transition(creatingBridgeEndpoint, acquiringRemoteConnection));
         transitions.add(new Transition(acquiringRemoteConnection, initializingRemoteConnection));
         transitions.add(new Transition(initializingRemoteConnection, openingRemoteConnection));
@@ -233,13 +233,13 @@ public class ConferenceMediaResourceController extends UntypedActor{
             conferenceSid = message.conferenceSid();
             conferenceName = message.conferenceName();
             connectionMode = message.connectionMode();
-            fsm.transition(message, initializing);
+            fsm.transition(message, gettingConferenceInfoFromDB);
         }
     }
 
     private void onMediaGatewayResponse(MediaGatewayResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
         logger.info("inside onMediaGatewayResponse: state = "+fsm.state());
-        if(is(initializing)){
+        if(is(gettingConferenceInfoFromDB)){
             logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - initializing to acquiringMediaSession ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             this.mediaSession = (MediaSession) message.get();
             this.fsm.transition(message, creatingBridgeEndpoint);
@@ -274,7 +274,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 ConnectionStateChanged connState = (ConnectionStateChanged) message;
                 localMediaServerSdp = connState.descriptor().toString();
                 logger.info("localMediaServerSdp: "+localMediaServerSdp);
-                if(isThisMasterBridgeConnector){
+                if(isThisMaster){
                     setMasterMediaServerSDP();
                     logger.info("A bridge has been create on master media server");
                 }else{
@@ -316,7 +316,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 if (is(openingInternalLink)) {
                     fsm.transition(message, updatingInternalLink);
                 } else if (is(updatingInternalLink)) {
-                    if(isThisMasterBridgeConnector){
+                    if(isThisMaster){
                     	
                     }else{
                         fsm.transition(message, initializingConnectingBridges);
@@ -343,9 +343,9 @@ public class ConferenceMediaResourceController extends UntypedActor{
         }
     }
 
-    private final class Initializing extends AbstractAction {
+    private final class GettingConferenceInfoFromDB extends AbstractAction {
 
-        public Initializing(final ActorRef source) {
+        public GettingConferenceInfoFromDB(final ActorRef source) {
             super(source);
         }
 
@@ -363,7 +363,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 masterMsId = cdr.getMasterMsId();
                 if(localMsId.equalsIgnoreCase(masterMsId)){
                     logger.info("first participant Joined on master MS and sent StartBridgeConnector message to BridgeConnector");
-                    isThisMasterBridgeConnector = true;
+                    isThisMaster = true;
                 }else{
                     logger.info("new slave sent StartBridgeConnector message to BridgeConnector");
                     // enter slave record in MRB resource table
@@ -501,7 +501,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
             final ActorRef self = self();
 
 
-            if(isThisMasterBridgeConnector){
+            if(isThisMaster){
             	//TODO: create a new actor ask it to do this
                 //TODO: yahan pay koi job laga do jo db me dekhti rahay slave bridges ki appearance
                 //TODO: as soon as they come modify connection with their sdp and change isbridge to true;
