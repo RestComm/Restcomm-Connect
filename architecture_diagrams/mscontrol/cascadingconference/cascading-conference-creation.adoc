@@ -1,4 +1,4 @@
-[plantuml, cascading-conference-creation, png]     
+[plantuml, cascading-conference-creation, svg]     
 ....
 title cascading conference creation sequence (2 participants, 2 RMS)
 actor Participant1

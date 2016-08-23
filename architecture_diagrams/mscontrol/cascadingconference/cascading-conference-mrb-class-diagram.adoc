@@ -1,4 +1,4 @@
-[plantuml, cascading-conference-mrb-class-diagram, png] 
+[plantuml, cascading-conference-mrb-class-diagram, svg] 
 ....
 interface MediaServerController{
     

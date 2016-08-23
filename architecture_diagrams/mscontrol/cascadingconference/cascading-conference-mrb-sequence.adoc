@@ -1,4 +1,4 @@
-[plantuml, cascading-conference-mrb-sequence, png]     
+[plantuml, cascading-conference-mrb-sequence, svg]     
 ....
 title cascading-conference-mrb-sequence
 

@@ -1,4 +1,4 @@
-[plantuml, cascading-conference-cleanup, png]     
+[plantuml, cascading-conference-cleanup, svg]     
 ....
 title cascading conference cleanup (2 participants)
 actor Participant1
