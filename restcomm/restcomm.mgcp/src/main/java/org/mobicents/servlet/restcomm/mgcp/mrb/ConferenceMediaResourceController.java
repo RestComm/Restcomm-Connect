@@ -316,7 +316,11 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 if (is(openingInternalLink)) {
                     fsm.transition(message, updatingInternalLink);
                 } else if (is(updatingInternalLink)) {
-                    fsm.transition(message, initializingConnectingBridges);
+                    if(isThisMasterBridgeConnector){
+                    	
+                    }else{
+                        fsm.transition(message, initializingConnectingBridges);
+                    }
                 }
                 break;
 

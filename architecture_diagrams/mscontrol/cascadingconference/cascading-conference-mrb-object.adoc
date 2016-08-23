@@ -1,4 +1,4 @@
-[plantuml, cascading-conference-mrb-object, png]     
+[plantuml, cascading-conference-mrb-object, svg]     
 ....
 title Cascading Conference MRB Class Details
 

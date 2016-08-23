@@ -1,4 +1,4 @@
-[plantuml, cascading-conference-mrb-state-machine, png]     
+[plantuml, cascading-conference-mrb-state-machine, svg]     
 ....
 title MediaResourceBroker FSM
 [*] --> uninitialized

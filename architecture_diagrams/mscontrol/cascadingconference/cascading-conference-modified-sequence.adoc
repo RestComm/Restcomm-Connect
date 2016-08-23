@@ -1,4 +1,4 @@
-[plantuml, cascading-conference-mrb-sequence-modified, png]     
+["plantuml", cascading-conference-mrb-sequence-modified, svg]     
 ....
 title cascading-conference-mrb-sequence
 box "RC1 Master" #LightGreen
@@ -55,4 +55,5 @@ RMS1->CMRC2:success.
 CMRC2->RMS1:UnMute\nStill need to identify command and parameters
 RMS1->CMRC2:success.
 RMS1<->RMS2: RTP
+
 ....

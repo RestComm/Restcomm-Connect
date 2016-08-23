@@ -1,4 +1,4 @@
-[plantuml, cascading-conference-in-progress-resource-snapshot, png]     
+[plantuml, cascading-conference-in-progress-resource-snapshot, svg]     
 ....
 
 title Conference in progress Snapshot

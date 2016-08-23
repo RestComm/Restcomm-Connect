@@ -1,4 +1,4 @@
-[plantuml, cascading-conference-mrb-data-model, png]     
+[plantuml, cascading-conference-mrb-data-model, svg]     
 ....
 title Cascading Conference Data Model
 !define table(x) class x << (T,#FFAAAA) >>
