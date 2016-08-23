@@ -4,6 +4,8 @@ title Conference Media Resource Controller FSM
 
 [*] -->Uninitialized
 Uninitialized-->GettingConferenceInfoFromDB
+GettingConferenceInfoFromDB : Fetch record from DB\nCreateMediaSession with local MS
+
 GettingConferenceInfoFromDB-->GettingConferenceEndpointID
 GettingConferenceEndpointID--> UpdatingConferenceEndpointIDInDB
 UpdatingConferenceEndpointIDInDB-->Active
@@ -14,6 +16,7 @@ CreatingConnectionWithLocalCnfEP-->AcquiringRemoteConnectionWithMasterMS
 AcquiringRemoteConnectionWithMasterMS-->CreatingConnectionWithMasterCnfEP
 CreatingConnectionWithMasterCnfEP-->UpdatingLocalConferenceEP
 UpdatingLocalConferenceEP-->Active
-Active-->Inactive
+Active-->Stopping
+Stopping-->Inactive
 Inactive-->[*]
 ....
