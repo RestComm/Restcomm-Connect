@@ -73,6 +73,11 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private final FiniteStateMachine fsm;
     private final State uninitialized;
     private final State gettingConferenceInfoFromDB;
+    GettingConferenceEndpointID
+    UpdatingConferenceEndpointIDInDB
+    CreatingConnectionWithLocalCnfEP
+    CreatingConnectionWithMasterCnfEP
+    UpdatingLocalConferenceEP
     private final State creatingBridgeEndpoint;
     private final State acquiringRemoteConnection;
     private final State initializingRemoteConnection;
