@@ -2,11 +2,18 @@
 ....
 title Conference Media Resource Controller FSM
 
-[*] -->uninitialized
-uninitialized-->gettingConferenceInfoFromDB
+[*] -->Uninitialized
+Uninitialized-->GettingConferenceInfoFromDB
+GettingConferenceInfoFromDB-->GettingConferenceEndpointID
+GettingConferenceEndpointID--> UpdatingConferenceEndpointIDInDB
+UpdatingConferenceEndpointIDInDB-->Active
 
-
-gettingConferenceInfoFromDB-->Failed
-Failed-->inactive
-inactive-->[*]
+GettingConferenceInfoFromDB-->AcquiringRemoteConnectionWithLocalMS
+AcquiringRemoteConnectionWithLocalMS-->CreatingConnectionWithLocalCnfEP
+CreatingConnectionWithLocalCnfEP-->AcquiringRemoteConnectionWithMasterMS
+AcquiringRemoteConnectionWithMasterMS-->CreatingConnectionWithMasterCnfEP
+CreatingConnectionWithMasterCnfEP-->UpdatingLocalConferenceEP
+UpdatingLocalConferenceEP-->Active
+Active-->Inactive
+Inactive-->[*]
 ....
