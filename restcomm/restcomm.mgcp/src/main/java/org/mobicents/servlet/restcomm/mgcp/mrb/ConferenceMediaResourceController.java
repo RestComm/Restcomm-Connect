@@ -229,7 +229,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
             if(isThisMaster){
                 this.fsm.transition(message, acquiringConferenceEndpointID);
             }else{
-                this.fsm.transition(message, acquiringRemoteConnectionWithLocalMS);                
+                this.fsm.transition(message, acquiringRemoteConnectionWithLocalMS);
             }
         } else if (is(acquiringRemoteConnectionWithLocalMS)){
             logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringRemoteConnection ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
@@ -239,10 +239,10 @@ public class ConferenceMediaResourceController extends UntypedActor{
             logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringMediaSessionWithMasterMS"+" masterMediaSession is "+masterMediaSession+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             fsm.transition(message, acquiringMasterConferenceEndpoint);
         } else if (is(acquiringMasterConferenceEndpoint)){
-        	logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringMasterConferenceEndpoint"+" masterConfernceEndpoint is "+masterConfernceEndpoint+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-        	masterConfernceEndpoint = (ActorRef) message.get();
-        	masterConfernceEndpoint.tell(new Observe(self), self);
-        	fsm.transition(message, acquiringRemoteConnectionWithMasterMS);
+            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringMasterConferenceEndpoint"+" masterConfernceEndpoint is "+masterConfernceEndpoint+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            masterConfernceEndpoint = (ActorRef) message.get();
+            masterConfernceEndpoint.tell(new Observe(self), self);
+            fsm.transition(message, acquiringRemoteConnectionWithMasterMS);
         } else if (is(acquiringRemoteConnectionWithMasterMS)) {
             fsm.transition(message, initializingRemoteConnectionWithMasterMS);
         }
@@ -495,7 +495,9 @@ public class ConferenceMediaResourceController extends UntypedActor{
         }
 
         @Override
-        public void execute(final Object message) throws Exception {}
+        public void execute(final Object message) throws Exception {
+            logger.info("CMRC is ACTIVE NOW...");
+        }
     }
 
     private class Stopping extends AbstractAction {
