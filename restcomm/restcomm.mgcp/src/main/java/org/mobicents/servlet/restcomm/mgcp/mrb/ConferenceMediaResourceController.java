@@ -328,6 +328,34 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
     }
 
+    private final class AcquiringConferenceEndpointID extends AbstractAction {
+        public AcquiringConferenceEndpointID(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            if (localConfernceEndpoint != null) {
+                final InviteEndpoint invite = new InviteEndpoint();
+                localConfernceEndpoint.tell(invite, source);
+            }
+        }
+    }
+
+    private final class SavingConferenceEndpointID extends AbstractAction {
+        public SavingConferenceEndpointID(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            final EndpointCredentials response = (EndpointCredentials) message;
+            localConfernceEndpointId = response.endpointId();
+            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ localConfernceEndpointId:"+localConfernceEndpointId+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            //TODO: update DB here
+        }
+    }
+
     private final class AcquiringRemoteConnectionWithLocalMS extends AbstractAction {
 
         public AcquiringRemoteConnectionWithLocalMS(final ActorRef source) {
@@ -436,33 +464,6 @@ public class ConferenceMediaResourceController extends UntypedActor{
             final ConnectionDescriptor descriptor = new ConnectionDescriptor(masterMediaServerSdp);
             final UpdateConnection update = new UpdateConnection(descriptor);
             connectionWithMasterMS.tell(update, source);
-        }
-    }
-
-    private final class AcquiringConferenceEndpointID extends AbstractAction {
-        public AcquiringConferenceEndpointID(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            if (localConfernceEndpoint != null) {
-                final InviteEndpoint invite = new InviteEndpoint();
-                localConfernceEndpoint.tell(invite, source);
-            }
-        }
-    }
-
-    private final class SavingConferenceEndpointID extends AbstractAction {
-        public SavingConferenceEndpointID(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            final EndpointCredentials response = (EndpointCredentials) message;
-            localConfernceEndpointId = response.endpointId();
-            //TODO: update DB here
         }
     }
 
