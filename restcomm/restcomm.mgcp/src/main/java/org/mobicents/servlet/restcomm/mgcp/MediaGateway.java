@@ -19,6 +19,14 @@
  */
 package org.mobicents.servlet.restcomm.mgcp;
 
+import java.net.InetAddress;
+import java.util.Map;
+import java.util.TooManyListenersException;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl;
+import org.mobicents.servlet.restcomm.util.RevolvingCounter;
+
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -27,7 +35,6 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
 import jain.protocol.ip.mgcp.CreateProviderException;
 import jain.protocol.ip.mgcp.DeleteProviderException;
 import jain.protocol.ip.mgcp.JainMgcpCommandEvent;
@@ -40,14 +47,6 @@ import jain.protocol.ip.mgcp.message.Constants;
 import jain.protocol.ip.mgcp.message.NotificationRequest;
 import jain.protocol.ip.mgcp.message.Notify;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
-
-import java.net.InetAddress;
-import java.util.Map;
-import java.util.TooManyListenersException;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl;
-import org.mobicents.servlet.restcomm.util.RevolvingCounter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -118,14 +117,26 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         final ActorRef gateway = self();
         final CreateConferenceEndpoint request = (CreateConferenceEndpoint) message;
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
+        final String endpointId = request.endpointId();
+        if(endpointId == null){
+            return getContext().actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
 
-            @Override
-            public UntypedActor create() throws Exception {
-                return new ConferenceEndpoint(gateway, session, agent, domain, timeout);
-            }
-        }));
+                @Override
+                public UntypedActor create() throws Exception {
+                    return new ConferenceEndpoint(gateway, session, agent, domain, timeout);
+                }
+            }));
+        } else {
+            return getContext().actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public UntypedActor create() throws Exception {
+                    return new ConferenceEndpoint(gateway, session, agent, domain, timeout, endpointId);
+                }
+            }));
+        }
     }
 
     private MediaGatewayInfo getInfo(final Object message) {
