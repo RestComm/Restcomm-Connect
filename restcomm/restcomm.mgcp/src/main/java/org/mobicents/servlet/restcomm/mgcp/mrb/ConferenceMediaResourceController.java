@@ -176,8 +176,8 @@ public class ConferenceMediaResourceController extends UntypedActor{
         final State state = fsm.state();
 
         if (logger.isInfoEnabled()) {
-            logger.info(" ********** MRBBridgeConnector " + self().path() + " Processing Message: " + klass.getName());
-            logger.info(" ********** MRBBridgeConnector " + self().path() + " Current State: \"" + state.toString());
+            logger.info(" ********** ConferenceMediaResourceController " + self().path() + " Processing Message: " + klass.getName());
+            logger.info(" ********** ConferenceMediaResourceController " + self().path() + " Current State: \"" + state.toString());
         }
 
         if (Observe.class.equals(klass)) {
@@ -570,10 +570,10 @@ public class ConferenceMediaResourceController extends UntypedActor{
     }
 
     private void updateMasterConferenceEndpointId(){
-    	if(cdr != null){
-    		final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
-    		cdr.setMasterConfernceEndpointId(localConfernceEndpointId.getLocalEndpointName());
-    		dao.updateConferenceDetailRecord(cdr);
-    	}
+        if(cdr != null){
+            final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
+            cdr.setMasterConfernceEndpointId(localConfernceEndpointId.getLocalEndpointName());
+            dao.updateConferenceDetailRecord(cdr);
+        }
     }
 }
