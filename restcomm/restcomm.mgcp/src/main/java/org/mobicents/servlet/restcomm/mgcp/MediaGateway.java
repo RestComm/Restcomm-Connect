@@ -117,8 +117,8 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         final ActorRef gateway = self();
         final CreateConferenceEndpoint request = (CreateConferenceEndpoint) message;
         final MediaSession session = request.session();
-        final String endpointId = request.endpointId();
-        if(endpointId == null){
+        final String endpointName = request.endpointName();
+        if(endpointName == null){
             return getContext().actorOf(new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
@@ -133,7 +133,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
 
                 @Override
                 public UntypedActor create() throws Exception {
-                    return new ConferenceEndpoint(gateway, session, agent, domain, timeout, endpointId);
+                    return new ConferenceEndpoint(gateway, session, agent, domain, timeout, endpointName);
                 }
             }));
         }

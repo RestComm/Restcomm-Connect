@@ -26,16 +26,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class CreateConferenceEndpoint extends AbstractCreateMessage {
-    private String endpointId;
+    private String endpointName;
     public CreateConferenceEndpoint(final MediaSession session) {
         super(session);
     }
 
     public CreateConferenceEndpoint(final MediaSession session, final String endpointId) {
          this(session);
-         this.endpointId = endpointId;
+         this.endpointName = endpointId;
     }
-     public String endpointId() {
-          return this.endpointId;
+     public String endpointName() {
+          return this.endpointName;
      }
 }

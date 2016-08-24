@@ -34,7 +34,7 @@ public final class ConferenceEndpoint extends GenericEndpoint {
     }
 
     public ConferenceEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent,
-            final String domain, long timeout, String endpointId) {
-        super(gateway, session, agent, new EndpointIdentifier("mobicents/cnf/"+endpointId, domain), timeout);
+            final String domain, long timeout, String endpointName) {
+        super(gateway, session, agent, new EndpointIdentifier(endpointName, domain), timeout);
     }
 }

@@ -191,6 +191,8 @@ public class ConferenceMediaResourceController extends UntypedActor{
             onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
         } else if (ConnectionStateChanged.class.equals(klass)) {
             onConnectionStateChanged((ConnectionStateChanged) message, self, sender);
+        } else if (EndpointCredentials.class.equals(klass)) {
+            fsm.transition(message, active);
         }
     }
 
@@ -362,7 +364,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
             final EndpointCredentials response = (EndpointCredentials) message;
             localConfernceEndpointId = response.endpointId();
             logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ localConfernceEndpointId:"+localConfernceEndpointId+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-            //TODO: update DB here
+            updateMasterConferenceEndpointId();
         }
     }
 
@@ -565,5 +567,13 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
         entity = builder.build();
         dao.addMediaResourceBrokerEntity(entity);
+    }
+
+    private void updateMasterConferenceEndpointId(){
+    	if(cdr != null){
+    		final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
+    		cdr.setMasterConfernceEndpointId(localConfernceEndpointId.getLocalEndpointName());
+    		dao.updateConferenceDetailRecord(cdr);
+    	}
     }
 }
