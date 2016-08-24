@@ -23,7 +23,6 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 import akka.actor.ActorRef;
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -33,15 +32,11 @@ public final class StartBridgeConnector {
 
     private final ActorRef cnfEndpoint;
     private final Sid conferenceSid;
-    private final String conferenceName;
-    private ConnectionMode connectionMode;
 
-    public StartBridgeConnector(final ActorRef cnfEndpoint, final Sid conferenceSid, final String conferenceName, final ConnectionMode connectionMode) {
+    public StartBridgeConnector(final ActorRef cnfEndpoint, final Sid conferenceSid) {
         super();
         this.cnfEndpoint = cnfEndpoint;
         this.conferenceSid = conferenceSid;
-        this.conferenceName = conferenceName;
-        this.connectionMode = connectionMode;
     }
 
     public ActorRef cnfEndpoint() {
@@ -50,13 +45,5 @@ public final class StartBridgeConnector {
 
     public Sid conferenceSid() {
         return conferenceSid;
-    }
-
-    public String conferenceName() {
-        return conferenceName;
-    }
-
-    public ConnectionMode connectionMode() {
-        return connectionMode;
     }
 }
