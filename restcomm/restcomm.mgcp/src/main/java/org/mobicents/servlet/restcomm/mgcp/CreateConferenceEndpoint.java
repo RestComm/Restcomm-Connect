@@ -32,10 +32,10 @@ public final class CreateConferenceEndpoint extends AbstractCreateMessage {
     }
 
     public CreateConferenceEndpoint(final MediaSession session, final String endpointId) {
-    	this(session);
-    	this.endpointId = endpointId;
+         this(session);
+         this.endpointId = endpointId;
     }
-	public String endpointId() {
-		return this.endpointId;
-	}
+     public String endpointId() {
+          return this.endpointId;
+     }
 }
