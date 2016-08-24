@@ -272,17 +272,15 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ localMediaServerSdp: "+localMediaServerSdp);
                     fsm.transition(message, acquiringMediaSessionWithMasterMS);
                     break;
-                } else if (is(openingRemoteConnectionWithMasterMS)){
+                }
+                break;
+            case OPEN:
+                if (is(openingRemoteConnectionWithMasterMS)){
                     ConnectionStateChanged connState = (ConnectionStateChanged) message;
                     masterMediaServerSdp = connState.descriptor().toString();
                     logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ masterMediaServerSdp: "+masterMediaServerSdp);
                     fsm.transition(message, updatingRemoteConnectionWithLocalMS);
-                    break;
                 }
-                break;
-            case OPEN:
-                logger.info("unhandled case");
-                //fsm.transition(message, active);
                 break;
 
             default:
@@ -486,7 +484,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         public void execute(final Object message) throws Exception {
             final ConnectionDescriptor descriptor = new ConnectionDescriptor(masterMediaServerSdp);
             final UpdateConnection update = new UpdateConnection(descriptor);
-            connectionWithMasterMS.tell(update, source);
+            connectionWithLocalMS.tell(update, source);
         }
     }
 
@@ -571,8 +569,9 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
     private void updateMasterConferenceEndpointId(){
         if(cdr != null){
+            logger.info("updateMasterConferenceEndpointId: localConfernceEndpointId.getLocalEndpointName(): "+localConfernceEndpointId.getLocalEndpointName());
             final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
-            cdr.setMasterConfernceEndpointId(localConfernceEndpointId.getLocalEndpointName());
+            cdr = cdr.setMasterConfernceEndpointId(localConfernceEndpointId.getLocalEndpointName());
             dao.updateConferenceDetailRecord(cdr);
         }
     }
