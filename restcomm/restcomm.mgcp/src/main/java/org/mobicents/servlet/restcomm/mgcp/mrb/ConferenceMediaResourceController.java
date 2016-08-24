@@ -38,6 +38,7 @@ import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mgcp.ConnectionStateChanged;
+import org.mobicents.servlet.restcomm.mgcp.CreateConferenceEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.CreateConnection;
 import org.mobicents.servlet.restcomm.mgcp.EndpointCredentials;
 import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
@@ -73,6 +74,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private final State openingRemoteConnectionWithLocalMS;
     private final State updatingRemoteConnectionWithLocalMS;
     private final State acquiringMediaSessionWithMasterMS;
+    private final State acquiringMasterConferenceEndpoint;
     private final State acquiringRemoteConnectionWithMasterMS;
     private final State initializingRemoteConnectionWithMasterMS;
     private final State openingRemoteConnectionWithMasterMS;
@@ -97,7 +99,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private ActorRef localConfernceEndpoint;
     private ActorRef masterConfernceEndpoint;
     public EndpointIdentifier localConfernceEndpointId;
-    public EndpointIdentifier masterConfernceEndpointId;
+    public String masterConfernceEndpointId;
     private ActorRef connectionWithLocalMS;
     private ActorRef connectionWithMasterMS;
 
@@ -121,6 +123,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         this.openingRemoteConnectionWithLocalMS = new State("opening connection", new OpeningRemoteConnection(source), null);
         this.updatingRemoteConnectionWithLocalMS = new State("updating RemoteConnection With Local MS", new UpdatingRemoteConnectionWithLocalMS(source), null);
         this.acquiringMediaSessionWithMasterMS = new State("acquiring MediaSession With Master MS", new AcquiringMediaSessionWithMasterMS(source), null);
+        this.acquiringMasterConferenceEndpoint = new State("acquiring Master ConferenceEndpoint", new AcquiringMasterConferenceEndpoint(source), null);
         this.acquiringRemoteConnectionWithMasterMS = new State("acquiring RemoteConnection With Master MS", new AcquiringRemoteConnectionWithMasterMS(source), null);
         this.initializingRemoteConnectionWithMasterMS = new State("initializing RemoteConnection With Master MS", new InitializingRemoteConnectionWithMasterMS(source), null);
         this.openingRemoteConnectionWithMasterMS = new State("opening RemoteConnection With Master MS", new OpeningRemoteConnectionWithMasterMS(source), null);
@@ -138,7 +141,8 @@ public class ConferenceMediaResourceController extends UntypedActor{
         transitions.add(new Transition(initializingRemoteConnectionWithLocalMS, openingRemoteConnectionWithLocalMS));
         transitions.add(new Transition(openingRemoteConnectionWithLocalMS, failed));
         transitions.add(new Transition(openingRemoteConnectionWithLocalMS, acquiringMediaSessionWithMasterMS));
-        transitions.add(new Transition(acquiringMediaSessionWithMasterMS, acquiringRemoteConnectionWithMasterMS));
+        transitions.add(new Transition(acquiringMediaSessionWithMasterMS, acquiringMasterConferenceEndpoint));
+        transitions.add(new Transition(acquiringMasterConferenceEndpoint, acquiringRemoteConnectionWithMasterMS));
         transitions.add(new Transition(acquiringRemoteConnectionWithMasterMS, initializingRemoteConnectionWithMasterMS));
         transitions.add(new Transition(initializingRemoteConnectionWithMasterMS, openingRemoteConnectionWithMasterMS));
         transitions.add(new Transition(openingRemoteConnectionWithMasterMS, updatingRemoteConnectionWithLocalMS));
@@ -233,7 +237,12 @@ public class ConferenceMediaResourceController extends UntypedActor{
         } else if (is(acquiringMediaSessionWithMasterMS)) {
             this.masterMediaSession = (MediaSession) message.get();
             logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringMediaSessionWithMasterMS"+" masterMediaSession is "+masterMediaSession+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-            fsm.transition(message, acquiringRemoteConnectionWithMasterMS);
+            fsm.transition(message, acquiringMasterConferenceEndpoint);
+        } else if (is(acquiringMasterConferenceEndpoint)){
+        	logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringMasterConferenceEndpoint"+" masterConfernceEndpoint is "+masterConfernceEndpoint+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+        	masterConfernceEndpoint = (ActorRef) message.get();
+        	masterConfernceEndpoint.tell(new Observe(self), self);
+        	fsm.transition(message, acquiringRemoteConnectionWithMasterMS);
         } else if (is(acquiringRemoteConnectionWithMasterMS)) {
             fsm.transition(message, initializingRemoteConnectionWithMasterMS);
         }
@@ -316,6 +325,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     isThisMaster = true;
                 }else{
                     masterMediaGateway = allMediaGateways.get(masterMsId);
+                    masterConfernceEndpointId = cdr.getMasterConferenceEndpointId();
                     logger.info("masterMediaGateway acquired: "+masterMediaGateway);
                     logger.info("new slave sent StartBridgeConnector message to CMRC");
                     // enter slave record in MRB resource table
@@ -410,6 +420,18 @@ public class ConferenceMediaResourceController extends UntypedActor{
         }
     }
 
+    private final class AcquiringMasterConferenceEndpoint extends AbstractAction {
+
+        public AcquiringMasterConferenceEndpoint(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            masterMediaGateway.tell(new CreateConferenceEndpoint(masterMediaSession, masterConfernceEndpointId), super.source);
+        }
+    }
+
     private final class AcquiringRemoteConnectionWithMasterMS extends AbstractAction {
 
         public AcquiringRemoteConnectionWithMasterMS(final ActorRef source) {
@@ -418,7 +440,6 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
         @Override
         public void execute(final Object message) throws Exception {
-            
             masterMediaGateway.tell(new CreateConnection(masterMediaSession), source);
         }
     }

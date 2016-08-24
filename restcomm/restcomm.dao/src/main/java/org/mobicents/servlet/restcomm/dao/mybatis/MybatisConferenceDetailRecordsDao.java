@@ -182,8 +182,8 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         final String apiVersion = readString(map.get("api_version"));
         final URI uri = readUri(map.get("uri"));
         final String msId = readString(map.get("master_ms_id"));
-        final String masterMsSDP = readString(map.get("master_ms_sdp"));
-        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri, msId, masterMsSDP);
+        final String masterConferenceEndpointId = readString(map.get("master_conference_endpoint_id"));
+        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri, msId, masterConferenceEndpointId);
     }
 
     private Map<String, Object> toMap(final ConferenceDetailRecord cdr) {
@@ -197,7 +197,7 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         map.put("api_version", cdr.getApiVersion());
         map.put("uri", writeUri(cdr.getUri()));
         map.put("master_ms_id", cdr.getMasterMsId());
-        map.put("master_ms_sdp", cdr.getMasterMsSDP());
+        map.put("master_conference_endpoint_id", cdr.getMasterConferenceEndpointId());
         return map;
     }
 }
