@@ -535,6 +535,8 @@ public final class MmsConferenceController extends MediaServerController {
             // Destroy Media Group
             mediaGroup.tell(new StopMediaGroup(), super.source);
             // Destroy Bridge Endpoint and its connections
+            here check if no slave is in mrb new table then go otherwise no
+            also check if this is last participant in whole conf then tell CMRC to destroy master conference ep.
             cnfEndpoint.tell(new DestroyEndpoint(), super.source);
         }
     }
