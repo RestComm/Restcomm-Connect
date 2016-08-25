@@ -28,12 +28,12 @@ import akka.actor.ActorRef;
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
-public final class StartBridgeConnector {
+public final class StopConferenceMediaResourceController {
 
     private final ActorRef cnfEndpoint;
     private final Sid conferenceSid;
 
-    public StartBridgeConnector(final ActorRef cnfEndpoint, final Sid conferenceSid) {
+    public StopConferenceMediaResourceController(final ActorRef cnfEndpoint, final Sid conferenceSid) {
         super();
         this.cnfEndpoint = cnfEndpoint;
         this.conferenceSid = conferenceSid;

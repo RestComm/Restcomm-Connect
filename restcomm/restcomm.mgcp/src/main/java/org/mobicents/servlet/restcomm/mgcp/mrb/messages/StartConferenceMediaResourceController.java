@@ -17,25 +17,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.mgcp;
+package org.mobicents.servlet.restcomm.mgcp.mrb.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.entities.Sid;
+
+import akka.actor.ActorRef;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
-public final class CreateConferenceEndpoint extends AbstractCreateMessage {
-    private String endpointName;
-    public CreateConferenceEndpoint(final MediaSession session) {
-        super(session);
+public final class StartConferenceMediaResourceController {
+
+    private final ActorRef cnfEndpoint;
+    private final Sid conferenceSid;
+
+    public StartConferenceMediaResourceController(final ActorRef cnfEndpoint, final Sid conferenceSid) {
+        super();
+        this.cnfEndpoint = cnfEndpoint;
+        this.conferenceSid = conferenceSid;
     }
 
-    public CreateConferenceEndpoint(final MediaSession session, final String endpointName) {
-         this(session);
-         this.endpointName = endpointName;
+    public ActorRef cnfEndpoint() {
+        return cnfEndpoint;
     }
-    public String endpointName() {
-        return this.endpointName;
+
+    public Sid conferenceSid() {
+        return conferenceSid;
     }
 }

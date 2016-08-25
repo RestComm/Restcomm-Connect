@@ -259,7 +259,7 @@ public final class MmsConferenceController extends MediaServerController {
         logger.info("got JoinComplete in conference controller");
         if(!startBridgeConnectorSignalSent){
             startBridgeConnectorSignalSent = true;
-            conferenceMediaResourceController.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartBridgeConnector(this.cnfEndpoint, this.conferenceSid), self);
+            conferenceMediaResourceController.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartConferenceMediaResourceController(this.cnfEndpoint, this.conferenceSid), self);
         }
     }
 
