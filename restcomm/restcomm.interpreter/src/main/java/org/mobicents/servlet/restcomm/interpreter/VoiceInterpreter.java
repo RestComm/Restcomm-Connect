@@ -2530,9 +2530,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 // update conference state in DB
                 if (conferenceDetailRecord != null) {
+                    final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
+                    conferenceDetailRecord = dao.getConferenceDetailRecord(conferenceDetailRecord.getSid());
                     conferenceDetailRecord = conferenceDetailRecord.setStatus(ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT.name());
-                    final ConferenceDetailRecordsDao records = storage.getConferenceDetailRecordsDao();
-                    records.updateConferenceDetailRecord(conferenceDetailRecord);
+                    dao.updateConferenceDetailRecord(conferenceDetailRecord);
                 }
                 // Call is no more on hold
                 updateMuteAndHoldStatusOfAllConferenceCalls(conferenceDetailRecord.getAccountSid(), conferenceDetailRecord.getSid(), false, false);
@@ -2606,9 +2607,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 // update conference state in DB
                 if (conferenceDetailRecord != null) {
+                    final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
+                    conferenceDetailRecord = dao.getConferenceDetailRecord(conferenceDetailRecord.getSid());
                     conferenceDetailRecord = conferenceDetailRecord.setStatus(confStateChanged.state().name());
-                    final ConferenceDetailRecordsDao records = storage.getConferenceDetailRecordsDao();
-                    records.updateConferenceDetailRecord(conferenceDetailRecord);
+                    dao.updateConferenceDetailRecord(conferenceDetailRecord);
                 }
             }
             conference = null;

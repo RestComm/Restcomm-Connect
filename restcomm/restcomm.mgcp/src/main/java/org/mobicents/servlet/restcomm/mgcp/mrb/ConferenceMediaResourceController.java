@@ -47,7 +47,8 @@ import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
 import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
-import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartBridgeConnector;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartConferenceMediaResourceController;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
@@ -184,9 +185,11 @@ public class ConferenceMediaResourceController extends UntypedActor{
             onObserve((Observe) message, self, sender);
         } else if (StopObserving.class.equals(klass)) {
             onStopObserving((StopObserving) message, self, sender);
-        } else if (StartBridgeConnector.class.equals(klass)){
-            onStartBridgeConnector((StartBridgeConnector) message, self, sender);
-        } else if (MediaGatewayResponse.class.equals(klass)) {
+        } else if (StartConferenceMediaResourceController.class.equals(klass)){
+            onStartConferenceMediaResourceController((StartConferenceMediaResourceController) message, self, sender);
+        } else if (StopConferenceMediaResourceController.class.equals(klass)) {
+            fsm.transition(message, stopping);
+        }else if (MediaGatewayResponse.class.equals(klass)) {
             logger.info("going to call onMediaGatewayResponse");
             onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
         } else if (ConnectionStateChanged.class.equals(klass)) {
@@ -213,7 +216,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         }
     }
 
-    private void onStartBridgeConnector(StartBridgeConnector message, ActorRef self, ActorRef sender) throws Exception{
+    private void onStartConferenceMediaResourceController(StartConferenceMediaResourceController message, ActorRef self, ActorRef sender) throws Exception{
         if (is(uninitialized)) {
             logger.info("onStartBridgeConnector: conferenceSid: "+message.conferenceSid()+" cnfEndpoint: "+message.cnfEndpoint());
             this.localConfernceEndpoint = message.cnfEndpoint();
@@ -497,6 +500,9 @@ public class ConferenceMediaResourceController extends UntypedActor{
         @Override
         public void execute(final Object message) throws Exception {
             logger.info("CMRC is ACTIVE NOW...");
+            if(isThisMaster){
+                updateMasterConferenceEndpointId();
+            }
         }
     }
 
@@ -507,7 +513,16 @@ public class ConferenceMediaResourceController extends UntypedActor{
         }
 
         @Override
-        public void execute(Object message) throws Exception {}
+        public void execute(Object message) throws Exception {
+            logger.info("CMRC is STOPPING NOW...");
+            if(isThisMaster){
+                logger.info("CMRC is STOPPING Master NOW...");
+                //TODO: do clean up here
+            }else{
+                logger.info("CMRC is STOPPING Slave NOW...");
+                //TODO: do clean up here
+            }
+        }
 
     }
 
@@ -571,6 +586,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         if(cdr != null){
             logger.info("updateMasterConferenceEndpointId: localConfernceEndpointId.getLocalEndpointName(): "+localConfernceEndpointId.getLocalEndpointName());
             final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
+            cdr = dao.getConferenceDetailRecord(conferenceSid);
             cdr = cdr.setMasterConfernceEndpointId(localConfernceEndpointId.getLocalEndpointName());
             dao.updateConferenceDetailRecord(cdr);
         }
