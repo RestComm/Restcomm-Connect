@@ -20,6 +20,7 @@
  */
 package org.mobicents.servlet.restcomm.mgcp.mrb;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.MediaResourceBrokerDao;
 import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
 import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntity;
+import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntityFilter;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
@@ -49,6 +51,7 @@ import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
 import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResourceController;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResourceControllerResponse;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
@@ -188,7 +191,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         } else if (StartConferenceMediaResourceController.class.equals(klass)){
             onStartConferenceMediaResourceController((StartConferenceMediaResourceController) message, self, sender);
         } else if (StopConferenceMediaResourceController.class.equals(klass)) {
-            fsm.transition(message, stopping);
+            onStopConferenceMediaResourceController((StopConferenceMediaResourceController) message, self, sender);
         }else if (MediaGatewayResponse.class.equals(klass)) {
             logger.info("going to call onMediaGatewayResponse");
             onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
@@ -291,6 +294,19 @@ public class ConferenceMediaResourceController extends UntypedActor{
         }
     }
 
+    private void onStopConferenceMediaResourceController(StopConferenceMediaResourceController message, ActorRef self,
+            ActorRef sender) throws Exception {
+        if(isThisMaster){
+            logger.info("onStopConferenceMediaResourceController");
+            final boolean areAnySlavesConnectedToThisConferenceEndpoint = areAnySlavesConnectedToThisConferenceEndpoint();
+            logger.info("areAnySlavesConnectedToThisConferenceEndpoint = "+areAnySlavesConnectedToThisConferenceEndpoint);
+            sender.tell(new StopConferenceMediaResourceControllerResponse(!areAnySlavesConnectedToThisConferenceEndpoint), sender);
+        }else{
+            sender.tell(new StopConferenceMediaResourceControllerResponse(true), sender);
+        }
+        fsm.transition(message, stopping);
+    }
+
     /*
      * ACTIONS
      *
@@ -331,8 +347,6 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     masterConfernceEndpointId = cdr.getMasterConferenceEndpointId();
                     logger.info("masterMediaGateway acquired: "+masterMediaGateway);
                     logger.info("new slave sent StartBridgeConnector message to CMRC");
-                    // enter slave record in MRB resource table
-                    addNewSlaveRecord();
                 }
                 logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AcquiringMediaSession ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
                 localMediaGateway.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), source);
@@ -502,6 +516,9 @@ public class ConferenceMediaResourceController extends UntypedActor{
             logger.info("CMRC is ACTIVE NOW...");
             if(isThisMaster){
                 updateMasterConferenceEndpointId();
+            }else{
+                // enter slave record in MRB resource table
+                addNewSlaveRecord();
             }
         }
     }
@@ -521,6 +538,9 @@ public class ConferenceMediaResourceController extends UntypedActor{
             }else{
                 logger.info("CMRC is STOPPING Slave NOW...");
                 //TODO: do clean up here
+                //TODO: check if it is last to leave in entire cluster then distroymaster confe EP as well
+                //TODO: fetch in progress calls.
+                removeSlaveRecord();
             }
         }
 
@@ -576,7 +596,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
         builder.setConferenceSid(conferenceSid);
         builder.setSlaveMsId(localMsId);
-        builder.setBridgedTogether(false);
+        builder.setBridgedTogether(true);
 
         entity = builder.build();
         dao.addMediaResourceBrokerEntity(entity);
@@ -590,5 +610,19 @@ public class ConferenceMediaResourceController extends UntypedActor{
             cdr = cdr.setMasterConfernceEndpointId(localConfernceEndpointId.getLocalEndpointName());
             dao.updateConferenceDetailRecord(cdr);
         }
+    }
+
+    private void removeSlaveRecord() throws ParseException {
+        final MediaResourceBrokerDao dao= storage.getMediaResourceBrokerDao();
+        dao.removeMediaResourceBrokerEntity(new MediaResourceBrokerEntityFilter(conferenceSid, localMsId, null, null, true));
+    }
+
+    private boolean areAnySlavesConnectedToThisConferenceEndpoint(){
+        final MediaResourceBrokerDao dao= storage.getMediaResourceBrokerDao();
+        List<MediaResourceBrokerEntity> slaves = dao.getConnectedSlaveEntitiesByConfSid(conferenceSid);
+        if(slaves != null && !slaves.isEmpty()){
+            return true;
+        }
+        return false;
     }
 }

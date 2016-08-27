@@ -90,12 +90,12 @@ public final class MybatisMediaResourceBrokerDao implements MediaResourceBrokerD
     }
 
     @Override
-    public List<MediaResourceBrokerEntity> getUnConnectedSlaveEntitiesByConfSid(Sid conferenceSid) {
+    public List<MediaResourceBrokerEntity> getConnectedSlaveEntitiesByConfSid(Sid conferenceSid) {
 
         final SqlSession session = sessions.openSession();
 
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getUnConnectedSlaveEntitiesByConfSid",
+            final List<Map<String, Object>> results = session.selectList(namespace + "getConnectedSlaveEntitiesByConfSid",
                     conferenceSid.toString());
             final List<MediaResourceBrokerEntity> entities = new ArrayList<MediaResourceBrokerEntity>();
 
@@ -127,9 +127,8 @@ public final class MybatisMediaResourceBrokerDao implements MediaResourceBrokerD
         final String slaveMsBridgeEpId = readString(map.get("slave_ms_bridge_ep_id"));
         final String slaveMsCnfEpId = readString(map.get("slave_ms_cnf_ep_id"));
         final boolean isBridgedTogether = readBoolean(map.get("is_bridged_together"));
-        final String slaveMsSDP = readString(map.get("slave_ms_sdp"));
 
-        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether, slaveMsSDP);
+        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether);
     }
 
     private Map<String, Object> toMap(final MediaResourceBrokerEntity ms) {
@@ -139,7 +138,6 @@ public final class MybatisMediaResourceBrokerDao implements MediaResourceBrokerD
         map.put("slave_ms_bridge_ep_id", ms.getSlaveMsBridgeEpId());
         map.put("slave_ms_cnf_ep_id", ms.getSlaveMsCnfEpId());
         map.put("is_bridged_together", ms.isBridgedTogether());
-        map.put("slave_ms_sdp", ms.getSlaveMsSDP());
         return map;
     }
 }

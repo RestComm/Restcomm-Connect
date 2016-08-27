@@ -32,17 +32,15 @@ public final class MediaResourceBrokerEntity {
     private String slaveMsBridgeEpId;
     private String slaveMsCnfEpId;
     private boolean isBridgedTogether;
-    private String slaveMsSDP;
 
     public MediaResourceBrokerEntity(final Sid conferenceSid, final String slaveMsId, final String slaveMsBridgeEpId,
-        final String slaveMsCnfEpId, final Boolean isBridgedTogether, String slaveMsSDP) {
+        final String slaveMsCnfEpId, final Boolean isBridgedTogether) {
         super();
         this.conferenceSid = conferenceSid;
         this.slaveMsId = slaveMsId;
         this.slaveMsBridgeEpId = slaveMsBridgeEpId;
         this.slaveMsCnfEpId = slaveMsCnfEpId;
         this.isBridgedTogether = isBridgedTogether;
-        this.slaveMsSDP = slaveMsSDP;
     }
 
     public static Builder builder() {
@@ -69,28 +67,24 @@ public final class MediaResourceBrokerEntity {
         return isBridgedTogether;
     }
 
-    public String getSlaveMsSDP() {
-        return slaveMsSDP;
-    }
-
     public MediaResourceBrokerEntity setSlaveMsId(String slaveMsId) {
-        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether, slaveMsSDP);
+        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether);
     }
 
     public MediaResourceBrokerEntity setSlaveMsBridgeEpId(String slaveMsBridgeEpId) {
-        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether, slaveMsSDP);
+        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether);
     }
 
     public MediaResourceBrokerEntity setSlaveMsCnfEpId(String slaveMsCnfEpId) {
-        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether, slaveMsSDP);
+        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether);
     }
 
     public MediaResourceBrokerEntity setBridgedTogether(boolean isBridgedTogether) {
-        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether, slaveMsSDP);
+        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether);
     }
 
     public MediaResourceBrokerEntity setSlaveMsSDP(String slaveMsSDP) {
-        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether, slaveMsSDP);
+        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether);
     }
 
     @NotThreadSafe
@@ -112,7 +106,7 @@ public final class MediaResourceBrokerEntity {
         }
 
         public MediaResourceBrokerEntity build() {
-            return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether, slaveMsSDP);
+            return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether);
         }
 
         public void setConferenceSid(Sid conferenceSid) {

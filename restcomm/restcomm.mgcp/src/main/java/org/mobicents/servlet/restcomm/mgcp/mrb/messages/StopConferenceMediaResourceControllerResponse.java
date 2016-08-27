@@ -25,9 +25,15 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
-public final class StopConferenceMediaResourceController {
+public final class StopConferenceMediaResourceControllerResponse {
 
-    public StopConferenceMediaResourceController() {
+    private final boolean distroyEndpoint;
+    public StopConferenceMediaResourceControllerResponse(final boolean distroyEndpoint) {
         super();
+        this.distroyEndpoint = distroyEndpoint;
+    }
+
+    public boolean distroyEndpoint(){
+        return distroyEndpoint;
     }
 }

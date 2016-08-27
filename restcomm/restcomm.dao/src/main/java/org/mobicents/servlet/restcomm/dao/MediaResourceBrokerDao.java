@@ -34,7 +34,7 @@ public interface MediaResourceBrokerDao {
 
     List<MediaResourceBrokerEntity> getMediaResourceBrokerEntities();
 
-    List<MediaResourceBrokerEntity> getUnConnectedSlaveEntitiesByConfSid(Sid conferenceSid);
+    List<MediaResourceBrokerEntity> getConnectedSlaveEntitiesByConfSid(Sid conferenceSid);
 
     void removeMediaResourceBrokerEntity(MediaResourceBrokerEntityFilter filter);
 
