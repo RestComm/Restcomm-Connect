@@ -50,7 +50,7 @@ import org.mobicents.servlet.restcomm.asr.AsrRequest;
 import org.mobicents.servlet.restcomm.asr.AsrResponse;
 import org.mobicents.servlet.restcomm.asr.GetAsrInfo;
 import org.mobicents.servlet.restcomm.asr.ISpeechAsr;
-import org.mobicents.servlet.restcomm.cache.DiskCache;
+import org.mobicents.servlet.restcomm.cache.DiskCacheFactory;
 import org.mobicents.servlet.restcomm.cache.DiskCacheRequest;
 import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.cache.HashGenerator;
@@ -479,7 +479,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new DiskCache(path, uri, true);
+                return new DiskCacheFactory(configuration).getDiskCache(path, uri);
             }
         }));
     }

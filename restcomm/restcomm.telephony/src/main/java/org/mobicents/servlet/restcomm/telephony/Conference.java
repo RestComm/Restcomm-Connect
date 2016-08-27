@@ -22,6 +22,7 @@ package org.mobicents.servlet.restcomm.telephony;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -174,7 +175,7 @@ public final class Conference extends UntypedActor {
         } else if (StopObserving.class.equals(klass)) {
             onStopObserving((StopObserving) message, self, sender);
         } else if (GetConferenceInfo.class.equals(klass)) {
-            onGetConferenceInfo((GetConferenceInfo) message, self, sender);
+            onGetConferenceInfo(self, sender);
         } else if (StartConference.class.equals(klass)) {
             onStartConference((StartConference) message, self, sender);
         } else if (StopConference.class.equals(klass)) {
@@ -345,7 +346,7 @@ public final class Conference extends UntypedActor {
         }
     }
 
-    private void onGetConferenceInfo(GetConferenceInfo message, ActorRef self, ActorRef sender) throws Exception {
+    private void onGetConferenceInfo(ActorRef self, ActorRef sender) throws Exception {
         sender.tell(new ConferenceResponse<ConferenceInfo>(createConferenceInfo()), self);
     }
 
@@ -443,9 +444,19 @@ public final class Conference extends UntypedActor {
         }
     }
 
-    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
+    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) throws Exception {
         this.mscontroller.tell(message, sender);
         this.calls.add(sender);
+        if (logger.isInfoEnabled()) {
+            logger.info("Conference : "+self().path()+", received JoinComplete from Call: "+sender.path()+", will send confernce info to observers");
+        }
+        if (observers != null && observers.size() > 0) {
+            Iterator<ActorRef> iter = observers.iterator();
+            while (iter.hasNext()) {
+                ActorRef observer = iter.next();
+                onGetConferenceInfo(self(), observer);
+            }
+        }
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
