@@ -9,18 +9,18 @@
     INSERT INTO 
     	media_resource_broker_entity 
     		(conference_sid, slave_ms_id, slave_ms_bridge_ep_id, slave_ms_cnf_ep_id, 
-    		is_bridged_together, slave_ms_sdp) 
+    		is_bridged_together) 
     	VALUES 
     		(#{conference_sid}, #{slave_ms_id}, #{slave_ms_bridge_ep_id}, #{slave_ms_cnf_ep_id}, 
-    		#{is_bridged_together}, #{slave_ms_sdp});
+    		#{is_bridged_together});
   </insert>
   
   <select id="getMediaResourceBrokerEntities" resultType="hashmap">
     SELECT * FROM media_resource_broker_entity;
   </select>
   
-  <select id="getUnConnectedSlaveEntitiesByConfSid" parameterType="string" resultType="hashmap">
-		SELECT * FROM media_resource_broker_entity AS media_resource_broker_entity WHERE conference_sid=#{conference_sid} AND is_bridged_together is false AND slave_ms_sdp IS NOT NULL;
+  <select id="getConnectedSlaveEntitiesByConfSid" parameterType="string" resultType="hashmap">
+		SELECT * FROM media_resource_broker_entity AS media_resource_broker_entity WHERE conference_sid=#{conference_sid} AND is_bridged_together is true;
   </select>
   <delete id="removeMediaResourceBrokerEntity" parameterType="map">
     DELETE FROM media_resource_broker_entity WHERE conference_sid="#{conference_sid} AND slave_ms_id="#{slave_ms_id};
