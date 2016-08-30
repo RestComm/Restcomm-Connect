@@ -1135,17 +1135,19 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             // Notify the observers.
-            external = CallStateChanged.State.IN_PROGRESS;
-            final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
+            if (external != null && !external.equals(CallStateChanged.State.IN_PROGRESS)) {
+                external = CallStateChanged.State.IN_PROGRESS;
+                final CallStateChanged event = new CallStateChanged(external);
+                for (final ActorRef observer : observers) {
+                    observer.tell(event, source);
+                }
 
-            // Record call data
-            if (outgoingCallRecord != null && isOutbound() && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                outgoingCallRecord = outgoingCallRecord.setAnsweredBy(to.getUser());
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                // Record call data
+                if (outgoingCallRecord != null && isOutbound() && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
+                    outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                    outgoingCallRecord = outgoingCallRecord.setAnsweredBy(to.getUser());
+                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                }
             }
         }
     }
@@ -1810,6 +1812,7 @@ public final class Call extends UntypedActor {
     }
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) throws Exception {
+        //The CallController will send to the Call the JoinComplete message when the join completes
         if (is(joining)) {
             // Forward message to the bridge
             if (conferencing) {
