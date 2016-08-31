@@ -103,7 +103,7 @@ if [[ -z "$MEDIASERVER_HIGHEST_PORT" ]]; then
 	MEDIASERVER_HIGHEST_PORT="65535"
 fi
 
-echo "Configuring Mobicents Media Server... MS_ADDRESS $MS_ADDRESS BIND_ADDRESS $BIND_ADDRESS NETWORK $NETWORK SUBNET_MASK $SUBNET_MASK RTP_LOW_PORT $MEDIASERVER_LOWEST_PORT RTP_HIGH_PORT $MEDIASERVER_HIGHEST_PORT"
+echo "Configuring RestComm Media Server... MS_ADDRESS $MS_ADDRESS BIND_ADDRESS $BIND_ADDRESS NETWORK $NETWORK SUBNET_MASK $SUBNET_MASK RTP_LOW_PORT $MEDIASERVER_LOWEST_PORT RTP_HIGH_PORT $MEDIASERVER_HIGHEST_PORT"
 if [ -z "$MS_ADDRESS" ]; then
 		MS_ADDRESS=$BIND_ADDRESS
 fi
@@ -130,4 +130,4 @@ for i in $( set -o posix ; set | grep ^RESOURCE_ | sort -rn ); do
     echo "Update resources pool size: $reg -> $val"
     set_pool_size $reg $val
 done
-echo 'Finished configuring Mobicents Media Server!'
+echo 'Finished configuring RestComm Media Server!'

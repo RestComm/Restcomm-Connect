@@ -31,6 +31,12 @@
 		<cache-path>${restcomm:home}/cache</cache-path>
 		<cache-uri>/restcomm/cache</cache-uri>
 
+		<!-- If set to true RestComm will NOT use cache for *.wav files playback.
+			If set to false RestComm will use cache for *.wav files playback. 
+			Default: false
+		-->
+		<cache-no-wav>false</cache-no-wav>
+
 		<!-- The path where recordings made by the <Record> verb are stored. -->
 		<recordings-path>file://${restcomm:home}/recordings</recordings-path>
 		<recordings-uri>/restcomm/recordings</recordings-uri>
@@ -271,10 +277,10 @@
 	</amazon-s3>
 
 	<!-- Defines how RestComm communicates with the Media Server Control layer. 
-		Accepted values: XMS (Dialogic XMS using JSR-309 driver) or MMS (Mobicents 
+		Accepted values: XMS (Dialogic XMS using JSR-309 driver) or RMS (RestComm
 		Media Server using MGCP driver) -->
 	<mscontrol>
-		<compatibility>mms</compatibility>
+		<compatibility>rms</compatibility>
 		<media-server name="Dialogic XMS" class="com.dialogic.dlg309">
 			<address>127.0.0.1</address>
 			<port>5060</port>

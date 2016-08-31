@@ -19,22 +19,42 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
-import akka.actor.ActorContext;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.util.Timeout;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.telestax.servlet.MonitoringService;
+import static akka.pattern.Patterns.ask;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
 import gov.nist.javax.sip.header.UserAgent;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
+
+import javax.servlet.ServletContext;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.AuthInfo;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipApplicationSessionEvent;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
+import javax.sip.header.RouteHeader;
+import javax.sip.message.Response;
+
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
@@ -60,40 +80,26 @@ import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
 import org.mobicents.servlet.restcomm.util.UriUtils;
+
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
+import akka.actor.ActorContext;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.util.Timeout;
 
-import javax.servlet.ServletContext;
-import javax.servlet.sip.AuthInfo;
-import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipApplicationSessionEvent;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
-import javax.sip.message.Response;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
-
-import static akka.pattern.Patterns.ask;
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.telestax.servlet.MonitoringService;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -755,7 +761,8 @@ public final class CallManager extends UntypedActor {
         // if this is an ACK that belongs to a B2BUA session, then we proxy it to the other client
         if (response != null) {
             SipServletRequest ack = response.createAck();
-            if (!ack.getHeaders("Route").hasNext() && patchForNatB2BUASessions) {
+//            if (!ack.getHeaders("Route").hasNext() && patchForNatB2BUASessions) {
+            if (patchForNatB2BUASessions) {
                 InetAddress ackRURI = null;
                 try {
                     ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
@@ -776,6 +783,59 @@ public final class CallManager extends UntypedActor {
                             + " as a request uri of the ACK request");
                     }
                     ack.setRequestURI(toInetUri);
+                } else if (toInetUri == null
+                        && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Public IP toInetUri from SipSession is null, will check LB headers from last Response");
+                    }
+                    final String initialIpBeforeLB = response.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+                    String initialPortBeforeLB = response.getHeader("X-Sip-Balancer-InitialRemotePort");
+                    if (initialIpBeforeLB != null) {
+                        if (initialPortBeforeLB == null)
+                            initialPortBeforeLB = "5060";
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("We are behind load balancer, checking if the request URI needs to be patched");
+                        }
+                        String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
+                        SipURI uri = sipFactory.createSipURI(null, realIP);
+                        boolean patchRURI = true;
+                        try {
+                            // https://github.com/RestComm/Restcomm-Connect/issues/1336 checking if the initial IP and Port behind LB is part of the route set or not
+                            ListIterator<? extends Address> routes = ack.getAddressHeaders(RouteHeader.NAME);
+                            while(routes.hasNext()) {
+                                SipURI route = (SipURI) routes.next().getURI();
+                                String routeHost = route.getHost();
+                                int routePort = route.getPort();
+                                if(routePort < 0) {
+                                    routePort = 5060;
+                                }
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("Checking if route " + routeHost + ":" + routePort + " is matching ip and port before LB " + initialIpBeforeLB + ":"
+                                        + initialPortBeforeLB + " for the ACK request");
+                                }
+                                if(routeHost.equalsIgnoreCase(initialIpBeforeLB) && routePort == Integer.parseInt(initialPortBeforeLB)) {
+                                    if (logger.isDebugEnabled()) {
+                                        logger.debug("route " + route + " is matching ip and port before LB " + initialIpBeforeLB + ":"
+                                            + initialPortBeforeLB + " for the ACK request, so not patching the Request-URI");
+                                    }
+                                    patchRURI = false;
+                                }
+                            }
+                        } catch (ServletParseException e) {
+                            logger.error("Impossible to parse the route set from the ACK " + ack, e);
+                        }
+                        if(patchRURI) {
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("We are behind load balancer, will use Initial Remote Address " + initialIpBeforeLB + ":"
+                                        + initialPortBeforeLB + " for the ACK request");
+                            }
+                            ack.setRequestURI(uri);
+                        }
+                    } else {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("LB Headers are also null");
+                        }
+                    }
                 }
             }
             ack.send();
@@ -1229,7 +1289,7 @@ public final class CallManager extends UntypedActor {
             SipServletRequest clonedBye = linkedB2BUASession.createRequest("BYE");
             linkedB2BUASession.setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, clonedBye);
 
-            if (!clonedBye.getHeaders("Route").hasNext() && patchForNatB2BUASessions) {
+            if (patchForNatB2BUASessions) {
                 // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
                 SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
                 SipURI fromInetUri = (SipURI) request.getSession().getAttribute("fromInetUri");
@@ -1258,6 +1318,63 @@ public final class CallManager extends UntypedActor {
                             + " as a request uri of the CloneBye request");
                     }
                     clonedBye.setRequestURI(fromInetUri);
+                } else if (toInetUri == null
+                        && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Public IP toInetUri from SipSession is null, will check LB headers from last Response");
+                    }
+                    final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+                    String initialPortBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemotePort");
+                    if (initialIpBeforeLB != null) {
+                        if (initialPortBeforeLB == null)
+                            initialPortBeforeLB = "5060";
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("We are behind load balancer, checking if the request URI needs to be patched");
+                        }
+                        String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
+                        SipURI uri = sipFactory.createSipURI(null, realIP);
+                        boolean patchRURI = true;
+                        try {
+                            // https://github.com/RestComm/Restcomm-Connect/issues/1336 checking if the initial IP and Port behind LB is part of the route set or not
+                            ListIterator<? extends Address> routes = clonedBye.getAddressHeaders(RouteHeader.NAME);
+                            while(routes.hasNext()) {
+                                SipURI route = (SipURI) routes.next().getURI();
+                                String routeHost = route.getHost();
+                                int routePort = route.getPort();
+                                if(routePort < 0) {
+                                    routePort = 5060;
+                                }
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("Checking if route " + routeHost + ":" + routePort + " is matching ip and port before LB " + initialIpBeforeLB + ":"
+                                        + initialPortBeforeLB + " for the BYE request");
+                                }
+                                if(routeHost.equalsIgnoreCase(initialIpBeforeLB) && routePort == Integer.parseInt(initialPortBeforeLB)) {
+                                    if (logger.isDebugEnabled()) {
+                                        logger.debug("route " + route + " is matching ip and port before LB " + initialIpBeforeLB + ":"
+                                            + initialPortBeforeLB + " for the BYE request, so not patching the Request-URI");
+                                    }
+                                    patchRURI = false;
+                                }
+                            }
+                        } catch (ServletParseException e) {
+                            logger.error("Impossible to parse the route set from the BYE " + clonedBye, e);
+                        }
+                        if(patchRURI) {
+                            if(logger.isDebugEnabled()) {
+                                logger.debug("We are behind load balancer, will use: " + initialIpBeforeLB + ":"
+                                        + initialPortBeforeLB + " for the cloned BYE message");
+                            }
+                            clonedBye.setRequestURI(uri);
+                        }
+                        if (logger.isInfoEnabled()) {
+                            logger.info("We are behind load balancer, will use Initial Remote Address " + initialIpBeforeLB + ":"
+                                    + initialPortBeforeLB + " for the cloned BYE request");
+                        }
+                    } else {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("LB Headers are also null");
+                        }
+                    }
                 }
             }
             B2BUAHelper.updateCDR(request, CallStateChanged.State.COMPLETED);

@@ -245,9 +245,9 @@ configVoiceRSS() {
 	echo 'Configured VoiceRSS Speech Synthesizer'
 }
 
-## Description: Updates Mobicents properties for RestComm
+## Description: Updates RestComm DARS properties for RestComm
 ## Parameters : none
-configMobicentsProperties() {
+configDARSProperties() {
 	FILE=$RESTCOMM_DARS/mobicents-dar.properties
 	sed -e 's|^ALL=.*|ALL=("RestComm", "DAR\:From", "NEUTRAL", "", "NO_ROUTE", "0")|' $FILE > $FILE.bak
 	mv $FILE.bak $FILE
@@ -472,6 +472,14 @@ otherRestCommConf(){
         fi
 	fi
 
+	if [ -n "$USSDGATEWAYURI" ]; then
+  		echo "USSD GATEWAY configuration"
+  		FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+         sed -e "s|<ussd-gateway-uri>.*</ussd-gateway-uri>|<ussd-gateway-uri>$USSDGATEWAYURI</ussd-gateway-uri>|" \
+             -e "s|<ussd-gateway-user>.*</ussd-gateway-user>|<ussd-gateway-user>$USSDGATEWAYUSER</ussd-gateway-user>|" \
+             -e "s|<ussd-gateway-password>.*</ussd-gateway-password>|<ussd-gateway-password>$USSDGATEWAYPASSWORD</ussd-gateway-password>|" $FILE > $FILE.bak
+          mv $FILE.bak $FILE
+	fi
     echo "End Rest RestComm configuration"
 }
 
@@ -499,7 +507,7 @@ confRVD(){
 # MAIN
 echo 'Configuring RestComm...'
 configRCJavaOpts
-configMobicentsProperties
+configDARSProperties
 configRestcomm "$PUBLIC_IP"
 #configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
 

@@ -49,6 +49,7 @@ import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 import javax.sip.header.RecordRouteHeader;
+import javax.sip.header.RouteHeader;
 import javax.sip.message.Response;
 
 import org.apache.commons.configuration.Configuration;
@@ -1056,13 +1057,44 @@ public final class Call extends UntypedActor {
                 if (initialIpBeforeLB != null ) {
                     if (initialPortBeforeLB == null)
                         initialPortBeforeLB = "5060";
-                    if(logger.isInfoEnabled()) {
-                        logger.info("We are behind load balancer, will use: " + initialIpBeforeLB + ":"
-                                + initialPortBeforeLB + " for ACK message, ");
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("We are behind load balancer, checking if the request URI needs to be patched");
                     }
                     String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
                     SipURI uri = factory.createSipURI(null, realIP);
-                    ack.setRequestURI(uri);
+                    boolean patchRURI = true;
+                    try {
+                        // https://github.com/RestComm/Restcomm-Connect/issues/1336 checking if the initial IP and Port behind LB is part of the route set or not
+                        ListIterator<? extends Address> routes = ack.getAddressHeaders(RouteHeader.NAME);
+                        while(routes.hasNext() && patchRURI) {
+                            SipURI route = (SipURI) routes.next().getURI();
+                            String routeHost = route.getHost();
+                            int routePort = route.getPort();
+                            if(routePort < 0) {
+                                routePort = 5060;
+                            }
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Checking if route " + routeHost + ":" + routePort + " is matching ip and port before LB " + initialIpBeforeLB + ":"
+                                    + initialPortBeforeLB + " for the ACK request");
+                            }
+                            if(routeHost.equalsIgnoreCase(initialIpBeforeLB) && routePort == Integer.parseInt(initialPortBeforeLB)) {
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("route " + route + " is matching ip and port before LB " + initialIpBeforeLB + ":"
+                                        + initialPortBeforeLB + " for the ACK request, so not patching the Request-URI");
+                                }
+                                patchRURI = false;
+                            }
+                        }
+                    } catch (ServletParseException e) {
+                        logger.error("Impossible to parse the route set from the ACK " + ack, e);
+                    }
+                    if(patchRURI) {
+                        if(logger.isDebugEnabled()) {
+                            logger.debug("We are behind load balancer, will use: " + initialIpBeforeLB + ":"
+                                    + initialPortBeforeLB + " for ACK message, ");
+                        }
+                        ack.setRequestURI(uri);
+                    }
                 } else if (!ack.getHeaders("Route").hasNext()) {
                     final SipServletRequest originalInvite = response.getRequest();
                     final SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
@@ -1135,17 +1167,19 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             // Notify the observers.
-            external = CallStateChanged.State.IN_PROGRESS;
-            final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
+            if (external != null && !external.equals(CallStateChanged.State.IN_PROGRESS)) {
+                external = CallStateChanged.State.IN_PROGRESS;
+                final CallStateChanged event = new CallStateChanged(external);
+                for (final ActorRef observer : observers) {
+                    observer.tell(event, source);
+                }
 
-            // Record call data
-            if (outgoingCallRecord != null && isOutbound() && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                outgoingCallRecord = outgoingCallRecord.setAnsweredBy(to.getUser());
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                // Record call data
+                if (outgoingCallRecord != null && isOutbound() && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
+                    outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                    outgoingCallRecord = outgoingCallRecord.setAnsweredBy(to.getUser());
+                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                }
             }
         }
     }
@@ -1512,6 +1546,55 @@ public final class Call extends UntypedActor {
             }
             default: {
                 if (code >= 400 && code != 487) {
+                    if (code == 487 && isOutbound()) {
+                            String initialIpBeforeLB = null;
+                            String initialPortBeforeLB = null;
+                            try {
+                                initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+                                initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
+                            } catch (Exception e) {
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("Exception during check of LB custom headers for IP address and port");
+                                }
+                            }
+                        final SipServletRequest ack = message.createAck();
+                        addCustomHeaders(ack);
+                        SipSession session = message.getSession();
+
+                        if (initialIpBeforeLB != null ) {
+                            if (initialPortBeforeLB == null)
+                                initialPortBeforeLB = "5060";
+                            if(logger.isInfoEnabled()) {
+                                logger.info("We are behind load balancer, will use: " + initialIpBeforeLB + ":"
+                                        + initialPortBeforeLB + " for ACK message, ");
+                            }
+                            String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
+                            SipURI uri = factory.createSipURI(null, realIP);
+                            ack.setRequestURI(uri);
+                        } else if (!ack.getHeaders("Route").hasNext()) {
+                            final SipServletRequest originalInvite = message.getRequest();
+                            final SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
+                            if ((SipURI) session.getAttribute("realInetUri") == null) {
+                                session.setAttribute("realInetUri", realInetUri);
+                            }
+                            final InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
+                            final int ackRURIPort = ((SipURI) ack.getRequestURI()).getPort();
+
+                            if (realInetUri != null
+                                    && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())
+                                    && (ackRURIPort != realInetUri.getPort())) {
+                                if(logger.isInfoEnabled()) {
+                                    logger.info("Using the real ip address and port of the sip client " + realInetUri.toString()
+                                            + " as a request uri of the ACK");
+                                }
+                                ack.setRequestURI(realInetUri);
+                            }
+                        }
+                        ack.send();
+                        if(logger.isInfoEnabled()) {
+                            logger.info("Just sent out ACK : " + ack.toString());
+                        }
+                    }
                     this.fail = true;
                     sendCallInfoToObservers();
                     fsm.transition(message, stopping);
@@ -1630,10 +1713,42 @@ public final class Call extends UntypedActor {
                 }
                 if (realInetUri != null && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
                     if(logger.isInfoEnabled()) {
-                    logger.info("Using the real ip address of the sip client " + realInetUri.toString()
-                        + " as a request uri of the BYE request");
+                        logger.info("real ip address of the sip client " + realInetUri.toString()
+                            + " is not null, checking if the request URI needs to be patched");
                     }
-                    bye.setRequestURI(realInetUri);
+                    boolean patchRURI = true;
+                    try {
+                        // https://github.com/RestComm/Restcomm-Connect/issues/1336 checking if the initial IP and Port behind LB is part of the route set or not
+                        ListIterator<? extends Address> routes = bye.getAddressHeaders(RouteHeader.NAME);
+                        while(routes.hasNext() && patchRURI) {
+                            SipURI route = (SipURI) routes.next().getURI();
+                            String routeHost = route.getHost();
+                            int routePort = route.getPort();
+                            if(routePort < 0) {
+                                routePort = 5060;
+                            }
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Checking if route " + routeHost + ":" + routePort + " is matching ip and port of realNetURI " + realInetUri.getHost() + ":"
+                                    + realInetUri.getPort() + " for the BYE request");
+                            }
+                            if(routeHost.equalsIgnoreCase(realInetUri.getHost()) && routePort == realInetUri.getPort()) {
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("route " + route + " is matching ip and port of realNetURI "+ realInetUri.getHost() + ":"
+                                     + realInetUri.getPort() + " for the BYE request, so not patching the Request-URI");
+                                }
+                                patchRURI = false;
+                            }
+                        }
+                    } catch (ServletParseException e) {
+                        logger.error("Impossible to parse the route set from the BYE " + bye, e);
+                    }
+                    if(patchRURI) {
+                        if(logger.isInfoEnabled()) {
+                             logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                                  + " as a request uri of the BYE request");
+                        }
+                        bye.setRequestURI(realInetUri);
+                    }
                 }
             }
             if(logger.isInfoEnabled()) {
@@ -1761,6 +1876,7 @@ public final class Call extends UntypedActor {
     }
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) throws Exception {
+        //The CallController will send to the Call the JoinComplete message when the join completes
         if (is(joining)) {
             // Forward message to the bridge
             if (conferencing) {
