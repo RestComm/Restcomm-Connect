@@ -1066,7 +1066,7 @@ public final class Call extends UntypedActor {
                     try {
                         // https://github.com/RestComm/Restcomm-Connect/issues/1336 checking if the initial IP and Port behind LB is part of the route set or not
                         ListIterator<? extends Address> routes = ack.getAddressHeaders(RouteHeader.NAME);
-                        while(routes.hasNext()) {
+                        while(routes.hasNext() && patchRURI) {
                             SipURI route = (SipURI) routes.next().getURI();
                             String routeHost = route.getHost();
                             int routePort = route.getPort();
@@ -1720,7 +1720,7 @@ public final class Call extends UntypedActor {
                     try {
                         // https://github.com/RestComm/Restcomm-Connect/issues/1336 checking if the initial IP and Port behind LB is part of the route set or not
                         ListIterator<? extends Address> routes = bye.getAddressHeaders(RouteHeader.NAME);
-                        while(routes.hasNext()) {
+                        while(routes.hasNext() && patchRURI) {
                             SipURI route = (SipURI) routes.next().getURI();
                             String routeHost = route.getHost();
                             int routePort = route.getPort();
