@@ -67,7 +67,7 @@ public final class DiskCacheTest {
 
             @Override
             public Actor create() throws Exception {
-                return new DiskCache(location, uri);
+                return new DiskCache(new FileDownloader(), location, uri);
             }
         }));
     }

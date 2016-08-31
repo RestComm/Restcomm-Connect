@@ -23,6 +23,7 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -159,7 +160,7 @@ public final class Conference extends UntypedActor {
         } else if (StopObserving.class.equals(klass)) {
             onStopObserving((StopObserving) message, self, sender);
         } else if (GetConferenceInfo.class.equals(klass)) {
-            onGetConferenceInfo((GetConferenceInfo) message, self, sender);
+            onGetConferenceInfo(self, sender);
         } else if (StartConference.class.equals(klass)) {
             onStartConference((StartConference) message, self, sender);
         } else if (StopConference.class.equals(klass)) {
@@ -327,7 +328,7 @@ public final class Conference extends UntypedActor {
         }
     }
 
-    private void onGetConferenceInfo(GetConferenceInfo message, ActorRef self, ActorRef sender) throws Exception {
+    private void onGetConferenceInfo(ActorRef self, ActorRef sender) throws Exception {
         ConferenceInfo information = null;
         if (is(waiting)) {
             information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT, name, moderatorPresent);
@@ -417,8 +418,21 @@ public final class Conference extends UntypedActor {
         }
     }
 
-    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
+    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) throws Exception {
         this.calls.add(sender);
+        if (logger.isInfoEnabled()) {
+            logger.info("Conference name: "+name+", path: "+self().path()+", received JoinComplete from Call: "+sender.path()+", number of participants currently: "+calls.size()+", will send conference info to observers");
+        }
+        if (observers != null && observers.size() > 0) {
+            Iterator<ActorRef> iter = observers.iterator();
+            while (iter.hasNext()) {
+                ActorRef observer = iter.next();
+                //First send conferenceInfo
+                onGetConferenceInfo(self(), observer);
+                //Next send the JoinComplete message
+                observer.tell(message, self());
+            }
+        }
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
