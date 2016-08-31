@@ -421,13 +421,16 @@ public final class Conference extends UntypedActor {
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) throws Exception {
         this.calls.add(sender);
         if (logger.isInfoEnabled()) {
-            logger.info("Conference : "+self().path()+", received JoinComplete from Call: "+sender.path()+", will send confernce info to observers");
+            logger.info("Conference name: "+name+", path: "+self().path()+", received JoinComplete from Call: "+sender.path()+", number of participants currently: "+calls.size()+", will send conference info to observers");
         }
         if (observers != null && observers.size() > 0) {
             Iterator<ActorRef> iter = observers.iterator();
             while (iter.hasNext()) {
                 ActorRef observer = iter.next();
+                //First send conferenceInfo
                 onGetConferenceInfo(self(), observer);
+                //Next send the JoinComplete message
+                observer.tell(message, self());
             }
         }
     }
