@@ -29,7 +29,7 @@
             <dt>Role</dt>
             <dd>
                 <select ng-model='newAccount.role' class="form-control">
-                    <option value="Administrator">Administrator</option>
+                    <option value="Administrator" ng-hide="currentAccount.role!='Administrator'">Administrator</option>
                     <option value="Developer">Developer</option>
                 </select>
             </dd>

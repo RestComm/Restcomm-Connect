@@ -476,6 +476,14 @@ otherRestCommConf(){
         fi
 	fi
 
+	if [ -n "$USSDGATEWAYURI" ]; then
+  		echo "USSD GATEWAY configuration"
+  		FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+         sed -e "s|<ussd-gateway-uri>.*</ussd-gateway-uri>|<ussd-gateway-uri>$USSDGATEWAYURI</ussd-gateway-uri>|" \
+             -e "s|<ussd-gateway-user>.*</ussd-gateway-user>|<ussd-gateway-user>$USSDGATEWAYUSER</ussd-gateway-user>|" \
+             -e "s|<ussd-gateway-password>.*</ussd-gateway-password>|<ussd-gateway-password>$USSDGATEWAYPASSWORD</ussd-gateway-password>|" $FILE > $FILE.bak
+          mv $FILE.bak $FILE
+	fi
     echo "End Rest RestComm configuration"
 }
 

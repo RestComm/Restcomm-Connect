@@ -34,6 +34,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $state
 							project.startUrl = currentApp.rcml_url;
 							project.kind = currentApp.kind;
 							project.viewMode = 'view';
+							project.status = data[i].status;
 							projectList.push(project);
 							break;
 						}
