@@ -251,6 +251,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.dialing, this.stopping));
         transitions.add(new Transition(this.dialing, this.failingBusy));
         transitions.add(new Transition(this.dialing, this.ringing));
+        transitions.add(new Transition(this.dialing, this.failed));
         transitions.add(new Transition(this.dialing, this.updatingMediaSession));
         transitions.add(new Transition(this.inProgress, this.stopping));
         transitions.add(new Transition(this.inProgress, this.joining));
@@ -1513,7 +1514,7 @@ public final class Call extends UntypedActor {
             case SipServletResponse.SC_UNAUTHORIZED:
             case SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED: {
                 // Handles Auth for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
-                if (this.username == null || this.password == null) {
+                if ((this.username!= null || this.username.isEmpty()) && (this.password != null && this.password.isEmpty())) {
                     sendCallInfoToObservers();
                     fsm.transition(message, failed);
                 } else {
