@@ -72,11 +72,11 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     private MediaServerControllerFactory mediaServerControllerFactory(final Configuration configuration, ClassLoader loader)
             throws ServletException {
         Configuration settings ;
-        String compatibility = configuration.subset("mscontrol").getString("compatibility", "mms");
+        String compatibility = configuration.subset("mscontrol").getString("compatibility", "rms");
 
         MediaServerControllerFactory factory;
         switch (compatibility) {
-            case "mms":
+            case "rms":
                 ActorRef gateway;
                 try {
                     settings = configuration.subset("media-server-manager");

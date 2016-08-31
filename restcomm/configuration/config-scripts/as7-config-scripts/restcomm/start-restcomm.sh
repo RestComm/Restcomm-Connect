@@ -62,14 +62,14 @@ startRestcomm() {
 }
 
 startMediaServer() {
-	echo "Starting Mobicents Media Server..."
+	echo "Starting RestComm Media Server..."
 	echo "Media Server will bind to the IP Address: $BIND_ADDRESS"
-	if screen -ls | grep -q 'mms'; then
-		echo '...Mobicents Media Server is already running on screen session "mms"!'
+	if screen -ls | grep -q 'rms'; then
+		echo '...RestComm Media Server is already running on screen session "rms"!'
 	else
 		chmod +x $MMS_HOME/bin/run.sh
-		screen -dmS 'mms'  $MMS_HOME/bin/run.sh
-		echo '...Mobicents Media Server started running on screen "mms"!'
+		screen -dmS 'rms'  $MMS_HOME/bin/run.sh
+		echo '...RestComm Media Server started running on screen "rms"!'
 fi
 }
 
