@@ -85,6 +85,7 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Nouns;
 import org.mobicents.servlet.restcomm.interpreter.rcml.ParserFailed;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
@@ -539,6 +540,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     fsm.transition(message, hangingUp);
                 }
             }
+        } else if (JoinComplete.class.equals(klass)) {
+          if (logger.isInfoEnabled()) {
+              logger.info("JoinComplete received, sender: "+sender().path()+", VI state: "+fsm.state());
+          }
+          if (is(joiningConference)) {
+              fsm.transition(message, conferencing);
+          }
         } else if (CallResponse.class.equals(klass)) {
             if (forking.equals(state)) {
                 // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
@@ -607,7 +615,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         fsm.transition(message, downloadingRcml);
                     }
                 } else if (joiningConference.equals(state)) {
-                    fsm.transition(message, conferencing);
+                    //Do nothing here
+//                    fsm.transition(message, conferencing);
                 } else if (forking.equals(state)) {
                     if (outboundCall == null || !sender.equals(call)) {
                         outboundCall = sender;
@@ -732,11 +741,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, forking);
             }
         } else if (ConferenceResponse.class.equals(klass)) {
-            if (logger.isInfoEnabled()) {
-                logger.info("VoiceInterpreter received ConferenceResponse from Conference: "+sender().path()+", VI state: "+fsm.state());
-            }
             final ConferenceResponse<ConferenceInfo> response = (ConferenceResponse<ConferenceInfo>) message;
             conferenceInfo = response.get();
+            if (logger.isInfoEnabled()) {
+                logger.info("VoiceInterpreter received ConferenceResponse from Conference: "+conferenceInfo.name()+", path: "+sender().path()+", current confernce size: "+conferenceInfo.participants().size()+", VI state: "+fsm.state());
+            }
             if (acquiringConferenceInfo.equals(state)) {
                 fsm.transition(message, joiningConference);
             }
@@ -2261,8 +2270,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-//            final ConferenceResponse<ConferenceInfo> response = (ConferenceResponse<ConferenceInfo>) message;
-//            conferenceInfo = response.get();
             conferenceState = conferenceInfo.state();
             final Tag child = conference(verb);
 
@@ -2312,6 +2319,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                     final Play play = new Play(uri, 1);
                     conference.tell(play, source);
+                }
+                if (logger.isInfoEnabled()) {
+                    logger.info("About to join call to Conference: "+conferenceInfo.name()+", with state: "+conferenceInfo.state()+", with moderator present: "+conferenceInfo.isModeratorPresent()+", and current participants: "+conferenceInfo.participants().size());
                 }
                 // Join the conference.
                 final AddParticipant request = new AddParticipant(call);
