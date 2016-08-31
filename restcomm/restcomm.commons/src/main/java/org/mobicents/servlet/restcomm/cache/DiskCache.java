@@ -24,23 +24,12 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import org.apache.commons.io.FileUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.utils.HttpClientUtils;
-import org.apache.http.client.utils.URIBuilder;
+import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.crypto.hash.Sha256Hash;
-import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
-import org.mobicents.servlet.restcomm.http.CustomHttpClientBuilder;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -51,171 +40,143 @@ import java.nio.file.Paths;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class DiskCache extends UntypedActor {
-
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final String location;
-    private final String uri;
+    private final String cacheDir;
+    private final String cacheUri;
 
-    public DiskCache(final String location, final String uri, final boolean create) {
+    // flag for cache disabling in *.wav files usage case
+    private boolean wavNoCache = false;
+    private FileDownloader downloader;
+
+    public DiskCache(FileDownloader downloader, String cacheDir, String cacheUri, final boolean create, final boolean wavNoCache) {
         super();
+
+        this.wavNoCache = wavNoCache;
+        this.downloader = downloader;
+
         // Format the cache path.
-        String temp = location;
-        if (!temp.endsWith("/")) {
-            temp += "/";
+        if (!cacheDir.endsWith("/")) {
+            cacheDir += "/";
         }
         // Create the cache path if specified.
-        final File path = new File(temp);
+        final File path = new File(cacheDir);
         //        if (create) {
         //            path.mkdirs();
         //        }
 
         // Make sure the cache path exists and is a directory.
         if (!path.exists() || !path.isDirectory()) {
-            //            throw new IllegalArgumentException(location + " is not a valid cache location.");
+            //            throw new IllegalArgumentException(cacheDir + " is not a valid cache cacheDir.");
             path.mkdirs();
         }
         // Format the cache URI.
-        this.location = temp;
-        temp = uri;
-        if (!temp.endsWith("/")) {
-            temp += "/";
+        this.cacheDir = cacheDir;
+        if (!cacheUri.endsWith("/")) {
+            cacheUri += "/";
         }
-        this.uri = temp;
+        this.cacheUri = cacheUri;
     }
 
-    public DiskCache(final String location, final String uri) {
-        this(location, uri, false);
+    public DiskCache(FileDownloader downloader, final String cacheDir, final String cacheUri, final boolean create) {
+        this(downloader, cacheDir, cacheUri, create, false);
     }
 
-    private URI cache(final Object message) throws IOException, URISyntaxException {
-        final DiskCacheRequest request = (DiskCacheRequest) message;
+    public DiskCache(FileDownloader downloader, final String cacheDir, final String cacheUri) {
+        this(downloader, cacheDir, cacheUri, false);
+    }
 
-        if (request.hash() == null) {
-            if (request.uri().getScheme().equalsIgnoreCase("file")) {
-                File origFile = new File(request.uri());
-                File destFile = new File(location + origFile.getName());
-                if (!destFile.exists())
-                    FileUtils.moveFile(origFile, destFile);
+    // constructor for compatibility with existing tests
+    public DiskCache(final String cacheDir, final String cacheUri, final boolean create) {
+        this(new FileDownloader(), cacheDir, cacheUri, create, false);
+    }
 
-                return URI.create(this.uri + destFile.getName());
-
-            } else {
-                //Handle all the rest
-                // This is a request to cache a URI
-                String hash = null;
-                URI uri = null;
-                if (request.uri().toString().contains("hash")) {
-                    String fragment = request.uri().getFragment();
-                    hash = fragment.replace("hash=", "");
-                    String uriStr = ((request.uri().toString()).replace(fragment, "")).replace("#", "");
-                    uri = URI.create(uriStr);
-                } else {
-                    uri = request.uri();
-                    hash = new Sha256Hash(uri.toString()).toHex();
-                }
-
-                final String extension = extension(uri).toLowerCase();
-                final File path = new File(location + hash + "." + extension);
-                if (!path.exists()) {
-                    final File tmp = new File(path + "." + "tmp");
-                    InputStream input = null;
-                    OutputStream output = null;
-                    HttpClient client = null;
-                    HttpResponse httpResponse = null;
-                    try {
-                        if (request.uri().getScheme().equalsIgnoreCase("https")) {
-                            //Handle the HTTPS URIs
-                            client = CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
-                            URI result = new URIBuilder()
-                                    .setScheme(uri.getScheme())
-                                    .setHost(uri.getHost())
-                                    .setPort(uri.getPort())
-                                    .setPath(uri.getPath())
-                                    .build();
-
-                            HttpGet httpRequest = new HttpGet(result);
-                            httpResponse = client.execute((HttpUriRequest) httpRequest);
-                            int code = httpResponse.getStatusLine().getStatusCode();
-
-                            if (code >= 400) {
-                                String requestUrl = httpRequest.getRequestLine().getUri();
-                                String errorReason = httpResponse.getStatusLine().getReasonPhrase();
-                                String httpErrorMessage = String.format(
-                                        "Error while fetching http resource: %s \n Http error code: %d \n Http error message: %s", requestUrl,
-                                        code, errorReason);
-                                logger.warning(httpErrorMessage);
-                            }
-                            input = httpResponse.getEntity().getContent();
-                        } else {
-                            input = uri.toURL().openStream();
-                        }
-                        output = new FileOutputStream(tmp);
-                        final byte[] buffer = new byte[4096];
-                        int read = 0;
-                        do {
-                            read = input.read(buffer, 0, 4096);
-                            if (read > 0) {
-                                output.write(buffer, 0, read);
-                            }
-                        } while (read != -1);
-                        tmp.renameTo(path);
-                    } finally {
-                        if (input != null) {
-                            input.close();
-                        }
-                        if (output != null) {
-                            output.close();
-                        }
-                        if (httpResponse != null) {
-                            ((CloseableHttpResponse) httpResponse).close();
-                            httpResponse = null;
-                        }
-                        if (client != null) {
-                            HttpClientUtils.closeQuietly(client);
-                            client = null;
-                        }
-                    }
-                }
-                URI result = URI.create(this.uri+ hash + "." + extension);
-                return result;
-            }
+    public URI cache(final DiskCacheRequest request) throws IOException, URISyntaxException {
+        if (StringUtils.isNotEmpty(request.hash())) {
+            return handleHashedRequest(request);
+        } else if ("file".equalsIgnoreCase(request.uri().getScheme())) {
+            return handleLocalFile(request);
         } else {
-            // This is a check cache request
-            final String extension = "wav";
-            final String hash = request.hash();
-            final String filename = hash + "." + extension;
-            Path p = Paths.get(location+filename);
-
-            if (Files.exists(p)) {
-                // return URI.create(matchedFile.getAbsolutePath());
-                return URI.create(this.uri + filename);
-            } else {
-                throw new FileNotFoundException(filename);
-            }
+            return handleExternalUrl(request);
         }
     }
 
-    private String extension(final URI uri) {
-        final String path = uri.getPath();
-        return path.substring(path.lastIndexOf(".") + 1);
+    private URI handleHashedRequest(final DiskCacheRequest request) throws FileNotFoundException {
+        // This is a check cache request
+        final String extension = "wav";
+        final String hash = request.hash();
+        final String filename = hash + "." + extension;
+        Path p = Paths.get(cacheDir + filename);
+
+        if (Files.exists(p)) {
+            // return URI.create(matchedFile.getAbsolutePath());
+            return URI.create(this.cacheUri + filename);
+        } else {
+            throw new FileNotFoundException(filename);
+        }
+    }
+
+    private URI handleLocalFile(final DiskCacheRequest request) throws IOException {
+        File origFile = new File(request.uri());
+        File destFile = new File(cacheDir + origFile.getName());
+        if (!destFile.exists()) {
+            FileUtils.moveFile(origFile, destFile);
+        }
+        return URI.create(this.cacheUri + destFile.getName());
+    }
+
+    private URI handleExternalUrl(final DiskCacheRequest request) throws IOException, URISyntaxException {
+        //Handle all the rest
+        // This is a request to cache a URI
+        String hash;
+        URI uri;
+        URI requestUri = request.uri();
+        String requestUriText = requestUri.toString();
+        if (wavNoCache && "wav".equalsIgnoreCase(extension(requestUri))) {
+            return requestUri;
+        }else if (requestUriText.contains("hash")) {
+            String fragment = requestUri.getFragment();
+            hash = fragment.replace("hash=", "");
+            String uriStr = requestUriText.replace(fragment, "").replace("#", "");
+            uri = URI.create(uriStr);
+        } else {
+            uri = requestUri;
+            hash = new Sha256Hash(requestUriText).toHex();
+        }
+
+        final String extension = extension(uri).toLowerCase();
+        final File path = new File(cacheDir + hash + "." + extension);
+        if (!path.exists()) {
+            downloader.download(uri, path);
+        }
+        return URI.create(this.cacheUri + hash + "." + extension);
     }
 
     @Override
     public void onReceive(final Object message) throws Exception {
+        if (!(message instanceof DiskCacheRequest)) {
+            logger.warning("Unexpected request type");
+            return;
+        }
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
         if (DiskCacheRequest.class.equals(klass)) {
-            DiskCacheResponse response = null;
+            DiskCacheResponse response;
             try {
-                response = new DiskCacheResponse(cache(message));
+                response = new DiskCacheResponse(cache((DiskCacheRequest) message));
             } catch (final Exception exception) {
-                logger.error("Error while chaching", exception);
+                logger.error("Error while caching", exception);
                 response = new DiskCacheResponse(exception);
             }
             sender.tell(response, self);
         }
     }
+
+    private static String extension(final URI uri) {
+        final String path = uri.getPath();
+        return path.substring(path.lastIndexOf(".") + 1);
+    }
+
 }

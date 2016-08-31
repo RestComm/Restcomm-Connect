@@ -13,6 +13,7 @@ import javax.servlet.ServletContext;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.commons.http.SslMode;
 import org.mobicents.servlet.restcomm.rvd.configuration.RestcommConfig;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RestcommConfigNotFound;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RestcommConfigurationException;
 import org.mobicents.servlet.restcomm.rvd.http.utils.UriUtils;
 import org.mobicents.servlet.restcomm.rvd.model.RvdConfig;
@@ -114,8 +115,18 @@ public class RvdConfiguration {
         if(logger.isInfoEnabled()) {
             logger.info("Using workspace at " + workspaceBasePath);
         }
-        // load configuration from restcomm.xml file
-        restcommConfig = loadRestcommXmlConfig(contextRootPath + "../restcomm.war/WEB-INF/conf/restcomm.xml");
+        // try load configuration from restcomm.war/.../restcomm.xml file
+        try {
+            restcommConfig = loadRestcommXmlConfig(contextRootPath + "../restcomm.war/WEB-INF/conf/restcomm.xml");
+        } catch (RestcommConfigNotFound e) {
+            // fallback to local configuration
+            try {
+                restcommConfig = loadRestcommXmlConfig(contextRootPath + "WEB-INF/restcomm.xml");
+            } catch (RestcommConfigNotFound restcommConfigNotFound) {
+                restcommConfig = null;
+                logger.error("Could not load restcomm configuration.");
+            }
+        }
     }
 
     /**
@@ -142,10 +153,12 @@ public class RvdConfiguration {
      * @param pathToXml
      * @return a valid RestcommConfig object or null
      */
-    private RestcommConfig loadRestcommXmlConfig(String pathToXml) {
+    private RestcommConfig loadRestcommXmlConfig(String pathToXml) throws RestcommConfigNotFound {
         try {
             RestcommConfig restcommConfig = new RestcommConfig(pathToXml);
             return restcommConfig;
+        } catch (RestcommConfigNotFound e) {
+            throw e;
         } catch (RestcommConfigurationException e) {
             logger.error(e.getMessage(), e);
             return null;

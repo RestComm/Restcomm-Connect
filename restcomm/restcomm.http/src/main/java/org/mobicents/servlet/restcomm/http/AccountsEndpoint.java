@@ -30,11 +30,11 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 
 import static javax.ws.rs.core.MediaType.*;
 
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -54,15 +54,14 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
 import org.mobicents.servlet.restcomm.http.exceptions.InsufficientPermission;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public abstract class AccountsEndpoint extends SecuredEndpoint {
-    @Context
-    protected ServletContext context;
+public class AccountsEndpoint extends SecuredEndpoint {
     protected Configuration configuration;
     protected Gson gson;
     protected XStream xstream;
@@ -72,8 +71,13 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         super();
     }
 
+    // used for testing
+    public AccountsEndpoint(ServletContext context, HttpServletRequest request) {
+        super(context,request);
+    }
+
     @PostConstruct
-    private void init() {
+    void init() {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
@@ -233,7 +237,6 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
                 clientData.add("Password", data.getFirst("Password"));
                 clientData.add("FriendlyName", account.getFriendlyName());
                 clientData.add("AccountSid", account.getSid().toString());
-
                 Client client = clientDao.getClient(clientData.getFirst("Login"));
                 if (client == null) {
                     client = createClientFrom(account.getSid(), clientData);
@@ -292,6 +295,14 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         } else {
             result = result.setStatus(Account.Status.ACTIVE);
         }
+        if (data.containsKey("Role")) {
+            Account operatingAccount = userIdentityContext.getEffectiveAccount();
+            // Only allow role change for administrators. Multitenancy checks will take care of restricting the modification scope to sub-accounts.
+            if ( userIdentityContext.getEffectiveAccountRoles().contains(getAdministratorRole())) {
+                result = result.setRole(data.getFirst("Role"));
+            } else
+                throw new AuthorizationException();
+        }
         if (data.containsKey("Password")) {
             final String hash = new Md5Hash(data.getFirst("Password")).toString();
             result = result.setAuthToken(hash);
@@ -304,7 +315,8 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response updateAccount(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
-        //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
+        // First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO
+        // operations
         checkPermission("RestComm:Modify:Accounts");
         final Sid sid = new Sid(accountSid);
         Account account = accountsDao.getAccount(sid);
@@ -313,30 +325,31 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         } else {
             account = update(account, data);
 
-            secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT );
+            secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
             accountsDao.updateAccount(account);
 
-                // Update SIP client of the corresponding Account
-                String email = account.getEmailAddress();
-                if (email != null && !email.equals("")) {
-                    String username = email.split("@")[0];
-                    Client client = clientDao.getClient(username);
-                    if (client != null) {
-                        // TODO: need to encrypt this password because it's
-                        // same with Account password.
-                        // Don't implement now. Opened another issue for it.
-                        if (data.containsKey("Password")) {
-                            // Md5Hash(data.getFirst("Password")).toString();
-                            String password = data.getFirst("Password");
-                            client = client.setPassword(password);
-                        }
-
-                        if (data.containsKey("FriendlyName")) {
-                            client = client.setFriendlyName(data.getFirst("FriendlyName"));
-                        }
-                        clientDao.updateClient(client);
+            // Update SIP client of the corresponding Account
+            String email = account.getEmailAddress();
+            if (email != null && !email.equals("")) {
+                String username = email.split("@")[0];
+                Client client = clientDao.getClient(username);
+                if (client != null) {
+                    // TODO: need to encrypt this password because it's
+                    // same with Account password.
+                    // Don't implement now. Opened another issue for it.
+                    if (data.containsKey("Password")) {
+                        // Md5Hash(data.getFirst("Password")).toString();
+                        String password = data.getFirst("Password");
+                        client = client.setPassword(password);
                     }
+
+                    if (data.containsKey("FriendlyName")) {
+                        client = client.setFriendlyName(data.getFirst("FriendlyName"));
+                    }
+
+                    clientDao.updateClient(client);
                 }
+            }
 
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(account), APPLICATION_JSON).build();
