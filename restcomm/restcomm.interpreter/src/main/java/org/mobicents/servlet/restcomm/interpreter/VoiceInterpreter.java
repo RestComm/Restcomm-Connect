@@ -61,6 +61,7 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Nouns;
 import org.mobicents.servlet.restcomm.interpreter.rcml.ParserFailed;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
@@ -547,6 +548,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             onBridgeStateChanged((BridgeStateChanged) message, self, sender);
         } else if (GetRelatedCall.class.equals(klass)) {
             onGetRelatedCall((GetRelatedCall) message, self, sender);
+        } else if (JoinComplete.class.equals(klass)) {
+            onJoinComplete((JoinComplete)message);
+        }
+    }
+
+    private void onJoinComplete(JoinComplete message) throws TransitionNotFoundException, TransitionFailedException, TransitionRollbackException {
+        if (logger.isInfoEnabled()) {
+            logger.info("JoinComplete received, sender: " + sender().path() + ", VI state: " + fsm.state());
+        }
+        if (is(joiningConference)) {
+            fsm.transition(message, conferencing);
         }
     }
 
@@ -571,11 +583,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     private void onConferenceResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
-        if (logger.isInfoEnabled()) {
-            logger.info("VoiceInterpreter received ConferenceResponse from Conference: "+sender().path()+", VI state: "+fsm.state());
-        }
         final ConferenceResponse<ConferenceInfo> response = (ConferenceResponse<ConferenceInfo>) message;
         conferenceInfo = response.get();
+        if (logger.isInfoEnabled()) {
+            logger.info("VoiceInterpreter received ConferenceResponse from Conference: " + conferenceInfo.name() + ", path: " + sender().path() + ", current confernce size: " + conferenceInfo.participants().size() + ", VI state: " + fsm.state());
+        }
         if (is(acquiringConferenceInfo)) {
             fsm.transition(message, joiningConference);
         }
@@ -1158,7 +1170,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         fsm.transition(message, downloadingRcml);
                     }
                 } else if (is(joiningConference)) {
-                    fsm.transition(message, conferencing);
+                    //Do nothing here
+                    //fsm.transition(message, conferencing);
                 } else if (is(forking)) {
                     if (outboundCall == null || !sender.equals(call)) {
                         outboundCall = sender;
@@ -2537,6 +2550,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                     final Play play = new Play(uri, 1);
                     conference.tell(play, source);
+                }
+                if (logger.isInfoEnabled()) {
+                    logger.info("About to join call to Conference: "+conferenceInfo.name()+", with state: "+conferenceInfo.state()+", with moderator present: "+conferenceInfo.isModeratorPresent()+", and current participants: "+conferenceInfo.participants().size());
                 }
                 // Join the conference.
                 final AddParticipant request = new AddParticipant(call);
