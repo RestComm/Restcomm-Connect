@@ -97,10 +97,6 @@ configVoipInnovations() {
 configDidProvisionManager() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
-    #Check for port offset.
-    local SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
-
-
     if [[ "$PROVISION_PROVIDER" == "VI" || "$PROVISION_PROVIDER" == "vi" ]]; then
         sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
 
@@ -129,7 +125,7 @@ configDidProvisionManager() {
                 sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager\"|" $FILE
 
                 sed -i "/<callback-urls>/ {
-                    N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"$5:$SIP_PORT_UDP\" method=\"SIP\" />|
+                    N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"$5:$8\" method=\"SIP\" />|
                     N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\" method=\"\" />|
                     N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\" method=\"\" />|
                     N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\" method=\"\" />|
@@ -150,10 +146,10 @@ configDidProvisionManager() {
                 sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.voxbone.VoxbonePhoneNumberProvisioningManager\"|" $FILE
 
                 sed -i "/<callback-urls>/ {
-                    N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
-                    N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
-                    N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
-                    N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
+                    N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"\+\{E164\}\@$5:$8\" method=\"SIP\" />|
+                    N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\+\{E164\}\@$5:$8\" method=\"SIP\" />|
+                    N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\+\{E164\}\@$5:$8\" method=\"SIP\" />|
+                    N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\+\{E164\}\@$5:$8\" method=\"SIP\" />|
                 }" $FILE
 
                 sed -i "/<voxbone>/ {
@@ -514,7 +510,19 @@ configRCJavaOpts
 configDARSProperties
 configRestcomm "$PUBLIC_IP"
 #configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
-configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$PUBLIC_IP" "$DID_ACCOUNTID" "$SMPP_SYSTEM_TYPE"
+
+if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
+    HOSTFORDID=$LBHOST
+    PORTFORDID=$LBPORT
+
+else
+    PORTFORDID=$SIP_PORT_UDP
+    HOSTFORDID=$PUBLIC_IP
+
+    #Check for port offset.
+    PORTFORDID=$((PORTFORDID + PORT_OFFSET))
+fi
+configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$HOSTFORDID" "$DID_ACCOUNTID" "$SMPP_SYSTEM_TYPE" "$PORTFORDID"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
 configSmsAggregator "$SMS_OUTBOUND_PROXY" "$SMS_PREFIX"
 configSpeechRecognizer "$ISPEECH_KEY"
