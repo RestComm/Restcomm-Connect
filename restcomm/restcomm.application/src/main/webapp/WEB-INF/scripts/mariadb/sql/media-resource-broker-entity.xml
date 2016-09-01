@@ -22,8 +22,8 @@
   <select id="getConnectedSlaveEntitiesByConfSid" parameterType="string" resultType="hashmap">
 		SELECT * FROM media_resource_broker_entity AS media_resource_broker_entity WHERE conference_sid=#{conference_sid} AND is_bridged_together is true;
   </select>
-  <delete id="removeMediaResourceBrokerEntity" parameterType="map">
-    DELETE FROM media_resource_broker_entity WHERE conference_sid="#{conference_sid} AND slave_ms_id="#{slave_ms_id};
+  <delete id="removeMediaResourceBrokerEntity" parameterType="org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntityFilter">
+    DELETE FROM media_resource_broker_entity WHERE conference_sid=#{conferenceSid} AND slave_ms_id=#{slaveMsId};
   </delete>
   
   <update id="updateMediaResource" parameterType="map">

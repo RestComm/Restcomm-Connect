@@ -42,6 +42,7 @@ import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mgcp.ConnectionStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.CreateConferenceEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.CreateConnection;
+import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.EndpointCredentials;
 import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
 import org.mobicents.servlet.restcomm.mgcp.InviteEndpoint;
@@ -286,6 +287,8 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     masterMediaServerSdp = connState.descriptor().toString();
                     logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ masterMediaServerSdp: "+masterMediaServerSdp);
                     fsm.transition(message, updatingRemoteConnectionWithLocalMS);
+                } else if (is(updatingRemoteConnectionWithLocalMS)){
+                    fsm.transition(message, active);
                 }
                 break;
 
@@ -538,9 +541,14 @@ public class ConferenceMediaResourceController extends UntypedActor{
             }else{
                 logger.info("CMRC is STOPPING Slave NOW...");
                 //TODO: do clean up here
-                //TODO: check if it is last to leave in entire cluster then distroymaster confe EP as well
-                //TODO: fetch in progress calls.
                 removeSlaveRecord();
+                final boolean areAnySlavesConnectedToThisConferenceEndpoint = areAnySlavesConnectedToThisConferenceEndpoint();
+                //check if it is last to leave in entire cluster then distroymaster confe EP as well
+                logger.info("areAnySlavesConnectedToThisConferenceEndpoint: "+areAnySlavesConnectedToThisConferenceEndpoint);
+                if(areAnySlavesConnectedToThisConferenceEndpoint){
+                    logger.info("Going to Detroy Master conference EP..");
+                    masterConfernceEndpoint.tell(new DestroyEndpoint(), super.source);
+                }
             }
         }
 
@@ -591,6 +599,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
      *
      */
     private void addNewSlaveRecord() {
+        logger.info("addNewSlaveRecord: conferenceSid: "+conferenceSid+" localMsId: "+localMsId);
         final MediaResourceBrokerDao dao= storage.getMediaResourceBrokerDao();
         final MediaResourceBrokerEntity.Builder builder = MediaResourceBrokerEntity.builder();
 
@@ -608,13 +617,13 @@ public class ConferenceMediaResourceController extends UntypedActor{
             final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
             cdr = dao.getConferenceDetailRecord(conferenceSid);
             cdr = cdr.setMasterConfernceEndpointId(localConfernceEndpointId.getLocalEndpointName());
-            dao.updateConferenceDetailRecord(cdr);
+            dao.updateConferenceDetailRecordMasterEndpointID(cdr);
         }
     }
 
     private void removeSlaveRecord() throws ParseException {
         final MediaResourceBrokerDao dao= storage.getMediaResourceBrokerDao();
-        dao.removeMediaResourceBrokerEntity(new MediaResourceBrokerEntityFilter(conferenceSid, localMsId, null, null, true));
+        dao.removeMediaResourceBrokerEntity(new MediaResourceBrokerEntityFilter(conferenceSid.toString(), localMsId, null, null, true));
     }
 
     private boolean areAnySlavesConnectedToThisConferenceEndpoint(){

@@ -239,7 +239,7 @@ public final class MmsConferenceController extends MediaServerController {
         } else if (MediaResourceBrokerResponse.class.equals(klass)) {
             onMediaResourceBrokerResponse((MediaResourceBrokerResponse<?>) message, self, sender);
         } else if (StopConferenceMediaResourceControllerResponse.class.equals(klass)) {
-        	fsm.transition(message, stopping);
+            fsm.transition(message, stopping);
         } else if(JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
         }
@@ -265,7 +265,7 @@ public final class MmsConferenceController extends MediaServerController {
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
         logger.info("got JoinComplete in conference controller");
         if(!startCMRCSignalSent){
-        	startCMRCSignalSent = true;
+            startCMRCSignalSent = true;
             conferenceMediaResourceController.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartConferenceMediaResourceController(this.cnfEndpoint, this.conferenceSid), self);
         }
     }
@@ -539,8 +539,8 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-        	logger.info("StoppingCMRC");
-        	conferenceMediaResourceController.tell(new StopConferenceMediaResourceController(), super.source);
+            logger.info("StoppingCMRC");
+            conferenceMediaResourceController.tell(new StopConferenceMediaResourceController(), super.source);
         }
     }
 
@@ -552,13 +552,13 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-        	StopConferenceMediaResourceControllerResponse response = (StopConferenceMediaResourceControllerResponse) message;
+            StopConferenceMediaResourceControllerResponse response = (StopConferenceMediaResourceControllerResponse) message;
             // Destroy Media Group
             mediaGroup.tell(new StopMediaGroup(), super.source);
             // CMRC might ask you not to destroy endpoint bcz master have left firt and other slaves are still connected to this conference endpoint.
             if(response.distroyEndpoint()){
                 // Destroy Bridge Endpoint and its connections
-                cnfEndpoint.tell(new DestroyEndpoint(), super.source);            	
+                cnfEndpoint.tell(new DestroyEndpoint(), super.source);
             }else{
                 logger.info("CMRC have ask you not to destroy endpoint bcz master have left firt and other slaves are still connected to this conference endpoint");
             }

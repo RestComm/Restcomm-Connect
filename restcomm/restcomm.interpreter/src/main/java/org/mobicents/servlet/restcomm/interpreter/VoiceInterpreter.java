@@ -2357,7 +2357,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 conferenceDao.addConferenceDetailRecord(conferenceDetailRecord);
             }else{
                 conferenceDetailRecord = conferenceDetailRecord.setStatus(conferenceState.name());
-                conferenceDao.updateConferenceDetailRecord(conferenceDetailRecord);
+                conferenceDao.updateConferenceDetailRecordStatus(conferenceDetailRecord);
             }
             // parse mute
             attribute = child.attribute("muted");
@@ -2538,7 +2538,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
                     conferenceDetailRecord = dao.getConferenceDetailRecord(conferenceDetailRecord.getSid());
                     conferenceDetailRecord = conferenceDetailRecord.setStatus(ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT.name());
-                    dao.updateConferenceDetailRecord(conferenceDetailRecord);
+                    dao.updateConferenceDetailRecordStatus(conferenceDetailRecord);
                 }
                 // Call is no more on hold
                 updateMuteAndHoldStatusOfAllConferenceCalls(conferenceDetailRecord.getAccountSid(), conferenceDetailRecord.getSid(), false, false);
@@ -2615,7 +2615,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
                     conferenceDetailRecord = dao.getConferenceDetailRecord(conferenceDetailRecord.getSid());
                     conferenceDetailRecord = conferenceDetailRecord.setStatus(confStateChanged.state().name());
-                    dao.updateConferenceDetailRecord(conferenceDetailRecord);
+                    dao.updateConferenceDetailRecordStatus(conferenceDetailRecord);
                 }
             }
             conference = null;

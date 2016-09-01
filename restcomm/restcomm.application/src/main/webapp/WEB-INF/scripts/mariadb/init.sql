@@ -159,7 +159,7 @@ friendly_name VARCHAR(60),
 api_version VARCHAR(10) NOT NULL,
 uri MEDIUMTEXT NOT NULL, 
 master_ms_id VARCHAR(34),
-master_conference_endpoint_id VARCHAR(2000)
+master_conference_endpoint_id VARCHAR(20)
 );
 
 CREATE TABLE restcomm_clients (
@@ -361,3 +361,6 @@ INSERT INTO restcomm_incoming_phone_numbers VALUES('PNb43ed9e641364277b6432547ff
 /* Create demo clients */
 INSERT INTO restcomm_clients VALUES('CLa2b99142e111427fbb489c3de357f60a','2013-11-04 12:52:44.144000000','2013-11-04 12:52:44.144000000','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24','alice','alice','1234',1,NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa2b99142e111427fbb489c3de357f60a');
 INSERT INTO restcomm_clients VALUES('CL3003328d0de04ba68f38de85b732ed56','2013-11-04 16:33:39.248000000','2013-11-04 16:33:39.248000000','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24','bob','bob','1234',1,NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL3003328d0de04ba68f38de85b732ed56');
+
+/* Create stored procedure addConferenceDetailRecord  */
+source addConferenceDetailRecord.sql

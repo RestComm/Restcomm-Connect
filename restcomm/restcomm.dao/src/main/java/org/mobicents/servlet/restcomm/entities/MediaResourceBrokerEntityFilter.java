@@ -19,8 +19,6 @@
  */
 package org.mobicents.servlet.restcomm.entities;
 
-import java.text.ParseException;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
@@ -30,13 +28,13 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 @Immutable
 public class MediaResourceBrokerEntityFilter {
 
-    private final Sid conferenceSid;
+    private final String conferenceSid;
     private String slaveMsId;
     private String slaveMsBridgeEpId;
     private String slaveMsCnfEpId;
     private boolean isBridgedTogether;
 
-    public MediaResourceBrokerEntityFilter(Sid conferenceSid, String slaveMsId, String slaveMsBridgeEpId, String slaveMsCnfEpId, boolean isBridgedTogether) throws ParseException {
+    public MediaResourceBrokerEntityFilter(String conferenceSid, String slaveMsId, String slaveMsBridgeEpId, String slaveMsCnfEpId, boolean isBridgedTogether) {
         this.conferenceSid = conferenceSid;
         this.slaveMsId = slaveMsId;
         this.slaveMsBridgeEpId = slaveMsBridgeEpId;
@@ -44,7 +42,7 @@ public class MediaResourceBrokerEntityFilter {
         this.isBridgedTogether = isBridgedTogether;
     }
 
-    public Sid getConferenceSid() {
+    public String getConferenceSid() {
         return conferenceSid;
     }
 
