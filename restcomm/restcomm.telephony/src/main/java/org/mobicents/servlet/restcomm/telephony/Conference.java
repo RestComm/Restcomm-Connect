@@ -19,7 +19,6 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -483,26 +482,25 @@ public final class Conference extends UntypedActor {
 
     /**
      * get Conference Sid From DataBase:
+     * @throws Exception
      */
-    private void getConferenceSidFromDB(){
+    private void getConferenceSidFromDB() throws Exception{
         ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
         ConferenceDetailRecordFilter filter;
-        try {
-            filter = new ConferenceDetailRecordFilter(accountSid, "RUNNING%", null, null, friendlyName, 1, 0);
-            List<ConferenceDetailRecord> records = dao.getConferenceDetailRecords(filter);
-            if(records == null || records.size() == 0){
-                logger.warning("this conference is in trouble bcz we did not get its record..");
+        filter = new ConferenceDetailRecordFilter(accountSid, "RUNNING%", null, null, friendlyName, 1, 0);
+        List<ConferenceDetailRecord> records = dao.getConferenceDetailRecords(filter);
+        if(records == null || records.size() == 0){
+            logger.error("this conference is in trouble bcz we did not get its record..");
+            throw new Exception("Conference records did not found. There is no other way to proceed with this conference.");
+        }else{
+            logger.info("records size: "+ records.size());
+            if(records.size()>1){
+                logger.error("this conference is in trouble bcz we got more than one record against it..");
+                throw new Exception("this conference is in trouble bcz we got more than one record against it..");
             }else{
-                logger.info("records size: "+ records.size());
-                if(records.size()>1){
-                    logger.warning("this conference is in trouble bcz we got more than one record against it..");
-                }else{
-                    ConferenceDetailRecord cdr = records.get(0);
-                    sid = cdr.getSid();
-                }
+                ConferenceDetailRecord cdr = records.get(0);
+                sid = cdr.getSid();
             }
-        } catch (ParseException e) {
-            logger.error("Error while creating conference filter",e);
         }
     }
 }

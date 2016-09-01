@@ -5,9 +5,7 @@
 	namespace="org.mobicents.servlet.sip.restcomm.dao.ConferenceDetailRecordsDao">
 
     <insert id="addConferenceDetailRecord" parameterType="map">
-        INSERT INTO restcomm_conference_detail_records (sid, date_created, date_updated, account_sid, status,
-        friendly_name, api_version, uri, master_ms_id, master_conference_endpoint_id) VALUES (#{sid},
-		#{date_created}, #{date_updated}, #{account_sid}, #{status}, #{friendly_name}, #{api_version}, #{uri}, #{master_ms_id}, #{master_conference_endpoint_id});
+        call addConferenceDetailRecord( #{sid}, #{date_created}, #{date_updated}, #{account_sid}, #{status}, #{friendly_name}, #{api_version}, #{uri}, #{master_ms_id} );
     </insert>
 	<select id="getConferenceDetailRecord" parameterType="string" resultType="hashmap">
 		SELECT * FROM restcomm_conference_detail_records WHERE sid=#{sid};
@@ -16,7 +14,7 @@
         SELECT * FROM restcomm_conference_detail_records WHERE account_sid=#{account_sid};
     </select>
     <select id="getConferenceDetailRecordsByStatus" parameterType="string" resultType="hashmap">
-       SELECT * FROM restcomm_conference_detail_records WHERE status=#{status};
+       SELECT * FROM restcomm_conference_detail_records WHERE status like #{status};
     </select>
     <select id="getConferenceDetailRecordsByDateCreated" parameterType="date" resultType="hashmap">
         SELECT * FROM restcomm_conference_detail_records WHERE date_created&gt;=#{date_created} AND date_created&lt;DATE_ADD(#{date_created},INTERVAL 1 DAY);
@@ -64,12 +62,19 @@
     <delete id="removeConferenceDetailRecords" parameterType="string">
         DELETE FROM restcomm_conference_detail_records WHERE account_sid=#{account_sid};
     </delete>
-    <update id="updateConferenceDetailRecord" parameterType="map">
-        UPDATE 
+    <update id="updateConferenceDetailRecordStatus" parameterType="map">
+            UPDATE 
         	restcomm_conference_detail_records 
-        	SET 
-        		date_updated=#{date_updated}, status=#{status}, master_ms_id=#{master_ms_id}, master_conference_endpoint_id=#{master_conference_endpoint_id} 
+        	SET status=#{status}, date_updated=#{date_updated} 
         	WHERE sid=#{sid};
+
+    </update>
+    <update id="updateConferenceDetailRecordMasterEndpointID" parameterType="map">
+            UPDATE 
+        	restcomm_conference_detail_records 
+        	SET master_conference_endpoint_id=#{master_conference_endpoint_id}, date_updated=#{date_updated}
+        	WHERE sid=#{sid};
+
     </update>
 
 </mapper>

@@ -171,7 +171,7 @@ public class MediaResourceBroker extends UntypedActor{
         }
     }
 
-    private void onGetMediaGateway(GetMediaGateway message, ActorRef self, ActorRef sender) {
+    private void onGetMediaGateway(GetMediaGateway message, ActorRef self, ActorRef sender) throws Exception {
         final ConferenceInfo conferenceInfo = message.conferenceInfo();
         final Sid callSid = message.callSid();
 
@@ -203,57 +203,57 @@ public class MediaResourceBroker extends UntypedActor{
 
     }
 
-    private Sid addConferenceDetailRecord(final ConferenceInfo conferenceInfo, final Sid callSid) {
+    private Sid addConferenceDetailRecord(final ConferenceInfo conferenceInfo, final Sid callSid) throws Exception {
        Sid sid = null;
         if(conferenceInfo == null || conferenceInfo.name() == null){
             logger.info("provided conference info/sid is null, this can lead to problems in future of this call");
         }else{
-            try{
-                CallDetailRecordsDao callDao = storage.getCallDetailRecordsDao();
-                CallDetailRecord callRecord = callDao.getCallDetailRecord(callSid);
-                if(callRecord != null){
-                    ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
+            CallDetailRecordsDao callDao = storage.getCallDetailRecordsDao();
+            CallDetailRecord callRecord = callDao.getCallDetailRecord(callSid);
+            if(callRecord != null){
+                ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
 
-                    // check if a conference with same name/account is running.
-                    final String[] cnfNameAndAccount = conferenceInfo.name().split(":");
-                    final String accountSid = cnfNameAndAccount[0];
-                    final String friendlyName = cnfNameAndAccount[1];
+                // check if a conference with same name/account is running.
+                final String[] cnfNameAndAccount = conferenceInfo.name().split(":");
+                final String accountSid = cnfNameAndAccount[0];
+                final String friendlyName = cnfNameAndAccount[1];
 
-                    ConferenceDetailRecordFilter filter = new ConferenceDetailRecordFilter(accountSid, "RUNNING%", null, null, friendlyName, 1, 0);
-                    logger.info("ConferenceDetailRecordFilter: "+filter.toString());
-                    List<ConferenceDetailRecord> records = dao.getConferenceDetailRecords(filter);
+                ConferenceDetailRecordFilter filter = new ConferenceDetailRecordFilter(accountSid, "RUNNING%", null, null, friendlyName, 1, 0);
+                logger.info("ConferenceDetailRecordFilter: "+filter.toString());
+                List<ConferenceDetailRecord> records = dao.getConferenceDetailRecords(filter);
 
-                    if(records != null && records.size()>0){
-                        final ConferenceDetailRecord cdr = records.get(0);
-                        sid = cdr.getSid();
-                        logger.info("A conference with same name is running. According to database record. given SID is: "+sid);
-                    }else{
-                        // this is first record of this conference on all instances of
-                        final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
-                        sid = Sid.generate(Sid.Type.CONFERENCE);
-                        conferenceBuilder.setSid(sid);
-                        conferenceBuilder.setDateCreated(DateTime.now());
-
-                        conferenceBuilder.setAccountSid(new Sid(accountSid));
-                        conferenceBuilder.setStatus(ConferenceStateChanged.State.RUNNING_INITIALIZING.toString());
-                        conferenceBuilder.setApiVersion(callRecord.getApiVersion());
-                        final StringBuilder UriBuffer = new StringBuilder();
-                        UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountSid).append("/Conferences/");
-                        UriBuffer.append(sid);
-                        final URI uri = URI.create(UriBuffer.toString());
-                        conferenceBuilder.setUri(uri);
-                        conferenceBuilder.setFriendlyName(friendlyName);
-                        conferenceBuilder.setMasterMsId(msId);
-
-                        ConferenceDetailRecord cdr = conferenceBuilder.build();
-                        dao.addConferenceDetailRecord(cdr);
-                        logger.info("addConferenceDetailRecord: SID: "+sid+" NAME: "+conferenceInfo.name()+" STATE: "+conferenceInfo.state());
-                    }
+                if(records != null && records.size()>0){
+                    final ConferenceDetailRecord cdr = records.get(0);
+                    sid = cdr.getSid();
+                    logger.info("A conference with same name is running. According to database record. given SID is: "+sid);
                 }else{
-                    logger.info("call record is null");
+                    // this is first record of this conference on all instances of
+                    final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
+                    sid = Sid.generate(Sid.Type.CONFERENCE);
+                    conferenceBuilder.setSid(sid);
+                    conferenceBuilder.setDateCreated(DateTime.now());
+
+                    conferenceBuilder.setAccountSid(new Sid(accountSid));
+                    conferenceBuilder.setStatus(ConferenceStateChanged.State.RUNNING_INITIALIZING.toString());
+                    conferenceBuilder.setApiVersion(callRecord.getApiVersion());
+                    final StringBuilder UriBuffer = new StringBuilder();
+                    UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountSid).append("/Conferences/");
+                    UriBuffer.append(sid);
+                    final URI uri = URI.create(UriBuffer.toString());
+                    conferenceBuilder.setUri(uri);
+                    conferenceBuilder.setFriendlyName(friendlyName);
+                    conferenceBuilder.setMasterMsId(msId);
+
+                    ConferenceDetailRecord cdr = conferenceBuilder.build();
+                    dao.addConferenceDetailRecord(cdr);
+
+                    //getting CDR again as it is a conditional insert(select if exists or insert) to handle concurrency (incase another participant joins on another instance at very same time)
+                    cdr = dao.getConferenceDetailRecords(filter).get(0);
+                    sid = cdr.getSid();
+                    logger.info("addConferenceDetailRecord: SID: "+sid+" NAME: "+conferenceInfo.name()+" STATE: "+conferenceInfo.state());
                 }
-            }catch(Exception e){
-                logger.error("ERROR SAVING CONFERENCE IN DATBASE");
+            }else{
+                logger.info("call record is null");
             }
         }
         return sid;

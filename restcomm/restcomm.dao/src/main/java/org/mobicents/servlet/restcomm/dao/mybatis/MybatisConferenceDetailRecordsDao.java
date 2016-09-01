@@ -56,14 +56,16 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     }
 
     @Override
-    public void addConferenceDetailRecord(ConferenceDetailRecord cdr) {
+    public int addConferenceDetailRecord(ConferenceDetailRecord cdr) {
         final SqlSession session = sessions.openSession();
+        int effectedRows = 0;
         try {
-            session.insert(namespace + "addConferenceDetailRecord", toMap(cdr));
+            effectedRows = session.insert(namespace + "addConferenceDetailRecord", toMap(cdr));
             session.commit();
         } finally {
             session.close();
         }
+        return effectedRows;
     }
 
     @Override
@@ -136,10 +138,21 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     }
 
     @Override
-    public void updateConferenceDetailRecord(ConferenceDetailRecord cdr) {
+    public void updateConferenceDetailRecordStatus(ConferenceDetailRecord cdr) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateConferenceDetailRecord", toMap(cdr));
+            session.update(namespace + "updateConferenceDetailRecordStatus", toMap(cdr));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void updateConferenceDetailRecordMasterEndpointID(ConferenceDetailRecord cdr) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateConferenceDetailRecordMasterEndpointID", toMap(cdr));
             session.commit();
         } finally {
             session.close();
