@@ -170,7 +170,7 @@ public class UpgradeService {
         }
 
         if ( ! version.equals(versionPath[versionPath.length-1]) ) {
-            throw new NoUpgradePathException("No upgrade path for project " + projectName + "Best effort from version: " + startVersion + " - to version: " + version);
+            throw new NoUpgradePathException("No upgrade path for project " + projectName + ". Best effort from version: " + startVersion + " - to version: " + versionPath[versionPath.length-1]);
         }
 
         FsProjectStorage.backupProjectState(projectName,workspaceStorage);

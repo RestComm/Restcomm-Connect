@@ -19,25 +19,19 @@
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
-import static akka.pattern.Patterns.ask;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
-
-import java.io.File;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
-
+import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.util.Timeout;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -50,7 +44,7 @@ import org.mobicents.servlet.restcomm.asr.AsrRequest;
 import org.mobicents.servlet.restcomm.asr.AsrResponse;
 import org.mobicents.servlet.restcomm.asr.GetAsrInfo;
 import org.mobicents.servlet.restcomm.asr.ISpeechAsr;
-import org.mobicents.servlet.restcomm.cache.DiskCache;
+import org.mobicents.servlet.restcomm.cache.DiskCacheFactory;
 import org.mobicents.servlet.restcomm.cache.DiskCacheRequest;
 import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.cache.HashGenerator;
@@ -107,24 +101,28 @@ import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerRequest;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 import org.mobicents.servlet.restcomm.util.WavUtils;
-
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.util.Timeout;
 
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import java.io.File;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
+
+import static akka.pattern.Patterns.ask;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -517,7 +515,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new DiskCache(path, uri, true);
+                return new DiskCacheFactory(configuration).getDiskCache(path, uri);
             }
         }));
     }
