@@ -216,6 +216,138 @@ public class TestDialVerbPartOne {
     }
 
     @Test
+    public synchronized void testDialConferenceConcurrentCalls() throws InterruptedException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialConfernceRcml)));
+
+        final SipCall bobCall = bobPhone.createSipCall();
+        final SipCall georgeCall = georgePhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        georgeCall.initiateOutgoingCall(georgeContact, dialRestcomm, null, body, "application", "sdp", null, null);
+
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+
+
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        int responseGeorge = georgeCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseGeorge == Response.TRYING || responseGeorge == Response.RINGING);
+
+        if (responseGeorge == Response.TRYING) {
+            assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, georgeCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, georgeCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        georgeCall.sendInviteOkAck();
+
+        // Wait for the media to play and the call to hangup.
+        bobCall.listenForDisconnect();
+        georgeCall.listenForDisconnect();
+
+        Thread.sleep(5000);
+
+        // Start a new thread for george to wait disconnect
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                assertTrue(georgeCall.waitForDisconnect(30 * 1000));
+            }
+        }).start();
+
+        // Start a new thread for bob to wait disconnect
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                assertTrue(bobCall.waitForDisconnect(30 * 1000));
+            }
+        }).start();
+    }
+
+    private String dialConfernceRcmlWithPlay = "<Response><Play>/restcomm/audio/demo-prompt.wav</Play><Dial timeLimit=\"50\"><Conference>test</Conference></Dial></Response>";
+    @Test
+    public synchronized void testDialConferenceWithPlay() throws InterruptedException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialConfernceRcml)));
+
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        // George calls to the conference
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.initiateOutgoingCall(georgeContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(georgeCall);
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        int responseGeorge = georgeCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseGeorge == Response.TRYING || responseGeorge == Response.RINGING);
+
+        if (responseGeorge == Response.TRYING) {
+            assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, georgeCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, georgeCall.getLastReceivedResponse().getStatusCode());
+        georgeCall.sendInviteOkAck();
+        assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        // Wait for the media to play and the call to hangup.
+        bobCall.listenForDisconnect();
+        georgeCall.listenForDisconnect();
+
+        // Start a new thread for george to wait disconnect
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                assertTrue(georgeCall.waitForDisconnect(30 * 1000));
+            }
+        }).start();
+
+        // Start a new thread for bob to wait disconnect
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                assertTrue(bobCall.waitForDisconnect(30 * 1000));
+            }
+        }).start();
+    }
+
+    @Test
     public synchronized void testDialConferenceWithContactHeaderPortNull() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -338,11 +470,13 @@ public class TestDialVerbPartOne {
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        String inboundCallSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[0];
 
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        String outboundCallSid = aliceCall.getLastReceivedRequest().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[0];
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
@@ -355,8 +489,20 @@ public class TestDialVerbPartOne {
         aliceCall.disconnect();
 
         bobCall.listenForDisconnect();
-        assertTrue(bobCall.waitForDisconnect(30 * 1000));
+        assertTrue(bobCall.waitForDisconnect(50 * 1000));
         assertTrue(bobCall.respondToDisconnect());
+
+        JsonObject inboundCallCdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, inboundCallSid);
+        JsonObject outboundCallCdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, outboundCallSid);
+        assertNotNull(inboundCallCdr);
+        assertNotNull(outboundCallCdr);
+
+        int inboundCdrDuration = inboundCallCdr.get("duration").getAsInt();
+        int outboundCdrDuration = outboundCallCdr.get("duration").getAsInt();
+        int outboundCdrRinging = outboundCallCdr.get("ring_duration").getAsInt();
+        assertTrue(inboundCdrDuration==3);
+        assertTrue(outboundCdrDuration==3);
+        assertTrue(outboundCdrRinging==0);
     }
 
     @Test
