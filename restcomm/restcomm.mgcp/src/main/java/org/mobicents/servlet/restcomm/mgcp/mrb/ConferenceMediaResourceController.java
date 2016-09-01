@@ -545,7 +545,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 final boolean areAnySlavesConnectedToThisConferenceEndpoint = areAnySlavesConnectedToThisConferenceEndpoint();
                 //check if it is last to leave in entire cluster then distroymaster confe EP as well
                 logger.info("areAnySlavesConnectedToThisConferenceEndpoint: "+areAnySlavesConnectedToThisConferenceEndpoint);
-                if(areAnySlavesConnectedToThisConferenceEndpoint){
+                if(!areAnySlavesConnectedToThisConferenceEndpoint){
                     logger.info("Going to Detroy Master conference EP..");
                     masterConfernceEndpoint.tell(new DestroyEndpoint(), super.source);
                 }
