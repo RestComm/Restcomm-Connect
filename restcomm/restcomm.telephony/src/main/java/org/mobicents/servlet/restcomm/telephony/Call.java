@@ -49,6 +49,7 @@ import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 import javax.sip.header.RecordRouteHeader;
+import javax.sip.header.RouteHeader;
 import javax.sip.message.Response;
 
 import org.apache.commons.configuration.Configuration;
@@ -250,6 +251,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.dialing, this.stopping));
         transitions.add(new Transition(this.dialing, this.failingBusy));
         transitions.add(new Transition(this.dialing, this.ringing));
+        transitions.add(new Transition(this.dialing, this.failed));
         transitions.add(new Transition(this.dialing, this.updatingMediaSession));
         transitions.add(new Transition(this.inProgress, this.stopping));
         transitions.add(new Transition(this.inProgress, this.joining));
@@ -1060,13 +1062,44 @@ public final class Call extends UntypedActor {
                 if (initialIpBeforeLB != null ) {
                     if (initialPortBeforeLB == null)
                         initialPortBeforeLB = "5060";
-                    if(logger.isInfoEnabled()) {
-                        logger.info("We are behind load balancer, will use: " + initialIpBeforeLB + ":"
-                                + initialPortBeforeLB + " for ACK message, ");
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("We are behind load balancer, checking if the request URI needs to be patched");
                     }
                     String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
                     SipURI uri = factory.createSipURI(null, realIP);
-                    ack.setRequestURI(uri);
+                    boolean patchRURI = true;
+                    try {
+                        // https://github.com/RestComm/Restcomm-Connect/issues/1336 checking if the initial IP and Port behind LB is part of the route set or not
+                        ListIterator<? extends Address> routes = ack.getAddressHeaders(RouteHeader.NAME);
+                        while(routes.hasNext() && patchRURI) {
+                            SipURI route = (SipURI) routes.next().getURI();
+                            String routeHost = route.getHost();
+                            int routePort = route.getPort();
+                            if(routePort < 0) {
+                                routePort = 5060;
+                            }
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Checking if route " + routeHost + ":" + routePort + " is matching ip and port before LB " + initialIpBeforeLB + ":"
+                                    + initialPortBeforeLB + " for the ACK request");
+                            }
+                            if(routeHost.equalsIgnoreCase(initialIpBeforeLB) && routePort == Integer.parseInt(initialPortBeforeLB)) {
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("route " + route + " is matching ip and port before LB " + initialIpBeforeLB + ":"
+                                        + initialPortBeforeLB + " for the ACK request, so not patching the Request-URI");
+                                }
+                                patchRURI = false;
+                            }
+                        }
+                    } catch (ServletParseException e) {
+                        logger.error("Impossible to parse the route set from the ACK " + ack, e);
+                    }
+                    if(patchRURI) {
+                        if(logger.isDebugEnabled()) {
+                            logger.debug("We are behind load balancer, will use: " + initialIpBeforeLB + ":"
+                                    + initialPortBeforeLB + " for ACK message, ");
+                        }
+                        ack.setRequestURI(uri);
+                    }
                 } else if (!ack.getHeaders("Route").hasNext()) {
                     final SipServletRequest originalInvite = response.getRequest();
                     final SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
@@ -1494,7 +1527,7 @@ public final class Call extends UntypedActor {
             case SipServletResponse.SC_UNAUTHORIZED:
             case SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED: {
                 // Handles Auth for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
-                if (this.username == null || this.password == null) {
+                if ((this.username!= null || this.username.isEmpty()) && (this.password != null && this.password.isEmpty())) {
                     sendCallInfoToObservers();
                     fsm.transition(message, failed);
                 } else {
@@ -1693,10 +1726,42 @@ public final class Call extends UntypedActor {
                 }
                 if (realInetUri != null && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
                     if(logger.isInfoEnabled()) {
-                    logger.info("Using the real ip address of the sip client " + realInetUri.toString()
-                        + " as a request uri of the BYE request");
+                        logger.info("real ip address of the sip client " + realInetUri.toString()
+                            + " is not null, checking if the request URI needs to be patched");
                     }
-                    bye.setRequestURI(realInetUri);
+                    boolean patchRURI = true;
+                    try {
+                        // https://github.com/RestComm/Restcomm-Connect/issues/1336 checking if the initial IP and Port behind LB is part of the route set or not
+                        ListIterator<? extends Address> routes = bye.getAddressHeaders(RouteHeader.NAME);
+                        while(routes.hasNext() && patchRURI) {
+                            SipURI route = (SipURI) routes.next().getURI();
+                            String routeHost = route.getHost();
+                            int routePort = route.getPort();
+                            if(routePort < 0) {
+                                routePort = 5060;
+                            }
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Checking if route " + routeHost + ":" + routePort + " is matching ip and port of realNetURI " + realInetUri.getHost() + ":"
+                                    + realInetUri.getPort() + " for the BYE request");
+                            }
+                            if(routeHost.equalsIgnoreCase(realInetUri.getHost()) && routePort == realInetUri.getPort()) {
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("route " + route + " is matching ip and port of realNetURI "+ realInetUri.getHost() + ":"
+                                     + realInetUri.getPort() + " for the BYE request, so not patching the Request-URI");
+                                }
+                                patchRURI = false;
+                            }
+                        }
+                    } catch (ServletParseException e) {
+                        logger.error("Impossible to parse the route set from the BYE " + bye, e);
+                    }
+                    if(patchRURI) {
+                        if(logger.isInfoEnabled()) {
+                             logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                                  + " as a request uri of the BYE request");
+                        }
+                        bye.setRequestURI(realInetUri);
+                    }
                 }
             }
             if(logger.isInfoEnabled()) {

@@ -247,7 +247,7 @@
 		Accepted values: XMS (Dialogic XMS using JSR-309 driver) or MMS (Mobicents 
 		Media Server using MGCP driver) -->
 	<mscontrol>
-		<compatibility>mms</compatibility>
+		<compatibility>rms</compatibility>
 		<media-server name="Dialogic XMS" class="com.dialogic.dlg309">
 			<address>127.0.0.1</address>
 			<port>5060</port>
