@@ -1970,6 +1970,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (child.attribute("password") != null) {
                         password = child.attribute("password").value();
                     }
+                    if (username == null || username.isEmpty()) {
+                        if (storage.getClientsDao().getClient(callInfo.from()) != null) {
+                            username = callInfo.from();
+                            password = storage.getClientsDao().getClient(callInfo.from()).getPassword();
+                        }
+                    }
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
                                 CreateCall.Type.SIP, accountId, callInfo.sid());
