@@ -597,7 +597,7 @@ public class DialActionTest {
             String msgToPrint = requestBody.replaceAll("&", "\n");
             logger.info("requestBody: \n"+"\n ---------------------- \n"+msgToPrint+"\n---------------------- ");
         }
-        assertTrue(requestBody.contains("DialCallStatus=no-answer"));
+        assertTrue(requestBody.contains("DialCallStatus=canceled"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialRingDuration=3"));
