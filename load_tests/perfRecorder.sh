@@ -14,7 +14,7 @@ cp $RESULTS_FOLDER/$TEST_NAME*.csv $TOOLS_DIR/target/data/periodic/sip/sipp.csv
 cp $RESULTS_FOLDER/$TEST_NAME*_rtt.csv $TOOLS_DIR/target/data/periodic/sip/sipp_rtt.csv
 cd $TOOLS_DIR
 rm -f *.zip
-./pc_stop_collect.sh -s 360 $RESTCOMM_PID
+./pc_stop_collect.sh -s 360
 cp -f $TOOLS_DIR/perf*.zip $PR_RESULTS_FOLDER
 ### Check for performance regression
 ./pc_analyse.sh $TOOLS_DIR/perf*.zip 1 > $PR_RESULTS_FOLDER/PerfCorderAnalysis.xml 2> $PR_RESULTS_FOLDER/analysis.log
