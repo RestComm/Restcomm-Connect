@@ -208,7 +208,7 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         final URI uri = readUri(map.get("uri"));
         final String msId = readString(map.get("master_ms_id"));
         final String masterConferenceEndpointId = readString(map.get("master_conference_endpoint_id"));
-        final boolean masterPresent = readBoolean(map.get("master_present")); 
+        final boolean masterPresent = readBoolean(map.get("master_present"));
         return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri, msId, masterConferenceEndpointId, masterPresent);
     }
 

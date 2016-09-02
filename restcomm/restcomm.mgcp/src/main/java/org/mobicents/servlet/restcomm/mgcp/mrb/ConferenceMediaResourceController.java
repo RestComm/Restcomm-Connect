@@ -20,6 +20,7 @@
  */
 package org.mobicents.servlet.restcomm.mgcp.mrb;
 
+import java.net.URI;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -49,21 +50,18 @@ import org.mobicents.servlet.restcomm.mgcp.InviteEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
+import org.mobicents.servlet.restcomm.mgcp.Play;
 import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResourceControllerResponse;
-import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MgcpMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsConferenceController.AbstractAction;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
+import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import akka.actor.ActorRef;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
@@ -117,6 +115,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private ActorRef connectionWithMasterMS;
 
     private final DaoManager storage;
+    private final Configuration configuration;
     private MediaResourceBrokerEntity entity;
     private ConferenceDetailRecord cdr;
     private Sid conferenceSid;
@@ -126,6 +125,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
     private boolean areAnySlavesConnectedToThisConferenceEndpoint;
     private int noOfConnectedSlaves = 0;
+     private ActorRef msConferenceController;
 
     public ConferenceMediaResourceController(final String localMsId, final Map<String, ActorRef> gateways, final Configuration configuration, final DaoManager storage){
         super();
@@ -171,6 +171,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
 
         this.storage = storage;
+        this.configuration = configuration;
         this.allMediaGateways = gateways;
         logger.info("localMsId: "+localMsId);
         this.localMsId = localMsId;
@@ -202,6 +203,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
             onStopObserving((StopObserving) message, self, sender);
         } else if (StartConferenceMediaResourceController.class.equals(klass)){
             onStartConferenceMediaResourceController((StartConferenceMediaResourceController) message, self, sender);
+            msConferenceController = sender;
         } else if (StopConferenceMediaResourceController.class.equals(klass)) {
             onStopConferenceMediaResourceController((StopConferenceMediaResourceController) message, self, sender);
         }else if (MediaGatewayResponse.class.equals(klass)) {
@@ -531,7 +533,14 @@ public class ConferenceMediaResourceController extends UntypedActor{
             if(isThisMaster){
                 updateMasterConferenceEndpointId();
             }else{
-            	
+                 //TODO: read it from config after testing
+                 String path = "/restcomm/audio/";
+                String entryAudio = "beep.wav";
+                path += entryAudio == null || entryAudio.equals("") ? "beep.wav" : entryAudio;
+                URI uri = null;
+                uri = UriUtils.resolve(new URI(path));
+                final Play play = new Play(uri, 1);
+                msConferenceController.tell(play, source);
                 // enter slave record in MRB resource table
                 addNewSlaveRecord();
             }
@@ -667,7 +676,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     }
 
     private boolean isMasterPresence(){
-        boolean masterPresent = true; 
+        boolean masterPresent = true;
         if(cdr != null){
             final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
             cdr = dao.getConferenceDetailRecord(conferenceSid);
