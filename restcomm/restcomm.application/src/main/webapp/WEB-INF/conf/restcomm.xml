@@ -89,7 +89,7 @@
 
 		<!--Play background music for conference rooms with 1 participant even if startConference=true? Music will stop after the second participant joins-->
 		<!--Default value: false -->
-		<play-music-for-conference>false</play-music-for-conference>
+		<play-music-for-conference>true</play-music-for-conference>
 
 		<!-- Set to true so Restcomm won't patch the SDP answer answered received trying to cope with NAT -->
 		<!-- Default value: false -->
@@ -286,15 +286,12 @@
 		Media Server using MGCP driver) -->
 	<mscontrol>
 		<compatibility>mms</compatibility>
-		<!-- media-servers defines: multiple media-server entities -->
-		<media-servers>
 			<media-server name="Dialogic XMS" class="com.dialogic.dlg309">
 				<address>127.0.0.1</address>
 				<port>5060</port>
 				<transport>udp</transport>
 				<timeout>5</timeout>
 			</media-server>
-		</media-servers>
 	</mscontrol>
 
 	<!-- The media server manager is responsible for managing the media servers 

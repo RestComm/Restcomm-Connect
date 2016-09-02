@@ -30,16 +30,10 @@ public class MediaResourceBrokerEntityFilter {
 
     private final String conferenceSid;
     private String slaveMsId;
-    private String slaveMsBridgeEpId;
-    private String slaveMsCnfEpId;
-    private boolean isBridgedTogether;
 
-    public MediaResourceBrokerEntityFilter(String conferenceSid, String slaveMsId, String slaveMsBridgeEpId, String slaveMsCnfEpId, boolean isBridgedTogether) {
+    public MediaResourceBrokerEntityFilter(String conferenceSid, String slaveMsId) {
         this.conferenceSid = conferenceSid;
         this.slaveMsId = slaveMsId;
-        this.slaveMsBridgeEpId = slaveMsBridgeEpId;
-        this.slaveMsCnfEpId = slaveMsCnfEpId;
-        this.isBridgedTogether = isBridgedTogether;
     }
 
     public String getConferenceSid() {
@@ -48,17 +42,5 @@ public class MediaResourceBrokerEntityFilter {
 
     public String getSlaveMsId() {
         return slaveMsId;
-    }
-
-    public String getSlaveMsBridgeEpId() {
-        return slaveMsBridgeEpId;
-    }
-
-    public String getSlaveMsCnfEpId() {
-        return slaveMsCnfEpId;
-    }
-
-    public boolean isBridgedTogether() {
-        return isBridgedTogether;
     }
 }

@@ -159,7 +159,8 @@ friendly_name VARCHAR(60),
 api_version VARCHAR(10) NOT NULL,
 uri MEDIUMTEXT NOT NULL, 
 master_ms_id VARCHAR(34),
-master_conference_endpoint_id VARCHAR(20)
+master_conference_endpoint_id VARCHAR(20),
+master_present BOOLEAN NOT NULL DEFAULT TRUE 
 );
 
 CREATE TABLE restcomm_clients (

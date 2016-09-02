@@ -1106,7 +1106,7 @@ public class MmsCallController extends MediaServerController {
             // Notify observers the controller has stopped
             broadcast(new MediaServerControllerStateChanged(state));
         }
-        }
+    }
 
         protected void cleanup() {
             if(logger.isInfoEnabled()) {
