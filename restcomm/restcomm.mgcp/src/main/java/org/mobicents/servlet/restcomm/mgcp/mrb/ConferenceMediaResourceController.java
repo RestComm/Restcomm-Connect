@@ -53,18 +53,26 @@ import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResourceControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.mgcp.MgcpMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsConferenceController.AbstractAction;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 
 import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import jain.protocol.ip.mgcp.message.parms.EndpointIdentifier;
 
+/**
+ * @author maria.farooq@telestax.com (Maria Farooq)
+ */
 public class ConferenceMediaResourceController extends UntypedActor{
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -99,12 +107,12 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private boolean isThisMaster = false;
     private String localMediaServerSdp;
     private String masterMediaServerSdp;
+    public EndpointIdentifier localConfernceEndpointId;
+    public String masterConfernceEndpointId;
     private MediaSession localMediaSession;
     private MediaSession masterMediaSession;
     private ActorRef localConfernceEndpoint;
     private ActorRef masterConfernceEndpoint;
-    public EndpointIdentifier localConfernceEndpointId;
-    public String masterConfernceEndpointId;
     private ActorRef connectionWithLocalMS;
     private ActorRef connectionWithMasterMS;
 
@@ -115,6 +123,9 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
     // Observer pattern
     private final List<ActorRef> observers;
+
+    private boolean areAnySlavesConnectedToThisConferenceEndpoint;
+    private int noOfConnectedSlaves = 0;
 
     public ConferenceMediaResourceController(final String localMsId, final Map<String, ActorRef> gateways, final Configuration configuration, final DaoManager storage){
         super();
@@ -299,10 +310,10 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
     private void onStopConferenceMediaResourceController(StopConferenceMediaResourceController message, ActorRef self,
             ActorRef sender) throws Exception {
+        areAnySlavesConnectedToThisConferenceEndpoint = areAnySlavesConnectedToThisConferenceEndpoint();
+        logger.info("areAnySlavesConnectedToThisConferenceEndpoint = "+areAnySlavesConnectedToThisConferenceEndpoint);
         if(isThisMaster){
             logger.info("onStopConferenceMediaResourceController");
-            final boolean areAnySlavesConnectedToThisConferenceEndpoint = areAnySlavesConnectedToThisConferenceEndpoint();
-            logger.info("areAnySlavesConnectedToThisConferenceEndpoint = "+areAnySlavesConnectedToThisConferenceEndpoint);
             sender.tell(new StopConferenceMediaResourceControllerResponse(!areAnySlavesConnectedToThisConferenceEndpoint), sender);
         }else{
             sender.tell(new StopConferenceMediaResourceControllerResponse(true), sender);
@@ -520,6 +531,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
             if(isThisMaster){
                 updateMasterConferenceEndpointId();
             }else{
+            	
                 // enter slave record in MRB resource table
                 addNewSlaveRecord();
             }
@@ -537,21 +549,18 @@ public class ConferenceMediaResourceController extends UntypedActor{
             logger.info("CMRC is STOPPING NOW...");
             if(isThisMaster){
                 logger.info("CMRC is STOPPING Master NOW...");
-                //TODO: do clean up here
+                updateMasterPresence(false);
             }else{
                 logger.info("CMRC is STOPPING Slave NOW...");
                 //TODO: do clean up here
                 removeSlaveRecord();
-                final boolean areAnySlavesConnectedToThisConferenceEndpoint = areAnySlavesConnectedToThisConferenceEndpoint();
                 //check if it is last to leave in entire cluster then distroymaster confe EP as well
-                logger.info("areAnySlavesConnectedToThisConferenceEndpoint: "+areAnySlavesConnectedToThisConferenceEndpoint);
-                if(!areAnySlavesConnectedToThisConferenceEndpoint){
+                if(!isMasterPresence() && noOfConnectedSlaves < 2){
                     logger.info("Going to Detroy Master conference EP..");
                     masterConfernceEndpoint.tell(new DestroyEndpoint(), super.source);
                 }
             }
         }
-
     }
 
     private abstract class FinalState extends AbstractAction {
@@ -561,7 +570,8 @@ public class ConferenceMediaResourceController extends UntypedActor{
         }
 
         @Override
-        public void execute(Object message) throws Exception {}
+        public void execute(Object message) throws Exception {
+        }
    }
 
     private final class Inactive extends FinalState {
@@ -592,7 +602,17 @@ public class ConferenceMediaResourceController extends UntypedActor{
         getContext().stop(self());
     }
 
-    protected void cleanup() {}
+    protected void cleanup() {
+        if (connectionWithLocalMS != null) {
+            context().stop(connectionWithLocalMS);
+            connectionWithLocalMS = null;
+        }
+
+        if (connectionWithMasterMS != null) {
+            context().stop(connectionWithMasterMS);
+            connectionWithMasterMS = null;
+        }
+    }
 
     /*
      * Database Utility Functions
@@ -621,17 +641,39 @@ public class ConferenceMediaResourceController extends UntypedActor{
         }
     }
 
+    private void updateMasterPresence(boolean masterPresent){
+        if(cdr != null){
+            logger.info("updateMasterPresence called");
+            final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
+            cdr = dao.getConferenceDetailRecord(conferenceSid);
+            cdr = cdr.setMasterPresent(masterPresent);
+            dao.updateMasterPresent(cdr);
+        }
+    }
+
     private void removeSlaveRecord() throws ParseException {
         final MediaResourceBrokerDao dao= storage.getMediaResourceBrokerDao();
-        dao.removeMediaResourceBrokerEntity(new MediaResourceBrokerEntityFilter(conferenceSid.toString(), localMsId, null, null, true));
+        dao.removeMediaResourceBrokerEntity(new MediaResourceBrokerEntityFilter(conferenceSid.toString(), localMsId));
     }
 
     private boolean areAnySlavesConnectedToThisConferenceEndpoint(){
         final MediaResourceBrokerDao dao= storage.getMediaResourceBrokerDao();
         List<MediaResourceBrokerEntity> slaves = dao.getConnectedSlaveEntitiesByConfSid(conferenceSid);
         if(slaves != null && !slaves.isEmpty()){
+            noOfConnectedSlaves = slaves.size();
             return true;
         }
         return false;
+    }
+
+    private boolean isMasterPresence(){
+        boolean masterPresent = true; 
+        if(cdr != null){
+            final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
+            cdr = dao.getConferenceDetailRecord(conferenceSid);
+            masterPresent = cdr.isMasterPresent();
+            logger.info("isMasterPresence called : is masterPresent?: "+ masterPresent);
+        }
+        return masterPresent;
     }
 }

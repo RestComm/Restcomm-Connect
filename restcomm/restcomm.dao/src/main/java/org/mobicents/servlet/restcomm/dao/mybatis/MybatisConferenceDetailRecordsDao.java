@@ -20,6 +20,7 @@
 package org.mobicents.servlet.restcomm.dao.mybatis;
 
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readDateTime;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readBoolean;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readSid;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readString;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readUri;
@@ -160,6 +161,17 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     }
 
     @Override
+    public void updateMasterPresent(ConferenceDetailRecord cdr) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateMasterPresent", toMap(cdr));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public void removeConferenceDetailRecord(Sid sid) {
         // TODO Add support for conference modification after basic API's as twillio's
     }
@@ -196,7 +208,8 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         final URI uri = readUri(map.get("uri"));
         final String msId = readString(map.get("master_ms_id"));
         final String masterConferenceEndpointId = readString(map.get("master_conference_endpoint_id"));
-        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri, msId, masterConferenceEndpointId);
+        final boolean masterPresent = readBoolean(map.get("master_present")); 
+        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri, msId, masterConferenceEndpointId, masterPresent);
     }
 
     private Map<String, Object> toMap(final ConferenceDetailRecord cdr) {
@@ -211,6 +224,7 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         map.put("uri", writeUri(cdr.getUri()));
         map.put("master_ms_id", cdr.getMasterMsId());
         map.put("master_conference_endpoint_id", cdr.getMasterConferenceEndpointId());
+        map.put("master_present", cdr.isMasterPresent());
         return map;
     }
 }
