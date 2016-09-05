@@ -34,10 +34,12 @@ import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.mappers.ClientsMapper;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 @NotThreadSafe
 public final class MybatisClientsDao implements ClientsDao {
@@ -53,7 +55,9 @@ public final class MybatisClientsDao implements ClientsDao {
     public void addClient(final Client client) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addClient", toMap(client));
+            //session.insert(namespace + "addClient", toMap(client));
+            ClientsMapper mapper=session.getMapper(ClientsMapper.class);
+            mapper.addClient(toMap(client));
             session.commit();
         } finally {
             session.close();
@@ -62,18 +66,26 @@ public final class MybatisClientsDao implements ClientsDao {
 
     @Override
     public Client getClient(final Sid sid) {
-        return getClient(namespace + "getClient", sid.toString());
+        final SqlSession session = sessions.openSession();
+        try {
+            ClientsMapper mapper=session.getMapper(ClientsMapper.class);
+            final Map<String, Object> result = mapper.getClient(sid.toString());
+            if (result != null) {
+                return toClient(result);
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public Client getClient(final String login) {
-        return getClient(namespace + "getClientByLogin", login);
-    }
-
-    private Client getClient(final String selector, final String parameter) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(selector, parameter);
+            ClientsMapper mapper=session.getMapper(ClientsMapper.class);
+            final Map<String, Object> result = mapper.getClientByLogin(login);
             if (result != null) {
                 return toClient(result);
             } else {
@@ -88,7 +100,8 @@ public final class MybatisClientsDao implements ClientsDao {
     public List<Client> getClients(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getClients", accountSid.toString());
+            ClientsMapper mapper=session.getMapper(ClientsMapper.class);
+            final List<Map<String, Object>> results = mapper.getClients(accountSid.toString());
             final List<Client> clients = new ArrayList<Client>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -105,7 +118,8 @@ public final class MybatisClientsDao implements ClientsDao {
     public List<Client> getAllClients() {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getAllClients");
+            ClientsMapper mapper=session.getMapper(ClientsMapper.class);
+            final List<Map<String, Object>> results = mapper.getAllClients();
             final List<Client> clients = new ArrayList<Client>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -120,18 +134,22 @@ public final class MybatisClientsDao implements ClientsDao {
 
     @Override
     public void removeClient(final Sid sid) {
-        removeClients(namespace + "removeClient", sid);
+        final SqlSession session = sessions.openSession();
+        try {
+            ClientsMapper mapper=session.getMapper(ClientsMapper.class);
+            mapper.removeClient(sid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public void removeClients(final Sid accountSid) {
-        removeClients(namespace + "removeClients", accountSid);
-    }
-
-    private void removeClients(final String selector, final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            session.delete(selector, sid.toString());
+            ClientsMapper mapper=session.getMapper(ClientsMapper.class);
+            mapper.removeClients(accountSid.toString());
             session.commit();
         } finally {
             session.close();
@@ -142,7 +160,8 @@ public final class MybatisClientsDao implements ClientsDao {
     public void updateClient(final Client client) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateClient", toMap(client));
+            ClientsMapper mapper=session.getMapper(ClientsMapper.class);
+            mapper.updateClient(toMap(client));
             session.commit();
         } finally {
             session.close();

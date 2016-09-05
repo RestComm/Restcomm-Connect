@@ -41,10 +41,12 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.mappers.RegistrationsMapper;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@gmail.com (Jean Deruelle)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 @ThreadSafe
 public final class MybatisRegistrationsDao implements RegistrationsDao {
@@ -62,7 +64,8 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
     public void addRegistration(final Registration registration) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addRegistration", toMap(registration));
+            RegistrationsMapper mapper=session.getMapper(RegistrationsMapper.class);
+            mapper.addRegistration(toMap(registration));
             session.commit();
         } finally {
             session.close();
@@ -76,7 +79,8 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
             // https://bitbucket.org/telestax/telscale-restcomm/issue/107/dial-fails-to-call-a-client-registered
             // we get all registrations and sort them by latest updated date so that we target the device where the user last
             // updated the registration
-            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistration", user);
+            RegistrationsMapper mapper=session.getMapper(RegistrationsMapper.class);
+            final List<Map<String, Object>> results =mapper.getRegistration(user);
             final List<Registration> records = new ArrayList<Registration>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -103,11 +107,11 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
             // https://bitbucket.org/telestax/telscale-restcomm/issue/107/dial-fails-to-call-a-client-registered
             // we get all registrations and sort them by latest updated date so that we target the device where the user last
             // updated the registration
-
+            RegistrationsMapper mapper=session.getMapper(RegistrationsMapper.class);
             final Map<String, Object> map = new HashMap<String, Object>();
             map.put("user_name", user);
             map.put("instanceid", instanceId);
-            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistrationByInstanceId", map);
+            final List<Map<String, Object>> results = mapper.getRegistrationByInstanceId(map);
             final List<Registration> records = new ArrayList<Registration>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -134,7 +138,8 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
             // https://bitbucket.org/telestax/telscale-restcomm/issue/107/dial-fails-to-call-a-client-registered
             // we get all registrations and sort them by latest updated date so that we target the device where the user last
             // updated the registration
-            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistration", user);
+            RegistrationsMapper mapper=session.getMapper(RegistrationsMapper.class);
+            final List<Map<String, Object>> results = mapper.getRegistration(user);
             final List<Registration> records = new ArrayList<Registration>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -158,7 +163,8 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
     public List<Registration> getRegistrations() {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistrations");
+            RegistrationsMapper mapper=session.getMapper(RegistrationsMapper.class);
+            final List<Map<String, Object>> results = mapper.getRegistrations();
             final List<Registration> records = new ArrayList<Registration>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -175,7 +181,8 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
     public boolean hasRegistration(final Registration registration) {
         final SqlSession session = sessions.openSession();
         try {
-            final Integer result = (Integer) session.selectOne(namespace + "hasRegistration", toMap(registration));
+            RegistrationsMapper mapper=session.getMapper(RegistrationsMapper.class);
+            final Integer result = mapper.hasRegistration(toMap(registration));
             return result != null && result > 0;
         } finally {
             session.close();
@@ -186,7 +193,8 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
     public void removeRegistration(final Registration registration) {
         final SqlSession session = sessions.openSession();
         try {
-            session.delete(namespace + "removeRegistration", toMap(registration));
+            RegistrationsMapper mapper=session.getMapper(RegistrationsMapper.class);
+            mapper.removeRegistration(toMap(registration));
             session.commit();
         } finally {
             session.close();
@@ -197,7 +205,8 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
     public void updateRegistration(final Registration registration) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateRegistration", toMap(registration));
+            RegistrationsMapper mapper=session.getMapper(RegistrationsMapper.class);
+            mapper.updateRegistration( toMap(registration));
             session.commit();
         } finally {
             session.close();

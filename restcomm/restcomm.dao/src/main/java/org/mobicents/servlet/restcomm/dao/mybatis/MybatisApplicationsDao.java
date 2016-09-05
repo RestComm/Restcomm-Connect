@@ -34,10 +34,12 @@ import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
 import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.mappers.ApplicationsMapper;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 @ThreadSafe
 public final class MybatisApplicationsDao implements ApplicationsDao {
@@ -53,7 +55,8 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
     public void addApplication(final Application application) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addApplication", toMap(application));
+            ApplicationsMapper mapper=session.getMapper(ApplicationsMapper.class);
+            mapper.addApplication(toMap(application));
             session.commit();
         } finally {
             session.close();
@@ -62,19 +65,10 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
 
     @Override
     public Application getApplication(final Sid sid) {
-        Application application = getApplication(namespace + "getApplication", sid.toString());
-        return application;
-    }
-
-    @Override
-    public Application getApplication(final String friendlyName) {
-        return getApplication(namespace + "getApplicationByFriendlyName", friendlyName);
-    }
-
-    private Application getApplication(final String selector, final String parameter) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(selector, parameter);
+            ApplicationsMapper mapper=session.getMapper(ApplicationsMapper.class);
+            final Map<String, Object> result = mapper.getApplication(sid.toString());
             if (result != null) {
                 return toApplication(result);
             } else {
@@ -86,10 +80,28 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
     }
 
     @Override
+    public Application getApplication(final String friendlyName) {
+        final SqlSession session = sessions.openSession();
+        try {
+            ApplicationsMapper mapper=session.getMapper(ApplicationsMapper.class);
+            final Map<String, Object> result = mapper.getApplicationByFriendlyName(friendlyName);
+            if (result != null) {
+                return toApplication(result);
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
+    }
+
+
+    @Override
     public List<Application> getApplications(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getApplications", accountSid.toString());
+            ApplicationsMapper mapper=session.getMapper(ApplicationsMapper.class);
+            final List<Map<String, Object>> results = mapper.getApplications(accountSid.toString());
             final List<Application> applications = new ArrayList<Application>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -104,18 +116,10 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
 
     @Override
     public void removeApplication(final Sid sid) {
-        removeApplications("removeApplication", sid);
-    }
-
-    @Override
-    public void removeApplications(final Sid accountSid) {
-        removeApplications("removeApplications", accountSid);
-    }
-
-    private void removeApplications(final String selector, final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            session.delete(namespace + selector, sid.toString());
+            ApplicationsMapper mapper=session.getMapper(ApplicationsMapper.class);
+            mapper.removeApplication(sid.toString());
             session.commit();
         } finally {
             session.close();
@@ -123,10 +127,24 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
     }
 
     @Override
+    public void removeApplications(final Sid accountSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            ApplicationsMapper mapper=session.getMapper(ApplicationsMapper.class);
+            mapper.removeApplications(accountSid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+
+    @Override
     public void updateApplication(final Application application) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateApplication", toMap(application));
+            ApplicationsMapper mapper=session.getMapper(ApplicationsMapper.class);
+            mapper.updateApplication(toMap(application));
             session.commit();
         } finally {
             session.close();

@@ -48,9 +48,12 @@ import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.mappers.CallDetailRecordsMapper;
+
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 @ThreadSafe
 public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
@@ -66,7 +69,8 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public void addCallDetailRecord(final CallDetailRecord cdr) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addCallDetailRecord", toMap(cdr));
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            mapper.addCallDetailRecord(toMap(cdr));
             session.commit();
         } finally {
             session.close();
@@ -77,7 +81,8 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public CallDetailRecord getCallDetailRecord(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + "getCallDetailRecord", sid.toString());
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            final Map<String, Object> result = mapper.getCallDetailRecord(sid.toString());
             if (result != null) {
                 return toCallDetailRecord(result);
             } else {
@@ -94,7 +99,8 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
 
         final SqlSession session = sessions.openSession();
         try {
-            final Integer total = session.selectOne(namespace + "getTotalCallDetailRecordByUsingFilters", filter);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            final Integer total = mapper.getTotalCallDetailRecordByUsingFilters(filter);
             return total;
         } finally {
             session.close();
@@ -110,7 +116,8 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         final SqlSession session = sessions.openSession();
 
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getCallDetailRecordByUsingFilters",
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            final List<Map<String, Object>> results = mapper.getCallDetailRecordByUsingFilters(
                     filter);
             final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
 
@@ -127,58 +134,175 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
 
     @Override
     public List<CallDetailRecord> getCallDetailRecords(final Sid accountSid) {
-        return getCallDetailRecords(namespace + "getCallDetailRecords", accountSid.toString());
+        final SqlSession session = sessions.openSession();
+        try {
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            final List<Map<String, Object>> results = mapper.getCallDetailRecords(accountSid.toString());
+            final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toCallDetailRecord(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public List<CallDetailRecord> getCallDetailRecordsByRecipient(final String recipient) {
-        return getCallDetailRecords(namespace + "getCallDetailRecordsByRecipient", recipient);
+        final SqlSession session = sessions.openSession();
+        try {
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            final List<Map<String, Object>> results = mapper.getCallDetailRecordsByRecipient(recipient);
+            final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toCallDetailRecord(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public List<CallDetailRecord> getCallDetailRecordsBySender(final String sender) {
-        return getCallDetailRecords(namespace + "getCallDetailRecordsBySender", sender);
+        final SqlSession session = sessions.openSession();
+        try {
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            final List<Map<String, Object>> results = mapper.getCallDetailRecordsBySender(sender);
+            final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toCallDetailRecord(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public List<CallDetailRecord> getCallDetailRecordsByStatus(final String status) {
-        return getCallDetailRecords(namespace + "getCallDetailRecordsByStatus", status);
+        final SqlSession session = sessions.openSession();
+        try {
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            final List<Map<String, Object>> results = mapper.getCallDetailRecordsByStatus(status);
+            final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toCallDetailRecord(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public List<CallDetailRecord> getCallDetailRecordsByStartTime(final DateTime startTime) {
-        return getCallDetailRecords(namespace + "getCallDetailRecordsByStartTime", startTime.toDate());
+        final SqlSession session = sessions.openSession();
+        try {
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            final List<Map<String, Object>> results = mapper.getCallDetailRecordsByStartTime(startTime.toDate());
+            final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toCallDetailRecord(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public List<CallDetailRecord> getCallDetailRecordsByEndTime(final DateTime endTime) {
-        return getCallDetailRecords(namespace + "getCallDetailRecordsByEndTime", endTime.toDate());
+        final SqlSession session = sessions.openSession();
+        try {
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            final List<Map<String, Object>> results = mapper.getCallDetailRecordsByEndTime(endTime.toDate());
+            final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toCallDetailRecord(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
-    public List<CallDetailRecord> getCallDetailRecordsByStarTimeAndEndTime(final DateTime endTime) {
-        return getCallDetailRecords(namespace + "getCallDetailRecordsByStarTimeAndEndTime", endTime.toDate());
+    public List<CallDetailRecord> getCallDetailRecordsByStarTimeAndEndTime(final DateTime startTime,final DateTime endTime) {
+        final SqlSession session = sessions.openSession();
+        try {
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            Map<String,Object> map= new HashMap<>();
+            map.put("startTime", startTime.toDate());
+            map.put("endTime", endTime.toDate());
+            final List<Map<String, Object>> results = mapper.getCallDetailRecordsByStarTimeAndEndTime(map);
+            final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toCallDetailRecord(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public List<CallDetailRecord> getCallDetailRecordsByParentCall(final Sid parentCallSid) {
-        return getCallDetailRecords(namespace + "getCallDetailRecordsByParentCall", parentCallSid.toString());
+        final SqlSession session = sessions.openSession();
+        try {
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            final List<Map<String, Object>> results = mapper.getCallDetailRecordsByParentCall(parentCallSid.toString());
+            final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toCallDetailRecord(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public List<CallDetailRecord> getCallDetailRecordsByConferenceSid(final Sid conferenceSid) {
-        return getCallDetailRecords(namespace + "getCallDetailRecordsByConferenceSid", conferenceSid.toString());
+        final SqlSession session = sessions.openSession();
+        try {
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            final List<Map<String, Object>> results = mapper.getCallDetailRecordsByConferenceSid(conferenceSid.toString());
+            final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toCallDetailRecord(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public List<CallDetailRecord> getCallDetailRecordsByInstanceId(final Sid instanceId) {
-        return getCallDetailRecords(namespace + "getCallDetailRecordsByInstanceId", instanceId.toString());
-    }
-
-    private List<CallDetailRecord> getCallDetailRecords(final String selector, Object input) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(selector, input);
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            final List<Map<String, Object>> results = mapper.getCallDetailRecordsByInstanceId(instanceId.toString());
             final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -193,18 +317,22 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
 
     @Override
     public void removeCallDetailRecord(final Sid sid) {
-        removeCallDetailRecords(namespace + "removeCallDetailRecord", sid);
+        final SqlSession session = sessions.openSession();
+        try {
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            mapper.removeCallDetailRecord(sid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public void removeCallDetailRecords(final Sid accountSid) {
-        removeCallDetailRecords(namespace + "removeCallDetailRecords", accountSid);
-    }
-
-    private void removeCallDetailRecords(final String selector, final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            session.delete(selector, sid.toString());
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            mapper.removeCallDetailRecord(accountSid.toString());
             session.commit();
         } finally {
             session.close();
@@ -215,7 +343,8 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public void updateCallDetailRecord(final CallDetailRecord cdr) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateCallDetailRecord", toMap(cdr));
+            CallDetailRecordsMapper mapper=session.getMapper(CallDetailRecordsMapper.class);
+            mapper.updateCallDetailRecord(toMap(cdr));
             session.commit();
         } finally {
             session.close();

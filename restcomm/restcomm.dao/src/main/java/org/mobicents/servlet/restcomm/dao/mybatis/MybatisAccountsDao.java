@@ -34,14 +34,16 @@ import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.mappers.AccountsMapper;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 @ThreadSafe
 public final class MybatisAccountsDao implements AccountsDao {
-    private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.AccountsDao.";
+//    private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.AccountsDao.";
     private final SqlSessionFactory sessions;
 
     public MybatisAccountsDao(final SqlSessionFactory sessions) {
@@ -53,7 +55,8 @@ public final class MybatisAccountsDao implements AccountsDao {
     public void addAccount(final Account account) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addAccount", toMap(account));
+            AccountsMapper mapper = session.getMapper(AccountsMapper.class);
+            mapper.addAccount(toMap(account));
             session.commit();
         } finally {
             session.close();
@@ -62,19 +65,31 @@ public final class MybatisAccountsDao implements AccountsDao {
 
     @Override
     public Account getAccount(final Sid sid) {
-        return getAccount(namespace + "getAccount", sid.toString());
+        final SqlSession session = sessions.openSession();
+        try {
+            AccountsMapper mapper = session.getMapper(AccountsMapper.class);
+            final Map<String, Object> result = mapper.getAccount(sid.toString());
+            if (result != null) {
+                return toAccount(result);
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
+        //return getAccount(namespace + "getAccount", sid.toString());
     }
 
     @Override
     public Account getAccount(final String name) {
         Account account = null;
 
-        account = getAccount(namespace + "getAccountByFriendlyName", name);
+        account = getAccountByFriendlyName(name);
         if (account == null) {
-            account = getAccount(namespace + "getAccountByEmail", name);
+            account = getAccountByEmail(name);
         }
         if (account == null) {
-            account = getAccount(namespace + "getAccount", name);
+            account = getAccountBySid(name);
         }
 
         return account;
@@ -84,14 +99,61 @@ public final class MybatisAccountsDao implements AccountsDao {
     public Account getAccountToAuthenticate(final String name) {
         Account account = null;
 
-        account = getAccount(namespace + "getAccountByEmail", name);
+        account = getAccountByEmail(name);
         if (account == null) {
-            account = getAccount(namespace + "getAccount", name);
+            account = getAccountBySid(name);
         }
 
         return account;
     }
 
+    private Account getAccountByFriendlyName(final String name) {
+        final SqlSession session = sessions.openSession();
+        try {
+            AccountsMapper mapper = session.getMapper(AccountsMapper.class);
+            final Map<String, Object> result = mapper.getAccountByFriendlyName(name);
+            if (result != null) {
+                return toAccount(result);
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
+    }
+
+    private Account getAccountByEmail(final String email) {
+        final SqlSession session = sessions.openSession();
+        try {
+            AccountsMapper mapper = session.getMapper(AccountsMapper.class);
+            final Map<String, Object> result = mapper.getAccountByEmail(email);
+            if (result != null) {
+                return toAccount(result);
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
+    }
+
+    private Account getAccountBySid(final String sid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            AccountsMapper mapper = session.getMapper(AccountsMapper.class);
+            final Map<String, Object> result = mapper.getAccount(sid);
+            if (result != null) {
+                return toAccount(result);
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
+    }
+
+    //deleted because this method was splited
+/*
     private Account getAccount(final String selector, final Object parameters) {
         final SqlSession session = sessions.openSession();
         try {
@@ -105,12 +167,15 @@ public final class MybatisAccountsDao implements AccountsDao {
             session.close();
         }
     }
+*/
 
     @Override
     public List<Account> getAccounts(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getAccounts", accountSid.toString());
+            //final List<Map<String, Object>> results = session.selectList(namespace + "getAccounts", accountSid.toString());
+            AccountsMapper mapper = session.getMapper(AccountsMapper.class);
+            final List<Map<String, Object>> results =mapper.getAccounts(accountSid.toString());
             final List<Account> accounts = new ArrayList<Account>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -125,9 +190,17 @@ public final class MybatisAccountsDao implements AccountsDao {
 
     @Override
     public void removeAccount(final Sid sid) {
-        removeAccount(namespace + "removeAccount", sid);
+         final SqlSession session = sessions.openSession();
+         try {
+             AccountsMapper mapper = session.getMapper(AccountsMapper.class);
+             mapper.removeAccount(sid.toString());
+             session.commit();
+         } finally {
+             session.close();
+         }
     }
 
+/*
     private void removeAccount(final String selector, final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
@@ -137,12 +210,21 @@ public final class MybatisAccountsDao implements AccountsDao {
             session.close();
         }
     }
+*/
 
     @Override
     public void updateAccount(final Account account) {
-        updateAccount(namespace + "updateAccount", account);
+        final SqlSession session = sessions.openSession();
+        try {
+            AccountsMapper mapper = session.getMapper(AccountsMapper.class);
+            mapper.updateAccount(toMap(account));
+            session.commit();
+        } finally {
+            session.close();
+        }
     }
 
+    /*
     private void updateAccount(final String selector, final Account account) {
         final SqlSession session = sessions.openSession();
         try {
@@ -152,6 +234,7 @@ public final class MybatisAccountsDao implements AccountsDao {
             session.close();
         }
     }
+    */
 
     private Account toAccount(final Map<String, Object> map) {
         final Sid sid = readSid(map.get("sid"));

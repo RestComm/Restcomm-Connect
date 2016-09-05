@@ -33,9 +33,11 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
 import org.mobicents.servlet.restcomm.dao.HttpCookiesDao;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.mappers.HttpCookiesMapper;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 public final class MybatisHttpCookiesDao implements HttpCookiesDao {
     private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.HttpCookiesDao.";
@@ -51,7 +53,8 @@ public final class MybatisHttpCookiesDao implements HttpCookiesDao {
     public void addCookie(final Sid sid, final Cookie cookie) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addCookie", toMap(sid, cookie));
+            HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
+            mapper.addCookie(toMap(sid, cookie));
             session.commit();
         } finally {
             session.close();
@@ -62,7 +65,8 @@ public final class MybatisHttpCookiesDao implements HttpCookiesDao {
     public List<Cookie> getCookies(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getCookies", sid.toString());
+            HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
+            final List<Map<String, Object>> results = mapper.getCookies();
             final List<Cookie> cookies = new ArrayList<Cookie>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -79,7 +83,8 @@ public final class MybatisHttpCookiesDao implements HttpCookiesDao {
     public boolean hasCookie(final Sid sid, final Cookie cookie) {
         final SqlSession session = sessions.openSession();
         try {
-            final Integer result = session.selectOne(namespace + "hasCookie", toMap(sid, cookie));
+            HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
+            final Integer result = mapper.hasCookie(toMap(sid, cookie));
             if (result > 0) {
                 return true;
             } else {
@@ -94,7 +99,8 @@ public final class MybatisHttpCookiesDao implements HttpCookiesDao {
     public boolean hasExpiredCookies(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            final Integer result = session.selectOne(namespace + "hasExpiredCookies", sid.toString());
+            HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
+            final Integer result = mapper.hasExpiredCookies(sid.toString());
             if (result > 0) {
                 return true;
             } else {
@@ -109,7 +115,8 @@ public final class MybatisHttpCookiesDao implements HttpCookiesDao {
     public void removeCookies(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            session.delete(namespace + "removeCookies", sid.toString());
+            HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
+            mapper.removeCookies(sid.toString());
             session.commit();
         } finally {
             session.close();
@@ -120,7 +127,8 @@ public final class MybatisHttpCookiesDao implements HttpCookiesDao {
     public void removeExpiredCookies(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            session.delete(namespace + "removeExpiredCookies", sid.toString());
+            HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
+            mapper.removeExpiredCookies(sid.toString());
             session.commit();
         } finally {
             session.close();
@@ -131,7 +139,8 @@ public final class MybatisHttpCookiesDao implements HttpCookiesDao {
     public void updateCookie(final Sid sid, final Cookie cookie) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateCookie", toMap(sid, cookie));
+            HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
+            mapper.updateCookie( toMap(sid, cookie));
             session.commit();
         } finally {
             session.close();

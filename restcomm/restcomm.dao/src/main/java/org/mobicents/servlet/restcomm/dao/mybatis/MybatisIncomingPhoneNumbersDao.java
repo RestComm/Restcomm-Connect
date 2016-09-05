@@ -42,10 +42,12 @@ import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberFilter;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.mappers.IncomingPhoneNumbersMapper;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 @ThreadSafe
 public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumbersDao {
@@ -61,7 +63,8 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
     public void addIncomingPhoneNumber(final IncomingPhoneNumber incomingPhoneNumber) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addIncomingPhoneNumber", toMap(incomingPhoneNumber));
+            IncomingPhoneNumbersMapper mapper=session.getMapper(IncomingPhoneNumbersMapper.class);
+            mapper.addIncomingPhoneNumber(toMap(incomingPhoneNumber));
             session.commit();
         } finally {
             session.close();
@@ -70,18 +73,26 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
 
     @Override
     public IncomingPhoneNumber getIncomingPhoneNumber(final Sid sid) {
-        return getIncomingPhoneNumber("getIncomingPhoneNumber", sid.toString());
+        final SqlSession session = sessions.openSession();
+        try {
+            IncomingPhoneNumbersMapper mapper=session.getMapper(IncomingPhoneNumbersMapper.class);
+            final Map<String, Object> result =mapper.getIncomingPhoneNumber(sid.toString());
+            if (result != null) {
+                return toIncomingPhoneNumber(result);
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public IncomingPhoneNumber getIncomingPhoneNumber(final String phoneNumber) {
-        return getIncomingPhoneNumber("getIncomingPhoneNumberByValue", phoneNumber);
-    }
-
-    private IncomingPhoneNumber getIncomingPhoneNumber(final String selector, Object parameter) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + selector, parameter);
+            IncomingPhoneNumbersMapper mapper=session.getMapper(IncomingPhoneNumbersMapper.class);
+            final Map<String, Object> result =mapper.getIncomingPhoneNumberByValue(phoneNumber);
             if (result != null) {
                 return toIncomingPhoneNumber(result);
             } else {
@@ -96,8 +107,8 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
     public List<IncomingPhoneNumber> getIncomingPhoneNumbers(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getIncomingPhoneNumbers",
-                    accountSid.toString());
+            IncomingPhoneNumbersMapper mapper=session.getMapper(IncomingPhoneNumbersMapper.class);
+            final List<Map<String, Object>> results = mapper.getIncomingPhoneNumbers(accountSid.toString());
             final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -114,7 +125,8 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
     public List<IncomingPhoneNumber> getAllIncomingPhoneNumbers() {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getAllIncomingPhoneNumbers");
+            IncomingPhoneNumbersMapper mapper=session.getMapper(IncomingPhoneNumbersMapper.class);
+            final List<Map<String, Object>> results = mapper.getAllIncomingPhoneNumbers();
             final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -131,8 +143,8 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
     public List<IncomingPhoneNumber> getIncomingPhoneNumbersByFilter(IncomingPhoneNumberFilter filter) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getIncomingPhoneNumbersByFriendlyName",
-                    filter);
+            IncomingPhoneNumbersMapper mapper=session.getMapper(IncomingPhoneNumbersMapper.class);
+            final List<Map<String, Object>> results = mapper.getIncomingPhoneNumbersByFriendlyName(filter);
             final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -147,18 +159,22 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
 
     @Override
     public void removeIncomingPhoneNumber(final Sid sid) {
-        removeIncomingPhoneNumbers("removeIncomingPhoneNumber", sid);
+        final SqlSession session = sessions.openSession();
+        try {
+            IncomingPhoneNumbersMapper mapper=session.getMapper(IncomingPhoneNumbersMapper.class);
+            mapper.removeIncomingPhoneNumber(sid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public void removeIncomingPhoneNumbers(final Sid accountSid) {
-        removeIncomingPhoneNumbers("removeIncomingPhoneNumbers", accountSid);
-    }
-
-    private void removeIncomingPhoneNumbers(final String selector, final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            session.delete(namespace + selector, sid.toString());
+            IncomingPhoneNumbersMapper mapper=session.getMapper(IncomingPhoneNumbersMapper.class);
+            mapper.removeIncomingPhoneNumbers(accountSid.toString());
             session.commit();
         } finally {
             session.close();
@@ -169,7 +185,8 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
     public void updateIncomingPhoneNumber(final IncomingPhoneNumber incomingPhoneNumber) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateIncomingPhoneNumber", toMap(incomingPhoneNumber));
+            IncomingPhoneNumbersMapper mapper=session.getMapper(IncomingPhoneNumbersMapper.class);
+            mapper.updateIncomingPhoneNumber(toMap(incomingPhoneNumber));
             session.commit();
         } finally {
             session.close();

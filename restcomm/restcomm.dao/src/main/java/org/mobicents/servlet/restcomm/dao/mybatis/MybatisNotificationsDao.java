@@ -34,10 +34,12 @@ import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.mappers.NotificationsMapper;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 @ThreadSafe
 public final class MybatisNotificationsDao implements NotificationsDao {
@@ -53,7 +55,8 @@ public final class MybatisNotificationsDao implements NotificationsDao {
     public void addNotification(final Notification notification) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addNotification", toMap(notification));
+            NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+            mapper.addNotification(toMap(notification));
             session.commit();
         } finally {
             session.close();
@@ -64,7 +67,8 @@ public final class MybatisNotificationsDao implements NotificationsDao {
     public Notification getNotification(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + "getNotification", sid.toString());
+            NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+            final Map<String, Object> result = mapper.getNotification(sid.toString());
             if (result != null) {
                 return toNotification(result);
             } else {
@@ -77,17 +81,56 @@ public final class MybatisNotificationsDao implements NotificationsDao {
 
     @Override
     public List<Notification> getNotifications(final Sid accountSid) {
-        return getNotifications(namespace + "getNotifications", accountSid.toString());
+         final SqlSession session = sessions.openSession();
+         try {
+             NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+             final List<Map<String, Object>> results = mapper.getNotifications(accountSid.toString());
+             final List<Notification> notifications = new ArrayList<Notification>();
+             if (results != null && !results.isEmpty()) {
+                 for (final Map<String, Object> result : results) {
+                     notifications.add(toNotification(result));
+                 }
+             }
+             return notifications;
+         } finally {
+             session.close();
+         }
     }
 
     @Override
     public List<Notification> getNotificationsByCall(final Sid callSid) {
-        return getNotifications(namespace + "getNotificationsByCall", callSid.toString());
+        final SqlSession session = sessions.openSession();
+        try {
+               NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+            final List<Map<String, Object>> results = mapper.getNotificationsByCall(callSid.toString());
+            final List<Notification> notifications = new ArrayList<Notification>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    notifications.add(toNotification(result));
+                }
+            }
+            return notifications;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public List<Notification> getNotificationsByLogLevel(final int logLevel) {
-        return getNotifications(namespace + "getNotificationsByLogLevel", logLevel);
+        final SqlSession session = sessions.openSession();
+        try {
+               NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+            final List<Map<String, Object>> results = mapper.getNotificationsByLogLevel(logLevel);
+            final List<Notification> notifications = new ArrayList<Notification>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    notifications.add(toNotification(result));
+                }
+            }
+            return notifications;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
@@ -95,13 +138,10 @@ public final class MybatisNotificationsDao implements NotificationsDao {
         final Map<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("start_date", messageDate.toDate());
         parameters.put("end_date", messageDate.plusDays(1).toDate());
-        return getNotifications(namespace + "getNotificationsByMessageDate", parameters);
-    }
-
-    private List<Notification> getNotifications(final String selector, final Object input) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(selector, input);
+               NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+            final List<Map<String, Object>> results = mapper.getNotificationsByMessageDate(parameters);
             final List<Notification> notifications = new ArrayList<Notification>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -116,23 +156,34 @@ public final class MybatisNotificationsDao implements NotificationsDao {
 
     @Override
     public void removeNotification(final Sid sid) {
-        removeNotifications(namespace + "removeNotification", sid);
+        final SqlSession session = sessions.openSession();
+        try {
+            NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+            mapper.removeNotification(sid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public void removeNotifications(final Sid accountSid) {
-        removeNotifications(namespace + "removeNotifications", accountSid);
+        final SqlSession session = sessions.openSession();
+        try {
+            NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+            mapper.removeNotifications(accountSid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public void removeNotificationsByCall(final Sid callSid) {
-        removeNotifications(namespace + "removeNotificationsByCall", callSid);
-    }
-
-    private void removeNotifications(final String selector, final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            session.delete(selector, sid.toString());
+            NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+            mapper.removeNotificationsByCall(callSid.toString());
             session.commit();
         } finally {
             session.close();

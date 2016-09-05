@@ -40,6 +40,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 public class IncomingPhoneNumbersDaoTest {
     private static MybatisDaoManager manager;
@@ -171,9 +172,9 @@ public class IncomingPhoneNumbersDaoTest {
         List<IncomingPhoneNumber> phoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
         Assert.assertEquals("Only a single phone number expected",1, phoneNumbers.size());
         IncomingPhoneNumber number = phoneNumbers.get(0);
-        Assert.assertEquals(number.getVoiceApplicationName(), "app0");
-        Assert.assertEquals(number.getSmsApplicationName(), "app1");
-        Assert.assertEquals(number.getUssdApplicationName(), "app2");
+        Assert.assertEquals("app0",number.getVoiceApplicationName());
+        Assert.assertEquals("app1",number.getSmsApplicationName());
+        Assert.assertEquals( "app2",number.getUssdApplicationName());
     }
 
     @Test
@@ -211,6 +212,11 @@ public class IncomingPhoneNumbersDaoTest {
         IncomingPhoneNumber result = numbers.getIncomingPhoneNumber("+12223334444");
         assert (result != null);
         assertTrue(result.getSid().equals(number.getSid()));
+
+        // test getIncomingPhoneNumbersByFilter
+        IncomingPhoneNumberFilter filter= new IncomingPhoneNumberFilter(account.toString(), "Incoming Phone Number Test", null);
+        assertTrue(numbers.getIncomingPhoneNumbersByFilter(filter).size() == 1);
+
         // Delete the incoming phone number.
         numbers.removeIncomingPhoneNumber(sid);
         // Validate that the incoming phone number was removed.
