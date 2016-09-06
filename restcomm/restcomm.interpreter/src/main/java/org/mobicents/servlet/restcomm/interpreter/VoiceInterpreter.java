@@ -2389,6 +2389,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final ConferenceDetailRecordsDao conferenceDao = storage.getConferenceDetailRecordsDao();
             conferenceDetailRecord = conferenceDao.getConferenceDetailRecord(conferenceSid);
             if(conferenceDetailRecord == null){
+                if (logger.isInfoEnabled()) {
+                    logger.info("Updating Conference record for call: "+call.path()+", call status: "+callInfo.state()+", to include Conference details, conference: "+conferenceSid);
+                }
                 final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
                 conferenceBuilder.setSid(conferenceSid);
                 conferenceBuilder.setDateCreated(callRecord.getDateCreated());
@@ -2431,6 +2434,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             //updating conferenceSid and other conference related info in cdr
             if (callRecord != null) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Updating CDR for call: "+call.path()+", call status: "+callInfo.state()+", to include Conference details, conference: "+conferenceSid);
+                }
                 callRecord = callRecord.setConferenceSid(conferenceSid);
                 callRecord = callRecord.setMuted(muteCall);
                 callRecord = callRecord.setStartConferenceOnEnter(startConferenceOnEnter);

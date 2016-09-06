@@ -140,7 +140,7 @@ public class DialConferenceTest {
         }
         Thread.sleep(3000);
         wireMockRule.resetRequests();
-        Thread.sleep(2000);
+        Thread.sleep(4000);
     }
 
     private int getConferencesSize() {
@@ -260,7 +260,7 @@ public class DialConferenceTest {
         georgeCall.sendInviteOkAck();
         assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        Thread.sleep(1000);
+        Thread.sleep(6000);
 
         assertTrue(getConferencesSize()>=1);
         assertTrue(getParticipantsSize()==2);
@@ -291,6 +291,11 @@ public class DialConferenceTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(waitUrlRcml)));
 
+        stubFor(get(urlPathEqualTo("/restcomm/audio/demo-prompt.wav"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBodyFile("demo-prompt.wav")));
+
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
@@ -308,10 +313,14 @@ public class DialConferenceTest {
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
+        bobCall.listenForDisconnect();
+
         Thread.sleep(1000);
         assertTrue(getConferencesSize()>=1);
         int numOfParticipants = getParticipantsSize();
         logger.info("Number of participants: "+numOfParticipants);
+        if (bobCall.getLastReceivedMessageRequest() != null)
+            logger.info("Last received request: "+bobCall.getLastReceivedMessageRequest().toString());
         assertTrue(numOfParticipants==1);
 
 //        final SipCall georgeCall = georgePhone.createSipCall();
@@ -342,14 +351,14 @@ public class DialConferenceTest {
         assertTrue(getParticipantsSize()==0);
     }
 
-    private String dialConfernceRcmlWithTimeLimit5Sec = "<Response><Dial timeLimit=\"5\"><Conference>test</Conference></Dial></Response>";
+    private String dialConfernceRcmlWithTimeLimit10Sec = "<Response><Dial timeLimit=\"10\"><Conference>test</Conference></Dial></Response>";
     @Test
     public synchronized void testDialConferenceClientsDestroy() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
-                        .withBody(dialConfernceRcmlWithTimeLimit5Sec)));
+                        .withBody(dialConfernceRcmlWithTimeLimit10Sec)));
 
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
@@ -385,7 +394,7 @@ public class DialConferenceTest {
         georgeCall.sendInviteOkAck();
         assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        Thread.sleep(1000);
+        Thread.sleep(5000);
         int confSize = getConferencesSize();
         int partSize = getParticipantsSize();
         logger.info("Conference rooms: "+confSize+", participants: "+partSize);
@@ -397,7 +406,7 @@ public class DialConferenceTest {
         georgeCall.disposeNoBye();
         bobCall.disposeNoBye();
 
-        Thread.sleep(2000);
+        Thread.sleep(3000);
         confSize = getConferencesSize();
         partSize = getParticipantsSize();
         logger.info("Conference rooms: "+confSize+", participants: "+partSize);
