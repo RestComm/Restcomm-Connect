@@ -206,19 +206,16 @@
 	</amazon-s3>
 
 	<!-- Defines how RestComm communicates with the Media Server Control layer. 
-		Accepted values: XMS (Dialogic XMS using JSR-309 driver) or MMS (Mobicents 
+		Accepted values: XMS (Dialogic XMS using JSR-309 driver) or RMS (RestComm
 		Media Server using MGCP driver) -->
 	<mscontrol>
-		<compatibility>mms</compatibility>
-		<!-- media-servers defines: multiple media-server entities -->
-		<media-servers>
-			<media-server name="Dialogic XMS" class="com.dialogic.dlg309">
-				<address>127.0.0.1</address>
-				<port>5060</port>
-				<transport>udp</transport>
-				<timeout>5</timeout>
-			</media-server>
-		</media-servers>
+		<compatibility>rms</compatibility>
+		<media-server name="Dialogic XMS" class="com.dialogic.dlg309">
+			<address>127.0.0.1</address>
+			<port>5060</port>
+			<transport>udp</transport>
+			<timeout>5</timeout>
+		</media-server>
 	</mscontrol>
 
 	<!-- The media server manager is responsible for managing the media servers 
