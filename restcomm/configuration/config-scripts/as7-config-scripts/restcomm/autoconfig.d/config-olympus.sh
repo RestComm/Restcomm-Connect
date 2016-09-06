@@ -24,8 +24,8 @@ FILE=$BASEDIR/standalone/deployments/olympus.war/resources/js/controllers/regist
    if [ -n "$SECURESSL" ]; then
        sed -i "s|ws:|wss:|" $FILE
        if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
-           sed -i "s|\$scope.serverAddress + ':[0-9][0-9]*'|\$scope.serverAddress + ':${LBOLYMPUSPORT}'|" $FILE
-           sed -i "s|\$scope.serverPort = '[0-9][0-9]*';|\$scope.serverPort = '${LBOLYMPUSPORT}';|" $FILE
+           sed -i "s|\$scope.serverAddress + ':[0-9][0-9]*'|\$scope.serverAddress + ':${LB_EXTERNAL_PORT_WSS}'|" $FILE
+           sed -i "s|\$scope.serverPort = '[0-9][0-9]*';|\$scope.serverPort = '${LB_EXTERNAL_PORT_WSS}';|" $FILE
        else
             sed -i "s|\$scope.serverAddress + ':[0-9][0-9]*'|\$scope.serverAddress + ':${SIP_PORT_WSS}'|" $FILE
             sed -i "s|\$scope.serverPort = '[0-9][0-9]*';|\$scope.serverPort = '${SIP_PORT_WSS}';|" $FILE
@@ -33,8 +33,8 @@ FILE=$BASEDIR/standalone/deployments/olympus.war/resources/js/controllers/regist
    else
 
       if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
-            sed -i "s|\$scope.serverAddress + ':[0-9][0-9]*'|\$scope.serverAddress + ':${LBOLYMPUSPORT}'|" $FILE
-            sed -i "s|\$scope.serverPort = '[0-9][0-9]*';|\$scope.serverPort = '${LBOLYMPUSPORT}';|" $FILE
+            sed -i "s|\$scope.serverAddress + ':[0-9][0-9]*'|\$scope.serverAddress + ':${LB_EXTERNAL_PORT_WS}'|" $FILE
+            sed -i "s|\$scope.serverPort = '[0-9][0-9]*';|\$scope.serverPort = '${LB_EXTERNAL_PORT_WS}';|" $FILE
        else
             sed -i "s|\$scope.serverAddress + ':[0-9][0-9]*'|\$scope.serverAddress + ':${SIP_PORT_WS}'|" $FILE
             sed -i "s|\$scope.serverPort = '[0-9][0-9]*';|\$scope.serverPort = '${SIP_PORT_WS}';|" $FILE

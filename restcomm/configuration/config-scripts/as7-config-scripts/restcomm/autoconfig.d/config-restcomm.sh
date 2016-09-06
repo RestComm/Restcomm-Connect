@@ -513,7 +513,7 @@ configRestcomm "$PUBLIC_IP"
 
 if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
     HOSTFORDID=$LBHOST
-    PORTFORDID=$LBPORT
+    PORTFORDID=$LB_EXTERNAL_PORT_UDP
 
 else
     PORTFORDID=$SIP_PORT_UDP
