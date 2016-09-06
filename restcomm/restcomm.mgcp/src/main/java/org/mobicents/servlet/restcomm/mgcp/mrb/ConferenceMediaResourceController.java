@@ -533,8 +533,8 @@ public class ConferenceMediaResourceController extends UntypedActor{
             if(isThisMaster){
                 updateMasterConferenceEndpointId();
             }else{
-                 //TODO: read it from config after testing
-                 String path = "/restcomm/audio/";
+                //TODO: read it from config after testing
+                String path = "/restcomm/audio/";
                 String entryAudio = "beep.wav";
                 path += entryAudio == null || entryAudio.equals("") ? "beep.wav" : entryAudio;
                 URI uri = null;
