@@ -21,7 +21,6 @@
 package org.mobicents.servlet.restcomm.http;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
@@ -81,11 +80,10 @@ public class OrgIdentityJsonEndpoint extends OrgIdentityEndpoint {
     }
 
     @POST
-    public Response createIdentityInstance(
+    public Response createOrgIdentity(
             @FormParam("Name") String name,
-            @FormParam("Organization") String organizationDomain)
-            throws AuthServerAuthorizationError {
-        return createOrgIdentity(name, organizationDomain);
+            @FormParam("Organization") String organizationDomain) {
+        return super.createOrgIdentity(name, organizationDomain);
     }
 
     @Path("/{OrgIdentitySid}")
