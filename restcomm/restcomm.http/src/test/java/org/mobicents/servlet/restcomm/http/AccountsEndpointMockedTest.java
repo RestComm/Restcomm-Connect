@@ -46,6 +46,7 @@ public class AccountsEndpointMockedTest extends EndpointMockedTest {
         when(request.getHeader("Authorization")).thenReturn(null); // override Authorization header to null
         AccountsEndpoint endpoint = new AccountsEndpoint(servletContext,request);
         endpoint.init();
+        endpoint.checkAuthenticatedAccount();
     }
 
 }

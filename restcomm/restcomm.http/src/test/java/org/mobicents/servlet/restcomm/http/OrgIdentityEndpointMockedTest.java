@@ -41,51 +41,33 @@ import static org.mockito.Mockito.*;
  */
 public class OrgIdentityEndpointMockedTest extends EndpointMockedTest {
 
-    List<Organization> orgs;
-    OrganizationsDaoMock organizationDao;
-    List<OrgIdentity> orgIdentities;
-    OrgIdentityDaoMock orgIdentitiesDao;
-
-    public void before() {
-        init();
-        orgs = new ArrayList<Organization>();
-        organizationDao = new OrganizationsDaoMock(orgs);
-        daoManager.setOrganizationsDao(organizationDao);
-        orgIdentities = new ArrayList<OrgIdentity>();
-        orgIdentitiesDao = new OrgIdentityDaoMock(orgIdentities);
-        daoManager.setOrgIdentityDao(orgIdentitiesDao);
-        // mock IdentityContext
-        IdentityContext identityContext = new IdentityContext(conf, restcommConfiguration.getMain(),orgIdentitiesDao);
-        when(servletContext.getAttribute(IdentityContext.class.getName())).thenReturn(identityContext);
-    }
-
     @Test
     public void testOrgIdentityCreationAndConflict() throws MalformedURLException {
         setRestcommXmlResourcePath("/restcomm_keycloak.xml");
-        before();
-        orgs.add(new Organization(new Sid("OR00000000000000000000000000000000"),null,null,"Default organization","default",null,null));
-        orgs.add(new Organization(new Sid("OR11111111111111111111111111111111"),null,null,"Orestis organization","orestis",null,null));
+        init();
+        organizations.clear();
+        organizations.add(new Organization(new Sid("OR00000000000000000000000000000000"),null,null,"Default organization","default",null,null));
+        organizations.add(new Organization(new Sid("OR11111111111111111111111111111111"),null,null,"Orestis organization","orestis",null,null));
 
-        when(request.getRequestURL()).thenReturn(new StringBuffer("http://127.0.0.1:8080/"));
         OrgIdentityEndpoint endpoint = new OrgIdentityEndpoint(servletContext,request);
         endpoint.init();
         // if the organization does not exist should get a 400 back and not store any orgIdentity
         Response response = endpoint.createOrgIdentity("newOrgIdentity", "non-existent-org");
         Assert.assertEquals(400, response.getStatus());
-        Assert.assertNull(orgIdentitiesDao.getOrgIdentityByName("newOrgIdentity"));
+        Assert.assertNull(orgIdentityDao.getOrgIdentityByName("newOrgIdentity"));
         // test OrgIdentity creation with explicit organization namespace use
         response = endpoint.createOrgIdentity("random123", "orestis");
         Assert.assertEquals(200, response.getStatus());
-        OrgIdentity created = orgIdentitiesDao.getOrgIdentityByName("random123");
+        OrgIdentity created = orgIdentityDao.getOrgIdentityByName("random123");
         Assert.assertNotNull(created);
         Assert.assertEquals("OR11111111111111111111111111111111",created.getOrganizationSid().toString());
         // test update really changed orgIdentity name
         endpoint.updateOrgIdentity(created.getSid().toString(),"random321");
-        Assert.assertEquals("random321",orgIdentitiesDao.getOrgIdentity(created.getSid()).getName());
+        Assert.assertEquals("random321",orgIdentityDao.getOrgIdentity(created.getSid()).getName());
         // if no organization defined as query param, use domain name to determine it
         response = endpoint.createOrgIdentity("newOrgIdentity", null);
         Assert.assertEquals(200, response.getStatus());
-        Assert.assertNotNull(orgIdentitiesDao.getOrgIdentityByName("newOrgIdentity"));
+        Assert.assertNotNull(orgIdentityDao.getOrgIdentityByName("newOrgIdentity"));
         // Try to create again. should get a conflict.
         response = endpoint.createOrgIdentity("newOrgIdentity", null);
         Assert.assertEquals(409, response.getStatus());
@@ -94,24 +76,32 @@ public class OrgIdentityEndpointMockedTest extends EndpointMockedTest {
     @Test
     public void updateOrgIdentity() {
         setRestcommXmlResourcePath("/restcomm_keycloak.xml");
-        before();
-        orgs.add(new Organization(new Sid("OR00000000000000000000000000000000"),null,null,"Foo organization","fooorg",null,null));
+        init();
+        organizations.clear();
+        organizations.add(new Organization(new Sid("OR00000000000000000000000000000000"),null,null,"Foo organization","fooorg",null,null));
+        orgIdentities.clear();
         orgIdentities.add(new OrgIdentity(new Sid("OI00000000000000000000000000000000"),new Sid("OR00000000000000000000000000000000"),"random123",null,null));
 
         when(request.getRequestURL()).thenReturn(new StringBuffer("http://127.0.0.1:8080/"));
         OrgIdentityEndpoint endpoint = new OrgIdentityEndpoint(servletContext,request);
         endpoint.init();
-
-        endpoint.updateOrgIdentity("OI00000000000000000000000000000000","updated");
-        Assert.assertEquals("updated", orgIdentitiesDao.getOrgIdentity(new Sid("OI00000000000000000000000000000000")).getName());
-
+        // check OrgIdentity name is really updated
+        Response response = endpoint.updateOrgIdentity("OI00000000000000000000000000000000","updated");
+        Assert.assertEquals("updated", orgIdentityDao.getOrgIdentity(new Sid("OI00000000000000000000000000000000")).getName());
+        Assert.assertEquals(200, response.getStatus());
+        // if OrgIdentity does not exist should get a 404
+        response = endpoint.updateOrgIdentity("OI00000000000000000000000000000001","foo");
+        Assert.assertEquals(404,response.getStatus());
+        //if 'name' parameter is missing should get a 400
+        response = endpoint.updateOrgIdentity("OI00000000000000000000000000000001",null);
+        Assert.assertEquals(400,response.getStatus());
     }
 
     @Test
     public void orgIdentityIsRemoved() {
         setRestcommXmlResourcePath("/restcomm_keycloak.xml");
-        before();
-        orgs.add(new Organization(new Sid("OR00000000000000000000000000000000"),null,null,"Foo organization","fooorg",null,null));
+        init();
+        organizations.add(new Organization(new Sid("OR00000000000000000000000000000000"),null,null,"Foo organization","fooorg",null,null));
         orgIdentities.add(new OrgIdentity(new Sid("OI00000000000000000000000000000000"),new Sid("OR00000000000000000000000000000000"),"random123",null,null));
 
         when(request.getRequestURL()).thenReturn(new StringBuffer("http://127.0.0.1:8080/"));
@@ -119,7 +109,7 @@ public class OrgIdentityEndpointMockedTest extends EndpointMockedTest {
         endpoint.init();
 
         endpoint.removeOrgIdentity("OI00000000000000000000000000000000");
-        Assert.assertNull(orgIdentitiesDao.getOrgIdentity(new Sid("OI00000000000000000000000000000000")));
+        Assert.assertNull(orgIdentityDao.getOrgIdentity(new Sid("OI00000000000000000000000000000000")));
     }
 
 }

@@ -37,6 +37,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * In a typical use case you can  access to the IdentityContext from the ServletContext.
  *
+ * Presence: An Identity Context is assumed present (not null) even if no keycloak configuration is in place.
+ *
  * @author "Tsakiridis Orestis"
  */
 public class IdentityContext {

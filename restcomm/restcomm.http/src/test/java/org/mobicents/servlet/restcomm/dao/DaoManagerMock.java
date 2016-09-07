@@ -38,6 +38,9 @@ public class DaoManagerMock implements DaoManager {
         this.organizationsDao = organizationsDao;
     }
 
+    public DaoManagerMock() {
+    }
+
     @Override
     public AccountsDao getAccountsDao() {
         return accountsDao;
