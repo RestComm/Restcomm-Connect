@@ -2376,36 +2376,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     logger.info("About to join call to Conference: "+conferenceInfo.name()+", with state: "+conferenceInfo.state()+", with moderator present: "+conferenceInfo.isModeratorPresent()+", and current participants: "+conferenceInfo.participants().size());
                 }
                 // Join the conference.
+                //Adding conference record in DB
+                final Sid conferenceSid = conferenceInfo.sid();
+                updateConferenceDetailRecord(conferenceSid);
                 final AddParticipant request = new AddParticipant(call);
                 conference.tell(request, source);
             } else {
                 // Ask the parser for the next action to take.
                 final GetNextVerb next = GetNextVerb.instance();
                 parser.tell(next, source);
-            }
-            final Sid conferenceSid = conferenceInfo.sid();
-
-            //Adding conference record in DB
-            final ConferenceDetailRecordsDao conferenceDao = storage.getConferenceDetailRecordsDao();
-            conferenceDetailRecord = conferenceDao.getConferenceDetailRecord(conferenceSid);
-            if(conferenceDetailRecord == null){
-                if (logger.isInfoEnabled()) {
-                    logger.info("Updating Conference record for call: "+call.path()+", call status: "+callInfo.state()+", to include Conference details, conference: "+conferenceSid);
-                }
-                final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
-                conferenceBuilder.setSid(conferenceSid);
-                conferenceBuilder.setDateCreated(callRecord.getDateCreated());
-                conferenceBuilder.setAccountSid(accountId);/* I am not sure about this parameter */
-                conferenceBuilder.setStatus(conferenceState.name());
-                conferenceBuilder.setApiVersion(version);
-                final StringBuilder UriBuffer = new StringBuilder();
-                UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountId.toString()).append("/Conferences/");
-                UriBuffer.append(conferenceSid);
-                final URI uri = URI.create(UriBuffer.toString());
-                conferenceBuilder.setUri(uri);
-                conferenceBuilder.setFriendlyName(conferenceFriendlyName);
-                conferenceDetailRecord = conferenceBuilder.build();
-                conferenceDao.addConferenceDetailRecord(conferenceDetailRecord);
             }
             // parse mute
             attribute = child.attribute("muted");
@@ -2431,11 +2410,34 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     endConferenceOnExit = Boolean.parseBoolean(value);
                 }
             }
+        }
 
+        private void updateConferenceDetailRecord(Sid conferenceSid) {
+            final ConferenceDetailRecordsDao conferenceDao = storage.getConferenceDetailRecordsDao();
+            conferenceDetailRecord = conferenceDao.getConferenceDetailRecord(conferenceSid);
+            if(conferenceDetailRecord == null){
+                if (logger.isInfoEnabled()) {
+                    logger.info("Updating Conference record for call: "+callInfo.sid()+", call status: "+callInfo.state()+", to include Conference details, conference: "+conferenceSid);
+                }
+                final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
+                conferenceBuilder.setSid(conferenceSid);
+                conferenceBuilder.setDateCreated(callRecord.getDateCreated());
+                conferenceBuilder.setAccountSid(accountId);/* I am not sure about this parameter */
+                conferenceBuilder.setStatus(conferenceState.name());
+                conferenceBuilder.setApiVersion(version);
+                final StringBuilder UriBuffer = new StringBuilder();
+                UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountId.toString()).append("/Conferences/");
+                UriBuffer.append(conferenceSid);
+                final URI uri = URI.create(UriBuffer.toString());
+                conferenceBuilder.setUri(uri);
+                conferenceBuilder.setFriendlyName(conferenceFriendlyName);
+                conferenceDetailRecord = conferenceBuilder.build();
+                conferenceDao.addConferenceDetailRecord(conferenceDetailRecord);
+            }
             //updating conferenceSid and other conference related info in cdr
             if (callRecord != null) {
                 if (logger.isInfoEnabled()) {
-                    logger.info("Updating CDR for call: "+call.path()+", call status: "+callInfo.state()+", to include Conference details, conference: "+conferenceSid);
+                    logger.info("Updating CDR for call: "+callInfo.sid()+", call status: "+callInfo.state()+", to include Conference details, conference: "+conferenceSid);
                 }
                 callRecord = callRecord.setConferenceSid(conferenceSid);
                 callRecord = callRecord.setMuted(muteCall);
