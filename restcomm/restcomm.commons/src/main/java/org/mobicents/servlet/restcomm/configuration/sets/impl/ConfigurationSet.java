@@ -17,7 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.configuration.sets;
+
+package org.mobicents.servlet.restcomm.configuration.sets.impl;
 
 import org.mobicents.servlet.restcomm.configuration.sources.ConfigurationSource;
 
