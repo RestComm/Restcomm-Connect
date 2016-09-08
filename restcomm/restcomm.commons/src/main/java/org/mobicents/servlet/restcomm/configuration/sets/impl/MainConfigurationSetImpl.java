@@ -53,6 +53,15 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
 
     public static final String BYPASS_LB_FOR_CLIENTS = "bypass-lb-for-clients";
     private boolean bypassLbForClients = false;
+    // keycloak related properties
+    private static final String IDENTITY_AUTH_SERVER_URL = "identity.auth-server-url";
+    private static final String IDENTITY_REALM_PUBLIC_KEY = "identity.realm-public-key";
+    private static final String IDENTITY_REALM = "identity.realm";
+    private String identityAuthServerUrl;
+    private String identityRealmPublicKey;
+    private String identityRealm;
+    private String orgIdentityNamingMode; // one of: random|domain|query   - this is not yet in restcomm.xml :
+    private String identityManagerUrl;
 
     public MainConfigurationSetImpl(ConfigurationSource source) {
         super(source);
@@ -92,6 +101,9 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
         this.useHostnameToResolveRelativeUrls = resolveRelativeUrlWithHostname;
         this.hostname = resolveRelativeUrlHostname;
         bypassLbForClients = bypassLb;
+        // initialize keycloak properties
+        initIdentity(source);
+
     }
 
     public MainConfigurationSetImpl(SslMode sslMode, int responseTimeout, boolean useHostnameToResolveRelativeUrls, String hostname, String instanceId, boolean bypassLbForClients) {
@@ -102,6 +114,25 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
         this.hostname = hostname;
         this.instanceId = instanceId;
         this.bypassLbForClients = bypassLbForClients;
+    }
+
+    private void initIdentity(ConfigurationSource source) {
+        // identity.auth-server-url
+        String identityAuthServerUrl = source.getProperty(IDENTITY_AUTH_SERVER_URL);
+        String identityRealm = source.getProperty(IDENTITY_REALM);
+        String identityRealmPublicKey = source.getProperty(IDENTITY_REALM_PUBLIC_KEY);
+        if (!StringUtils.isEmpty(identityAuthServerUrl)) {
+            if (StringUtils.isEmpty(identityRealm) || StringUtils.isEmpty(identityRealmPublicKey)) {
+                throw new RuntimeException("Inconsistent identity configuration! Keycloak based authorization will not work.");
+            }
+            this.identityAuthServerUrl = identityAuthServerUrl;
+            this.identityRealm = identityRealm;
+            this.identityRealmPublicKey = identityRealmPublicKey;
+        }
+        // this is hardcoded for now
+        this.orgIdentityNamingMode = "organization"; // organization | random
+        // this is hardcoded for now
+        this.identityManagerUrl = "http://localhost:8090/manager";
     }
 
     @Override
@@ -153,5 +184,25 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
 
     public void setBypassLbForClients(boolean bypassLbForClients) {
         this.bypassLbForClients = bypassLbForClients;
+    }
+
+    public String getIdentityAuthServerUrl() {
+        return identityAuthServerUrl;
+    }
+
+    public String getIdentityRealmPublicKey() {
+        return identityRealmPublicKey;
+    }
+
+    public String getIdentityRealm() {
+        return identityRealm;
+    }
+
+    public String getOrgIdentityNamingMode() {
+        return orgIdentityNamingMode;
+    }
+
+    public String getIdentityManagerUrl() {
+        return identityManagerUrl;
     }
 }

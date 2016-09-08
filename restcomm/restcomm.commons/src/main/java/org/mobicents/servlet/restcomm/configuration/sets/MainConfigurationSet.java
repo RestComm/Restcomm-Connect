@@ -25,7 +25,6 @@ import org.mobicents.servlet.restcomm.http.SslMode;
 /**
  * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
  */
-
 public interface MainConfigurationSet {
     SslMode getSslMode();
 
@@ -35,9 +34,19 @@ public interface MainConfigurationSet {
 
     String getHostname();
 
+    String getInstanceId();
+
     boolean getBypassLbForClients();
 
     void setInstanceId(String instanceId);
 
-    String getInstanceId();
+    String getIdentityAuthServerUrl();
+
+    String getIdentityRealmPublicKey();
+
+    String getIdentityRealm();
+
+    String getOrgIdentityNamingMode();
+
+    String getIdentityManagerUrl();
 }
