@@ -19,25 +19,19 @@
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
-import static akka.pattern.Patterns.ask;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
-
-import java.io.File;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
-
+import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.util.Timeout;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -50,7 +44,7 @@ import org.mobicents.servlet.restcomm.asr.AsrRequest;
 import org.mobicents.servlet.restcomm.asr.AsrResponse;
 import org.mobicents.servlet.restcomm.asr.GetAsrInfo;
 import org.mobicents.servlet.restcomm.asr.ISpeechAsr;
-import org.mobicents.servlet.restcomm.cache.DiskCache;
+import org.mobicents.servlet.restcomm.cache.DiskCacheFactory;
 import org.mobicents.servlet.restcomm.cache.DiskCacheRequest;
 import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.cache.HashGenerator;
@@ -107,24 +101,28 @@ import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerRequest;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 import org.mobicents.servlet.restcomm.util.WavUtils;
-
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.util.Timeout;
 
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import java.io.File;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
+
+import static akka.pattern.Patterns.ask;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -172,7 +170,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     // The user specific configuration.
     Configuration configuration = null;
     // The block storage cache.
-    ActorRef cache = null;
+    private ActorRef cache;
     String cachePath = null;
     // The downloader will fetch resources for us using HTTP.
     ActorRef downloader = null;
@@ -184,17 +182,17 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     // The conference manager.
     ActorRef conferenceManager = null;
     // The automatic speech recognition service.
-    ActorRef asrService = null;
+    private ActorRef asrService;
     int outstandingAsrRequests;
     // The fax service.
-    ActorRef faxService = null;
+    private ActorRef faxService;
     // The SMS service = null.
     ActorRef smsService = null;
     Map<Sid, ActorRef> smsSessions = null;
     // The storage engine.
     DaoManager storage = null;
     // The text to speech synthesizer service.
-    ActorRef synthesizer = null;
+    private ActorRef synthesizer;
     // The languages supported by the automatic speech recognition service.
     AsrInfo asrInfo = null;
     // The languages supported by the text to speech synthesizer service.
@@ -385,6 +383,13 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     abstract List<NameValuePair> parameters();
 
+    public ActorRef getAsrService() {
+        if (asrService == null || (asrService != null && asrService.isTerminated())) {
+            asrService = asr(configuration.subset("speech-recognizer"));
+        }
+        return asrService;
+    }
+
     ActorRef asr(final Configuration configuration) {
         final UntypedActorContext context = getContext();
         return context.actorOf(new Props(new UntypedActorFactory() {
@@ -424,6 +429,13 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             // Try to stop the interpreter.
             postCleanup();
         }
+    }
+
+    public ActorRef getFaxService() {
+        if (faxService == null || (faxService != null && faxService.isTerminated())) {
+            faxService = fax(configuration.subset("fax-service"));
+        }
+        return faxService;
     }
 
     ActorRef fax(final Configuration configuration) {
@@ -472,6 +484,30 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         callback(false);
     }
 
+    public ActorRef getCache() {
+        if (cache == null || (cache != null && cache.isTerminated())) {
+            final Configuration runtime = configuration.subset("runtime-settings");
+            String path = runtime.getString("cache-path");
+            if (!path.endsWith("/")) {
+                path = path + "/";
+            }
+            path = path + accountId.toString();
+            cachePath = path;
+            String uri = runtime.getString("cache-uri");
+            if (!uri.endsWith("/")) {
+                uri = uri + "/";
+            }
+            try {
+                uri = UriUtils.resolve(new URI(uri)).toString();
+            } catch (URISyntaxException e) {
+                logger.error("URISyntaxException while trying to resolve Cache URI: " + e);
+            }
+            uri = uri + accountId.toString();
+            cache = cache(path, uri);
+        }
+        return cache;
+    }
+
     ActorRef cache(final String path, final String uri) {
         final UntypedActorContext context = getContext();
         return context.actorOf(new Props(new UntypedActorFactory() {
@@ -479,7 +515,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new DiskCache(path, uri, true);
+                return new DiskCacheFactory(configuration).getDiskCache(path, uri);
             }
         }));
     }
@@ -738,6 +774,13 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         }
     }
 
+    public ActorRef getSynthesizer() {
+        if (synthesizer == null || (synthesizer != null && synthesizer.isTerminated())) {
+            synthesizer = tts(configuration.subset("speech-synthesizer"));
+        }
+        return synthesizer;
+    }
+
     ActorRef tts(final Configuration configuration) {
         final String classpath = configuration.getString("[@class]");
 
@@ -768,9 +811,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            final StartInterpreter request = (StartInterpreter) message;
-            call = request.resource();
-            asrService.tell(new GetAsrInfo(), source);
+            getAsrService().tell(new GetAsrInfo(), source);
         }
     }
 
@@ -784,7 +825,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         public void execute(final Object message) throws Exception {
             final AsrResponse<AsrInfo> response = (AsrResponse<AsrInfo>) message;
             asrInfo = response.get();
-            synthesizer.tell(new GetSpeechSynthesizerInfo(), source);
+            getSynthesizer().tell(new GetSpeechSynthesizerInfo(), source);
         }
     }
 
@@ -931,7 +972,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             final int offset = uri.lastIndexOf("/");
             final String path = cachePath + "/" + uri.substring(offset + 1, uri.length());
             final FaxRequest fax = new FaxRequest(to, new File(path));
-            faxService.tell(fax, source);
+            getFaxService().tell(fax, source);
         }
     }
 
@@ -987,7 +1028,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (logger.isErrorEnabled()) {
                 logger.info("Checking cache for hash: " + hash);
             }
-            cache.tell(request, source);
+            getCache().tell(request, source);
         }
     }
 
@@ -1003,7 +1044,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (SpeechSynthesizerResponse.class.equals(klass)) {
                 final SpeechSynthesizerResponse<URI> response = (SpeechSynthesizerResponse<URI>) message;
                 final DiskCacheRequest request = new DiskCacheRequest(response.get());
-                cache.tell(request, source);
+                getCache().tell(request, source);
             } else if (Tag.class.equals(klass)) {
                 if (Tag.class.equals(klass)) {
                     verb = (Tag) message;
@@ -1027,7 +1068,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     final URI base = request.getUri();
                     final URI uri = UriUtils.resolve(base, target);
                     final DiskCacheRequest request = new DiskCacheRequest(uri);
-                    cache.tell(request, source);
+                    getCache().tell(request, source);
                 } else {
                     // Ask the parser for the next action to take.
                     final GetNextVerb next = GetNextVerb.instance();
@@ -1162,7 +1203,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 String language = details.get("language");
                 String text = details.get("text");
                 final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(voice, language, text);
-                synthesizer.tell(synthesize, source);
+                getSynthesizer().tell(synthesize, source);
             } else {
                 // Ask the parser for the next action to take.
                 final GetNextVerb next = GetNextVerb.instance();
@@ -1285,7 +1326,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (SpeechSynthesizerResponse.class.equals(klass)) {
                 final SpeechSynthesizerResponse<URI> response = (SpeechSynthesizerResponse<URI>) message;
                 final DiskCacheRequest request = new DiskCacheRequest(response.get());
-                cache.tell(request, source);
+                getCache().tell(request, source);
             } else {
                 if (Tag.class.equals(klass)) {
                     verb = (Tag) message;
@@ -1346,7 +1387,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                             final URI uri = UriUtils.resolve(base, target);
                             // Cache the prompt.
                             final DiskCacheRequest request = new DiskCacheRequest(uri);
-                            cache.tell(request, source);
+                            getCache().tell(request, source);
                             break;
                         }
                     } else if (say.equals(child.name())) {
@@ -1386,7 +1427,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                             // break;
                             String hash = hash(child);
                             DiskCacheRequest request = new DiskCacheRequest(hash);
-                            cache.tell(request, source);
+                            getCache().tell(request, source);
                             break;
                         }
                     } else if (pause.equals(child.name())) {
@@ -1774,7 +1815,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     final Map<String, Object> attributes = new HashMap<String, Object>();
                     attributes.put("callback", transcribeCallback);
                     attributes.put("transcription", transcription);
-                    asrService.tell(new AsrRequest(new File(recordingUri), "en", attributes), source);
+                    getAsrService().tell(new AsrRequest(new File(recordingUri), "en", attributes), source);
                     outstandingAsrRequests++;
                 } catch (final Exception exception) {
                     logger.error(exception.getMessage(), exception);

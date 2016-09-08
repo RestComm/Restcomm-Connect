@@ -18,25 +18,26 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.configuration.sets;
+package org.mobicents.servlet.restcomm.configuration.sets.impl;
 
-import org.mobicents.servlet.restcomm.http.SslMode;
+import org.mobicents.servlet.restcomm.configuration.sources.ConfigurationSource;
 
 /**
- * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
+ * A logical group of configuration options. It encapsulates storage, initialization
+ * and validation operations. Extend it to add new groups.
+ *
+ * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
+ *
  */
-public interface MainConfigurationSet {
-    SslMode getSslMode();
+public class ConfigurationSet {
+    private final ConfigurationSource source;
 
-    int getResponseTimeout();
+    protected ConfigurationSet(ConfigurationSource source) {
+        super();
+        this.source = source;
+    }
 
-    boolean isUseHostnameToResolveRelativeUrls();
-
-    String getHostname();
-
-    boolean getBypassLbForClients();
-
-    void setInstanceId(String instanceId);
-
-    String getInstanceId();
+    public ConfigurationSource getSource() {
+        return source;
+    }
 }
