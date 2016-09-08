@@ -41,23 +41,7 @@ configSipStack() {
     fi
 }
 
-
-configStandalone() {
-	lb_standalone_file="$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml"
-	
-	path_name='org.mobicents.ext'
-	if [[ "$RUN_MODE" == *"-lb" ]]; then
-		path_name="org.mobicents.ha.balancing.only"
-	fi
-	
-	sed -e "s|subsystem xmlns=\"urn:org.mobicents:sip-servlets-as7:1.0\" application-router=\"configuration/dars/mobicents-dar.properties\" stack-properties=\"configuration/mss-sip-stack.properties\" path-name=\".*\" app-dispatcher-class=\"org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl\" concurrency-control-mode=\"SipApplicationSession\" congestion-control-interval=\"-1\"|subsystem xmlns=\"urn:org.mobicents:sip-servlets-as7:1.0\" application-router=\"configuration/dars/mobicents-dar.properties\" stack-properties=\"configuration/mss-sip-stack.properties\" path-name=\"$path_name\" app-dispatcher-class=\"org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl\" concurrency-control-mode=\"SipApplicationSession\" congestion-control-interval=\"-1\"|" $lb_standalone_file > $lb_standalone_file.bak
-	mv -f $lb_standalone_file.bak lb_standalone_file
-}
-
-
-
 ## MAIN
-configSipStack 
-#configStandalone
+configSipStack
 
 

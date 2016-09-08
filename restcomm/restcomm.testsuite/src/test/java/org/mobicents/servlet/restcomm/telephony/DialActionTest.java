@@ -182,8 +182,9 @@ public class DialActionTest {
         if (georgeSipStack != null) {
             georgeSipStack.dispose();
         }
+        Thread.sleep(1000);
         wireMockRule.resetRequests();
-        Thread.sleep(2000);
+        Thread.sleep(4000);
     }
 
     @Test
@@ -585,18 +586,18 @@ public class DialActionTest {
 
         assertTrue(bobCall.disconnect());
 
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        Thread.sleep(10000);
         
         logger.info("About to check the DialAction Requests");
         List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
         assertTrue(requests.size() == 1);
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=no-answer"));
+        if (!requestBody.contains("DialCallStatus=no-answer")) {
+            String msgToPrint = requestBody.replaceAll("&", "\n");
+            logger.info("requestBody: \n"+"\n ---------------------- \n"+msgToPrint+"\n---------------------- ");
+        }
+        assertTrue(requestBody.contains("DialCallStatus=canceled"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialRingDuration=3"));
@@ -669,6 +670,9 @@ public class DialActionTest {
         assertTrue(requests.size() == 1);
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
+        if (!requestBody.contains("DialCallStatus=busy")) {
+            logger.info("requestBody: \n"+requestBody);
+        }
         assertTrue(requestBody.contains("DialCallStatus=busy"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
@@ -718,7 +722,7 @@ public class DialActionTest {
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
 
-        String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
+        String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[0];
 
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
@@ -746,7 +750,7 @@ public class DialActionTest {
         assertTrue(requests.size() == 1);
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=null"));
+        assertTrue(requestBody.contains("DialCallStatus=completed"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));

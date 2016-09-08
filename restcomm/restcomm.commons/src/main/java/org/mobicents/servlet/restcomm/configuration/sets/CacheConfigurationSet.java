@@ -17,26 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
+
 package org.mobicents.servlet.restcomm.configuration.sets;
 
-import org.mobicents.servlet.restcomm.configuration.sources.ConfigurationSource;
-
 /**
- * A logical group of configuration options. It encapsulates storage, initialization
- * and validation operations. Extend it to add new groups.
- *
- * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
- *
+ * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
  */
-public class ConfigurationSet {
-    private final ConfigurationSource source;
+public interface CacheConfigurationSet {
 
-    protected ConfigurationSet(ConfigurationSource source) {
-        super();
-        this.source = source;
-    }
+    boolean isNoWavCache();
 
-    public ConfigurationSource getSource() {
-        return source;
-    }
+    String getCachePath();
+
+    String getCacheUri();
 }

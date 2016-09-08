@@ -4,7 +4,7 @@
 ## Authors    : Henrique Rosa   henrique.rosa@telestax.com
 ##
 
-echo 'shutting down telscale restcomm...'
+echo 'shutting down RestComm...'
 
 
 getPIDKill(){
@@ -39,7 +39,7 @@ getPIDKill
 # stop Media Server if necessary
 if screen -ls | grep -q 'mms'; then
 	screen -S 'mms' -p 0 -X 'quit'
-	echo '...stopped Mobicents Media Server instance running on screen session "mms"...'
+	echo '...stopped RestComm Media Server instance running on screen session "rms"...'
 else
 	echo '...media server is not running, skipping...'
 fi
