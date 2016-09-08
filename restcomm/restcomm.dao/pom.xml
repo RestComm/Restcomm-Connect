@@ -73,7 +73,8 @@
 			<artifactId>hsqldb</artifactId>
 		</dependency>
 
-<!-- 		<dependency>
+<!--
+		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-s3</artifactId>
 			<version>${aws.sdk.version}</version>
@@ -83,7 +84,28 @@
 					<artifactId>httpclient</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency> -->
+		</dependency>
+ -->
 
 	</dependencies>
+
+	<build>
+		<plugins>
+			<!-- Put shared test classes in a separate jar. It can then be used by other modules
+			using <type>test-jar</type>.
+			See: https://maven.apache.org/guides/mini/guide-multiple-modules.html -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.6</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>

@@ -18,9 +18,10 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.dao;
+package org.mobicents.servlet.restcomm.dao.mocks;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.mobicents.servlet.restcomm.dao.OrgIdentityDao;
 import org.mobicents.servlet.restcomm.entities.OrgIdentity;
 import org.mobicents.servlet.restcomm.entities.Sid;
 

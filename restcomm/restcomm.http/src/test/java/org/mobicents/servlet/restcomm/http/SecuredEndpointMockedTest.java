@@ -22,15 +22,11 @@ package org.mobicents.servlet.restcomm.http;
 
 import junit.framework.Assert;
 import org.junit.Test;
-import org.mobicents.servlet.restcomm.dao.OrgIdentityDaoMock;
-import org.mobicents.servlet.restcomm.dao.mocks.OrganizationsDaoMock;
 import org.mobicents.servlet.restcomm.entities.OrgIdentity;
 import org.mobicents.servlet.restcomm.entities.Organization;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.exceptions.NotAuthenticated;
 import org.mobicents.servlet.restcomm.http.exceptions.OrganizationAccessForbidden;
-
-import java.util.List;
 
 import static org.mockito.Mockito.when;
 

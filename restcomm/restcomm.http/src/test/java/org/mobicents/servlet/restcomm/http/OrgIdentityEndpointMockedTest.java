@@ -22,17 +22,12 @@ package org.mobicents.servlet.restcomm.http;
 
 import junit.framework.Assert;
 import org.junit.Test;
-import org.mobicents.servlet.restcomm.dao.OrgIdentityDaoMock;
-import org.mobicents.servlet.restcomm.dao.mocks.OrganizationsDaoMock;
 import org.mobicents.servlet.restcomm.entities.OrgIdentity;
 import org.mobicents.servlet.restcomm.entities.Organization;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.identity.IdentityContext;
 
 import javax.ws.rs.core.Response;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.mockito.Mockito.*;
 

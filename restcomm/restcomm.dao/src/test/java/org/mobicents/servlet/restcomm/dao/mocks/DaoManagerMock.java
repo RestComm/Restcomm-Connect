@@ -18,9 +18,31 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.dao;
+package org.mobicents.servlet.restcomm.dao.mocks;
 
 import org.apache.commons.configuration.Configuration;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
+import org.mobicents.servlet.restcomm.dao.AnnouncementsDao;
+import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
+import org.mobicents.servlet.restcomm.dao.AvailablePhoneNumbersDao;
+import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.restcomm.dao.ClientsDao;
+import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.GatewaysDao;
+import org.mobicents.servlet.restcomm.dao.HttpCookiesDao;
+import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
+import org.mobicents.servlet.restcomm.dao.InstanceIdDao;
+import org.mobicents.servlet.restcomm.dao.NotificationsDao;
+import org.mobicents.servlet.restcomm.dao.OrgIdentityDao;
+import org.mobicents.servlet.restcomm.dao.OrganizationsDao;
+import org.mobicents.servlet.restcomm.dao.OutgoingCallerIdsDao;
+import org.mobicents.servlet.restcomm.dao.RecordingsDao;
+import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
+import org.mobicents.servlet.restcomm.dao.ShortCodesDao;
+import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
+import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
+import org.mobicents.servlet.restcomm.dao.UsageDao;
 
 /**
  * DaoManager mock class to be used for unit-testing endpoints. Add further Daos if needed.
