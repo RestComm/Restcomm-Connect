@@ -25,8 +25,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.configuration.sets.CacheConfigurationSet;
-import org.mobicents.servlet.restcomm.configuration.sets.ConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.impl.CacheConfigurationSetImpl;
+import org.mobicents.servlet.restcomm.configuration.sets.impl.ConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.impl.MainConfigurationSetImpl;
 import org.mobicents.servlet.restcomm.configuration.sources.ApacheConfigurationSource;
 
 /**
@@ -48,8 +50,8 @@ public class RestcommConfiguration {
         // addConfigurationSet("main", new MainConfigurationSet( new ApacheConfigurationSource(apacheConf)));
         ApacheConfigurationSource apacheCfgSrc = new ApacheConfigurationSource(apacheConf);
 
-        addConfigurationSet("main", new MainConfigurationSet(apacheCfgSrc));
-        addConfigurationSet("cache", new CacheConfigurationSet(apacheCfgSrc));
+        addConfigurationSet("main", new MainConfigurationSetImpl(apacheCfgSrc));
+        addConfigurationSet("cache", new CacheConfigurationSetImpl(apacheCfgSrc));
         // addConfigurationSet("identity", new IdentityConfigurationSet( new DbConfigurationSource(dbConf)));
         // ...
     }
