@@ -370,10 +370,17 @@ public final class Conference extends UntypedActor {
 
     private void onRemoveParticipant(RemoveParticipant message, ActorRef self, ActorRef sender) throws Exception {
         if (isRunning()) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Received RemoveParticipants for Call: "+message.call().path());
+            }
             // Kindly ask participant to leave
             final ActorRef call = message.call();
             final Leave leave = new Leave();
             call.tell(leave, self);
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Received RemoveParticipants for Call: "+message.call().path()+" but the state is: "+fsm.state().toString());
+            }
         }
     }
 
