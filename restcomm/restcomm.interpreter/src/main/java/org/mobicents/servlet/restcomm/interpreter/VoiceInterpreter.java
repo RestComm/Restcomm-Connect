@@ -2646,6 +2646,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             if (message instanceof ReceiveTimeout) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("At FinishConferencing received timeout, VI path: "+self().path()+", call path: "+call.path());
+                }
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
                 final RemoveParticipant remove = new RemoveParticipant(call);
