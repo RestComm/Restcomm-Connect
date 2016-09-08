@@ -230,6 +230,14 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
         }
 
         final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(filter);
+        if (logger.isDebugEnabled()) {
+            final List<CallDetailRecord> allCdrs = dao.getCallDetailRecords(new Sid(accountSid));
+            logger.debug("CDR with filter size: "+ cdrs.size()+", all CDR with no filter size: "+allCdrs.size());
+            logger.debug("CDRs for ConferenceSid: "+conferenceSid);
+            for (CallDetailRecord cdr: allCdrs) {
+                logger.debug("CDR sid: "+cdr.getSid()+", status: "+cdr.getStatus()+", conferenceSid: "+cdr.getConferenceSid());
+            }
+        }
 
         listConverter.setCount(total);
         listConverter.setPage(Integer.parseInt(page));

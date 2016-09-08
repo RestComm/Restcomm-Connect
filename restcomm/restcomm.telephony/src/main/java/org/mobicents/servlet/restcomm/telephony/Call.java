@@ -272,6 +272,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.updatingMediaSession, this.failed));
         transitions.add(new Transition(this.stopping, this.completed));
         transitions.add(new Transition(this.stopping, this.failed));
+        transitions.add(new Transition(this.failed, this.completed));
 
         // FSM
         this.fsm = new FiniteStateMachine(this.uninitialized, transitions);
@@ -747,6 +748,9 @@ public final class Call extends UntypedActor {
                     final SipServletRequest cancel = invite.createCancel();
                     addCustomHeaders(cancel);
                     cancel.send();
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Sent CANCEL for Call: "+self().path()+", state: "+fsm.state()+", direction: "+direction);
+                    }
                 }
             } catch (Exception e) {
                 StringBuffer strBuffer = new StringBuffer();
@@ -775,10 +779,10 @@ public final class Call extends UntypedActor {
             //since no-answer is a final state and we need to keep it so observer knows how the call ended
 //            if (!external.equals(CallStateChanged.State.NO_ANSWER)) {
                 external = CallStateChanged.State.CANCELED;
-                final CallStateChanged event = new CallStateChanged(external);
-                for (final ActorRef observer : observers) {
-                    observer.tell(event, source);
-                }
+//                final CallStateChanged event = new CallStateChanged(external);
+//                for (final ActorRef observer : observers) {
+//                    observer.tell(event, source);
+//                }
 //            }
 
             // Record call data
@@ -1206,11 +1210,11 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-            // if (!receivedBye) {
-            // // Conference was stopped and this call was asked to leave
-            // // Send BYE to remote client
-            // sendBye();
-            // }
+             if (!receivedBye) {
+             // Conference was stopped and this call was asked to leave
+             // Send BYE to remote client
+             sendBye(new Hangup("Conference time limit reached"));
+             }
             msController.tell(message, super.source);
         }
 
@@ -1395,11 +1399,20 @@ public final class Call extends UntypedActor {
     }
 
     private void onCancel(Cancel message, ActorRef self, ActorRef sender) throws Exception {
-        if(logger.isInfoEnabled()) {
-            logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state());
-        }
         if (is(initializing) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
+            if(logger.isInfoEnabled()) {
+                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state()+", will Cancel the call");
+            }
             fsm.transition(message, canceling);
+        } else if (is(inProgress)) {
+            if(logger.isInfoEnabled()) {
+                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state()+", will Hangup the call");
+            }
+            onHangup(new Hangup(), self(), sender());
+        } else {
+            if(logger.isInfoEnabled()) {
+                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state());
+            }
         }
     }
 
@@ -1597,7 +1610,6 @@ public final class Call extends UntypedActor {
                         }
                     }
                     this.fail = true;
-                    sendCallInfoToObservers();
                     fsm.transition(message, stopping);
                 }
             }
@@ -1894,6 +1906,10 @@ public final class Call extends UntypedActor {
     private void onLeave(Leave message, ActorRef self, ActorRef sender) throws Exception {
         if (is(inProgress)) {
             fsm.transition(message, leaving);
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Received Leave for Call: "+self.path()+", but state is :"+fsm.state().toString());
+            }
         }
     }
 
@@ -1943,6 +1959,9 @@ public final class Call extends UntypedActor {
     @Override
     public void postStop() {
         try {
+            if (logger.isInfoEnabled()) {
+                logger.info("Call actor at postStop, path: "+self().path()+", direction: "+direction+", state: "+fsm.state()+", isTerminated: "+self().isTerminated()+", sender: "+sender());
+            }
             onStopObserving(new StopObserving(), self(), null);
             getContext().stop(msController);
         } catch (Exception exception) {
