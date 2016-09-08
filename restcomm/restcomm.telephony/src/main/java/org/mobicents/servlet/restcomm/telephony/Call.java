@@ -1906,6 +1906,10 @@ public final class Call extends UntypedActor {
     private void onLeave(Leave message, ActorRef self, ActorRef sender) throws Exception {
         if (is(inProgress)) {
             fsm.transition(message, leaving);
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Received Leave for Call: "+self.path()+", but state is :"+fsm.state().toString());
+            }
         }
     }
 
