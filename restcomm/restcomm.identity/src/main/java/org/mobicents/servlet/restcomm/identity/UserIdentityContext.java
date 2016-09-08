@@ -37,7 +37,7 @@ import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
 
 /**
- * A per-request security context providing access to an effective account
+ * A per-request security context providing access to an effective account,
  * authorization tokens and credentials extracted from the request. When keycloak-based
  * auth is used an identity instance reference should also be present.
  *

@@ -271,8 +271,8 @@
     </http-client>
 
     <identity>
-        <auth-server-url>https://my.identity.com/auth</auth-server-url>
-        <realm-public-key>MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnxG03GY7KX5SIvEGnHcGi/7npaLF6ROwc63v3Yhn4a62zASkJD6edprGJvrGgHMPXtf8/y7RtusTRVtHKw0OXZdCnKx7VYN3tABrwZldX/DZNLEdaKHv2XCuQnbMnwRhaELAe9lavPymXlpx4QUI93JhGhS6P9F0+YM7H57bovDaR4vsCD7xmtsvyxjLaRLTzMYJWGMHT3hoDuM3mTJFdHp7occ3znKt7JkiHkr+6ljKup6+R8OSjm0WTdxEYyZRGfhOejDV9NmqclmQjxw5rlka1iYk0K8Hu70J/eWDff5bYixyBXmAUlOmhYaXqgmwKKU2dNXnF5b32bnOLQfERQIDAQAB</realm-public-key>
+        <auth-server-url>http://127.0.0.1:8081/auth</auth-server-url>
+        <realm-public-key>MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlZ0mjEQCkuy6w19Epj5t9ZhR64LMgrs9mSKmFkpyjP8GmRGUsCrJGkpSrHliLqz7Mp7v1zyLWLIRHDjtw+EDsUAbzjVECSj58Qah9Vk826QSdVn0lNPFo7jKU/43BZhhCqiP26sh0FkWWXvhVVVco8KkUymYRSGzOINoNbdQjaV9exYKEYezKYWPqfdgIusEnPjSZlE0ISpOqFIN6Alci7R7hJEjaAB4Upg7Fy8V/ikNWK8aSqIXB+vto3d03xa48k1F4k4aL2w6UsmsyZEz2xb8+B547Bfct2dn+3w/LWQxWlW3s2DTw95XeQMFS+JYHtIKz4x8i11GYzXfkIUp7QIDAQAB</realm-public-key>
         <realm>restcomm</realm>
     </identity>
 

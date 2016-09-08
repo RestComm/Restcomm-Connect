@@ -3,11 +3,12 @@ package org.mobicents.servlet.restcomm.identity;
 import org.keycloak.adapters.KeycloakDeployment;
 import org.keycloak.adapters.KeycloakDeploymentBuilder;
 import org.keycloak.representations.adapters.config.AdapterConfig;
+import org.mobicents.servlet.restcomm.entities.OrgIdentity;
 
 public class IdentityUtils {
     // private static Logger logger = Logger.getLogger(IdentityUtils.class);
 
-    public static String RESTCOMM_CLIENT_SUFFIX = "restcomm_connect";
+    public static String RESTCOMM_CLIENT_SUFFIX = "restcomm";
 
     private IdentityUtils() {
         // TODO Auto-generated constructor stub
@@ -39,10 +40,10 @@ public class IdentityUtils {
      * Example
      *  telestax-restcomm
      *
-     * @param orgIdentityName
+     * @param orgIdentity
      * @return the nanme of the Keycloak Client
      */
-    public static String buildKeycloakClientName(String orgIdentityName) {
-        return orgIdentityName + "-" + RESTCOMM_CLIENT_SUFFIX;
+    public static String buildKeycloakClientName(OrgIdentity orgIdentity) {
+        return orgIdentity.getName() + "-" + RESTCOMM_CLIENT_SUFFIX;
     }
 }

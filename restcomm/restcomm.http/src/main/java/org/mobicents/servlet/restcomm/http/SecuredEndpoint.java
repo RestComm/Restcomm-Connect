@@ -112,7 +112,6 @@ public class SecuredEndpoint extends AbstractEndpoint {
         if (this.orgIdentity != null)
             deployment = identityContext.getDeployment(orgIdentity.getSid());
         this.userIdentityContext = new UserIdentityContext(deployment, request, accountsDao);
-        checkOrganizationIdentity(); // check bearer-based access to organization in all Secured endpoints
     }
 
     /**
@@ -146,13 +145,46 @@ public class SecuredEndpoint extends AbstractEndpoint {
     }
 
     /**
+     * Asserts a request that targets resources of an Organization can really access them. The underlying implementation depends on
+     * the authorization mode restcomm run in (i.e. whether keycloak is used or not).
+     *
+     * KeycloakAuth mode
+     *
+     *  The request should carry a bearer token that includes a *-access role where '*' reflects the organization determined
+     *  from the domain name in the url.
+     *
+     * RestcommAuth mode
+     *
+     *  The Basic Auth header credentials should refer to an account that belongs to the organization that is determined from
+     *  the domain name in the url.
+     */
+    protected void checkOrganizationAccess() {
+        if (userIdentityContext.getAuthKind() == AuthKind.KeycloakAuth) {
+            String neededRole = IdentityUtils.buildKeycloakClientRole(orgIdentity.getName()); // the following role should be present in the bearer token in order to allow access to the instance
+            AccessToken oauthToken = userIdentityContext.getOauthToken();
+            if (oauthToken == null) {
+                throw new NotAuthenticated();
+            }
+            if (!hasKeycloakUserRole(neededRole))
+                throw new OrganizationAccessForbidden();
+        } else
+        if (userIdentityContext.getAuthKind() == AuthKind.RestcommAuth) {
+            if (organization == null)
+                logger.warn("Could not resolve organization. Still, allowing initial access");
+            else
+                logger.warn("Initial access to Organization '" + organization.getNamespace() + "' is allowed but access rules have not been defined in RestcommAuth mode!");
+        }
+    }
+
+    /**
      * Checks if the incoming request contains the required roles for accessing the organization specified
      * in the URL
      */
+    /*
     protected void checkOrganizationIdentity() {
         if (userIdentityContext.getAuthKind() == AuthKind.KeycloakAuth) {
             String neededRole = IdentityUtils.buildKeycloakClientRole(orgIdentity.getName()); // the following role should be present in the bearer token in order to allow access to the instance
-            String keycloakClientName = IdentityUtils.buildKeycloakClientName(orgIdentity.getName());
+            String keycloakClientName = IdentityUtils.buildKeycloakClientName(orgIdentity);
             AccessToken oauthToken = userIdentityContext.getOauthToken();
             try {
                 if (oauthToken == null) {
@@ -167,6 +199,7 @@ public class SecuredEndpoint extends AbstractEndpoint {
             }
         }
     }
+    */
 
     // boolean overloaded form of checkAuthenticatedAccount(permission)
     protected boolean isSecuredByPermission(final String permission) {
@@ -246,6 +279,26 @@ public class SecuredEndpoint extends AbstractEndpoint {
     protected boolean hasAccountRole(final String role) {
         if (userIdentityContext.getEffectiveAccount() != null) {
             return userIdentityContext.getEffectiveAccountRoles().contains(role);
+        }
+        return false;
+    }
+
+    /**
+     * Searches for the specified role in the bearer token in the request.
+     *
+     * @param role
+     * @return 'true' if the role was found, 'false' otherwise
+     */
+    protected boolean hasKeycloakUserRole(final String role) {
+        if (userIdentityContext.getAuthKind() == AuthKind.RestcommAuth)
+            return false;
+        try {
+            Set<String> roles = userIdentityContext.getOauthToken().getResourceAccess(IdentityUtils.buildKeycloakClientName(orgIdentity)).getRoles();
+            if (roles.contains(role)) {
+                return true;
+            }
+        } catch (NullPointerException e) {
+            return false; // in case getResourceAccess() returns null (no client-level roles defined for the specific client)
         }
         return false;
     }
