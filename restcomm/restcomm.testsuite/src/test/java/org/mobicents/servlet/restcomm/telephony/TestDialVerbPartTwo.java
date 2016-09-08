@@ -263,8 +263,6 @@ public class TestDialVerbPartTwo {
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
         assertTrue(aliceCall.respondToDisconnect());
 
-        Thread.sleep(10000);
-
         bobCall.listenForMessage();
         assertTrue(bobCall.waitForMessage(60 * 1000));
         assertTrue(bobCall.sendMessageResponse(200, "OK-Message Received", 3600));
@@ -1150,13 +1148,23 @@ public class TestDialVerbPartTwo {
         assertTrue(contactHeader.equalsIgnoreCase("Contact: \"+13055872294\" <sip:+13055872294@127.0.0.1:5080>"));
         assertTrue(georgeCall.waitForAck(50 * 1000));
 
-        Thread.sleep(3000);
+        //Since the Screening URL is not valid, Restcomm will disconnect call
+        bobCall.listenForDisconnect();
         georgeCall.listenForDisconnect();
-        // hangup.
-        bobCall.disconnect();
-        assertTrue(!bobCall.callTimeoutOrError());
+
+        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.respondToDisconnect());
+
         assertTrue(georgeCall.waitForDisconnect(30 * 1000));
         assertTrue(georgeCall.respondToDisconnect());
+
+//        Thread.sleep(3000);
+//        georgeCall.listenForDisconnect();
+//        // hangup.
+//        bobCall.disconnect();
+//        assertTrue(!bobCall.callTimeoutOrError());
+//        assertTrue(georgeCall.waitForDisconnect(30 * 1000));
+//        assertTrue(georgeCall.respondToDisconnect());
     }
 
     //Non-regression test for https://github.com/Mobicents/RestComm/issues/505

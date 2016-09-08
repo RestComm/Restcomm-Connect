@@ -33,13 +33,15 @@ public class MonitoringServiceResponse {
     private final InstanceId instanceId;
     private final List<CallInfo> callDetailsList;
     private final Map<String, Integer> countersMap;
+    private final Map<String, Double> durationMap;
 
 
-    public MonitoringServiceResponse(final InstanceId instanceId, final List<CallInfo> callDetailsList, final Map<String, Integer> countersMap) {
+    public MonitoringServiceResponse(final InstanceId instanceId, final List<CallInfo> callDetailsList, final Map<String, Integer> countersMap, final Map<String, Double> durationMap) {
         super();
         this.instanceId = instanceId;
         this.callDetailsList = callDetailsList;
         this.countersMap = countersMap;
+        this.durationMap = durationMap;
     }
 
     public List<CallInfo> getCallDetailsList() {
@@ -54,4 +56,7 @@ public class MonitoringServiceResponse {
         return instanceId;
     }
 
+    public Map<String, Double> getDurationMap() {
+        return durationMap;
+    }
 }
