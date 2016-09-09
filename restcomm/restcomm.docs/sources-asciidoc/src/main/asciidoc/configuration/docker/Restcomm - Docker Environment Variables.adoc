@@ -146,12 +146,35 @@ You can use Telestax open source Graylog-docker project from https://github.com/
 * *ACTIVATE_LB* Activate LB. Use LB for the current setup.
 * *LB_PUBLIC_IP* The "external" IP of the LB. Is used for the incoming traffic.
 * *LB_INTERNAL_IP* The "internal" IP of the LB. Is used for RC to connect to the LB.
-* *LB_SIP_PORT_UDP* The port used from the LB for UDP transport (Default 5060).
-* *LB_SIP_PORT_TCP* The port used from the LB for TCP transport (Default 5060).
-* *LB_SIP_PORT_TLS* The port used from the LB for TLS transport (Default 5061).
-* *LB_SIP_PORT_WS* The port used from the Web Socket (WebRTC - Default 5062).
-* *LB_SIP_PORT_WSS* The port used from the Secure Web Socket (WebRTC - Default 5063).
+* *RC_PORTFORLB_UDP* The port used from the LB for UDP transport (Default 5080).
+* *RC_PORTFORLB_TCP* The port used from the LB for TCP transport (Default 5080).
+* *RC_PORTFORLB_TLS* The port used from the LB for TLS transport (Default 5081).
+* *RC_PORTFORLB_WS* The port used from the Web Socket (WebRTC - Default 5082).
+* *RC_PORTFORLB_WSS* The port used from the Secure Web Socket (WebRTC - Default 503).
 * *LB_RMI_PORT* The port used from RMI connection between RC and LB (Default 2000).
+
+.LB INTERNAL PORTS
+IMPORTANT: Need to be set same values as LB is configured for the corresponding transport internal Ports.
+
+* *LB_INTERNAL_PORT_UDP* LB internal port used from RC for UDP traffic. Default is 5080.
+* *LB_INTERNAL_PORT_TCP* LB internal port used from RC for TCP traffic. Default is 5080
+* *LB_INTERNAL_PORT_TLS* LB internal port used from RC for TLS traffic. Default is 5081
+* *LB_INTERNAL_PORT_WS*	 LB internal port used from RC for WS traffic. Default is 5082
+* *LB_INTERNAL_PORT_WSS* LB internal port used from RC for WSS traffic. Default is 5083
+
+.LB External Ports
+IMPORTANT: Need to be set same values as LB is configured for the corresponding transport external Ports.
+
+* *LB_EXTERNAL_PORT_UDP* LB external port of LB for UDP traffic. Default is 5060.
+* *LB_EXTERNAL_PORT_TCP* LB external port of LB for UDP traffic. Default is 5060.
+* *LB_EXTERNAL_PORT_TLS* LB external port of LB for TLS traffic. Default is 5061.
+* *LB_EXTERNAL_PORT_WS*	 LB external port of LB for WS traffic. Default is 5062.
+* *LB_EXTERNAL_PORT_WSS*  LB external port of LB for WSS traffic. Default is 5063. (Port used for Olympus)
+
+IMPORTANT: Load Balancer external HOSTNAME/IP. Must be set if RC under LB. Used to configure DID provider.This way PSTN calls going through LB.
+LB_EXTERNAL_PORT_UDP will be used for the DID provider PORT configuration.
+
+* *LBHOST* Obligatory to set if Load Balancer is used for PSTN (DID provider configuration).
 
 *More Info on LB http://documentation.telestax.com/core/lb/Load_Balancer_User_Guide.html[HERE]
 
