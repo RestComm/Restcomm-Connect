@@ -108,13 +108,13 @@ public class MediaResourceBroker extends UntypedActor{
 
                 @Override
                 public UntypedActor create() throws Exception {
-                    final String classpath = configuration.getString("mgcp-servers[@class]");
+                    final String classpath = configuration.getString("mgcp-server[@class]");
                     return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
                 }
             }));
 
             final PowerOnMediaGateway.Builder builder = PowerOnMediaGateway.builder();
-            builder.setName(configuration.getString("mgcp-servers[@name]"));
+            builder.setName(configuration.getString("mgcp-server[@name]"));
 
             if(logger.isInfoEnabled())
                 logger.info("localIpAdressForMediaGateway: "+localIpAdressForMediaGateway+" localPortAdressForMediaGateway: "+localPortAdressForMediaGateway);
@@ -260,50 +260,34 @@ public class MediaResourceBroker extends UntypedActor{
     }
 
     private void uploadLocalMediaServersInDataBase() {
+        localIpAdressForMediaGateway = configuration.getString("mgcp-server.local-address");
+        localPortAdressForMediaGateway = Integer.parseInt(configuration.getString("mgcp-server.local-port"));
+        String remoteIpAddress = configuration.getString("mgcp-server.remote-address");
+        int remotePort = Integer.parseInt(configuration.getString("mgcp-server.remote-port"));
+        String responseTimeout = configuration.getString("mgcp-server.response-timeout");
+        String externalAddress = configuration.getString("mgcp-server.external-address");
 
-        List<Object> mgcpMediaServers = configuration.getList("mgcp-servers.mgcp-server.local-address");
-        int mgcpMediaServerListSize = mgcpMediaServers.size();
+        final MediaServerEntity.Builder builder = MediaServerEntity.builder();
+        builder.setLocalIpAddress(localIpAdressForMediaGateway);
+        builder.setLocalPort(localPortAdressForMediaGateway);
+        builder.setRemoteIpAddress(remoteIpAddress);
+        builder.setRemotePort(remotePort);
+        builder.setResponseTimeout(responseTimeout);
+        builder.setExternalAddress(externalAddress);
 
-        //TODO remove this log line after completion
-        logger.info("Available Media Servers are: "+mgcpMediaServerListSize);
+        MediaServersDao dao = storage.getMediaServersDao();
+        final MediaServerEntity freshMediaServerEntity = builder.build();
+        final List<MediaServerEntity> existingMediaServersForSameIP = dao.getMediaServerEntityByIP(remoteIpAddress);
 
-        for (int count = 0; count < mgcpMediaServerListSize; count++) {
-
-            //To which of these MS is relative is considered one to one with this RC instance.
-            String relativeMS = configuration.getString("mgcp-servers.mgcp-server(" + count + ").is-relative-ms");
-
-            if(relativeMS != null && Boolean.parseBoolean(relativeMS)){
-
-                localIpAdressForMediaGateway = configuration.getString("mgcp-servers.mgcp-server(" + count + ").local-address");
-                localPortAdressForMediaGateway = Integer.parseInt(configuration.getString("mgcp-servers.mgcp-server(" + count + ").local-port"));
-                String remoteIpAddress = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-address");
-                int remotePort = Integer.parseInt(configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-port"));
-                String responseTimeout = configuration.getString("mgcp-servers.mgcp-server(" + count + ").response-timeout");
-                String externalAddress = configuration.getString("mgcp-servers.mgcp-server(" + count + ").external-address");
-
-                final MediaServerEntity.Builder builder = MediaServerEntity.builder();
-                builder.setLocalIpAddress(localIpAdressForMediaGateway);
-                builder.setLocalPort(localPortAdressForMediaGateway);
-                builder.setRemoteIpAddress(remoteIpAddress);
-                builder.setRemotePort(remotePort);
-                builder.setResponseTimeout(responseTimeout);
-                builder.setExternalAddress(externalAddress);
-
-                MediaServersDao dao = storage.getMediaServersDao();
-                final MediaServerEntity freshMediaServerEntity = builder.build();
-                final List<MediaServerEntity> existingMediaServersForSameIP = dao.getMediaServerEntityByIP(remoteIpAddress);
-
-                if(existingMediaServersForSameIP == null || existingMediaServersForSameIP.size()==0){
-                    dao.addMediaServer(freshMediaServerEntity);
-                    final List<MediaServerEntity> newMediaServerEntity = dao.getMediaServerEntityByIP(remoteIpAddress);
-                    this.msId = newMediaServerEntity.get(0).getMsId()+"";
-                }else{
-                    this.msId = existingMediaServersForSameIP.get(0).getMsId()+"";
-                    dao.updateMediaServer(freshMediaServerEntity);
-                    if(existingMediaServersForSameIP.size()>1)
-                        logger.error("in DB: there are multiple media servers registered for same IP address");
-                }
-            }
+        if(existingMediaServersForSameIP == null || existingMediaServersForSameIP.size()==0){
+            dao.addMediaServer(freshMediaServerEntity);
+            final List<MediaServerEntity> newMediaServerEntity = dao.getMediaServerEntityByIP(remoteIpAddress);
+            this.msId = newMediaServerEntity.get(0).getMsId()+"";
+        }else{
+            this.msId = existingMediaServersForSameIP.get(0).getMsId()+"";
+            dao.updateMediaServer(freshMediaServerEntity);
+            if(existingMediaServersForSameIP.size()>1)
+                logger.error("in DB: there are multiple media servers registered for same IP address");
         }
     }
 
