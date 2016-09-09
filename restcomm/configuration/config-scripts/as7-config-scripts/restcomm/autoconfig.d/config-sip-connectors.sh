@@ -19,28 +19,28 @@ configConnectors() {
          echo "Additional Connectors not Created earlier"
     fi
 
-	#Check for Por Offset
-    local SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
-    local SIP_PORT_TCP=$((SIP_PORT_TCP + PORT_OFFSET))
-    local SIP_PORT_TLS=$((SIP_PORT_TLS + PORT_OFFSET))
-    local SIP_PORT_WS=$((SIP_PORT_WS + PORT_OFFSET))
-    local SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
-
-
     #IF LB activated. (Algorithm "use-load-balancer" used).
 	if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
 		if [ -z "$LB_INTERNAL_IP" ]; then
       		LB_INTERNAL_IP=$LB_PUBLIC_IP
 		fi
 		sed -e "s|path-name=\"org.mobicents.ext\" \(app-dispatcher-class=.*\)|path-name=\"org.mobicents.ha.balancing.only\" \1|" \
-		    -e "s|<connector name=\"sip-udp\" .*/>|<connector name=\"sip-udp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-udp\" use-static-address=\"true\" static-server-address=\"$LB_PUBLIC_IP\" static-server-port=\"$SIP_PORT_UDP\" use-load-balancer=\"true\" load-balancer-address=\"$LB_INTERNAL_IP\" load-balancer-rmi-port=\"$LB_RMI_PORT\"  load-balancer-sip-port=\"$LB_SIP_PORT_UDP\"/>|" \
-	        -e "s|<connector name=\"sip-tcp\" .*/>|<connector name=\"sip-tcp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-tcp\" use-static-address=\"true\" static-server-address=\"$LB_PUBLIC_IP\" static-server-port=\"$SIP_PORT_TCP\" use-load-balancer=\"true\" load-balancer-address=\"$LB_INTERNAL_IP\" load-balancer-rmi-port=\"$LB_RMI_PORT\"  load-balancer-sip-port=\"$LB_SIP_PORT_TCP\"/>|" \
-	        -e "s|<connector name=\"sip-tls\" .*/>|<connector name=\"sip-tls\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-tls\" use-static-address=\"true\" static-server-address=\"$LB_PUBLIC_IP\" static-server-port=\"$SIP_PORT_TLS\" use-load-balancer=\"true\" load-balancer-address=\"$LB_INTERNAL_IP\" load-balancer-rmi-port=\"$LB_RMI_PORT\"  load-balancer-sip-port=\"$LB_SIP_PORT_TLS\"/>|" \
-	        -e "s|<connector name=\"sip-ws\" .*/>|<connector name=\"sip-ws\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-ws\" use-static-address=\"true\" static-server-address=\"$LB_PUBLIC_IP\" static-server-port=\"$SIP_PORT_WS\" use-load-balancer=\"true\" load-balancer-address=\"$LB_INTERNAL_IP\" load-balancer-rmi-port=\"$LB_RMI_PORT\"  load-balancer-sip-port=\"$LB_SIP_PORT_WS\"/>|" \
-	        -e "s|<connector name=\"sip-wss\" .*/>|<connector name=\"sip-wss\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-wss\" use-static-address=\"true\" static-server-address=\"$LB_PUBLIC_IP\" static-server-port=\"$SIP_PORT_WSS\" use-load-balancer=\"true\" load-balancer-address=\"$LB_INTERNAL_IP\" load-balancer-rmi-port=\"$LB_RMI_PORT\"  load-balancer-sip-port=\"$LB_SIP_PORT_WSS\"/>|" \
+		    -e "s|<connector name=\"sip-udp\" .*/>|<connector name=\"sip-udp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-udp\" use-static-address=\"true\" static-server-address=\"$LB_PUBLIC_IP\" static-server-port=\"$LB_EXTERNAL_PORT_UDP\" use-load-balancer=\"true\" load-balancer-address=\"$LB_INTERNAL_IP\" load-balancer-rmi-port=\"$LB_RMI_PORT\"  load-balancer-sip-port=\"$LB_INTERNAL_PORT_UDP\"/>|" \
+	        -e "s|<connector name=\"sip-tcp\" .*/>|<connector name=\"sip-tcp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-tcp\" use-static-address=\"true\" static-server-address=\"$LB_PUBLIC_IP\" static-server-port=\"$LB_EXTERNAL_PORT_TCP\" use-load-balancer=\"true\" load-balancer-address=\"$LB_INTERNAL_IP\" load-balancer-rmi-port=\"$LB_RMI_PORT\"  load-balancer-sip-port=\"$LB_INTERNAL_PORT_TCP\"/>|" \
+	        -e "s|<connector name=\"sip-tls\" .*/>|<connector name=\"sip-tls\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-tls\" use-static-address=\"true\" static-server-address=\"$LB_PUBLIC_IP\" static-server-port=\"$LB_EXTERNAL_PORT_TLS\" use-load-balancer=\"true\" load-balancer-address=\"$LB_INTERNAL_IP\" load-balancer-rmi-port=\"$LB_RMI_PORT\"  load-balancer-sip-port=\"$LB_INTERNAL_PORT_TLS\"/>|" \
+	        -e "s|<connector name=\"sip-ws\" .*/>|<connector name=\"sip-ws\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-ws\" use-static-address=\"true\" static-server-address=\"$LB_PUBLIC_IP\" static-server-port=\"$SLB_EXTERNAL_PORT_WS\" use-load-balancer=\"true\" load-balancer-address=\"$LB_INTERNAL_IP\" load-balancer-rmi-port=\"$LB_RMI_PORT\"  load-balancer-sip-port=\"$LB_INTERNAL_PORT_WS\"/>|" \
+	        -e "s|<connector name=\"sip-wss\" .*/>|<connector name=\"sip-wss\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-wss\" use-static-address=\"true\" static-server-address=\"$LB_PUBLIC_IP\" static-server-port=\"$LB_EXTERNAL_PORT_WSS\" use-load-balancer=\"true\" load-balancer-address=\"$LB_INTERNAL_IP\" load-balancer-rmi-port=\"$LB_RMI_PORT\"  load-balancer-sip-port=\"$LB_INTERNAL_PORT_WSS\"/>|" \
 	    $FILE > $FILE.bak
 
 	else
+
+	        #Check for Por Offset
+            local SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
+            local SIP_PORT_TCP=$((SIP_PORT_TCP + PORT_OFFSET))
+            local SIP_PORT_TLS=$((SIP_PORT_TLS + PORT_OFFSET))
+            local SIP_PORT_WS=$((SIP_PORT_WS + PORT_OFFSET))
+            local SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
+
 			sed -e "s|path-name=\".*\"  \(app-dispatcher-class=.*\)|path-name=\"org.mobicents.ext\"  \1|" \
 			-e "s|<connector name=\"sip-udp\" .*/>|<connector name=\"sip-udp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-udp\" use-static-address=\"true\" static-server-address=\"$static_address\" static-server-port=\"$SIP_PORT_UDP\"/>|" \
 			-e "s|<connector name=\"sip-tcp\" .*/>|<connector name=\"sip-tcp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-tcp\" use-static-address=\"true\" static-server-address=\"$static_address\" static-server-port=\"$SIP_PORT_TCP\"/>|" \
@@ -114,21 +114,11 @@ port=$2
 
     #check for port offset at the new connectors.
     local port=$((port + PORT_OFFSET))
+     grep -q "connector name=\"${connector}\"" $FILE || sed -e "/path-name=\"org.mobicents.ext\"/a\
+               <connector name=\"${connector}\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"${connector}\" use-static-address=\"true\" static-server-address=\"${static_address}\" static-server-port=\"${port}\"/>" $FILE > $FILE.bak
 
-
-    if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
-		if [ -z "$LB_INTERNAL_IP" ]; then
-      		LB_INTERNAL_IP=$LB_PUBLIC_IP
-		fi
-         grep -q "connector name=\"${connector}\"" $FILE || sed -e "/path-name=\"org.mobicents.ha.balancing.only\"/a\
-               <connector name=\"${connector}\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"${connector}\" use-static-address=\"true\" static-server-address=\"${LB_PUBLIC_IP}\" static-server-port=\"${port}\" use-load-balancer=\"true\" load-balancer-address=\"${LB_INTERNAL_IP}\" load-balancer-rmi-port=\"${LB_RMI_PORT}\"  load-balancer-sip-port=\"${LB_SIP_PORT_UDP}\"/>" $FILE > $FILE.bak
-
-    else
-         grep -q "connector name=\"${connector}\"" $FILE || sed -e "/path-name=\"org.mobicents.ext\"/a\
-			   <connector name=\"${connector}\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"${connector}\" use-static-address=\"true\" static-server-address=\"${static_address}\" static-server-port=\"${port}\"/>" $FILE > $FILE.bak
-	fi
-	mv $FILE.bak $FILE
-	echo 'Configured additional SIP Connectors and Bindings'
+    mv $FILE.bak $FILE
+    echo 'Configured additional SIP Connectors and Bindings'
 }
 
 addSocketBinding(){
@@ -141,45 +131,30 @@ port=$2
 }
 
 setInitialSign(){
-    if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
-		if [ -z "$LB_INTERNAL_IP" ]; then
-      		LB_INTERNAL_IP=$LB_PUBLIC_IP
-		fi
-         sed -e "/path-name=\"org.mobicents.ha.balancing.only\"/a\
-               <!-- new-conectors -->" $FILE > $FILE.bak
+    sed -e "/path-name=\"org.mobicents.ext\"/a\
+        <!-- new-conectors -->" $FILE > $FILE.bak
+    mv $FILE.bak $FILE
 
-    else
-          sed -e "/path-name=\"org.mobicents.ext\"/a\
-			   <!-- new-conectors -->" $FILE > $FILE.bak
-	fi
-	mv $FILE.bak $FILE
-
-	sed "/name=\"management-https\"/a <!-- new-bindings -->" $FILE > $FILE.bak
-  mv $FILE.bak $FILE
-
+    sed "/name=\"management-https\"/a <!-- new-bindings -->" $FILE > $FILE.bak
+    mv $FILE.bak $FILE
 }
 
 setFinalSign(){
-    if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
-		if [ -z "$LB_INTERNAL_IP" ]; then
-      		LB_INTERNAL_IP=$LB_PUBLIC_IP
-		fi
-         sed -e "/path-name=\"org.mobicents.ha.balancing.only\"/a\
-               <!-- new-conectors -->" $FILE > $FILE.bak
+    sed -e "/path-name=\"org.mobicents.ext\"/a\
+        <!-- new-conectors -->" $FILE > $FILE.bak
 
-    else
-          sed -e "/path-name=\"org.mobicents.ext\"/a\
-			   <!-- new-conectors -->" $FILE > $FILE.bak
-	fi
-	mv $FILE.bak $FILE
-
-	sed "/name=\"management-https\"/a <!-- new-bindings -->" $FILE > $FILE.bak
-  mv $FILE.bak $FILE
+    mv $FILE.bak $FILE
+    sed "/name=\"management-https\"/a <!-- new-bindings -->" $FILE > $FILE.bak
+    mv $FILE.bak $FILE
 }
 
 #MAIN
 echo 'Configuring Application Server...'
 configSocketbinding
 configConnectors "$PUBLIC_IP"
-setMoreConnectors
+if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
+    echo "can not set additional connectors under LB."
+else
+    setMoreConnectors
+fi
 echo 'Finished configuring Application Server!'
