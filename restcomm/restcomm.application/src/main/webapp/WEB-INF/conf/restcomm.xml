@@ -309,19 +309,14 @@
 		the maximum amount of time to wait for a response from the media server before 
 		abandoning the request. This does NOT apply to RQNT/NOTIFY request/response. -->
 	<media-server-manager>
-		<!-- mgcp-servers defines: multiple mgcp-server entities -->
-		<mgcp-servers class="org.mobicents.servlet.restcomm.mgcp.MediaGateway" name="Mobicents Media Server">
-            <mgcp-server>
-            	<!-- is-relative-ms = true for one MS, which is relative and is considered one to one with this RC instance. -->
-            	<is-relative-ms>true</is-relative-ms>
-                <local-address>192.168.8.102</local-address>
-                <local-port>2727</local-port>
-                <remote-address>192.168.8.102</remote-address>
-                <remote-port>2427</remote-port>
-                <response-timeout>500</response-timeout>
-                <external-address><null/></external-address>
-            </mgcp-server>
-        </mgcp-servers>
+		<mgcp-server class="org.mobicents.servlet.restcomm.mgcp.MediaGateway" name="Mobicents Media Server">
+            <local-address>192.168.8.102</local-address>
+            <local-port>2727</local-port>
+            <remote-address>192.168.8.102</remote-address>
+            <remote-port>2427</remote-port>
+            <response-timeout>500</response-timeout>
+            <external-address><null/></external-address>
+        </mgcp-server>
 	</media-server-manager>
 	<!-- media-server-routing Defines routing rules for media server traffic with following parameters:
 	<algorithm> - Defines routing algorithm, possible values are: 
