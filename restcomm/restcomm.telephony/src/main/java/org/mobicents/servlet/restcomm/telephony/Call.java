@@ -466,7 +466,7 @@ public final class Call extends UntypedActor {
             message.addHeader("X-RestComm-ApiVersion", apiVersion);
         if (accountId != null)
             message.addHeader("X-RestComm-AccountSid", accountId.toString());
-        message.addHeader("X-RestComm-CallSid", id.toString()+"-"+instanceId);
+        message.addHeader("X-RestComm-CallSid", instanceId+"-"+id.toString());
     }
 
     // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
