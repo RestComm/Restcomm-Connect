@@ -169,6 +169,8 @@ INITIAL_ADMIN_PASSWORD=''
 #It allows many different domains to be served over a single IP.
 #Used in some cases that ES of RVD is not working. (Issue #725)
 SSLSNI=TRUE #Enable/disable SNI (Server Name Indication).
+#Used to set HTTP Response timeout for RC to download the RCML.
+HTTP_RESPONSE_TIMEOUT=5000
 ----
 
 
