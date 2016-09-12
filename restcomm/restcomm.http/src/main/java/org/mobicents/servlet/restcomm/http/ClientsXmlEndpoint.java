@@ -49,16 +49,16 @@ public final class ClientsXmlEndpoint extends ClientsEndpoint {
     }
 
     private Response deleteClient(final String accountSid, final String sid) {
-           Account operatedAccount =super.accountsDao.getAccount(accountSid);
+        Account operatedAccount =super.accountsDao.getAccount(accountSid);
         secure(operatedAccount, "RestComm:Delete:Clients");
         Client client = dao.getClient(new Sid(sid));
         if (client != null) {
             secure(operatedAccount, client.getAccountSid(), SecuredType.SECURED_STANDARD);
             dao.removeClient(new Sid(sid));
-        } else
+            return ok().build();
+        } else {
             return status(Response.Status.NOT_FOUND).build();
-
-        return ok().build();
+        }
     }
 
     @Path("/{sid}.json")
