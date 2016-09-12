@@ -302,9 +302,10 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             //ShiroResources.getInstance().set(DaoManager.class, storage);
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
             // Create high-level restcomm configuration
-            RestcommConfiguration.createOnce(xml);
+            RestcommConfiguration restcommConfiguration = RestcommConfiguration.createOnce(xml);
+            context.setAttribute(RestcommConfiguration.class.getName(), restcommConfiguration);
             // Initialize identityContext
-            IdentityContext identityContext = new IdentityContext(xml, RestcommConfiguration.getInstance().getMain(), storage.getOrgIdentityDao());
+            IdentityContext identityContext = new IdentityContext(xml, restcommConfiguration.getMain(), storage.getOrgIdentityDao());
             context.setAttribute(IdentityContext.class.getName(), identityContext);
             if (identityContext.getAuthServerUrl() != null) {
                 if (logger.isInfoEnabled())

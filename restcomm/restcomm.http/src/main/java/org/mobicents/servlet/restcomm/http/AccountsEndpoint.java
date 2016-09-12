@@ -44,6 +44,8 @@ import static javax.ws.rs.core.Response.Status.*;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
+import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Account;
@@ -67,6 +69,7 @@ import org.mobicents.servlet.restcomm.identity.UserIdentityContext.AuthKind;
  */
 public class AccountsEndpoint extends SecuredEndpoint {
     protected Configuration configuration;
+    protected MainConfigurationSet mainConfiguration;
     protected Gson gson;
     protected XStream xstream;
     protected ClientsDao clientDao;
@@ -83,6 +86,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
     @PostConstruct
     void init() {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+        mainConfiguration = ((RestcommConfiguration) context.getAttribute(RestcommConfiguration.class.getName())).getMain();
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         clientDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getClientsDao();
@@ -252,6 +256,10 @@ public class AccountsEndpoint extends SecuredEndpoint {
                     client = createClientFrom(account.getSid(), clientData);
                     clientDao.addClient(client);
                 }
+
+                // invite linked keycloak user to this Organization
+
+
             } else {
                 throw new InsufficientPermission();
             }
@@ -442,6 +450,19 @@ public class AccountsEndpoint extends SecuredEndpoint {
             return Response.ok().build();
         }
     }
+
+    /**
+     * Invites a keycloak user to an organization. Effectively it will add an *-access role to the user entity
+     * residing at keycloak.
+     *
+     * For example, if an account with email address john@company.com is invited from telestax organization,
+     * the 'telestax-access' role will be assigned to 'john@company.com' keycloak user.
+     */
+    private inviteUserToOrganization(Account invitedAccount) {
+        mainConfiguration.g
+    }
+
+
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
         if (!data.containsKey("EmailAddress")) {
