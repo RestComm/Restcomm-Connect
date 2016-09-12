@@ -32,7 +32,6 @@ import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -76,7 +75,6 @@ import org.mobicents.servlet.restcomm.telephony.CreateCall;
 import org.mobicents.servlet.restcomm.telephony.DestroyCall;
 import org.mobicents.servlet.restcomm.telephony.Reject;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
-import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
@@ -184,30 +182,30 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
         this.emailAddress = emailAddress;
         this.configuration = configuration;
         this.callManager = callManager;
-        this.asrService = asr(configuration.subset("speech-recognizer"));
-        this.faxService = fax(configuration.subset("fax-service"));
+//        this.asrService = asr(configuration.subset("speech-recognizer"));
+//        this.faxService = fax(configuration.subset("fax-service"));
         this.smsService = sms;
         this.smsSessions = new HashMap<Sid, ActorRef>();
         this.storage = storage;
-        this.synthesizer = tts(configuration.subset("speech-synthesizer"));
+//        this.synthesizer = tts(configuration.subset("speech-synthesizer"));
         final Configuration runtime = configuration.subset("runtime-settings");
-        String path = runtime.getString("cache-path");
-        if (!path.endsWith("/")) {
-            path = path + "/";
-        }
-        path = path + accountId.toString();
-        cachePath = path;
-        String uri = runtime.getString("cache-uri");
-        if (!uri.endsWith("/")) {
-            uri = uri + "/";
-        }
-        try {
-            uri = UriUtils.resolve(new URI(uri)).toString();
-        } catch (URISyntaxException e) {
-            logger.error("URISyntaxException while trying to resolve Cache URI: "+e);
-        }
-        uri = uri + accountId.toString();
-        this.cache = cache(path, uri);
+//        String path = runtime.getString("cache-path");
+//        if (!path.endsWith("/")) {
+//            path = path + "/";
+//        }
+//        path = path + accountId.toString();
+//        cachePath = path;
+//        String uri = runtime.getString("cache-uri");
+//        if (!uri.endsWith("/")) {
+//            uri = uri + "/";
+//        }
+//        try {
+//            uri = UriUtils.resolve(new URI(uri)).toString();
+//        } catch (URISyntaxException e) {
+//            logger.error("URISyntaxException while trying to resolve Cache URI: "+e);
+//        }
+//        uri = uri + accountId.toString();
+//        this.cache = cache(path, uri);
         this.downloader = downloader();
         this.hangupOnEnd = hangupOnEnd;
     }
@@ -273,6 +271,8 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
         }
 
         if (StartInterpreter.class.equals(klass)) {
+            final StartInterpreter request = (StartInterpreter) message;
+            call = request.resource();
             originalInterpreter = sender;
             fsm.transition(message, acquiringAsrInfo);
         } else if (AsrResponse.class.equals(klass)) {
@@ -621,10 +621,10 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
             if (mailerNotify != null)
                 context.stop(mailerNotify);
             context.stop(downloader);
-            context.stop(asrService);
-            context.stop(faxService);
-            context.stop(cache);
-            context.stop(synthesizer);
+            context.stop(getAsrService());
+            context.stop(getFaxService());
+            context.stop(getCache());
+            context.stop(getSynthesizer());
 
             // Stop the interpreter.
             postCleanup();

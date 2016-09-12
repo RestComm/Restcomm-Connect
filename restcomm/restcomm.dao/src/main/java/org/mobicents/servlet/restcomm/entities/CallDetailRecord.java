@@ -297,6 +297,14 @@ public final class CallDetailRecord {
                 callerName, uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit, onHold, msId);
     }
 
+    @Override
+    public String toString() {
+        return getSid()+" | "+getInstanceId()+" | "+getParentCallSid()+" | "+getConferenceSid()+"|"+getDateCreated()+"|"+getDateUpdated()+"|"+getAccountSid()+"|"+getTo()+"|"+getFrom()+"|"+
+                getPhoneNumberSid()+"|"+getStatus()+"|"+getStartTime()+"|"+getEndTime()+"|"+getDuration()+"|"+getPrice()+"|"+getPriceUnit()+"|"+getDirection()+"|"+getAnsweredBy()+"|"+
+                getApiVersion()+"|"+getForwardedFrom()+"|"+getCallerName()+"|"+getUri()+"|"+getCallPath()+"|"+getRingDuration()+"|"+isMuted()+"|"+isStartConferenceOnEnter()+"|"+
+                isEndConferenceOnExit()+"|"+isOnHold();
+    }
+
     @NotThreadSafe
     public static final class Builder {
         private Sid sid;

@@ -274,7 +274,7 @@ public final class CallManager extends UntypedActor {
         ActorRef call = request.call();
         if (call != null) {
             if(logger.isInfoEnabled()) {
-                logger.info("About to destroy call: "+request.call().path());
+                logger.info("About to destroy call: "+request.call().path()+", call isTerminated(): "+sender().isTerminated()+", sender: "+sender());
             }
             context.stop(call);
         }
@@ -385,8 +385,21 @@ public final class CallManager extends UntypedActor {
                     final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address", false);
                     final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean(
                             "outboudproxy-user-at-from-header", true);
+
+                    final String fromHost = ((SipURI) request.getFrom().getURI()).getHost();
+                    final String fromHostIpAddress = InetAddress.getByName(fromHost).getHostAddress();
+//                    final String fromPort = String.valueOf(((SipURI) request.getFrom().getURI()).getPort()).equalsIgnoreCase("-1") ? "5060"
+//                            : String.valueOf(((SipURI) request.getFrom().getURI()).getHost());
+
+                    if(logger.isInfoEnabled()) {
+                        logger.info("fromHost: " + fromHost + "fromHostIP: " + fromHostIpAddress + "myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
+                        + " toHost: " + toHost + " toHostIP: " + toHostIpAddress + " proxyUri: " + proxyURI);
+                    }
                     if ((myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost)) ||
-                            (myHostIp.equalsIgnoreCase(toHostIpAddress) || mediaExternalIp.equalsIgnoreCase(toHostIpAddress))) {
+                            (myHostIp.equalsIgnoreCase(toHostIpAddress) || mediaExternalIp.equalsIgnoreCase(toHostIpAddress))
+                            // https://github.com/RestComm/Restcomm-Connect/issues/1357
+                            || (fromHost.equalsIgnoreCase(toHost) || fromHost.equalsIgnoreCase(toHostIpAddress))
+                            || (fromHostIpAddress.equalsIgnoreCase(toHost) || fromHostIpAddress.equalsIgnoreCase(toHostIpAddress))) {
                         if(logger.isInfoEnabled()) {
                             logger.info("Call to NUMBER.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
                             + " toHost: " + toHost + " proxyUri: " + proxyURI);
@@ -501,8 +514,8 @@ public final class CallManager extends UntypedActor {
             linkedB2BUASession.setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, clonedInfo);
 
             // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
-            SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
-            SipURI fromInetUri = (SipURI) request.getSession().getAttribute("fromInetUri");
+            SipURI toInetUri = (SipURI) request.getSession().getAttribute(B2BUAHelper.TO_INET_URI);
+            SipURI fromInetUri = (SipURI) request.getSession().getAttribute(B2BUAHelper.FROM_INET_URI);
             InetAddress infoRURI = null;
             try {
                 infoRURI = InetAddress.getByName(((SipURI) clonedInfo.getRequestURI()).getHost());
@@ -768,62 +781,77 @@ public final class CallManager extends UntypedActor {
                     ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
                 } catch (UnknownHostException e) {
                 }
-                // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
-                SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
-                if (toInetUri != null && ackRURI == null) {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("Using the real ip address of the sip client " + toInetUri.toString()
-                            + " as a request uri of the ACK request");
+                boolean isBehindLB = false;
+                final String initialIpBeforeLB = response.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+                String initialPortBeforeLB = response.getHeader("X-Sip-Balancer-InitialRemotePort");
+                if (initialIpBeforeLB != null) {
+                    if (initialPortBeforeLB == null)
+                        initialPortBeforeLB = "5060";
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("We are behind load balancer, checking if the request URI needs to be patched");
                     }
-                    ack.setRequestURI(toInetUri);
+                    isBehindLB = true;
+                }
+                // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
+                SipURI toInetUri = (SipURI) request.getSession().getAttribute(B2BUAHelper.TO_INET_URI);
+                if (toInetUri != null && ackRURI == null) {
+                    if(isBehindLB) {
+                        // https://github.com/RestComm/Restcomm-Connect/issues/1357
+                        boolean patchRURI = isLBPatchRURI(ack, initialIpBeforeLB, initialPortBeforeLB);
+                        if(patchRURI) {
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("We are behind load balancer, but Using the real ip address of the sip client " + toInetUri.toString()
+                                    + " as a request uri of the ACK request");
+                            }
+                            ack.setRequestURI(toInetUri);
+                        } else {
+                            // https://github.com/RestComm/Restcomm-Connect/issues/1357
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("removing the toInetUri to avoid the other subsequent requests using it " + toInetUri.toString());
+                            }
+                            request.getSession().removeAttribute(B2BUAHelper.TO_INET_URI);
+                        }
+                    } else {
+                        if(logger.isInfoEnabled()) {
+                            logger.info("Using the real ip address of the sip client " + toInetUri.toString()
+                                + " as a request uri of the ACK request");
+                        }
+                        ack.setRequestURI(toInetUri);
+                    }
                 } else if (toInetUri != null
                         && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("Using the real ip address of the sip client " + toInetUri.toString()
-                            + " as a request uri of the ACK request");
+                    if(isBehindLB) {
+                        // https://github.com/RestComm/Restcomm-Connect/issues/1357
+                        boolean patchRURI = isLBPatchRURI(ack, initialIpBeforeLB, initialPortBeforeLB);
+                        if(patchRURI) {
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("We are behind load balancer, but Using the real ip address of the sip client " + toInetUri.toString()
+                                    + " as a request uri of the ACK request");
+                            }
+                            ack.setRequestURI(toInetUri);
+                        } else {
+                            // https://github.com/RestComm/Restcomm-Connect/issues/1357
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("removing the toInetUri to avoid the other subsequent requests using it " + toInetUri.toString());
+                            }
+                            request.getSession().removeAttribute(B2BUAHelper.TO_INET_URI);
+                        }
+                    } else {
+                        if(logger.isInfoEnabled()) {
+                            logger.info("Using the real ip address of the sip client " + toInetUri.toString()
+                                + " as a request uri of the ACK request");
+                        }
+                        ack.setRequestURI(toInetUri);
                     }
-                    ack.setRequestURI(toInetUri);
                 } else if (toInetUri == null
                         && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
                     if (logger.isInfoEnabled()) {
                         logger.info("Public IP toInetUri from SipSession is null, will check LB headers from last Response");
                     }
-                    final String initialIpBeforeLB = response.getHeader("X-Sip-Balancer-InitialRemoteAddr");
-                    String initialPortBeforeLB = response.getHeader("X-Sip-Balancer-InitialRemotePort");
-                    if (initialIpBeforeLB != null) {
-                        if (initialPortBeforeLB == null)
-                            initialPortBeforeLB = "5060";
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("We are behind load balancer, checking if the request URI needs to be patched");
-                        }
+                    if(isBehindLB) {
                         String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
                         SipURI uri = sipFactory.createSipURI(null, realIP);
-                        boolean patchRURI = true;
-                        try {
-                            // https://github.com/RestComm/Restcomm-Connect/issues/1336 checking if the initial IP and Port behind LB is part of the route set or not
-                            ListIterator<? extends Address> routes = ack.getAddressHeaders(RouteHeader.NAME);
-                            while(routes.hasNext()) {
-                                SipURI route = (SipURI) routes.next().getURI();
-                                String routeHost = route.getHost();
-                                int routePort = route.getPort();
-                                if(routePort < 0) {
-                                    routePort = 5060;
-                                }
-                                if (logger.isDebugEnabled()) {
-                                    logger.debug("Checking if route " + routeHost + ":" + routePort + " is matching ip and port before LB " + initialIpBeforeLB + ":"
-                                        + initialPortBeforeLB + " for the ACK request");
-                                }
-                                if(routeHost.equalsIgnoreCase(initialIpBeforeLB) && routePort == Integer.parseInt(initialPortBeforeLB)) {
-                                    if (logger.isDebugEnabled()) {
-                                        logger.debug("route " + route + " is matching ip and port before LB " + initialIpBeforeLB + ":"
-                                            + initialPortBeforeLB + " for the ACK request, so not patching the Request-URI");
-                                    }
-                                    patchRURI = false;
-                                }
-                            }
-                        } catch (ServletParseException e) {
-                            logger.error("Impossible to parse the route set from the ACK " + ack, e);
-                        }
+                        boolean patchRURI = isLBPatchRURI(ack, initialIpBeforeLB, initialPortBeforeLB);
                         if(patchRURI) {
                             if (logger.isDebugEnabled()) {
                                 logger.debug("We are behind load balancer, will use Initial Remote Address " + initialIpBeforeLB + ":"
@@ -866,6 +894,36 @@ public final class CallManager extends UntypedActor {
         // sipAppSession.invalidate();
         // }
         // }
+    }
+
+    private boolean isLBPatchRURI(SipServletRequest request,
+            final String initialIpBeforeLB, String initialPortBeforeLB) {
+        try {
+            // https://github.com/RestComm/Restcomm-Connect/issues/1336 checking if the initial IP and Port behind LB is part of the route set or not
+            ListIterator<? extends Address> routes = request.getAddressHeaders(RouteHeader.NAME);
+            while(routes.hasNext()) {
+                SipURI route = (SipURI) routes.next().getURI();
+                String routeHost = route.getHost();
+                int routePort = route.getPort();
+                if(routePort < 0) {
+                    routePort = 5060;
+                }
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Checking if route " + routeHost + ":" + routePort + " is matching ip and port before LB " + initialIpBeforeLB + ":"
+                        + initialPortBeforeLB + " for the " + request.getMethod() + " request");
+                }
+                if(routeHost.equalsIgnoreCase(initialIpBeforeLB) && routePort == Integer.parseInt(initialPortBeforeLB)) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("route " + route + " is matching ip and port before LB " + initialIpBeforeLB + ":"
+                            + initialPortBeforeLB + " for the " + request.getMethod() + " request, so not patching the Request-URI");
+                    }
+                    return false;
+                }
+            }
+        } catch (ServletParseException e) {
+            logger.error("Impossible to parse the route set from the request " + request, e);
+        }
+        return true;
     }
 
     private void execute(final Object message) {
@@ -1291,74 +1349,69 @@ public final class CallManager extends UntypedActor {
 
             if (patchForNatB2BUASessions) {
                 // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
-                SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
-                SipURI fromInetUri = (SipURI) request.getSession().getAttribute("fromInetUri");
+                SipURI toInetUri = (SipURI) request.getSession().getAttribute(B2BUAHelper.TO_INET_URI);
+                SipURI fromInetUri = (SipURI) request.getSession().getAttribute(B2BUAHelper.FROM_INET_URI);
                 InetAddress byeRURI = null;
                 try {
                     byeRURI = InetAddress.getByName(((SipURI) clonedBye.getRequestURI()).getHost());
                 } catch (UnknownHostException e) {
                 }
+                boolean isBehindLB = false;
+                final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+                String initialPortBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemotePort");
+                if (initialIpBeforeLB != null) {
+                    if (initialPortBeforeLB == null)
+                        initialPortBeforeLB = "5060";
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("We are behind load balancer, checking if the request URI needs to be patched");
+                    }
+                    isBehindLB = true;
+                }
+                if(logger.isDebugEnabled()) {
+                    logger.debug("toInetUri: " + toInetUri + " fromInetUri: " + fromInetUri + " byeRURI: " + byeRURI + " initialIpBeforeLB: " + initialIpBeforeLB
+                    + " initialPortBeforeLB: " + initialPortBeforeLB);
+                }
                 if (toInetUri != null && byeRURI == null) {
                     if(logger.isInfoEnabled()) {
-                        logger.info("Using the real ip address of the sip client " + toInetUri.toString()
-                            + " as a request uri of the CloneBye request");
+                        logger.info("Using the real To inet ip address of the sip client " + toInetUri.toString()
+                        + " as a request uri of the CloneBye request");
                     }
                     clonedBye.setRequestURI(toInetUri);
                 } else if (toInetUri != null
                         && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
                     if(logger.isInfoEnabled()) {
-                        logger.info("Using the real ip address of the sip client " + toInetUri.toString()
-                            + " as a request uri of the CloneBye request");
+                        logger.info("Using the real To inet ip address of the sip client " + toInetUri.toString()
+                        + " as a request uri of the CloneBye request");
                     }
                     clonedBye.setRequestURI(toInetUri);
                 } else if (fromInetUri != null
                         && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("Using the real ip address of the sip client " + fromInetUri.toString()
+                    if(isBehindLB) {
+                        // https://github.com/RestComm/Restcomm-Connect/issues/1357
+                        boolean patchRURI = isLBPatchRURI(clonedBye, initialIpBeforeLB, initialPortBeforeLB);
+                        if(patchRURI) {
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("We are behind load balancer, but Using the real ip address of the sip client " + fromInetUri.toString()
+                                    + " as a request uri of the CloneBye request");
+                            }
+                            clonedBye.setRequestURI(fromInetUri);
+                        }
+                    } else {
+                        if(logger.isInfoEnabled()) {
+                            logger.info("Using the real From inet ip  address of the sip client " + fromInetUri.toString()
                             + " as a request uri of the CloneBye request");
+                        }
+                        clonedBye.setRequestURI(fromInetUri);
                     }
-                    clonedBye.setRequestURI(fromInetUri);
                 } else if (toInetUri == null
                         && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
                     if (logger.isInfoEnabled()) {
                         logger.info("Public IP toInetUri from SipSession is null, will check LB headers from last Response");
                     }
-                    final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
-                    String initialPortBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemotePort");
-                    if (initialIpBeforeLB != null) {
-                        if (initialPortBeforeLB == null)
-                            initialPortBeforeLB = "5060";
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("We are behind load balancer, checking if the request URI needs to be patched");
-                        }
+                    if(isBehindLB) {
                         String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
                         SipURI uri = sipFactory.createSipURI(null, realIP);
-                        boolean patchRURI = true;
-                        try {
-                            // https://github.com/RestComm/Restcomm-Connect/issues/1336 checking if the initial IP and Port behind LB is part of the route set or not
-                            ListIterator<? extends Address> routes = clonedBye.getAddressHeaders(RouteHeader.NAME);
-                            while(routes.hasNext()) {
-                                SipURI route = (SipURI) routes.next().getURI();
-                                String routeHost = route.getHost();
-                                int routePort = route.getPort();
-                                if(routePort < 0) {
-                                    routePort = 5060;
-                                }
-                                if (logger.isDebugEnabled()) {
-                                    logger.debug("Checking if route " + routeHost + ":" + routePort + " is matching ip and port before LB " + initialIpBeforeLB + ":"
-                                        + initialPortBeforeLB + " for the BYE request");
-                                }
-                                if(routeHost.equalsIgnoreCase(initialIpBeforeLB) && routePort == Integer.parseInt(initialPortBeforeLB)) {
-                                    if (logger.isDebugEnabled()) {
-                                        logger.debug("route " + route + " is matching ip and port before LB " + initialIpBeforeLB + ":"
-                                            + initialPortBeforeLB + " for the BYE request, so not patching the Request-URI");
-                                    }
-                                    patchRURI = false;
-                                }
-                            }
-                        } catch (ServletParseException e) {
-                            logger.error("Impossible to parse the route set from the BYE " + clonedBye, e);
-                        }
+                        boolean patchRURI = isLBPatchRURI(clonedBye, initialIpBeforeLB, initialPortBeforeLB);
                         if(patchRURI) {
                             if(logger.isDebugEnabled()) {
                                 logger.debug("We are behind load balancer, will use: " + initialIpBeforeLB + ":"

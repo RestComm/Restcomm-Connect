@@ -19,40 +19,40 @@
  */package org.mobicents.servlet.restcomm.telephony.util;
 
  import java.io.IOException;
- import java.math.BigDecimal;
- import java.net.InetAddress;
- import java.net.URI;
- import java.net.UnknownHostException;
- import java.util.Currency;
- import java.util.Vector;
+import java.math.BigDecimal;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.util.Currency;
+import java.util.Vector;
 
  import javax.sdp.Connection;
- import javax.sdp.MediaDescription;
- import javax.sdp.SdpException;
- import javax.sdp.SdpFactory;
- import javax.sdp.SessionDescription;
- import javax.sdp.SessionName;
- import javax.servlet.sip.Address;
- import javax.servlet.sip.ServletParseException;
- import javax.servlet.sip.SipFactory;
- import javax.servlet.sip.SipServletMessage;
- import javax.servlet.sip.SipServletRequest;
- import javax.servlet.sip.SipServletResponse;
- import javax.servlet.sip.SipSession;
- import javax.servlet.sip.SipURI;
+import javax.sdp.MediaDescription;
+import javax.sdp.SdpException;
+import javax.sdp.SdpFactory;
+import javax.sdp.SessionDescription;
+import javax.sdp.SessionName;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
 
  import org.apache.log4j.Logger;
- import org.joda.time.DateTime;
- import org.mobicents.javax.servlet.sip.SipSessionExt;
- import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
- import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
- import org.mobicents.servlet.restcomm.dao.DaoManager;
- import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
- import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
- import org.mobicents.servlet.restcomm.entities.Client;
- import org.mobicents.servlet.restcomm.entities.Registration;
- import org.mobicents.servlet.restcomm.entities.Sid;
- import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
+import org.joda.time.DateTime;
+import org.mobicents.javax.servlet.sip.SipSessionExt;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
+import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
+import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
+import org.mobicents.servlet.restcomm.entities.Client;
+import org.mobicents.servlet.restcomm.entities.Registration;
+import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 
  /**
   * Helper methods for proxying SIP messages between Restcomm clients that are connecting in peer to peer mode
@@ -63,6 +63,8 @@
   */
  public class B2BUAHelper {
 
+     public static final String FROM_INET_URI = "fromInetURI";
+     public static final String TO_INET_URI = "toInetURI";
      public static final String B2BUA_LAST_REQUEST = "lastRequest";
      public static final String B2BUA_LAST_RESPONSE = "lastResponse";
      public static final String B2BUA_LAST_FINAL_RESPONSE = "lastFinalResponse";
@@ -146,7 +148,7 @@
                  outgoingSession.setAttribute(B2BUA_LAST_REQUEST, outRequest);
                  request.createResponse(100).send();
                  // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
-                 request.getSession().setAttribute("toInetUri", to);
+                 request.getSession().setAttribute(TO_INET_URI, to);
                  if (logger.isInfoEnabled())
                     logger.info("bypassLoadBalancer is set to: "+RestcommConfiguration.getInstance().getMain().getBypassLbForClients());
                  if (RestcommConfiguration.getInstance().getMain().getBypassLbForClients()) {
@@ -154,7 +156,7 @@
                      ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
                  }
                  outRequest.send();
-                 outRequest.getSession().setAttribute("fromInetUri", from);
+                 outRequest.getSession().setAttribute(FROM_INET_URI, from);
 
                  final CallDetailRecord.Builder builder = CallDetailRecord.builder();
                  builder.setSid(Sid.generate(Sid.Type.CALL));
@@ -236,6 +238,18 @@
                  logger.info("Request: " + request.getMethod() + " content exists: " + request.getContent() != null+ " content type: " + request.getContentType());
              }
 
+             boolean isBehindLB = false;
+             final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+             String initialPortBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemotePort");
+             if (initialIpBeforeLB != null) {
+                 if (initialPortBeforeLB == null)
+                     initialPortBeforeLB = "5060";
+                 if (logger.isDebugEnabled()) {
+                     logger.debug("We are behind load balancer, initial IP and Ports are  " + initialIpBeforeLB+":"+initialPortBeforeLB);
+                 }
+                 isBehindLB = true;
+             }
+
              if (request.getContent() != null) {
                  final byte[] sdp = request.getRawContent();
                  String offer = null;
@@ -243,7 +257,6 @@
                      // Issue 308: https://telestax.atlassian.net/browse/RESTCOMM-308
                      String externalIp = request.getInitialRemoteAddr();
                      // Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
-                     final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
                      try {
                          if (initialIpBeforeLB != null && !initialIpBeforeLB.isEmpty()) {
                              offer = patch(sdp, initialIpBeforeLB);
@@ -269,7 +282,8 @@
              outgoingSession.setAttribute(B2BUA_LAST_REQUEST, outRequest);
              request.createResponse(100).send();
              // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
-             request.getSession().setAttribute("toInetUri", to);
+             request.getSession().setAttribute(TO_INET_URI, to);
+
              if (callToSipUri) {
                  if (logger.isInfoEnabled())
                      logger.info("bypassLoadBalancer is set to: "+RestcommConfiguration.getInstance().getMain().getBypassLbForClients());
@@ -286,7 +300,21 @@
                  port = request.getRemotePort();
                  originalFromUri.setPort(port);
              }
-             outRequest.getSession().setAttribute("fromInetUri", originalFromUri);
+
+             if(isBehindLB) {
+                 // https://github.com/RestComm/Restcomm-Connect/issues/1357
+                 String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
+                 SipURI uri = sipFactory.createSipURI(null, realIP);
+                 if (logger.isDebugEnabled()) {
+                     logger.debug("We are behind load balancer, storing initial IP and Ports " + uri);
+                 }
+                 outRequest.getSession().setAttribute(FROM_INET_URI, uri);
+             } else {
+                 if (logger.isDebugEnabled()) {
+                     logger.debug("We are not behind load balancer, storing " + FROM_INET_URI +": " + to);
+                 }
+                 outRequest.getSession().setAttribute(FROM_INET_URI, originalFromUri);
+             }
 
              final CallDetailRecord.Builder builder = CallDetailRecord.builder();
              builder.setSid(Sid.generate(Sid.Type.CALL));
