@@ -53,7 +53,8 @@ public class MonitoringServiceConverter extends AbstractConverter implements Jso
 
     @Override
     public JsonElement serialize(MonitoringServiceResponse monitoringServiceResponse, Type typeOfSrc, JsonSerializationContext context) {
-        Map<String, Integer> countersMap = monitoringServiceResponse.getCountersMap();
+        final Map<String, Integer> countersMap = monitoringServiceResponse.getCountersMap();
+        final Map<String, Double> durationMap = monitoringServiceResponse.getDurationMap();
         JsonObject result = new JsonObject();
         JsonObject metrics = new JsonObject();
         JsonArray callsArray = new JsonArray();
@@ -68,6 +69,11 @@ public class MonitoringServiceConverter extends AbstractConverter implements Jso
             String counter = counterIterator.next();
             metrics.addProperty(counter, countersMap.get(counter));
         }
+        Iterator<String> durationIterator = durationMap.keySet().iterator();
+        while (durationIterator.hasNext()) {
+            String durationKey = durationIterator.next();
+            metrics.addProperty(durationKey, durationMap.get(durationKey));
+        }
         result.add("Metrics", metrics);
 
         if (monitoringServiceResponse.getCallDetailsList().size() > 0)
@@ -81,9 +87,11 @@ public class MonitoringServiceConverter extends AbstractConverter implements Jso
     @Override
     public void marshal(Object object, HierarchicalStreamWriter writer, MarshallingContext context) {
         final MonitoringServiceResponse monitoringServiceResponse = (MonitoringServiceResponse) object;
+        final Map<String, Double> durationMap = monitoringServiceResponse.getDurationMap();
         int size = monitoringServiceResponse.getCallDetailsList().size();
         final Map<String, Integer> countersMap = monitoringServiceResponse.getCountersMap();
         Iterator<String> counterIterator = countersMap.keySet().iterator();
+        Iterator<String> durationIterator = durationMap.keySet().iterator();
 
         writer.startNode("InstanceId");
         writer.setValue(monitoringServiceResponse.getInstanceId().getId().toString());
@@ -102,6 +110,12 @@ public class MonitoringServiceConverter extends AbstractConverter implements Jso
             String counter = counterIterator.next();
             writer.startNode(counter);
             writer.setValue(String.valueOf(countersMap.get(counter)));
+            writer.endNode();
+        }
+        while (durationIterator.hasNext()) {
+            String durationKey = durationIterator.next();
+            writer.startNode(durationKey);
+            writer.setValue(String.valueOf(durationMap.get(durationKey)));
             writer.endNode();
         }
         writer.endNode();
