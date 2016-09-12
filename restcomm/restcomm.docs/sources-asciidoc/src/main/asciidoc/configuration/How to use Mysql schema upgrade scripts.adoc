@@ -47,6 +47,10 @@ At the end the script will report the result like:
 
 *Troubleshooting*
 
+You can run the following script to check the status of the migration:
+
+**$RESTCOMM_HOME/bin/restcomm/db_migration_status.sh**
+
 If you need to restore a backup run the following backup:
 
 mysql -u MYSQL_USER -pMYSQL_PASSWORD -h MYSQL_HOST -P MYSQL_PORT < RESTCOMM_BACKUP_FILE
