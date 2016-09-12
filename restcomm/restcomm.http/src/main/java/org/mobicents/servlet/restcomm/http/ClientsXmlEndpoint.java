@@ -22,6 +22,7 @@ package org.mobicents.servlet.restcomm.http;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -52,10 +53,12 @@ public final class ClientsXmlEndpoint extends ClientsEndpoint {
         secure(operatedAccount, "RestComm:Delete:Clients");
         Client client = dao.getClient(new Sid(sid));
         if (client != null) {
-            secure(operatedAccount, String.valueOf(client.getAccountSid()), SecuredType.SECURED_STANDARD);
+            secure(operatedAccount, client.getAccountSid(), SecuredType.SECURED_STANDARD);
+            dao.removeClient(new Sid(sid));
+            return ok().build();
+        } else {
+            return status(Response.Status.NOT_FOUND).build();
         }
-        dao.removeClient(new Sid(sid));
-        return ok().build();
     }
 
     @Path("/{sid}.json")
