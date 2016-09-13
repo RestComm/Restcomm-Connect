@@ -26,17 +26,16 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.mobicents.servlet.restcomm.HttpConnector;
-import org.mobicents.servlet.restcomm.HttpConnectorList;
+import org.apache.http.ssl.SSLContexts;
 import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
-import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Iterator;
-import java.util.List;
+import javax.net.ssl.SSLContext;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -44,7 +43,8 @@ import java.util.List;
  *
  */
 public class CustomHttpClientBuilder {
-
+        // Logger.
+    private static Logger logger = Logger.getLogger(CustomHttpClientBuilder.class.getName());
     private CustomHttpClientBuilder() {
         // TODO Auto-generated constructor stub
     }
@@ -62,15 +62,52 @@ public class CustomHttpClientBuilder {
             return  HttpClients.custom().setDefaultRequestConfig(requestConfig).build();
         } else {
             return buildAllowallClient(requestConfig);
+            //return buildAllowallClient();
         }
     }
 
-    private static HttpClient buildAllowallClient(RequestConfig requestConfig) {
+
+    private static CloseableHttpClient buildAllowallClient(RequestConfig requestConfig) {
+        String[] protocols = getSSLPrototocolsFromSystemProperties();
+        //SSLContext sslcontext = SSLContexts.createDefault();
+        SSLContext sslcontext;
+        try {
+            sslcontext = SSLContexts.custom().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build();
+        } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
+            throw new RuntimeException(e);
+        }
+        // Allow TLSv1 protocol only
+        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext, protocols, null, new NoopHostnameVerifier());
+       // CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
+       CloseableHttpClient httpclient = HttpClients.custom().setDefaultRequestConfig(requestConfig).setSSLSocketFactory(sslsf).build();
+        return httpclient;
+    }
+
+    private static String[] getSSLPrototocolsFromSystemProperties() {
+        String protocols = System.getProperty("jdk.tls.client.protocols");
+        if (protocols == null)
+            protocols = System.getProperty("https.protocols");
+
+        if (protocols != null) {
+            String[] protocolsArray = protocols.split(",");
+            return protocolsArray;
+        }
+        return null;
+}
+
+/**
+        private static HttpClient buildAllowallClient(RequestConfig requestConfig) {
         HttpConnectorList httpConnectorList = UriUtils.getHttpConnectorList();
         HttpClient httpClient = null;
         //Enable SSL only if we have HTTPS connector
         List<HttpConnector> connectors = httpConnectorList.getConnectors();
         Iterator<HttpConnector> iterator = connectors.iterator();
+
+                        while (iterator.hasNext()){
+                    HttpConnector elemCon = iterator.next();
+                logger.error("***https connectors content ***" +"getAddress : " + elemCon.getAddress() +"getPort : " + elemCon.getPort() + "getScheme : " + elemCon.getScheme()
+                        );
+                }
         while (iterator.hasNext()) {
             HttpConnector connector = iterator.next();
             if (connector.isSecure()) {
@@ -88,8 +125,10 @@ public class CustomHttpClientBuilder {
         }
         if (httpClient == null) {
             httpClient = HttpClients.custom().setDefaultRequestConfig(requestConfig).build();
-        }
+}
+
 
         return httpClient;
     }
+    * **/
 }
