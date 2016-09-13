@@ -21,6 +21,7 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.messages;
 
+import akka.actor.ActorRef;
 import org.apache.http.annotation.Immutable;
 
 /**
@@ -29,8 +30,17 @@ import org.apache.http.annotation.Immutable;
 @Immutable
 public final class Left {
 
+    private ActorRef call;
+
     public Left() {
         super();
     }
 
+    public Left(final ActorRef call) {
+        this.call = call;
+    }
+
+    public ActorRef get() {
+        return call;
+    }
 }
