@@ -71,8 +71,7 @@ public class DaoTest {
         // replace mybatis descriptors path inside sandbox mybatis.xml
         String mybatisXmlPath = sandboxDir.getAbsolutePath() + "/mybatis.xml";
         String content = FileUtils.readFileToString(new File(mybatisXmlPath));
-        String restcommScriptPath = sandboxDir.getAbsolutePath() + "/restcomm";
-        content = content.replace("RESTCOMM_SCRIPT_LOCATION",restcommScriptPath);
+        content = content.replaceAll("MYBATIS_SANDBOX_PATH",sandboxDir.getAbsolutePath());
         FileUtils.writeStringToFile(new File(sandboxDir.getAbsolutePath() + "/mybatis_updated.xml"),content);
     }
 }
