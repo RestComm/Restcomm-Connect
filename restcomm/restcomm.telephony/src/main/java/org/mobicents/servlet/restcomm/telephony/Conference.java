@@ -392,11 +392,19 @@ public final class Conference extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("################################## Conference " + name + " has " + participantsNr + " participants");
             }
+            ConferenceResponse conferenceResponse = new ConferenceResponse(message);
+            notifyObservers(conferenceResponse);
 
             // Stop the conference when ALL participants have been evicted
             if (removed && calls.isEmpty()) {
                 fsm.transition(message, stopping);
             }
+        }
+    }
+
+    private void notifyObservers(final Object message) {
+        for (final ActorRef observer : this.observers) {
+            observer.tell(message, self());
         }
     }
 

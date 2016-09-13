@@ -1918,7 +1918,7 @@ public final class Call extends UntypedActor {
             if (conferencing) {
                 // Let conference know the call exited the room
                 this.conferencing = false;
-                this.conference.tell(new Left(), self);
+                this.conference.tell(new Left(self()), self);
                 this.conference = null;
             }
 
