@@ -8,6 +8,12 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, 
 
   $scope.sid = SessionService.get("sid");
 
+  // default search values
+  $scope.search = {
+    local_only: true,
+    sub_accounts: false
+  }
+
   // pagination support ----------------------------------------------------------------------------------------------
 
   $scope.currentPage = 1; //current page
@@ -65,6 +71,9 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, 
     }
     if(search.local_only) {
       params["LocalOnly"] = search.local_only;
+    }
+    if (search.sub_accounts) {
+      params["SubAccounts"] = search.sub_accounts;
     }
 
     return params;
