@@ -76,7 +76,12 @@
                 </div>
                 <button class="btn btn-default btn-sm" ng-click="getCallsList()"><i class="fa fa-search"></i> Search</button>
                 <br/><br/>
-                <input type="checkbox" ng-checked="true" value="true" ng-model="search.local_only" > Local instance only
+                <div class="form-group col-md-3">
+                    <input type="checkbox" ng-true-value="true" ng-false-value="false" ng-model="search.local_only" > Local instance only
+                </div>
+                <div class="form-group col-md-3">
+                    <input type="checkbox" ng-true-value="true" ng-false-value="false" ng-model="search.sub_accounts" > Sub-Account search
+                </div>
             </form>
         </div>
 
