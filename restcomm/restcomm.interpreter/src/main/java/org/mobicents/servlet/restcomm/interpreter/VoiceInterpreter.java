@@ -378,6 +378,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(conferencing, checkingCache));
         transitions.add(new Transition(conferencing, caching));
         transitions.add(new Transition(conferencing, playing));
+        transitions.add(new Transition(conferencing, startDialing));
+        transitions.add(new Transition(conferencing, creatingSmsSession));
         transitions.add(new Transition(finishConferencing, ready));
         transitions.add(new Transition(finishConferencing, faxing));
         transitions.add(new Transition(finishConferencing, sendingEmail));
@@ -618,6 +620,24 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     // Stop the conference if endConferenceOnExit is true
                     final StopConference stop = new StopConference();
                     conference.tell(stop, self());
+                }
+
+                Attribute attribute = null;
+                if (verb != null) {
+                    attribute = verb.attribute("action");
+                }
+
+                if (attribute == null) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Attribute is null, will ask for the next verb from parser");
+                    }
+                    final GetNextVerb next = GetNextVerb.instance();
+                    parser.tell(next, self());
+                } else {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Dial Action is set, executing Dial Action");
+                    }
+                    executeDialAction(message, sender);
                 }
             }
         } else if (ConferenceInfo.class.equals(klass)) {
