@@ -2422,7 +2422,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 conferenceBuilder.setFriendlyName(conferenceFriendlyName);
                 conferenceDetailRecord = conferenceBuilder.build();
                 conferenceDao.addConferenceDetailRecord(conferenceDetailRecord);
-            }else{
+            }else if(conferenceState != null){
                 conferenceDetailRecord = conferenceDetailRecord.setStatus(conferenceState.name());
                 conferenceDao.updateConferenceDetailRecordStatus(conferenceDetailRecord);
             }
