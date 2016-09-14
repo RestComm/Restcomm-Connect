@@ -22,6 +22,7 @@ package org.mobicents.servlet.restcomm.entities;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
@@ -33,6 +34,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 public class CallDetailRecordFilter {
 
     private final String accountSid;
+    private final List<String> accountSidSet; // if not-null we need the cdrs that belong to several accounts
     private final String recipient;
     private final String sender;
     private final String status;
@@ -44,14 +46,15 @@ public class CallDetailRecordFilter {
     private final Integer offset;
     private final String instanceid;
 
-    public CallDetailRecordFilter(String accountSid, String recipient, String sender, String status, String startTime, String endTime,
-            String parentCallSid, String conferenceSid, Integer limit, Integer offset) throws ParseException {
-        this(accountSid,recipient,sender,status,startTime,endTime,parentCallSid, conferenceSid, limit,offset,null);
+    public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
+                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset) throws ParseException {
+        this(accountSid, accountSidSet, recipient,sender,status,startTime,endTime,parentCallSid, conferenceSid, limit,offset,null);
     }
 
-    public CallDetailRecordFilter(String accountSid, String recipient, String sender, String status, String startTime, String endTime,
-            String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId) throws ParseException {
+    public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
+                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId) throws ParseException {
         this.accountSid = accountSid;
+        this.accountSidSet = accountSidSet;
 
         // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
         // Add here the '%' keyword so +15126002188 will be the same as 15126002188 and 6002188
@@ -90,6 +93,10 @@ public class CallDetailRecordFilter {
 
     public String getSid() {
         return accountSid;
+    }
+
+    public List<String> getAccountSidSet() {
+        return accountSidSet;
     }
 
     public String getRecipient() {

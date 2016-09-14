@@ -2623,7 +2623,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     protected void updateMuteAndHoldStatusOfAllConferenceCalls(final Sid accountSid, final Sid conferenceSid, final boolean mute, final boolean hold) throws ParseException{
         if (conferenceSid != null){
-            CallDetailRecordFilter filter = new CallDetailRecordFilter(accountSid.toString(), null, null, "in-progress", null, null, null, conferenceSid.toString(), 50, 0);
+            CallDetailRecordFilter filter = new CallDetailRecordFilter(accountSid.toString(), null, null, null, "in-progress", null, null, null, conferenceSid.toString(), 50, 0);
             CallDetailRecordsDao callRecordsDAO = storage.getCallDetailRecordsDao();
             List<CallDetailRecord> conferenceCallRecords = callRecordsDAO.getCallDetailRecords(filter);
             if(conferenceCallRecords != null){
