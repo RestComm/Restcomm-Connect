@@ -468,7 +468,7 @@ public final class Call extends UntypedActor {
             message.addHeader("X-RestComm-ApiVersion", apiVersion);
         if (accountId != null)
             message.addHeader("X-RestComm-AccountSid", accountId.toString());
-        message.addHeader("X-RestComm-CallSid", id.toString()+"-"+instanceId);
+        message.addHeader("X-RestComm-CallSid", instanceId+"-"+id.toString());
     }
 
     // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
@@ -1646,6 +1646,9 @@ public final class Call extends UntypedActor {
     private void sendBye(Hangup hangup) throws IOException, TransitionNotFoundException, TransitionFailedException, TransitionRollbackException {
         final SipSession session = invite.getSession();
         String sessionState = session.getState().name();
+        if (logger.isInfoEnabled()) {
+            logger.info("About to send BYE, session state: "+sessionState);
+        }
         if (sessionState == SipSession.State.INITIAL.name() || (sessionState == SipSession.State.EARLY.name() && isInbound())) {
             final SipServletResponse resp = invite.createResponse(Response.SERVER_INTERNAL_ERROR);
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
@@ -1921,7 +1924,7 @@ public final class Call extends UntypedActor {
             if (conferencing) {
                 // Let conference know the call exited the room
                 this.conferencing = false;
-                this.conference.tell(new Left(), self);
+                this.conference.tell(new Left(self()), self);
                 this.conference = null;
             }
 

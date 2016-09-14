@@ -14,7 +14,7 @@ the following tutorial will show how to get started with Restcomm and Mysql._
 
 == Configuring the mybatis.xml file to use Mysql
 * Go to the *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/* directory.
- Open the *mybatis.xml*. $RESTCOMM_HOME is conventional name for unzipped *Restcomm-JBoss-AS7-7.6.0.869* directory.
+ Open the *mybatis.xml*. $RESTCOMM_HOME is conventional name for unzipped *Restcomm-JBoss-AS7-7.X.X.XXX* directory.
 * Change the
 
 [source,bash]
@@ -44,7 +44,27 @@ and IP of the computer where the database is located (it is 172.21.0.107 in the 
 ----
 * Save and exit the mybatis.xml file.
 
-== Start Mysql and Create the Restcomm database
+== Run Mysql and Create the Restcomm database
+
+To use MySQL you can either install the MySQL binary for your platform or run it using Docker.
+
+=== Run MySQL using Docker
+
+* Install Docker for your platform, follow instructions from http://www.docker.com/
+
+* Run MySQL docker image using:
+[source,bash]
+----
+docker run --name mysql_restcomm -e MYSQL_ROOT_PASSWORD=my-secret-pw -p 3306:3306 -d mysql:5.6
+----
+
+The above command will download MySQL Docker image, will create a new container from this image with name "mysql_restcomm", will set root
+password to "my-secret-pw", and finally will run MySQL and listen to 3306 port of your host ip address.
+
+
+=== Run MySQL using binary
+
+Visit https://www.mysql.com/ and download the appropriate MySQL for your platform. Follow the instruction for how to install.
 
 * Start Mysql by running the command
 
@@ -54,6 +74,8 @@ sudo /etc/init.d/mysql start
 ----
 
 Or use link:http://dev.mysql.com/doc/refman/5.7/en/windows-start-command-line.html[MySQL guide].
+
+=== Create the Restcomm database
 
 * Go to the *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/scripts/mariadb* directory. There will be the *init.sql* file and *sql* directory:
 
