@@ -21,6 +21,7 @@
 package org.mobicents.servlet.restcomm.mgcp.mrb;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -55,6 +56,7 @@ import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResourceControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
@@ -533,14 +535,10 @@ public class ConferenceMediaResourceController extends UntypedActor{
             if(isThisMaster){
                 updateMasterConferenceEndpointId();
             }else{
-                //TODO: read it from config after testing
-                String path = "/restcomm/audio/";
-                String entryAudio = "beep.wav";
-                path += entryAudio == null || entryAudio.equals("") ? "beep.wav" : entryAudio;
-                URI uri = null;
-                uri = UriUtils.resolve(new URI(path));
-                final Play play = new Play(uri, 1);
-                msConferenceController.tell(play, source);
+                // Stop the background music if present
+                msConferenceController.tell(new StopMediaGroup(), super.source);
+
+                playBeep(source);
                 // enter slave record in MRB resource table
                 addNewSlaveRecord();
             }
@@ -623,6 +621,21 @@ public class ConferenceMediaResourceController extends UntypedActor{
         }
     }
 
+    /*
+     * private Utility Functions
+     *
+     */
+
+    private void playBeep(final ActorRef source) throws URISyntaxException{
+        //TODO: read it from config after testing
+        String path = "/restcomm/audio/";
+        String entryAudio = "beep.wav";
+        path += entryAudio == null || entryAudio.equals("") ? "beep.wav" : entryAudio;
+        URI uri = null;
+        uri = UriUtils.resolve(new URI(path));
+        final Play play = new Play(uri, 1);
+        msConferenceController.tell(play, source);
+    }
     /*
      * Database Utility Functions
      *
