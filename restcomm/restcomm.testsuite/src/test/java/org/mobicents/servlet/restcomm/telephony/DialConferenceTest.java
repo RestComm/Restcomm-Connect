@@ -301,15 +301,15 @@ public class DialConferenceTest {
         georgeCall.disconnect();
         bobCall.disconnect();
 
-        Thread.sleep(1000);
-        assertTrue(getConferencesSize()>=1);
-        assertTrue(getParticipantsSize(confRoom2)==0);
+        Thread.sleep(5000);
         liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertTrue(liveCalls == 0);
         assertTrue(liveCallsArraySize == 0);
+        assertTrue(getConferencesSize()>=1);
+        assertTrue(getParticipantsSize(confRoom2)==0);
     }
 
     private final String confRoom3 = "confRoom3";
