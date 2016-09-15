@@ -51,11 +51,11 @@ import org.mobicents.servlet.restcomm.mgcp.InviteEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
-import org.mobicents.servlet.restcomm.mgcp.Play;
 import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResourceControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
@@ -316,6 +316,9 @@ public class ConferenceMediaResourceController extends UntypedActor{
             ActorRef sender) throws Exception {
         areAnySlavesConnectedToThisConferenceEndpoint = areAnySlavesConnectedToThisConferenceEndpoint();
         logger.info("areAnySlavesConnectedToThisConferenceEndpoint = "+areAnySlavesConnectedToThisConferenceEndpoint);
+        if(areAnySlavesConnectedToThisConferenceEndpoint){
+            playBeepOnExit(self);
+        }
         if(isThisMaster){
             logger.info("onStopConferenceMediaResourceController");
             sender.tell(new StopConferenceMediaResourceControllerResponse(!areAnySlavesConnectedToThisConferenceEndpoint), sender);
@@ -538,7 +541,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 // Stop the background music if present
                 msConferenceController.tell(new StopMediaGroup(), super.source);
 
-                playBeep(source);
+                playBeepOnEnter(source);
                 // enter slave record in MRB resource table
                 addNewSlaveRecord();
             }
@@ -561,7 +564,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 logger.info("CMRC is STOPPING Slave NOW...");
                 //TODO: do clean up here
                 removeSlaveRecord();
-                //check if it is last to leave in entire cluster then distroymaster confe EP as well
+                //check if it is last to leave in entire cluster then distroymaster conf EP as well
                 if(!isMasterPresence() && noOfConnectedSlaves < 2){
                     logger.info("Going to Detroy Master conference EP..");
                     masterConfernceEndpoint.tell(new DestroyEndpoint(), super.source);
@@ -626,10 +629,21 @@ public class ConferenceMediaResourceController extends UntypedActor{
      *
      */
 
-    private void playBeep(final ActorRef source) throws URISyntaxException{
+    private void playBeepOnEnter(final ActorRef source) throws URISyntaxException{
         //TODO: read it from config after testing
         String path = "/restcomm/audio/";
         String entryAudio = "beep.wav";
+        path += entryAudio == null || entryAudio.equals("") ? "beep.wav" : entryAudio;
+        URI uri = null;
+        uri = UriUtils.resolve(new URI(path));
+        final Play play = new Play(uri, 1);
+        msConferenceController.tell(play, source);
+    }
+
+    private void playBeepOnExit(final ActorRef source) throws URISyntaxException{
+        //TODO: read it from config after testing
+        String path = "/restcomm/audio/";
+        String entryAudio = "alert.wav";
         path += entryAudio == null || entryAudio.equals("") ? "beep.wav" : entryAudio;
         URI uri = null;
         uri = UriUtils.resolve(new URI(path));

@@ -226,11 +226,7 @@ public final class MmsConferenceController extends MediaServerController {
             onStopMediaGroup((StopMediaGroup) message, self, sender);
         } else if (JoinCall.class.equals(klass)) {
             onJoinCall((JoinCall) message, self, sender);
-        } else if (Play.class.equals(klass) || org.mobicents.servlet.restcomm.mgcp.Play.class.equals(klass)) {
-            if(org.mobicents.servlet.restcomm.mgcp.Play.class.equals(klass)){
-                org.mobicents.servlet.restcomm.mgcp.Play mgcpPlay = (org.mobicents.servlet.restcomm.mgcp.Play) message;
-                message = new Play(mgcpPlay.announcements(), mgcpPlay.iterations());
-            }
+        } else if (Play.class.equals(klass)) {
             onPlay((Play) message, self, sender);
         } else if (StartRecording.class.equals(klass)) {
             onStartRecording((StartRecording) message, self, sender);

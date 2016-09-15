@@ -505,7 +505,9 @@ public final class Conference extends UntypedActor {
     private void getConferenceSidFromDB() throws Exception{
         ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
         ConferenceDetailRecordFilter filter;
-        filter = new ConferenceDetailRecordFilter(accountSid, "RUNNING%", null, null, friendlyName, 1, 0);
+        // Putting offset to 100 but this filter should return only 1 DB record, otherwise code below will throw exception
+        // As there should be only one conference in running state by a given friendlyName under an account. 
+        filter = new ConferenceDetailRecordFilter(accountSid, "RUNNING%", null, null, friendlyName, 100, 0);
         List<ConferenceDetailRecord> records = dao.getConferenceDetailRecords(filter);
         if(records == null || records.size() == 0){
             logger.error("this conference is in trouble bcz we did not get its record..");
