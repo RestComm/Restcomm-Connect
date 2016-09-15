@@ -84,4 +84,9 @@ public class AccountsDaoMock implements AccountsDao {
     public void updateAccount(Account account) {
         throw new NotImplementedException();
     }
+
+    @Override
+    public List<String> getSubAccountSidsRecursive(Sid parentAccountSid) {
+        throw new NotImplementedException();
+    }
 }
