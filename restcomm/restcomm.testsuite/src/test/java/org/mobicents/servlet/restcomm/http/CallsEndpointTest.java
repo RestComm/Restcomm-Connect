@@ -68,7 +68,7 @@ public class CallsEndpointTest {
                 adminAuthToken, firstPage.get("num_pages").getAsInt(), null, true);
         JsonArray lastPageCallsArray = lastPage.get("calls").getAsJsonArray();
         assertTrue(lastPageCallsArray.get(lastPageCallsArray.size() - 1).getAsJsonObject().get("sid").getAsString()
-                .equals("CAfe9ce46f104f4beeb10c83a5dad2be66"));
+                .equals("CAe803a594ac1649d98855eafc7535ed41"));
         assertTrue(lastPageCallsArray.size() == 48);
         assertTrue(lastPage.get("start").getAsInt() == 400);
         assertTrue(lastPage.get("end").getAsInt() == 448);
@@ -97,8 +97,7 @@ public class CallsEndpointTest {
         JsonObject lastPage = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, firstPage.get("num_pages").getAsInt(), 100, true);
         JsonArray lastPageCallsArray = lastPage.get("calls").getAsJsonArray();
-        assertTrue(lastPageCallsArray.get(lastPageCallsArray.size() - 1).getAsJsonObject().get("sid").getAsString()
-                .equals("CAfe9ce46f104f4beeb10c83a5dad2be66"));
+        assertEquals("CAe803a594ac1649d98855eafc7535ed41",lastPageCallsArray.get(lastPageCallsArray.size() - 1).getAsJsonObject().get("sid").getAsString());
         assertTrue(lastPageCallsArray.size() == 48);
         assertTrue(lastPage.get("start").getAsInt() == 400);
         assertTrue(lastPage.get("end").getAsInt() == 448);
