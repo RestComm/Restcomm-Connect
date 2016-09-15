@@ -436,6 +436,18 @@ import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
          if (logger.isInfoEnabled()) {
              logger.info(String.format("B2BUA: Got response: \n %s", response));
          }
+         if (response.getSession() == null || !response.getSession().isValid()) {
+             if (logger.isDebugEnabled()) {
+                 logger.debug("Response session is either null or invalidated");
+             }
+             return;
+         }
+         if (getLinkedSession(response) == null || !getLinkedSession(response).isValid()) {
+             if (logger.isDebugEnabled()) {
+                 logger.debug("Linked session of response is either null or invalidated");
+             }
+             return;
+         }
          CallDetailRecordsDao records = daoManager.getCallDetailRecordsDao();
 
          if (response.getStatus() > 200)
