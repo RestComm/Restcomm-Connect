@@ -1643,6 +1643,9 @@ public final class Call extends UntypedActor {
     private void sendBye(Hangup hangup) throws IOException, TransitionNotFoundException, TransitionFailedException, TransitionRollbackException {
         final SipSession session = invite.getSession();
         String sessionState = session.getState().name();
+        if (logger.isInfoEnabled()) {
+            logger.info("About to send BYE, session state: "+sessionState);
+        }
         if (sessionState == SipSession.State.INITIAL.name() || (sessionState == SipSession.State.EARLY.name() && isInbound())) {
             final SipServletResponse resp = invite.createResponse(Response.SERVER_INTERNAL_ERROR);
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
@@ -1918,7 +1921,7 @@ public final class Call extends UntypedActor {
             if (conferencing) {
                 // Let conference know the call exited the room
                 this.conferencing = false;
-                this.conference.tell(new Left(), self);
+                this.conference.tell(new Left(self()), self);
                 this.conference = null;
             }
 
