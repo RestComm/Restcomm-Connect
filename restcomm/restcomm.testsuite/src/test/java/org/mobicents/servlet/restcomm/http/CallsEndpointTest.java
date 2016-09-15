@@ -39,7 +39,13 @@ public class CallsEndpointTest {
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    
+    private String topLevelAccountSid = "AC00000000000000000000000000000000";
+    private String subAccount1 =  "AC10000000000000000000000000000000";
+    private String subAccount2 =  "AC20000000000000000000000000000000";
+    private String subAccount11 = "AC11000000000000000000000000000000";
+    private String subAccount111 = "AC11100000000000000000000000000000";
+    private String commonAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+
     @Test
     public void getCallsList() {
         JsonObject firstPage = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid,
@@ -196,6 +202,45 @@ public class CallsEndpointTest {
         assertTrue(filteredCallsUsingMultipleFilters.get("calls").getAsJsonArray().size() > 0);
         assertTrue(allCalls.get("calls").getAsJsonArray().size() > filteredCallsUsingMultipleFilters.get("calls")
                 .getAsJsonArray().size());
+    }
+
+    @Test
+    public void getCallsListIncludingSubAccounts() {
+        Map<String, String> filters = new HashMap<String, String>();
+        filters.put("SubAccounts", "true");
+
+        // retrieve top-level account cdrs
+        JsonObject calls = RestcommCallsTool.getInstance().getCallsUsingFilter(
+                deploymentUrl.toString(), topLevelAccountSid, commonAuthToken, filters);
+        assertEquals(50,calls.get("calls").getAsJsonArray().size()); // that's because of the default page size
+        int totalSize = calls.get("total").getAsInt();
+        assertEquals(54, calls.get("total").getAsInt());
+        // retrieve second page too
+        filters.put("Page", "1");
+        calls = RestcommCallsTool.getInstance().getCallsUsingFilter(
+                deploymentUrl.toString(), topLevelAccountSid, commonAuthToken, filters);
+        assertEquals(4, calls.get("calls").getAsJsonArray().size()); // 50 + 4 = 54
+        filters.remove("Page"); // no page for the rest of the cases
+        // retrieve first level child account cdrs
+        calls = RestcommCallsTool.getInstance().getCallsUsingFilter(
+                deploymentUrl.toString(), subAccount1, commonAuthToken, filters);
+        assertEquals(33,calls.get("calls").getAsJsonArray().size());
+        // retrieve first level child (with no grandchildren) account cdrs
+        calls = RestcommCallsTool.getInstance().getCallsUsingFilter(
+                deploymentUrl.toString(), subAccount2, commonAuthToken, filters);
+        assertEquals(19,calls.get("calls").getAsJsonArray().size());
+        // retrieve second level child cdrs
+        calls = RestcommCallsTool.getInstance().getCallsUsingFilter(
+                deploymentUrl.toString(), subAccount11, commonAuthToken, filters);
+        assertEquals(18,calls.get("calls").getAsJsonArray().size());
+        // retrieve third level child cdrs
+        calls = RestcommCallsTool.getInstance().getCallsUsingFilter(
+                deploymentUrl.toString(), subAccount111, commonAuthToken, filters);
+        assertEquals(11,calls.get("calls").getAsJsonArray().size());
+        // retrieve all cdrs of administrator@company.com but using the SubAccount filter
+        calls = RestcommCallsTool.getInstance().getCallsUsingFilter(
+                deploymentUrl.toString(), adminAccountSid, adminAuthToken, filters);
+        assertEquals(50,calls.get("calls").getAsJsonArray().size());
     }
 
     @Test
