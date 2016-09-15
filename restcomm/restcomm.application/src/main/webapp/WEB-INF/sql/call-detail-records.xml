@@ -121,7 +121,7 @@
 
 		<!-- select AVG(duration) from restcomm_call_detail_records where instanceid like ('ID1979e298e5194cc78191b03ea64c5466') AND start_time >= '2016-06-24' AND end_time <= DATE_ADD('2016-06-24', INTERVAL 1 DAY); -->
 			AND "start_time" &gt;= #{startTime}
-			AND "end_time" &lt;= DATE_ADD(#{startTime},INTERVAL 1 DAY);
+			AND "end_time" &lt;= (#{startTime} + INTERVAL '1' DAY);
 	</select>
 
 	<!-- Issue 1215: https://github.com/RestComm/Restcomm-Connect/issues/1215 -->
@@ -130,7 +130,7 @@
 
 		<!-- select AVG(duration) from restcomm_call_detail_records where instanceid like ('ID1979e298e5194cc78191b03ea64c5466') AND start_time >= '2016-06-24 11:00:00' AND end_time <= DATE_ADD('2016-06-24 11:00:00', INTERVAL 1 HOUR); -->
 			AND "start_time" &gt;= #{startTime}
-			AND "end_time" &lt;= DATE_ADD(#{startTime},INTERVAL 1 HOUR);
+		AND "end_time" &lt;= (#{startTime} + INTERVAL '1' HOUR);
 	</select>
 
   <select id="getCallDetailRecords" parameterType="string" resultType="hashmap">
