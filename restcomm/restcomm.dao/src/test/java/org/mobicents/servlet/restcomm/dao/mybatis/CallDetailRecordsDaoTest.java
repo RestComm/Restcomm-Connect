@@ -21,26 +21,31 @@ package org.mobicents.servlet.restcomm.dao.mybatis;
 
 import static org.junit.Assert.*;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Currency;
+import java.util.List;
 
+import junit.framework.Assert;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
+import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public class CallDetailRecordsDaoTest {
+public class CallDetailRecordsDaoTest extends DaoTest {
     private static MybatisDaoManager manager;
 
     public CallDetailRecordsDaoTest() {
@@ -48,8 +53,13 @@ public class CallDetailRecordsDaoTest {
     }
 
     @Before
-    public void before() {
-        final InputStream data = getClass().getResourceAsStream("/mybatis.xml");
+    public void before() throws Exception {
+        sandboxRoot = createTempDir("cdrTest");
+        String mybatisFilesPath = getClass().getResource("/callDetailRecordsDao").getFile();
+        setupSandbox(mybatisFilesPath, sandboxRoot);
+
+        String mybatisXmlPath = sandboxRoot.getPath() + "/mybatis_updated.xml";
+        final InputStream data = new FileInputStream(mybatisXmlPath);
         final SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
         final SqlSessionFactory factory = builder.build(data);
         manager = new MybatisDaoManager();
@@ -59,6 +69,7 @@ public class CallDetailRecordsDaoTest {
     @After
     public void after() {
         manager.shutdown();
+        removeTempDir(sandboxRoot.getAbsolutePath());
     }
 
     @Test
@@ -400,5 +411,42 @@ public class CallDetailRecordsDaoTest {
         cdrs.removeCallDetailRecord(sid);
         // Validate that the CDRs were removed.
         assertTrue(cdrs.getCallDetailRecord(sid) == null);
+    }
+
+    @Test
+    public void retrieveAccountCdrsRecursively() throws ParseException {
+        CallDetailRecordsDao dao = manager.getCallDetailRecordsDao();
+
+        /*
+            Sample data summary
+
+                100 calls in total
+                12 calls belong to AC00000000000000000000000000000000
+                5 calls belong to AC11111111111111111111111111111111
+                8 calls belong to AC22222222222222222222222222222222
+         */
+
+        // read from a single account but using the 'accountSidSet' interface
+        List<String> accountSidSet = new ArrayList<String>();
+        accountSidSet.add("AC00000000000000000000000000000000");
+        CallDetailRecordFilter filter = new CallDetailRecordFilter(null, accountSidSet, null, null, null, null, null, null, null, null, null);
+        Assert.assertEquals(12, dao.getTotalCallDetailRecords(filter).intValue());
+        // read cdrs of three accounts
+        accountSidSet.add("AC00000000000000000000000000000000");
+        accountSidSet.add("AC11111111111111111111111111111111");
+        accountSidSet.add("AC22222222222222222222222222222222");
+        Assert.assertEquals(25, dao.getTotalCallDetailRecords(filter).intValue());
+        // pass an empty accountSid set
+        accountSidSet.clear();
+        Assert.assertEquals(0, dao.getTotalCallDetailRecords(filter).intValue());
+        // if both an accountSid and a accountSid set are passed, only accountSidSet is taken into account
+        filter = new CallDetailRecordFilter("ACae6e420f425248d6a26948c17a9e2acf", accountSidSet, null, null, null, null, null, null, null, null, null);
+        accountSidSet.add("AC00000000000000000000000000000000");
+        accountSidSet.add("AC11111111111111111111111111111111");
+        accountSidSet.add("AC22222222222222222222222222222222");
+        Assert.assertEquals(25, dao.getTotalCallDetailRecords(filter).intValue());
+        // if no (null) accountSidSet is passed the method still works
+        filter = new CallDetailRecordFilter("AC00000000000000000000000000000000", null, null, null, null, null, null, null, null, null, null);
+        Assert.assertEquals(12, dao.getTotalCallDetailRecords(filter).intValue());
     }
 }
