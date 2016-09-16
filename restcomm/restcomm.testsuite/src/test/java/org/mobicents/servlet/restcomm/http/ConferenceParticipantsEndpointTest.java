@@ -61,7 +61,7 @@ public class ConferenceParticipantsEndpointTest {
     @Test
     public void getParticipantsListRunningConference() {
         JsonObject page = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid,
-        		runningConferenceSid, adminAuthToken);
+                adminAuthToken, runningConferenceSid);
         int totalSize = page.get("total").getAsInt();
         JsonArray pageCallsArray = page.get("calls").getAsJsonArray();
         int pageCallsArraySize = pageCallsArray.size();
@@ -75,7 +75,7 @@ public class ConferenceParticipantsEndpointTest {
     @Test
     public void getParticipantsListCompletedConference() {
         JsonObject page = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid,
-        		completedConferenceSid, adminAuthToken);
+                adminAuthToken, completedConferenceSid);
         int totalSize = page.get("total").getAsInt();
         JsonArray pageCallsArray = page.get("calls").getAsJsonArray();
         int pageCallsArraySize = pageCallsArray.size();
@@ -89,7 +89,7 @@ public class ConferenceParticipantsEndpointTest {
     @Test @Ignore //Pending issue https://github.com/RestComm/Restcomm-Connect/issues/1135
     public void muteParticipant() {
         JsonObject page = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid,
-        		runningConferenceSid, adminAuthToken);
+                adminAuthToken, runningConferenceSid);
         int totalSize = page.get("total").getAsInt();
         JsonArray pageCallsArray = page.get("calls").getAsJsonArray();
         int pageCallsArraySize = pageCallsArray.size();

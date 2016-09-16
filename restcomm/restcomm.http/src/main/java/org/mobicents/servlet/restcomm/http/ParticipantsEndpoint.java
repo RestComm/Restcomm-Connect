@@ -200,10 +200,10 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
         try {
 
             if (localInstanceOnly) {
-                filterForTotal = new CallDetailRecordFilter(accountSid, null, null, status, null, null,
+                filterForTotal = new CallDetailRecordFilter(accountSid, null, null, null, status, null, null,
                         null, conferenceSid, null, null);
             } else {
-                filterForTotal = new CallDetailRecordFilter(accountSid, null, null, status, null, null,
+                filterForTotal = new CallDetailRecordFilter(accountSid, null, null, null, status, null, null,
                         null, conferenceSid, null, null, instanceId);
             }
         } catch (ParseException e) {
@@ -219,10 +219,10 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
         CallDetailRecordFilter filter;
         try {
             if (localInstanceOnly) {
-                filter = new CallDetailRecordFilter(accountSid, null, null, status, null, null,
+                filter = new CallDetailRecordFilter(accountSid, null, null, null, status, null, null,
                         null, conferenceSid, limit, offset);
             } else {
-                filter = new CallDetailRecordFilter(accountSid, null, null, status, null, null,
+                filter = new CallDetailRecordFilter(accountSid, null, null, null, status, null, null,
                         null, conferenceSid, limit, offset, instanceId);
             }
         } catch (ParseException e) {

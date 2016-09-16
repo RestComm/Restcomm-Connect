@@ -51,4 +51,16 @@ public interface AccountsDao {
     void removeAccount(Sid sid);
 
     void updateAccount(Account account);
+
+    /**
+     * Returns a list of all sub-accounts under a parent account. All nested sub-accounts in
+     * any level will be returned.
+     *
+     * It will return an empty array in case the parent has no children or the parent does
+     * not exist.
+     *
+     * @param parentAccountSid
+     * @return list of account sid or null
+     */
+    List<String> getSubAccountSidsRecursive(Sid parentAccountSid);
 }

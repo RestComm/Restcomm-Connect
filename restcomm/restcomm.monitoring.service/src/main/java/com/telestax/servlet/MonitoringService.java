@@ -305,7 +305,13 @@ public class MonitoringService extends UntypedActor{
         countersMap.put("MaximumConcurrentOutgoingCalls", maxConcurrentOutgoingCalls.get());
 
         Double averageCallDurationLast24Hours = daoManager.getCallDetailRecordsDao().getAverageCallDurationLast24Hours(instanceId.getId());
+        if (averageCallDurationLast24Hours == null) {
+            averageCallDurationLast24Hours = 0.0;
+        }
         Double averageCallDurationLastHour = daoManager.getCallDetailRecordsDao().getAverageCallDurationLastHour(instanceId.getId());
+        if (averageCallDurationLastHour == null) {
+            averageCallDurationLastHour = 0.0;
+        }
 
         durationMap.put("AverageCallDurationInSecondsLast24Hours", averageCallDurationLast24Hours);
         durationMap.put("AverageCallDurationInSecondsLastHour", averageCallDurationLastHour);
