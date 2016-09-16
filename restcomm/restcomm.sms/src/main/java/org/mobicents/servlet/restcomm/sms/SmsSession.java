@@ -53,6 +53,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.servlet.ServletException;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -265,6 +266,8 @@ public final class SmsSession extends UntypedActor {
         if (toClient != null && toClientRegistration != null) {
             buffer.append(toClientRegistration.getLocation());
         } else {
+              //logger.error("toClientRegistration2.getTimeToLive() :"+ toClientRegistration.getTimeToLive());
+              //logger.error("toClientRegistration2.getDisplayName() :"+ toClientRegistration.getDisplayName());
             buffer.append("sip:");
             if (prefix != null) {
                 buffer.append(prefix);
@@ -293,7 +296,7 @@ public final class SmsSession extends UntypedActor {
                 }
             }
             sms.send();
-        } catch (final Exception exception) {
+        } catch (final ServletException | IOException exception) {
             // Notify the observers.
             final SmsSessionInfo info = info();
             final SmsSessionResponse error = new SmsSessionResponse(info, false);
@@ -301,7 +304,11 @@ public final class SmsSession extends UntypedActor {
                 observer.tell(error, self);
             }
             // Log the exception.
-            logger.error(exception.getMessage(), exception);
+            if (toClientRegistration == null){
+            logger.error("The destination Client : " + toClient.getFriendlyName() + " is currently not registered/connected to receive messages");
+            }else{
+            logger.error("Error sending message to " + toClient.getFriendlyName() + "{}" , exception.getMessage());
+            }
         }}
 
     private boolean sendUsingSmpp(String from, String to, String body) {
