@@ -28,6 +28,7 @@ NoSslRestConf(){
 SslRestCommConf(){
 	FILE=$RESTCOMM_CONF/standalone-sip.xml
 	echo "Will properly configure HTTPS Connector ";
+	  FILERESTCOMMXML=$BASEDIR/standalone/deployments/restcomm.war/WEB-INF/web.xml
       FILEMANAGERXML=$BASEDIR/standalone/deployments/restcomm-management.war/WEB-INF/web.xml
       FILERVDXML=$BASEDIR/standalone/deployments/restcomm-rvd.war/WEB-INF/web.xml
       FILEOLYMPUSXML=$BASEDIR/standalone/deployments/olympus.war/WEB-INF/web.xml
@@ -37,6 +38,8 @@ SslRestCommConf(){
 		sed -e "s/<.*connector name=\"http\".*>/<\!--connector name=\"http\" protocol=\"HTTP\/1.1\" scheme=\"http\" socket-binding=\"http\"-->/" $FILE > $FILE.bak
 		mv $FILE.bak $FILE
 
+		grep -q '<security-constraint>' $FILERESTCOMMXML &&  sed -e "s/<security-constraint>/<!--security-constraint>/"  $FILERESTCOMMXML > $FILERESTCOMMXML.bak \
+        &&  sed -e "s/<\/security-constraint>/<\/security-constraint-->/"  $FILERESTCOMMXML.bak > $FILERESTCOMMXML
         grep -qs '<security-constraint>' $FILEMANAGERXML && sed -e "s/<security-constraint>/<!--security-constraint>/"  $FILEMANAGERXML > $FILEMANAGERXML.bak \
         && sed -e "s/<\/security-constraint>/<\/security-constraint-->/"  $FILEMANAGERXML.bak > $FILEMANAGERXML
         grep -q '<security-constraint>' $FILERVDXML && sed -e "s/<security-constraint>/<!--security-constraint>/"  $FILERVDXML > $FILERVDXML.bak \
@@ -54,6 +57,8 @@ SslRestCommConf(){
             mv -f $BASEDIR/standalone/deployments/restcomm-management-exploded.war $BASEDIR/standalone/deployments/restcomm-management.war
         fi
 
+        sed -e "s/<!--security-constraint>/<security-constraint>/"  $FILERESTCOMMXML > $FILERESTCOMMXML.bak
+        sed -e "s/<\/security-constraint-->/<\/security-constraint>/"  $FILERESTCOMMXML.bak > $FILERESTCOMMXML
         sed -e "s/<!--security-constraint>/<security-constraint>/"  $FILEMANAGERXML > $FILEMANAGERXML.bak
         sed -e "s/<\/security-constraint-->/<\/security-constraint>/"  $FILEMANAGERXML.bak > $FILEMANAGERXML
         sed -e "s/<!--security-constraint>/<security-constraint>/"  $FILERVDXML > $FILERVDXML.bak
@@ -65,6 +70,8 @@ SslRestCommConf(){
         sed -e "s/<.*connector name=\"http\".*>/<connector name=\"http\" protocol=\"HTTP\/1.1\" scheme=\"http\" socket-binding=\"http\"\/>    /" $FILE > $FILE.bak
         mv $FILE.bak $FILE
 
+        grep -q '<security-constraint>' $FILERESTCOMMXML &&  sed -e "s/<security-constraint>/<!--security-constraint>/"  $FILERESTCOMMXML > $FILERESTCOMMXML.bak \
+        &&  sed -e "s/<\/security-constraint>/<\/security-constraint-->/"  $FILERESTCOMMXML.bak > $FILERESTCOMMXML
         grep -qs '<security-constraint>' $FILEMANAGERXML && sed -e "s/<security-constraint>/<!--security-constraint>/"  $FILEMANAGERXML > $FILEMANAGERXML.bak \
         && sed -e "s/<\/security-constraint>/<\/security-constraint-->/"  $FILEMANAGERXML.bak > $FILEMANAGERXML
         grep -q '<security-constraint>' $FILERVDXML && sed -e "s/<security-constraint>/<!--security-constraint>/"  $FILERVDXML > $FILERVDXML.bak \
