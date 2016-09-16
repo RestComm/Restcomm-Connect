@@ -29,8 +29,8 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, 
     $scope.getCallsList($scope.currentPage-1);
   };
 
-  $scope.pageChanged = function(page) {
-    $scope.getCallsList(page-1);
+  $scope.pageChanged = function() {
+    $scope.getCallsList($scope.currentPage-1);
   };
 
   $scope.getCallsList = function(page) {
