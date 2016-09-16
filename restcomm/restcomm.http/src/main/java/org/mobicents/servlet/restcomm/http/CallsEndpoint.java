@@ -71,6 +71,7 @@ import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -178,6 +179,11 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
                 localInstanceOnly = false;
         } catch (Exception e) {
         }
+        // shall we include sub-accounts cdrs in our query ?
+        boolean querySubAccounts = false; // be default we don't
+        String querySubAccountsParam = info.getQueryParameters().getFirst("SubAccounts");
+        if (querySubAccountsParam != null && querySubAccountsParam.equalsIgnoreCase("true"))
+            querySubAccounts = true;
 
         String pageSize = info.getQueryParameters().getFirst("PageSize");
         String page = info.getQueryParameters().getFirst("Page");
@@ -202,16 +208,25 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         int offset = (page == "0") ? 0 : (((Integer.parseInt(page) - 1) * Integer.parseInt(pageSize)) + Integer
                 .parseInt(pageSize));
 
+        // Shall we query cdrs of sub-accounts too ?
+        // if we do, we need to find the sub-accounts involved first
+        List<String> ownerAccounts = null;
+        if (querySubAccounts) {
+            ownerAccounts = new ArrayList<String>();
+            ownerAccounts.add(accountSid); // we will also return parent account cdrs
+            ownerAccounts.addAll(accountsDao.getSubAccountSidsRecursive(new Sid(accountSid)));
+        }
+
         CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
 
         CallDetailRecordFilter filterForTotal;
         try {
 
             if (localInstanceOnly) {
-                filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
+                filterForTotal = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
                         parentCallSid, conferenceSid, null, null);
             } else {
-                filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
+                filterForTotal = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
                         parentCallSid, conferenceSid, null, null, instanceId);
             }
         } catch (ParseException e) {
@@ -227,10 +242,10 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         CallDetailRecordFilter filter;
         try {
             if (localInstanceOnly) {
-                filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
+                filter = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
                         parentCallSid, conferenceSid, limit, offset);
             } else {
-                filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
+                filter = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
                         parentCallSid, conferenceSid, limit, offset, instanceId);
             }
         } catch (ParseException e) {
