@@ -304,11 +304,22 @@ public class MonitoringService extends UntypedActor{
         countersMap.put("MaximumConcurrentIncomingCalls", maxConcurrentIncomingCalls.get());
         countersMap.put("MaximumConcurrentOutgoingCalls", maxConcurrentOutgoingCalls.get());
 
-        Double averageCallDurationLast24Hours = daoManager.getCallDetailRecordsDao().getAverageCallDurationLast24Hours(instanceId.getId());
+        Double averageCallDurationLast24Hours = null;
+        Double averageCallDurationLastHour = null;
+
+        try {
+            averageCallDurationLast24Hours = daoManager.getCallDetailRecordsDao().getAverageCallDurationLast24Hours(instanceId.getId());
+            averageCallDurationLastHour = daoManager.getCallDetailRecordsDao().getAverageCallDurationLastHour(instanceId.getId());
+        } catch (Exception e) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Exception during the query for AVG Call Duration: "+e.getStackTrace());
+            }
+        }
+
         if (averageCallDurationLast24Hours == null) {
             averageCallDurationLast24Hours = 0.0;
         }
-        Double averageCallDurationLastHour = daoManager.getCallDetailRecordsDao().getAverageCallDurationLastHour(instanceId.getId());
+
         if (averageCallDurationLastHour == null) {
             averageCallDurationLastHour = 0.0;
         }
