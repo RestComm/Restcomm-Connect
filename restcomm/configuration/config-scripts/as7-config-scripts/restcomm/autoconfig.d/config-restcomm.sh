@@ -464,10 +464,10 @@ otherRestCommConf(){
 
 	if [ -n "$HSQL_DIR" ]; then
   		echo "HSQL_DIR $HSQL_DIR"
-  		FILE=$HSQL_DIR/restcomm.script
-  		mkdir -p $HSQL_DIR
-  		if [ ! -f $FILE ]; then
-  		    sed -i "s|<data-files>.*</data-files>|<data-files>${HSQL_DIR}</data-files>|"  $FILE
+  		FILEDB=$HSQL_DIR/restcomm.script
+  		sed -i "s|<data-files>.*</data-files>|<data-files>${HSQL_DIR}</data-files>|"  $FILE
+  		if [ ! -f $FILEDB ]; then
+  		    mkdir -p $HSQL_DIR
   		    cp $RESTCOMM_DEPLOY/WEB-INF/data/hsql/* $HSQL_DIR
         fi
 	fi
