@@ -76,7 +76,12 @@
                 </div>
                 <button class="btn btn-default btn-sm" ng-click="getCallsList()"><i class="fa fa-search"></i> Search</button>
                 <br/><br/>
-                <input type="checkbox" ng-checked="true" value="true" ng-model="search.local_only" > Local instance only
+                <div class="form-group col-md-3">
+                    <input type="checkbox" ng-true-value="true" ng-false-value="false" ng-model="search.local_only" > Local instance only
+                </div>
+                <div class="form-group col-md-3">
+                    <input type="checkbox" ng-true-value="true" ng-false-value="false" ng-model="search.sub_accounts" title="Includes calls from sub-accounts and displays account info" > Sub-Account search
+                </div>
             </form>
         </div>
 
@@ -89,6 +94,7 @@
             <!--th class="width-30pc">DATE <button ng-click="toggle=!toggle"><span  ng-class="{'glyphicon glyphicon-arrow-up':toggle,'glyphicon glyphicon-arrow-down':!toggle}" ></span></button> </th-->
             <th class="width-20pc" style="border-bottom: 3px solid #428bca;text-align: center;">DATE<span class="pull-right"><button style="border-style: solid; border-color: #DCDCDC; border-width: 0px; background-color: #fff;" ng-click="sortBy('date_created');toggleD=!toggleD;reverse=toggleD"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></button></span></th>
             <th class="width-10pc" style="border-bottom: 3px solid #428bca;text-align: center;"><span class="pull-right">DIRECTION </span></th>
+            <th ng-show="search.sub_accounts" class="width-10pc" style="border-bottom: 3px solid #428bca;text-align: center;">ACCOUNT</th>
             <th class="width-10pc" style="border-bottom: 3px solid #428bca;text-align: center;">FROM</th>
             <th class="width-10pc" style="border-bottom: 3px solid #428bca;text-align: center;">TO</th>
             <th class="width-5pc"  style="border-bottom: 3px solid #428bca;text-align: center;">TYPE </th>
@@ -104,6 +110,7 @@
             <!--<tr ng-repeat="call in callsLogsList">-->
                 <td><a href="" ng-click="showCallDetailsModal(call)">{{  call.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
                 <td><div class="text-center"><i ng-class="call.direction == 'inbound' ? 'fa fa-sign-in' : (call.direction == 'outbound-api' ? 'fa fa-sign-out' : '')"></i><!-- {{ call.direction ? call.direction : '?' }} --></div></td>
+                <td ng-show="search.sub_accounts"><div class="text-center" title="{{call.account_sid}}">{{ call.account_sid.substr(0,10)+"..." }}</div></td>
                 <td><div class="text-center">{{ call.from ? call.from : '?' }}</div></td>
                 <td><div class="text-center">{{ call.to ? call.to : '?' }}</div></td>
                 <td><div class="text-center"><i class="fa fa-phone"></i> </div></td>
@@ -115,18 +122,20 @@
             </tbody>
             <tfoot>
             <td><small class="pull-left">{{ totalCalls }} Call{{ totalCalls == 1 ? "" : "s" }}</small></td>
-            <td colspan=3>
-                <form class="form-inline text-center">
-                    <h6>Items / Page</h6>
-                    <div class="btn-group buttons-per-page" data-toggle="buttons-radio">
-                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
-                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
-                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
-                    </div>
-                </form>
-            </td>
-            <td colspan="99">
-                <pagination class="pagination pagination-sm pull-right" on-select-page="pageChanged(page)" total-items="totalCalls" items-per-page="entryLimit" page="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>
+            <td colspan=4>
+                <div class="col-md-12 text-center">
+                    <uib-pagination class="pagination pagination-sm" ng-change="pageChanged()" total-items="totalCalls" items-per-page="entryLimit" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
+                </div>
+                <div class="col-md-12">
+                    <form class="form-inline text-center">
+                        <h6>Items / Page</h6>
+                        <div class="btn-group buttons-per-page" data-toggle="buttons-radio">
+                            <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
+                            <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
+                            <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
+                        </div>
+                    </form>
+                </div>
             </td>
             </tfoot>
         </table>

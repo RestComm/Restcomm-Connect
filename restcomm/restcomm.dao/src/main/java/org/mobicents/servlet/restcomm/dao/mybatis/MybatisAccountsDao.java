@@ -42,11 +42,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 @ThreadSafe
 public final class MybatisAccountsDao implements AccountsDao {
     private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.AccountsDao.";
+    private Integer accountRecursionDepth = 4; // maximum value for recursive account queries
     private final SqlSessionFactory sessions;
 
     public MybatisAccountsDao(final SqlSessionFactory sessions) {
         super();
         this.sessions = sessions;
+    }
+
+    public void setAccountRecursionDepth(Integer accountRecursionDepth) {
+        this.accountRecursionDepth = accountRecursionDepth;
     }
 
     @Override
@@ -141,6 +146,34 @@ public final class MybatisAccountsDao implements AccountsDao {
     @Override
     public void updateAccount(final Account account) {
         updateAccount(namespace + "updateAccount", account);
+    }
+
+    @Override
+    public List<String> getSubAccountSidsRecursive(Sid parentAccountSid) {
+        List<String> parentList = new ArrayList<String>();
+        parentList.add(parentAccountSid.toString());
+        List<String> allChildren = new ArrayList<String>();
+
+        int depth = 1;
+        List<String> childrenList = getSubAccountsSids(parentList);
+        while (childrenList != null && !childrenList.isEmpty() && depth < accountRecursionDepth) {
+            allChildren.addAll(childrenList);
+            childrenList = getSubAccountsSids(childrenList); // retrieve children's children
+
+            depth ++;
+        }
+
+        return allChildren;
+    }
+
+    private List<String> getSubAccountsSids(List<String> parentAccountSidList) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<String> results = session.selectList(namespace + "getSubAccountSids", parentAccountSidList);
+            return results;
+        } finally {
+            session.close();
+        }
     }
 
     private void updateAccount(final String selector, final Account account) {

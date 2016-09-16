@@ -90,7 +90,7 @@ $RESTCOMM_HOME/bin/restcomm/restcomm.conf
 SECURESSL=SELF
 
 #HTTPS Settings
-DISABLE_HTTP='false' #Control whether or not HTTP connector will be disabled. Values, true=HTTP connector will be disable, false=HTTP Connector will not be disabled
+DISABLE_HTTP='false' #Control whether or not HTTP connector will be disabled. Values: true=HTTP connector will be disable, false=HTTP Connector will not be disabled, REDIRECT= http -> https redirection will be enabled (For CLI RestAPI requests when redirect is active https needs to be used).
 TRUSTSTORE_FILE='restcomm.jks' #File should be located at $RESTCOMM_HOME/standalone/configuration folder. Provide just the name of the trustore file. Leave it blank to disable HTTPS
 TRUSTSTORE_PASSWORD='changeit' #Password for the trustore file
 TRUSTSTORE_ALIAS='restcomm' #The certificate alias
