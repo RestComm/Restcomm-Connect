@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import javax.sdp.SdpParseException;
 import javax.servlet.ServletContext;
 import javax.servlet.sip.Address;
 import javax.servlet.sip.AuthInfo;
@@ -79,6 +80,7 @@ import org.mobicents.servlet.restcomm.mscontrol.MediaServerControllerFactory;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
+import org.mobicents.servlet.restcomm.util.SdpUtils;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import scala.concurrent.Await;
@@ -470,9 +472,19 @@ public final class CallManager extends UntypedActor {
         if (userAgent != null && !userAgent.isEmpty() && userAgent.equalsIgnoreCase("wss-sipunit")) {
             return true;
         }
-        if (!request.getInitialTransport().equalsIgnoreCase(transport))
+        if (!request.getInitialTransport().equalsIgnoreCase(transport)) {
             transport = request.getInitialTransport();
-        return "ws".equalsIgnoreCase(transport) || "wss".equalsIgnoreCase(transport);
+            if ("ws".equalsIgnoreCase(transport) || "wss".equalsIgnoreCase(transport))
+                return true;
+        }
+        try {
+            if (SdpUtils.isWebRTCSDP(request.getContentType(), request.getRawContent())) {
+                return true;
+            }
+        } catch (SdpParseException e) {}
+          catch (IOException e) {}
+
+        return false;
     }
 
     private void proxyThroughMediaServer(final SipServletRequest request, final Client client, final String destNumber) {
