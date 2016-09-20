@@ -1,0 +1,3 @@
+---
+- name: install maven
+  apt: name=maven state=present

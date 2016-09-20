@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  become: yes
+  roles:
+  - role: jdk7
+  - role: git
+  - role: ant
+  - role: maven
+  - role: restcomm
