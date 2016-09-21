@@ -22,35 +22,28 @@
 package org.mobicents.servlet.restcomm.mscontrol.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
- * @author Henrique Rosa (henrique.rosa@telestax.com)
+ * @author Maria
  *
  */
 @Immutable
-public class MediaServerControllerStateChanged {
+public final class MediaServerConferenceControllerStateChanged extends MediaServerControllerStateChanged{
 
-    public enum MediaServerControllerState {
-        PENDING, ACTIVE, FAILED, INACTIVE;
+    private final Sid conferenceSid;
+
+    public MediaServerConferenceControllerStateChanged(MediaServerControllerState state, MediaSessionInfo mediaSession, Sid conferenceSid) {
+        super(state, mediaSession);
+        this.conferenceSid = conferenceSid;
     }
 
-    private final MediaServerControllerState state;
-    private final MediaSessionInfo mediaSession;
-
-    public MediaServerControllerStateChanged(MediaServerControllerState state, MediaSessionInfo mediaSession) {
-        this.state = state;
-        this.mediaSession = mediaSession;
+    public MediaServerConferenceControllerStateChanged(MediaServerControllerState state, Sid conferenceSid) {
+        super(state);
+        this.conferenceSid = conferenceSid;
     }
 
-    public MediaServerControllerStateChanged(MediaServerControllerState state) {
-        this(state, null);
-    }
-
-    public MediaServerControllerState getState() {
-        return state;
-    }
-
-    public MediaSessionInfo getMediaSession() {
-        return mediaSession;
+    public Sid conferenceSid() {
+        return conferenceSid;
     }
 }

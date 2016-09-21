@@ -53,6 +53,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
@@ -108,7 +109,7 @@ public final class MmsConferenceController extends MediaServerController {
     private ActorRef conference;
     private ActorRef mediaGroup;
     private ActorRef conferenceMediaResourceController;
-    private boolean startCMRCSignalSent = false;
+    private boolean startJoinConferencesOverDifferentMediaServers = false;
 
     // Runtime media operations
     private Boolean playing;
@@ -264,9 +265,9 @@ public final class MmsConferenceController extends MediaServerController {
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
         logger.info("got JoinComplete in conference controller");
-        if(!startCMRCSignalSent){
-            startCMRCSignalSent = true;
-            conferenceMediaResourceController.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartConferenceMediaResourceController(this.cnfEndpoint, this.conferenceSid), self);
+        if(!startJoinConferencesOverDifferentMediaServers){
+            startJoinConferencesOverDifferentMediaServers = true;
+            conferenceMediaResourceController.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.JoinConferences(), self);
         }
     }
 
@@ -280,6 +281,7 @@ public final class MmsConferenceController extends MediaServerController {
         }else if(is(gettingCnfMediaResourceController)){
             conferenceMediaResourceController = (ActorRef) message.get();
             conferenceMediaResourceController.tell(new Observe(self), self);
+            conferenceMediaResourceController.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartConferenceMediaResourceController(this.cnfEndpoint, this.conferenceSid), self);
             fsm.transition(message, active);
         }
     }
@@ -527,7 +529,7 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.ACTIVE));
+            broadcast(new MediaServerConferenceControllerStateChanged(MediaServerControllerState.ACTIVE, conferenceSid));
         }
     }
 
