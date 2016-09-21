@@ -657,10 +657,10 @@ public class MmsCallController extends MediaServerController {
     }
 
     private void onJoinConference(JoinConference message, ActorRef self, ActorRef sender) throws Exception {
-        // Ask the remote media session controller for the bridge endpoint
+        // Ask the remote media session controller for the bridge endpoint.
         //Why ??
         this.bridge = sender;
-        //internalLinkEndpoint is basically conference endpoint where master participant is connected.
+        //internalLinkEndpoint is basically conference endpoint.
         this.internalLinkEndpoint = (ActorRef) message.getEndpoint();
         this.internalLinkMode = message.getConnectionMode();
 

@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.MediaResourceBrokerDao;
@@ -52,18 +53,28 @@ import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
 import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.JoinConferences;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResourceControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecording;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
@@ -81,6 +92,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private final FiniteStateMachine fsm;
     private final State uninitialized;
     private final State acquiringConferenceInfo;
+    private final State creatingMediaGroup;
     //for slave
     private final State acquiringRemoteConnectionWithLocalMS;
     private final State initializingRemoteConnectionWithLocalMS;
@@ -101,6 +113,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private final Map<String, ActorRef> allMediaGateways;
     private final ActorRef localMediaGateway;
     private ActorRef masterMediaGateway;
+    private ActorRef mediaGroup;
 
     private String localMsId;
     private String masterMsId;
@@ -122,6 +135,11 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private ConferenceDetailRecord cdr;
     private Sid conferenceSid;
 
+    // Runtime media operations
+    private Boolean playing;
+    private Boolean recording;
+    private DateTime recordStarted;
+
     // Observer pattern
     private final List<ActorRef> observers;
 
@@ -134,6 +152,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         final ActorRef source = self();
         // Initialize the states for the FSM.
         this.uninitialized = new State("uninitialized", null, null);
+        this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(source), null);
         this.acquiringConferenceInfo = new State("getting Conference Info From DB", new AcquiringConferenceInfo(source), null);
         this.acquiringConferenceEndpointID=new State("acquiring ConferenceEndpoint ID", new AcquiringConferenceEndpointID(source), new SavingConferenceEndpointID(source));
         this.acquiringRemoteConnectionWithLocalMS = new State("acquiring connection with local media server", new AcquiringRemoteConnectionWithLocalMS(source), null);
@@ -206,6 +225,9 @@ public class ConferenceMediaResourceController extends UntypedActor{
         } else if (StartConferenceMediaResourceController.class.equals(klass)){
             onStartConferenceMediaResourceController((StartConferenceMediaResourceController) message, self, sender);
             msConferenceController = sender;
+        } else if (JoinConferences.class.equals(klass)){
+            onJoinConferences((JoinConferences) message, self, sender);
+            msConferenceController = sender;
         } else if (StopConferenceMediaResourceController.class.equals(klass)) {
             onStopConferenceMediaResourceController((StopConferenceMediaResourceController) message, self, sender);
         }else if (MediaGatewayResponse.class.equals(klass)) {
@@ -237,9 +259,18 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
     private void onStartConferenceMediaResourceController(StartConferenceMediaResourceController message, ActorRef self, ActorRef sender) throws Exception{
         if (is(uninitialized)) {
-            logger.info("onStartBridgeConnector: conferenceSid: "+message.conferenceSid()+" cnfEndpoint: "+message.cnfEndpoint());
+            logger.info("onStartConferenceMediaResourceController: conferenceSid: "+message.conferenceSid()+" cnfEndpoint: "+message.cnfEndpoint());
             this.localConfernceEndpoint = message.cnfEndpoint();
             this.conferenceSid = message.conferenceSid();
+            fsm.transition(message, acquiringConferenceInfo);
+        }
+    }
+
+    private void onJoinConferences(JoinConferences message, ActorRef self, ActorRef sender) throws Exception{
+        if(logger.isDebugEnabled())
+            logger.debug("onJoinConferences: current state is: "+fsm.state());
+        //TODO: change the folowing state as per situation
+    	if (is(uninitialized)) {
             fsm.transition(message, acquiringConferenceInfo);
         }
     }
@@ -328,6 +359,79 @@ public class ConferenceMediaResourceController extends UntypedActor{
         fsm.transition(message, stopping);
     }
 
+    private void onMediaGroupStateChanged(MediaGroupStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+        switch (message.state()) {
+            case ACTIVE:
+                if (is(creatingMediaGroup)) {
+                    fsm.transition(message, gettingCnfMediaResourceController);
+                }
+                break;
+
+            case INACTIVE:
+                if (is(creatingMediaGroup)) {
+                    this.fail = Boolean.TRUE;
+                    fsm.transition(message, failed);
+                } else if (is(stopping)) {
+                    // Stop media group actor
+                    this.mediaGroup.tell(new StopObserving(self), self);
+                    context().stop(mediaGroup);
+                    this.mediaGroup = null;
+
+                    // Move to next state
+                    if (this.mediaGroup == null && this.cnfEndpoint == null) {
+                        this.fsm.transition(message, fail ? failed : inactive);
+                    }
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    private void onPlay(Play message, ActorRef self, ActorRef sender) {
+        if (is(active) && !playing) {
+            this.playing = Boolean.TRUE;
+            this.mediaGroup.tell(message, self);
+        }
+    }
+
+    private void onStartRecording(StartRecording message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(active) && !recording) {
+            String finishOnKey = "1234567890*#";
+            int maxLength = 3600;
+            int timeout = 5;
+
+            this.recording = Boolean.TRUE;
+            this.recordStarted = DateTime.now();
+
+            // Tell media group to start recording
+            Record record = new Record(message.getRecordingUri(), timeout, maxLength, finishOnKey);
+            this.mediaGroup.tell(record, null);
+        }
+    }
+
+    private void onStopRecording(StopRecording message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(active) && recording) {
+            this.recording = Boolean.FALSE;
+            mediaGroup.tell(new Stop(), null);
+        }
+    }
+
+    private void onMediaGroupResponse(MediaGroupResponse<String> message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(active) && this.playing) {
+            this.playing = Boolean.FALSE;
+        }
+    }
+
+    private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) {
+        if (is(active)) {
+            // Stop the primary media group
+            this.mediaGroup.tell(new Stop(), self);
+            this.playing = Boolean.FALSE;
+        }
+    }
+
     /*
      * ACTIONS
      *
@@ -372,6 +476,32 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AcquiringMediaSession ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
                 localMediaGateway.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), source);
             }
+        }
+
+    }
+
+    private final class CreatingMediaGroup extends AbstractAction {
+
+        public CreatingMediaGroup(ActorRef source) {
+            super(source);
+        }
+
+        private ActorRef createMediaGroup(final Object message) {
+            return getContext().actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public UntypedActor create() throws Exception {
+                    return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint);
+                }
+            }));
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            mediaGroup = createMediaGroup(message);
+            mediaGroup.tell(new Observe(super.source), super.source);
+            mediaGroup.tell(new StartMediaGroup(), super.source);
         }
 
     }

@@ -40,6 +40,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Left;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
@@ -438,7 +439,12 @@ public final class Conference extends UntypedActor {
             case ACTIVE:
                 if (is(initializing)) {
                     //As MRB have generated Sid for this conference and saved in db.
-                    getConferenceSidFromDB();
+                    MediaServerConferenceControllerStateChanged mediaServerConferenceControllerStateChanged = (MediaServerConferenceControllerStateChanged) message;
+                    sid = mediaServerConferenceControllerStateChanged.conferenceSid();
+                    if(logger.isInfoEnabled()) {
+                        logger.info("################################## Conference " + name + " has sid: "+sid);
+                    }
+                    //getConferenceSidFromDB();
                     this.fsm.transition(message, waiting);
                 }
                 break;
@@ -506,7 +512,7 @@ public final class Conference extends UntypedActor {
         ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
         ConferenceDetailRecordFilter filter;
         // Putting offset to 100 but this filter should return only 1 DB record, otherwise code below will throw exception
-        // As there should be only one conference in running state by a given friendlyName under an account. 
+        // As there should be only one conference in running state by a given friendlyName under an account.
         filter = new ConferenceDetailRecordFilter(accountSid, "RUNNING%", null, null, friendlyName, 100, 0);
         List<ConferenceDetailRecord> records = dao.getConferenceDetailRecords(filter);
         if(records == null || records.size() == 0){
