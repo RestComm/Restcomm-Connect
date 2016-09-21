@@ -147,14 +147,26 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         final ActorRef gateway = self();
         final CreateIvrEndpoint request = (CreateIvrEndpoint) message;
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
+        final String endpointName = request.endpointName();
+        if(endpointName == null){
+            return getContext().actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
 
-            @Override
-            public UntypedActor create() throws Exception {
-                return new IvrEndpoint(gateway, session, agent, domain, timeout);
-            }
-        }));
+                @Override
+                public UntypedActor create() throws Exception {
+                    return new IvrEndpoint(gateway, session, agent, domain, timeout);
+                }
+            }));
+        }else{
+            return getContext().actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public UntypedActor create() throws Exception {
+                    return new IvrEndpoint(gateway, session, agent, domain, timeout, endpointName);
+                }
+            }));
+        }
     }
 
     private ActorRef getLink(final Object message) {

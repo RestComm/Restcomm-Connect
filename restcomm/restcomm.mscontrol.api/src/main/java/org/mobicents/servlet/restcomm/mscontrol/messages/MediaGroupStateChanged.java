@@ -21,11 +21,14 @@ package org.mobicents.servlet.restcomm.mscontrol.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
+import akka.actor.ActorRef;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
 public final class MediaGroupStateChanged {
+	private ActorRef ivr;
     public static enum State {
         ACTIVE, INACTIVE
     };
@@ -37,7 +40,16 @@ public final class MediaGroupStateChanged {
         this.state = state;
     }
 
+    public MediaGroupStateChanged(final State state, final ActorRef ivr) {
+        this(state);
+        this.ivr = ivr;
+    }
+
     public State state() {
         return state;
+    }
+
+    public ActorRef ivr() {
+        return ivr;
     }
 }
