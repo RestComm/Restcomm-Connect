@@ -2339,16 +2339,32 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         callback();
                         return;
                     } else if (dialBranches != null && dialBranches.contains(sender)) {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("At FinishDialing. Sender in the dialBranches, will remove and check next verb");
+                        }
                         removeDialBranch(message, sender);
                         return;
                     } else {
                         // At this point !sender.equal(call)
                         // Ask the parser for the next action to take.
-                        final GetNextVerb next = GetNextVerb.instance();
-                        if (parser != null) {
-                            parser.tell(next, source);
+                        Attribute attribute = null;
+                        if (verb != null) {
+                            attribute = verb.attribute("action");
                         }
-
+                        if (attribute == null) {
+                            if (logger.isInfoEnabled()) {
+                                logger.info("At FinishDialing. Sender NOT in the dialBranches, attribute is null, will check for the next verb");
+                            }
+                            final GetNextVerb next = GetNextVerb.instance();
+                            if (parser != null) {
+                                parser.tell(next, source);
+                            }
+                        } else {
+                            if (logger.isInfoEnabled()) {
+                                logger.info("At FinishDialing. Sender NOT in the dialBranches, attribute is NOT null, will execute Dial Action");
+                            }
+                            executeDialAction(message, outboundCall);
+                        }
                         dialChildren = null;
                         if (!sender().equals(outboundCall)) {
                             callManager.tell(new DestroyCall(sender), self());
