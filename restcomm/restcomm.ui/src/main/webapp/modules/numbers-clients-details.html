@@ -2,37 +2,68 @@
 
 <rc-page-title icon="phone" title="{{ clientDetails.login }}" sub-title="{{ clientDetails.friendly_name }}"></rc-page-title>
 
+<style type="text/css">
+    #login-password .form-group {
+    margin-right: 15px;
+    }
+
+    #login-password .form-group label {
+    margin-right: 10px;
+    }
+
+    #account-enabled-group {
+    margin-top: 8px;
+    }
+
+    .password-strength {
+    width:167px;
+    }
+</style>
+
 <div class="well well-sm">
     <h3 class="text-muted details-header">Authentication</h3>
-    <form class="form-inline">
-    <fieldset class="">
-        <div class="checkbox" style="font-size: 18px;">
-            <label>
-                <input type=checkbox ng-checked="clientDetails.status == 1">
-                <strong>Account Enabled</strong>
-            </label>
-        </div>
-        <span class="pull-right row form-group">
-            <span class="col-md-5">
-                <label for="client-login" class="col-md-3 account-details-field">
-                    <h4>Login</h4>
-                </label>
-                <span class="col-md-2">
-                    <input id="client-login" type="text" class="form-control" placeholder="Login" ng-model="clientDetails.login" readonly />
-                </span>
-            </span>
-            <span class="col-md-5">
-                <label for="client-password" class="col-md-5 account-details-field">
-                    <h4>Password</h4>
-                </label>
-                <span class="col-md-2">
-                    <input id="client-password" type="password" class="form-control" placeholder="Voice Request URL" ng-model="clientDetails.password" />
-                </span>
-            </span>
-        </span>
-    </fieldset>
-    </form>
+    <div class="row">
+        <form class="form-inline">
+            <div class="col-md-3 col-sm-12">
+                <div id="account-enabled-group" class="form-group" style="font-size: 18px;">
+                    <label>
+                        <input type=checkbox ng-checked="clientDetails.status == 1">
+                        <strong>Account Enabled</strong>
+                    </label>
+                </div>
+            </div>
+            <div id="login-password" class="col-md-9 col-sm-12 pull-right">
+                <div class="form-group">
+                    <label for="client-login">
+                        <h4>Login</h4>
+                    </label>
+                        <span>
+                            <input id="client-login" type="text" class="form-control" placeholder="Login" ng-model="clientDetails.login" readonly />
+                        </span>
+                </div>
+                <div class="form-group">
+                    <label for="client-password">
+                        <h4>Password</h4>
+                    </label>
+                </div>
+                <div class="form-group" style="position:relative">
+                    <span>
+                        <div ng-show="editingPass" class="password-strength" ng-password-strength="clientDetails.newPassword" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-" style="padding: inherit;">
+                            <uib-progressbar value="pwdStrength"></uib-progressbar>
+                        </div>
+                        <!-- un-comment this to use input-group for more control for the password field -->
+                        <span class="input-group" style="width:220px;">
+                            <input ng-if="editingPass" id="client-password" type="password" class="form-control" placeholder="Change password" ng-model="clientDetails.newPassword" ng-class="{'password-transparent' : clientDetails.newPassword}" />
+                            <input ng-if="!editingPass" type="password" class="form-control" placeholder="password" ng-model="clientDetails.password" readonly />
+                            <span ng-click="togglePasswordEdit()" class="input-group-addon clickable"><i class="fa fa-pencil"></i></span>
+                        </span>
+                    </span>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
+
 <div class="well well-sm">
     <h3 class="text-muted details-header">Voice</h3>
     <fieldset>
@@ -85,7 +116,7 @@
 <div class="">
     <span class="pull-right">
         <a href="#/numbers/clients" class="btn btn-default">Close</a>
-        <button class="btn btn-primary" ng-click="updateSIPClient(clientDetails)">Save Changes</button>
+        <button class="btn btn-primary" ng-click="updateSIPClient(clientDetails)" ng-disabled="editingPass && pwdStrength < 50">Save Changes</button>
     </span>
     <button class="btn btn-danger" ng-click="confirmClientDelete(clientDetails)">Delete Client</button>
 </div>

@@ -12,17 +12,17 @@
             <dt>Phone Number</dt>
             <dd>
                 <span class="col-md-8">
-                    <input id="new-number-number" class="form-control" ng-model="$parent.newNumber.phone_number" type="tel" placeholder="Phone Number" required popover-placement="top" popover-trigger="focus" popover="A number you own. We'll call this number to verify!" />
+                    <input id="new-number-number" class="form-control" ng-model="$parent.newNumber.phone_number" type="tel" placeholder="Phone Number" required popover-placement="top" popover-trigger="focus" uib-popover="A number you own. We'll call this number to verify!" />
                 </span>
                 <span class="col-md-4">
-                    <input id="new-number-extension" class="form-control" ng-model="$parent.newNumber.extension" type="tel" placeholder="Extension" required popover-placement="top" popover-trigger="focus" popover="Enter the 'w' character for 1/2 second pause." />
+                    <input id="new-number-extension" class="form-control" ng-model="$parent.newNumber.extension" type="tel" placeholder="Extension" required popover-placement="top" popover-trigger="focus" uib-popover="Enter the 'w' character for 1/2 second pause." />
                 </span>
             </dd>
         </dl>
         <div class="text-right">
             <button type="button" ng-click="isCollapsed = !isCollapsed" class="btn btn-default btn-sm"><i class="fa fa-ellipsis-h"></i> Optional Parameters</legend></button>
         </div>
-        <div collapse="isCollapsed">
+        <div uib-collapse="isCollapsed">
             <hr />
             <div class="well"><h4><i class="fa fa-bullhorn"></i> C'mon.. play with defaults for now!</h4></div>
         </div>

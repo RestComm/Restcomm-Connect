@@ -117,24 +117,28 @@
                 <td><div class="text-center">{{ call.status ? call.status : '?' }}</div></td>
                 <td><div class="text-center">{{ call.duration ? call.duration  : '0' }} s</div></td>
                 <td><div class="text-center">$ {{call.cost ? call.cost : '0.00' }}</div></td>
-                <!--<td><div class="text-center"><a href="" class="clean-link"><i class="fa fa-expand" tooltip="Recording Available"></i></a></div></td>-->
+                <!--<td><div class="text-center"><a href="" class="clean-link"><i class="fa fa-expand" uib-tooltip="Recording Available"></i></a></div></td>-->
             </tr>
             </tbody>
             <tfoot>
-            <td><small class="pull-left">{{ totalCalls }} Call{{ totalCalls == 1 ? "" : "s" }}</small></td>
-            <td colspan=4>
-                <div class="col-md-12 text-center">
-                    <uib-pagination class="pagination pagination-sm" ng-change="pageChanged()" total-items="totalCalls" items-per-page="entryLimit" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
-                </div>
-                <div class="col-md-12">
-                    <form class="form-inline text-center">
-                        <h6>Items / Page</h6>
-                        <div class="btn-group buttons-per-page" data-toggle="buttons-radio">
-                            <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
-                            <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
-                            <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
-                        </div>
-                    </form>
+            <td colspan="99">
+                <div class="row">
+                    <div class="col-md-4">
+                        <small class="pull-left">{{ totalCalls }} Call{{ totalCalls == 1 ? "" : "s" }}</small>
+                    </div>
+                    <div class="col-md-4">
+                        <form class="form-inline text-center">
+                            <h6>Items / Page</h6>
+                            <div class="btn-group buttons-per-page" data-toggle="buttons-radio">
+                                <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
+                                <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
+                                <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-4">
+                        <uib-pagination style="float:right" class="pagination pagination-sm" ng-change="pageChanged()" total-items="totalCalls" items-per-page="entryLimit" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
+                    </div>
                 </div>
             </td>
             </tfoot>
