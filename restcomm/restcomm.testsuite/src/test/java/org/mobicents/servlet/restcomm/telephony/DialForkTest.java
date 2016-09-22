@@ -22,7 +22,6 @@ import org.junit.*;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
 import org.mobicents.servlet.restcomm.tools.MonitoringServiceTool;
-import org.tritonus.share.sampled.file.THeaderlessAudioFileWriter;
 
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
@@ -954,7 +953,11 @@ public class DialForkTest {
         assertTrue(liveCalls == 0);
         assertTrue(liveCallsArraySize == 0);
 
-        Thread.sleep(10000);
+        Thread.sleep(60000);
+
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        Thread.sleep(5000);
 
         logger.info("About to check the Requests");
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
