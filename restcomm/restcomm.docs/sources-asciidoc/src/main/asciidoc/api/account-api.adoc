@@ -50,11 +50,20 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 
 **Change default account password(AuthToken).**
 
+To update an account you need to provide the SID of the account or the email address of the account (make sure you url escape the @ sign of the email address)
+
+For example, update password using account sid:
 ....
 curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf -d "Password=NewPassword"
 ....
 
-NOTE: The above command uses the Account SID and the one below uses the Email Account. Note the administrator%40company.com is used instead of administrator@company.com . This is because using curl on the bash terminal doesn't parse the @ correctlyl. If you were to running on a browser, you can safely use the @ as the web browser will correctly handle it.
+And update password using email address of the account:
+
+....
+curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/administrator%40company.com -d "Password=NewPassword"
+....
+
+NOTE: The above command uses the Account SID of the requestor, and the one below uses the Email Account. Note the administrator%40company.com is used instead of administrator@company.com . This is because using curl on the bash terminal doesn't parse the @ correctlyl. If you were to running on a browser, you can safely use the @ as the web browser will correctly handle it.
 
 ....
 curl -X GET  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf
@@ -95,7 +104,7 @@ The above commands will print an output similar to the one below:
 
 === Supported Operations
 
-**HTTP GET**. Returns the list representation of all the *Sub-Account* resources for this **Account**, including the properties above. 
+**HTTP GET**. Returns the list representation of all the *Sub-Account* resources for this **Account**, including the properties above.
 
 **HTTP POST**. Creates a new Sub-Account and returns the representation of the Sub-Account resource, including the properties above. Below you will find a list of required and optional parameters.  
 
