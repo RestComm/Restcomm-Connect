@@ -161,6 +161,17 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     }
 
     @Override
+    public void updateConferenceDetailRecordMasterIVREndpointID(ConferenceDetailRecord cdr) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateConferenceDetailRecordMasterIVREndpointID", toMap(cdr));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public void updateMasterPresent(ConferenceDetailRecord cdr) {
         final SqlSession session = sessions.openSession();
         try {
@@ -208,8 +219,9 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         final URI uri = readUri(map.get("uri"));
         final String msId = readString(map.get("master_ms_id"));
         final String masterConferenceEndpointId = readString(map.get("master_conference_endpoint_id"));
+        final String masterIVREndpointId = readString(map.get("master_ivr_endpoint_id"));
         final boolean masterPresent = readBoolean(map.get("master_present"));
-        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri, msId, masterConferenceEndpointId, masterPresent);
+        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri, msId, masterConferenceEndpointId, masterPresent, masterIVREndpointId);
     }
 
     private Map<String, Object> toMap(final ConferenceDetailRecord cdr) {
@@ -224,6 +236,7 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         map.put("uri", writeUri(cdr.getUri()));
         map.put("master_ms_id", cdr.getMasterMsId());
         map.put("master_conference_endpoint_id", cdr.getMasterConferenceEndpointId());
+        map.put("master_ivr_endpoint_id", cdr.getMasterIVREndpointId());
         map.put("master_present", cdr.isMasterPresent());
         return map;
     }

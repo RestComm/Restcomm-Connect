@@ -282,6 +282,7 @@ public final class MmsConferenceController extends MediaServerController {
             conferenceMediaResourceController = (ActorRef) message.get();
             conferenceMediaResourceController.tell(new Observe(self), self);
             conferenceMediaResourceController.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartConferenceMediaResourceController(this.cnfEndpoint, this.conferenceSid), self);
+            //TODO: IMPORTANT do following transition after receiving success from above statement.
             fsm.transition(message, active);
         }
     }
