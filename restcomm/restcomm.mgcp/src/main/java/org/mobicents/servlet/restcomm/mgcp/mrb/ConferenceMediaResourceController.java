@@ -254,19 +254,25 @@ public class ConferenceMediaResourceController extends UntypedActor{
         } else if (StartConferenceMediaResourceController.class.equals(klass)){
             onStartConferenceMediaResourceController((StartConferenceMediaResourceController) message, self, sender);
             msConferenceController = sender;
-        } else if (MediaGroupStateChanged.class.equals(klass)) {
-            onMediaGroupStateChanged((MediaGroupStateChanged) message, self, sender);
         } else if (JoinConferences.class.equals(klass)){
             onJoinConferences((JoinConferences) message, self, sender);
-        } else if (StopConferenceMediaResourceController.class.equals(klass)) {
-            onStopConferenceMediaResourceController((StopConferenceMediaResourceController) message, self, sender);
-        }else if (MediaGatewayResponse.class.equals(klass)) {
+        } else if (MediaGatewayResponse.class.equals(klass)) {
             logger.info("going to call onMediaGatewayResponse");
             onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
         } else if (ConnectionStateChanged.class.equals(klass)) {
             onConnectionStateChanged((ConnectionStateChanged) message, self, sender);
         } else if (EndpointCredentials.class.equals(klass)) {
             onEndpointCredentials((EndpointCredentials) message, self, sender);
+        } else if (MediaGroupStateChanged.class.equals(klass)) {
+            onMediaGroupStateChanged((MediaGroupStateChanged) message, self, sender);
+        } else if (StopMediaGroup.class.equals(klass)) {
+            onStopMediaGroup((StopMediaGroup) message, self, sender);
+        } else if (Play.class.equals(klass)) {
+            onPlay((Play) message, self, sender);
+        } else if (StartRecording.class.equals(klass)) {
+            onStartRecording((StartRecording) message, self, sender);
+        } else if (StopConferenceMediaResourceController.class.equals(klass)) {
+            onStopConferenceMediaResourceController((StopConferenceMediaResourceController) message, self, sender);
         }
     }
 

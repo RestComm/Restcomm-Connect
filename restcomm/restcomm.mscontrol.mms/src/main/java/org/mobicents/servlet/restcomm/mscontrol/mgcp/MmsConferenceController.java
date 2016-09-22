@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
@@ -52,13 +51,10 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
-import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
@@ -113,9 +109,9 @@ public final class MmsConferenceController extends MediaServerController {
     private boolean startJoinConferencesOverDifferentMediaServers = false;
 
     // Runtime media operations
-    private Boolean playing;
-    private Boolean recording;
-    private DateTime recordStarted;
+    //private Boolean playing;
+    //private Boolean recording;
+    //private DateTime recordStarted;
 
     // Observers
     private final List<ActorRef> observers;
@@ -172,8 +168,8 @@ public final class MmsConferenceController extends MediaServerController {
         this.mrb = mrb;
 
         // Runtime media operations
-        this.playing = Boolean.FALSE;
-        this.recording = Boolean.FALSE;
+        //this.playing = Boolean.FALSE;
+        //this.recording = Boolean.FALSE;
 
         // Observers
         this.observers = new ArrayList<ActorRef>(2);
@@ -222,20 +218,12 @@ public final class MmsConferenceController extends MediaServerController {
             onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
         } else if (Stop.class.equals(klass)) {
             onStop((Stop) message, self, sender);
-        } else if (MediaGroupStateChanged.class.equals(klass)) {
+        } /*else if (MediaGroupStateChanged.class.equals(klass)) {
             onMediaGroupStateChanged((MediaGroupStateChanged) message, self, sender);
-        } else if (StopMediaGroup.class.equals(klass)) {
-            onStopMediaGroup((StopMediaGroup) message, self, sender);
-        } else if (JoinCall.class.equals(klass)) {
+        }*/  else if (JoinCall.class.equals(klass)) {
             onJoinCall((JoinCall) message, self, sender);
-        } else if (Play.class.equals(klass)) {
-            onPlay((Play) message, self, sender);
-        } else if (StartRecording.class.equals(klass)) {
-            onStartRecording((StartRecording) message, self, sender);
-        } else if (StopRecording.class.equals(klass)) {
-            onStopRecording((StopRecording) message, self, sender);
-        } else if(MediaGroupResponse.class.equals(klass)) {
-            onMediaGroupResponse((MediaGroupResponse<String>) message, self, sender);
+        } else if (Play.class.equals(klass) || StartRecording.class.equals(klass) || StopRecording.class.equals(klass) || StopMediaGroup.class.equals(klass)) {
+            conferenceMediaResourceController.tell(message, sender);
         } else if(EndpointStateChanged.class.equals(klass)) {
             onEndpointStateChanged((EndpointStateChanged) message, self, sender);
         } else if (MediaResourceBrokerResponse.class.equals(klass)) {
@@ -288,6 +276,20 @@ public final class MmsConferenceController extends MediaServerController {
         }
     }
 
+    private void onConferenceMediaResourceControllerStateChanged(ConferenceMediaResourceControllerStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+        if(logger.isDebugEnabled())
+            logger.debug("onConferenceMediaResourceControllerStateChanged: "+message.state());
+        switch (message.state()) {
+            case INITIALIZED:
+                if (is(gettingCnfMediaResourceController)) {
+                    fsm.transition(message, active);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
     private void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
         if (is(uninitialized)) {
             this.conference = sender;
@@ -319,25 +321,11 @@ public final class MmsConferenceController extends MediaServerController {
         } else if (is(acquiringEndpoint)) {
             this.cnfEndpoint = (ActorRef) message.get();
             this.cnfEndpoint.tell(new Observe(self), self);
-            this.fsm.transition(message, creatingMediaGroup);
+            this.fsm.transition(message, gettingCnfMediaResourceController);
         }
     }
 
-    private void onConferenceMediaResourceControllerStateChanged(ConferenceMediaResourceControllerStateChanged message, ActorRef self, ActorRef sender) throws Exception {
-        if(logger.isDebugEnabled())
-            logger.debug("onConferenceMediaResourceControllerStateChanged: "+message.state());
-        switch (message.state()) {
-            case INITIALIZED:
-                if (is(gettingCnfMediaResourceController)) {
-                    fsm.transition(message, active);
-                }
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void onMediaGroupStateChanged(MediaGroupStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+    /*private void onMediaGroupStateChanged(MediaGroupStateChanged message, ActorRef self, ActorRef sender) throws Exception {
         switch (message.state()) {
             case ACTIVE:
                 if (is(creatingMediaGroup)) {
@@ -365,21 +353,21 @@ public final class MmsConferenceController extends MediaServerController {
             default:
                 break;
         }
-    }
-
-    private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) {
-        if (is(active)) {
-            // Stop the primary media group
-            this.mediaGroup.tell(new Stop(), self);
-            this.playing = Boolean.FALSE;
-        }
-    }
+    }*/
 
     private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
         connectionMode = message.getConnectionMode();
         // Tell call to join conference by passing reference to the media mixer
         final JoinConference join = new JoinConference(this.cnfEndpoint, connectionMode);
         message.getCall().tell(join, sender);
+    }
+
+    /*private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) {
+        if (is(active)) {
+            // Stop the primary media group
+            this.mediaGroup.tell(new Stop(), self);
+            this.playing = Boolean.FALSE;
+        }
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
@@ -415,7 +403,7 @@ public final class MmsConferenceController extends MediaServerController {
         if (is(active) && this.playing) {
             this.playing = Boolean.FALSE;
         }
-    }
+    }*/
 
     private void onEndpointStateChanged(EndpointStateChanged message, ActorRef self, ActorRef sender) throws Exception {
         if (is(stopping)) {
