@@ -53,6 +53,7 @@ import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
 import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.ConferenceMediaResourceControllerStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.JoinConferences;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResourceController;
@@ -223,6 +224,17 @@ public class ConferenceMediaResourceController extends UntypedActor{
         return this.fsm.state().equals(state);
     }
 
+    private void broadcast(Object message) {
+        if (!this.observers.isEmpty()) {
+            final ActorRef self = self();
+            synchronized (this.observers) {
+                for (ActorRef observer : observers) {
+                    observer.tell(message, self);
+                }
+            }
+        }
+    }
+
     @Override
     public void onReceive(Object message) throws Exception {
         final Class<?> klass = message.getClass();
@@ -254,7 +266,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         } else if (ConnectionStateChanged.class.equals(klass)) {
             onConnectionStateChanged((ConnectionStateChanged) message, self, sender);
         } else if (EndpointCredentials.class.equals(klass)) {
-        	onEndpointCredentials((EndpointCredentials) message, self, sender);
+            onEndpointCredentials((EndpointCredentials) message, self, sender);
         }
     }
 
@@ -286,29 +298,29 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
     private void onEndpointCredentials(EndpointCredentials message, ActorRef self, ActorRef sender) throws Exception{
         logger.info("onEndpointCredentials state = "+fsm.state());
-    	if(is(acquiringIVREndpointID)){
+        if(is(acquiringIVREndpointID)){
             fsm.transition(message, initialized);
-    	}else{
-            fsm.transition(message, active);	
-    	}
+        }else{
+            fsm.transition(message, active);    
+        }
     }
 
     private void onJoinConferences(JoinConferences message, ActorRef self, ActorRef sender) throws Exception{
         if(logger.isDebugEnabled())
             logger.debug("onJoinConferences: current state is: "+fsm.state());
-    	if (is(initialized)) {
-    		if(isThisMaster){
-    			this.fsm.transition(message, acquiringConferenceEndpointID);
-    		}else{
-    			this.fsm.transition(message, acquiringRemoteConnectionWithLocalMS);
-    		}
+        if (is(initialized)) {
+            if(isThisMaster){
+                this.fsm.transition(message, acquiringConferenceEndpointID);
+            }else{
+                this.fsm.transition(message, acquiringRemoteConnectionWithLocalMS);
+            }
         }
     }
 
     private void onMediaGatewayResponse(MediaGatewayResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
         logger.info("inside onMediaGatewayResponse: state = "+fsm.state());
         if (is(acquiringConferenceInfo)){
-        	logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringMediaSession ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringMediaSession ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             this.localMediaSession = (MediaSession) message.get();
 
             this.fsm.transition(message, creatingMediaGroup);
@@ -386,16 +398,16 @@ public class ConferenceMediaResourceController extends UntypedActor{
     }
 
     private void onMediaGroupStateChanged(MediaGroupStateChanged message, ActorRef self, ActorRef sender) throws Exception {
-    	logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGroupStateChanged - received STATE is: "+message.state()+" current fsm STATE is: "+fsm.state()+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+        logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGroupStateChanged - received STATE is: "+message.state()+" current fsm STATE is: "+fsm.state()+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
         switch (message.state()) {
             case ACTIVE:
                 if (is(creatingMediaGroup)) {
-                	this.masterIVREndpoint = message.ivr();
-                	if(isThisMaster){
-                		fsm.transition(message, acquiringIVREndpointID);
-                	}else{
-                		fsm.transition(message, initialized);
-                	}
+                    this.masterIVREndpoint = message.ivr();
+                    if(isThisMaster){
+                        fsm.transition(message, acquiringIVREndpointID);
+                    }else{
+                        fsm.transition(message, initialized);
+                    }
                 }
                 break;
 
@@ -546,8 +558,8 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
         @Override
         public void execute(Object message) throws Exception {
-        	logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Initialized ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-        	msConferenceController.tell(new , super.source);
+            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Initialized ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            broadcast(new ConferenceMediaResourceControllerStateChanged(ConferenceMediaResourceControllerStateChanged.MediaServerControllerState.INITIALIZED));
         }
 
     }
