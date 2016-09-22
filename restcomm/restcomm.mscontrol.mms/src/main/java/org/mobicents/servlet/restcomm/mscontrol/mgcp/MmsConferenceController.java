@@ -92,7 +92,7 @@ public final class MmsConferenceController extends MediaServerController {
     private final State failed;
     private final State acquiringMediaSession;
     private final State acquiringEndpoint;
-    private final State creatingMediaGroup;
+    //private final State creatingMediaGroup;
     private final State stopping;
     private final State stoppingCMRC;
     private Boolean fail;
@@ -137,7 +137,7 @@ public final class MmsConferenceController extends MediaServerController {
         this.failed = new State("failed", new Failed(source), null);
         this.acquiringMediaSession = new State("acquiring media session", new AcquiringMediaSession(source), null);
         this.acquiringEndpoint = new State("acquiring endpoint", new AcquiringEndpoint(source), null);
-        this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(source), null);
+        //this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(source), null);
         this.stoppingCMRC = new State("stopping HA Conference Media Resource Controller", new StoppingCMRC(source), null);
         this.stopping = new State("stopping", new Stopping(source), null);
 
@@ -147,12 +147,12 @@ public final class MmsConferenceController extends MediaServerController {
         transitions.add(new Transition(getMediaGatewayFromMRB, acquiringMediaSession));
         transitions.add(new Transition(acquiringMediaSession, acquiringEndpoint));
         transitions.add(new Transition(acquiringMediaSession, inactive));
-        transitions.add(new Transition(acquiringEndpoint, creatingMediaGroup));
+        transitions.add(new Transition(acquiringEndpoint, gettingCnfMediaResourceController));
         transitions.add(new Transition(acquiringEndpoint, inactive));
-        transitions.add(new Transition(creatingMediaGroup, gettingCnfMediaResourceController));
+        //transitions.add(new Transition(creatingMediaGroup, gettingCnfMediaResourceController));
         transitions.add(new Transition(gettingCnfMediaResourceController, active));
-        transitions.add(new Transition(creatingMediaGroup, stoppingCMRC));
-        transitions.add(new Transition(creatingMediaGroup, failed));
+        transitions.add(new Transition(gettingCnfMediaResourceController, stoppingCMRC));
+        transitions.add(new Transition(gettingCnfMediaResourceController, failed));
         transitions.add(new Transition(active, stoppingCMRC));
         transitions.add(new Transition(stoppingCMRC, stopping));
         transitions.add(new Transition(stopping, inactive));
@@ -308,7 +308,7 @@ public final class MmsConferenceController extends MediaServerController {
     private void onStop(Stop message, ActorRef self, ActorRef sender) throws Exception {
         if (is(acquiringMediaSession) || is(acquiringEndpoint)) {
             this.fsm.transition(message, inactive);
-        } else if (is(creatingMediaGroup) || is(active)) {
+        } else if (is(gettingCnfMediaResourceController) || is(active)) {
             this.fsm.transition(message, stoppingCMRC);
         }
     }

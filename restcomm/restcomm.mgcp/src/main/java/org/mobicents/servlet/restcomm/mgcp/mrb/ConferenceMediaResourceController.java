@@ -210,7 +210,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         this.localMsId = localMsId;
         this.localMediaGateway = allMediaGateways.get(this.localMsId);
         masterIVREndpointId = null;
-        
+
         // Runtime media operations
         this.playing = Boolean.FALSE;
         this.recording = Boolean.FALSE;
@@ -307,7 +307,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         if(is(acquiringIVREndpointID)){
             fsm.transition(message, initialized);
         }else{
-            fsm.transition(message, active);    
+            fsm.transition(message, active);
         }
     }
 
