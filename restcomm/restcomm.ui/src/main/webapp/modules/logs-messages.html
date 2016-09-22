@@ -74,7 +74,7 @@
                 </form>
             </td>
             <td colspan="99">
-                <pagination class="pagination pagination-sm pull-right" on-select-page="pageChanged(page)" total-items="totalMessages" items-per-page="entryLimit" page="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>
+                <uib-pagination class="pagination pagination-sm pull-right" total-items="filtered.length" items-per-page="entryLimit" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
             </td>
             </tfoot>
         </table>

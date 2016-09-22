@@ -13,8 +13,14 @@
                 <label class="col-md-4 control-label" for="newPassword">New Password</label>
                 <div class="controls">
                     <div class="input-group col-md-6">
-                        <span class="input-group-addon"><i class="fa fa-lock"></i> </span><input id="newPassword" type="password" class="col-md-3 form-control" ng-class="{'password-transparent' : newPassword}" placeholder="Password" ng-model="newPassword" required />
-                        <div class="col-md-12 password-strength" ng-password-strength="newPassword" ng-show="newPassword"></div>
+                        <span class="input-group-addon"><i class="fa fa-lock"></i> </span>
+                        <div style="position:relative">
+                            <input id="newPassword" type="password" class="col-md-3 form-control" ng-class="{'password-transparent' : newPassword}" placeholder="Password" ng-model="newPassword" required />
+                            <div class="password-strength" ng-password-strength="newPassword" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-" style="padding: inherit;">
+                                <uib-progressbar value="pwdStrength"></uib-progressbar>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>

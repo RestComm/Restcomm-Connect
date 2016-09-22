@@ -62,8 +62,9 @@
                     <h5 class="no-margins">Password</h5>
                 </label>
                 <div class="col-md-4">
-                    <style type="text/css">div.password-strength span { right: 20px !important; }</style>
-                    <div ng-show="newPassword" class="col-md-12 password-strength" ng-password-strength="newPassword" style="padding: inherit;"></div>
+                    <div ng-show="newPassword" class="col-md-12 password-strength" ng-password-strength="newPassword" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-" style="padding: inherit;">
+                        <uib-progressbar value="pwdStrength"></uib-progressbar>
+                    </div>
                     <input id="newPassword" name="newPassword" type="password" class="form-control" ng-class="{'password-transparent' : newPassword}" placeholder="New Password" ng-model="newPassword" />
                 </div>
                 <div class="col-md-4">
@@ -93,7 +94,7 @@
             </div>
             <div class="row form-horizontal">
                 <div class="col-md-12">
-                    <alert type="alert.type" close="closeAlert()" ng-show="$parent.alert.show">{{alert.msg}}</alert>
+                    <uib-alert type="alert.type" close="closeAlert()" ng-show="$parent.alert.show">{{alert.msg}}</uib-alert>
                 </div>
             </div>
         </div>
