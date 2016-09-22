@@ -51,32 +51,6 @@ configLogDirectory() {
 	echo 'Updated log configuration'
 }
 
-## Description: Configures Media Server Manager
-## Parameters :
-## 		1.BIND_ADDRESS
-## 		2.MEDIASERVER_EXTERNAL_ADDRESS
-configMediaServerManager() {
-	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-	bind_address="$1"
-	ms_address="$2"
-	ms_external_address="$3"
-
-	#Check for Por Offset
-    local LOCALMGCP=$((LOCALMGCP + PORT_OFFSET))
-    local REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
-
-    sed -e "s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|" \
-        -e "s|<local-port>.*</local-port>|<local-port>$LOCALMGCP</local-port>|" \
-        -e "s|<remote-address>.*</remote-address>|<remote-address>$ms_address</remote-address>|" \
-        -e "s|<remote-port>.*</remote-port>|<remote-port>$REMOTEMGCP</remote-port>|" \
-        -e "s|<response-timeout>.*</response-timeout>|<response-timeout>500</response-timeout>|" \
-        -e "s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|" \
-        -e "s|<external-address>.*</external-address>|<external-address>$ms_external_address</external-address>|" $FILE > $FILE.bak
-
-    mv $FILE.bak $FILE
-    echo 'Configured Media Server Manager'
-}
-
 set_pool_size () {
     local property=$1
     local value=$2
@@ -90,11 +64,6 @@ set_pool_size () {
 			mv $FILE.bak $FILE
 }
 
-configOther(){
-    echo "MGCP_RESPONSE_TIMEOUT $MGCP_RESPONSE_TIMEOUT"
-    sed -i "s|<response-timeout>.*</response-timeout>|<response-timeout>${MGCP_RESPONSE_TIMEOUT}</response-timeout>|"  $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-}
-
 ## MAIN
 if [[ -z "$MEDIASERVER_LOWEST_PORT" ]]; then
 	MEDIASERVER_LOWEST_PORT="34534"
@@ -103,7 +72,7 @@ if [[ -z "$MEDIASERVER_HIGHEST_PORT" ]]; then
 	MEDIASERVER_HIGHEST_PORT="65535"
 fi
 
-echo "Configuring Mobicents Media Server... MS_ADDRESS $MS_ADDRESS BIND_ADDRESS $BIND_ADDRESS NETWORK $NETWORK SUBNET_MASK $SUBNET_MASK RTP_LOW_PORT $MEDIASERVER_LOWEST_PORT RTP_HIGH_PORT $MEDIASERVER_HIGHEST_PORT"
+echo "Configuring RestComm Media Server... MS_ADDRESS $MS_ADDRESS BIND_ADDRESS $BIND_ADDRESS NETWORK $NETWORK SUBNET_MASK $SUBNET_MASK RTP_LOW_PORT $MEDIASERVER_LOWEST_PORT RTP_HIGH_PORT $MEDIASERVER_HIGHEST_PORT"
 if [ -z "$MS_ADDRESS" ]; then
 		MS_ADDRESS=$BIND_ADDRESS
 fi
@@ -119,8 +88,7 @@ fi
 configServerBeans "$MS_ADDRESS" "$MS_NETWORK" "$MS_SUBNET_MASK"
 configRMSJavaOpts
 configLogDirectory
-configMediaServerManager "$BIND_ADDRESS" "$MS_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
-configOther
+
 #Contribution by: https://github.com/hamsterksu
 #set pool size of RMS resources
 for i in $( set -o posix ; set | grep ^RESOURCE_ | sort -rn ); do
@@ -130,4 +98,4 @@ for i in $( set -o posix ; set | grep ^RESOURCE_ | sort -rn ); do
     echo "Update resources pool size: $reg -> $val"
     set_pool_size $reg $val
 done
-echo 'Finished configuring Mobicents Media Server!'
+echo 'Finished configuring RestComm Media Server!'

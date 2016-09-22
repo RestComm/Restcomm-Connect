@@ -34,8 +34,12 @@ import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeUri;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Currency;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +47,8 @@ import java.util.Map;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
@@ -173,6 +179,46 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     @Override
     public List<CallDetailRecord> getCallDetailRecordsByInstanceId(final Sid instanceId) {
         return getCallDetailRecords(namespace + "getCallDetailRecordsByInstanceId", instanceId.toString());
+    }
+
+    @Override
+    public Double getAverageCallDurationLast24Hours(Sid instanceId) throws ParseException {
+        DateTime now = DateTime.now();
+        DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd");
+        SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd");
+
+        Date today = formatter.parse(now.toString(fmt));
+
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("instanceid", instanceId.toString());
+        params.put("startTime", today);
+
+        final SqlSession session = sessions.openSession();
+        try {
+            final Double total = session.selectOne(namespace + "getAverageCallDurationLast24Hours", params);
+            return total;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public Double getAverageCallDurationLastHour(Sid instanceId) throws ParseException {
+        SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd HH:00:00");
+        String hour = formatter.format(Calendar.getInstance().getTime());
+        Date lastHour = formatter.parse(hour);
+
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("instanceid", instanceId.toString());
+        params.put("startTime", lastHour);
+
+        final SqlSession session = sessions.openSession();
+        try {
+            final Double total = session.selectOne(namespace + "getAverageCallDurationLastHour", params);
+            return total;
+        } finally {
+            session.close();
+        }
     }
 
     private List<CallDetailRecord> getCallDetailRecords(final String selector, Object input) {

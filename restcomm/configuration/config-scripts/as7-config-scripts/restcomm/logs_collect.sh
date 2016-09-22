@@ -13,13 +13,14 @@ RESTCOMM_LOG_BASE=$(cd $BASEDIR/../../ && pwd)
 RESTCOMM_CORE_LOG=$RESTCOMM_LOG_BASE/standalone/log
 MMS_LOGS=$RESTCOMM_LOG_BASE/mediaserver/log
 LOGS_DIR_ZIP=$BASEDIR/$DIR_NAME
+
 restcomm_logs () {
-    if [ -f cp $RESTCOMM_CORE_LOG/$RESTCOMM_CORE_FILE $LOGS_DIR_ZIP/restcomm_server.log ]; then
+    if [ -f $RESTCOMM_CORE_LOG/$RESTCOMM_CORE_FILE ]; then
         cp $RESTCOMM_CORE_LOG/$RESTCOMM_CORE_FILE $LOGS_DIR_ZIP/restcomm_server.log
     fi
 }
 restcomm_logs_bytime () {
-    if [ -f cp $RESTCOMM_CORE_LOG/$RESTCOMM_CORE_FILE $LOGS_DIR_ZIP/restcomm_server.log ]; then
+    if [ -f $RESTCOMM_CORE_LOG/$RESTCOMM_CORE_FILE ]; then
         IN=$1
         IFS=","
         arr=($IN)
@@ -30,7 +31,7 @@ restcomm_logs_bytime () {
     fi
 }
 mediaserver_logs () {
-    if [ -f $MMS_LOGS/$MEDIASERVER_FILE $LOGS_DIR_ZIP/mms_server.log ]; then
+    if [ -f $MMS_LOGS/$MEDIASERVER_FILE ]; then
         cp $MMS_LOGS/$MEDIASERVER_FILE $LOGS_DIR_ZIP/mms_server.log
     fi
 }

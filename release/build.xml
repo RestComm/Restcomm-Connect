@@ -9,11 +9,11 @@
   <property location="${release.dir}/docs/restcomm" name="restcomm.docs.dir"/>
   <property location="${release.tomcat.dir}/docs/restcomm" name="restcomm.docs.tomcat.dir"/>
   <property location="${release.as7.dir}/docs/restcomm" name="restcomm.docs.as7.dir"/>
-  <property name="olympus.build" value="12"/>
+  <property name="olympus.build" value="13"/>
   <property location="${workspace.restcomm.dir}/configuration" name="configuration.directory"/>
 
   <!--mobicents binaries versions-->
-  <property name="sipservlets-build" value="746"/>
+  <property name="sipservlets-build" value="758"/>
   <property name="restcomm-sipservlets-as7.version" value="3.1.${sipservlets-build}"/>
   <!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
   <property name="restcomm-media.version" value="4.1.0"/>

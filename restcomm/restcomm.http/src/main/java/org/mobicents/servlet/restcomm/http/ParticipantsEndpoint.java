@@ -200,10 +200,10 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
         try {
 
             if (localInstanceOnly) {
-                filterForTotal = new CallDetailRecordFilter(accountSid, null, null, status, null, null,
+                filterForTotal = new CallDetailRecordFilter(accountSid, null, null, null, status, null, null,
                         null, conferenceSid, null, null);
             } else {
-                filterForTotal = new CallDetailRecordFilter(accountSid, null, null, status, null, null,
+                filterForTotal = new CallDetailRecordFilter(accountSid, null, null, null, status, null, null,
                         null, conferenceSid, null, null, instanceId);
             }
         } catch (ParseException e) {
@@ -219,10 +219,10 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
         CallDetailRecordFilter filter;
         try {
             if (localInstanceOnly) {
-                filter = new CallDetailRecordFilter(accountSid, null, null, status, null, null,
+                filter = new CallDetailRecordFilter(accountSid, null, null, null, status, null, null,
                         null, conferenceSid, limit, offset);
             } else {
-                filter = new CallDetailRecordFilter(accountSid, null, null, status, null, null,
+                filter = new CallDetailRecordFilter(accountSid, null, null, null, status, null, null,
                         null, conferenceSid, limit, offset, instanceId);
             }
         } catch (ParseException e) {
@@ -230,6 +230,14 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
         }
 
         final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(filter);
+        if (logger.isDebugEnabled()) {
+            final List<CallDetailRecord> allCdrs = dao.getCallDetailRecords(new Sid(accountSid));
+            logger.debug("CDR with filter size: "+ cdrs.size()+", all CDR with no filter size: "+allCdrs.size());
+            logger.debug("CDRs for ConferenceSid: "+conferenceSid);
+            for (CallDetailRecord cdr: allCdrs) {
+                logger.debug("CDR sid: "+cdr.getSid()+", status: "+cdr.getStatus()+", conferenceSid: "+cdr.getConferenceSid());
+            }
+        }
 
         listConverter.setCount(total);
         listConverter.setPage(Integer.parseInt(page));

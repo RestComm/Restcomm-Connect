@@ -72,11 +72,11 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     private MediaServerControllerFactory mediaServerControllerFactory(final Configuration configuration, ClassLoader loader)
             throws ServletException {
         Configuration settings ;
-        String compatibility = configuration.subset("mscontrol").getString("compatibility", "mms");
+        String compatibility = configuration.subset("mscontrol").getString("compatibility", "rms");
 
         MediaServerControllerFactory factory;
         switch (compatibility) {
-            case "mms":
+            case "rms":
                 ActorRef gateway;
                 try {
                     settings = configuration.subset("media-server-manager");
@@ -242,13 +242,13 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return daoManager;
     }
 
-    private ActorRef monitoringService(final Configuration configuration, final ClassLoader loader) {
+    private ActorRef monitoringService(final Configuration configuration, final DaoManager daoManager, final ClassLoader loader) {
         final ActorRef monitoring = system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return (UntypedActor) new ObjectFactory(loader).getObjectInstance(MonitoringService.class.getName());
+                return new MonitoringService(daoManager);
             }
         }));
         return monitoring;
@@ -310,7 +310,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Create the media gateway.
 
             //Initialize Monitoring Service
-            ActorRef monitoring = monitoringService(xml, loader);
+            ActorRef monitoring = monitoringService(xml, storage, loader);
             if (monitoring != null) {
                 context.setAttribute(MonitoringService.class.getName(), monitoring);
                 if(logger.isInfoEnabled()) {

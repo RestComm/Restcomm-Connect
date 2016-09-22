@@ -370,10 +370,17 @@ public final class Conference extends UntypedActor {
 
     private void onRemoveParticipant(RemoveParticipant message, ActorRef self, ActorRef sender) throws Exception {
         if (isRunning()) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Received RemoveParticipants for Call: "+message.call().path());
+            }
             // Kindly ask participant to leave
             final ActorRef call = message.call();
             final Leave leave = new Leave();
             call.tell(leave, self);
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Received RemoveParticipants for Call: "+message.call().path()+" but the state is: "+fsm.state().toString());
+            }
         }
     }
 
@@ -385,11 +392,19 @@ public final class Conference extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("################################## Conference " + name + " has " + participantsNr + " participants");
             }
+            ConferenceResponse conferenceResponse = new ConferenceResponse(message);
+            notifyObservers(conferenceResponse);
 
             // Stop the conference when ALL participants have been evicted
             if (removed && calls.isEmpty()) {
                 fsm.transition(message, stopping);
             }
+        }
+    }
+
+    private void notifyObservers(final Object message) {
+        for (final ActorRef observer : this.observers) {
+            observer.tell(message, self());
         }
     }
 
@@ -421,13 +436,16 @@ public final class Conference extends UntypedActor {
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) throws Exception {
         this.calls.add(sender);
         if (logger.isInfoEnabled()) {
-            logger.info("Conference : "+self().path()+", received JoinComplete from Call: "+sender.path()+", will send confernce info to observers");
+            logger.info("Conference name: "+name+", path: "+self().path()+", received JoinComplete from Call: "+sender.path()+", number of participants currently: "+calls.size()+", will send conference info to observers");
         }
         if (observers != null && observers.size() > 0) {
             Iterator<ActorRef> iter = observers.iterator();
             while (iter.hasNext()) {
                 ActorRef observer = iter.next();
+                //First send conferenceInfo
                 onGetConferenceInfo(self(), observer);
+                //Next send the JoinComplete message
+                observer.tell(message, self());
             }
         }
     }

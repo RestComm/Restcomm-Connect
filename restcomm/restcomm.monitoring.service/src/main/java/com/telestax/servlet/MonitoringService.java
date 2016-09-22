@@ -20,6 +20,24 @@
  */
 package com.telestax.servlet;
 
+import akka.actor.ActorRef;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.entities.InstanceId;
+import org.mobicents.servlet.restcomm.patterns.Observing;
+import org.mobicents.servlet.restcomm.patterns.StopObserving;
+import org.mobicents.servlet.restcomm.telephony.CallInfo;
+import org.mobicents.servlet.restcomm.telephony.CallResponse;
+import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
+import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
+import org.mobicents.servlet.restcomm.telephony.GetLiveCalls;
+import org.mobicents.servlet.restcomm.telephony.MonitoringServiceResponse;
+import org.mobicents.servlet.restcomm.telephony.TextMessage;
+import org.mobicents.servlet.restcomm.telephony.UserRegistration;
+
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,31 +45,18 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.mobicents.servlet.restcomm.entities.InstanceId;
-import org.mobicents.servlet.restcomm.patterns.Observing;
-import org.mobicents.servlet.restcomm.patterns.StopObserving;
-import org.mobicents.servlet.restcomm.telephony.CallInfo;
-import org.mobicents.servlet.restcomm.telephony.MonitoringServiceResponse;
-import org.mobicents.servlet.restcomm.telephony.TextMessage;
-import org.mobicents.servlet.restcomm.telephony.UserRegistration;
-import org.mobicents.servlet.restcomm.telephony.CallResponse;
-import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
-import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
-import org.mobicents.servlet.restcomm.telephony.GetLiveCalls;
-
-import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 public class MonitoringService extends UntypedActor{
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+    private DaoManager daoManager;
+
     private final Map<String, ActorRef> callMap;
     private final Map<String,CallInfo> callDetailsMap;
+    private final Map<String,CallInfo> incomingCallDetailsMap;
+    private final Map<String,CallInfo> outgoingCallDetailsMap;
     private final Map<String, CallStateChanged.State> callStateMap;
     private final Map<String, String> registeredUsers;
     private final AtomicInteger callsUpToNow;
@@ -68,13 +73,19 @@ public class MonitoringService extends UntypedActor{
     private final AtomicInteger textInboundToProxyOut;
     private final AtomicInteger textOutbound;
     private final AtomicInteger textNotFound;
+    private final AtomicInteger maxConcurrentCalls;
+    private final AtomicInteger maxConcurrentIncomingCalls;
+    private final AtomicInteger maxConcurrentOutgoingCalls;
     private InstanceId instanceId;
 
 
-    public MonitoringService() {
-        this.callMap = new ConcurrentHashMap<String, ActorRef>();
-        this.callDetailsMap = new ConcurrentHashMap<String, CallInfo>();
-        this.callStateMap = new ConcurrentHashMap<String, CallStateChanged.State>();
+    public MonitoringService(final DaoManager daoManager) {
+        this.daoManager = daoManager;
+        callMap = new ConcurrentHashMap<String, ActorRef>();
+        callDetailsMap = new ConcurrentHashMap<String, CallInfo>();
+        incomingCallDetailsMap = new ConcurrentHashMap<String, CallInfo>();
+        outgoingCallDetailsMap = new ConcurrentHashMap<String, CallInfo>();
+        callStateMap = new ConcurrentHashMap<String, CallStateChanged.State>();
         registeredUsers = new ConcurrentHashMap<String, String>();
         callsUpToNow = new AtomicInteger();
         incomingCallsUpToNow = new AtomicInteger();
@@ -90,6 +101,9 @@ public class MonitoringService extends UntypedActor{
         textInboundToProxyOut = new AtomicInteger();
         textOutbound = new AtomicInteger();
         textNotFound = new AtomicInteger();
+        maxConcurrentCalls = new AtomicInteger(0);
+        maxConcurrentIncomingCalls = new AtomicInteger(0);
+        maxConcurrentOutgoingCalls = new AtomicInteger(0);
         if(logger.isInfoEnabled()){
             logger.info("Monitoring Service started");
         }
@@ -185,7 +199,18 @@ public class MonitoringService extends UntypedActor{
     private void onStopObserving(StopObserving message, ActorRef self, ActorRef sender) {
         String senderPath = sender.path().name();
         callMap.remove(senderPath);
-        callDetailsMap.remove(senderPath);
+        CallInfo callInfo = callDetailsMap.remove(senderPath);
+        if (callInfo.direction().equalsIgnoreCase("inbound")) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Removed inbound call from: "+callInfo.from()+"  to: "+callInfo.to());
+            }
+            incomingCallDetailsMap.remove(senderPath);
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Removed outbound call from: "+callInfo.from()+"  to: "+callInfo.to());
+            }
+            outgoingCallDetailsMap.remove(senderPath);
+        }
         callStateMap.remove(senderPath);
     }
 
@@ -199,9 +224,27 @@ public class MonitoringService extends UntypedActor{
         CallInfo callInfo = message.get();
         callDetailsMap.put(senderPath, callInfo);
         if (callInfo.direction().equalsIgnoreCase("inbound")) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("New inbound call from: "+callInfo.from()+"  to: "+callInfo.to());
+            }
+            incomingCallDetailsMap.put(senderPath, callInfo);
             incomingCallsUpToNow.incrementAndGet();
         } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("New outbound call from: "+callInfo.from()+"  to: "+callInfo.to());
+            }
+            outgoingCallDetailsMap.put(senderPath, callInfo);
             outgoingCallsUpToNow.incrementAndGet();
+        }
+        //Calculate Maximum concurrent calls
+        if (maxConcurrentCalls.get() < callDetailsMap.size()) {
+            maxConcurrentCalls.set(callDetailsMap.size());
+        }
+        if (maxConcurrentIncomingCalls.get() < incomingCallDetailsMap.size()) {
+            maxConcurrentIncomingCalls.set(incomingCallDetailsMap.size());
+        }
+        if (maxConcurrentOutgoingCalls.get() < outgoingCallDetailsMap.size()) {
+            maxConcurrentOutgoingCalls.set(outgoingCallDetailsMap.size());
         }
     }
 
@@ -244,9 +287,10 @@ public class MonitoringService extends UntypedActor{
      * @param self
      * @param sender
      */
-    private void onGetLiveCalls(GetLiveCalls message, ActorRef self, ActorRef sender) {
+    private void onGetLiveCalls(GetLiveCalls message, ActorRef self, ActorRef sender) throws ParseException {
         List<CallInfo> callDetailsList = new ArrayList<CallInfo>(callDetailsMap.values());
         Map<String, Integer> countersMap = new HashMap<String, Integer>();
+        Map<String, Double> durationMap = new HashMap<String, Double>();
 
         final AtomicInteger liveIncomingCalls = new AtomicInteger();
         final AtomicInteger liveOutgoingCalls = new AtomicInteger();
@@ -256,6 +300,32 @@ public class MonitoringService extends UntypedActor{
         countersMap.put("OutgoingCallsSinceUptime", outgoingCallsUpToNow.get());
         countersMap.put("RegisteredUsers", registeredUsers.size());
         countersMap.put("LiveCalls", callDetailsList.size());
+        countersMap.put("MaximumConcurrentCalls", maxConcurrentCalls.get());
+        countersMap.put("MaximumConcurrentIncomingCalls", maxConcurrentIncomingCalls.get());
+        countersMap.put("MaximumConcurrentOutgoingCalls", maxConcurrentOutgoingCalls.get());
+
+        Double averageCallDurationLast24Hours = null;
+        Double averageCallDurationLastHour = null;
+
+        try {
+            averageCallDurationLast24Hours = daoManager.getCallDetailRecordsDao().getAverageCallDurationLast24Hours(instanceId.getId());
+            averageCallDurationLastHour = daoManager.getCallDetailRecordsDao().getAverageCallDurationLastHour(instanceId.getId());
+        } catch (Exception e) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Exception during the query for AVG Call Duration: "+e.getStackTrace());
+            }
+        }
+
+        if (averageCallDurationLast24Hours == null) {
+            averageCallDurationLast24Hours = 0.0;
+        }
+
+        if (averageCallDurationLastHour == null) {
+            averageCallDurationLastHour = 0.0;
+        }
+
+        durationMap.put("AverageCallDurationInSecondsLast24Hours", averageCallDurationLast24Hours);
+        durationMap.put("AverageCallDurationInSecondsLastHour", averageCallDurationLastHour);
 
         for (CallInfo callInfo : callDetailsList) {
             if (callInfo.direction().equalsIgnoreCase("inbound")) {
@@ -279,7 +349,7 @@ public class MonitoringService extends UntypedActor{
         countersMap.put("TextMessageNotFound", textNotFound.get());
         countersMap.put("TextMessageOutbound", textOutbound.get());
 
-        MonitoringServiceResponse callInfoList = new MonitoringServiceResponse(instanceId, callDetailsList, countersMap);
+        MonitoringServiceResponse callInfoList = new MonitoringServiceResponse(instanceId, callDetailsList, countersMap, durationMap);
         sender.tell(callInfoList, self);
     }
 
