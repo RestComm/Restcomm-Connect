@@ -415,7 +415,7 @@ public class SmppClientOpsThread implements Runnable {
         String to = smppTo;
         String from = smppFrom;
         String inboundMessage = smppMessage;
-        SmppInboundMessageEntity smppInboundMessage = new SmppInboundMessageEntity(to, from, inboundMessage);
+        SmppInboundMessageEntity smppInboundMessage = new SmppInboundMessageEntity(to, from, inboundMessage, CharsetUtil.CHARSET_GSM);
         smppMessageHandler.tell(smppInboundMessage, null);
     }
 }

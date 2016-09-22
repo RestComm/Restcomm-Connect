@@ -23,6 +23,8 @@ import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import com.cloudhopper.commons.charset.Charset;
+import com.cloudhopper.commons.charset.CharsetUtil;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
@@ -224,6 +226,16 @@ public final class SmsSession extends UntypedActor {
         final String from = last.from();
         final String to = last.to();
         final String body = last.body();
+        final Charset encoding;
+        if(last.encoding().equals(SmsSessionRequest.GSM)) {
+            encoding = CharsetUtil.CHARSET_GSM;
+        } else if(last.encoding().equals(SmsSessionRequest.UCS_2)) {
+            encoding = CharsetUtil.CHARSET_UCS_2;
+        } else if(last.encoding().equals(SmsSessionRequest.UTF_8)) {
+            encoding = CharsetUtil.CHARSET_UTF_8;
+        } else {
+            encoding = CharsetUtil.CHARSET_GSM;
+        }
 
         monitoringService.tell(new TextMessage(from, to, TextMessage.SmsState.OUTBOUND), self());
         final ClientsDao clients = storage.getClientsDao();
@@ -245,7 +257,7 @@ public final class SmsSession extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("Destination is not a local registered client, therefore, sending through SMPP to:  " + to );
             }
-            if (sendUsingSmpp(from, to, body))
+            if (sendUsingSmpp(from, to, body, encoding))
                 return;
         }
 
@@ -304,7 +316,7 @@ public final class SmsSession extends UntypedActor {
             logger.error(exception.getMessage(), exception);
         }}
 
-    private boolean sendUsingSmpp(String from, String to, String body) {
+    private boolean sendUsingSmpp(String from, String to, String body, Charset encoding) {
         if ((SmppClientOpsThread.getSmppSession() != null && SmppClientOpsThread.getSmppSession().isBound()) && smppMessageHandler != null) {
             if(logger.isInfoEnabled()) {
                 logger.info("SMPP session is available and connected, outbound message will be forwarded to :  " + to );
@@ -313,7 +325,8 @@ public final class SmsSession extends UntypedActor {
                 final String smppFrom = from ;
                 final String smppTo = to ;
                 final String smppContent = body;
-                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(smppTo, smppFrom, smppContent);
+                final Charset smppEncoding = encoding;
+                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(smppTo, smppFrom, smppContent, smppEncoding);
                 smppMessageHandler.tell(sms, null);
             }catch (final Exception exception) {
                 // Log the exception.
