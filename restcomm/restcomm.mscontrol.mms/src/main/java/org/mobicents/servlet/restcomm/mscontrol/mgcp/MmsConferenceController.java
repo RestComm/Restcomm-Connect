@@ -40,6 +40,7 @@ import org.mobicents.servlet.restcomm.mgcp.EndpointStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaResourceBrokerResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.ConferenceMediaResourceControllerStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetMediaGateway;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.MediaGatewayForConference;
@@ -243,6 +244,8 @@ public final class MmsConferenceController extends MediaServerController {
             fsm.transition(message, stopping);
         } else if(JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
+        } else if(ConferenceMediaResourceControllerStateChanged.class.equals(klass)) {
+            onConferenceMediaResourceControllerStateChanged((ConferenceMediaResourceControllerStateChanged) message, self, sender);
         }
     }
 
@@ -282,8 +285,6 @@ public final class MmsConferenceController extends MediaServerController {
             conferenceMediaResourceController = (ActorRef) message.get();
             conferenceMediaResourceController.tell(new Observe(self), self);
             conferenceMediaResourceController.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartConferenceMediaResourceController(this.cnfEndpoint, this.conferenceSid), self);
-            //TODO: IMPORTANT do following transition after receiving success from above statement.
-            fsm.transition(message, active);
         }
     }
 
@@ -319,6 +320,20 @@ public final class MmsConferenceController extends MediaServerController {
             this.cnfEndpoint = (ActorRef) message.get();
             this.cnfEndpoint.tell(new Observe(self), self);
             this.fsm.transition(message, creatingMediaGroup);
+        }
+    }
+
+    private void onConferenceMediaResourceControllerStateChanged(ConferenceMediaResourceControllerStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+        if(logger.isDebugEnabled())
+            logger.debug("onConferenceMediaResourceControllerStateChanged: "+message.state());
+        switch (message.state()) {
+            case INITIALIZED:
+                if (is(gettingCnfMediaResourceController)) {
+                    fsm.transition(message, active);
+                }
+                break;
+            default:
+                break;
         }
     }
 
