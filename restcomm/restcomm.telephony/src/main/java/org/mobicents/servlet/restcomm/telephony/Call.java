@@ -744,7 +744,7 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             try {
-                if (isOutbound()) {
+                if (isOutbound() && (invite.getSession().getState() != SipSession.State.INITIAL || invite.getSession().getState() != SipSession.State.TERMINATED)) {
                     final UntypedActorContext context = getContext();
                     context.setReceiveTimeout(Duration.Undefined());
                     final SipServletRequest cancel = invite.createCancel();
