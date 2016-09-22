@@ -182,7 +182,10 @@ public class ConferenceMediaResourceController extends UntypedActor{
         transitions.add(new Transition(acquiringConferenceInfo, creatingMediaGroup));
         transitions.add(new Transition(creatingMediaGroup, acquiringIVREndpointID));
         transitions.add(new Transition(creatingMediaGroup, initialized));
-        transitions.add(new Transition(acquiringConferenceInfo, acquiringRemoteConnectionWithLocalMS));
+        transitions.add(new Transition(acquiringIVREndpointID, initialized));
+        transitions.add(new Transition(initialized, acquiringRemoteConnectionWithLocalMS));
+        transitions.add(new Transition(initialized, acquiringConferenceEndpointID));
+        transitions.add(new Transition(acquiringConferenceEndpointID, active));
         transitions.add(new Transition(acquiringRemoteConnectionWithLocalMS, initializingRemoteConnectionWithLocalMS));
         transitions.add(new Transition(initializingRemoteConnectionWithLocalMS, openingRemoteConnectionWithLocalMS));
         transitions.add(new Transition(openingRemoteConnectionWithLocalMS, failed));
@@ -193,7 +196,6 @@ public class ConferenceMediaResourceController extends UntypedActor{
         transitions.add(new Transition(initializingRemoteConnectionWithMasterMS, openingRemoteConnectionWithMasterMS));
         transitions.add(new Transition(openingRemoteConnectionWithMasterMS, updatingRemoteConnectionWithLocalMS));
         transitions.add(new Transition(updatingRemoteConnectionWithLocalMS, active));
-        transitions.add(new Transition(acquiringConferenceEndpointID, active));
         transitions.add(new Transition(active, stopping));
         transitions.add(new Transition(stopping, inactive));
 
@@ -252,7 +254,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         } else if (ConnectionStateChanged.class.equals(klass)) {
             onConnectionStateChanged((ConnectionStateChanged) message, self, sender);
         } else if (EndpointCredentials.class.equals(klass)) {
-            fsm.transition(message, active);
+        	onEndpointCredentials((EndpointCredentials) message, self, sender);
         }
     }
 
@@ -282,12 +284,24 @@ public class ConferenceMediaResourceController extends UntypedActor{
         }
     }
 
+    private void onEndpointCredentials(EndpointCredentials message, ActorRef self, ActorRef sender) throws Exception{
+        logger.info("onEndpointCredentials state = "+fsm.state());
+    	if(is(acquiringIVREndpointID)){
+            fsm.transition(message, initialized);
+    	}else{
+            fsm.transition(message, active);	
+    	}
+    }
+
     private void onJoinConferences(JoinConferences message, ActorRef self, ActorRef sender) throws Exception{
         if(logger.isDebugEnabled())
             logger.debug("onJoinConferences: current state is: "+fsm.state());
-        //TODO: change the folowing state as per situation
-    	if (is(uninitialized)) {
-            fsm.transition(message, acquiringConferenceInfo);
+    	if (is(initialized)) {
+    		if(isThisMaster){
+    			this.fsm.transition(message, acquiringConferenceEndpointID);
+    		}else{
+    			this.fsm.transition(message, acquiringRemoteConnectionWithLocalMS);
+    		}
         }
     }
 
@@ -298,15 +312,6 @@ public class ConferenceMediaResourceController extends UntypedActor{
             this.localMediaSession = (MediaSession) message.get();
 
             this.fsm.transition(message, creatingMediaGroup);
-        } else if(is(initialized)){
-            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - initialized ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-            this.localMediaSession = (MediaSession) message.get();
-            logger.info("isThisMaster: "+isThisMaster);
-            if(isThisMaster){
-                this.fsm.transition(message, acquiringConferenceEndpointID);
-            }else{
-                this.fsm.transition(message, acquiringRemoteConnectionWithLocalMS);
-            }
         } else if (is(acquiringRemoteConnectionWithLocalMS)){
             logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringRemoteConnection ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             fsm.transition(message, initializingRemoteConnectionWithLocalMS);
@@ -542,6 +547,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         @Override
         public void execute(Object message) throws Exception {
         	logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Initialized ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+        	msConferenceController.tell(new , super.source);
         }
 
     }
