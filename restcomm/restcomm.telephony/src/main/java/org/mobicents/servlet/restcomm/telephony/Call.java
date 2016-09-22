@@ -252,6 +252,8 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.dialing, this.failingBusy));
         transitions.add(new Transition(this.dialing, this.ringing));
         transitions.add(new Transition(this.dialing, this.failed));
+        transitions.add(new Transition(this.dialing, this.failingNoAnswer));
+        transitions.add(new Transition(this.dialing, this.noAnswer));
         transitions.add(new Transition(this.dialing, this.updatingMediaSession));
         transitions.add(new Transition(this.inProgress, this.stopping));
         transitions.add(new Transition(this.inProgress, this.joining));
@@ -1418,7 +1420,7 @@ public final class Call extends UntypedActor {
 
     private void onReceiveTimeout(ReceiveTimeout message, ActorRef self, ActorRef sender) throws Exception {
         getContext().setReceiveTimeout(Duration.Undefined());
-        if (is(ringing)) {
+        if (is(ringing) || is(dialing)) {
             fsm.transition(message, failingNoAnswer);
         } else if(logger.isInfoEnabled()) {
             logger.info("Timeout received for Call : "+self().path()+" isTerminated(): "+self().isTerminated()+". Sender: " + sender.path().toString() + " State: " + this.fsm.state()
@@ -1469,7 +1471,8 @@ public final class Call extends UntypedActor {
                 conference.tell(new RemoveParticipant(self), self);
             } else {
                 // Clean media resources as necessary
-                fsm.transition(message, stopping);
+                if (!is(completed))
+                    fsm.transition(message, stopping);
             }
         } else if ("INFO".equalsIgnoreCase(method)) {
             processInfo(message);
