@@ -593,8 +593,8 @@ public class ConferenceMediaResourceController extends UntypedActor{
         public void execute(final Object message) throws Exception {
             final EndpointCredentials response = (EndpointCredentials) message;
             masterIVREndpointId = response.endpointId().getLocalEndpointName();
-            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ localConfernceEndpointId:"+localConfernceEndpointId+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-            updateMasterConferenceEndpointId();
+            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ masterIVREndpointId:"+masterIVREndpointId+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            updateMasterIVREndpointId();
         }
     }
 
@@ -895,7 +895,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
             final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
             cdr = dao.getConferenceDetailRecord(conferenceSid);
             cdr = cdr.setMasterIVREndpointId(masterIVREndpointId);
-            dao.updateConferenceDetailRecordMasterEndpointID(cdr);
+            dao.updateConferenceDetailRecordMasterIVREndpointID(cdr);
         }
     }
 
