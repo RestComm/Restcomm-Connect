@@ -97,3 +97,9 @@ rcFilters.filter('bytes', function() {
   }
 });
 
+rcFilters.filter('toTrusted', ['$sce', function($sce){
+        return function(text) {
+            return $sce.trustAsHtml(text);
+        };
+}]);
+

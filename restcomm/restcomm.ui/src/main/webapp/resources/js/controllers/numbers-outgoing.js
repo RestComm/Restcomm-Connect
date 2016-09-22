@@ -4,11 +4,11 @@ var rcMod = angular.module('rcApp');
 
 // Numbers : Outgoing ----------------------------------------------------------
 
-rcMod.controller('OutgoingCtrl', function($scope, $resource, $modal, $dialog, SessionService, RCommOutgoingCallerIDs) {
+rcMod.controller('OutgoingCtrl', function($scope, $resource, $uibModal, $dialog, SessionService, RCommOutgoingCallerIDs) {
   $scope.sid = SessionService.get("sid");
 
   $scope.showRegisterOutgoingCallerIDModal = function () {
-    var registerOutgoingCallerIDModal = $modal.open({
+    var registerOutgoingCallerIDModal = $uibModal.open({
       controller: OutgoingDetailsCtrl,
       scope: $scope,
       templateUrl: 'modules/modals/modal-register-outgoing.html'
@@ -49,7 +49,7 @@ rcMod.controller('OutgoingCtrl', function($scope, $resource, $modal, $dialog, Se
   $scope.outgoingList = RCommOutgoingCallerIDs.query({accountSid:$scope.sid});
 });
 
-var OutgoingDetailsCtrl = function($scope, $stateParams, $resource, $location, $dialog, $modalInstance, SessionService, RCommOutgoingCallerIDs, Notifications) {
+var OutgoingDetailsCtrl = function($scope, $stateParams, $resource, $location, $dialog, $uibModalInstance, SessionService, RCommOutgoingCallerIDs, Notifications) {
 
   if($scope.outgoingSid = $stateParams.outgoingSid) {
     $scope.sid = SessionService.get("sid");
@@ -60,7 +60,7 @@ var OutgoingDetailsCtrl = function($scope, $stateParams, $resource, $location, $
     $scope.isCollapsed = true;
 
     $scope.closeRegisterOutgoingNumber = function () {
-      $modalInstance.dismiss('cancel');
+      $uibModalInstance.dismiss('cancel');
     };
   }
 
@@ -71,7 +71,7 @@ var OutgoingDetailsCtrl = function($scope, $stateParams, $resource, $location, $
       }),
         function() { // success
           Notifications.success('Number "' + number.number + '" created successfully!');
-          $modalInstance.close();
+          $uibModalInstance.close();
         },
         function() { // error
           Notifications.error('Failed to register Outgoing Caller ID "' + number.number + '".');

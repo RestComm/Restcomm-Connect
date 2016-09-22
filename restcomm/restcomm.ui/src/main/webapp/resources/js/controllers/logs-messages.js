@@ -2,7 +2,7 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('LogsMessagesCtrl', function ($scope, $resource, $timeout, $modal, SessionService, RCommLogsMessages) {
+rcMod.controller('LogsMessagesCtrl', function ($scope, $resource, $timeout, $uibModal, SessionService, RCommLogsMessages) {
 
   $scope.Math = window.Math;
 
@@ -21,9 +21,11 @@ rcMod.controller('LogsMessagesCtrl', function ($scope, $resource, $timeout, $mod
     $scope.noOfPages = Math.ceil($scope.filtered.length / $scope.entryLimit);
   };
 
+/*
   $scope.setPage = function(pageNo) {
     $scope.currentPage = pageNo;
   };
+  */
 
   $scope.filter = function() {
     $timeout(function() { //wait for 'filtered' to be changed
@@ -34,7 +36,7 @@ rcMod.controller('LogsMessagesCtrl', function ($scope, $resource, $timeout, $mod
 
   // Modal : Message Details
   $scope.showMessageDetailsModal = function (message) {
-    $modal.open({
+    $uibModal.open({
       controller: 'LogsMessagesDetailsCtrl',
       scope: $scope,
       templateUrl: 'modules/modals/modal-logs-messages.html',
@@ -71,7 +73,7 @@ $scope.sortBy = function(field) {
 
 });
 
-rcMod.controller('LogsMessagesDetailsCtrl', function($scope, $stateParams, $resource, $modalInstance, SessionService, RCommLogsMessages, messageSid) {
+rcMod.controller('LogsMessagesDetailsCtrl', function($scope, $stateParams, $resource, $uibMmodalInstance, SessionService, RCommLogsMessages, messageSid) {
   $scope.sid = SessionService.get("sid");
   $scope.messageSid = $stateParams.messageSid || messageSid;
 

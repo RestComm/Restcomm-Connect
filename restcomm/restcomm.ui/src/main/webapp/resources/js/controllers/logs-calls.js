@@ -2,7 +2,7 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, SessionService, RCommLogsCalls) {
+rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $uibModal, SessionService, RCommLogsCalls) {
 
   $scope.Math = window.Math;
 
@@ -81,7 +81,7 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, 
 
   // Modal : Call Details
   $scope.showCallDetailsModal = function (call) {
-    $modal.open({
+    $uibModal.open({
       controller: 'LogsCallsDetailsCtrl',
       scope: $scope,
       templateUrl: 'modules/modals/modal-logs-calls.html',
@@ -135,12 +135,12 @@ $scope.sortBy = function(field) {
   $scope.getCallsList(0);
 });
 
-rcMod.controller('LogsCallsDetailsCtrl', function($scope, $stateParams, $resource, $modalInstance, SessionService, RCommLogsCalls, callSid) {
+rcMod.controller('LogsCallsDetailsCtrl', function($scope, $stateParams, $resource, $uibModalInstance, SessionService, RCommLogsCalls, callSid) {
   $scope.sid = SessionService.get("sid");
   $scope.callSid = $stateParams.callSid || callSid;
 
   $scope.closeCallDetails = function () {
-    $modalInstance.dismiss('cancel');
+    $uibModalInstance.dismiss('cancel');
   };
 
   $scope.callDetails = RCommLogsCalls.view({accountSid: $scope.sid, callSid:$scope.callSid});
