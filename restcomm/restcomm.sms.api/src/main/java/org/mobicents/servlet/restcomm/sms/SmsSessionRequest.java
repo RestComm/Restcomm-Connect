@@ -33,17 +33,27 @@ public final class SmsSessionRequest {
     private final String from;
     private final String to;
     private final String body;
+    private final String encoding;
     private final SipServletRequest origRequest;
     private final ConcurrentHashMap<String, String> customHeaders;
 
+    public static final String UCS_2 = "UCS-2";
+    public static final String UTF_8 = "UTF-8";
+    public static final String GSM = "GSM";
+
     //TODO need to check which is using the SmsSessionRequest and modify accordingly to include or not the custom headers
-    public SmsSessionRequest(final String from, final String to, final String body, final SipServletRequest origRequest, final ConcurrentHashMap<String, String> customHeaders) {
+    public SmsSessionRequest(final String from, final String to, final String body, final String encoding, final SipServletRequest origRequest, final ConcurrentHashMap<String, String> customHeaders) {
         super();
         this.from = from;
         this.to = to;
         this.origRequest = origRequest;
         this.body = body;
         this.customHeaders = customHeaders;
+        this.encoding = encoding;
+    }
+
+    public SmsSessionRequest(final String from, final String to, final String body, final SipServletRequest origRequest, final ConcurrentHashMap<String, String> customHeaders) {
+        this(from, to, body, GSM, origRequest, customHeaders);
     }
 
     public SmsSessionRequest(final String from, final String to, final String body, final ConcurrentHashMap<String, String> customHeaders) {
@@ -60,6 +70,10 @@ public final class SmsSessionRequest {
 
     public String body() {
         return body;
+    }
+
+    public String encoding() {
+        return encoding;
     }
 
     public SipServletRequest getOrigRequest() {
