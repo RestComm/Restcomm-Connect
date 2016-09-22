@@ -28,7 +28,7 @@ import akka.actor.ActorRef;
  */
 @Immutable
 public final class MediaGroupStateChanged {
-	private ActorRef ivr;
+    private ActorRef ivr;
     public static enum State {
         ACTIVE, INACTIVE
     };
