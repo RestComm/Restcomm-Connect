@@ -36,6 +36,6 @@ public final class CreateIvrEndpoint extends AbstractCreateMessage {
         this.endpointName = endpointName;
     }
     public String endpointName(){
-    	return endpointName;
+        return endpointName;
     }
 }
