@@ -17,8 +17,10 @@
                 <input id="new-account-email" class="form-control" ng-model="newAccount.email" type="email" placeholder="labs@restcomm.org" autofocus required />
             </dd>
             <dt>Password</dt>
-            <dd>
-                <div class="col-md-12 password-strength-modal" ng-password-strength="newAccount.password" ng-show="newAccount.password"></div>
+            <dd style="position:relative">
+                <div ng-show="newAccount.password" class="password-strength" ng-password-strength="newAccount.password" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-" style="padding: inherit;">
+                    <uib-progressbar value="pwdStrength"></uib-progressbar>
+                </div>
                 <input id="new-account-password" class="form-control" ng-class="{'password-transparent' : newAccount.password}" name="new-account-password" ng-model="newAccount.password" equals="{{newAccount.passwordConfirmation}}" type="password" placeholder="mySafeP@ssw0rD!" required />
             </dd>
             <dt>Confirm Password</dt>

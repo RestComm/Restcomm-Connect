@@ -54,8 +54,8 @@
                 <td><div>{{ recording.to ? recording.to : '&lt;callee&gt;' }}</div></td>
                 <td><div class="text-center">{{ recording.duration ? (recording.duration + "s") : '. . .' }}</div></td>
                 <td><div class="text-center"><a href="#/logs/calls/{{ recording.call_sid }}">{{ recording.call_sid }}</a></div></td>
-                <!-- <td><div class="text-center"><a href="/restcomm/recordings/{{ recording.sid }}.wav" target="_blank" tooltip="Download"><i class="fa fa-download"></i></a></div></td> -->
-                <td><div class="text-center"><a href="{{ recording.file_uri }}" target="_blank" tooltip="Download"><i class="fa fa-download"></i></a></div></td>
+                <!-- <td><div class="text-center"><a href="/restcomm/recordings/{{ recording.sid }}.wav" target="_blank" uib-tooltip="Download"><i class="fa fa-download"></i></a></div></td> -->
+                <td><div class="text-center"><a href="{{ recording.file_uri }}" target="_blank" uib-tooltip="Download"><i class="fa fa-download"></i></a></div></td>
             </tr>
             </tbody>
             <tfoot>
@@ -71,7 +71,8 @@
                 </form>
             </td>
             <td colspan="99">
-                <pagination class="pagination pagination-sm pull-right" on-select-page="pageChanged(page)" total-items="recordingsLogsList.length" items-per-page="entryLimit" page="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>
+                <!--<pagination class="pagination pagination-sm pull-right" on-select-page="pageChanged(page)" total-items="recordingsLogsList.length" items-per-page="entryLimit" page="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>-->
+                <uib-pagination class="pagination pagination-sm pull-right" total-items="filtered.length" items-per-page="entryLimit" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
             </td>
             </tfoot>
         </table>

@@ -4,7 +4,7 @@ var rcMod = angular.module('rcApp');
 
 // Numbers : RestComm Clients : List ------------------------------------------------
 
-rcMod.controller('ClientsCtrl', function($scope, $resource, $modal, $dialog, SessionService, RCommClients, RCommApps, Notifications) {
+rcMod.controller('ClientsCtrl', function($scope, $resource, $uibModal, $dialog, SessionService, RCommClients, RCommApps, Notifications) {
 
   $scope.sid = SessionService.get("sid");
 
@@ -27,7 +27,7 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $modal, $dialog, Ses
   // add incoming client -----------------------------------------------------
 
   $scope.showRegisterSIPClientModal = function () {
-    var registerSIPClientModal = $modal.open({
+    var registerSIPClientModal = $uibModal.open({
       controller: 'ClientDetailsCtrl',
       scope: $scope,
       templateUrl: 'modules/modals/modal-register-sip-client.html',
@@ -56,7 +56,7 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $modal, $dialog, Ses
 
 // Numbers : RestComm Clients : Details (also used for Modal) -----------------------
 
-rcMod.controller('ClientDetailsCtrl', function ($scope, $stateParams, $location, $dialog, $modalInstance, SessionService, RCommClients, RCommApps, Notifications, localApps) {
+rcMod.controller('ClientDetailsCtrl', function ($scope, $stateParams, $location, $dialog, $uibModalInstance, SessionService, RCommClients, RCommApps, Notifications, localApps) {
 
 	$scope.localApps = localApps;
   // are we editing details...
@@ -71,7 +71,7 @@ rcMod.controller('ClientDetailsCtrl', function ($scope, $stateParams, $location,
     $scope.isCollapsed = true;
 
     $scope.closeRegisterSIPClient = function () {
-      $modalInstance.dismiss('cancel');
+      $uibModalInstance.dismiss('cancel');
     };
   }
 
@@ -82,9 +82,10 @@ rcMod.controller('ClientDetailsCtrl', function ($scope, $stateParams, $location,
     var params = {};
 
     // Mandatory fields
-    if(client.login && client.password) {
+    var effectivePassword = ($scope.editingPass && client.newPassword) ? client.newPassword : client.password;
+    if(client.login && effectivePassword) {
       params["Login"] = client.login;
-      params["Password"] = client.password;
+      params["Password"] = effectivePassword;
     }
     else {
       alert("You must provide Login and Password.");
@@ -126,7 +127,7 @@ rcMod.controller('ClientDetailsCtrl', function ($scope, $stateParams, $location,
     RCommClients.register({accountSid: $scope.sid}, $.param(params),
       function() { // success
         Notifications.success('RestComm Client "' + client.login + '" created successfully!');
-        $modalInstance.close();
+        $uibModalInstance.close();
       },
       function() { // error
         // TODO: Show alert
@@ -149,6 +150,12 @@ rcMod.controller('ClientDetailsCtrl', function ($scope, $stateParams, $location,
 
   $scope.confirmClientDelete = function(client) {
     confirmClientDelete(client, $dialog, $scope, Notifications, RCommClients, $location);
+  }
+
+  $scope.togglePasswordEdit = function () {
+    $scope.editingPass = !$scope.editingPass;
+    if (!$scope.editingPass)
+      $scope.clientDetails.newPassword = "";
   }
 });
 
