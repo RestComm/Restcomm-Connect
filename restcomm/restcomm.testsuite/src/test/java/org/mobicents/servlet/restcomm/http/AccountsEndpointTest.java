@@ -196,6 +196,40 @@ public class AccountsEndpointTest {
         Assert.assertEquals("Role field is not updated", "Administrator", getAccountResponse.get("role").getAsString());
     }
 
+    @Test
+    public void testUpdateAccountByEmail() {
+        JsonObject updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, updatedUsername, "updated2", "Restcomm2", null, "Developer", "active" );
+        JsonObject getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, updatedUsername);
+
+        Assert.assertEquals("FriendlyName field is not updated",  "updated2", updateAccountResponse.get("friendly_name").getAsString());
+        Assert.assertEquals("AuthToken field is not updated", new Md5Hash("Restcomm2").toString(), updateAccountResponse.get("auth_token").getAsString());
+        Assert.assertEquals("Status field is not updated", "active", updateAccountResponse.get("status").getAsString());
+        Assert.assertEquals("Role field is not updated", "Developer", updateAccountResponse.get("role").getAsString());
+
+        Assert.assertEquals("FriendlyName field is not updated",  "updated2", getAccountResponse.get("friendly_name").getAsString());
+        Assert.assertEquals("AuthToken field is not updated", new Md5Hash("Restcomm2").toString(), getAccountResponse.get("auth_token").getAsString());
+        Assert.assertEquals("Status field is not updated", "active", getAccountResponse.get("status").getAsString());
+        Assert.assertEquals("Role field is not updated", "Developer", updateAccountResponse.get("role").getAsString());
+
+        // role update test revert it back to Administrator
+        updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, updatedAccountSid, "updated3", "Restcomm2", null, "Administrator", "active" );
+        getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, updatedUsername);
+
+        Assert.assertEquals("FriendlyName field is not updated",  "updated3", updateAccountResponse.get("friendly_name").getAsString());
+        Assert.assertEquals("AuthToken field is not updated", new Md5Hash("Restcomm2").toString(), updateAccountResponse.get("auth_token").getAsString());
+        Assert.assertEquals("Status field is not updated", "active", updateAccountResponse.get("status").getAsString());
+        Assert.assertEquals("Role field is not updated", "Administrator", updateAccountResponse.get("role").getAsString());
+
+        Assert.assertEquals("FriendlyName field is not updated",  "updated3", getAccountResponse.get("friendly_name").getAsString());
+        Assert.assertEquals("AuthToken field is not updated", new Md5Hash("Restcomm2").toString(), getAccountResponse.get("auth_token").getAsString());
+        Assert.assertEquals("Status field is not updated", "active", getAccountResponse.get("status").getAsString());
+        Assert.assertEquals("Role field is not updated", "Administrator", getAccountResponse.get("role").getAsString());
+    }
+
     // special account-update policy when updating roles
     @Test public void testUpdateAccountRoleAccessControl() {
         // non-admins should not be able to change their role

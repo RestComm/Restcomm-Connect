@@ -313,13 +313,28 @@ public class AccountsEndpoint extends SecuredEndpoint {
         return result;
     }
 
-    protected Response updateAccount(final String accountSid, final MultivaluedMap<String, String> data,
+    protected Response updateAccount(final String identifier, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
         // First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO
         // operations
         checkPermission("RestComm:Modify:Accounts");
-        final Sid sid = new Sid(accountSid);
-        Account account = accountsDao.getAccount(sid);
+        Sid sid = null;
+        Account account = null;
+        try {
+            sid = new Sid(identifier);
+            account = accountsDao.getAccount(sid);
+        } catch (Exception e) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("At update account, exception trying to get SID. Seems we have email as identifier");
+            }
+        }
+        if (account == null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("At update account, trying to get account using email as identifier");
+            }
+            account = accountsDao.getAccount(identifier);
+        }
+
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {

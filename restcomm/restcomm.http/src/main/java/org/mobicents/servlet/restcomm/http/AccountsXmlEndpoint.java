@@ -68,6 +68,7 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
         return putAccount(data, APPLICATION_XML_TYPE);
     }
 
+    //The {accountSid} could be the email address of the account we need to update. Later we check if this is SID or EMAIL
     @Path("/{accountSid}.json")
     @Consumes(APPLICATION_FORM_URLENCODED)
     @POST
@@ -76,6 +77,7 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
         return updateAccount(accountSid, data, APPLICATION_JSON_TYPE);
     }
 
+    //The {accountSid} could be the email address of the account we need to update. Later we check if this is SID or EMAIL
     @Path("/{accountSid}.json")
     @Consumes(APPLICATION_FORM_URLENCODED)
     @PUT
@@ -84,6 +86,7 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
         return updateAccount(accountSid, data, APPLICATION_JSON_TYPE);
     }
 
+    //The {accountSid} could be the email address of the account we need to update. Later we check if this is SID or EMAIL
     @Path("/{accountSid}")
     @Consumes(APPLICATION_FORM_URLENCODED)
     @POST
@@ -92,6 +95,7 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
         return updateAccount(accountSid, data, APPLICATION_XML_TYPE);
     }
 
+    //The {accountSid} could be the email address of the account we need to update. Later we check if this is SID or EMAIL
     @Path("/{accountSid}")
     @Consumes(APPLICATION_FORM_URLENCODED)
     @PUT
