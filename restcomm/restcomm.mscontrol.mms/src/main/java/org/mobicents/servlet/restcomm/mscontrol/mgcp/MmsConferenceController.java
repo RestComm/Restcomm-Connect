@@ -52,10 +52,8 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
-import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
@@ -66,9 +64,6 @@ import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.ConferenceInfo;
 
 import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
@@ -104,7 +99,7 @@ public final class MmsConferenceController extends MediaServerController {
 
     // Conference runtime stuff
     private ActorRef conference;
-    private ActorRef mediaGroup;
+    //private ActorRef mediaGroup;
     private ActorRef conferenceMediaResourceController;
     private boolean startJoinConferencesOverDifferentMediaServers = false;
 
@@ -412,7 +407,7 @@ public final class MmsConferenceController extends MediaServerController {
                 context().stop(cnfEndpoint);
                 cnfEndpoint = null;
 
-                if(this.mediaGroup == null && this.cnfEndpoint == null) {
+                if(this.cnfEndpoint == null) {
                     this.fsm.transition(message, inactive);
                 }
             }
@@ -486,7 +481,7 @@ public final class MmsConferenceController extends MediaServerController {
         }
     }
 
-    private final class CreatingMediaGroup extends AbstractAction {
+    /*private final class CreatingMediaGroup extends AbstractAction {
 
         public CreatingMediaGroup(ActorRef source) {
             super(source);
@@ -523,7 +518,7 @@ public final class MmsConferenceController extends MediaServerController {
         public void execute(Object message) throws Exception {
             mediaGroup.tell(new StopMediaGroup(), super.source);
         }
-    }
+    }*/
 
     private final class Active extends AbstractAction {
 
@@ -559,8 +554,6 @@ public final class MmsConferenceController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             StopConferenceMediaResourceControllerResponse response = (StopConferenceMediaResourceControllerResponse) message;
-            // Destroy Media Group
-            mediaGroup.tell(new StopMediaGroup(), super.source);
             // CMRC might ask you not to destroy endpoint bcz master have left firt and other slaves are still connected to this conference endpoint.
             if(response.distroyEndpoint()){
                 // Destroy Bridge Endpoint and its connections
@@ -589,7 +582,7 @@ public final class MmsConferenceController extends MediaServerController {
             }
 
             // Notify observers the controller has stopped
-            broadcast(new MediaServerControllerStateChanged(state));
+            broadcast(new MediaServerConferenceControllerStateChanged(state, conferenceSid));
 
             // Clean observers
             observers.clear();

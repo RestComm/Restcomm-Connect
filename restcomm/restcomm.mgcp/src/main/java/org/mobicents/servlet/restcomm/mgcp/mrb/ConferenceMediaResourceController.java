@@ -151,7 +151,6 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
     private boolean areAnySlavesConnectedToThisConferenceEndpoint;
     private int noOfConnectedSlaves = 0;
-     private ActorRef msConferenceController;
 
     public ConferenceMediaResourceController(final String localMsId, final Map<String, ActorRef> gateways, final Configuration configuration, final DaoManager storage){
         super();
@@ -253,7 +252,6 @@ public class ConferenceMediaResourceController extends UntypedActor{
             onStopObserving((StopObserving) message, self, sender);
         } else if (StartConferenceMediaResourceController.class.equals(klass)){
             onStartConferenceMediaResourceController((StartConferenceMediaResourceController) message, self, sender);
-            msConferenceController = sender;
         } else if (JoinConferences.class.equals(klass)){
             onJoinConferences((JoinConferences) message, self, sender);
         } else if (MediaGatewayResponse.class.equals(klass)) {
@@ -269,8 +267,12 @@ public class ConferenceMediaResourceController extends UntypedActor{
             onStopMediaGroup((StopMediaGroup) message, self, sender);
         } else if (Play.class.equals(klass)) {
             onPlay((Play) message, self, sender);
+        } else if(MediaGroupResponse.class.equals(klass)) {
+            onMediaGroupResponse((MediaGroupResponse<String>) message, self, sender);
         } else if (StartRecording.class.equals(klass)) {
             onStartRecording((StartRecording) message, self, sender);
+        } else if (StopRecording.class.equals(klass)) {
+            onStopRecording((StopRecording) message, self, sender);
         } else if (StopConferenceMediaResourceController.class.equals(klass)) {
             onStopConferenceMediaResourceController((StopConferenceMediaResourceController) message, self, sender);
         }
@@ -757,11 +759,10 @@ public class ConferenceMediaResourceController extends UntypedActor{
         @Override
         public void execute(final Object message) throws Exception {
             logger.info("CMRC is ACTIVE NOW...");
-            if(isThisMaster){
-                updateMasterConferenceEndpointId();
-            }else{
+            updateConferenceStatus("RUNNING");
+            if(!isThisMaster){
                 // Stop the background music if present
-                msConferenceController.tell(new StopMediaGroup(), super.source);
+                onStopMediaGroup(new StopMediaGroup(), self(), self());
 
                 playBeepOnEnter(source);
                 // enter slave record in MRB resource table
@@ -782,14 +783,21 @@ public class ConferenceMediaResourceController extends UntypedActor{
             if(isThisMaster){
                 logger.info("CMRC is STOPPING Master NOW...");
                 updateMasterPresence(false);
+                if(!areAnySlavesConnectedToThisConferenceEndpoint){
+                    updateConferenceStatus("COMPLETED");
+                    // Destroy Media Group
+                    mediaGroup.tell(new StopMediaGroup(), super.source);
+                }
             }else{
                 logger.info("CMRC is STOPPING Slave NOW...");
-                //TODO: do clean up here
                 removeSlaveRecord();
                 //check if it is last to leave in entire cluster then distroymaster conf EP as well
                 if(!isMasterPresence() && noOfConnectedSlaves < 2){
                     logger.info("Going to Detroy Master conference EP..");
+                    updateConferenceStatus("COMPLETED");
                     masterConfernceEndpoint.tell(new DestroyEndpoint(), super.source);
+                    // Destroy Media Group
+                    mediaGroup.tell(new StopMediaGroup(), super.source);
                 }
             }
         }
@@ -859,7 +867,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         URI uri = null;
         uri = UriUtils.resolve(new URI(path));
         final Play play = new Play(uri, 1);
-        msConferenceController.tell(play, source);
+        onPlay(play, self(), sender());
     }
 
     private void playBeepOnExit(final ActorRef source) throws URISyntaxException{
@@ -870,7 +878,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         URI uri = null;
         uri = UriUtils.resolve(new URI(path));
         final Play play = new Play(uri, 1);
-        msConferenceController.tell(play, source);
+        onPlay(play, self(), sender());
     }
     /*
      * Database Utility Functions
@@ -916,6 +924,16 @@ public class ConferenceMediaResourceController extends UntypedActor{
             cdr = dao.getConferenceDetailRecord(conferenceSid);
             cdr = cdr.setMasterPresent(masterPresent);
             dao.updateMasterPresent(cdr);
+        }
+    }
+
+    private void updateConferenceStatus(String status){
+        if(cdr != null){
+            logger.info("updateConferenceStatus called");
+            final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
+            cdr = dao.getConferenceDetailRecord(conferenceSid);
+            cdr = cdr.setStatus(status);
+            dao.updateConferenceDetailRecordStatus(cdr);
         }
     }
 
