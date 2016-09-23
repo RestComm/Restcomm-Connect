@@ -2838,12 +2838,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final Class<?> klass = message.getClass();
 
                 if (callRecord != null) {
+                    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
+                    callRecord = records.getCallDetailRecord(callRecord.getSid());
                     callRecord = callRecord.setStatus(callState.toString());
                     final DateTime end = DateTime.now();
                     callRecord = callRecord.setEndTime(end);
                     final int seconds = (int) (end.getMillis() - callRecord.getStartTime().getMillis()) / 1000;
                     callRecord = callRecord.setDuration(seconds);
-                    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                     records.updateCallDetailRecord(callRecord);
                 }
             if (!dialActionExecuted) {

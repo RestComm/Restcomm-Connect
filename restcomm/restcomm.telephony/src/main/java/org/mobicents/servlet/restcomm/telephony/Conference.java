@@ -41,7 +41,6 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Left;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
@@ -190,8 +189,8 @@ public final class Conference extends UntypedActor {
             onLeft((Left) message, self, sender);
         } else if (JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
-        } else if (MediaServerControllerStateChanged.class.equals(klass)) {
-            onMediaServerControllerStateChanged((MediaServerControllerStateChanged) message, self, sender);
+        } else if (MediaServerConferenceControllerStateChanged.class.equals(klass)) {
+            onMediaServerControllerStateChanged((MediaServerConferenceControllerStateChanged) message, self, sender);
         } else if (Play.class.equals(klass)) {
             onPlay((Play) message, self, sender);
         } else if (StartRecording.class.equals(klass)) {
@@ -432,7 +431,7 @@ public final class Conference extends UntypedActor {
         }
     }
 
-    private void onMediaServerControllerStateChanged(MediaServerControllerStateChanged message, ActorRef self, ActorRef sender)
+    private void onMediaServerControllerStateChanged(MediaServerConferenceControllerStateChanged message, ActorRef self, ActorRef sender)
             throws Exception {
         MediaServerControllerState state = message.getState();
         switch (state) {
