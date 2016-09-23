@@ -21,6 +21,7 @@ package org.mobicents.servlet.restcomm.dao;
 
 import java.util.List;
 
+import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
@@ -63,4 +64,15 @@ public interface AccountsDao {
      * @return list of account sid or null
      */
     List<String> getSubAccountSidsRecursive(Sid parentAccountSid);
+
+    /**
+     * Returns a list of all the ancestor account SIDs of an Account all the way up to the
+     * top-level account. Currently works in an iterative way starting from the account's parent,
+     * moving to the grandfather etc. In the returned list, subject account goes first and the
+     * top-level root account goes last.
+     *
+     * @param accountSid
+     * @return
+     */
+    List<String> getAccountAncestors(Sid accountSid) throws AccountHierarchyDepthCrossed;
 }

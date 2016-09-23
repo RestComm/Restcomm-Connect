@@ -32,6 +32,7 @@ import org.joda.time.DateTime;
 
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
+import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
@@ -42,7 +43,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 @ThreadSafe
 public final class MybatisAccountsDao implements AccountsDao {
     private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.AccountsDao.";
-    private Integer accountRecursionDepth = 4; // maximum value for recursive account queries
+    private Integer accountRecursionDepth = 3; // maximum value for recursive account queries
     private final SqlSessionFactory sessions;
 
     public MybatisAccountsDao(final SqlSessionFactory sessions) {
@@ -164,6 +165,29 @@ public final class MybatisAccountsDao implements AccountsDao {
         }
 
         return allChildren;
+    }
+
+    @Override
+    public List<String> getAccountAncestors(Sid accountSid) throws AccountHierarchyDepthCrossed {
+        if (accountSid == null)
+            return null;
+        List<String> ancestorList = new ArrayList<String>();
+        Sid sid = accountSid;
+        int depth = 1;
+        do {
+            if (depth >= accountRecursionDepth) // TODO investigate the exact condition that makes sense here to
+                throw new AccountHierarchyDepthCrossed();
+            // this account should exist. If it's not, either it was removed or we're having a bad accountSid parameter
+            Account account = getAccount(sid);
+            if (account == null)
+                throw new RuntimeException("Invalid or missing account SID found when searching for account ancestors");
+            ancestorList.add(account.getSid().toString());
+            sid = account.getAccountSid();
+            if (sid == null) // seems we reached top-level account
+                break;
+            depth ++;
+        } while (true);
+        return ancestorList;
     }
 
     private List<String> getSubAccountsSids(List<String> parentAccountSidList) {
