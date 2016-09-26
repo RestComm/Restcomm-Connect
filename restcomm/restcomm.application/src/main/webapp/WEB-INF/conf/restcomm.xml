@@ -89,7 +89,7 @@
 
 		<!--Play background music for conference rooms with 1 participant even if startConference=true? Music will stop after the second participant joins-->
 		<!--Default value: false -->
-		<play-music-for-conference>false</play-music-for-conference>
+		<play-music-for-conference>true</play-music-for-conference>
 
 		<!-- Set to true so Restcomm won't patch the SDP answer answered received trying to cope with NAT -->
 		<!-- Default value: false -->
