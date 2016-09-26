@@ -179,16 +179,15 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
+        //states for master
         transitions.add(new Transition(uninitialized, acquiringConferenceInfo));
         transitions.add(new Transition(acquiringConferenceInfo, creatingMediaGroup));
-        transitions.add(new Transition(acquiringConferenceInfo, acquiringMediaSessionWithMasterMS));
-        transitions.add(new Transition(acquiringMediaSessionWithMasterMS, creatingMediaGroup));
         transitions.add(new Transition(creatingMediaGroup, acquiringIVREndpointID));
-        transitions.add(new Transition(creatingMediaGroup, acquiringConferenceEndpointID));
-        transitions.add(new Transition(acquiringIVREndpointID, acquiringRemoteConnectionWithLocalMS));
-        transitions.add(new Transition(initialized, acquiringRemoteConnectionWithLocalMS));
-        transitions.add(new Transition(initialized, acquiringConferenceEndpointID));
+        transitions.add(new Transition(acquiringIVREndpointID, acquiringConferenceEndpointID));
         transitions.add(new Transition(acquiringConferenceEndpointID, active));
+        //states for slave
+        transitions.add(new Transition(acquiringConferenceInfo, acquiringMediaSessionWithMasterMS));
+        transitions.add(new Transition(acquiringMediaSessionWithMasterMS, acquiringRemoteConnectionWithLocalMS));
         transitions.add(new Transition(acquiringRemoteConnectionWithLocalMS, initializingRemoteConnectionWithLocalMS));
         transitions.add(new Transition(initializingRemoteConnectionWithLocalMS, openingRemoteConnectionWithLocalMS));
         transitions.add(new Transition(openingRemoteConnectionWithLocalMS, failed));
@@ -384,7 +383,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ masterMediaServerSdp: "+masterMediaServerSdp);
                     fsm.transition(message, updatingRemoteConnectionWithLocalMS);
                 } else if (is(updatingRemoteConnectionWithLocalMS)){
-                    fsm.transition(message, active);
+                    fsm.transition(message, creatingMediaGroup);
                 }
                 break;
 
@@ -418,7 +417,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     if(isThisMaster){
                         fsm.transition(message, acquiringIVREndpointID);
                     }else{
-                        fsm.transition(message, acquiringRemoteConnectionWithLocalMS);
+                        fsm.transition(message, active);
                     }
                 }
                 break;
