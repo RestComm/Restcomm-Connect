@@ -45,6 +45,7 @@ import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mgcp.ConnectionStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.CreateConferenceEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.CreateConnection;
+import org.mobicents.servlet.restcomm.mgcp.CreateIvrEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.EndpointCredentials;
 import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
@@ -54,7 +55,6 @@ import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
 import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.ConferenceMediaResourceControllerStateChanged;
-import org.mobicents.servlet.restcomm.mgcp.mrb.messages.JoinConferences;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResourceControllerResponse;
@@ -123,9 +123,10 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private boolean isThisMaster = false;
     private String localMediaServerSdp;
     private String masterMediaServerSdp;
-    public EndpointIdentifier localConfernceEndpointId;
-    public String masterConfernceEndpointId;
-    public String masterIVREndpointId;
+    public EndpointIdentifier masterConfernceEndpointId;
+    public EndpointIdentifier masterIVREndpointId;
+    public String masterConfernceEndpointIdName;
+    public String masterIVREndpointIdName;
     private MediaSession localMediaSession;
     private MediaSession masterMediaSession;
     private ActorRef localConfernceEndpoint;
@@ -167,7 +168,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         this.openingRemoteConnectionWithLocalMS = new State("opening connection", new OpeningRemoteConnection(source), null);
         this.updatingRemoteConnectionWithLocalMS = new State("updating RemoteConnection With Local MS", new UpdatingRemoteConnectionWithLocalMS(source), null);
         this.acquiringMediaSessionWithMasterMS = new State("acquiring MediaSession With Master MS", new AcquiringMediaSessionWithMasterMS(source), null);
-        this.acquiringMasterConferenceEndpoint = new State("acquiring Master ConferenceEndpoint", new AcquiringMasterConferenceEndpoint(source), null);
+        this.acquiringMasterConferenceEndpoint = new State("acquiring Master ConferenceEndpoint", new AcquiringMasterIVREndpoint(source), null);
         this.acquiringRemoteConnectionWithMasterMS = new State("acquiring RemoteConnection With Master MS", new AcquiringRemoteConnectionWithMasterMS(source), null);
         this.initializingRemoteConnectionWithMasterMS = new State("initializing RemoteConnection With Master MS", new InitializingRemoteConnectionWithMasterMS(source), null);
         this.openingRemoteConnectionWithMasterMS = new State("opening RemoteConnection With Master MS", new OpeningRemoteConnectionWithMasterMS(source), null);
@@ -183,8 +184,8 @@ public class ConferenceMediaResourceController extends UntypedActor{
         transitions.add(new Transition(acquiringConferenceInfo, acquiringMediaSessionWithMasterMS));
         transitions.add(new Transition(acquiringMediaSessionWithMasterMS, creatingMediaGroup));
         transitions.add(new Transition(creatingMediaGroup, acquiringIVREndpointID));
-        transitions.add(new Transition(creatingMediaGroup, initialized));
-        transitions.add(new Transition(acquiringIVREndpointID, initialized));
+        transitions.add(new Transition(creatingMediaGroup, acquiringConferenceEndpointID));
+        transitions.add(new Transition(acquiringIVREndpointID, acquiringRemoteConnectionWithLocalMS));
         transitions.add(new Transition(initialized, acquiringRemoteConnectionWithLocalMS));
         transitions.add(new Transition(initialized, acquiringConferenceEndpointID));
         transitions.add(new Transition(acquiringConferenceEndpointID, active));
@@ -196,7 +197,8 @@ public class ConferenceMediaResourceController extends UntypedActor{
         transitions.add(new Transition(acquiringRemoteConnectionWithMasterMS, initializingRemoteConnectionWithMasterMS));
         transitions.add(new Transition(initializingRemoteConnectionWithMasterMS, openingRemoteConnectionWithMasterMS));
         transitions.add(new Transition(openingRemoteConnectionWithMasterMS, updatingRemoteConnectionWithLocalMS));
-        transitions.add(new Transition(updatingRemoteConnectionWithLocalMS, active));
+        transitions.add(new Transition(updatingRemoteConnectionWithLocalMS, creatingMediaGroup));
+        transitions.add(new Transition(creatingMediaGroup, active));
         transitions.add(new Transition(active, stopping));
         transitions.add(new Transition(stopping, inactive));
 
@@ -209,7 +211,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         logger.info("localMsId: "+localMsId);
         this.localMsId = localMsId;
         this.localMediaGateway = allMediaGateways.get(this.localMsId);
-        masterIVREndpointId = null;
+        masterIVREndpointIdName = null;
 
         // Runtime media operations
         this.playing = Boolean.FALSE;
@@ -253,9 +255,9 @@ public class ConferenceMediaResourceController extends UntypedActor{
             onStopObserving((StopObserving) message, self, sender);
         } else if (StartConferenceMediaResourceController.class.equals(klass)){
             onStartConferenceMediaResourceController((StartConferenceMediaResourceController) message, self, sender);
-        } else if (JoinConferences.class.equals(klass)){
+        } /*else if (JoinConferences.class.equals(klass)){
             onJoinConferences((JoinConferences) message, self, sender);
-        } else if (MediaGatewayResponse.class.equals(klass)) {
+        }*/ else if (MediaGatewayResponse.class.equals(klass)) {
             logger.info("going to call onMediaGatewayResponse");
             onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
         } else if (ConnectionStateChanged.class.equals(klass)) {
@@ -308,13 +310,13 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private void onEndpointCredentials(EndpointCredentials message, ActorRef self, ActorRef sender) throws Exception{
         logger.info("onEndpointCredentials state = "+fsm.state());
         if(is(acquiringIVREndpointID)){
-            fsm.transition(message, initialized);
+            fsm.transition(message, acquiringConferenceEndpointID);
         }else{
             fsm.transition(message, active);
         }
     }
 
-    private void onJoinConferences(JoinConferences message, ActorRef self, ActorRef sender) throws Exception{
+    /*private void onJoinConferences(JoinConferences message, ActorRef self, ActorRef sender) throws Exception{
         if(logger.isDebugEnabled())
             logger.debug("onJoinConferences: current state is: "+fsm.state());
         if (is(initialized)) {
@@ -324,7 +326,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 this.fsm.transition(message, acquiringRemoteConnectionWithLocalMS);
             }
         }
-    }
+    }*/
 
     private void onMediaGatewayResponse(MediaGatewayResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
         logger.info("inside onMediaGatewayResponse: state = "+fsm.state());
@@ -416,7 +418,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     if(isThisMaster){
                         fsm.transition(message, acquiringIVREndpointID);
                     }else{
-                        fsm.transition(message, initialized);
+                        fsm.transition(message, acquiringRemoteConnectionWithLocalMS);
                     }
                 }
                 break;
@@ -523,10 +525,10 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     isThisMaster = true;
                 }else{
                     masterMediaGateway = allMediaGateways.get(masterMsId);
-                    masterConfernceEndpointId = cdr.getMasterConferenceEndpointId();
-                    masterIVREndpointId = cdr.getMasterIVREndpointId();
+                    masterConfernceEndpointIdName = cdr.getMasterConferenceEndpointId();
+                    masterIVREndpointIdName = cdr.getMasterIVREndpointId();
                     logger.info("masterMediaGateway acquired: "+masterMediaGateway);
-                    logger.info("new slave sent StartBridgeConnector message to CMRC masterIVREndpointId: "+masterIVREndpointId);
+                    logger.info("new slave sent StartBridgeConnector message to CMRC masterIVREndpointId: "+masterIVREndpointIdName);
                 }
                 logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AcquiringMediaSession ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
                 localMediaGateway.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), source);
@@ -548,9 +550,9 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 @Override
                 public UntypedActor create() throws Exception {
                     if(isThisMaster){
-                        return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint, masterIVREndpointId);
+                        return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint, masterIVREndpointIdName);
                     }else{
-                        return new MgcpMediaGroup(masterMediaGateway, masterMediaSession, localConfernceEndpoint, masterIVREndpointId);
+                        return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint, masterIVREndpointIdName);
                     }
                 }
             }));
@@ -600,8 +602,9 @@ public class ConferenceMediaResourceController extends UntypedActor{
         @Override
         public void execute(final Object message) throws Exception {
             final EndpointCredentials response = (EndpointCredentials) message;
-            masterIVREndpointId = response.endpointId().getLocalEndpointName();
-            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ masterIVREndpointId:"+masterIVREndpointId+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            masterIVREndpointId = response.endpointId();
+            masterIVREndpointIdName = masterIVREndpointId.getLocalEndpointName();
+            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ masterIVREndpointId:"+masterIVREndpointIdName+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             updateMasterIVREndpointId();
         }
     }
@@ -628,8 +631,8 @@ public class ConferenceMediaResourceController extends UntypedActor{
         @Override
         public void execute(final Object message) throws Exception {
             final EndpointCredentials response = (EndpointCredentials) message;
-            localConfernceEndpointId = response.endpointId();
-            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ localConfernceEndpointId:"+localConfernceEndpointId+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            masterConfernceEndpointId = response.endpointId();
+            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ localConfernceEndpointId:"+masterConfernceEndpointId+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             updateMasterConferenceEndpointId();
         }
     }
@@ -696,7 +699,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
         @Override
         public void execute(final Object message) throws Exception {
-            masterMediaGateway.tell(new CreateConferenceEndpoint(masterMediaSession, masterConfernceEndpointId), super.source);
+            masterMediaGateway.tell(new CreateConferenceEndpoint(masterMediaSession, masterConfernceEndpointIdName), super.source);
         }
     }
 
@@ -755,6 +758,37 @@ public class ConferenceMediaResourceController extends UntypedActor{
             connectionWithLocalMS.tell(update, source);
         }
     }
+
+    private final class AcquiringMasterIVREndpoint extends AbstractAction {
+
+        public AcquiringMasterIVREndpoint(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            masterMediaGateway.tell(new CreateIvrEndpoint(masterMediaSession, masterIVREndpointIdName), super.source);
+        }
+    }
+
+    /*private final class Opening extends AbstractAction {
+        public Opening(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            final OpenLink request = (OpenLink) message;
+            final String sessionId = Integer.toString(localMediaSession.id());
+            final CallIdentifier callId = new CallIdentifier(sessionId);
+            final jain.protocol.ip.mgcp.message.CreateConnection crcx = new jain.protocol.ip.mgcp.message.CreateConnection(source, callId, localConfernceEndpoint, request.mode());
+            crcx.setNotifiedEntity(agent);
+            crcx.setSecondEndpointIdentifier(masterIVREndpointId);
+            localMediaGateway.tell(crcx, source);
+            // Make sure we don't wait for a response indefinitely.
+            getContext().setReceiveTimeout(Duration.create(timeout, TimeUnit.MILLISECONDS));
+        }
+    }*/
 
     private final class Active extends AbstractAction {
 
@@ -905,20 +939,20 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
     private void updateMasterIVREndpointId(){
         if(cdr != null){
-            logger.info("updateMasterIVREndpointId: name: "+masterIVREndpointId);
+            logger.info("updateMasterIVREndpointId: name: "+masterIVREndpointIdName);
             final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
             cdr = dao.getConferenceDetailRecord(conferenceSid);
-            cdr = cdr.setMasterIVREndpointId(masterIVREndpointId);
+            cdr = cdr.setMasterIVREndpointId(masterIVREndpointIdName);
             dao.updateConferenceDetailRecordMasterIVREndpointID(cdr);
         }
     }
 
     private void updateMasterConferenceEndpointId(){
         if(cdr != null){
-            logger.info("updateMasterConferenceEndpointId: localConfernceEndpointId.getLocalEndpointName(): "+localConfernceEndpointId.getLocalEndpointName());
+            logger.info("updateMasterConferenceEndpointId: localConfernceEndpointId.getLocalEndpointName(): "+masterConfernceEndpointId.getLocalEndpointName());
             final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
             cdr = dao.getConferenceDetailRecord(conferenceSid);
-            cdr = cdr.setMasterConfernceEndpointId(localConfernceEndpointId.getLocalEndpointName());
+            cdr = cdr.setMasterConfernceEndpointId(masterConfernceEndpointId.getLocalEndpointName());
             dao.updateConferenceDetailRecordMasterEndpointID(cdr);
         }
     }
