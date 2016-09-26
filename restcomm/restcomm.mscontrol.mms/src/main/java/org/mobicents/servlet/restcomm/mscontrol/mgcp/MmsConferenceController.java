@@ -80,8 +80,8 @@ public final class MmsConferenceController extends MediaServerController {
     // Finite State Machine
     private final FiniteStateMachine fsm;
     private final State uninitialized;
-    private final State getMediaGatewayFromMRB;
-    private final State gettingCnfMediaResourceController;
+    private final State acquiringMediaGateway;
+    private final State acquiringCnfMediaResourceController;
     private final State active;
     private final State inactive;
     private final State failed;
@@ -125,8 +125,8 @@ public final class MmsConferenceController extends MediaServerController {
 
         // Finite States
         this.uninitialized = new State("uninitialized", null, null);
-        this.getMediaGatewayFromMRB = new State("get media gateway from mrb", new GetMediaGatewayFromMRB(source), null);
-        this.gettingCnfMediaResourceController = new State("getting Cnf Media Resource Controller", new GettingCnfMediaResourceController(source), null);
+        this.acquiringMediaGateway = new State("acquiring media gateway from mrb", new AcquiringMediaGateway(source), null);
+        this.acquiringCnfMediaResourceController = new State("acquiring Cnf Media Resource Controller", new AcquiringCnfMediaResourceController(source), null);
         this.active = new State("active", new Active(source), null);
         this.inactive = new State("inactive", new Inactive(source), null);
         this.failed = new State("failed", new Failed(source), null);
@@ -138,16 +138,16 @@ public final class MmsConferenceController extends MediaServerController {
 
         // Initialize the transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
-        transitions.add(new Transition(uninitialized, getMediaGatewayFromMRB));
-        transitions.add(new Transition(getMediaGatewayFromMRB, acquiringMediaSession));
+        transitions.add(new Transition(uninitialized, acquiringMediaGateway));
+        transitions.add(new Transition(acquiringMediaGateway, acquiringMediaSession));
         transitions.add(new Transition(acquiringMediaSession, acquiringEndpoint));
         transitions.add(new Transition(acquiringMediaSession, inactive));
-        transitions.add(new Transition(acquiringEndpoint, gettingCnfMediaResourceController));
+        transitions.add(new Transition(acquiringEndpoint, acquiringCnfMediaResourceController));
         transitions.add(new Transition(acquiringEndpoint, inactive));
         //transitions.add(new Transition(creatingMediaGroup, gettingCnfMediaResourceController));
-        transitions.add(new Transition(gettingCnfMediaResourceController, active));
-        transitions.add(new Transition(gettingCnfMediaResourceController, stoppingCMRC));
-        transitions.add(new Transition(gettingCnfMediaResourceController, failed));
+        transitions.add(new Transition(acquiringCnfMediaResourceController, active));
+        transitions.add(new Transition(acquiringCnfMediaResourceController, stoppingCMRC));
+        transitions.add(new Transition(acquiringCnfMediaResourceController, failed));
         transitions.add(new Transition(active, stoppingCMRC));
         transitions.add(new Transition(stoppingCMRC, stopping));
         transitions.add(new Transition(stopping, inactive));
@@ -259,12 +259,12 @@ public final class MmsConferenceController extends MediaServerController {
 
     private void onMediaResourceBrokerResponse(MediaResourceBrokerResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
         logger.info("got MRB response in conference controller");
-        if(is(getMediaGatewayFromMRB)){
+        if(is(acquiringMediaGateway)){
             MediaGatewayForConference mgc = (MediaGatewayForConference) message.get();
             mediaGateway = mgc.mediaGateway();
             this.conferenceSid = mgc.conferenceSid();
             fsm.transition(message, acquiringMediaSession);
-        }else if(is(gettingCnfMediaResourceController)){
+        }else if(is(acquiringCnfMediaResourceController)){
             conferenceMediaResourceController = (ActorRef) message.get();
             conferenceMediaResourceController.tell(new Observe(self), self);
             conferenceMediaResourceController.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartConferenceMediaResourceController(this.cnfEndpoint, this.conferenceSid), self);
@@ -276,7 +276,7 @@ public final class MmsConferenceController extends MediaServerController {
             logger.debug("onConferenceMediaResourceControllerStateChanged: "+message.state());
         switch (message.state()) {
             case ACTIVE:
-                if (is(gettingCnfMediaResourceController)) {
+                if (is(acquiringCnfMediaResourceController)) {
                     fsm.transition(message, active);
                 }
                 break;
@@ -288,7 +288,7 @@ public final class MmsConferenceController extends MediaServerController {
     private void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
         if (is(uninitialized)) {
             this.conference = sender;
-            fsm.transition(message, getMediaGatewayFromMRB);
+            fsm.transition(message, acquiringMediaGateway);
         }
     }
 
@@ -303,7 +303,7 @@ public final class MmsConferenceController extends MediaServerController {
     private void onStop(Stop message, ActorRef self, ActorRef sender) throws Exception {
         if (is(acquiringMediaSession) || is(acquiringEndpoint)) {
             this.fsm.transition(message, inactive);
-        } else if (is(gettingCnfMediaResourceController) || is(active)) {
+        } else if (is(acquiringCnfMediaResourceController) || is(active)) {
             this.fsm.transition(message, stoppingCMRC);
         }
     }
@@ -316,7 +316,7 @@ public final class MmsConferenceController extends MediaServerController {
         } else if (is(acquiringEndpoint)) {
             this.cnfEndpoint = (ActorRef) message.get();
             this.cnfEndpoint.tell(new Observe(self), self);
-            this.fsm.transition(message, gettingCnfMediaResourceController);
+            this.fsm.transition(message, acquiringCnfMediaResourceController);
         }
     }
 
@@ -426,9 +426,9 @@ public final class MmsConferenceController extends MediaServerController {
         }
     }
 
-    private final class GetMediaGatewayFromMRB extends AbstractAction {
+    private final class AcquiringMediaGateway extends AbstractAction {
 
-        public GetMediaGatewayFromMRB(final ActorRef source) {
+        public AcquiringMediaGateway(final ActorRef source) {
             super(source);
         }
 
@@ -444,9 +444,9 @@ public final class MmsConferenceController extends MediaServerController {
         }
     }
 
-    private final class GettingCnfMediaResourceController extends AbstractAction {
+    private final class AcquiringCnfMediaResourceController extends AbstractAction {
 
-        public GettingCnfMediaResourceController(final ActorRef source) {
+        public AcquiringCnfMediaResourceController(final ActorRef source) {
             super(source);
         }
 
