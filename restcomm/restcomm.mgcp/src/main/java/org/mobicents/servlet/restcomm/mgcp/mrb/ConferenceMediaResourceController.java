@@ -91,7 +91,6 @@ public class ConferenceMediaResourceController extends UntypedActor{
     // Finite State Machine
     private final FiniteStateMachine fsm;
     private final State uninitialized;
-    private final State initialized;
     private final State acquiringConferenceInfo;
     private final State creatingMediaGroup;
     private final State acquiringIVREndpointID;
@@ -157,7 +156,6 @@ public class ConferenceMediaResourceController extends UntypedActor{
         final ActorRef source = self();
         // Initialize the states for the FSM.
         this.uninitialized = new State("uninitialized", null, null);
-        this.initialized = new State("initialized", new Initialized(source), null);
         this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(source), null);
         this.acquiringConferenceInfo = new State("getting Conference Info From DB", new AcquiringConferenceInfo(source), null);
         this.acquiringIVREndpointID=new State("acquiring IVR endpoint ID", new AcquiringIVREndpointID(source), new SavingIVREndpointID(source));
@@ -562,20 +560,6 @@ public class ConferenceMediaResourceController extends UntypedActor{
             mediaGroup.tell(new Observe(super.source), super.source);
             mediaGroup.tell(new StartMediaGroup(), super.source);
         }
-    }
-
-    private final class Initialized extends AbstractAction {
-
-        public Initialized(ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(Object message) throws Exception {
-            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Initialized ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-            broadcast(new ConferenceMediaResourceControllerStateChanged(ConferenceMediaResourceControllerStateChanged.MediaServerControllerState.INITIALIZED));
-        }
-
     }
 
     private final class AcquiringIVREndpointID extends AbstractAction {
