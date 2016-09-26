@@ -121,10 +121,11 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private boolean isThisMaster = false;
     private String localMediaServerSdp;
     private String masterMediaServerSdp;
-    public EndpointIdentifier masterConfernceEndpointId;
-    public EndpointIdentifier masterIVREndpointId;
-    public String masterConfernceEndpointIdName;
-    public String masterIVREndpointIdName;
+    private EndpointIdentifier masterConfernceEndpointId;
+    private EndpointIdentifier masterIVREndpointId;
+    private String masterIVREndpointSessionId;
+    private String masterConfernceEndpointIdName;
+    private String masterIVREndpointIdName;
     private MediaSession localMediaSession;
     private MediaSession masterMediaSession;
     private ActorRef localConfernceEndpoint;
@@ -523,8 +524,9 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     masterMediaGateway = allMediaGateways.get(masterMsId);
                     masterConfernceEndpointIdName = cdr.getMasterConferenceEndpointId();
                     masterIVREndpointIdName = cdr.getMasterIVREndpointId();
+                    masterIVREndpointSessionId = cdr.getMasterIVREndpointSessionId();
                     logger.info("masterMediaGateway acquired: "+masterMediaGateway);
-                    logger.info("new slave sent StartBridgeConnector message to CMRC masterIVREndpointId: "+masterIVREndpointIdName);
+                    logger.info("new slave sent StartBridgeConnector message to CMRC masterIVREndpointId: "+masterIVREndpointIdName+" masterIVREndpointSessionId: "+ masterIVREndpointSessionId);
                 }
                 logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AcquiringMediaSession ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
                 localMediaGateway.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), source);
@@ -548,7 +550,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     if(isThisMaster){
                         return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint, masterIVREndpointIdName);
                     }else{
-                        return new MgcpMediaGroup(masterMediaGateway, masterMediaSession, localConfernceEndpoint, masterIVREndpointIdName);
+                        return new MgcpMediaGroup(masterMediaGateway, new MediaSession(Integer.parseInt(masterIVREndpointSessionId)), localConfernceEndpoint, masterIVREndpointIdName);
                     }
                 }
             }));
@@ -587,7 +589,6 @@ public class ConferenceMediaResourceController extends UntypedActor{
             masterIVREndpointId = response.endpointId();
             masterIVREndpointIdName = masterIVREndpointId.getLocalEndpointName();
             logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ masterIVREndpointId:"+masterIVREndpointIdName+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-            updateMasterIVREndpointId();
         }
     }
 
@@ -920,22 +921,14 @@ public class ConferenceMediaResourceController extends UntypedActor{
         dao.addMediaResourceBrokerEntity(entity);
     }
 
-    private void updateMasterIVREndpointId(){
-        if(cdr != null){
-            logger.info("updateMasterIVREndpointId: name: "+masterIVREndpointIdName);
-            final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
-            cdr = dao.getConferenceDetailRecord(conferenceSid);
-            cdr = cdr.setMasterIVREndpointId(masterIVREndpointIdName);
-            dao.updateConferenceDetailRecordMasterIVREndpointID(cdr);
-        }
-    }
-
     private void updateMasterConferenceEndpointId(){
         if(cdr != null){
-            logger.info("updateMasterConferenceEndpointId: localConfernceEndpointId.getLocalEndpointName(): "+masterConfernceEndpointId.getLocalEndpointName());
+            logger.info("updateMasterConferenceEndpointId: localConfernceEndpointId.getLocalEndpointName(): "+masterConfernceEndpointId.getLocalEndpointName()+" masterIVREndpointIdName: "+masterIVREndpointIdName+" setMasterIVREndpointSessionId: "+localMediaSession.id());
             final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
             cdr = dao.getConferenceDetailRecord(conferenceSid);
             cdr = cdr.setMasterConfernceEndpointId(masterConfernceEndpointId.getLocalEndpointName());
+            cdr = cdr.setMasterIVREndpointId(masterIVREndpointIdName);
+            cdr = cdr.setMasterIVREndpointSessionId(localMediaSession.id()+"");
             dao.updateConferenceDetailRecordMasterEndpointID(cdr);
         }
     }
