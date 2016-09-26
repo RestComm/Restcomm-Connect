@@ -75,7 +75,7 @@ RMS2 -> Restcomm: Success\n Connection identifier
 
 == create a connection with conference1 endpoint on RMS1 ==
 
-Restcomm -> RMS1: CRCX: {sendrcv}\n{Primary: mobicents/cnf1/$@RMS1:2427}
+Restcomm -> RMS1: CRCX: {sendrcv}\n{Primary: mobicents/cnf/1@RMS1:2427}
 RMS1 ->Restcomm: Success \n and SDP offer RMS1
 
 == pass SDP offer from RMS1 to RMS2 ==
