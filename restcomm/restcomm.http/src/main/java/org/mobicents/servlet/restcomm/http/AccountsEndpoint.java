@@ -287,28 +287,35 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     private Account update(final Account account, final MultivaluedMap<String, String> data) {
         Account result = account;
-        if (data.containsKey("FriendlyName")) {
-            result = result.setFriendlyName(data.getFirst("FriendlyName"));
-        }
-        if (data.containsKey("Status")) {
-            result = result.setStatus(Account.Status.getValueOf(data.getFirst("Status")));
-        } else {
-            result = result.setStatus(Account.Status.ACTIVE);
-        }
-        if (data.containsKey("Role")) {
-            Account operatingAccount = userIdentityContext.getEffectiveAccount();
-            // Only allow role change for administrators. Multitenancy checks will take care of restricting the modification scope to sub-accounts.
-            if ( userIdentityContext.getEffectiveAccountRoles().contains(getAdministratorRole())) {
-                result = result.setRole(data.getFirst("Role"));
-            } else
-                throw new AuthorizationException();
-        }
-        if (data.containsKey("Password")) {
-            final String hash = new Md5Hash(data.getFirst("Password")).toString();
-            result = result.setAuthToken(hash);
-        }
-        if (data.containsKey("Auth_Token")) {
-            result = result.setAuthToken(data.getFirst("Auth_Token"));
+        try {
+            if (data.containsKey("FriendlyName")) {
+                result = result.setFriendlyName(data.getFirst("FriendlyName"));
+            }
+            if (data.containsKey("Status")) {
+                result = result.setStatus(Account.Status.getValueOf(data.getFirst("Status").toLowerCase()));
+            } else {
+                //Don't change to ACTIVE if there is no Status in the request
+//            result = result.setStatus(Account.Status.ACTIVE);
+            }
+            if (data.containsKey("Role")) {
+                Account operatingAccount = userIdentityContext.getEffectiveAccount();
+                // Only allow role change for administrators. Multitenancy checks will take care of restricting the modification scope to sub-accounts.
+                if (userIdentityContext.getEffectiveAccountRoles().contains(getAdministratorRole())) {
+                    result = result.setRole(data.getFirst("Role"));
+                } else
+                    throw new AuthorizationException();
+            }
+            if (data.containsKey("Password")) {
+                final String hash = new Md5Hash(data.getFirst("Password")).toString();
+                result = result.setAuthToken(hash);
+            }
+            if (data.containsKey("Auth_Token")) {
+                result = result.setAuthToken(data.getFirst("Auth_Token"));
+            }
+        } catch (Exception e) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Exception during Account update: "+e.getStackTrace());
+            }
         }
         return result;
     }
