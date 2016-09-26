@@ -551,7 +551,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     if(isThisMaster){
                         return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint, masterIVREndpointIdName);
                     }else{
-                        return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint, masterIVREndpointIdName);
+                        return new MgcpMediaGroup(masterMediaGateway, masterMediaSession, localConfernceEndpoint, masterIVREndpointIdName);
                     }
                 }
             }));
