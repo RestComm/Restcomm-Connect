@@ -359,11 +359,9 @@ public class ConferenceMediaResourceController extends UntypedActor{
             case CLOSED:
                 if (is(initializingRemoteConnectionWithLocalMS)) {
                     fsm.transition(message, openingRemoteConnectionWithLocalMS);
-                } else if (is(openingRemoteConnectionWithLocalMS)) {
-                    fsm.transition(message, failed);
                 } else if (is(initializingRemoteConnectionWithMasterMS)) {
                     fsm.transition(message, openingRemoteConnectionWithMasterMS);
-                } else if (is(openingRemoteConnectionWithMasterMS)) {
+                } else if (is(openingRemoteConnectionWithLocalMS) || is(openingRemoteConnectionWithMasterMS)) {
                     fsm.transition(message, failed);
                 }
                 break;
