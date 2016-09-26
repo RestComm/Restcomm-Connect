@@ -161,17 +161,6 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     }
 
     @Override
-    public void updateConferenceDetailRecordMasterIVREndpointID(ConferenceDetailRecord cdr) {
-        final SqlSession session = sessions.openSession();
-        try {
-            session.update(namespace + "updateConferenceDetailRecordMasterIVREndpointID", toMap(cdr));
-            session.commit();
-        } finally {
-            session.close();
-        }
-    }
-
-    @Override
     public void updateMasterPresent(ConferenceDetailRecord cdr) {
         final SqlSession session = sessions.openSession();
         try {
@@ -221,7 +210,8 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         final String masterConferenceEndpointId = readString(map.get("master_conference_endpoint_id"));
         final String masterIVREndpointId = readString(map.get("master_ivr_endpoint_id"));
         final boolean masterPresent = readBoolean(map.get("master_present"));
-        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri, msId, masterConferenceEndpointId, masterPresent, masterIVREndpointId);
+        final String masterIVREndpointSessionId = readString(map.get("master_ivr_endpoint_session_id"));
+        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri, msId, masterConferenceEndpointId, masterPresent, masterIVREndpointId, masterIVREndpointSessionId);
     }
 
     private Map<String, Object> toMap(final ConferenceDetailRecord cdr) {
@@ -237,6 +227,7 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         map.put("master_ms_id", cdr.getMasterMsId());
         map.put("master_conference_endpoint_id", cdr.getMasterConferenceEndpointId());
         map.put("master_ivr_endpoint_id", cdr.getMasterIVREndpointId());
+        map.put("master_ivr_endpoint_session_id", cdr.getMasterIVREndpointSessionId());
         map.put("master_present", cdr.isMasterPresent());
         return map;
     }

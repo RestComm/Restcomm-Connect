@@ -54,7 +54,5 @@ public interface ConferenceDetailRecordsDao {
 
     void updateConferenceDetailRecordMasterEndpointID(ConferenceDetailRecord cdr);
 
-    void updateConferenceDetailRecordMasterIVREndpointID(ConferenceDetailRecord cdr);
-
     void updateMasterPresent(ConferenceDetailRecord cdr);
 }
