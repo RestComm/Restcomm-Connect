@@ -312,6 +312,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
             if (data.containsKey("Auth_Token")) {
                 result = result.setAuthToken(data.getFirst("Auth_Token"));
             }
+        } catch (AuthorizationException e) {
+            // authorization exceptions should reach outer layers and result in 403
+            throw e;
         } catch (Exception e) {
             if (logger.isInfoEnabled()) {
                 logger.info("Exception during Account update: "+e.getStackTrace());
