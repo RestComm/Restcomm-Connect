@@ -175,12 +175,46 @@ public class AccountsEndpoint extends SecuredEndpoint {
         if (accountsDao.getAccount(sidToBeRemoved) == null)
             return status(NOT_FOUND).build();
 
-        accountsDao.removeAccount(sidToBeRemoved);
-
-        // Remove its SIP client account
-        clientDao.removeClients(sidToBeRemoved);
+        // the whole tree of sub-accounts has to be removed as well
+        List<String> removedAccounts = accountsDao.getSubAccountSidsRecursive(sidToBeRemoved);
+        if (removedAccounts != null && !removedAccounts.isEmpty()) {
+            int i = removedAccounts.size(); // is is the count of accounts left to process
+            while (i > 0) {
+                i --;
+                String removedSid = removedAccounts.get(i);
+                try {
+                    removeSingleAccount(removedSid);
+                } catch (Exception e) {
+                    // if anything bad happens, log the error and continue removing the rest of the accounts.
+                    logger.error("Failed removing (child) account '" + removedSid + "'");
+                }
+            }
+        }
+        // remove the parent account too
+        removeSingleAccount(operatedSid);
 
         return ok().build();
+    }
+
+    /**
+     * Removes a single account (and not the while sub-account tree)
+     * @param removedAccountSid
+     */
+    private void removeSingleAccount(String removedAccountSid) {
+        Sid sid = new Sid(removedAccountSid);
+        DaoManager daoManager = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        // remove safer entities first
+        daoManager.getAnnouncementsDao().removeAnnouncements(sid);
+        daoManager.getNotificationsDao().removeNotifications(sid);
+        daoManager.getShortCodesDao().removeShortCodes(sid);
+        daoManager.getOutgoingCallerIdsDao().removeOutgoingCallerIds(sid);
+        daoManager.getRecordingsDao().removeRecordings(sid);
+        daoManager.getTranscriptionsDao().removeTranscriptions(sid);
+        daoManager.getApplicationsDao().removeApplications(sid);
+        daoManager.getIncomingPhoneNumbersDao().removeIncomingPhoneNumbers(sid);
+        daoManager.getClientsDao().removeClients(sid);
+
+        accountsDao.removeAccount(sid);
     }
 
     protected Response getAccounts(final MediaType responseType) {
