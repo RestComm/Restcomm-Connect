@@ -168,7 +168,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         this.openingRemoteConnectionWithLocalMS = new State("opening connection", new OpeningRemoteConnection(source), null);
         this.updatingRemoteConnectionWithLocalMS = new State("updating RemoteConnection With Local MS", new UpdatingRemoteConnectionWithLocalMS(source), null);
         this.acquiringMediaSessionWithMasterMS = new State("acquiring MediaSession With Master MS", new AcquiringMediaSessionWithMasterMS(source), null);
-        this.acquiringMasterConferenceEndpoint = new State("acquiring Master ConferenceEndpoint", new AcquiringMasterIVREndpoint(source), null);
+        this.acquiringMasterConferenceEndpoint = new State("acquiring Master ConferenceEndpoint", new AcquiringMasterConferenceEndpoint(source), null);
         this.acquiringRemoteConnectionWithMasterMS = new State("acquiring RemoteConnection With Master MS", new AcquiringRemoteConnectionWithMasterMS(source), null);
         this.initializingRemoteConnectionWithMasterMS = new State("initializing RemoteConnection With Master MS", new InitializingRemoteConnectionWithMasterMS(source), null);
         this.openingRemoteConnectionWithMasterMS = new State("opening RemoteConnection With Master MS", new OpeningRemoteConnectionWithMasterMS(source), null);
@@ -758,7 +758,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         }
     }
 
-    private final class AcquiringMasterIVREndpoint extends AbstractAction {
+    /*private final class AcquiringMasterIVREndpoint extends AbstractAction {
 
         public AcquiringMasterIVREndpoint(final ActorRef source) {
             super(source);
@@ -768,7 +768,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         public void execute(final Object message) throws Exception {
             masterMediaGateway.tell(new CreateIvrEndpoint(masterMediaSession, masterIVREndpointIdName), super.source);
         }
-    }
+    }*/
 
     /*private final class Opening extends AbstractAction {
         public Opening(final ActorRef source) {
