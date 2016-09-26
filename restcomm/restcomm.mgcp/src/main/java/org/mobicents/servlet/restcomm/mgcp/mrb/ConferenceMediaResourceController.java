@@ -45,7 +45,6 @@ import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mgcp.ConnectionStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.CreateConferenceEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.CreateConnection;
-import org.mobicents.servlet.restcomm.mgcp.CreateIvrEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.EndpointCredentials;
 import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
