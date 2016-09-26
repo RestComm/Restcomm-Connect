@@ -111,7 +111,7 @@ public class MmsCallController extends MediaServerController {
     // Finite State Machine
     private final FiniteStateMachine fsm;
     private final State uninitialized;
-    private final State getMediaGatewayFromMRB;
+    private final State acquiringMediaGateway;
     private final State acquiringMediaGatewayInfo;
     private final State acquiringMediaSession;
     private final State acquiringBridge;
@@ -183,7 +183,7 @@ public class MmsCallController extends MediaServerController {
 
         // Initialize the states for the FSM.
         this.uninitialized = new State("uninitialized", null, null);
-        this.getMediaGatewayFromMRB = new State("get media gateway from mrb", new GetMediaGatewayFromMRB(source), null);
+        this.acquiringMediaGateway = new State("acquiring media gateway from mrb", new AcquiringMediaGateway(source), null);
         this.acquiringMediaGatewayInfo = new State("acquiring media gateway info", new AcquiringMediaGatewayInfo(source), null);
         this.acquiringMediaSession = new State("acquiring media session", new AcquiringMediaSession(source), null);
         this.acquiringBridge = new State("acquiring media bridge", new AcquiringBridge(source), null);
@@ -209,8 +209,8 @@ public class MmsCallController extends MediaServerController {
 
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
-        transitions.add(new Transition(this.uninitialized, this.getMediaGatewayFromMRB));
-        transitions.add(new Transition(this.getMediaGatewayFromMRB, this.acquiringMediaGatewayInfo));
+        transitions.add(new Transition(this.uninitialized, this.acquiringMediaGateway));
+        transitions.add(new Transition(this.acquiringMediaGateway, this.acquiringMediaGatewayInfo));
         transitions.add(new Transition(this.uninitialized, this.closingRemoteConnection));
         transitions.add(new Transition(this.acquiringMediaGatewayInfo, this.acquiringMediaSession));
         transitions.add(new Transition(this.acquiringMediaSession, this.acquiringBridge));
@@ -488,7 +488,7 @@ public class MmsCallController extends MediaServerController {
         this.webrtc = message.isWebrtc();
         this.callId = message.callSid();
 
-        fsm.transition(message, getMediaGatewayFromMRB);
+        fsm.transition(message, acquiringMediaGateway);
     }
 
     private void onCloseMediaSession(CloseMediaSession message, ActorRef self, ActorRef sender) throws Exception {
@@ -735,9 +735,9 @@ public class MmsCallController extends MediaServerController {
     /*
      * ACTIONS
      */
-    private final class GetMediaGatewayFromMRB extends AbstractAction {
+    private final class AcquiringMediaGateway extends AbstractAction {
 
-        public GetMediaGatewayFromMRB(final ActorRef source) {
+        public AcquiringMediaGateway(final ActorRef source) {
             super(source);
         }
 
