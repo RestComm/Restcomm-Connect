@@ -9,7 +9,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
 
+import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 import org.apache.shiro.crypto.hash.Md5Hash;
@@ -42,7 +44,7 @@ import javax.sip.address.SipURI;
  */
 
 @RunWith(Arquillian.class)
-public class AccountsEndpointTest {
+public class AccountsEndpointTest extends EndpointTest {
     private final static Logger logger = Logger.getLogger(AccountsEndpointTest.class.getName());
 
     private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
@@ -89,6 +91,8 @@ public class AccountsEndpointTest {
     private String updatedRoleAccountSid = "AC33333333333333333333333333333333";
     private String updateRoleAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     private String nonSubAccountSid = "AC44444444444444444444444444444444";
+
+    private String commonAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     static SipStackTool tool1;
 
@@ -358,6 +362,29 @@ public class AccountsEndpointTest {
                 subAccountResponse, adminUsername, adminPassword);
         assertTrue(clientOfAccount2 == null);
         assertFalse(thinhPhone.register(reqUri, "lyhungthinh", subAccountPassword, thinhContact, 1800, 1800));
+    }
+
+    @Test
+    public void testRemoveAccountNested() {
+        String topLevelSid = "AC12300000000000000000000000000000";
+        String removed1Sid = "AC12300000000000000000000000000001";
+        String removed11Sid = "AC12300000000000000000000000000011";
+
+        Client jersey = getClient("removed-top@company.com", commonAuthToken);
+        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+removed1Sid+".json" ) );
+        Assert.assertEquals(200, resource.delete(ClientResponse.class).getStatus());
+        // assert the designated account was really removed
+        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+removed1Sid ) );
+        Assert.assertEquals(404, resource.get(ClientResponse.class).getStatus());
+        // assert removed accounts children are removed too - TODO enable this once three-level accounts hierarchies are supported - https://github.com/RestComm/Restcomm-Connect/issues/1397
+            //resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+removed11Sid+".json" ) );
+            //Assert.assertEquals(404, resource.get(ClientResponse.class).getStatus());
+        // assert the applications of the account are removed
+        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Applications/AP00000000000000000000000000000001.json" ) );
+        Assert.assertEquals(404, resource.get(ClientResponse.class).getStatus());
+        // assert IncomingPhoneNumbers of the account are removed
+        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/IncomingPhoneNumbers/PN00000000000000000000000000000001.json" ) );
+        Assert.assertEquals(404, resource.get(ClientResponse.class).getStatus());
     }
 
     @Test

@@ -138,9 +138,12 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     protected void secure(final Account operatedAccount, final String permission, SecuredType type) throws AuthorizationException {
         checkAuthenticatedAccount();
-        checkPermission(permission); // check an authbenticated account allowed to do "permission" is available
-        if (operatedAccount == null)
-            throw new AuthorizationException();
+        checkPermission(permission); // check an authenticated account allowed to do "permission" is available
+        if (operatedAccount == null) {
+            // if operatedAccount is NULL, nothing is really at stake here. Do NOT throw exception!
+            //throw new AuthorizationException();
+            return;
+        }
         if (type == SecuredType.SECURED_STANDARD) {
             if (secureLevelControl(userIdentityContext.getEffectiveAccount(), operatedAccount, null) != AuthOutcome.OK )
                 throw new InsufficientPermission();

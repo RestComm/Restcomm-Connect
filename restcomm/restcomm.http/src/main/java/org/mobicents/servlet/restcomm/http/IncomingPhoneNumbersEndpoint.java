@@ -225,6 +225,10 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         if (incomingPhoneNumber == null) {
             return status(NOT_FOUND).build();
         } else {
+            // if the account that the resource belongs to does not existb while the resource does, we're having BAD parameters
+            if (operatedAccount == null) {
+                return status(BAD_REQUEST).build();
+            }
             secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD);
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
