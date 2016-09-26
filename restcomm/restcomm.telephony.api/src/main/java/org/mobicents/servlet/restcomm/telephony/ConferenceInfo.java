@@ -37,8 +37,9 @@ public final class ConferenceInfo {
     private final ConferenceStateChanged.State state;
     private final String name;
     private final boolean moderatorPresent;
+    private final int globalParticipants;
 
-    public ConferenceInfo(final Sid sid, final List<ActorRef> participants, final ConferenceStateChanged.State state, final String name, final boolean moderatorPresent) {
+    public ConferenceInfo(final Sid sid, final List<ActorRef> participants, final ConferenceStateChanged.State state, final String name, final boolean moderatorPresent, final int globalParticipants) {
 
         super();
         this.sid = sid;
@@ -46,6 +47,7 @@ public final class ConferenceInfo {
         this.state = state;
         this.name = name;
         this.moderatorPresent = moderatorPresent;
+        this.globalParticipants = globalParticipants;
     }
 
     public List<ActorRef> participants() {
@@ -65,4 +67,8 @@ public final class ConferenceInfo {
     }
 
     public boolean isModeratorPresent() { return moderatorPresent; }
+
+    public int globalParticipants(){
+        return globalParticipants;
+    }
 }

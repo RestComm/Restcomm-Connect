@@ -106,6 +106,18 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
 
     }
 
+    @Override
+    public Integer getTotalRunningCallDetailRecordsByConferenceSid(Sid conferenceSid){
+
+        final SqlSession session = sessions.openSession();
+        try {
+            final Integer total = session.selectOne(namespace + "getTotalRunningCallDetailRecordsByConferenceSid", conferenceSid.toString());
+            return total;
+        } finally {
+            session.close();
+        }
+
+    }
     // Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
     // Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
     @Override

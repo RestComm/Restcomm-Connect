@@ -26,10 +26,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
-import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
+import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
-import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
@@ -349,16 +347,17 @@ public final class Conference extends UntypedActor {
         sender.tell(new ConferenceResponse<ConferenceInfo>(createConferenceInfo()), self);
     }
 
-    private ConferenceInfo createConferenceInfo(){
+    private ConferenceInfo createConferenceInfo() throws Exception{
         ConferenceInfo information = null;
+        int globalNoOfParticipants = getGlobalNoOfParticipants();
         if (is(waiting)) {
-            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT, name, moderatorPresent);
+            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT, name, moderatorPresent, globalNoOfParticipants);
         } else if (is(running)) {
-            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT, name, moderatorPresent);
+            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT, name, moderatorPresent, globalNoOfParticipants);
         } else if (is(stopped)) {
-            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.COMPLETED, name, moderatorPresent);
+            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.COMPLETED, name, moderatorPresent, globalNoOfParticipants);
         } else {
-            information = new ConferenceInfo(sid, calls, null, name, moderatorPresent);
+            information = new ConferenceInfo(sid, calls, null, name, moderatorPresent, globalNoOfParticipants);
         }
         return information;
     }
@@ -443,7 +442,6 @@ public final class Conference extends UntypedActor {
                     if(logger.isInfoEnabled()) {
                         logger.info("################################## Conference " + name + " has sid: "+sid);
                     }
-                    //getConferenceSidFromDB();
                     this.fsm.transition(message, waiting);
                 }
                 break;
@@ -471,10 +469,12 @@ public final class Conference extends UntypedActor {
         }
         if (observers != null && observers.size() > 0) {
             Iterator<ActorRef> iter = observers.iterator();
+            ConferenceInfo ci = createConferenceInfo();
+            sender.tell(new ConferenceResponse<ConferenceInfo>(createConferenceInfo()), self);
             while (iter.hasNext()) {
                 ActorRef observer = iter.next();
                 //First send conferenceInfo
-                onGetConferenceInfo(self(), observer);
+                observer.tell(new ConferenceResponse<ConferenceInfo>(ci), self());
                 //Next send the JoinComplete message
                 observer.tell(message, self());
             }
@@ -504,28 +504,19 @@ public final class Conference extends UntypedActor {
     }
 
     /**
-     * get Conference Sid From DataBase:
+     * get global total no of participants from db
      * @throws Exception
      */
-    private void getConferenceSidFromDB() throws Exception{
-        ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
-        ConferenceDetailRecordFilter filter;
-        // Putting offset to 100 but this filter should return only 1 DB record, otherwise code below will throw exception
-        // As there should be only one conference in running state by a given friendlyName under an account.
-        filter = new ConferenceDetailRecordFilter(accountSid, "RUNNING%", null, null, friendlyName, 100, 0);
-        List<ConferenceDetailRecord> records = dao.getConferenceDetailRecords(filter);
-        if(records == null || records.size() == 0){
-            logger.error("this conference is in trouble bcz we did not get its record..");
-            throw new Exception("Conference records did not found. There is no other way to proceed with this conference.");
+    private int getGlobalNoOfParticipants() throws Exception{
+        int globalNoOfParticipants = -1;
+        if(sid == null){
+            globalNoOfParticipants = calls.size();
         }else{
-            logger.info("records size: "+ records.size());
-            if(records.size()>1){
-                logger.error("this conference is in trouble bcz we got more than one record against it..");
-                throw new Exception("this conference is in trouble bcz we got more than one record against it..");
-            }else{
-                ConferenceDetailRecord cdr = records.get(0);
-                sid = cdr.getSid();
-            }
+            CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
+            globalNoOfParticipants = dao.getTotalRunningCallDetailRecordsByConferenceSid(sid);
         }
+        if(logger.isInfoEnabled())
+            logger.info("sid: "+sid+"globalNoOfParticipants: "+globalNoOfParticipants);
+        return globalNoOfParticipants;
     }
 }

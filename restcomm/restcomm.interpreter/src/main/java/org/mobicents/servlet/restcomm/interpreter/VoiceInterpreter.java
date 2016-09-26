@@ -595,7 +595,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             ActorRef leftCall = left.get();
             if (leftCall.equals(call) && conference != null) {
                 conference.tell(new StopObserving(self()), null);
-                if(conferenceInfo.participants() != null && conferenceInfo.participants().size() !=0 ){
+                if(conferenceInfo.globalParticipants() !=0 ){
                     String path = configuration.subset("runtime-settings").getString("prompts-uri");
                     if (!path.endsWith("/")) {
                         path += "/";
@@ -645,7 +645,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (ConferenceInfo.class.equals(klass)) {
             conferenceInfo = response.get();
             if (logger.isInfoEnabled()) {
-                logger.info("VoiceInterpreter received ConferenceResponse from Conference: " + conferenceInfo.name() + ", path: " + sender().path() + ", current confernce size: " + conferenceInfo.participants().size() + ", VI state: " + fsm.state());
+                logger.info("VoiceInterpreter received ConferenceResponse from Conference: " + conferenceInfo.name() + ", path: " + sender().path() + ", current confernce size: " + conferenceInfo.globalParticipants() + ", VI state: " + fsm.state());
             }
             if (is(acquiringConferenceInfo)) {
                 fsm.transition(message, joiningConference);
@@ -2413,7 +2413,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
 
-            if (conferenceInfo.participants().size() < maxParticipantLimit) {
+            if (conferenceInfo.globalParticipants() < maxParticipantLimit) {
                 // Play beep.
                 boolean beep = true;
                 attribute = child.attribute("beep");
@@ -2449,7 +2449,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     conference.tell(play, source);
                 }
                 if (logger.isInfoEnabled()) {
-                    logger.info("About to join call to Conference: "+conferenceInfo.name()+", with state: "+conferenceInfo.state()+", with moderator present: "+conferenceInfo.isModeratorPresent()+", and current participants: "+conferenceInfo.participants().size());
+                    logger.info("About to join call to Conference: "+conferenceInfo.name()+", with state: "+conferenceInfo.state()+", with moderator present: "+conferenceInfo.isModeratorPresent()+", and current participants: "+conferenceInfo.globalParticipants());
                 }
                 // Join the conference.
                 //Adding conference record in DB
@@ -2585,13 +2585,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             confModeratorPresent = startConferenceOnEnter;
             if (logger.isInfoEnabled()) {
-                logger.info("At conferencing, VI state: "+fsm.state()+" , playMusicForConference: "+playMusicForConference+" ConferenceState: "+conferenceState.name()+" startConferenceOnEnter: "+startConferenceOnEnter+"  conferenceInfo.participants().size(): "+conferenceInfo.participants().size());
+                logger.info("At conferencing, VI state: "+fsm.state()+" , playMusicForConference: "+playMusicForConference+" ConferenceState: "+conferenceState.name()+" startConferenceOnEnter: "+startConferenceOnEnter+"  conferenceInfo.globalParticipants(): "+conferenceInfo.globalParticipants());
             }
             if (playMusicForConference) { // && startConferenceOnEnter) {
                 //playMusicForConference is true, take over control of startConferenceOnEnter
-                if (conferenceInfo.participants().size() == 1) {
+                if (conferenceInfo.globalParticipants() == 1) {
                     startConferenceOnEnter = false;
-                } else if (conferenceInfo.participants().size() > 1) {
+                } else if (conferenceInfo.globalParticipants() > 1) {
                     if (startConferenceOnEnter || conferenceInfo.isModeratorPresent()) {
                         startConferenceOnEnter = true;
                     } else {
@@ -2614,9 +2614,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Only play background music if conference is not doing that already
                 // If conference state is RUNNING_MODERATOR_ABSENT and participants > 0 then BG music is playing already
                 if(logger.isInfoEnabled()) {
-                    logger.info("Play background music? " + (conferenceInfo.participants().size() == 1));
+                    logger.info("Play background music? " + (conferenceInfo.globalParticipants() == 1));
                 }
-                boolean playBackground = conferenceInfo.participants().size() == 1;
+                boolean playBackground = conferenceInfo.globalParticipants() == 1;
                 if (playBackground) {
                     // Parse wait url.
                     URI waitUrl = new URI("/restcomm/music/electronica/teru_-_110_Downtempo_Electronic_4.wav");

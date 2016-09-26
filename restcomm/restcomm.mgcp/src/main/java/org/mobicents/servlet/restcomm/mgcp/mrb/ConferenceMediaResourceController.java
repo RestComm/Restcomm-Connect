@@ -343,7 +343,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         } else if (is(acquiringMediaSessionWithMasterMS)) {
             this.masterMediaSession = (MediaSession) message.get();
             logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringMediaSessionWithMasterMS"+" masterMediaSession is "+masterMediaSession+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-            fsm.transition(message, creatingMediaGroup);
+            fsm.transition(message, acquiringRemoteConnectionWithLocalMS);
         } else if (is(acquiringMasterConferenceEndpoint)){
             logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringMasterConferenceEndpoint"+" masterConfernceEndpoint is "+masterConfernceEndpoint+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             masterConfernceEndpoint = (ActorRef) message.get();
@@ -445,7 +445,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
-        if (!playing) {
+        if (is(active) && !playing) {
             this.playing = Boolean.TRUE;
             this.mediaGroup.tell(message, self);
         }
@@ -807,6 +807,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 // enter slave record in MRB resource table
                 addNewSlaveRecord();
             }
+            broadcast(new ConferenceMediaResourceControllerStateChanged(ConferenceMediaResourceControllerStateChanged.MediaServerControllerState.ACTIVE));
         }
     }
 
