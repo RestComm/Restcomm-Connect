@@ -180,6 +180,8 @@ public class ConferenceMediaResourceController extends UntypedActor{
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, acquiringConferenceInfo));
         transitions.add(new Transition(acquiringConferenceInfo, creatingMediaGroup));
+        transitions.add(new Transition(acquiringConferenceInfo, acquiringMediaSessionWithMasterMS));
+        transitions.add(new Transition(acquiringMediaSessionWithMasterMS, creatingMediaGroup));
         transitions.add(new Transition(creatingMediaGroup, acquiringIVREndpointID));
         transitions.add(new Transition(creatingMediaGroup, initialized));
         transitions.add(new Transition(acquiringIVREndpointID, initialized));
@@ -189,8 +191,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         transitions.add(new Transition(acquiringRemoteConnectionWithLocalMS, initializingRemoteConnectionWithLocalMS));
         transitions.add(new Transition(initializingRemoteConnectionWithLocalMS, openingRemoteConnectionWithLocalMS));
         transitions.add(new Transition(openingRemoteConnectionWithLocalMS, failed));
-        transitions.add(new Transition(openingRemoteConnectionWithLocalMS, acquiringMediaSessionWithMasterMS));
-        transitions.add(new Transition(acquiringMediaSessionWithMasterMS, acquiringMasterConferenceEndpoint));
+        transitions.add(new Transition(openingRemoteConnectionWithLocalMS, acquiringMasterConferenceEndpoint));
         transitions.add(new Transition(acquiringMasterConferenceEndpoint, acquiringRemoteConnectionWithMasterMS));
         transitions.add(new Transition(acquiringRemoteConnectionWithMasterMS, initializingRemoteConnectionWithMasterMS));
         transitions.add(new Transition(initializingRemoteConnectionWithMasterMS, openingRemoteConnectionWithMasterMS));
@@ -330,15 +331,18 @@ public class ConferenceMediaResourceController extends UntypedActor{
         if (is(acquiringConferenceInfo)){
             logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringMediaSession ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             this.localMediaSession = (MediaSession) message.get();
-
-            this.fsm.transition(message, creatingMediaGroup);
+            if(isThisMaster){
+                this.fsm.transition(message, creatingMediaGroup);
+            }else{
+                this.fsm.transition(message, acquiringMediaSessionWithMasterMS);
+            }
         } else if (is(acquiringRemoteConnectionWithLocalMS)){
             logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringRemoteConnection ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             fsm.transition(message, initializingRemoteConnectionWithLocalMS);
         } else if (is(acquiringMediaSessionWithMasterMS)) {
             this.masterMediaSession = (MediaSession) message.get();
             logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringMediaSessionWithMasterMS"+" masterMediaSession is "+masterMediaSession+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-            fsm.transition(message, acquiringMasterConferenceEndpoint);
+            fsm.transition(message, creatingMediaGroup);
         } else if (is(acquiringMasterConferenceEndpoint)){
             logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringMasterConferenceEndpoint"+" masterConfernceEndpoint is "+masterConfernceEndpoint+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             masterConfernceEndpoint = (ActorRef) message.get();
@@ -369,7 +373,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     ConnectionStateChanged connState = (ConnectionStateChanged) message;
                     localMediaServerSdp = connState.descriptor().toString();
                     logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ localMediaServerSdp: "+localMediaServerSdp);
-                    fsm.transition(message, acquiringMediaSessionWithMasterMS);
+                    fsm.transition(message, acquiringMasterConferenceEndpoint);
                     break;
                 }
                 break;
@@ -442,7 +446,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
-        if (is(active) && !playing) {
+        if (!playing) {
             this.playing = Boolean.TRUE;
             this.mediaGroup.tell(message, self);
         }
@@ -477,11 +481,11 @@ public class ConferenceMediaResourceController extends UntypedActor{
     }
 
     private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) {
-        if (is(active)) {
+        //if (is(active)) {
             // Stop the primary media group
             this.mediaGroup.tell(new Stop(), self);
             this.playing = Boolean.FALSE;
-        }
+        //}
     }
 
     /*
@@ -545,7 +549,11 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
                 @Override
                 public UntypedActor create() throws Exception {
-                    return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint, masterIVREndpointId);
+                    if(isThisMaster){
+                        return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint, masterIVREndpointId);
+                    }else{
+                        return new MgcpMediaGroup(masterMediaGateway, masterMediaSession, localConfernceEndpoint, masterIVREndpointId);
+                    }
                 }
             }));
         }
