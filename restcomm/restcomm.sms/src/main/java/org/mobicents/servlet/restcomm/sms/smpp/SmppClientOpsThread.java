@@ -64,6 +64,10 @@ public class SmppClientOpsThread implements Runnable {
 
     private final ActorRef smppMessageHandler;
 
+    public static final int DATA_CODING_GSM7 = 0;
+    public static final int DATA_CODING_GSM8 = 4;
+    public static final int DATA_CODING_UCS2 = 8;
+
     public SmppClientOpsThread(DefaultSmppClient clientBootstrap, int sipPort, final ActorRef smppMessageHandler) {
         this.clientBootstrap = clientBootstrap;
         this.sipPort = sipPort;
@@ -354,7 +358,12 @@ public class SmppClientOpsThread implements Runnable {
                 String decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
                 String destSmppAddress = deliverSm.getDestAddress().getAddress();
                 String sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
-                Charset charset = CharsetUtil.CHARSET_GSM;
+                Charset charset;
+                if (DATA_CODING_UCS2 == deliverSm.getDataCoding()) {
+                    charset = CharsetUtil.CHARSET_UCS_2;
+                } else {
+                    charset = CharsetUtil.CHARSET_GSM;
+                }
                 //send received SMPP PDU message to restcomm
                 try {
                     sendSmppMessageToRestcomm(decodedPduMessage, destSmppAddress, sourceSmppAddress, charset);
