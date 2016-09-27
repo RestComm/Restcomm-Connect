@@ -385,6 +385,22 @@ public class AccountsEndpointTest extends EndpointTest {
         // assert IncomingPhoneNumbers of the account are removed
         resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/IncomingPhoneNumbers/PN00000000000000000000000000000001.json" ) );
         Assert.assertEquals(404, resource.get(ClientResponse.class).getStatus());
+        // assert notification are removed
+        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Notifications/NO00000000000000000000000000000001.json" ) );
+        Assert.assertEquals(404, resource.get(ClientResponse.class).getStatus());
+        // assert recordings are removed
+        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Recordings/RE00000000000000000000000000000001.json" ) );
+        Assert.assertEquals(404, resource.get(ClientResponse.class).getStatus());
+        // assert transcriptions are removed
+        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Transcriptions/TR00000000000000000000000000000001.json" ) );
+        Assert.assertEquals(404, resource.get(ClientResponse.class).getStatus());
+        // assert outgoing caller ids are removed
+        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/OutgoingCallerIds/PN00000000000000000000000000000001.json" ) );
+        Assert.assertEquals(404, resource.get(ClientResponse.class).getStatus());
+        // assert clients are removed
+        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Clients/CL00000000000000000000000000000001.json" ) );
+        Assert.assertEquals(404, resource.get(ClientResponse.class).getStatus());
+        // we won't test Announcements removal . There is no retrieval method yet.
     }
 
     @Test

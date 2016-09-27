@@ -203,13 +203,13 @@ public class AccountsEndpoint extends SecuredEndpoint {
     private void removeSingleAccount(String removedAccountSid) {
         Sid sid = new Sid(removedAccountSid);
         DaoManager daoManager = (DaoManager) context.getAttribute(DaoManager.class.getName());
-        // remove safer entities first
+        // remove dependency entities first and dependent entities last. Also, do safer operation first (as a secondary rule)
         daoManager.getAnnouncementsDao().removeAnnouncements(sid);
         daoManager.getNotificationsDao().removeNotifications(sid);
         daoManager.getShortCodesDao().removeShortCodes(sid);
         daoManager.getOutgoingCallerIdsDao().removeOutgoingCallerIds(sid);
-        daoManager.getRecordingsDao().removeRecordings(sid);
         daoManager.getTranscriptionsDao().removeTranscriptions(sid);
+        daoManager.getRecordingsDao().removeRecordings(sid);
         daoManager.getApplicationsDao().removeApplications(sid);
         daoManager.getIncomingPhoneNumbersDao().removeIncomingPhoneNumbers(sid);
         daoManager.getClientsDao().removeClients(sid);
