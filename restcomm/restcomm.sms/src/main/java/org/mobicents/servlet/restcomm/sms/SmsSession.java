@@ -224,13 +224,17 @@ public final class SmsSession extends UntypedActor {
         }
         final ActorRef self = self();
         final Charset charset;
-        if(last.encoding().equals(SmsSessionRequest.Encoding.GSM)) {
+        switch(last.encoding()) {
+        case GSM:
             charset = CharsetUtil.CHARSET_GSM;
-        } else if(last.encoding().equals(SmsSessionRequest.Encoding.UCS_2)) {
+            break;
+        case UCS_2:
             charset = CharsetUtil.CHARSET_UCS_2;
-        } else if(last.encoding().equals(SmsSessionRequest.Encoding.UTF_8)) {
+            break;
+        case UTF_8:
             charset = CharsetUtil.CHARSET_UTF_8;
-        } else {
+            break;
+        default:
             charset = CharsetUtil.CHARSET_GSM;
         }
 
