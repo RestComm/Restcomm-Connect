@@ -350,12 +350,10 @@ public class MgcpMediaGroup extends MediaGroup {
     }
 
     private void stop() {
-        if (ivrInUse) {
-            final ActorRef self = self();
-            ivr.tell(new StopEndpoint(), self);
-            ivrInUse = false;
-            originator = null;
-        }
+        final ActorRef self = self();
+        ivr.tell(new StopEndpoint(), self);
+        ivrInUse = false;
+        originator = null;
     }
 
     private void stopObserving(final Object message) {
