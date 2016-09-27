@@ -116,7 +116,7 @@ rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, RC
 
 
 
-rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService,AuthService, RCommAccounts, md5,Notifications) {
+rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService,AuthService, RCommAccounts, md5,Notifications, $location, $dialog) {
 
   //$scope.sid = SessionService.get('sid');
 
@@ -156,6 +156,10 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
     $scope.account = angular.copy(accountBackup);
     $scope.accountChanged = false;
   };
+
+  $scope.$on("account-created", function () {
+    $scope.getAccounts();
+   });
 
   $scope.updateProfile = function() {
     var params = {FriendlyName: $scope.account.friendly_name, Type: $scope.account.type, Status: $scope.account.status,Role: $scope.account.role};
@@ -202,6 +206,26 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
       $scope.resetChanges();
     });
   };
+
+  $scope.removeAccount = function (account) {
+    var title = 'Delete Account ' + account.friendly_name;
+    var msg = 'Are you sure you want to delete account ' + account.sid + ' (' + account.friendly_name +  ') ? This action cannot be undone.';
+    var btns = [{result:'cancel', label: 'Cancel', cssClass: 'btn-default'}, {result:'confirm', label: 'Delete!', cssClass: 'btn-danger'}];
+    // show configurmation
+    $dialog.messageBox(title, msg, btns).open().then(function (result) {
+        if (result == "confirm") {
+            RCommAccounts.remove({accountSid: account.sid}, function () {
+                Notifications.success('Account  "' + account.friendly_name + '" removed.');
+                if (account.sid == $stateParams.accountSid) // if we removed the account we're currently viewing, switch to logged user profile
+                    $location.path("/profile/" + loggedUserAccount.sid);
+                else
+                    $scope.getAccounts(); // otherwise we just reload the accounts on the left
+            }, function () {
+                Notifications.error("Can't remove Account '" + account.friendly_name + "'");
+            });
+        }
+    });
+  }
 
   $scope.getAccounts();
 
