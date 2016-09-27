@@ -64,9 +64,9 @@ public class SmppClientOpsThread implements Runnable {
 
     private final ActorRef smppMessageHandler;
 
-    public static final int DATA_CODING_GSM7 = 0;
-    public static final int DATA_CODING_GSM8 = 4;
-    public static final int DATA_CODING_UCS2 = 8;
+    public static final byte DATA_CODING_GSM7 = 0;
+    public static final byte DATA_CODING_GSM8 = 4;
+    public static final byte DATA_CODING_UCS2 = 8;
 
     public SmppClientOpsThread(DefaultSmppClient clientBootstrap, int sipPort, final ActorRef smppMessageHandler) {
         this.clientBootstrap = clientBootstrap;

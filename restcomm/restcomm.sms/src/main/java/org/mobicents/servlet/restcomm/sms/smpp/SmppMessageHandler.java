@@ -205,6 +205,11 @@ public class SmppMessageHandler extends UntypedActor  {
         submit0.setSourceAddress(new Address((byte)smppTonNpiValue, (byte) smppTonNpiValue, request.getSmppFrom() ));
         submit0.setDestAddress(new Address((byte)smppTonNpiValue, (byte)smppTonNpiValue, request.getSmppTo()));
         submit0.setShortMessage(textBytes);
+        if (CharsetUtil.CHARSET_UCS_2 == request.getSmppEncoding()) {
+            submit0.setDataCoding(SmppClientOpsThread.DATA_CODING_UCS2);
+        } else {
+            submit0.setDataCoding(SmppClientOpsThread.DATA_CODING_GSM7);
+        }
         try {
             if(logger.isInfoEnabled()) {
                 logger.info("To : " + request.getSmppTo() + " From : " + request.getSmppFrom() );
