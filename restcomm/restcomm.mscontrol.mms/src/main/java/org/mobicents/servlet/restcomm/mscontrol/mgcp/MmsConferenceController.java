@@ -49,6 +49,7 @@ import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
@@ -100,7 +101,7 @@ public final class MmsConferenceController extends MediaServerController {
     private ActorRef conference;
     //private ActorRef mediaGroup;
     private ActorRef conferenceMediaResourceController;
-    private boolean startJoinConferencesOverDifferentMediaServers = false;
+    private boolean firstJoinSent = false;
 
     // Runtime media operations
     //private Boolean playing;
@@ -224,9 +225,9 @@ public final class MmsConferenceController extends MediaServerController {
             onMediaResourceBrokerResponse((MediaResourceBrokerResponse<?>) message, self, sender);
         } else if (StopConferenceMediaResourceControllerResponse.class.equals(klass)) {
             fsm.transition(message, stopping);
-        } /*else if(JoinComplete.class.equals(klass)) {
+        } else if(JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
-        }*/ else if(ConferenceMediaResourceControllerStateChanged.class.equals(klass)) {
+        } else if(ConferenceMediaResourceControllerStateChanged.class.equals(klass)) {
             onConferenceMediaResourceControllerStateChanged((ConferenceMediaResourceControllerStateChanged) message, self, sender);
         }
     }
@@ -248,13 +249,13 @@ public final class MmsConferenceController extends MediaServerController {
         }
     }
 
-    /*private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
+    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
         logger.info("got JoinComplete in conference controller");
-        if(!startJoinConferencesOverDifferentMediaServers){
-            startJoinConferencesOverDifferentMediaServers = true;
-            conferenceMediaResourceController.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.JoinConferences(), self);
+        if(!firstJoinSent){
+            firstJoinSent = true;
+            conferenceMediaResourceController.tell(message, self);
         }
-    }*/
+    }
 
     private void onMediaResourceBrokerResponse(MediaResourceBrokerResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
         logger.info("got MRB response in conference controller");

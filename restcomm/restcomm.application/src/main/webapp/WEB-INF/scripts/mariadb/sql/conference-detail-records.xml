@@ -78,16 +78,13 @@
         		date_updated=#{date_updated}
         	WHERE sid=#{sid};
     </update>
-    <update id="updateConferenceDetailRecordMasterIVREndpointID" parameterType="map">
+    <update id="updateConferenceDetailRecordMasterBridgeEndpointID" parameterType="map">
             UPDATE 
         	restcomm_conference_detail_records 
-        	SET master_ivr_endpoint_id=#{master_ivr_endpoint_id}, date_updated=#{date_updated}
-        	WHERE sid=#{sid};
-    </update>
-    <update id="updateConferenceDetailRecordMasterIVREndpointSessionID" parameterType="map">
-            UPDATE 
-        	restcomm_conference_detail_records 
-        	SET master_ivr_endpoint_session_id=#{master_ivr_endpoint_session_id}, date_updated=#{date_updated}
+        	SET 
+        		master_bridge_endpoint_id=#{master_bridge_endpoint_id}, 
+        		master_bridge_endpoint_session_id=#{master_bridge_endpoint_session_id},
+        		date_updated=#{date_updated}
         	WHERE sid=#{sid};
     </update>
     <update id="updateMasterPresent" parameterType="map">
