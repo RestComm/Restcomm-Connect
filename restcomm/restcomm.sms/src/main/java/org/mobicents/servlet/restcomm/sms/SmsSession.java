@@ -322,11 +322,7 @@ public final class SmsSession extends UntypedActor {
                 logger.info("SMPP session is available and connected, outbound message will be forwarded to :  " + to );
             }
             try {
-                final String smppFrom = from ;
-                final String smppTo = to ;
-                final String smppContent = body;
-                final Charset smppEncoding = encoding;
-                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(smppTo, smppFrom, smppContent, smppEncoding);
+                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(to, from, body, encoding);
                 smppMessageHandler.tell(sms, null);
             }catch (final Exception exception) {
                 // Log the exception.
