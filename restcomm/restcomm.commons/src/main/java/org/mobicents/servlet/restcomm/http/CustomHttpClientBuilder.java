@@ -68,12 +68,12 @@ public class CustomHttpClientBuilder {
     private static CloseableHttpClient buildAllowallClient(RequestConfig requestConfig) {
         String[] protocols = getSSLPrototocolsFromSystemProperties();
         //SSLContext sslcontext = SSLContexts.createDefault();
-        SSLContext sslcontext = null;
+        SSLContext sslcontext = null ;
         try {
             sslcontext = SSLContexts.custom().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build();
         } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
             if (logger.isInfoEnabled()) {
-                logger.info("Exception during the http client creation, problem with the SSL Context: "+ e.getStackTrace());
+                logger.error("Exception during the http client creation, problem creating the SSL Context: "+ e.getStackTrace());
             }
         }
         if (sslcontext != null) {
