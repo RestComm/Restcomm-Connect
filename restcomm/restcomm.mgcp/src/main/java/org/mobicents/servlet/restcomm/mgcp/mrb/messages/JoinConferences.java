@@ -17,28 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.mscontrol.messages;
+package org.mobicents.servlet.restcomm.mgcp.mrb.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
-public final class JoinComplete {
+public final class JoinConferences {
 
-    private final Object endpoint;
-
-    public JoinComplete(final Object endpoint) {
+    public JoinConferences() {
         super();
-        this.endpoint = endpoint;
-    }
-
-    public JoinComplete() {
-        this(null);
-    }
-
-    public Object endpoint() {
-        return endpoint;
     }
 }

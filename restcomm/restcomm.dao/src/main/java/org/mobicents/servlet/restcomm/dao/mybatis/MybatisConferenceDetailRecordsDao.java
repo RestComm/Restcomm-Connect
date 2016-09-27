@@ -19,8 +19,8 @@
  */
 package org.mobicents.servlet.restcomm.dao.mybatis;
 
-import static org.mobicents.servlet.restcomm.dao.DaoUtils.readBoolean;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readDateTime;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readBoolean;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readSid;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readString;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readUri;
@@ -161,17 +161,6 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     }
 
     @Override
-    public void updateConferenceDetailRecordMasterBridgeEndpointID(ConferenceDetailRecord cdr) {
-        final SqlSession session = sessions.openSession();
-        try {
-            session.update(namespace + "updateConferenceDetailRecordMasterBridgeEndpointID", toMap(cdr));
-            session.commit();
-        } finally {
-            session.close();
-        }
-    }
-
-    @Override
     public void updateMasterPresent(ConferenceDetailRecord cdr) {
         final SqlSession session = sessions.openSession();
         try {
@@ -222,9 +211,7 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         final String masterIVREndpointId = readString(map.get("master_ivr_endpoint_id"));
         final boolean masterPresent = readBoolean(map.get("master_present"));
         final String masterIVREndpointSessionId = readString(map.get("master_ivr_endpoint_session_id"));
-        final String masterBridgeEndpointId = readString(map.get("master_bridge_endpoint_id"));
-        final String masterBridgeEndpointSessionId = readString(map.get("master_bridge_endpoint_session_id"));
-        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri, msId, masterConferenceEndpointId, masterPresent, masterIVREndpointId, masterIVREndpointSessionId, masterBridgeEndpointId, masterBridgeEndpointSessionId);
+        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri, msId, masterConferenceEndpointId, masterPresent, masterIVREndpointId, masterIVREndpointSessionId);
     }
 
     private Map<String, Object> toMap(final ConferenceDetailRecord cdr) {
@@ -241,8 +228,6 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         map.put("master_conference_endpoint_id", cdr.getMasterConferenceEndpointId());
         map.put("master_ivr_endpoint_id", cdr.getMasterIVREndpointId());
         map.put("master_ivr_endpoint_session_id", cdr.getMasterIVREndpointSessionId());
-        map.put("master_bridge_endpoint_id", cdr.getMasterBridgeEndpointId());
-        map.put("master_bridge_endpoint_session_id", cdr.getMasterBridgeEndpointSessionId());
         map.put("master_present", cdr.isMasterPresent());
         return map;
     }
