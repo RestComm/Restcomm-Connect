@@ -36,11 +36,6 @@ public final class BridgeEndpoint extends GenericEndpoint {
         super(gateway, session, agent, new EndpointIdentifier("mobicents/bridge/$", domain), timeout);
     }
 
-    public BridgeEndpoint(ActorRef gateway, MediaSession session, NotifiedEntity agent, String domain, long timeout,
-            String endpointName) {
-        super(gateway, session, agent, new EndpointIdentifier(endpointName, domain), timeout);
-    }
-
     @Override
     public void postStop() {
         ActorRef sender = this.sender();
