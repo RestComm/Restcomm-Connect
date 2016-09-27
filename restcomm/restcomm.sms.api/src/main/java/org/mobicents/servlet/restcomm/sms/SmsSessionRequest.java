@@ -33,16 +33,28 @@ public final class SmsSessionRequest {
     private final String from;
     private final String to;
     private final String body;
-    private final String encoding;
+    private final Encoding encoding;
     private final SipServletRequest origRequest;
     private final ConcurrentHashMap<String, String> customHeaders;
 
-    public static final String UCS_2 = "UCS-2";
-    public static final String UTF_8 = "UTF-8";
-    public static final String GSM = "GSM";
+    public enum Encoding {
+        UCS_2("UCS-2"),
+        UTF_8("UTF-8"),
+        GSM("GSM");
+
+        private final String name;
+
+        Encoding(String name) {
+            this.name = name;
+        }
+
+        public String toString() {
+            return name;
+        }
+    }
 
     //TODO need to check which is using the SmsSessionRequest and modify accordingly to include or not the custom headers
-    public SmsSessionRequest(final String from, final String to, final String body, final String encoding, final SipServletRequest origRequest, final ConcurrentHashMap<String, String> customHeaders) {
+    public SmsSessionRequest(final String from, final String to, final String body, final Encoding encoding, final SipServletRequest origRequest, final ConcurrentHashMap<String, String> customHeaders) {
         super();
         this.from = from;
         this.to = to;
@@ -53,11 +65,15 @@ public final class SmsSessionRequest {
     }
 
     public SmsSessionRequest(final String from, final String to, final String body, final SipServletRequest origRequest, final ConcurrentHashMap<String, String> customHeaders) {
-        this(from, to, body, GSM, origRequest, customHeaders);
+        this(from, to, body, Encoding.GSM, origRequest, customHeaders);
+    }
+
+    public SmsSessionRequest(final String from, final String to, final String body, final Encoding encoding, final ConcurrentHashMap<String, String> customHeaders) {
+        this(from, to, body, encoding, null, customHeaders);
     }
 
     public SmsSessionRequest(final String from, final String to, final String body, final ConcurrentHashMap<String, String> customHeaders) {
-        this(from, to, body, null, customHeaders);
+        this(from, to, body, Encoding.GSM, null, customHeaders);
     }
 
     public String from() {
@@ -72,7 +88,7 @@ public final class SmsSessionRequest {
         return body;
     }
 
-    public String encoding() {
+    public Encoding encoding() {
         return encoding;
     }
 
