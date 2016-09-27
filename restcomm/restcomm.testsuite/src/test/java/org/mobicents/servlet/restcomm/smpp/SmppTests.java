@@ -1,5 +1,6 @@
 package org.mobicents.servlet.restcomm.smpp;
 
+import com.cloudhopper.commons.charset.CharsetUtil;
 import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -130,7 +131,7 @@ public class SmppTests {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(smsEchoRcml)));
 
-		mockSmppServer.sendSmppMessageToRestcomm(msgBody,to,from);
+		mockSmppServer.sendSmppMessageToRestcomm(msgBody,to,from,CharsetUtil.CHARSET_GSM);
         Thread.sleep(2000);
         assertTrue(mockSmppServer.isMessageSent());
 		Thread.sleep(2000);
@@ -183,8 +184,8 @@ public class SmppTests {
 
 		SipCall aliceCall = alicePhone.createSipCall();
 		aliceCall.initiateOutgoingMessage("sip:9999@127.0.0.1:5080", null, "Test Message from Alice");
-		aliceCall.waitForAuthorisation(5000);
-		Thread.sleep(2000);
+		aliceCall.waitForAuthorisation(8000);
+		Thread.sleep(5000);
 		assertTrue(mockSmppServer.isMessageReceived());
 		SmppInboundMessageEntity inboundMessageEntity = mockSmppServer.getSmppInboundMessageEntity();
 		assertNotNull(inboundMessageEntity);
