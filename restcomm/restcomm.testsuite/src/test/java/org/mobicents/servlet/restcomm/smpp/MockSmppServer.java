@@ -27,6 +27,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 
+import com.cloudhopper.commons.charset.Charset;
 import com.cloudhopper.commons.charset.CharsetUtil;
 import com.cloudhopper.smpp.SmppServerConfiguration;
 import com.cloudhopper.smpp.SmppServerHandler;
@@ -89,10 +90,10 @@ public class MockSmppServer {
         logger.info("SMPP server started! Server counters: {} " + smppServer.getCounters());
     }
 
-    public void sendSmppMessageToRestcomm(String smppMessage, String smppTo, String smppFrom) throws IOException, SmppInvalidArgumentException {
+    public void sendSmppMessageToRestcomm(String smppMessage, String smppTo, String smppFrom, Charset charset) throws IOException, SmppInvalidArgumentException {
         //http://stackoverflow.com/a/25885741
         try {
-            byte[] textBytes = CharsetUtil.encode(smppMessage, CharsetUtil.CHARSET_GSM);
+            byte[] textBytes = CharsetUtil.encode(smppMessage, charset);
 
             DeliverSm deliver = new DeliverSm();
 
@@ -223,7 +224,7 @@ public class MockSmppServer {
                     logger.info("********DeliverSm Exception******* " + e);
                 }
 
-                smppInboundMessageEntity = new SmppInboundMessageEntity(destSmppAddress, sourceSmppAddress, decodedPduMessage);
+                smppInboundMessageEntity = new SmppInboundMessageEntity(destSmppAddress, sourceSmppAddress, decodedPduMessage, CharsetUtil.CHARSET_GSM);
                 messageReceived = true;
             }
             return pduRequest.createResponse();
