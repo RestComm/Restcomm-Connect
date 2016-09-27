@@ -21,6 +21,8 @@ package org.mobicents.servlet.restcomm.mscontrol.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
+import akka.actor.ActorRef;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
@@ -28,6 +30,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 public final class JoinComplete {
 
     private final Object endpoint;
+    private int sessionid;
 
     public JoinComplete(final Object endpoint) {
         super();
@@ -38,7 +41,16 @@ public final class JoinComplete {
         this(null);
     }
 
+    public JoinComplete(ActorRef bridgeEndpoint, int sessionid) {
+        this(bridgeEndpoint);
+        this.sessionid = sessionid;
+    }
+
     public Object endpoint() {
         return endpoint;
+    }
+
+    public int sessionid() {
+        return sessionid;
     }
 }

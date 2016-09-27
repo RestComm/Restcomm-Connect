@@ -162,7 +162,9 @@ master_ms_id VARCHAR(34),
 master_conference_endpoint_id VARCHAR(20),
 master_present BOOLEAN NOT NULL DEFAULT TRUE, 
 master_ivr_endpoint_id VARCHAR(20),
-master_ivr_endpoint_session_id VARCHAR(200)
+master_ivr_endpoint_session_id VARCHAR(200),
+master_bridge_endpoint_id VARCHAR(20),
+master_bridge_endpoint_session_id VARCHAR(200)
 );
 
 CREATE TABLE restcomm_clients (

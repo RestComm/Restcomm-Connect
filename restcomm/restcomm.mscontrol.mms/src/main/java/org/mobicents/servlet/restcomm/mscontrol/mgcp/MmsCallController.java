@@ -857,7 +857,7 @@ public class MmsCallController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             if (is(updatingInternalLink)) {
-                call.tell(new JoinComplete(null), super.source);
+                call.tell(new JoinComplete(bridgeEndpoint, session.id()), super.source);
             } else if (is(closingInternalLink)) {
                 call.tell(new Left(), super.source);
             } else if (is(openingRemoteConnection) || is(updatingRemoteConnection)) {
