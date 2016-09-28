@@ -31,6 +31,7 @@ echo "Current folder $CURRENT_FOLDER"
 echo "SIPP Executable $SIPP_EXECUTABLE"
 echo "JVMTOP Executable $JVMTOP_EXECUTABLE"
 echo "Collect JMAP: $COLLECT_JMAP"
+echo "Use RMS pid: $USE_RMS_PID"
 
 
 prepareRestcomm() {
@@ -79,8 +80,13 @@ startRestcomm(){
       getPID
       ###start data collection
       cd $TOOLS_DIR
-      $TOOLS_DIR/jvmdump.sh $RESTCOMM_PID
-      $TOOLS_DIR/pc_start_collect.sh $RESTCOMM_PID
+      if [ "$USE_RMS_PID" == "true"  ] || [ "$USE_RMS_PID" == "TRUE"  ]; then
+          $TOOLS_DIR/jvmdump.sh $RMS_PID
+          $TOOLS_DIR/pc_start_collect.sh $RMS_PID
+      else
+          $TOOLS_DIR/jvmdump.sh $RESTCOMM_PID
+          $TOOLS_DIR/pc_start_collect.sh $RESTCOMM_PID
+      fi
       cd $CURRENT_FOLDER
   fi
 }
@@ -136,7 +142,7 @@ case "$TEST_NAME" in
     $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
     sleep 5
     echo "Testing Hello-Play One Minute"
-    cp -ar $CURRENT_FOLDER/resources/audio/demo-prompt-one-minute.wav $RESTCOMM_HOME/standalone/deployments/restcomm.war/audio/demo-prompt.wav
+    cp -aR $CURRENT_FOLDER/resources/audio/demo-prompt-one-minute.wav $RESTCOMM_HOME/standalone/deployments/restcomm.war/audio/demo-prompt.wav
     rm -rf $RESTCOMM_HOME/standalone/deployments/restcomm.war/cache/AC*
     startRestcomm
     echo $'\n********** Restcomm started\n'
@@ -159,7 +165,7 @@ case "$TEST_NAME" in
   $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
   sleep 5
   echo "Testing Dial Client Application"
-  cp -ar $CURRENT_FOLDER/tests/dialclient/DialClientApp.xml $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/
+  cp -aR $CURRENT_FOLDER/tests/dialclient/DialClientApp.xml $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/
   sed -i "s/SIPP_SERVER_IP_HERE/$LOCAL_ADDRESS/g" $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/DialClientApp.xml
   startRestcomm
   echo $'\n********** Restcomm started\n'
@@ -186,7 +192,7 @@ case "$TEST_NAME" in
     sleep 5
     echo "Testing Gather Application"
     rm -rf $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/gather/
-    cp -ar $CURRENT_FOLDER/tests/gather/gather_app/ $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/gather
+    cp -aR $CURRENT_FOLDER/tests/gather/gather_app/ $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/gather
     startRestcomm
     echo $'\n********** Restcomm started\n'
     sleep 45
