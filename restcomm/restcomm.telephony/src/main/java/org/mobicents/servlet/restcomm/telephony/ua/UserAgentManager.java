@@ -315,7 +315,9 @@ public final class UserAgentManager extends UntypedActor {
         try {
             ping.send();
         } catch (IOException e) {
-            logger.warning("There was an exception trying to ping client: "+to+" , will remove registration. Exception: "+e);
+            if (logger.isInfoEnabled()) {
+                logger.info("There was an exception trying to ping client: "+to+" , will remove registration. Exception: "+e);
+            }
             removeRegistration(ping);
         }
     }
