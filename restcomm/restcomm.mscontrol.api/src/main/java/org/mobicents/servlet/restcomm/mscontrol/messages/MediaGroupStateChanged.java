@@ -22,6 +22,7 @@ package org.mobicents.servlet.restcomm.mscontrol.messages;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 import akka.actor.ActorRef;
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -29,20 +30,30 @@ import akka.actor.ActorRef;
 @Immutable
 public final class MediaGroupStateChanged {
     private ActorRef ivr;
+    private ConnectionIdentifier connectionIdentifier;
     public static enum State {
         ACTIVE, INACTIVE
     };
 
     private final State state;
 
+    public MediaGroupStateChanged(final State state, final ConnectionIdentifier connectionIdentifier) {
+        this(state, null, connectionIdentifier);
+    }
+
     public MediaGroupStateChanged(final State state) {
-        super();
-        this.state = state;
+        this(state, null, null);
     }
 
     public MediaGroupStateChanged(final State state, final ActorRef ivr) {
-        this(state);
+        this(state, ivr, null);
+    }
+
+    public MediaGroupStateChanged(final State state, final ActorRef ivr, final ConnectionIdentifier connectionIdentifier) {
+        super();
+        this.state = state;
         this.ivr = ivr;
+        this.connectionIdentifier = connectionIdentifier;
     }
 
     public State state() {
@@ -51,5 +62,9 @@ public final class MediaGroupStateChanged {
 
     public ActorRef ivr() {
         return ivr;
+    }
+
+    public ConnectionIdentifier connectionIdentifier() {
+        return connectionIdentifier;
     }
 }

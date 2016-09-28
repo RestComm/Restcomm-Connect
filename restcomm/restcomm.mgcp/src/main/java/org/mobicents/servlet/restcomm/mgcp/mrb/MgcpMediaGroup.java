@@ -20,6 +20,7 @@
 
 package org.mobicents.servlet.restcomm.mgcp.mrb;
 
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 import java.net.URI;
@@ -111,7 +112,13 @@ public class MgcpMediaGroup extends MediaGroup {
     private ActorRef internalLink;
     private ConnectionMode internalLinkMode;
 
+    private ConnectionIdentifier ivrConnectionIdentifier;
+
     public MgcpMediaGroup(final ActorRef gateway, final MediaSession session, final ActorRef endpoint, final String ivrEndpointName) {
+        this(gateway, session, endpoint, ivrEndpointName, null);
+    }
+
+    public MgcpMediaGroup(final ActorRef gateway, final MediaSession session, final ActorRef endpoint, final String ivrEndpointName, final ConnectionIdentifier ivrConnectionIdentifier) {
         super();
         final ActorRef source = self();
         // Initialize the states for the FSM.
@@ -161,6 +168,7 @@ public class MgcpMediaGroup extends MediaGroup {
         this.endpoint = endpoint;
         this.ivrInUse = false;
         this.ivrEndpointName = ivrEndpointName;
+        this.ivrConnectionIdentifier = ivrConnectionIdentifier;
         // Initialize the rest of the media group state.
         this.observers = new ArrayList<ActorRef>();
     }
@@ -242,9 +250,9 @@ public class MgcpMediaGroup extends MediaGroup {
             stopObserving(message);
         } else if (MediaGroupStatus.class.equals(klass)) {
             if (active.equals(state)) {
-                sender().tell(new MediaGroupStateChanged(MediaGroupStateChanged.State.ACTIVE, ivr), self());
+                sender().tell(new MediaGroupStateChanged(MediaGroupStateChanged.State.ACTIVE, ivr, ivrConnectionIdentifier), self());
             } else {
-                sender().tell(new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE, ivr), self());
+                sender().tell(new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE, ivr, ivrConnectionIdentifier), self());
             }
         } else if (StartMediaGroup.class.equals(klass)) {
             if(logger.isInfoEnabled()) {
@@ -274,6 +282,7 @@ public class MgcpMediaGroup extends MediaGroup {
                     fsm.transition(message, openingInternalLink);
                 }
             } else if (LinkStateChanged.State.OPEN == response.state()) {
+                ivrConnectionIdentifier = response.connectionIdentifier();
                 if (openingLink.equals(state)) {
                     fsm.transition(message, updatingLink);
                 } else if (updatingLink.equals(state)) {
@@ -420,7 +429,7 @@ public class MgcpMediaGroup extends MediaGroup {
                 logger.info("MediaGroup :" + self().path() + " state: " + fsm.state().toString() + " session: " + session.id()
                     + " ivr endpoint: " + ivr.path() + " will ask to get Link");
             }
-            gateway.tell(new CreateLink(session), source);
+            gateway.tell(new CreateLink(session, ivrConnectionIdentifier), source);
         }
     }
 
@@ -490,7 +499,7 @@ public class MgcpMediaGroup extends MediaGroup {
                 internalLinkEndpoint = request.endpoint();
                 internalLinkMode = request.mode();
             }
-            gateway.tell(new CreateLink(session), source);
+            gateway.tell(new CreateLink(session, ivrConnectionIdentifier), source);
         }
     }
 
@@ -542,7 +551,7 @@ public class MgcpMediaGroup extends MediaGroup {
         @Override
         public void execute(final Object message) throws Exception {
             // Notify the observers.
-            final MediaGroupStateChanged event = new MediaGroupStateChanged(MediaGroupStateChanged.State.ACTIVE, ivr);
+            final MediaGroupStateChanged event = new MediaGroupStateChanged(MediaGroupStateChanged.State.ACTIVE, ivr, ivrConnectionIdentifier);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
@@ -567,7 +576,7 @@ public class MgcpMediaGroup extends MediaGroup {
             }
 
             // Notify the observers.
-            final MediaGroupStateChanged event = new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE, ivr);
+            final MediaGroupStateChanged event = new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE, ivr, ivrConnectionIdentifier);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
