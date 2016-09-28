@@ -105,10 +105,54 @@ public class SmsEndpointTest {
         assertNotNull(callResult);
         
 //        bobPhone.setLoopback(true);
-        assertTrue(bobCall.waitForMessage(5000));
+        assertTrue(bobCall.waitForMessage(10000));
         Request messageRequest = bobCall.getLastReceivedMessageRequest();
         assertTrue(bobCall.sendMessageResponse(202, "Accepted", 3600));
         String messageReceived = new String(messageRequest.getRawContent());
+        assertTrue(messageReceived.equals(body));
+    }
+
+    @Test
+    public void sendSmsTestGSMEncoding() {
+        SipCall bobCall = bobPhone.createSipCall();
+        bobCall.listenForMessage();
+        
+        String from = "+15126002188";
+        String to = "1213";
+        String body = "Hello Bob!";
+        String encoding = "GSM";
+        
+        JsonObject callResult = SmsEndpointTool.getInstance().createSms(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, body, null, encoding);
+        assertNotNull(callResult);
+        
+        assertTrue(bobCall.waitForMessage(10000));
+        Request messageRequest = bobCall.getLastReceivedMessageRequest();
+        assertTrue(bobCall.sendMessageResponse(202, "Accepted", 3600));
+        String messageReceived = new String(messageRequest.getRawContent());
+        assertTrue(messageReceived.equals(body));
+    }
+
+    @Test
+    public void sendSmsTestUCS2Encoding() {
+        SipCall bobCall = bobPhone.createSipCall();
+        bobCall.listenForMessage();
+        
+        String from = "+15126002188";
+        String to = "1213";
+        String body = " ̰Heo llb!Bo ͤb!";
+        String encoding = "UCS-2";
+        
+        JsonObject callResult = SmsEndpointTool.getInstance().createSms(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, body, null, encoding);
+        assertNotNull(callResult);
+        
+        assertTrue(bobCall.waitForMessage(10000));
+        Request messageRequest = bobCall.getLastReceivedMessageRequest();
+        assertTrue(bobCall.sendMessageResponse(202, "Accepted", 3600));
+        String messageReceived = new String(messageRequest.getRawContent());
+        System.out.println("Body: " + body);
+        System.out.println("messageReceived: " + messageReceived);
         assertTrue(messageReceived.equals(body));
     }
 
@@ -134,7 +178,7 @@ public class SmsEndpointTest {
                 adminAuthToken, from, to, body, additionalHeaders);
         assertNotNull(callResult);
         
-        assertTrue(bobCall.waitForMessage(5000));
+        assertTrue(bobCall.waitForMessage(10000));
         Request messageRequest = bobCall.getLastReceivedMessageRequest();
         assertTrue(bobCall.sendMessageResponse(202, "Accepted", 3600));
         String messageReceived = new String(messageRequest.getRawContent());
