@@ -44,6 +44,7 @@ import com.cloudhopper.smpp.pdu.SubmitSm;
 import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppProcessingException;
 import org.mobicents.servlet.restcomm.sms.smpp.SmppInboundMessageEntity;
+import org.mobicents.servlet.restcomm.sms.smpp.DataCoding;
 
 
 public class MockSmppServer {
@@ -100,6 +101,12 @@ public class MockSmppServer {
             deliver.setSourceAddress(new Address((byte) 0x03, (byte) 0x00, smppFrom));
             deliver.setDestAddress(new Address((byte) 0x01, (byte) 0x01, smppTo));
             deliver.setShortMessage(textBytes);
+            if (CharsetUtil.CHARSET_UCS_2 == charset) {
+                deliver.setDataCoding(DataCoding.DATA_CODING_UCS2);
+            } else {
+                deliver.setDataCoding(DataCoding.DATA_CODING_GSM7);
+            }
+            logger.info("deliver.getDataCoding: " + deliver.getDataCoding());
 
             WindowFuture<Integer, PduRequest, PduResponse> future = smppServerSession.sendRequestPdu(deliver, 10000, false);
             if (!future.await()) {
@@ -219,6 +226,7 @@ public class MockSmppServer {
                     decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
                     destSmppAddress = deliverSm.getDestAddress().getAddress();
                     sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
+                    logger.info("getDataCoding: " + deliverSm.getDataCoding());
                     //send received SMPP PDU message to restcomm
                 } catch (Exception e) {
                     logger.info("********DeliverSm Exception******* " + e);
