@@ -26,6 +26,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
@@ -65,4 +66,24 @@ public final class AccountsJsonEndpoint extends AccountsEndpoint {
     public Response putAccount(final MultivaluedMap<String, String> data) {
         return putAccount(data, APPLICATION_JSON_TYPE);
     }
+
+    //The {accountSid} could be the email address of the account we need to update. Later we check if this is SID or EMAIL
+    @Path("/{accountSid}")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @POST
+    public Response updateAccountAsJsonPost(@PathParam("accountSid") final String accountSid,
+                                            final MultivaluedMap<String, String> data) {
+        return updateAccount(accountSid, data, APPLICATION_JSON_TYPE);
+    }
+
+    //The {accountSid} could be the email address of the account we need to update. Later we check if this is SID or EMAIL
+    @Path("/{accountSid}")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @PUT
+    public Response updateAccountAsJsonPut(@PathParam("accountSid") final String accountSid,
+                                           final MultivaluedMap<String, String> data) {
+        return updateAccount(accountSid, data, APPLICATION_JSON_TYPE);
+    }
+
+
 }

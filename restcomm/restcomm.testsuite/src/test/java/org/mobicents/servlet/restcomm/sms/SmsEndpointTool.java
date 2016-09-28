@@ -91,6 +91,37 @@ public class SmsEndpointTool {
         return jsonObject;
     }
 
+    public JsonObject createSms (String deploymentUrl, String username, String authToken, String from, String to, String body, HashMap<String, String> additionalHeaders, String encoding) {
+
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+
+        String url = getAccountsUrl(deploymentUrl, username, true);
+
+        WebResource webResource = jerseyClient.resource(url);
+
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.add("From", from);
+        params.add("To", to);
+        params.add("Encoding", encoding);
+        params.add("Body", body);
+        
+        if (additionalHeaders != null && !additionalHeaders.isEmpty()){
+            Iterator<String> iter = additionalHeaders.keySet().iterator();
+            while (iter.hasNext()) {
+                String headerName = iter.next();
+                params.add(headerName, additionalHeaders.get(headerName));
+            }
+        }
+
+        // webResource = webResource.queryParams(params);
+        String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
+        JsonParser parser = new JsonParser();
+        JsonObject jsonObject = parser.parse(response).getAsJsonObject();
+
+        return jsonObject;
+    }
+
     public JsonArray getSmsList(String deploymentUrl, String username, String authToken) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));

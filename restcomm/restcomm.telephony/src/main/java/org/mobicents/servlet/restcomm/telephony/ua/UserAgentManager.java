@@ -201,6 +201,9 @@ public final class UserAgentManager extends UntypedActor {
             final SipServletRequest request = (SipServletRequest) message;
             final String method = request.getMethod();
             if ("REGISTER".equalsIgnoreCase(method)) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("REGISTER request received: "+request.toString());
+                }
                 if(authenticateUsers) { // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
                     final String authorization = request.getHeader("Proxy-Authorization");
                     if (authorization != null) {
@@ -358,6 +361,9 @@ public final class UserAgentManager extends UntypedActor {
         // Make sure registrations don't last more than 1 hour.
         if (ttl > 3600) {
             ttl = 3600;
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("Register request received for contact: "+contact+", and ttl: "+ttl);
         }
         // Get the rest of the information needed for a registration record.
         String name = contact.getDisplayName();
