@@ -9,6 +9,11 @@ import java.text.ParseException;
 
 import javax.sip.address.SipURI;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import junit.framework.Assert;
 import org.apache.http.client.ClientProtocolException;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
@@ -45,6 +50,11 @@ public class ClientsEndpointTest {
     private SipStack bobSipStack;
     private SipPhone bobPhone;
     private String bobContact = "sip:bob@127.0.0.1:5090";
+
+    String developerUsername = "developer@company.com";
+    String developeerAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    String developerAccountSid = "AC11111111111111111111111111111111";
+    String removedClientSid = "CLb8838febabef4970a10dda1680506815";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -114,6 +124,38 @@ public class ClientsEndpointTest {
         assertTrue(bobPhone.unregister(bobContact, 0));
     }
 
+    @Test
+    public void clientRemovalBehaviour() {
+        // A developer account should be able to remove his own client
+        Client jersey = getClient(developerUsername, developeerAuthToken);
+        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients/" + removedClientSid ) );
+        ClientResponse response = resource.delete(ClientResponse.class);
+        Assert.assertEquals("Developer account could not remove his client", 200, response.getStatus());
+        // re-removing the client should return a 404 (not a 200)
+        response = resource.delete(ClientResponse.class);
+        Assert.assertEquals("Removing a non-existing client did not return 404", 404, response.getStatus());
+    }
+
+    protected String getResourceUrl(String suffix) {
+        String urlString = deploymentUrl.toString();
+        if ( urlString.endsWith("/") )
+            urlString = urlString.substring(0,urlString.length()-1);
+
+        if ( suffix != null && !suffix.isEmpty()) {
+            if (!suffix.startsWith("/"))
+                suffix = "/" + suffix;
+            return urlString + suffix;
+        } else
+            return urlString;
+
+    }
+
+    protected Client getClient(String username, String password) {
+        Client jersey = Client.create();
+        jersey.addFilter(new HTTPBasicAuthFilter(username, password));
+        return jersey;
+    }
+
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
@@ -126,7 +168,7 @@ public class ClientsEndpointTest {
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("restcomm.script_clients_test", "data/hsql/restcomm.script");
         return archive;
     }
 }

@@ -252,6 +252,8 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.dialing, this.failingBusy));
         transitions.add(new Transition(this.dialing, this.ringing));
         transitions.add(new Transition(this.dialing, this.failed));
+        transitions.add(new Transition(this.dialing, this.failingNoAnswer));
+        transitions.add(new Transition(this.dialing, this.noAnswer));
         transitions.add(new Transition(this.dialing, this.updatingMediaSession));
         transitions.add(new Transition(this.inProgress, this.stopping));
         transitions.add(new Transition(this.inProgress, this.joining));
@@ -466,7 +468,7 @@ public final class Call extends UntypedActor {
             message.addHeader("X-RestComm-ApiVersion", apiVersion);
         if (accountId != null)
             message.addHeader("X-RestComm-AccountSid", accountId.toString());
-        message.addHeader("X-RestComm-CallSid", id.toString()+"-"+instanceId);
+        message.addHeader("X-RestComm-CallSid", instanceId+"-"+id.toString());
     }
 
     // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
@@ -742,7 +744,7 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             try {
-                if (isOutbound()) {
+                if (isOutbound() && (invite.getSession().getState() != SipSession.State.INITIAL || invite.getSession().getState() != SipSession.State.TERMINATED)) {
                     final UntypedActorContext context = getContext();
                     context.setReceiveTimeout(Duration.Undefined());
                     final SipServletRequest cancel = invite.createCancel();
@@ -1418,7 +1420,7 @@ public final class Call extends UntypedActor {
 
     private void onReceiveTimeout(ReceiveTimeout message, ActorRef self, ActorRef sender) throws Exception {
         getContext().setReceiveTimeout(Duration.Undefined());
-        if (is(ringing)) {
+        if (is(ringing) || is(dialing)) {
             fsm.transition(message, failingNoAnswer);
         } else if(logger.isInfoEnabled()) {
             logger.info("Timeout received for Call : "+self().path()+" isTerminated(): "+self().isTerminated()+". Sender: " + sender.path().toString() + " State: " + this.fsm.state()
@@ -1469,7 +1471,8 @@ public final class Call extends UntypedActor {
                 conference.tell(new RemoveParticipant(self), self);
             } else {
                 // Clean media resources as necessary
-                fsm.transition(message, stopping);
+                if (!is(completed))
+                    fsm.transition(message, stopping);
             }
         } else if ("INFO".equalsIgnoreCase(method)) {
             processInfo(message);
@@ -1643,6 +1646,9 @@ public final class Call extends UntypedActor {
     private void sendBye(Hangup hangup) throws IOException, TransitionNotFoundException, TransitionFailedException, TransitionRollbackException {
         final SipSession session = invite.getSession();
         String sessionState = session.getState().name();
+        if (logger.isInfoEnabled()) {
+            logger.info("About to send BYE, session state: "+sessionState);
+        }
         if (sessionState == SipSession.State.INITIAL.name() || (sessionState == SipSession.State.EARLY.name() && isInbound())) {
             final SipServletResponse resp = invite.createResponse(Response.SERVER_INTERNAL_ERROR);
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
@@ -1918,7 +1924,7 @@ public final class Call extends UntypedActor {
             if (conferencing) {
                 // Let conference know the call exited the room
                 this.conferencing = false;
-                this.conference.tell(new Left(), self);
+                this.conference.tell(new Left(self()), self);
                 this.conference = null;
             }
 

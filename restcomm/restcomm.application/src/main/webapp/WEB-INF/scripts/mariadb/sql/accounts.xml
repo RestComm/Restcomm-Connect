@@ -38,4 +38,11 @@
 		type=#{type}, status=#{status}, auth_token=#{auth_token}, role=#{role}
 		WHERE sid=#{sid};
 	</update>
+
+	<select id="getSubAccountSids" parameterType="java.util.List" resultType="string">
+		SELECT sid FROM restcomm_accounts WHERE account_sid IN
+		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
 </mapper>

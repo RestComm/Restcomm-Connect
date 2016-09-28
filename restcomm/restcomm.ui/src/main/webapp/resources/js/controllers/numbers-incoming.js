@@ -4,7 +4,7 @@ var rcMod = angular.module('rcApp');
 
 // Numbers : Incoming : List ---------------------------------------------------
 
-rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $rootScope, $anchorScroll, SessionService, RCommNumbers, Notifications) {
+rcMod.controller('NumbersCtrl', function ($scope, $resource, $uibModal, $dialog, $rootScope, $anchorScroll, SessionService, RCommNumbers, Notifications) {
   $anchorScroll(); // scroll to top
   $scope.sid = SessionService.get("sid");
 
@@ -28,7 +28,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
 /*
 // no modal is used for number registration any more
   $scope.showRegisterIncomingNumberModal = function () {
-    var registerIncomingNumberModal = $modal.open({
+    var registerIncomingNumberModal = $uibModal.open({
       controller: NumberDetailsCtrl,
       scope: $scope,
       templateUrl: 'modules/modals/modal-register-incoming-number.html'
@@ -57,7 +57,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
 
 // Numbers : Incoming : Details (also used for Modal) --------------------------
 
-rcMod.controller('NumberDetailsCtrl', function ($scope, $stateParams, $location, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope, AuthService) {
+rcMod.controller('NumberDetailsCtrl', function ($scope, $stateParams, $location, $dialog, $uibModalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope, AuthService) {
 
   // are we editing details...
   //if($scope.phoneSid === $stateParams.phoneSid) {
@@ -73,7 +73,7 @@ rcMod.controller('NumberDetailsCtrl', function ($scope, $stateParams, $location,
   //  $scope.isCollapsed = true;
   //
   //  $scope.closeRegisterIncomingNumber = function () {
-  //    $modalInstance.dismiss('cancel');
+  //    $uibModalInstance.dismiss('cancel');
   //  };
   //}
 
@@ -94,7 +94,7 @@ rcMod.controller('NumberDetailsCtrl', function ($scope, $stateParams, $location,
     RCommNumbers.register({accountSid: $scope.sid}, $.param(params),
       function() { // success
         Notifications.success('Number "' + number.phone_number + '" created successfully!');
-        $modalInstance.close();
+        $uibModalInstance.close();
       },
       function() { // error
         Notifications.error('Failed to register number "' + number.phone_number + '".');
@@ -147,7 +147,7 @@ rcMod.controller('NumberDetailsCtrl', function ($scope, $stateParams, $location,
   }
 });
 
-rcMod.controller('NumberRegisterCtrl', function ($scope, $stateParams, $location, $http, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries) {
+rcMod.controller('NumberRegisterCtrl', function ($scope, $stateParams, $location, $http, $dialog, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries) {
 
   $scope.sid = SessionService.get("sid");
 

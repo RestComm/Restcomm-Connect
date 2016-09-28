@@ -107,7 +107,7 @@ public class SupervisorEndpoint extends SecuredEndpoint{
         secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
         CallDetailRecordFilter filterForTotal;
         try {
-            filterForTotal = new CallDetailRecordFilter("", null, null, null, null,null,
+            filterForTotal = new CallDetailRecordFilter("", null, null, null, null, null,null,
                     null, null, null, null);
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
