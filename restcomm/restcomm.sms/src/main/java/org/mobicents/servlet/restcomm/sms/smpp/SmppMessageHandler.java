@@ -197,7 +197,12 @@ public class SmppMessageHandler extends UntypedActor  {
             logger.info("Message is Received by the SmppSessionOutbound Class");
         }
 
-        byte[] textBytes = CharsetUtil.encode(request.getSmppContent(), CharsetUtil.CHARSET_GSM);
+        byte[] textBytes;
+        if (CharsetUtil.CHARSET_UCS_2 == request.getSmppEncoding()) {
+            textBytes = request.getSmppContent().getBytes();
+        } else {
+            textBytes = CharsetUtil.encode(request.getSmppContent(), request.getSmppEncoding());
+        }
         int smppTonNpiValue =  Integer.parseInt(SmppService.getSmppTonNpiValue()) ;
         // add delivery receipt
         //submit0.setRegisteredDelivery(SmppConstants.REGISTERED_DELIVERY_SMSC_RECEIPT_REQUESTED);
@@ -205,6 +210,11 @@ public class SmppMessageHandler extends UntypedActor  {
         submit0.setSourceAddress(new Address((byte)smppTonNpiValue, (byte) smppTonNpiValue, request.getSmppFrom() ));
         submit0.setDestAddress(new Address((byte)smppTonNpiValue, (byte)smppTonNpiValue, request.getSmppTo()));
         submit0.setShortMessage(textBytes);
+        if (CharsetUtil.CHARSET_UCS_2 == request.getSmppEncoding()) {
+            submit0.setDataCoding(DataCoding.DATA_CODING_UCS2);
+        } else {
+            submit0.setDataCoding(DataCoding.DATA_CODING_GSM7);
+        }
         try {
             if(logger.isInfoEnabled()) {
                 logger.info("To : " + request.getSmppTo() + " From : " + request.getSmppFrom() );
