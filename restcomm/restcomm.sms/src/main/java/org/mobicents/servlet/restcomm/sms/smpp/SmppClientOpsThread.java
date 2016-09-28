@@ -23,6 +23,7 @@ package org.mobicents.servlet.restcomm.sms.smpp;
 
 import akka.actor.ActorRef;
 import com.cloudhopper.commons.charset.CharsetUtil;
+import com.cloudhopper.commons.charset.Charset;
 import com.cloudhopper.smpp.PduAsyncResponse;
 import com.cloudhopper.smpp.SmppSession;
 import com.cloudhopper.smpp.SmppSessionConfiguration;
@@ -353,9 +354,15 @@ public class SmppClientOpsThread implements Runnable {
                 String decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
                 String destSmppAddress = deliverSm.getDestAddress().getAddress();
                 String sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
+                Charset charset;
+                if (DataCoding.DATA_CODING_UCS2 == deliverSm.getDataCoding()) {
+                    charset = CharsetUtil.CHARSET_UCS_2;
+                } else {
+                    charset = CharsetUtil.CHARSET_GSM;
+                }
                 //send received SMPP PDU message to restcomm
                 try {
-                    sendSmppMessageToRestcomm(decodedPduMessage, destSmppAddress, sourceSmppAddress);
+                    sendSmppMessageToRestcomm(decodedPduMessage, destSmppAddress, sourceSmppAddress, charset);
                 } catch (IOException | ServletException e) {
                     logger.error("Exception while trying to dispatch incoming SMPP message to Restcomm: " + e);
                 }
@@ -410,12 +417,12 @@ public class SmppClientOpsThread implements Runnable {
         return getSmppSession;
     }
 
-    public void sendSmppMessageToRestcomm(String smppMessage, String smppTo, String smppFrom) throws IOException, ServletException {
+    public void sendSmppMessageToRestcomm(String smppMessage, String smppTo, String smppFrom, Charset charset) throws IOException, ServletException {
         SmppSession smppSession = SmppClientOpsThread.getSmppSession();
         String to = smppTo;
         String from = smppFrom;
         String inboundMessage = smppMessage;
-        SmppInboundMessageEntity smppInboundMessage = new SmppInboundMessageEntity(to, from, inboundMessage);
+        SmppInboundMessageEntity smppInboundMessage = new SmppInboundMessageEntity(to, from, inboundMessage, charset);
         smppMessageHandler.tell(smppInboundMessage, null);
     }
 }

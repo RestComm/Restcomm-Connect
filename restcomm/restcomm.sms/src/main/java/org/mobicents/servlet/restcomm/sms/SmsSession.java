@@ -23,6 +23,8 @@ import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import com.cloudhopper.commons.charset.Charset;
+import com.cloudhopper.commons.charset.CharsetUtil;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
@@ -139,12 +141,15 @@ public final class SmsSession extends UntypedActor {
             }
         } else if (message instanceof SmppInboundMessageEntity) {
             final SmppInboundMessageEntity request = (SmppInboundMessageEntity) message;
-            String from = request.getSmppFrom();
-            String to = request.getSmppTo();
-            String body = request.getSmppContent();
 
+            final SmsSessionRequest.Encoding encoding;
+            if(request.getSmppEncoding().equals(CharsetUtil.CHARSET_UCS_2)) {
+                encoding = SmsSessionRequest.Encoding.UCS_2;
+            } else {
+                encoding = SmsSessionRequest.Encoding.GSM;
+            }
             // Store the last sms event.
-            last = new SmsSessionRequest (from, to, body, null);
+            last = new SmsSessionRequest (request.getSmppFrom(), request.getSmppTo(), request.getSmppContent(), encoding, null);
             if (initial == null) {
                 initial = last;
             }
@@ -221,13 +226,27 @@ public final class SmsSession extends UntypedActor {
             initial = last;
         }
         final ActorRef self = self();
-        final String from = last.from();
-        final String to = last.to();
-        final String body = last.body();
+        final Charset charset;
+        if(logger.isInfoEnabled()) {
+            logger.info("SMS encoding:  " + last.encoding() );
+        }
+        switch(last.encoding()) {
+        case GSM:
+            charset = CharsetUtil.CHARSET_GSM;
+            break;
+        case UCS_2:
+            charset = CharsetUtil.CHARSET_UCS_2;
+            break;
+        case UTF_8:
+            charset = CharsetUtil.CHARSET_UTF_8;
+            break;
+        default:
+            charset = CharsetUtil.CHARSET_GSM;
+        }
 
-        monitoringService.tell(new TextMessage(from, to, TextMessage.SmsState.OUTBOUND), self());
+        monitoringService.tell(new TextMessage(last.from(), last.to(), TextMessage.SmsState.OUTBOUND), self());
         final ClientsDao clients = storage.getClientsDao();
-        final Client toClient = clients.getClient(to);
+        final Client toClient = clients.getClient(last.to());
         Registration toClientRegistration = null;
         if (toClient != null) {
             final RegistrationsDao registrations = storage.getRegistrationsDao();
@@ -243,9 +262,9 @@ public final class SmsSession extends UntypedActor {
         // 2, SMPP is activated
         if (toClient == null && smppActivated) {
             if(logger.isInfoEnabled()) {
-                logger.info("Destination is not a local registered client, therefore, sending through SMPP to:  " + to );
+                logger.info("Destination is not a local registered client, therefore, sending through SMPP to:  " + last.to() );
             }
-            if (sendUsingSmpp(from, to, body))
+            if (sendUsingSmpp(last.from(), last.to(), last.body(), charset))
                 return;
         }
 
@@ -259,7 +278,7 @@ public final class SmsSession extends UntypedActor {
         final SipApplicationSession application = factory.createApplicationSession();
         StringBuilder buffer = new StringBuilder();
         //buffer.append("sip:").append(from).append("@").append(transport.getHost() + ":" + transport.getPort());
-        buffer.append("sip:").append(from).append("@").append(externalIP + ":" + transport.getPort());
+        buffer.append("sip:").append(last.from()).append("@").append(externalIP + ":" + transport.getPort());
         final String sender = buffer.toString();
         buffer = new StringBuilder();
         if (toClient != null && toClientRegistration != null) {
@@ -269,7 +288,7 @@ public final class SmsSession extends UntypedActor {
             if (prefix != null) {
                 buffer.append(prefix);
             }
-            buffer.append(to).append("@").append(service);
+            buffer.append(last.to()).append("@").append(service);
         }
         final String recipient = buffer.toString();
 
@@ -282,7 +301,7 @@ public final class SmsSession extends UntypedActor {
             final SipURI uri = (SipURI) factory.createURI(recipient);
             sms.pushRoute(uri);
             sms.setRequestURI(uri);
-            sms.setContent(body, "text/plain");
+            sms.setContent(last.body(), "text/plain");
             final SipSession session = sms.getSession();
             session.setHandler("SmsService");
             if (customHttpHeaderMap != null && !customHttpHeaderMap.isEmpty()) {
@@ -304,16 +323,14 @@ public final class SmsSession extends UntypedActor {
             logger.error(exception.getMessage(), exception);
         }}
 
-    private boolean sendUsingSmpp(String from, String to, String body) {
+    private boolean sendUsingSmpp(String from, String to, String body, Charset encoding) {
         if ((SmppClientOpsThread.getSmppSession() != null && SmppClientOpsThread.getSmppSession().isBound()) && smppMessageHandler != null) {
             if(logger.isInfoEnabled()) {
                 logger.info("SMPP session is available and connected, outbound message will be forwarded to :  " + to );
+                logger.info("Encoding:  " + encoding );
             }
             try {
-                final String smppFrom = from ;
-                final String smppTo = to ;
-                final String smppContent = body;
-                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(smppTo, smppFrom, smppContent);
+                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(to, from, body, encoding);
                 smppMessageHandler.tell(sms, null);
             }catch (final Exception exception) {
                 // Log the exception.
