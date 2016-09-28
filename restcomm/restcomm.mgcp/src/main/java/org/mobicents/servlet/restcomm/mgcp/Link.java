@@ -19,13 +19,26 @@
  */
 package org.mobicents.servlet.restcomm.mgcp;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import org.mobicents.servlet.restcomm.fsm.Action;
+import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
+import org.mobicents.servlet.restcomm.fsm.State;
+import org.mobicents.servlet.restcomm.fsm.Transition;
+import org.mobicents.servlet.restcomm.patterns.Observe;
+import org.mobicents.servlet.restcomm.patterns.Observing;
+import org.mobicents.servlet.restcomm.patterns.StopObserving;
+
 import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
 import jain.protocol.ip.mgcp.JainMgcpResponseEvent;
 import jain.protocol.ip.mgcp.message.CreateConnection;
 import jain.protocol.ip.mgcp.message.CreateConnectionResponse;
@@ -37,21 +50,6 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import jain.protocol.ip.mgcp.message.parms.EndpointIdentifier;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import org.mobicents.servlet.restcomm.patterns.Observe;
-import org.mobicents.servlet.restcomm.patterns.Observing;
-import org.mobicents.servlet.restcomm.patterns.StopObserving;
-import org.mobicents.servlet.restcomm.fsm.Action;
-import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
-import org.mobicents.servlet.restcomm.fsm.State;
-import org.mobicents.servlet.restcomm.fsm.Transition;
-
 import scala.concurrent.duration.Duration;
 
 /**
@@ -87,6 +85,9 @@ public final class Link extends UntypedActor {
     private ConnectionIdentifier secondaryConnId;
 
     public Link(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final long timeout) {
+        this(gateway, session, agent, timeout, null);
+    }
+    public Link(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final long timeout, final ConnectionIdentifier overrideSecondaryConnId) {
         super();
         final ActorRef source = self();
         // Initialize the states for the FSM.
@@ -131,7 +132,7 @@ public final class Link extends UntypedActor {
         this.timeout = timeout;
         this.observers = new ArrayList<ActorRef>();
         this.primaryConnId = null;
-        this.secondaryConnId = null;
+        this.secondaryConnId = overrideSecondaryConnId;
     }
 
     private void observe(final Object message) {
@@ -246,7 +247,7 @@ public final class Link extends UntypedActor {
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.Undefined());
             // Notify the observers.
-            final LinkStateChanged event = new LinkStateChanged(LinkStateChanged.State.CLOSED);
+            final LinkStateChanged event = new LinkStateChanged(LinkStateChanged.State.CLOSED, secondaryConnId);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
@@ -288,7 +289,7 @@ public final class Link extends UntypedActor {
                     secondaryEndpoint.tell(new UpdateEndpointId(secondaryEndpointId), source);
                 }
             }
-            final LinkStateChanged event = new LinkStateChanged(LinkStateChanged.State.OPEN);
+            final LinkStateChanged event = new LinkStateChanged(LinkStateChanged.State.OPEN, secondaryConnId);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }

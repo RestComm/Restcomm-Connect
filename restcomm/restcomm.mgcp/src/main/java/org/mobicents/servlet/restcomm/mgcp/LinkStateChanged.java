@@ -21,6 +21,8 @@ package org.mobicents.servlet.restcomm.mgcp;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
@@ -31,13 +33,23 @@ public final class LinkStateChanged {
     };
 
     private final State state;
+    private final ConnectionIdentifier connectionIdentifier;
 
     public LinkStateChanged(final State state) {
+        this(state, null);
+    }
+
+    public LinkStateChanged(final State state, final ConnectionIdentifier connectionIdentifier) {
         super();
         this.state = state;
+        this.connectionIdentifier = connectionIdentifier;
     }
 
     public State state() {
         return state;
+    }
+
+    public ConnectionIdentifier connectionIdentifier() {
+        return connectionIdentifier;
     }
 }

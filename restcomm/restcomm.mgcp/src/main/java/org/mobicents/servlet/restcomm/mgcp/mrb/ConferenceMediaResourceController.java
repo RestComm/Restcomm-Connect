@@ -400,7 +400,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     fsm.transition(message, openingRemoteConnectionWithMasterMS);
                 } else if (is(initializingRemoteConnectionWithBridgeMS)) {
                     fsm.transition(message, openingRemoteConnectionWithBridgeMS);
-                } else if (is(openingRemoteConnectionWithLocalMS) || is(openingRemoteConnectionWithMasterMS) || is(openingRemoteConnectionWithBridgeMS)) {
+                } else if (is(openingRemoteConnectionWithLocalMS) || is(openingRemoteConnectionWithMasterMS) || is(openingRemoteConnectionWithBridgeMS) || is(updatingRemoteConnectionWithLocalMS)) {
                     fsm.transition(message, failed);
                 }
                 break;
@@ -423,7 +423,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 } else if (is(updatingRemoteConnectionWithLocalMS)){
                     fsm.transition(message, creatingMediaGroup);
                 } else if(is(openingRemoteConnectionWithBridgeMS)){
-                	fsm.transition(message, active);
+                    fsm.transition(message, active);
                 }
                 break;
 
@@ -451,6 +451,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
             case ACTIVE:
                 if (is(creatingMediaGroup)) {
                     this.masterIVREndpoint = message.ivr();
+                    this.masterIVRConnectionIdentifier = message.connectionIdentifier().toString();
                     if(isThisMaster){
                         fsm.transition(message, acquiringIVREndpointID);
                     }else{
@@ -593,7 +594,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     if(isThisMaster){
                         return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint, masterIVREndpointIdName);
                     }else{
-                        return new MgcpMediaGroup(masterMediaGateway, new MediaSession(Integer.parseInt(masterIVREndpointSessionId)), localConfernceEndpoint, masterIVREndpointIdName);
+                        return new MgcpMediaGroup(masterMediaGateway, new MediaSession(Integer.parseInt(masterIVREndpointSessionId)), localConfernceEndpoint, masterIVREndpointIdName, new ConnectionIdentifier(masterIVRConnectionIdentifier));
                     }
                 }
             }));

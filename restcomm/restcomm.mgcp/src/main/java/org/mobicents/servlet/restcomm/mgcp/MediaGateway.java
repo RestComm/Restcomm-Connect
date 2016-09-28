@@ -46,6 +46,7 @@ import jain.protocol.ip.mgcp.JainMgcpStack;
 import jain.protocol.ip.mgcp.message.Constants;
 import jain.protocol.ip.mgcp.message.NotificationRequest;
 import jain.protocol.ip.mgcp.message.Notify;
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 
 /**
@@ -186,12 +187,13 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         final CreateLink request = (CreateLink) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
+        final ConnectionIdentifier connectionIdentifier = request.connectionIdentifier();
         return getContext().actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Link(gateway, session, agent, timeout);
+                return new Link(gateway, session, agent, timeout, connectionIdentifier);
             }
         }));
     }

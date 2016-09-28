@@ -150,6 +150,7 @@ public final class MmsConferenceController extends MediaServerController {
         transitions.add(new Transition(acquiringCnfMediaResourceController, failed));
         transitions.add(new Transition(active, stoppingCMRC));
         transitions.add(new Transition(stoppingCMRC, stopping));
+        transitions.add(new Transition(stoppingCMRC, inactive));
         transitions.add(new Transition(stopping, inactive));
         transitions.add(new Transition(stopping, failed));
 
@@ -560,6 +561,13 @@ public final class MmsConferenceController extends MediaServerController {
                 cnfEndpoint.tell(new DestroyEndpoint(), super.source);
             }else{
                 logger.info("CMRC have ask you not to destroy endpoint bcz master have left firt and other slaves are still connected to this conference endpoint");
+                cnfEndpoint.tell(new StopObserving(self()), self());
+                context().stop(cnfEndpoint);
+                cnfEndpoint = null;
+
+                if(cnfEndpoint == null) {
+                    fsm.transition(message, inactive);
+                }
             }
         }
     }
