@@ -141,12 +141,15 @@ public final class SmsSession extends UntypedActor {
             }
         } else if (message instanceof SmppInboundMessageEntity) {
             final SmppInboundMessageEntity request = (SmppInboundMessageEntity) message;
-            String from = request.getSmppFrom();
-            String to = request.getSmppTo();
-            String body = request.getSmppContent();
 
+            final SmsSessionRequest.Encoding encoding;
+            if(request.getSmppEncoding().equals(CharsetUtil.CHARSET_UCS_2)) {
+                encoding = SmsSessionRequest.Encoding.UCS_2;
+            } else {
+                encoding = SmsSessionRequest.Encoding.GSM;
+            }
             // Store the last sms event.
-            last = new SmsSessionRequest (from, to, body, null);
+            last = new SmsSessionRequest (request.getSmppFrom(), request.getSmppTo(), request.getSmppContent(), encoding, null);
             if (initial == null) {
                 initial = last;
             }
@@ -224,6 +227,9 @@ public final class SmsSession extends UntypedActor {
         }
         final ActorRef self = self();
         final Charset charset;
+        if(logger.isInfoEnabled()) {
+            logger.info("SMS encoding:  " + last.encoding() );
+        }
         switch(last.encoding()) {
         case GSM:
             charset = CharsetUtil.CHARSET_GSM;
@@ -321,6 +327,7 @@ public final class SmsSession extends UntypedActor {
         if ((SmppClientOpsThread.getSmppSession() != null && SmppClientOpsThread.getSmppSession().isBound()) && smppMessageHandler != null) {
             if(logger.isInfoEnabled()) {
                 logger.info("SMPP session is available and connected, outbound message will be forwarded to :  " + to );
+                logger.info("Encoding:  " + encoding );
             }
             try {
                 final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(to, from, body, encoding);
