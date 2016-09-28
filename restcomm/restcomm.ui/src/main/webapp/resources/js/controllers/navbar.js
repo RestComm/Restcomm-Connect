@@ -2,7 +2,7 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, $location, $modal, AuthService, Notifications, RCommAccounts, $state) {
+rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, $location, $uibModal, AuthService, Notifications, RCommAccounts, $state) {
 
   /* watch location change and update root scope variable for rc-*-pills */
   $rootScope.$on('$locationChangeStart', function(/*event, next, current*/) {
@@ -48,7 +48,7 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
   // add account -------------------------------------------------------------
 
   $scope.showRegisterAccountModal = function () {
-    var registerAccountModal = $modal.open({
+    var registerAccountModal = $uibModal.open({
       controller: RegisterAccountModalCtrl,
       scope: $scope,
       templateUrl: 'modules/modals/modal-register-account.html'
@@ -66,7 +66,7 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
   };
 
   $scope.showAboutModal = function () {
-    $modal.open({
+    $uibModal.open({
       controller: AboutModalCtrl,
       scope: $scope,
       windowClass: 'temp-modal-lg',
@@ -209,7 +209,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
 
 // Register Account Modal
 
-var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, Notifications) {
+var RegisterAccountModalCtrl = function ($scope, $uibModalInstance, RCommAccounts, Notifications) {
 
   $scope.statuses = ['ACTIVE','UNINITIALIZED','SUSPENDED','INACTIVE','CLOSED'];
   $scope.newAccount = {role: $scope.currentAccount.role};
@@ -228,7 +228,7 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
         function() { // success
           Notifications.success('Account  "' + account.friendlyName + '" created successfully!');
           $scope.$emit("account-created"); // handler should refresh sub-account list
-          $modalInstance.close();
+          $uibModalInstance.close();
         },
         function(response) { // error
         	if (response.status == 409)
@@ -244,11 +244,11 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
   };
   
   $scope.cancel = function () {
-    $modalInstance.dismiss('cancel');
+    $uibModalInstance.dismiss('cancel');
   };
 };
 
-var AboutModalCtrl = function($scope, $modalInstance, RCommJMX, RCVersion) {
+var AboutModalCtrl = function($scope, $uibModalInstance, RCommJMX, RCVersion) {
 
 	$scope.Math = window.Math;
 
@@ -277,7 +277,7 @@ var AboutModalCtrl = function($scope, $modalInstance, RCommJMX, RCVersion) {
 	};
 
 	$scope.cancel = function() {
-		$modalInstance.dismiss('cancel');
+		$uibModalInstance.dismiss('cancel');
 	};
 
 	$scope.getData();

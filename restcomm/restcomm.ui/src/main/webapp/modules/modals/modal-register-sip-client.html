@@ -1,3 +1,9 @@
+<style type="text/css">
+#client-password-wrap {
+    position: relative;
+}
+</style>
+
 <div class="modal-header">
     <h3 class="no-margins"><i class="fa fa-phone"></i> Register Client</h3>
 </div>
@@ -11,11 +17,15 @@
             <!--<hr class="small" />-->
             <dt>Login</dt>
             <dd>
-                <input id="new-client-login" class="form-control" ng-model="clientDetails.login" type="text" placeholder="eg: alice" required popover-placement="bottom" popover-trigger="focus" popover="The name that is used by the user agent as the user name for registration and outbound dialing." />
+                <input id="new-client-login" class="form-control" ng-model="clientDetails.login" type="text" placeholder="eg: alice" required popover-placement="bottom" popover-trigger="focus" uib-popover="The name that is used by the user agent as the user name for registration and outbound dialing." />
             </dd>
             <dt>Password</dt>
-            <dd>
-                <input id="new-client-password" class="form-control" ng-model="clientDetails.password" type="password" placeholder="Password" required />
+            <dd id="client-password-wrap">
+                <div class="password-strength" ng-password-strength="clientDetails.password" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-" style="padding: inherit;">
+                    <uib-progressbar value="pwdStrength"></uib-progressbar>
+                </div>
+
+                <input id="new-client-password" class="form-control" ng-model="clientDetails.password" type="password" placeholder="Password" ng-class="{'password-transparent' : clientDetails.password}" required />
             </dd>
             <!-- TODO: Implement password verification
             <dt>Confirm Password</dt>
@@ -28,7 +38,7 @@
         <div class="text-right">
             <button type="button" ng-click="isCollapsed = !isCollapsed" class="btn btn-default btn-sm"><i class="fa fa-ellipsis-h"></i> Optional Parameters</legend></button>
         </div>
-        <div collapse="isCollapsed">
+        <div uib-collapse="isCollapsed">
             <hr />
             <dl class="dl-horizontal form-dl">
                 <dt>Friendly Name</dt>
@@ -70,5 +80,5 @@
 </div>
 <div class="modal-footer">
     <button class="btn btn-default cancel" ng-click="closeRegisterSIPClient()">Cancel</button>
-    <button class="btn btn-primary" ng-click="registerSIPClient(clientDetails)">Register</button>
+    <button class="btn btn-primary" ng-click="registerSIPClient(clientDetails)" ng-disabled="!clientDetails.password || pwdStrength < 50">Register</button>
 </div>

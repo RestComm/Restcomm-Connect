@@ -344,17 +344,27 @@ public class Bridge extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
+            boolean liveCallModification = ((StopBridge)message).isLiveCallModification();
             // Disconnect both call legs from the bridge
             // NOTE: Null-check necessary in case bridge is stopped because
             // of timeout and bridging process has not taken place.
-            if (inboundCall != null) {
-                inboundCall.tell(new Leave(), super.source);
-                inboundCall = null;
-            }
+            if (!liveCallModification) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Stopping the Bridge, will ask calls to leave the bridge");
+                }
+                if (inboundCall != null) {
+                    inboundCall.tell(new Leave(), super.source);
+                    inboundCall = null;
+                }
 
-            if (outboundCall != null) {
-                outboundCall.tell(new Leave(), super.source);
-                outboundCall = null;
+                if (outboundCall != null) {
+                    outboundCall.tell(new Leave(), super.source);
+                    outboundCall = null;
+                }
+            } else {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Stopping the Bridge, will NOT ask calls to leave the bridge because liveCallModification: "+liveCallModification);
+                }
             }
 
             // Ask the MS Controller to stop

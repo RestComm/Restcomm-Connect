@@ -62,6 +62,7 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.Nouns;
 import org.mobicents.servlet.restcomm.interpreter.rcml.ParserFailed;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Left;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
@@ -377,6 +378,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(conferencing, checkingCache));
         transitions.add(new Transition(conferencing, caching));
         transitions.add(new Transition(conferencing, playing));
+        transitions.add(new Transition(conferencing, startDialing));
+        transitions.add(new Transition(conferencing, creatingSmsSession));
         transitions.add(new Transition(finishConferencing, ready));
         transitions.add(new Transition(finishConferencing, faxing));
         transitions.add(new Transition(finishConferencing, sendingEmail));
@@ -584,14 +587,71 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     private void onConferenceResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         final ConferenceResponse<ConferenceInfo> response = (ConferenceResponse<ConferenceInfo>) message;
-        conferenceInfo = response.get();
-        if (logger.isInfoEnabled()) {
-            logger.info("VoiceInterpreter received ConferenceResponse from Conference: " + conferenceInfo.name() + ", path: " + sender().path() + ", current confernce size: " + conferenceInfo.participants().size() + ", VI state: " + fsm.state());
-        }
-        if (is(acquiringConferenceInfo)) {
-            fsm.transition(message, joiningConference);
+        final Class<?> klass = ((ConferenceResponse)message).get().getClass();
+        if (Left.class.equals(klass)) {
+            Left left = (Left) ((ConferenceResponse)message).get();
+            ActorRef leftCall = left.get();
+            if (leftCall.equals(call) && conference != null) {
+                conference.tell(new StopObserving(self()), null);
+                if(conferenceInfo.participants() != null && conferenceInfo.participants().size() !=0 ){
+                    String path = configuration.subset("runtime-settings").getString("prompts-uri");
+                    if (!path.endsWith("/")) {
+                        path += "/";
+                    }
+                    String exitAudio = configuration.subset("runtime-settings").getString("conference-exit-audio");
+                    path += exitAudio == null || exitAudio.equals("") ? "alert.wav" : exitAudio;
+                    URI uri = null;
+                    try {
+                        uri = UriUtils.resolve(new URI(path));
+                    } catch (final Exception exception) {
+                        final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        notifications.addNotification(notification);
+                        sendMail(notification);
+                        final StopInterpreter stop = new StopInterpreter();
+                        self().tell(stop, self());
+                        return;
+                    }
+                    final Play play = new Play(uri, 1);
+                    conference.tell(play, self());
+                }
+
+                if (endConferenceOnExit) {
+                    // Stop the conference if endConferenceOnExit is true
+                    final StopConference stop = new StopConference();
+                    conference.tell(stop, self());
+                }
+
+                Attribute attribute = null;
+                if (verb != null) {
+                    attribute = verb.attribute("action");
+                }
+
+                if (attribute == null) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Attribute is null, will ask for the next verb from parser");
+                    }
+                    final GetNextVerb next = GetNextVerb.instance();
+                    parser.tell(next, self());
+                } else {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Dial Action is set, executing Dial Action");
+                    }
+                    executeDialAction(message, sender);
+                }
+            }
+        } else if (ConferenceInfo.class.equals(klass)) {
+            conferenceInfo = response.get();
+            if (logger.isInfoEnabled()) {
+                logger.info("VoiceInterpreter received ConferenceResponse from Conference: " + conferenceInfo.name() + ", path: " + sender().path() + ", current confernce size: " + conferenceInfo.participants().size() + ", VI state: " + fsm.state());
+            }
+            if (is(acquiringConferenceInfo)) {
+                fsm.transition(message, joiningConference);
+            }
         }
     }
+
+
 
     private void onConferenceStateChanged(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         final ConferenceStateChanged event = (ConferenceStateChanged) message;
@@ -1196,7 +1256,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             if (bridge != null) {
                 // Stop the bridge
-                bridge.tell(new StopBridge(), self());
+                bridge.tell(new StopBridge(liveCallModification), self());
                 bridge = null;
             }
         } else if (state != null && (state.equals(CallStateChanged.State.BUSY) ||
@@ -2279,16 +2339,32 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         callback();
                         return;
                     } else if (dialBranches != null && dialBranches.contains(sender)) {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("At FinishDialing. Sender in the dialBranches, will remove and check next verb");
+                        }
                         removeDialBranch(message, sender);
                         return;
                     } else {
                         // At this point !sender.equal(call)
                         // Ask the parser for the next action to take.
-                        final GetNextVerb next = GetNextVerb.instance();
-                        if (parser != null) {
-                            parser.tell(next, source);
+                        Attribute attribute = null;
+                        if (verb != null) {
+                            attribute = verb.attribute("action");
                         }
-
+                        if (attribute == null) {
+                            if (logger.isInfoEnabled()) {
+                                logger.info("At FinishDialing. Sender NOT in the dialBranches, attribute is null, will check for the next verb");
+                            }
+                            final GetNextVerb next = GetNextVerb.instance();
+                            if (parser != null) {
+                                parser.tell(next, source);
+                            }
+                        } else {
+                            if (logger.isInfoEnabled()) {
+                                logger.info("At FinishDialing. Sender NOT in the dialBranches, attribute is NOT null, will execute Dial Action");
+                            }
+                            executeDialAction(message, outboundCall);
+                        }
                         dialChildren = null;
                         if (!sender().equals(outboundCall)) {
                             callManager.tell(new DestroyCall(sender), self());
@@ -2623,7 +2699,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     protected void updateMuteAndHoldStatusOfAllConferenceCalls(final Sid accountSid, final Sid conferenceSid, final boolean mute, final boolean hold) throws ParseException{
         if (conferenceSid != null){
-            CallDetailRecordFilter filter = new CallDetailRecordFilter(accountSid.toString(), null, null, "in-progress", null, null, null, conferenceSid.toString(), 50, 0);
+            CallDetailRecordFilter filter = new CallDetailRecordFilter(accountSid.toString(), null, null, null, "in-progress", null, null, null, conferenceSid.toString(), 50, 0);
             CallDetailRecordsDao callRecordsDAO = storage.getCallDetailRecordsDao();
             List<CallDetailRecord> conferenceCallRecords = callRecordsDAO.getCallDetailRecords(filter);
             if(conferenceCallRecords != null){
@@ -2731,7 +2807,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             if(logger.isInfoEnabled()) {
-                logger.info("At Finished state, state: " + fsm.state());
+                logger.info("At Finished state, state: " + fsm.state()+", liveCallModification: "+liveCallModification);
             }
             final Class<?> klass = message.getClass();
 
@@ -2753,7 +2829,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // Cleanup bridge
             if ((bridge != null) && (is(forking) || is(acquiringOutboundCallInfo) || is(bridged))) {
                 // Stop the bridge
-                bridge.tell(new StopBridge(), super.source);
+                bridge.tell(new StopBridge(liveCallModification), super.source);
                 bridge = null;
             }
             // Cleanup the outbound call if necessary.
@@ -2765,42 +2841,42 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             // If the call is in a conference remove it.
-            if (conference != null) {
-                // Stop Observing the conference
-                conference.tell(new StopObserving(super.source), null);
-
-                // Play beep when participant leave the conference.
-                // Do not play beep if this was the last participant to leave the conference, because there is no one to listen to the beep.
-                if(conferenceInfo.participants() != null && conferenceInfo.participants().size() !=0 ){
-                    String path = configuration.subset("runtime-settings").getString("prompts-uri");
-                    if (!path.endsWith("/")) {
-                        path += "/";
-                    }
-                    String exitAudio = configuration.subset("runtime-settings").getString("conference-exit-audio");
-                    path += exitAudio == null || exitAudio.equals("") ? "alert.wav" : exitAudio;
-                    URI uri = null;
-                    try {
-                        uri = UriUtils.resolve(new URI(path));
-                    } catch (final Exception exception) {
-                        final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
-                        final NotificationsDao notifications = storage.getNotificationsDao();
-                        notifications.addNotification(notification);
-                        sendMail(notification);
-                        final StopInterpreter stop = new StopInterpreter();
-                        source.tell(stop, source);
-                        return;
-                    }
-                    final Play play = new Play(uri, 1);
-                    conference.tell(play, source);
-                }
-                if (endConferenceOnExit) {
-                    // Stop the conference if endConferenceOnExit is true
-                    final StopConference stop = new StopConference();
-                    conference.tell(stop, super.source);
-                } else {
-                    conference.tell(new RemoveParticipant(call), source);
-                }
-            }
+//            if (conference != null) {
+//                // Stop Observing the conference
+//                conference.tell(new StopObserving(super.source), null);
+//
+//                // Play beep when participant leave the conference.
+//                // Do not play beep if this was the last participant to leave the conference, because there is no one to listen to the beep.
+//                if(conferenceInfo.participants() != null && conferenceInfo.participants().size() !=0 ){
+//                    String path = configuration.subset("runtime-settings").getString("prompts-uri");
+//                    if (!path.endsWith("/")) {
+//                        path += "/";
+//                    }
+//                    String exitAudio = configuration.subset("runtime-settings").getString("conference-exit-audio");
+//                    path += exitAudio == null || exitAudio.equals("") ? "alert.wav" : exitAudio;
+//                    URI uri = null;
+//                    try {
+//                        uri = UriUtils.resolve(new URI(path));
+//                    } catch (final Exception exception) {
+//                        final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
+//                        final NotificationsDao notifications = storage.getNotificationsDao();
+//                        notifications.addNotification(notification);
+//                        sendMail(notification);
+//                        final StopInterpreter stop = new StopInterpreter();
+//                        source.tell(stop, source);
+//                        return;
+//                    }
+//                    final Play play = new Play(uri, 1);
+//                    conference.tell(play, source);
+//                }
+//                if (endConferenceOnExit) {
+//                    // Stop the conference if endConferenceOnExit is true
+//                    final StopConference stop = new StopConference();
+//                    conference.tell(stop, super.source);
+//                } else {
+//                    conference.tell(new RemoveParticipant(call), source);
+//                }
+//            }
 
             if (!liveCallModification) {
                 // Destroy the Call(s).

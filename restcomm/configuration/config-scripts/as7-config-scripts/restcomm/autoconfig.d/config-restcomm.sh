@@ -298,24 +298,24 @@ configTelestaxProxy() {
 
 configMediaServerManager() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-	enabled="$1"
-	bind_address="$2"
+	bind_address="$1"
+	ms_address="$2"
 	ms_external_address="$3"
 
-	if [ "$enabled" == "true" ] || [ "$enabled" == "TRUE" ]; then
-		sed -e "/<mgcp-server class=\"org.mobicents.servlet.restcomm.mgcp.MediaGateway\">/ {
-			N
-			N; s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|
-			N; s|<local-port>.*</local-port>|<local-port>2727</local-port>|
-			N; s|<remote-address>127.0.0.1</remote-address>|<remote-address>$bind_address</remote-address>|
-			N; s|<remote-port>.*</remote-port>|<remote-port>2427</remote-port>|
-			N; s|<response-timeout>.*</response-timeout>|<response-timeout>500</response-timeout>|
-			N; s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|
-		}" $FILE > $FILE.bak
+	#Check for Por Offset
+    local LOCALMGCP=$((LOCALMGCP + PORT_OFFSET))
+    local REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
 
-		mv $FILE.bak $FILE
-		echo 'Configured Media Server Manager'
-	fi
+    sed -e "s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|" \
+        -e "s|<local-port>.*</local-port>|<local-port>$LOCALMGCP</local-port>|" \
+        -e "s|<remote-address>.*</remote-address>|<remote-address>$ms_address</remote-address>|" \
+        -e "s|<remote-port>.*</remote-port>|<remote-port>$REMOTEMGCP</remote-port>|" \
+        -e "s|<response-timeout>.*</response-timeout>|<response-timeout>$MGCP_RESPONSE_TIMEOUT</response-timeout>|" \
+        -e "s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|" \
+        -e "s|<external-address>.*</external-address>|<external-address>$ms_external_address</external-address>|" $FILE > $FILE.bak
+
+    mv $FILE.bak $FILE
+    echo 'Configured Media Server Manager'
 }
 
 ## Description: Configures SMPP Account Details
@@ -464,10 +464,10 @@ otherRestCommConf(){
 
 	if [ -n "$HSQL_DIR" ]; then
   		echo "HSQL_DIR $HSQL_DIR"
-  		FILE=$HSQL_DIR/restcomm.script
-  		mkdir -p $HSQL_DIR
-  		if [ ! -f $FILE ]; then
-  		    sed -i "s|<data-files>.*</data-files>|<data-files>${HSQL_DIR}</data-files>|"  $FILE
+  		FILEDB=$HSQL_DIR/restcomm.script
+  		sed -i "s|<data-files>.*</data-files>|<data-files>${HSQL_DIR}</data-files>|"  $FILE
+  		if [ ! -f $FILEDB ]; then
+  		    mkdir -p $HSQL_DIR
   		    cp $RESTCOMM_DEPLOY/WEB-INF/data/hsql/* $HSQL_DIR
         fi
 	fi
@@ -480,6 +480,14 @@ otherRestCommConf(){
              -e "s|<ussd-gateway-password>.*</ussd-gateway-password>|<ussd-gateway-password>$USSDGATEWAYPASSWORD</ussd-gateway-password>|" $FILE > $FILE.bak
           mv $FILE.bak $FILE
 	fi
+
+	echo "HTTP_RESPONSE_TIMEOUT $HTTP_RESPONSE_TIMEOUT"
+	sed -e "/<http-client>/ {
+			N
+			N; s|<response-timeout>.*</response-timeout>|<response-timeout>$HTTP_RESPONSE_TIMEOUT</response-timeout>|
+		}" $FILE > $FILE.bak
+    mv $FILE.bak $FILE
+
     echo "End Rest RestComm configuration"
 }
 
@@ -522,13 +530,18 @@ else
     #Check for port offset.
     PORTFORDID=$((PORTFORDID + PORT_OFFSET))
 fi
+
+if [ -z "$MS_ADDRESS" ]; then
+		MS_ADDRESS=$BIND_ADDRESS
+fi
+
 configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$HOSTFORDID" "$DID_ACCOUNTID" "$SMPP_SYSTEM_TYPE" "$PORTFORDID"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
 configSmsAggregator "$SMS_OUTBOUND_PROXY" "$SMS_PREFIX"
 configSpeechRecognizer "$ISPEECH_KEY"
 configSpeechSynthesizers
 configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$PROXY_IP" "$SITE_ID"
-configMediaServerManager "$ACTIVE_PROXY" "$BIND_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
+configMediaServerManager "$BIND_ADDRESS" "$MS_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
 configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYSTEM_TYPE" "$SMPP_PEER_IP" "$SMPP_PEER_PORT" "$SMPP_SOURCE_MAP" "$SMPP_DEST_MAP"
 configRestCommURIs
 updateRecordingsPath
