@@ -22,6 +22,7 @@ package org.mobicents.servlet.restcomm.mscontrol.messages;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 import akka.actor.ActorRef;
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -29,21 +30,27 @@ import akka.actor.ActorRef;
 @Immutable
 public final class JoinComplete {
 
-    private final Object endpoint;
+    private final ActorRef endpoint;
     private int sessionid;
-
-    public JoinComplete(final Object endpoint) {
-        super();
-        this.endpoint = endpoint;
-    }
+    private ConnectionIdentifier connectionIdentifier;
 
     public JoinComplete() {
         this(null);
     }
 
+    public JoinComplete(final ActorRef endpoint) {
+        this.endpoint = endpoint;
+    }
+
     public JoinComplete(ActorRef bridgeEndpoint, int sessionid) {
-        this(bridgeEndpoint);
+        this(bridgeEndpoint, sessionid, null);
+    }
+
+    public JoinComplete(ActorRef bridgeEndpoint, int sessionid, ConnectionIdentifier connectionIdentifier) {
+        super();
+        this.endpoint = bridgeEndpoint;
         this.sessionid = sessionid;
+        this.connectionIdentifier = connectionIdentifier;
     }
 
     public Object endpoint() {
@@ -52,5 +59,9 @@ public final class JoinComplete {
 
     public int sessionid() {
         return sessionid;
+    }
+
+    public ConnectionIdentifier connectionIdentifier() {
+        return connectionIdentifier;
     }
 }

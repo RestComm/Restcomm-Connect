@@ -77,6 +77,7 @@ import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import jain.protocol.ip.mgcp.message.parms.EndpointIdentifier;
 
@@ -159,11 +160,14 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private boolean areAnySlavesConnectedToThisConferenceEndpoint;
     private int noOfConnectedSlaves = 0;
 
-    public String masterBridgeEndpointId;
+    private String masterBridgeEndpointId;
 
     private ActorRef masterBridgeEndpoint;
 
-    public String masterBridgeEndpointSessionId;
+    private String masterBridgeEndpointSessionId;
+
+    private String masterBridgeConnectionIdentifier;
+    private String masterIVRConnectionIdentifier;
 
     public ConferenceMediaResourceController(final String localMsId, final Map<String, ActorRef> gateways, final Configuration configuration, final DaoManager storage){
         super();
@@ -418,6 +422,8 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     fsm.transition(message, updatingRemoteConnectionWithLocalMS);
                 } else if (is(updatingRemoteConnectionWithLocalMS)){
                     fsm.transition(message, creatingMediaGroup);
+                } else if(is(openingRemoteConnectionWithBridgeMS)){
+                	fsm.transition(message, active);
                 }
                 break;
 
@@ -560,8 +566,10 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     masterIVREndpointSessionId = cdr.getMasterIVREndpointSessionId();
                     masterBridgeEndpointId = cdr.getMasterBridgeEndpointId();
                     masterBridgeEndpointSessionId = cdr.getMasterBridgeEndpointSessionId();
+                    masterBridgeConnectionIdentifier = cdr.getMasterBridgeConnectionIdentifier();
+                    masterIVRConnectionIdentifier = cdr.getMasterIVRConnectionIdentifier();
                     logger.info("masterMediaGateway acquired: "+masterMediaGateway);
-                    logger.info("new slave sent StartBridgeConnector message to CMRC masterIVREndpointId: "+masterIVREndpointIdName+" masterIVREndpointSessionId: "+ masterIVREndpointSessionId+" masterBridgeEndpointId: "+masterBridgeEndpointId+" masterBridgeEndpointSessionId "+masterBridgeEndpointSessionId);
+                    logger.info("new slave sent StartBridgeConnector message to CMRC masterIVREndpointId: "+masterIVREndpointIdName+" masterIVREndpointSessionId: "+ masterIVREndpointSessionId+" masterBridgeEndpointId: "+masterBridgeEndpointId+" masterBridgeEndpointSessionId "+masterBridgeEndpointSessionId +" masterBridgeConnectionIdentifier "+masterBridgeConnectionIdentifier+" masterIVRConnectionIdentifier "+masterIVRConnectionIdentifier);
                 }
                 logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AcquiringMediaSession ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
                 localMediaGateway.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), source);
@@ -666,6 +674,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
             if (msg !=null && msg.endpoint() != null) {
                 ActorRef bridgeEndpoint = (ActorRef)msg.endpoint();
                 masterBridgeEndpointSessionId = msg.sessionid()+"";
+                masterBridgeConnectionIdentifier = msg.connectionIdentifier().toString();
                 final InviteEndpoint invite = new InviteEndpoint();
                 bridgeEndpoint.tell(invite, source);
             }
@@ -918,8 +927,8 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("OpeningRemoteConnectionWithMasterMS...");
-            OpenConnection open = new OpenConnection(ConnectionMode.SendRecv, false);
+            logger.info("OpeningRemoteConnectionWithMasterMS... masterBridgeconnectionIdentifier: "+masterBridgeConnectionIdentifier);
+            UpdateConnection open = new UpdateConnection(null, ConnectionMode.SendRecv, new ConnectionIdentifier(masterBridgeConnectionIdentifier));
             connectionWithMasterBridgeMS.tell(open, source);
         }
     }
@@ -1031,17 +1040,20 @@ public class ConferenceMediaResourceController extends UntypedActor{
             cdr = cdr.setMasterConfernceEndpointId(masterConfernceEndpointId.getLocalEndpointName());
             cdr = cdr.setMasterIVREndpointId(masterIVREndpointIdName);
             cdr = cdr.setMasterIVREndpointSessionId(localMediaSession.id()+"");
+            cdr = cdr.setMasterIVRConnectionIdentifier(masterIVRConnectionIdentifier);
             dao.updateConferenceDetailRecordMasterEndpointID(cdr);
         }
     }
 
     private void updateMasterBridgeEndpointId(){
         if(cdr != null){
-            logger.info("updateMasterConferenceEndpointId: masterBridgeEndpointId: "+masterBridgeEndpointId+" masterBridgeEndpointSessionId "+masterBridgeEndpointSessionId);
+            logger.info("updateMasterConferenceEndpointId: masterBridgeEndpointId: "+masterBridgeEndpointId+" masterBridgeEndpointSessionId "+masterBridgeEndpointSessionId +" masterBridgeConnectionIdentifier: "+masterBridgeConnectionIdentifier);
             final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
             cdr = dao.getConferenceDetailRecord(conferenceSid);
             cdr = cdr.setMasterBridgeEndpointId(masterBridgeEndpointId);
             cdr = cdr.setMasterBridgeEndpointSessionId(masterBridgeEndpointSessionId);
+            cdr = cdr.setMasterBridgeConnectionIdentifier(masterBridgeConnectionIdentifier);
+            //masterBridgeconnectionIdentifier
             dao.updateConferenceDetailRecordMasterBridgeEndpointID(cdr);
         }
     }
