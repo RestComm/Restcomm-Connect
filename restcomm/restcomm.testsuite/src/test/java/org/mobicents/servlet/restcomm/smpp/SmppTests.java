@@ -49,6 +49,7 @@ public class SmppTests {
     private static String from = "9999";
     private static String msgBody = "Message from SMPP Server to Restcomm";
     private static String msgBodyResp = "Response from Restcomm to SMPP server";
+    private static String msgBodyRespUCS2 = "Response from Restcomm to SMPP serverПППРРр";
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
@@ -143,6 +144,29 @@ public class SmppTests {
 		assertTrue(inboundMessageEntity.getSmppContent().equals(msgBodyResp));
 	}
 
+    private String smsEchoRcmlUCS2 = "<Response><Sms to=\""+from+"\" from=\""+to+"\">"+msgBodyRespUCS2+"</Sms></Response>";
+	@Test
+	public void testSendMessageToRestcommUCS2 () throws SmppInvalidArgumentException, IOException, InterruptedException {
+
+        stubFor(get(urlPathEqualTo("/smsApp"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(smsEchoRcmlUCS2)));
+
+		mockSmppServer.sendSmppMessageToRestcomm(msgBody,to,from,CharsetUtil.CHARSET_UCS_2);
+        Thread.sleep(2000);
+        assertTrue(mockSmppServer.isMessageSent());
+		Thread.sleep(8000);
+		assertTrue(mockSmppServer.isMessageReceived());
+		SmppInboundMessageEntity inboundMessageEntity = mockSmppServer.getSmppInboundMessageEntity();
+		assertNotNull(inboundMessageEntity);
+		assertTrue(inboundMessageEntity.getSmppTo().equals(from));
+		assertTrue(inboundMessageEntity.getSmppFrom().equals(to));
+		logger.info("msgBodyResp: " + msgBodyRespUCS2);
+		logger.info("getSmppContent: " + inboundMessageEntity.getSmppContent());
+		assertTrue(inboundMessageEntity.getSmppContent().equals(msgBodyRespUCS2));
+	}
 
 	@Test
 	public void testClientSentToOtherClient () throws ParseException {
