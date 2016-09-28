@@ -19,24 +19,12 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.mobicents.servlet.restcomm.telephony;
+package org.mobicents.servlet.restcomm.sms.smpp;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+public class DataCoding {
 
-/**
- * @author Henrique Rosa (henrique.rosa@telestax.com)
- *
- */
-@Immutable
-public final class StopBridge {
+    public static final byte DATA_CODING_GSM7 = 0;
+    public static final byte DATA_CODING_GSM8 = 4;
+    public static final byte DATA_CODING_UCS2 = 8;
 
-    private boolean liveCallModification;
-
-    public StopBridge(final boolean liveCallModification) {
-        this.liveCallModification = liveCallModification;
-    }
-
-    public boolean isLiveCallModification() {
-        return liveCallModification;
-    }
 }

@@ -1256,7 +1256,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             if (bridge != null) {
                 // Stop the bridge
-                bridge.tell(new StopBridge(), self());
+                bridge.tell(new StopBridge(liveCallModification), self());
                 bridge = null;
             }
         } else if (state != null && (state.equals(CallStateChanged.State.BUSY) ||
@@ -2807,7 +2807,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             if(logger.isInfoEnabled()) {
-                logger.info("At Finished state, state: " + fsm.state());
+                logger.info("At Finished state, state: " + fsm.state()+", liveCallModification: "+liveCallModification);
             }
             final Class<?> klass = message.getClass();
 
@@ -2829,7 +2829,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // Cleanup bridge
             if ((bridge != null) && (is(forking) || is(acquiringOutboundCallInfo) || is(bridged))) {
                 // Stop the bridge
-                bridge.tell(new StopBridge(), super.source);
+                bridge.tell(new StopBridge(liveCallModification), super.source);
                 bridge = null;
             }
             // Cleanup the outbound call if necessary.
