@@ -94,7 +94,12 @@ public class MockSmppServer {
     public void sendSmppMessageToRestcomm(String smppMessage, String smppTo, String smppFrom, Charset charset) throws IOException, SmppInvalidArgumentException {
         //http://stackoverflow.com/a/25885741
         try {
-            byte[] textBytes = CharsetUtil.encode(smppMessage, charset);
+            byte[] textBytes;
+            if (CharsetUtil.CHARSET_UCS_2 == charset) {
+                textBytes = smppMessage.getBytes();
+            } else {
+                textBytes = CharsetUtil.encode(smppMessage, charset);
+            }
 
             DeliverSm deliver = new DeliverSm();
 

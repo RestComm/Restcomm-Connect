@@ -197,7 +197,12 @@ public class SmppMessageHandler extends UntypedActor  {
             logger.info("Message is Received by the SmppSessionOutbound Class");
         }
 
-        byte[] textBytes = CharsetUtil.encode(request.getSmppContent(), request.getSmppEncoding());
+        byte[] textBytes;
+        if (CharsetUtil.CHARSET_UCS_2 == request.getSmppEncoding()) {
+            textBytes = request.getSmppContent().getBytes();
+        } else {
+            textBytes = CharsetUtil.encode(request.getSmppContent(), request.getSmppEncoding());
+        }
         int smppTonNpiValue =  Integer.parseInt(SmppService.getSmppTonNpiValue()) ;
         // add delivery receipt
         //submit0.setRegisteredDelivery(SmppConstants.REGISTERED_DELIVERY_SMSC_RECEIPT_REQUESTED);
