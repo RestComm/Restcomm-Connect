@@ -224,7 +224,9 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         final String masterIVREndpointSessionId = readString(map.get("master_ivr_endpoint_session_id"));
         final String masterBridgeEndpointId = readString(map.get("master_bridge_endpoint_id"));
         final String masterBridgeEndpointSessionId = readString(map.get("master_bridge_endpoint_session_id"));
-        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri, msId, masterConferenceEndpointId, masterPresent, masterIVREndpointId, masterIVREndpointSessionId, masterBridgeEndpointId, masterBridgeEndpointSessionId);
+        final String masterBridgeConnectionIdentifier = readString(map.get("master_bridge_conn_id"));
+        final String masterIVRConnectionIdentifier = readString(map.get("master_ivr_conn_id"));
+        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri, msId, masterConferenceEndpointId, masterPresent, masterIVREndpointId, masterIVREndpointSessionId, masterBridgeEndpointId, masterBridgeEndpointSessionId, masterBridgeConnectionIdentifier, masterIVRConnectionIdentifier);
     }
 
     private Map<String, Object> toMap(final ConferenceDetailRecord cdr) {
@@ -244,6 +246,8 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         map.put("master_bridge_endpoint_id", cdr.getMasterBridgeEndpointId());
         map.put("master_bridge_endpoint_session_id", cdr.getMasterBridgeEndpointSessionId());
         map.put("master_present", cdr.isMasterPresent());
+        map.put("master_bridge_conn_id", cdr.getMasterBridgeConnectionIdentifier());
+        map.put("master_ivr_conn_id", cdr.getMasterIVRConnectionIdentifier());
         return map;
     }
 }

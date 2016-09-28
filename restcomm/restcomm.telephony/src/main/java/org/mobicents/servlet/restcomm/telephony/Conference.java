@@ -90,6 +90,7 @@ public final class Conference extends UntypedActor {
     private final ActorRef mscontroller;
 
     private final DaoManager storage;
+    private int globalNoOfParticipants;
 
     public Conference(final String name, final ActorRef msController, final DaoManager storage) {
         super();
@@ -508,7 +509,6 @@ public final class Conference extends UntypedActor {
      * @throws Exception
      */
     private int getGlobalNoOfParticipants() throws Exception{
-        int globalNoOfParticipants = -1;
         if(sid == null){
             globalNoOfParticipants = calls.size();
         }else{

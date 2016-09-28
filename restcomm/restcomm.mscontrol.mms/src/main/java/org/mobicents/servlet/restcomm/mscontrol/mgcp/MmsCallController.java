@@ -98,6 +98,7 @@ import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 /**
@@ -175,6 +176,8 @@ public class MmsCallController extends MediaServerController {
 
     // Observer pattern
     private final List<ActorRef> observers;
+
+    private ConnectionIdentifier connectionIdentifier;
 
     //public MmsCallController(final List<ActorRef> mediaGateways, final Configuration configuration) {
     public MmsCallController(final ActorRef mrb) {
@@ -857,11 +860,13 @@ public class MmsCallController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             if (is(updatingInternalLink)) {
-                call.tell(new JoinComplete(bridgeEndpoint, session.id()), super.source);
+                call.tell(new JoinComplete(bridgeEndpoint, session.id(), connectionIdentifier), super.source);
             } else if (is(closingInternalLink)) {
                 call.tell(new Left(), super.source);
             } else if (is(openingRemoteConnection) || is(updatingRemoteConnection)) {
                 ConnectionStateChanged connState = (ConnectionStateChanged) message;
+                connectionIdentifier = connState.connectionIdentifier();
+                logger.info("connectionIdentifier: "+connectionIdentifier);
                 localSdp = connState.descriptor().toString();
                 MediaSessionInfo mediaSessionInfo = new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(),
                         localSdp, remoteSdp);
