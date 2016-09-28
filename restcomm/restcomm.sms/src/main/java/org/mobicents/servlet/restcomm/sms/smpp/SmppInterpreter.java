@@ -696,6 +696,7 @@ public class SmppInterpreter extends UntypedActor  {
             final SmsServiceResponse<ActorRef> response = (SmsServiceResponse<ActorRef>) message;
             final ActorRef session = response.get();
             final NotificationsDao notifications = storage.getNotificationsDao();
+            SmsSessionRequest.Encoding encoding = initialSessionRequest.encoding();
             // Parse "from".
             String from = initialSessionRequest.to();
             Attribute attribute = verb.attribute("from");
@@ -786,7 +787,7 @@ public class SmppInterpreter extends UntypedActor  {
                 // Store the sms record in the sms session.
                 session.tell(new  SmsSessionAttribute("record", record), source);
                 // Send the SMS.
-                final SmsSessionRequest sms = new SmsSessionRequest(from, to, body, customHttpHeaderMap);
+                final SmsSessionRequest sms = new SmsSessionRequest(from, to, body, encoding, customHttpHeaderMap);
                 session.tell(sms, source);
                 sessions.put(sid, session);
             }
