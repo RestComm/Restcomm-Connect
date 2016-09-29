@@ -27,7 +27,9 @@ import java.util.Set;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
@@ -254,7 +256,7 @@ public final class Conference extends UntypedActor {
         public void execute(final Object message) throws Exception {
             // Stop the background music if present
             mscontroller.tell(new StopMediaGroup(), super.source);
-
+            updateConferenceStatus(ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT);
             // Notify the observers
             broadcast(new ConferenceStateChanged(name, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT));
         }
@@ -518,5 +520,14 @@ public final class Conference extends UntypedActor {
         if(logger.isInfoEnabled())
             logger.info("sid: "+sid+"globalNoOfParticipants: "+globalNoOfParticipants);
         return globalNoOfParticipants;
+    }
+
+    private void updateConferenceStatus(org.mobicents.servlet.restcomm.telephony.ConferenceStateChanged.State state){
+        if(sid != null){
+            final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
+            ConferenceDetailRecord cdr = dao.getConferenceDetailRecord(sid);
+            cdr = cdr.setStatus(state.name());
+            dao.updateConferenceDetailRecordStatus(cdr);
+        }
     }
 }

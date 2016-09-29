@@ -38,7 +38,6 @@ import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.HashMap;
@@ -64,12 +63,9 @@ import org.mobicents.servlet.restcomm.asr.AsrResponse;
 import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
-import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
-import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
-import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fax.FaxResponse;
@@ -182,7 +178,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     // The conference manager.
     private final ActorRef conferenceManager;
     // A conference detail record.
-    private ConferenceDetailRecord  conferenceDetailRecord = null;
+    //private ConferenceDetailRecord  conferenceDetailRecord = null;
 
     // State for outbound calls.
     private boolean isForking;
@@ -218,6 +214,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     // Call bridging
     private final ActorRef bridgeManager;
     private ActorRef bridge;
+	private Sid conferenceSid;
 
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
@@ -594,7 +591,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             Left left = (Left) ((ConferenceResponse)message).get();
             ActorRef leftCall = left.get();
             if (leftCall.equals(call) && conference != null) {
-                conference.tell(new StopObserving(self()), null);
                 if(conferenceInfo.globalParticipants() !=0 ){
                     String path = configuration.subset("runtime-settings").getString("prompts-uri");
                     if (!path.endsWith("/")) {
@@ -613,6 +609,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         final StopInterpreter stop = new StopInterpreter();
                         self().tell(stop, self());
                         return;
+                    }
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("going to play conference-exit-audio beep");
                     }
                     final Play play = new Play(uri, 1);
                     conference.tell(play, self());
@@ -641,6 +640,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                     executeDialAction(message, sender);
                 }
+                conference.tell(new StopObserving(self()), null);
             }
         } else if (ConferenceInfo.class.equals(klass)) {
             conferenceInfo = response.get();
@@ -2415,6 +2415,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             conferenceState = conferenceInfo.state();
+            conferenceSid = conferenceInfo.sid();
             final Tag child = conference(verb);
 
             // If there is room join the conference.
@@ -2461,6 +2462,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         source.tell(stop, source);
                         return;
                     }
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("going to play conference-entry-audio beep");
+                    }
                     final Play play = new Play(uri, 1);
                     conference.tell(play, source);
                 }
@@ -2469,8 +2473,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 // Join the conference.
                 //Adding conference record in DB
-                final Sid conferenceSid = conferenceInfo.sid();
-                updateConferenceDetailRecord(conferenceSid);
+                addConferenceStuffInCDR(conferenceSid);
                 final AddParticipant request = new AddParticipant(call);
                 conference.tell(request, source);
             } else {
@@ -2478,30 +2481,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final GetNextVerb next = GetNextVerb.instance();
                 parser.tell(next, source);
             }
-            final Sid conferenceSid = conferenceInfo.sid();
 
-            //Adding conference record in DB
-            final ConferenceDetailRecordsDao conferenceDao = storage.getConferenceDetailRecordsDao();
-            conferenceDetailRecord = conferenceDao.getConferenceDetailRecord(conferenceSid);
-            if(conferenceDetailRecord == null){
-                final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
-                conferenceBuilder.setSid(conferenceSid);
-                conferenceBuilder.setDateCreated(callRecord.getDateCreated());
-                conferenceBuilder.setAccountSid(accountId);/* I am not sure about this parameter */
-                conferenceBuilder.setStatus(conferenceState.name());
-                conferenceBuilder.setApiVersion(version);
-                final StringBuilder UriBuffer = new StringBuilder();
-                UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountId.toString()).append("/Conferences/");
-                UriBuffer.append(conferenceSid);
-                final URI uri = URI.create(UriBuffer.toString());
-                conferenceBuilder.setUri(uri);
-                conferenceBuilder.setFriendlyName(conferenceFriendlyName);
-                conferenceDetailRecord = conferenceBuilder.build();
-                conferenceDao.addConferenceDetailRecord(conferenceDetailRecord);
-            }else if(conferenceState != null){
-                conferenceDetailRecord = conferenceDetailRecord.setStatus(conferenceState.name());
-                conferenceDao.updateConferenceDetailRecordStatus(conferenceDetailRecord);
-            }
             // parse mute
             attribute = child.attribute("muted");
             if (attribute != null) {
@@ -2528,28 +2508,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
         }
 
-        private void updateConferenceDetailRecord(Sid conferenceSid) {
-            final ConferenceDetailRecordsDao conferenceDao = storage.getConferenceDetailRecordsDao();
-            conferenceDetailRecord = conferenceDao.getConferenceDetailRecord(conferenceSid);
-            if(conferenceDetailRecord == null){
-                if (logger.isInfoEnabled()) {
-                    logger.info("Updating Conference record for call: "+callInfo.sid()+", call status: "+callInfo.state()+", to include Conference details, conference: "+conferenceSid);
-                }
-                final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
-                conferenceBuilder.setSid(conferenceSid);
-                conferenceBuilder.setDateCreated(callRecord.getDateCreated());
-                conferenceBuilder.setAccountSid(accountId);/* I am not sure about this parameter */
-                conferenceBuilder.setStatus(conferenceState.name());
-                conferenceBuilder.setApiVersion(version);
-                final StringBuilder UriBuffer = new StringBuilder();
-                UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountId.toString()).append("/Conferences/");
-                UriBuffer.append(conferenceSid);
-                final URI uri = URI.create(UriBuffer.toString());
-                conferenceBuilder.setUri(uri);
-                conferenceBuilder.setFriendlyName(conferenceFriendlyName);
-                conferenceDetailRecord = conferenceBuilder.build();
-                conferenceDao.addConferenceDetailRecord(conferenceDetailRecord);
-            }
+        private void addConferenceStuffInCDR(Sid conferenceSid) {
             //updating conferenceSid and other conference related info in cdr
             if (callRecord != null) {
                 if (logger.isInfoEnabled()) {
@@ -2702,18 +2661,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     // XXX get record limit etc from dial verb
                     recordConference();
                 }
-                // update conference state in DB
-                if (conferenceDetailRecord != null) {
-                    final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
-                    conferenceDetailRecord = dao.getConferenceDetailRecord(conferenceDetailRecord.getSid());
-                    conferenceDetailRecord = conferenceDetailRecord.setStatus(ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT.name());
-                    dao.updateConferenceDetailRecordStatus(conferenceDetailRecord);
-                }
                 // Call is no more on hold
-                updateMuteAndHoldStatusOfAllConferenceCalls(conferenceDetailRecord.getAccountSid(), conferenceDetailRecord.getSid(), false, false);
+                //open this block when mute/hold functionality in conference API is fixed
+                //updateMuteAndHoldStatusOfAllConferenceCalls(conferenceDetailRecord.getAccountSid(), conferenceDetailRecord.getSid(), false, false);
             } else {
                 // Call is no more on hold
-                updateMuteAndHoldStatusOfAllConferenceCalls(conferenceDetailRecord.getAccountSid(), conferenceDetailRecord.getSid(), false, false);
+                //open this block when mute/hold functionality in conference API is fixed
+                //updateMuteAndHoldStatusOfAllConferenceCalls(conferenceDetailRecord.getAccountSid(), conferenceDetailRecord.getSid(), false, false);
             }
             // update Call hold and mute status
             if(callRecord != null){
@@ -2738,7 +2692,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         conference.tell(new Play(waitUrl, Short.MAX_VALUE, confModeratorPresent), source);
     }
 
-    protected void updateMuteAndHoldStatusOfAllConferenceCalls(final Sid accountSid, final Sid conferenceSid, final boolean mute, final boolean hold) throws ParseException{
+    /* open this block when mute/hold functionality in conference API is fixed
+     * protected void updateMuteAndHoldStatusOfAllConferenceCalls(final Sid accountSid, final Sid conferenceSid, final boolean mute, final boolean hold) throws ParseException{
         if (conferenceSid != null){
             CallDetailRecordFilter filter = new CallDetailRecordFilter(accountSid.toString(), null, null, null, "in-progress", null, null, null, conferenceSid.toString(), 50, 0);
             CallDetailRecordsDao callRecordsDAO = storage.getCallDetailRecordsDao();
@@ -2752,8 +2707,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
         }
-    }
-
+    }*/
 
     private final class FinishConferencing extends AbstractDialAction {
         public FinishConferencing(final ActorRef source) {
@@ -2778,13 +2732,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (ConferenceStateChanged.State.COMPLETED.equals(confStateChanged.state())) {
                     DestroyConference destroyConference = new DestroyConference(conferenceInfo.name());
                     conferenceManager.tell(destroyConference, super.source);
-                }
-                // update conference state in DB
-                if (conferenceDetailRecord != null) {
-                    final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
-                    conferenceDetailRecord = dao.getConferenceDetailRecord(conferenceDetailRecord.getSid());
-                    conferenceDetailRecord = conferenceDetailRecord.setStatus(confStateChanged.state().name());
-                    dao.updateConferenceDetailRecordStatus(conferenceDetailRecord);
                 }
             }
             conference = null;
