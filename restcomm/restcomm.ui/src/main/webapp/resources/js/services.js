@@ -218,7 +218,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     // Call it when authenticated and in Restcomm auth mode
     function updatePassword(newPassword) {
         var deferred = $q.defer();
-        var apiPath = "/restcomm/2012-04-24/Accounts/" + account.sid + ".json";
+        var apiPath = "/restcomm/2012-04-24/Accounts.json/" + account.sid;
         var auth_header = basicAuthHeader(account.sid, account.auth_token, true)
         var params = {Auth_Token: md5.createHash(newPassword)};
         var update = $http({
@@ -400,7 +400,7 @@ rcServices.factory('Notifications', function($rootScope, $timeout, $log) {
 'use strict';
 
 var  uiModalDialog = angular.module('ui.bootstrap.modal.dialog', []);
-uiModalDialog.factory('$dialog', ['$rootScope', '$modal', function ($rootScope, $modal) {
+uiModalDialog.factory('$dialog', ['$rootScope', '$uibModal', function ($rootScope, $uibModal) {
 
   var prompt = function(title, message, buttons) {
 
@@ -411,17 +411,17 @@ uiModalDialog.factory('$dialog', ['$rootScope', '$modal', function ($rootScope, 
       ];
     }
 
-    var ModalCtrl = function($scope, $modalInstance) {
+    var ModalCtrl = function($scope, $uibModalInstance) {
       $scope.title = title;
       $scope.message = message;
       $scope.buttons = buttons;
 
       $scope.close = function(result) {
-        $modalInstance.close(result);
+        $uibModalInstance.close(result);
       };
     };
 
-    return $modal.open({
+    return $uibModal.open({
       templateUrl: 'template/dialog/message.html',
       controller: ModalCtrl
     }).result;
@@ -466,6 +466,7 @@ rcServices.factory('RCommAccounts', function($resource) {
       },
       update: {
         method:'PUT',
+        url: '/restcomm/2012-04-24/Accounts.:format/:accountSid',
         headers : {
           'Content-Type': 'application/x-www-form-urlencoded'
         }

@@ -101,7 +101,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
     // application data.
     private DownloaderResponse downloaderResponse;
     private ActorRef source;
-    private Boolean hangupOnEnd;
+    private Boolean hangupOnEnd = false;
     private ActorRef originalInterpreter;
 
     public SubVoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,

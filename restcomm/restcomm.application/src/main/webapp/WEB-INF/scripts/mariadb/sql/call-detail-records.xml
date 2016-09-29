@@ -19,7 +19,23 @@
   	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/110 -->
 	<select id="getTotalCallDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter" resultType="int">
-		SELECT COUNT(*) FROM restcomm_call_detail_records WHERE account_sid=#{accountSid}
+		SELECT COUNT(*) FROM restcomm_call_detail_records WHERE
+
+		<!-- are we counting cdrs from a single account or from an account set -->
+		<if test="accountSidSet == null">
+			account_sid=#{accountSid}
+		</if>
+		<if test="accountSidSet != null">
+			<if test="!accountSidSet.isEmpty()">
+				account_sid IN
+				<foreach item="item" index="index" collection="accountSidSet" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="accountSidSet.isEmpty()">
+				account_sid=''
+			</if>
+		</if>
 
 		<if test="instanceid != null">
 			AND instanceid like #{instanceid}
@@ -51,7 +67,23 @@
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/110 -->
 	<select id="getCallDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter" resultType="hashmap">
-		SELECT * FROM restcomm_call_detail_records AS restcomm_call_detail_records WHERE account_sid=#{accountSid}
+		SELECT * FROM restcomm_call_detail_records AS restcomm_call_detail_records WHERE
+
+		<!-- are we retrieving cdrs from a single account or from an account set -->
+		<if test="accountSidSet == null">
+			account_sid=#{accountSid}
+		</if>
+		<if test="accountSidSet != null">
+			<if test="!accountSidSet.isEmpty()">
+				account_sid IN
+				<foreach item="item" index="index" collection="accountSidSet" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="accountSidSet.isEmpty()">
+				account_sid=''
+			</if>
+		</if>
 
 		<if test="instanceid != null">
 			AND instanceid like #{instanceid}
@@ -77,9 +109,10 @@
 		</if>
 
 		<if test="endTime != null">
-			AND end_time &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY) order by start_time
+			AND end_time &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
 		</if>
-		
+
+		order by start_time
 		LIMIT #{limit} OFFSET #{offset}
 	</select>
 

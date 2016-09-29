@@ -2,11 +2,17 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, SessionService, RCommLogsCalls) {
+rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $uibModal, SessionService, RCommLogsCalls) {
 
   $scope.Math = window.Math;
 
   $scope.sid = SessionService.get("sid");
+
+  // default search values
+  $scope.search = {
+    local_only: true,
+    sub_accounts: false
+  }
 
   // pagination support ----------------------------------------------------------------------------------------------
 
@@ -23,8 +29,8 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, 
     $scope.getCallsList($scope.currentPage-1);
   };
 
-  $scope.pageChanged = function(page) {
-    $scope.getCallsList(page-1);
+  $scope.pageChanged = function() {
+    $scope.getCallsList($scope.currentPage-1);
   };
 
   $scope.getCallsList = function(page) {
@@ -66,13 +72,16 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, 
     if(search.local_only) {
       params["LocalOnly"] = search.local_only;
     }
+    if (search.sub_accounts) {
+      params["SubAccounts"] = search.sub_accounts;
+    }
 
     return params;
   }
 
   // Modal : Call Details
   $scope.showCallDetailsModal = function (call) {
-    $modal.open({
+    $uibModal.open({
       controller: 'LogsCallsDetailsCtrl',
       scope: $scope,
       templateUrl: 'modules/modals/modal-logs-calls.html',
@@ -126,12 +135,12 @@ $scope.sortBy = function(field) {
   $scope.getCallsList(0);
 });
 
-rcMod.controller('LogsCallsDetailsCtrl', function($scope, $stateParams, $resource, $modalInstance, SessionService, RCommLogsCalls, callSid) {
+rcMod.controller('LogsCallsDetailsCtrl', function($scope, $stateParams, $resource, $uibModalInstance, SessionService, RCommLogsCalls, callSid) {
   $scope.sid = SessionService.get("sid");
   $scope.callSid = $stateParams.callSid || callSid;
 
   $scope.closeCallDetails = function () {
-    $modalInstance.dismiss('cancel');
+    $uibModalInstance.dismiss('cancel');
   };
 
   $scope.callDetails = RCommLogsCalls.view({accountSid: $scope.sid, callSid:$scope.callSid});

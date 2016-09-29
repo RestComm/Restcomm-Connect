@@ -2,7 +2,7 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('LogsRecordingsCtrl', function($scope, $resource, $timeout, $modal, SessionService, RCommLogsRecordings) {
+rcMod.controller('LogsRecordingsCtrl', function($scope, $resource, $timeout, $uibModal, SessionService, RCommLogsRecordings) {
 
   $scope.Math = window.Math;
 
@@ -21,9 +21,11 @@ rcMod.controller('LogsRecordingsCtrl', function($scope, $resource, $timeout, $mo
     $scope.noOfPages = Math.ceil($scope.filtered.length / $scope.entryLimit);
   };
 
+/*
   $scope.setPage = function(pageNo) {
     $scope.currentPage = pageNo;
   };
+  */
 
   $scope.filter = function() {
     $timeout(function() { //wait for 'filtered' to be changed
@@ -34,7 +36,7 @@ rcMod.controller('LogsRecordingsCtrl', function($scope, $resource, $timeout, $mo
 
   // Modal : Recording Details
   $scope.showRecordingDetailsModal = function (recording) {
-    $modal.open({
+    $uibModal.open({
       controller: 'LogsRecordingsDetailsCtrl',
       scope: $scope,
       templateUrl: 'modules/modals/modal-logs-recordings.html',
@@ -69,12 +71,12 @@ rcMod.controller('LogsRecordingsCtrl', function($scope, $resource, $timeout, $mo
 
 });
 
-rcMod.controller('LogsRecordingsDetailsCtrl', function($scope, $stateParams, $resource, $modalInstance, SessionService, RCommLogsRecordings, recordingSid) {
+rcMod.controller('LogsRecordingsDetailsCtrl', function($scope, $stateParams, $resource, $uibModalInstance, SessionService, RCommLogsRecordings, recordingSid) {
   $scope.sid = SessionService.get("sid");
   $scope.recordingSid = $stateParams.recordingSid || recordingSid;
 
   $scope.closeRecordingDetails = function () {
-    $modalInstance.dismiss('cancel');
+    $uibModalInstance.dismiss('cancel');
   };
 
   $scope.recordingDetails = RCommLogsRecordings.view({accountSid: $scope.sid, recordingSid: $scope.recordingSid});

@@ -1258,7 +1258,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             if (bridge != null) {
                 // Stop the bridge
-                bridge.tell(new StopBridge(), self());
+                bridge.tell(new StopBridge(liveCallModification), self());
                 bridge = null;
             }
         } else if (state != null && (state.equals(CallStateChanged.State.BUSY) ||
@@ -2355,16 +2355,32 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         callback();
                         return;
                     } else if (dialBranches != null && dialBranches.contains(sender)) {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("At FinishDialing. Sender in the dialBranches, will remove and check next verb");
+                        }
                         removeDialBranch(message, sender);
                         return;
                     } else {
                         // At this point !sender.equal(call)
                         // Ask the parser for the next action to take.
-                        final GetNextVerb next = GetNextVerb.instance();
-                        if (parser != null) {
-                            parser.tell(next, source);
+                        Attribute attribute = null;
+                        if (verb != null) {
+                            attribute = verb.attribute("action");
                         }
-
+                        if (attribute == null) {
+                            if (logger.isInfoEnabled()) {
+                                logger.info("At FinishDialing. Sender NOT in the dialBranches, attribute is null, will check for the next verb");
+                            }
+                            final GetNextVerb next = GetNextVerb.instance();
+                            if (parser != null) {
+                                parser.tell(next, source);
+                            }
+                        } else {
+                            if (logger.isInfoEnabled()) {
+                                logger.info("At FinishDialing. Sender NOT in the dialBranches, attribute is NOT null, will execute Dial Action");
+                            }
+                            executeDialAction(message, outboundCall);
+                        }
                         dialChildren = null;
                         if (!sender().equals(outboundCall)) {
                             callManager.tell(new DestroyCall(sender), self());
@@ -2724,7 +2740,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     protected void updateMuteAndHoldStatusOfAllConferenceCalls(final Sid accountSid, final Sid conferenceSid, final boolean mute, final boolean hold) throws ParseException{
         if (conferenceSid != null){
-            CallDetailRecordFilter filter = new CallDetailRecordFilter(accountSid.toString(), null, null, "in-progress", null, null, null, conferenceSid.toString(), 50, 0);
+            CallDetailRecordFilter filter = new CallDetailRecordFilter(accountSid.toString(), null, null, null, "in-progress", null, null, null, conferenceSid.toString(), 50, 0);
             CallDetailRecordsDao callRecordsDAO = storage.getCallDetailRecordsDao();
             List<CallDetailRecord> conferenceCallRecords = callRecordsDAO.getCallDetailRecords(filter);
             if(conferenceCallRecords != null){
@@ -2833,7 +2849,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             if(logger.isInfoEnabled()) {
-                logger.info("At Finished state, state: " + fsm.state());
+                logger.info("At Finished state, state: " + fsm.state()+", liveCallModification: "+liveCallModification);
             }
             final Class<?> klass = message.getClass();
 
@@ -2856,7 +2872,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // Cleanup bridge
             if ((bridge != null) && (is(forking) || is(acquiringOutboundCallInfo) || is(bridged))) {
                 // Stop the bridge
-                bridge.tell(new StopBridge(), super.source);
+                bridge.tell(new StopBridge(liveCallModification), super.source);
                 bridge = null;
             }
             // Cleanup the outbound call if necessary.

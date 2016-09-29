@@ -19,9 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -33,7 +31,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -68,22 +67,7 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
         return putAccount(data, APPLICATION_XML_TYPE);
     }
 
-    @Path("/{accountSid}.json")
-    @Consumes(APPLICATION_FORM_URLENCODED)
-    @POST
-    public Response updateAccountAsJsonPost(@PathParam("accountSid") final String accountSid,
-            final MultivaluedMap<String, String> data) {
-        return updateAccount(accountSid, data, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/{accountSid}.json")
-    @Consumes(APPLICATION_FORM_URLENCODED)
-    @PUT
-    public Response updateAccountAsJsonPut(@PathParam("accountSid") final String accountSid,
-            final MultivaluedMap<String, String> data) {
-        return updateAccount(accountSid, data, APPLICATION_JSON_TYPE);
-    }
-
+    //The {accountSid} could be the email address of the account we need to update. Later we check if this is SID or EMAIL
     @Path("/{accountSid}")
     @Consumes(APPLICATION_FORM_URLENCODED)
     @POST
@@ -92,6 +76,7 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
         return updateAccount(accountSid, data, APPLICATION_XML_TYPE);
     }
 
+    //The {accountSid} could be the email address of the account we need to update. Later we check if this is SID or EMAIL
     @Path("/{accountSid}")
     @Consumes(APPLICATION_FORM_URLENCODED)
     @PUT

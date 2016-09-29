@@ -33,21 +33,47 @@ public final class SmsSessionRequest {
     private final String from;
     private final String to;
     private final String body;
+    private final Encoding encoding;
     private final SipServletRequest origRequest;
     private final ConcurrentHashMap<String, String> customHeaders;
 
+    public enum Encoding {
+        UCS_2("UCS-2"),
+        UTF_8("UTF-8"),
+        GSM("GSM");
+
+        private final String name;
+
+        Encoding(String name) {
+            this.name = name;
+        }
+
+        public String toString() {
+            return name;
+        }
+    }
+
     //TODO need to check which is using the SmsSessionRequest and modify accordingly to include or not the custom headers
-    public SmsSessionRequest(final String from, final String to, final String body, final SipServletRequest origRequest, final ConcurrentHashMap<String, String> customHeaders) {
+    public SmsSessionRequest(final String from, final String to, final String body, final Encoding encoding, final SipServletRequest origRequest, final ConcurrentHashMap<String, String> customHeaders) {
         super();
         this.from = from;
         this.to = to;
         this.origRequest = origRequest;
         this.body = body;
         this.customHeaders = customHeaders;
+        this.encoding = encoding;
+    }
+
+    public SmsSessionRequest(final String from, final String to, final String body, final SipServletRequest origRequest, final ConcurrentHashMap<String, String> customHeaders) {
+        this(from, to, body, Encoding.GSM, origRequest, customHeaders);
+    }
+
+    public SmsSessionRequest(final String from, final String to, final String body, final Encoding encoding, final ConcurrentHashMap<String, String> customHeaders) {
+        this(from, to, body, encoding, null, customHeaders);
     }
 
     public SmsSessionRequest(final String from, final String to, final String body, final ConcurrentHashMap<String, String> customHeaders) {
-        this(from, to, body, null, customHeaders);
+        this(from, to, body, Encoding.GSM, null, customHeaders);
     }
 
     public String from() {
@@ -60,6 +86,10 @@ public final class SmsSessionRequest {
 
     public String body() {
         return body;
+    }
+
+    public Encoding encoding() {
+        return encoding;
     }
 
     public SipServletRequest getOrigRequest() {
