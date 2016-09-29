@@ -90,7 +90,7 @@ public final class MmsConferenceController extends MediaServerController {
     //private final State creatingMediaGroup;
     private final State stopping;
     private final State stoppingCMRC;
-    private Boolean fail;
+    //private Boolean fail;
 
     // MGCP runtime stuff.
     private ActorRef mediaGateway;
@@ -156,7 +156,7 @@ public final class MmsConferenceController extends MediaServerController {
 
         // Finite State Machine
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
-        this.fail = Boolean.FALSE;
+        //this.fail = Boolean.FALSE;
 
         // MGCP runtime stuff
         //this.mediaGateway = mrb.getNextMediaServerKey();
@@ -529,7 +529,8 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            broadcast(new MediaServerConferenceControllerStateChanged(MediaServerControllerState.ACTIVE, conferenceSid));
+            ConferenceMediaResourceControllerStateChanged msg = (ConferenceMediaResourceControllerStateChanged)message;
+            broadcast(new MediaServerConferenceControllerStateChanged(MediaServerControllerState.ACTIVE, conferenceSid, msg.conferenceState()));
         }
     }
 

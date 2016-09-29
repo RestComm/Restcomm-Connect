@@ -189,7 +189,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     // The conferencing stuff
     private int maxParticipantLimit = 40;
     private ActorRef conference;
-    private String conferenceFriendlyName;
+    private Sid conferenceSid;
     private ConferenceInfo conferenceInfo;
     private ConferenceStateChanged.State conferenceState;
     private boolean muteCall;
@@ -214,7 +214,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     // Call bridging
     private final ActorRef bridgeManager;
     private ActorRef bridge;
-	private Sid conferenceSid;
 
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
@@ -1868,7 +1867,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final String name = child.text();
                     final StringBuilder buffer = new StringBuilder();
                     buffer.append(accountId.toString()).append(":").append(name);
-                    conferenceFriendlyName = name;
                     final CreateConference create = new CreateConference(buffer.toString(), callRecord.getSid());
                     conferenceManager.tell(create, source);
                 } else {
