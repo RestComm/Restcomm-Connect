@@ -870,10 +870,12 @@ public class ConferenceMediaResourceController extends UntypedActor{
         @Override
         public void execute(final Object message) throws Exception {
             logger.info("CMRC is in pre ACTIVE NOW...");
-            updateConferenceStatus("RUNNING");
             if(!isThisMaster){
                 // enter slave record in MRB resource table
                 addNewSlaveRecord();
+            }else{
+                //TODO later VI will update the status as per RCML
+                updateConferenceStatus("RUNNING_MODERATOR_ABSENT");
             }
             broadcast(new ConferenceMediaResourceControllerStateChanged(ConferenceMediaResourceControllerStateChanged.MediaServerControllerState.ACTIVE));
             fsm.transition(message, active);
