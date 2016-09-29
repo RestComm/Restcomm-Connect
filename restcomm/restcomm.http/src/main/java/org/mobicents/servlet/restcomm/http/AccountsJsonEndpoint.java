@@ -23,7 +23,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -55,11 +54,13 @@ public final class AccountsJsonEndpoint extends AccountsEndpoint {
         return getAccounts(APPLICATION_JSON_TYPE);
     }
 
+    /* Account removal is disabled. Accounts can only be closed through update method
     @Path("/{sid}.json")
     @DELETE
     public Response deleteAccountAsJson(@PathParam("sid") final String sid) {
         return deleteAccount(sid);
     }
+    */
 
     @Consumes(APPLICATION_FORM_URLENCODED)
     @POST
