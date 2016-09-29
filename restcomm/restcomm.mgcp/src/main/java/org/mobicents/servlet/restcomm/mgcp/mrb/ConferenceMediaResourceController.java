@@ -874,10 +874,10 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 // enter slave record in MRB resource table
                 addNewSlaveRecord();
             }else{
-                //TODO later VI will update the status as per RCML
+                // later Conference will update the status as per informed by VI as per RCML
                 updateConferenceStatus("RUNNING_MODERATOR_ABSENT");
             }
-            broadcast(new ConferenceMediaResourceControllerStateChanged(ConferenceMediaResourceControllerStateChanged.MediaServerControllerState.ACTIVE));
+            broadcast(new ConferenceMediaResourceControllerStateChanged(ConferenceMediaResourceControllerStateChanged.MediaServerControllerState.ACTIVE, cdr.getStatus()));
             fsm.transition(message, active);
         }
     }

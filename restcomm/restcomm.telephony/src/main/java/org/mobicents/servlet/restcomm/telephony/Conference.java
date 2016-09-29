@@ -243,7 +243,17 @@ public final class Conference extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            broadcast(new ConferenceStateChanged(name, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT));
+            //As MRB have generated Sid for this conference and saved in db.
+            MediaServerConferenceControllerStateChanged mediaServerConferenceControllerStateChanged = (MediaServerConferenceControllerStateChanged) message;
+            sid = mediaServerConferenceControllerStateChanged.conferenceSid();
+            String stateStr= mediaServerConferenceControllerStateChanged.conferenceState();
+
+            //this is to cover the scenario where initial state is not moderatorAbsent and maybe moderator is present on another node.
+            ConferenceStateChanged.State initialState = ConferenceStateChanged.translateState(stateStr, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT);
+            if(logger.isInfoEnabled()) {
+                logger.info("################################## Conference " + name + " has sid: "+sid +" initial state: "+initialState);
+            }
+            broadcast(new ConferenceStateChanged(name, initialState));
         }
     }
 
@@ -439,12 +449,6 @@ public final class Conference extends UntypedActor {
         switch (state) {
             case ACTIVE:
                 if (is(initializing)) {
-                    //As MRB have generated Sid for this conference and saved in db.
-                    MediaServerConferenceControllerStateChanged mediaServerConferenceControllerStateChanged = (MediaServerConferenceControllerStateChanged) message;
-                    sid = mediaServerConferenceControllerStateChanged.conferenceSid();
-                    if(logger.isInfoEnabled()) {
-                        logger.info("################################## Conference " + name + " has sid: "+sid);
-                    }
                     this.fsm.transition(message, waiting);
                 }
                 break;

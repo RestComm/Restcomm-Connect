@@ -32,18 +32,31 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 public final class MediaServerConferenceControllerStateChanged extends MediaServerControllerStateChanged{
 
     private final Sid conferenceSid;
+    private final String conferenceState;
 
-    public MediaServerConferenceControllerStateChanged(MediaServerControllerState state, MediaSessionInfo mediaSession, Sid conferenceSid) {
+    public MediaServerConferenceControllerStateChanged(final MediaServerControllerState state, MediaSessionInfo mediaSession, final Sid conferenceSid, final String conferenceState) {
         super(state, mediaSession);
         this.conferenceSid = conferenceSid;
+        this.conferenceState = conferenceState;
     }
 
-    public MediaServerConferenceControllerStateChanged(MediaServerControllerState state, Sid conferenceSid) {
-        super(state);
-        this.conferenceSid = conferenceSid;
+    public MediaServerConferenceControllerStateChanged(final MediaServerControllerState state, MediaSessionInfo mediaSession, final Sid conferenceSid) {
+        this(state, mediaSession, conferenceSid, null);
+    }
+
+    public MediaServerConferenceControllerStateChanged(final MediaServerControllerState state, final Sid conferenceSid, final String conferenceState) {
+        this(state, null, conferenceSid, conferenceState);
+    }
+
+    public MediaServerConferenceControllerStateChanged(final MediaServerControllerState state, final Sid conferenceSid) {
+        this(state, null, conferenceSid, null);
     }
 
     public Sid conferenceSid() {
         return conferenceSid;
+    }
+
+    public String conferenceState() {
+        return conferenceState;
     }
 }
