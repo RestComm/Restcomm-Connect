@@ -54,7 +54,7 @@
                 <td><div class="text-center">{{ transcription.duration ? transcription.duration : '?' }}s</div></td>
                 <td><div class="text-center"><a href="/restcomm/2012-04-24/Accounts/{{ transcription.account_sid }}/Transcriptions/{{ transcription.sid }}">{{ transcription.recording_sid }}</a></div></td>
                 <td><div class="text-center" title="{{ transcription.transcription_text }}">{{ transcription.transcription_text.length > 35 ? (transcription.transcription_text | limitTo:32) + '...' : transcription.transcription_text }}</div></td>
-                <!--<td><div class="text-center"><a href="" class="clean-link"><i class="fa fa-print" tooltip="Export"></i></a></div></td>-->
+                <!--<td><div class="text-center"><a href="" class="clean-link"><i class="fa fa-print" uib-tooltip="Export"></i></a></div></td>-->
             </tr>
             </tbody>
             <tfoot>
@@ -70,7 +70,8 @@
                 </form>
             </td>
             <td colspan="99">
-                <pagination class="pagination pagination-sm pull-right" total-items="transcriptionsLogsList.length" items-per-page="entryLimit" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>
+                <!--<pagination class="pagination pagination-sm pull-right" total-items="transcriptionsLogsList.length" items-per-page="entryLimit" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>-->
+                <uib-pagination class="pagination pagination-sm pull-right" total-items="filtered.length" items-per-page="entryLimit" data-boundary-links="true" data-current-page="currentPage"  ng-model="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
             </td>
             </tfoot>
         </table>

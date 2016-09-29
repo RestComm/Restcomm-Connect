@@ -11,7 +11,7 @@ Prerequisites
 1. Restcomm
 ^^^^^^^^^^^
 
-Here you have three alternatives:
+Here you have three alternativess:
 
 * Don't perform a local installation and use RaaS (RestComm as a Service).
 * Install the latest link:https://hub.docker.com/r/restcomm/restcomm/[Restcomm Docker image] locally (i.e. $ docker pull restcomm/restcomm to get it from docker hub). For more information please check link:http://www.telestax.com/rapid-webrtc-application-development-with-restcomm-and-docker/ and link:https://github.com/RestComm/Restcomm-Docker#restcomm-docker-image. If you aren't familiar with docker you can have a quick intro here https://www.docker.com/
@@ -22,12 +22,12 @@ Here you have three alternatives:
 
 Once you have installed the  Restcomm platform (or you are using RaaS) you are ready to start taking advantage of Restcomm's features from your Android Applications. Here's what you need to do:
 
-* Grab the latest Restcomm Client Android SDK release from GitHub: https://github.com/RestComm/restcomm-android-sdk/releases. At the time of this writing it is v1.0.0-beta3 and the bundle you need to download is restcomm-android-sdk-1.0.0-beta3.tar.bz2
+* Grab the latest Restcomm Client Android SDK release from GitHub: https://github.com/RestComm/restcomm-android-sdk/releases/tag/v1.0.0-BETA4. At the time of this writing it is v1.0.0-beta4 and the bundle you need to download is restcomm-android-sdk-1.0.0-beta4.tar.bz2
 * Extract it:
 +
 [source,theme:github,toolbar:2,lang:default,decode:true]
 ----
-$ tar -jxvf restcomm-android-sdk-1.0.0-beta3.tar.bz2
+$ tar -jxvf restcomm-android-sdk-1.0.0-beta4.tar.bz2
 ----
 
 [[use-the-existing-sample-androidapp-helloworld]]
@@ -47,42 +47,40 @@ public void onClick(View view) {
             Log.e(TAG, "Error: already connected");
             return;
         }
-    HashMap<String, Object> connectParams = new HashMap<String, Object>();
-    // CHANGEME: update the IP address to your Restcomm instance
-    connectParams.put("username", "sip:+1235@cloud.restcomm.com:5060");
-    connectParams.put("video-enabled", true);
-    connection = device.connect(connectParams, this);
-    if (connection == null) {
-        Log.e(TAG, "Error: error connecting");
-        return;
+        connectParams = new HashMap<String, Object>();
+        // CHANGEME: You can update the IP address to your Restcomm instance. Also, you can update the number
+        // from '1235' to any Restcomm application you wish to reach
+        connectParams.put(RCConnection.ParameterKeys.CONNECTION_PEER, "sip:+1235@cloud.restcomm.com");
+        connectParams.put(RCConnection.ParameterKeys.CONNECTION_VIDEO_ENABLED, true);
+        connectParams.put(RCConnection.ParameterKeys.CONNECTION_LOCAL_VIDEO, findViewById(R.id.local_video_layout));
+        connectParams.put(RCConnection.ParameterKeys.CONNECTION_REMOTE_VIDEO, findViewById(R.id.remote_video_layout));
+        
+        handlePermissions(true);
     }
     ....
 }
 ----
-* Build and run Hello World (prefer a real device as the simulator tends to be slow on the media processing)
+* Build and run Hello World (prefer a real device as the simulator tends to be slow on the media processing and hasn't been tested)
 * Once the sample App starts up you can press Dial and behind the scenes number '1235' will be called on the Restcomm instance and you will hear the associated announcement.
 * From then on, you can try more fun experiments, such as calling a different Restcomm number by changing the whole URI in the code from sip:1235@<ip address>:5060 to for example sip:1311@<ip address>:5060 which is the default Restcomm Application for conferencing:
 +
 [source,theme:github,toolbar:1,lang:objc,mark:11,decode:true]
 ----
-public void onClick(View view) 
-{
+public void onClick(View view) {
     if (view.getId() == R.id.button_dial) {
         if (connection != null) {
             Log.e(TAG, "Error: already connected");
             return;
         }
-        HashMap<String, Object> connectParams = new HashMap<String, Object>();
-        // CHANGEME: update the IP address to your Restcomm instance. Also, you can update the number 
+        connectParams = new HashMap<String, Object>();
+        // CHANGEME: You can update the IP address to your Restcomm instance. Also, you can update the number
         // from '1235' to any Restcomm application you wish to reach
-        connectParams.put("username", "sip:+1311@cloud.restcomm.com:5060");
-        connectParams.put("video-enabled", true);
-
-        connection = device.connect(connectParams, this);
-        if (connection == null) {
-            Log.e(TAG, "Error: error connecting");
-            return;
-        }
+        connectParams.put(RCConnection.ParameterKeys.CONNECTION_PEER, "sip:+1311@cloud.restcomm.com:5060");
+        connectParams.put(RCConnection.ParameterKeys.CONNECTION_VIDEO_ENABLED, true);
+        connectParams.put(RCConnection.ParameterKeys.CONNECTION_LOCAL_VIDEO, findViewById(R.id.local_video_layout));
+        connectParams.put(RCConnection.ParameterKeys.CONNECTION_REMOTE_VIDEO, findViewById(R.id.remote_video_layout));
+        
+        handlePermissions(true);
     }
     ....
 }
@@ -122,154 +120,160 @@ image:./images/customize-activity.png[Customize the Activity,width=1030,height=6
 [Android Studio Designer]
 image:./images/Screen-Shot-2015-06-26-at-1.20.07-PM.png[Android Studio Designer,width=1030,height=654]
 +
-* Edit **settings.gradle** so that the Android SDK Java modules are included in the project but without copying the module projects anew (which is what Android Studio does by default when importing modules). This is how it should look after you update it (remember that here we assume that we are introducing this demo project inside the Examples in the SDK directory tree, if you don't want to do that then you need to update the 'project' setting for 'restcomm.android.client.sdk' module and set the full path to it):
+* Edit **settings.gradle** so that the Android SDK Java modules are included in the project but without copying the module projects anew (which is what Android Studio does by default when importing modules). This is how it should look after you update it (remember that here we assume that we are introducing this demo project inside the Examples in the SDK directory tree, if you don't want to do that then you need to update the 'project' setting for 'restcomm.android.sdk' module and set the full path to it):
 +
 [source,theme:github,lang:default,decode:true]
 ----
 include ':app'
-include ':restcomm.android.client.sdk'
-project(':restcomm.android.client.sdk').projectDir=new File('../../restcomm.android.client.sdk')
+include ':restcomm.android.sdk'
+project(':restcomm.android.sdk').projectDir=new File('../../restcomm.android.sdk')
 ----
-* Edit the 'app' module settings and add restcom.android.client.sdk as a dependency from View > Open Module Settings:
+* Edit the 'app' module settings and add restcom.android.sdk as a dependency from View > Open Module Settings:
 +
 [Update 'app' module settings]
 image:./images/updated-module-settings.png[Update 'app' module settings,width=821,height=683]
 +
 * Ok, now that we have all the settings ready the App should be able to build and run but with no actual functionality yet. For that we need to take advantage of the SDK facilities. So first you need to import required Android Client packages and make your Activity the listener of Android Client events (such as incoming calls and messages) as well as OnClick events for the buttons:
 +
-[source,theme:github,toolbar:1,lang:default,decode:true]
+[source,java,theme:github,toolbar:1,lang:default,decode:true]
 ----
-import org.mobicents.restcomm.android.client.sdk.RCClient;
-import org.mobicents.restcomm.android.client.sdk.RCConnection;
-import org.mobicents.restcomm.android.client.sdk.RCConnectionListener;
-import org.mobicents.restcomm.android.client.sdk.RCDevice;
-import org.mobicents.restcomm.android.client.sdk.RCDeviceListener;
-import org.mobicents.restcomm.android.client.sdk.RCPresenceEvent;
+import org.restcomm.android.sdk.RCClient;
+import org.restcomm.android.sdk.RCConnection;
+import org.restcomm.android.sdk.RCConnectionListener;
+import org.restcomm.android.sdk.RCDevice;
+import org.restcomm.android.sdk.RCDeviceListener;
+import org.restcomm.android.sdk.RCPresenceEvent;
 
-public class MainActivity extends Activity implements RCDeviceListener, RCConnectionListener, OnClickListener {
+public class MainActivity extends Activity implements RCDeviceListener, RCConnectionListener, OnClickListener, ServiceConnection {
 ...
 ----
 * Once you do that you 'll have to implement the Android Client listener interface methods with empty stubs so that Java doesn't complain. Notice that for this example we are keeping things simple and not handling incoming events, but you could add that later. An exception are the webrtc video events (i.e. onReceiveLocal/RemoteVideo), which need to be there so that the video tracks can be added to our video view.
 +
-[source,theme:github,toolbar:1,lang:default,decode:true]
+[source,java,theme:github,toolbar:1,lang:default,decode:true]
 ----
-    // RCDevice Listeners
-    public void onStartListening(RCDevice device)
-    {
-    }
+// RCDevice Listeners
+public void onStartListening(RCDevice device, RCDeviceListener.RCConnectivityStatus connectivityStatus)
+{
 
-    public void onStopListening(RCDevice device)
-    {
-    }
+}
 
-    public void onStopListening(RCDevice device, int errorCode, String errorText)
-    {
-    }
+public void onStopListening(RCDevice device)
+{
 
-    public boolean receivePresenceEvents(RCDevice device)
-    {
-        return false;
-    }
+}
 
-    public void onPresenceChanged(RCDevice device, RCPresenceEvent presenceEvent)
-    {
-    }
+public void onStopListening(RCDevice device, int errorCode, String errorText)
+{
+   Log.i(TAG, errorText);
+}
 
-    public void onIncomingConnection(RCDevice device, RCConnection connection)
-    {
-    }
+public boolean receivePresenceEvents(RCDevice device)
+{
+   return false;
+}
 
-    public void onIncomingMessage(RCDevice device, String message, HashMap<String, String> parameters)
-    {
-    }
+public void onPresenceChanged(RCDevice device, RCPresenceEvent presenceEvent)
+{
 
-    // RCConnection Listeners
-    public void onConnecting(RCConnection connection)
-    {
-    }
+}
 
-    public void onConnected(RCConnection connection)
-    {
-    }
+public void onIncomingConnection(RCDevice device, RCConnection connection)
+{
+}
 
-    public void onDisconnected(RCConnection connection)
-    {
-    }
-    
-    public void onDisconnected(RCConnection connection, int errorCode, String errorText) 
-    {
-    }
+public void onIncomingMessage(RCDevice device, String message, HashMap<String, String> parameters)
+{
+}
 
-    public void onCancelled(RCConnection connection) 
-    {
-    }
+public void onConnectivityUpdate(RCDevice device, RCConnectivityStatus connectivityStatus)
+{
 
-    public void onDeclined(RCConnection connection) 
-    {
-    }
-    public void onReceiveLocalVideo(RCConnection connection, VideoTrack videoTrack) 
-    {
-        if (videoTrack != null) {
-            //show media on screen
-            videoTrack.setEnabled(true);
-            videoTrack.addRenderer(new VideoRenderer(localRender));
-        }
-    }
+}
 
-    public void onReceiveRemoteVideo(RCConnection connection, VideoTrack videoTrack) 
-    {
-        if (videoTrack != null) {
-            //show media on screen
-            videoTrack.setEnabled(true);
-            videoTrack.addRenderer(new VideoRenderer(remoteRender));
+// RCConnection Listeners
+public void onConnecting(RCConnection connection)
+{
+}
 
-            VideoRendererGui.update(remoteRender,
-                    REMOTE_X, REMOTE_Y,
-                    REMOTE_WIDTH, REMOTE_HEIGHT, scalingType, false);
-            VideoRendererGui.update(localRender,
-                    LOCAL_X_CONNECTED, LOCAL_Y_CONNECTED,
-                    LOCAL_WIDTH_CONNECTED, LOCAL_HEIGHT_CONNECTED,
-                    VideoRendererGui.ScalingType.SCALE_ASPECT_FIT, true);
-        }
-    }
+public void onConnected(RCConnection connection, HashMap<String, String> customHeaders) {
+}
+
+public void onDisconnected(RCConnection connection)
+{
+   Log.i(TAG, "RCConnection disconnected");
+   this.connection = null;
+   pendingConnection = null;
+}
+
+public void onDisconnected(RCConnection connection, int errorCode, String errorText)
+{
+
+   Log.i(TAG, errorText);
+   this.connection = null;
+   pendingConnection = null;
+}
+
+public void onCancelled(RCConnection connection)
+{
+   Log.i(TAG, "RCConnection cancelled");
+   this.connection = null;
+   pendingConnection = null;
+}
+
+public void onDeclined(RCConnection connection)
+{
+   Log.i(TAG, "RCConnection declined");
+   this.connection = null;
+   pendingConnection = null;
+}
+
+public void onLocalVideo(RCConnection connection)
+{
+}
+
+public void onRemoteVideo(RCConnection connection)
+{
+}
+
+public void onError(RCConnection connection, int errorCode, String errorText)
+{
+}
+
+public void onDigitSent(RCConnection connection, int statusCode, String statusText)
+{
+}
+
+public void onMessageSent(RCDevice device, int statusCode, String statusText)
+{
+}
+
+public void onReleased(RCDevice device, int statusCode, String statusText)
+{
+}
+
+public void onInitialized(RCDevice device, RCDeviceListener.RCConnectivityStatus connectivityStatus, int statusCode, String statusText)
+{
+}
+
+public void onInitializationError(int errorCode, String errorText)
+{
+}
 ----
 * Add the needed Android Client objects (i.e. RCDevice and RCConnection) in the Activity class as well as some convenience variables:
 +
-[source,theme:github,toolbar:1,lang:default,decode:true]
+[source,java,theme:github,toolbar:1,lang:default,decode:true]
 ----
 public class MainActivity extends Activity implements RCDeviceListener, RCConnectionListener, View.OnClickListener {
     private RCDevice device;
     private RCConnection connection, pendingConnection;
     private HashMap<String, String> params;
     private static final String TAG = "MainActivity";
-
-    // webrtc video related stuff (these could be omitted if we are not interested in video)
-    private GLSurfaceView videoView;
-    private VideoRenderer.Callbacks localRender = null;
-    private VideoRenderer.Callbacks remoteRender = null;
-    private boolean videoReady = false;
-
-    // Local preview screen position before call is connected.
-    private static final int LOCAL_X_CONNECTING = 0;
-    private static final int LOCAL_Y_CONNECTING = 0;
-    private static final int LOCAL_WIDTH_CONNECTING = 100;
-    private static final int LOCAL_HEIGHT_CONNECTING = 100;
-    // Local preview screen position after call is connected.
-    private static final int LOCAL_X_CONNECTED = 72;
-    private static final int LOCAL_Y_CONNECTED = 2;
-    private static final int LOCAL_WIDTH_CONNECTED = 25;
-    private static final int LOCAL_HEIGHT_CONNECTED = 25;
-    // Remote video screen position
-    private static final int REMOTE_X = 0;
-    private static final int REMOTE_Y = 0;
-    private static final int REMOTE_WIDTH = 100;
-    private static final int REMOTE_HEIGHT = 100;
-    private VideoRendererGui.ScalingType scalingType;
+    boolean serviceBound = false;
     ....
 ----
 * In order to make the buttons we created available to the App and also initialise the Android Client you need to update the onCreate() method of your activity as follows:
 +
-[source,theme:github,toolbar:1,lang:java,decode:true]
+[source,java,theme:github,toolbar:1,lang:java,decode:true,linenums]
 ----
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -294,78 +298,162 @@ protected void onCreate(Bundle savedInstanceState) {
     btnHangup = (Button)findViewById(R.id.button_hangup);
     btnHangup.setOnClickListener(this);
 
-    RCClient.initialize(getApplicationContext(), new RCClient.RCInitListener() {
-        public void onInitialized() {
-            Log.i(TAG, "RCClient initialized");
-        }
+}
+----
+* Handle Android Service callbacks to initialized the SDK facilities. Remember that the SDK is wrapped inside and Android Service to be able to linger on even after Activities have been sent in the background or have been destroyed.
++
+[source,java,theme:github,toolbar:1,lang:java,decode:true]
+----
+// Callbacks for service binding, passed to bindService()
+@Override
+public void onServiceConnected(ComponentName className, IBinder service)
+{
+   Log.i(TAG, "%% onServiceConnected");
+   // We've bound to LocalService, cast the IBinder and get LocalService instance
+   RCDevice.RCDeviceBinder binder = (RCDevice.RCDeviceBinder) service;
+   device = binder.getService();
 
-        public void onError(Exception exception) {
-            Log.e(TAG, "RCClient initialization error");
-        }
-    });
+   Intent intent = new Intent(getApplicationContext(), MainActivity.class);
 
-    params = new HashMap<String, Object>();
-    // update the IP address to your Restcomm instance like sip:10.0.0.1:5060. Here we are leaving it empty for registrar-less functionality
-    params.put("pref_proxy_domain", "");
-    params.put("pref_sip_user", "bob");
-    params.put("pref_sip_password", "1234");
-    device = RCClient.createDevice(params, this);
-    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-    // we don't have a separate activity for the calls, so use the same intent both for calls and messages
-    device.setPendingIntents(intent, intent);
+   HashMap<String, Object> params = new HashMap<String, Object>();
+   // we don't have a separate activity for the calls and messages, so let's use the same intent both for calls and messages
+   params.put(RCDevice.ParameterKeys.INTENT_INCOMING_CALL, intent);
+   params.put(RCDevice.ParameterKeys.INTENT_INCOMING_MESSAGE, intent);
+   params.put(RCDevice.ParameterKeys.SIGNALING_DOMAIN, "");
+   params.put(RCDevice.ParameterKeys.SIGNALING_USERNAME, "android-sdk");
+   params.put(RCDevice.ParameterKeys.SIGNALING_PASSWORD, "1234");
+   params.put(RCDevice.ParameterKeys.MEDIA_ICE_URL, "https://service.xirsys.com/ice");
+   params.put(RCDevice.ParameterKeys.MEDIA_ICE_USERNAME, "atsakiridis");
+   params.put(RCDevice.ParameterKeys.MEDIA_ICE_PASSWORD, "4e89a09e-bf6f-11e5-a15c-69ffdcc2b8a7");
+   params.put(RCDevice.ParameterKeys.MEDIA_TURN_ENABLED, true);
+   //params.put(RCDevice.ParameterKeys.SIGNALING_SECURE_ENABLED, prefs.getBoolean(RCDevice.ParameterKeys.SIGNALING_SECURE_ENABLED, false));
 
-    // Setup video stuff (can be omitted if we 're not interested in video)
-    scalingType = VideoRendererGui.ScalingType.SCALE_ASPECT_FILL;
-    videoView = (GLSurfaceView) findViewById(R.id.glview_call);
-    // Create video renderers.
-    VideoRendererGui.setView(videoView, new Runnable() {
-        @Override
-        public void run() {
-            videoContextReady();
-        }
-    });
-    remoteRender = VideoRendererGui.create(
-            REMOTE_X, REMOTE_Y,
-            REMOTE_WIDTH, REMOTE_HEIGHT, scalingType, false);
-    localRender = VideoRendererGui.create(
-            LOCAL_X_CONNECTING, LOCAL_Y_CONNECTING,
-            LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING, scalingType, true);
+   if (!device.isInitialized()) {
+      device.initialize(getApplicationContext(), params, this);
+      device.setLogLevel(Log.VERBOSE);
+   }
+
+   serviceBound = true;
+}
+
+@Override
+public void onServiceDisconnected(ComponentName arg0)
+{
+   Log.i(TAG, "%% onServiceDisconnected");
+   serviceBound = false;
 }
 ----
 +
-****Lines 3-14**: **setup view for webrtc video **Lines 18-22**: retrieve the UI elements for later *Lines 24-44:* initialize the Restcomm Android Client with the desired parameters **Lines 44-59:** retrieve the video view (a custom GLSurfaceView) and create 2 renderers: one for remote and one for local video (this is where video will be rendered when ready)
 * Update the onClick Activity method to respond to button events -this is where the ids come into play that we updated back when we added the buttons in the Designer:
 +
-[source,theme:github,toolbar:1,lang:java,decode:true]
+[source,java,theme:github,toolbar:1,lang:java,decode:true]
 ----
-    public void onClick(View view) {
-        if (view.getId() == R.id.button_dial) {
-            if (connection != null) {
-                Log.e(TAG, "Error: already connected");
-                return;
-            }
-            HashMap<String, String> connectParams = new HashMap<String, String>();
-            // CHANGEME: update the IP address to your Restcomm instance. Also, you can update the number
-            // from '1235' to any Restcomm application you wish to reach
-            connectParams.put("username", "sip:+1235@cloud.restcomm.com:5060");
-            connectParams.put("video-enabled", true);
-            connection = device.connect(connectParams, this);
-            if (connection == null) {
-                Log.e(TAG, "Error: error connecting");
-                return;
-            }
-            //device.updateParams(params);
-        } else if (view.getId() == R.id.button_hangup) {
-            if (connection == null) {
-                Log.e(TAG, "Error: not connected");
-            }
-            else {
-                connection.disconnect();
-                connection = null;
-                pendingConnection = null;
-            }
-        }
-    }
+public void onClick(View view)
+{
+   if (view.getId() == R.id.button_dial) {
+      if (connection != null) {
+         Log.e(TAG, "Error: already connected");
+         return;
+      }
+
+      connectParams = new HashMap<String, Object>();
+      // CHANGEME: You can update the IP address to your Restcomm instance. Also, you can update the number
+      // from '1235' to any Restcomm application you wish to reach
+      connectParams.put(RCConnection.ParameterKeys.CONNECTION_PEER, "sip:+1235@cloud.restcomm.com");
+      connectParams.put(RCConnection.ParameterKeys.CONNECTION_VIDEO_ENABLED, true);
+      connectParams.put(RCConnection.ParameterKeys.CONNECTION_LOCAL_VIDEO, findViewById(R.id.local_video_layout));
+      connectParams.put(RCConnection.ParameterKeys.CONNECTION_REMOTE_VIDEO, findViewById(R.id.remote_video_layout));
+
+      handlePermissions(true);
+   }
+   else if (view.getId() == R.id.button_hangup) {
+      if (connection == null) {
+         Log.e(TAG, "Error: not connected");
+      }
+      else {
+         connection.disconnect();
+         connection = null;
+         pendingConnection = null;
+      }
+   }
+}
+----
+* Provide handling for runtime Android permissions (i.e. API level 23). We need permission for audio, calling and video (if the call is a video call):
++
+[source,java,theme:github,toolbar:1,lang:java,decode:true]
+----
+// Handle android permissions needed for Marshmallow (API 23) devices or later
+private boolean handlePermissions(boolean isVideo)
+{
+   ArrayList<String> permissions = new ArrayList<>(Arrays.asList(new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.USE_SIP}));
+   if (isVideo) {
+      // Only add CAMERA permission if this is a video call
+      permissions.add(Manifest.permission.CAMERA);
+   }
+
+   if (!havePermissions(permissions)) {
+      // Dynamic permissions where introduced in M
+      // PERMISSION_REQUEST_DANGEROUS is an app-defined int constant. The callback method (i.e. onRequestPermissionsResult) gets the result of the request.
+      ActivityCompat.requestPermissions(this, permissions.toArray(new String[permissions.size()]), PERMISSION_REQUEST_DANGEROUS);
+
+      return false;
+   }
+
+   resumeCall();
+
+   return true;
+}
+
+// Checks if user has given 'permissions'. If it has them all, it returns true. If not it returns false and modifies 'permissions' to keep only
+// the permission that got rejected, so that they can be passed later into requestPermissions()
+private boolean havePermissions(ArrayList<String> permissions)
+{
+   boolean allgranted = true;
+   ListIterator<String> it = permissions.listIterator();
+   while (it.hasNext()) {
+      if (ActivityCompat.checkSelfPermission(this, it.next()) != PackageManager.PERMISSION_GRANTED) {
+         allgranted = false;
+      }
+      else {
+         // permission granted, remove it from permissions
+         it.remove();
+      }
+   }
+   return allgranted;
+}
+
+@Override
+public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+   super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+   switch (requestCode) {
+      case PERMISSION_REQUEST_DANGEROUS: {
+         // If request is cancelled, the result arrays are empty.
+         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            // permission was granted, yay! Do the contacts-related task you need to do.
+            resumeCall();
+
+         } else {
+            // permission denied, boo! Disable the functionality that depends on this permission.
+            Log.e(TAG, "Error: Permission(s) denied; aborting call");
+         }
+         return;
+      }
+
+      // other 'case' lines to check for other permissions this app might request
+   }
+}
+
+// Resume call after permissions are checked
+private void resumeCall()
+{
+   if (connectParams != null) {
+      connection = device.connect(connectParams, this);
+      if (connection == null) {
+         Log.e(TAG, "Error: error connecting");
+         return;
+      }
+   }
+}
 ----
 * You are now ready to build and run your project! Press the Play button in Android Studio and wait for the App to load. It should look like this: 
 +

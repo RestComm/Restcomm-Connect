@@ -190,6 +190,12 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         final String sender = data.getFirst("From");
         final String recipient = data.getFirst("To");
         final String body = data.getFirst("Body");
+        final SmsSessionRequest.Encoding encoding;
+        if (!data.containsKey("Encoding")) {
+            encoding = SmsSessionRequest.Encoding.GSM;
+        } else {
+            encoding = SmsSessionRequest.Encoding.valueOf(data.getFirst("Encoding").replace('-', '_'));
+        }
         ConcurrentHashMap<String, String> customRestOutgoingHeaderMap = new ConcurrentHashMap<String, String>();
         Iterator<String> iter = data.keySet().iterator();
         while (iter.hasNext()) {
@@ -215,7 +221,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
                     final ActorRef observer = observer();
                     session.tell(new Observe(observer), observer);
                     session.tell(new SmsSessionAttribute("record", record), null);
-                    final SmsSessionRequest request = new SmsSessionRequest(sender, recipient, body, customRestOutgoingHeaderMap);
+                    final SmsSessionRequest request = new SmsSessionRequest(sender, recipient, body, encoding, customRestOutgoingHeaderMap);
                     session.tell(request, null);
                     if (APPLICATION_JSON_TYPE == responseType) {
                         return ok(gson.toJson(record), APPLICATION_JSON).build();

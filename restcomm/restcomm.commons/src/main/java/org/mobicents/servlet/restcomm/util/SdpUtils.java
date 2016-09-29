@@ -123,4 +123,16 @@ public class SdpUtils {
         }
     }
 
+    public static boolean isWebRTCSDP(final String contentType, final byte[] data) throws SdpParseException {
+        boolean isWebRTC = false;
+        if (contentType.equalsIgnoreCase("application/sdp")) {
+            String sdp = getSdp(contentType, data);
+            if (sdp != null && sdp.contains("RTP/SAVP") || sdp.contains("rtp/savp")
+                    || sdp.contains("RTP/SAVPF") || sdp.contains("rtp/savpf")) {
+                isWebRTC = true;
+            }
+        }
+        return isWebRTC;
+    }
+
 }

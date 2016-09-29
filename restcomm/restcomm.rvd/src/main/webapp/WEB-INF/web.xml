@@ -62,25 +62,13 @@
 		<param-value>false</param-value>
 	</context-param>
 
-<!-- 
-  <security-constraint>
-     <web-resource-collection>
-       <web-resource-name>Test Resource</web-resource-name>
-       <url-pattern>/services/projects/*</url-pattern>
-       <http-method>GET</http-method>
-     </web-resource-collection>
-     <auth-constraint>
-       <role-name>admin</role-name>
-     </auth-constraint>
-  </security-constraint>
-  <login-config>
-     <auth-method>BASIC</auth-method>
-     <realm-name>jaxrs_server</realm-name>
-  </login-config>
-  <security-role>
-     <role-name>admin</role-name>
-  </security-role>
- -->
-
-
+	<!--security-constraint>
+    <web-resource-collection>
+        <web-resource-name>RestComm</web-resource-name>
+        <url-pattern>/*</url-pattern>
+    </web-resource-collection>
+    <user-data-constraint>
+        <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+    </user-data-constraint>
+    </security-constraint-->
 </web-app>

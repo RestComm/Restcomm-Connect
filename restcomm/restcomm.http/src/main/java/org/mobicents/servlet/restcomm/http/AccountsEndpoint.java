@@ -287,39 +287,73 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     private Account update(final Account account, final MultivaluedMap<String, String> data) {
         Account result = account;
-        if (data.containsKey("FriendlyName")) {
-            result = result.setFriendlyName(data.getFirst("FriendlyName"));
-        }
-        if (data.containsKey("Status")) {
-            result = result.setStatus(Account.Status.getValueOf(data.getFirst("Status")));
-        } else {
-            result = result.setStatus(Account.Status.ACTIVE);
-        }
-        if (data.containsKey("Role")) {
-            Account operatingAccount = userIdentityContext.getEffectiveAccount();
-            // Only allow role change for administrators. Multitenancy checks will take care of restricting the modification scope to sub-accounts.
-            if ( userIdentityContext.getEffectiveAccountRoles().contains(getAdministratorRole())) {
-                result = result.setRole(data.getFirst("Role"));
-            } else
-                throw new AuthorizationException();
-        }
-        if (data.containsKey("Password")) {
-            final String hash = new Md5Hash(data.getFirst("Password")).toString();
-            result = result.setAuthToken(hash);
-        }
-        if (data.containsKey("Auth_Token")) {
-            result = result.setAuthToken(data.getFirst("Auth_Token"));
+        boolean isPasswordReset = false;
+        try {
+            if (data.containsKey("FriendlyName")) {
+                result = result.setFriendlyName(data.getFirst("FriendlyName"));
+            }
+            if (data.containsKey("Password")) {
+                // if this is a reset-password operation, we also need to set the account status to active
+                if (account.getStatus() == Account.Status.UNINITIALIZED)
+                    isPasswordReset = true;
+
+                final String hash = new Md5Hash(data.getFirst("Password")).toString();
+                result = result.setAuthToken(hash);
+            }
+            if (data.containsKey("Auth_Token")) {
+                result = result.setAuthToken(data.getFirst("Auth_Token"));
+                // if this is a reset-password operation, we also need to set the account status to active
+                if (account.getStatus() == Account.Status.UNINITIALIZED)
+                    isPasswordReset = true;
+            }
+            if (data.containsKey("Status")) {
+                result = result.setStatus(Account.Status.getValueOf(data.getFirst("Status").toLowerCase()));
+            } else {
+                // if this is a password reset operation we need to active the account too (in case there is no explicity Status passed of course)
+                if (isPasswordReset)
+                    result = result.setStatus(Account.Status.ACTIVE);
+            }
+            if (data.containsKey("Role")) {
+                Account operatingAccount = userIdentityContext.getEffectiveAccount();
+                // Only allow role change for administrators. Multitenancy checks will take care of restricting the modification scope to sub-accounts.
+                if (userIdentityContext.getEffectiveAccountRoles().contains(getAdministratorRole())) {
+                    result = result.setRole(data.getFirst("Role"));
+                } else
+                    throw new AuthorizationException();
+            }
+        } catch (AuthorizationException e) {
+            // authorization exceptions should reach outer layers and result in 403
+            throw e;
+        } catch (Exception e) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Exception during Account update: "+e.getStackTrace());
+            }
         }
         return result;
     }
 
-    protected Response updateAccount(final String accountSid, final MultivaluedMap<String, String> data,
+    protected Response updateAccount(final String identifier, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
         // First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO
         // operations
         checkPermission("RestComm:Modify:Accounts");
-        final Sid sid = new Sid(accountSid);
-        Account account = accountsDao.getAccount(sid);
+        Sid sid = null;
+        Account account = null;
+        try {
+            sid = new Sid(identifier);
+            account = accountsDao.getAccount(sid);
+        } catch (Exception e) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("At update account, exception trying to get SID. Seems we have email as identifier");
+            }
+        }
+        if (account == null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("At update account, trying to get account using email as identifier");
+            }
+            account = accountsDao.getAccount(identifier);
+        }
+
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {

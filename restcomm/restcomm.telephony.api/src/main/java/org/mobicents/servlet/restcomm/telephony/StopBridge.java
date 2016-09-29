@@ -30,8 +30,13 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 @Immutable
 public final class StopBridge {
 
-    public StopBridge() {
-        super();
+    private boolean liveCallModification;
+
+    public StopBridge(final boolean liveCallModification) {
+        this.liveCallModification = liveCallModification;
     }
 
+    public boolean isLiveCallModification() {
+        return liveCallModification;
+    }
 }

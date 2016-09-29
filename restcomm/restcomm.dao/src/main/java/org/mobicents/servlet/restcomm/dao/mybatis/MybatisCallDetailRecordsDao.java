@@ -47,6 +47,8 @@ import java.util.Map;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
@@ -198,9 +200,11 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
 
     @Override
     public Double getAverageCallDurationLast24Hours(Sid instanceId) throws ParseException {
-        SimpleDateFormat formatter= new SimpleDateFormat("YYYY-MM-dd");
-        Date today = formatter.parse(DateTime.now().toString());
+        DateTime now = DateTime.now();
+        DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd");
+        SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd");
 
+        Date today = formatter.parse(now.toString(fmt));
 
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("instanceid", instanceId.toString());
@@ -217,7 +221,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
 
     @Override
     public Double getAverageCallDurationLastHour(Sid instanceId) throws ParseException {
-        SimpleDateFormat formatter= new SimpleDateFormat("YYYY-MM-dd HH:00:00");
+        SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd HH:00:00");
         String hour = formatter.format(Calendar.getInstance().getTime());
         Date lastHour = formatter.parse(hour);
 

@@ -81,7 +81,7 @@ public class RestcommAccountsTool {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
-        String url = getAccountsUrl(deploymentUrl,true) + "/"+accountSid+".json";
+        String url = getAccountsUrl(deploymentUrl,false) + "/"+accountSid;
 
         WebResource webResource = jerseyClient.resource(url);
 

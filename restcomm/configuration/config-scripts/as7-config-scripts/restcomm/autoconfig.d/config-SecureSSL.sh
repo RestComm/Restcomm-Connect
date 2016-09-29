@@ -18,7 +18,7 @@ NoSslRestConf(){
 	sed -e "s/<connector name=\"https\" \(.*\)>/<\!--connector name=\"https\" \1>/" \
 	-e "s/<\/connector>/<\/connector-->/" $FILE > $FILE.bak
 	mv $FILE.bak $FILE
-	sed -e "s/<\!--connector name=\"http\" \(.*\)-->/<connector name=\"http\" \1\/>/" $FILE > $FILE.bak
+	sed -e "s/<.*connector name=\"http\".*>/<connector name=\"http\" protocol=\"HTTP\/1.1\" scheme=\"http\" socket-binding=\"http\"\/> /" $FILE > $FILE.bak
 	mv $FILE.bak $FILE
 }
 
@@ -28,14 +28,57 @@ NoSslRestConf(){
 SslRestCommConf(){
 	FILE=$RESTCOMM_CONF/standalone-sip.xml
 	echo "Will properly configure HTTPS Connector ";
+	  FILERESTCOMMXML=$BASEDIR/standalone/deployments/restcomm.war/WEB-INF/web.xml
+      FILEMANAGERXML=$BASEDIR/standalone/deployments/restcomm-management.war/WEB-INF/web.xml
+      FILERVDXML=$BASEDIR/standalone/deployments/restcomm-rvd.war/WEB-INF/web.xml
+      FILEOLYMPUSXML=$BASEDIR/standalone/deployments/olympus.war/WEB-INF/web.xml
 	#Disable HTTP if set to true.
 	if [[ "$DISABLE_HTTP" == "true" || "$DISABLE_HTTP" == "TRUE" ]]; then
 		echo "DISABLE_HTTP is '$DISABLE_HTTP'. Will disable HTTP Connector"
-		sed -e "s/<connector name=\"http\" \(.*\)\/>/<\!--connector name=\"http\" \1-->/" $FILE > $FILE.bak
+		sed -e "s/<.*connector name=\"http\".*>/<\!--connector name=\"http\" protocol=\"HTTP\/1.1\" scheme=\"http\" socket-binding=\"http\"-->/" $FILE > $FILE.bak
 		mv $FILE.bak $FILE
+
+		grep -q '<security-constraint>' $FILERESTCOMMXML &&  sed -e "s/<security-constraint>/<!--security-constraint>/"  $FILERESTCOMMXML > $FILERESTCOMMXML.bak \
+        &&  sed -e "s/<\/security-constraint>/<\/security-constraint-->/"  $FILERESTCOMMXML.bak > $FILERESTCOMMXML
+        grep -qs '<security-constraint>' $FILEMANAGERXML && sed -e "s/<security-constraint>/<!--security-constraint>/"  $FILEMANAGERXML > $FILEMANAGERXML.bak \
+        && sed -e "s/<\/security-constraint>/<\/security-constraint-->/"  $FILEMANAGERXML.bak > $FILEMANAGERXML
+        grep -q '<security-constraint>' $FILERVDXML && sed -e "s/<security-constraint>/<!--security-constraint>/"  $FILERVDXML > $FILERVDXML.bak \
+        && sed -e "s/<\/security-constraint>/<\/security-constraint-->/"  $FILERVDXML.bak > $FILERVDXML
+        grep -q '<security-constraint>' $FILEOLYMPUSXML && sed -e "s/<security-constraint>/<!--security-constraint>/"  $FILEOLYMPUSXML > $FILEOLYMPUSXML.bak \
+        && sed -e "s/<\/security-constraint>/<\/security-constraint-->/"  $FILEOLYMPUSXML.bak > $FILEOLYMPUSXML
+
+	elif [[ "$DISABLE_HTTP" == "REDIRECT" || "$DISABLE_HTTP" == "redirect" ]]; then
+	    sed -e "s/<.*connector name=\"http\".*>/<connector name=\"http\" protocol=\"HTTP\/1.1\" scheme=\"http\" socket-binding=\"http\" redirect-port=\"$HTTPS_PORT\" \/>/" $FILE > $FILE.bak
+	    mv $FILE.bak $FILE
+	    if [ ! -d "$BASEDIR/standalone/deployments/restcomm-management.war" ]; then
+            mkdir $BASEDIR/standalone/deployments/restcomm-management-exploded.war
+            unzip -q $BASEDIR/standalone/deployments/restcomm-management.war -d $BASEDIR/standalone/deployments/restcomm-management-exploded.war/
+            rm -f $BASEDIR/standalone/deployments/restcomm-management.war
+            mv -f $BASEDIR/standalone/deployments/restcomm-management-exploded.war $BASEDIR/standalone/deployments/restcomm-management.war
+        fi
+
+        sed -e "s/<!--security-constraint>/<security-constraint>/"  $FILERESTCOMMXML > $FILERESTCOMMXML.bak
+        sed -e "s/<\/security-constraint-->/<\/security-constraint>/"  $FILERESTCOMMXML.bak > $FILERESTCOMMXML
+        sed -e "s/<!--security-constraint>/<security-constraint>/"  $FILEMANAGERXML > $FILEMANAGERXML.bak
+        sed -e "s/<\/security-constraint-->/<\/security-constraint>/"  $FILEMANAGERXML.bak > $FILEMANAGERXML
+        sed -e "s/<!--security-constraint>/<security-constraint>/"  $FILERVDXML > $FILERVDXML.bak
+        sed -e "s/<\/security-constraint-->/<\/security-constraint>/"  $FILERVDXML.bak > $FILERVDXML
+        sed -e "s/<!--security-constraint>/<security-constraint>/"  $FILEOLYMPUSXML > $FILEOLYMPUSXML.bak
+        sed -e "s/<\/security-constraint-->/<\/security-constraint>/"  $FILEOLYMPUSXML.bak > $FILEOLYMPUSXML
+
 	else
-		sed -e "s/<\!--connector name=\"http\" \(.*\)-->/<connector name=\"http\" \1\/>/" $FILE > $FILE.bak
-		mv $FILE.bak $FILE
+        sed -e "s/<.*connector name=\"http\".*>/<connector name=\"http\" protocol=\"HTTP\/1.1\" scheme=\"http\" socket-binding=\"http\"\/>    /" $FILE > $FILE.bak
+        mv $FILE.bak $FILE
+
+        grep -q '<security-constraint>' $FILERESTCOMMXML &&  sed -e "s/<security-constraint>/<!--security-constraint>/"  $FILERESTCOMMXML > $FILERESTCOMMXML.bak \
+        &&  sed -e "s/<\/security-constraint>/<\/security-constraint-->/"  $FILERESTCOMMXML.bak > $FILERESTCOMMXML
+        grep -qs '<security-constraint>' $FILEMANAGERXML && sed -e "s/<security-constraint>/<!--security-constraint>/"  $FILEMANAGERXML > $FILEMANAGERXML.bak \
+        && sed -e "s/<\/security-constraint>/<\/security-constraint-->/"  $FILEMANAGERXML.bak > $FILEMANAGERXML
+        grep -q '<security-constraint>' $FILERVDXML && sed -e "s/<security-constraint>/<!--security-constraint>/"  $FILERVDXML > $FILERVDXML.bak \
+        && sed -e "s/<\/security-constraint>/<\/security-constraint-->/"  $FILERVDXML.bak > $FILERVDXML
+        grep -q '<security-constraint>' $FILEOLYMPUSXML && sed -e "s/<security-constraint>/<!--security-constraint>/"  $FILEOLYMPUSXML > $FILEOLYMPUSXML.bak \
+        && sed -e "s/<\/security-constraint>/<\/security-constraint-->/"  $FILEOLYMPUSXML.bak > $FILEOLYMPUSXML
+
 	fi
 	#If File contains path, or just the name.
 	if [[ "$TRUSTSTORE_FILE" = /* ]]; then
