@@ -54,6 +54,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.restcomm.http.exceptions.AccountAlreadyClosed;
 import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
 import org.mobicents.servlet.restcomm.http.exceptions.InsufficientPermission;
 import org.mobicents.servlet.restcomm.util.StringUtils;
@@ -159,6 +160,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         }
     }
 
+    /* // Account removal disabled as per https://github.com/RestComm/Restcomm-Connect/issues/1270
     protected Response deleteAccount(final String operatedSid) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Delete:Accounts");
@@ -195,13 +197,26 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
         return ok().build();
     }
+    */
 
     /**
-     * Removes a single account (and not the while sub-account tree)
-     * @param removedAccountSid
+     * Removes all resources belonging to an account and sets its status to CLOSED
+     *
+     * @param closedAccount
      */
-    private void removeSingleAccount(String removedAccountSid) {
-        Sid sid = new Sid(removedAccountSid);
+    private void closeSingleAccount(Account closedAccount) {
+        closedAccount = closedAccount.setStatus(Account.Status.CLOSED);
+        removeAccoundDependencies(closedAccount.getSid());
+        accountsDao.updateAccount(closedAccount);
+    }
+
+    /**
+     * Removes all dependent resources of an account. Some resources like
+     * CDRs are excluded.
+     *
+     * @param sid
+     */
+    private void removeAccoundDependencies(Sid sid) {
         DaoManager daoManager = (DaoManager) context.getAttribute(DaoManager.class.getName());
         // remove dependency entities first and dependent entities last. Also, do safer operation first (as a secondary rule)
         daoManager.getAnnouncementsDao().removeAnnouncements(sid);
@@ -213,8 +228,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
         daoManager.getApplicationsDao().removeApplications(sid);
         daoManager.getIncomingPhoneNumbersDao().removeIncomingPhoneNumbers(sid);
         daoManager.getClientsDao().removeClients(sid);
-
-        accountsDao.removeAccount(sid);
     }
 
     protected Response getAccounts(final MediaType responseType) {
@@ -319,10 +332,29 @@ public class AccountsEndpoint extends SecuredEndpoint {
         return builder.build();
     }
 
-    private Account update(final Account account, final MultivaluedMap<String, String> data) {
+    /**
+     * Fills an account entity object with values supplied from an http request
+     *
+     * @param account
+     * @param data
+     * @return
+     * @throws AccountAlreadyClosed
+     */
+    private Account prepareAccountForUpdate(final Account account, final MultivaluedMap<String, String> data) throws AccountAlreadyClosed {
         Account result = account;
         boolean isPasswordReset = false;
+        Account.Status newStatus = null;
         try {
+            // if the account is already CLOSED, no updates are allowed
+            if (account.getStatus() == Account.Status.CLOSED) {
+                throw new AccountAlreadyClosed();
+            }
+            if (data.containsKey("Status")) {
+                newStatus = Account.Status.getValueOf(data.getFirst("Status").toLowerCase());
+                if (newStatus == Account.Status.CLOSED)
+                    return account.setStatus(Account.Status.CLOSED);
+                // if the status is switched to CLOSED, the rest of the updates are ignored.
+            }
             if (data.containsKey("FriendlyName")) {
                 result = result.setFriendlyName(data.getFirst("FriendlyName"));
             }
@@ -340,10 +372,10 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 if (account.getStatus() == Account.Status.UNINITIALIZED)
                     isPasswordReset = true;
             }
-            if (data.containsKey("Status")) {
-                result = result.setStatus(Account.Status.getValueOf(data.getFirst("Status").toLowerCase()));
+            if (newStatus != null) {
+                result = result.setStatus(newStatus);
             } else {
-                // if this is a password reset operation we need to active the account too (in case there is no explicity Status passed of course)
+                // if this is a password reset operation we need to activate the account (in case there is no explicity Status passed of course)
                 if (isPasswordReset)
                     result = result.setStatus(Account.Status.ACTIVE);
             }
@@ -355,8 +387,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 } else
                     throw new AuthorizationException();
             }
-        } catch (AuthorizationException e) {
-            // authorization exceptions should reach outer layers and result in 403
+        } catch (AuthorizationException | AccountAlreadyClosed e) {
+            // some exceptions should reach outer layers and result in 403
             throw e;
         } catch (Exception e) {
             if (logger.isInfoEnabled()) {
@@ -391,38 +423,66 @@ public class AccountsEndpoint extends SecuredEndpoint {
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
-            account = update(account, data);
-
-            secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
-            accountsDao.updateAccount(account);
-
-            // Update SIP client of the corresponding Account
-            String email = account.getEmailAddress();
-            if (email != null && !email.equals("")) {
-                String username = email.split("@")[0];
-                Client client = clientDao.getClient(username);
-                if (client != null) {
-                    // TODO: need to encrypt this password because it's
-                    // same with Account password.
-                    // Don't implement now. Opened another issue for it.
-                    if (data.containsKey("Password")) {
-                        // Md5Hash(data.getFirst("Password")).toString();
-                        String password = data.getFirst("Password");
-                        client = client.setPassword(password);
-                    }
-
-                    if (data.containsKey("FriendlyName")) {
-                        client = client.setFriendlyName(data.getFirst("FriendlyName"));
-                    }
-
-                    clientDao.updateClient(client);
-                }
+            // If the account is CLOSED, no updates are allowed. Return a BAD_REQUEST status code.
+            Account modifiedAccount;
+            try {
+                modifiedAccount = prepareAccountForUpdate(account, data);
+            } catch (AccountAlreadyClosed accountAlreadyClosed) {
+                return status(BAD_REQUEST).build();
             }
 
+            secure(modifiedAccount, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
+            // are we closing the account ?
+            if (account.getStatus() != Account.Status.CLOSED && modifiedAccount.getStatus() == Account.Status.CLOSED) {
+                List<String> closedSubAccounts = accountsDao.getSubAccountSidsRecursive(modifiedAccount.getSid());
+                if (closedSubAccounts != null && !closedSubAccounts.isEmpty()) {
+                    int i = closedSubAccounts.size(); // is is the count of accounts left to process
+                    // we iterate backwards to handle child accounts first, parent accounts next
+                    while (i > 0) {
+                        i --;
+                        String removedSid = closedSubAccounts.get(i);
+                        try {
+                            Account subAccount = accountsDao.getAccount(new Sid(removedSid));
+                            closeSingleAccount(subAccount);
+                        } catch (Exception e) {
+                            // if anything bad happens, log the error and continue removing the rest of the accounts.
+                            logger.error("Failed removing (child) account '" + removedSid + "'");
+                        }
+                    }
+                }
+                // remove the parent resources too
+                removeAccoundDependencies(modifiedAccount.getSid());
+            } else {
+                // if we're not closing the account, update SIP client of the corresponding Account.
+                // Password and FriendlyName fields are synched.
+                String email = modifiedAccount.getEmailAddress();
+                if (email != null && !email.equals("")) {
+                    String username = email.split("@")[0];
+                    Client client = clientDao.getClient(username);
+                    if (client != null) {
+                        // TODO: need to encrypt this password because it's
+                        // same with Account password.
+                        // Don't implement now. Opened another issue for it.
+                        if (data.containsKey("Password")) {
+                            // Md5Hash(data.getFirst("Password")).toString();
+                            String password = data.getFirst("Password");
+                            client = client.setPassword(password);
+                        }
+
+                        if (data.containsKey("FriendlyName")) {
+                            client = client.setFriendlyName(data.getFirst("FriendlyName"));
+                        }
+
+                        clientDao.updateClient(client);
+                    }
+                }
+            }
+            accountsDao.updateAccount(modifiedAccount); // includes setting Status to CLOSED
+
             if (APPLICATION_JSON_TYPE == responseType) {
-                return ok(gson.toJson(account), APPLICATION_JSON).build();
+                return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {
-                final RestCommResponse response = new RestCommResponse(account);
+                final RestCommResponse response = new RestCommResponse(modifiedAccount);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else {
                 return null;

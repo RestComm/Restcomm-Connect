@@ -22,7 +22,6 @@ package org.mobicents.servlet.restcomm.http;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -44,11 +43,13 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
         super();
     }
 
+    /* Account removal is disabled. Accounts can only be closed through update method
     @Path("/{sid}")
     @DELETE
     public Response deleteAccountAsXml(@PathParam("sid") final String sid) {
         return deleteAccount(sid);
     }
+    */
 
     @Path("/{accountSid}")
     @GET

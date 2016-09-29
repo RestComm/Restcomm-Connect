@@ -9,9 +9,12 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 import org.apache.shiro.crypto.hash.Md5Hash;
@@ -36,6 +39,7 @@ import com.google.gson.JsonObject;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
 import javax.sip.address.SipURI;
+import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -399,20 +403,27 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
-    public void testRemoveAccountNested() {
+    public void testCloseAccountNested() {
         String topLevelSid = "AC12300000000000000000000000000000";
         String removed1Sid = "AC12300000000000000000000000000001";
         String removed11Sid = "AC12300000000000000000000000000011";
 
         Client jersey = getClient("removed-top@company.com", commonAuthToken);
-        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+removed1Sid+".json" ) );
-        Assert.assertEquals(200, resource.delete(ClientResponse.class).getStatus());
-        // assert the designated account was really removed
-        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+removed1Sid ) );
-        Assert.assertEquals(404, resource.get(ClientResponse.class).getStatus());
-        // assert removed accounts children are removed too - TODO enable this once three-level accounts hierarchies are supported - https://github.com/RestComm/Restcomm-Connect/issues/1397
-            //resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+removed11Sid+".json" ) );
-            //Assert.assertEquals(404, resource.get(ClientResponse.class).getStatus());
+
+        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+removed1Sid) );
+        MultivaluedMap<String,String> params = new MultivaluedMapImpl();
+        params.add("Status","closed");
+        ClientResponse response = resource.put(ClientResponse.class,params);
+        // the closed account should be available
+        Assert.assertEquals(200, response.getStatus());
+        JsonParser parser = new JsonParser();
+        JsonObject jsonObject = parser.parse(response.getEntity(String.class)).getAsJsonObject();
+        // make sure the account status is set to closed
+        Assert.assertEquals("closed", jsonObject.get("status").getAsString());
+        // assert removed accounts children are closed too - TODO enable this once three-level accounts hierarchies are supported - https://github.com/RestComm/Restcomm-Connect/issues/1397
+            // resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+removed11Sid) );
+            // ...
+
         // assert the applications of the account are removed
         resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Applications/AP00000000000000000000000000000001.json" ) );
         Assert.assertEquals(404, resource.get(ClientResponse.class).getStatus());
