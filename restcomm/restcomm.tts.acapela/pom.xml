@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm</artifactId>
-		<version>8.0.0-SNAPSHOT</version>
+		<version>8.0.0.1014</version>
 	</parent>
 
 	<artifactId>restcomm.tts.acapela</artifactId>
