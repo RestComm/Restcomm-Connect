@@ -128,9 +128,9 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
        $scope.accountChanged = true;
        // console.log('CHANGED: ' + $scope.accountChanged + ' => VALID:' + $scope.profileForm.$valid);
      }
-      if ( $scope.accountChanged  && angular.equals(accountBackup.sid, loggedUserAccount.sid)) {
-         Notifications.warn("You will loose some privileges due to this change.");
-     }
+     //if ( $scope.accountChanged  && angular.equals(accountBackup.sid, loggedUserAccount.sid) && accountBackup.role == loggedUserAccount.role) {
+     //    Notifications.warn("You will loose some privileges due to this change.");
+     //}
    }, true);
 
   $scope.newPassword = $scope.newPassword2 = '';

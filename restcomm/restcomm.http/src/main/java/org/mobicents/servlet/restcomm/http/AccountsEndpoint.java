@@ -321,15 +321,31 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     private Account update(final Account account, final MultivaluedMap<String, String> data) {
         Account result = account;
+        boolean isPasswordReset = false;
         try {
             if (data.containsKey("FriendlyName")) {
                 result = result.setFriendlyName(data.getFirst("FriendlyName"));
             }
+            if (data.containsKey("Password")) {
+                // if this is a reset-password operation, we also need to set the account status to active
+                if (account.getStatus() == Account.Status.UNINITIALIZED)
+                    isPasswordReset = true;
+
+                final String hash = new Md5Hash(data.getFirst("Password")).toString();
+                result = result.setAuthToken(hash);
+            }
+            if (data.containsKey("Auth_Token")) {
+                result = result.setAuthToken(data.getFirst("Auth_Token"));
+                // if this is a reset-password operation, we also need to set the account status to active
+                if (account.getStatus() == Account.Status.UNINITIALIZED)
+                    isPasswordReset = true;
+            }
             if (data.containsKey("Status")) {
                 result = result.setStatus(Account.Status.getValueOf(data.getFirst("Status").toLowerCase()));
             } else {
-                //Don't change to ACTIVE if there is no Status in the request
-//            result = result.setStatus(Account.Status.ACTIVE);
+                // if this is a password reset operation we need to active the account too (in case there is no explicity Status passed of course)
+                if (isPasswordReset)
+                    result = result.setStatus(Account.Status.ACTIVE);
             }
             if (data.containsKey("Role")) {
                 Account operatingAccount = userIdentityContext.getEffectiveAccount();
@@ -338,13 +354,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
                     result = result.setRole(data.getFirst("Role"));
                 } else
                     throw new AuthorizationException();
-            }
-            if (data.containsKey("Password")) {
-                final String hash = new Md5Hash(data.getFirst("Password")).toString();
-                result = result.setAuthToken(hash);
-            }
-            if (data.containsKey("Auth_Token")) {
-                result = result.setAuthToken(data.getFirst("Auth_Token"));
             }
         } catch (AuthorizationException e) {
             // authorization exceptions should reach outer layers and result in 403
