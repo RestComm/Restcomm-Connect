@@ -78,14 +78,16 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
 
 rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, RCommAccounts,Notifications) {
 	$scope.predicate = 'name';  
-    $scope.reverse = false;  
+    $scope.reverse = false;
+    $scope.search = {};
     $scope.currentPage = 1;  
      $scope.maxSize = 5; //pagination max size
     $scope.entryLimit = 10; //max rows for data table
      $scope.order = function (predicate) {  
     $scope.reverse = ($scope.predicate === predicate) ? !$scope.reverse : false;  
      $scope.predicate = predicate; 
-    };  
+    };
+    $scope.statusFilter = 'Any';
   
     var subAccountsList = RCommAccounts.query(function(list) {
 		// remove logged (parent) account from the list
@@ -111,7 +113,14 @@ rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, RC
       end = begin + $scope.entryLimit;  
       index = $scope.subAccountsList.indexOf(value);  
       return (begin <= index && index < end);  
-    };  
+    };
+
+    $scope.$watch('statusFilter', function (value) {
+        if (value == 'Any')
+            $scope.search.status = '';
+        else
+            $scope.search.status = value.toLowerCase();
+    });
   }); 
 
 
@@ -209,11 +218,22 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
 
   $scope.removeAccount = function (account) {
     var title = 'Delete Account ' + account.friendly_name;
-    var msg = 'Are you sure you want to delete account ' + account.sid + ' (' + account.friendly_name +  ') ? This action cannot be undone.';
+    var msg = 'Are you sure you want to close account ' + account.sid + ' (' + account.friendly_name +  ') ? This action cannot be undone.';
     var btns = [{result:'cancel', label: 'Cancel', cssClass: 'btn-default'}, {result:'confirm', label: 'Delete!', cssClass: 'btn-danger'}];
     // show configurmation
     $dialog.messageBox(title, msg, btns).open().then(function (result) {
         if (result == "confirm") {
+
+            RCommAccounts.update({accountSid:account.sid}, $.param({Status:"closed"}), function() { // success
+              Notifications.success('Account  "' + account.friendly_name + '" closed.');
+              if (account.sid == $stateParams.accountSid) // if we removed the account we're currently viewing, switch to logged user profile
+                  $location.path("/profile/" + loggedUserAccount.sid);
+              else
+                  $scope.getAccounts(); // otherwise we just reload the accounts on the left
+            }, function() { // error
+                Notifications.error("Can't close Account '" + account.friendly_name + "'");
+            });
+
             RCommAccounts.remove({accountSid: account.sid}, function () {
                 Notifications.success('Account  "' + account.friendly_name + '" removed.');
                 if (account.sid == $stateParams.accountSid) // if we removed the account we're currently viewing, switch to logged user profile

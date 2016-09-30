@@ -5,7 +5,7 @@
         <div class="tabbable tabs-left">
             <ul class="nav nav-tabs" style="margin: 0; width: 100%;" >
                 <li ng-repeat-start="acc in accounts" class="disabled" ng-show="$index == 1"><a>SUB ACCOUNTS</a></li>
-                <li ng-repeat-end ng-class="acc.sid == account.sid ? 'active grey-tab' : ''"><a href="#/profile/{{acc.sid}}" ng-class="$first ? 'fa fa-link' : ''"> {{ acc.friendly_name }}</a></li>
+                <li ng-repeat-end  ng-class="acc.sid == account.sid ? 'active grey-tab' : ''"><a href="#/profile/{{acc.sid}}" ng-class="{'fa fa-link': $first, 'text-muted': acc.status=='closed'}" title="{{acc.status=='closed' ? 'Account is closed' : ''}}"> {{ acc.friendly_name }}</a></li>
             </ul>
         </div>
     </div>
@@ -103,7 +103,7 @@
         <div class="">
             <button class="btn btn-primary pull-right margin-left-10" ng-click="updateProfile()" ng-show="accountChanged" ng-disabled="(newPassword && pwdStrength < 50) || !accountValid">Save</button>
             <button class="btn btn-default pull-right margin-left-10" ng-click="resetChanges()" ng-show="accountChanged">Reset Changes</button>
-            <button class="btn btn-danger pull-left" ng-disabled="loggedAccount.sid == account.sid" ng-click="removeAccount(account)">Delete Account</button>
+            <button class="btn btn-danger pull-left" ng-disabled="loggedAccount.sid == account.sid" ng-click="removeAccount(account)">Close Account</button>
         </div>
 
     </div>
