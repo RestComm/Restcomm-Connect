@@ -285,6 +285,18 @@ CREATE TABLE "restcomm_gateways" (
 "uri" LONGVARCHAR NOT NULL
 );
 
+CREATE TABLE "restcomm_queues" (
+"sid" VARCHAR(34) NOT NULL PRIMARY KEY,
+"date_created" DATETIME NOT NULL,
+"date_updated" DATETIME NOT NULL,
+"friendly_name" VARCHAR(64) NOT NULL,
+"account_sid" VARCHAR(34),
+"current_size" INT,
+"max_size" INT,
+"uri" LONGVARCHAR NOT NULL,
+"queue" BLOB
+);
+
 CREATE TABLE "update_scripts" (
 "script" VARCHAR(255) NOT NULL,
 "date_executed" DATETIME NOT NULL

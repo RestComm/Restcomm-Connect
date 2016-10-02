@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author muhammad.bilal19@gmail.com (Muhammad Bilal)
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.QueuesDao">
+  <insert id="addQueue" parameterType="map">
+    INSERT INTO "restcomm_queues" ("sid", "date_created", "date_updated", "friendly_name", "current_size", "max_size", "account_sid", "uri")
+    VALUES(#{sid}, #{date_created}, #{date_updated}, #{friendly_name}, #{current_size}, #{max_size}, #{account_sid}, #{uri});
+  </insert>
+  
+  <select id="getQueue" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_queues" WHERE "sid"=#{sid};
+  </select>
+  <select id="getTotalQueueByAccount" parameterType="org.mobicents.servlet.restcomm.entities.QueueFilter" resultType="int">
+    SELECT count(*) FROM "restcomm_queues" WHERE "account_sid"=#{accountSid};
+  </select>
+  
+  <select id="getQueueByFriendlyName" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_queues" WHERE "friendly_name"=#{friendlyName};
+  </select>
+  
+  <select id="getQueues" parameterType="org.mobicents.servlet.restcomm.entities.QueueFilter" resultType="hashmap">
+    SELECT * FROM "restcomm_queues" WHERE "account_sid"=#{accountSid} LIMIT #{limit} OFFSET #{offset};
+  </select>
+  
+   <select id="getQueueBytes" parameterType="string" resultType="map">
+    SELECT queue FROM "restcomm_queues" WHERE "sid"=#{sid};
+  </select>
+  
+  <update id="updateQueueBytes" parameterType="_byte[]">
+    UPDATE "restcomm_queues" SET "queue"=#{queue} WHERE "sid"=#{sid};
+  </update>
+  
+  <delete id="removeQueue" parameterType="string">
+    DELETE FROM "restcomm_queues" WHERE "sid"=#{sid};
+  </delete>
+  
+  <delete id="removeQueues" parameterType="string">
+    DELETE FROM "restcomm_queues" WHERE "account_sid"=#{sid};
+  </delete>
+  
+  <update id="updateQueue" parameterType="map">
+    UPDATE "restcomm_queues" SET "date_updated"=#{date_updated}, "friendly_name"=#{friendly_name},
+    "current_size"=#{current_size}, "max_size"=#{max_size} WHERE "sid"=#{sid};
+  </update>
+ 
+</mapper>

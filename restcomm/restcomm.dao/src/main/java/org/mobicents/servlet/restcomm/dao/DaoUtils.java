@@ -21,20 +21,23 @@ package org.mobicents.servlet.restcomm.dao;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.sql.Blob;
+import java.sql.SQLException;
 import java.util.Currency;
 import java.util.Date;
 
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe
 public final class DaoUtils {
+
     private DaoUtils() {
         super();
     }
@@ -74,6 +77,24 @@ public final class DaoUtils {
     public static DateTime readDateTime(final Object object) {
         if (object != null) {
             return new DateTime((Date) object);
+        } else {
+            return null;
+        }
+    }
+
+    public static byte[] readBlobData(final Object object) {
+        if (object != null) {
+            Blob blob = (Blob) object;
+
+            int blobLength;
+            try {
+                blobLength = (int) blob.length();
+                byte[] blobAsBytes = blob.getBytes(1, blobLength);
+                return blobAsBytes;
+
+            } catch (SQLException e) {
+                return null;
+            }
         } else {
             return null;
         }

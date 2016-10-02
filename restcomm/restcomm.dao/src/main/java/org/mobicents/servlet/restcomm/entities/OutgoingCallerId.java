@@ -22,7 +22,6 @@ package org.mobicents.servlet.restcomm.entities;
 import java.net.URI;
 
 import org.joda.time.DateTime;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
