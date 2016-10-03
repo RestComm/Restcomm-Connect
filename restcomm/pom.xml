@@ -156,7 +156,7 @@
 		<module>restcomm.email</module>
 		<module>restcomm.email.api</module>
 		<module>restcomm.extension.api</module>
-		<module>restcomm.extension.traffic.throttling</module>
+		<module>restcomm.extension.controller</module>
 		<module>restcomm.identity</module>
     <module>restcomm.monitoring.service</module>
   </modules>

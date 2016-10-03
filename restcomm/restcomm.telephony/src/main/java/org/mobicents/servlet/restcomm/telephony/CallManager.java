@@ -19,45 +19,29 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
-import static akka.pattern.Patterns.ask;
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
+import akka.actor.ActorContext;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.util.Timeout;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.telestax.servlet.CallRequest;
+import com.telestax.servlet.ExtensionResponse;
+import com.telestax.servlet.ExtensionType;
+import com.telestax.servlet.MonitoringService;
+import com.telestax.servlet.RestcommExtensionGeneric;
 import gov.nist.javax.sip.header.UserAgent;
-
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
-
-import javax.sdp.SdpParseException;
-import javax.servlet.ServletContext;
-import javax.servlet.sip.Address;
-import javax.servlet.sip.AuthInfo;
-import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipApplicationSessionEvent;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
-import javax.sip.header.RouteHeader;
-import javax.sip.message.Response;
-
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.ExtensionController;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
@@ -82,26 +66,45 @@ import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
 import org.mobicents.servlet.restcomm.util.SdpUtils;
 import org.mobicents.servlet.restcomm.util.UriUtils;
-
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-import akka.actor.ActorContext;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.util.Timeout;
 
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.telestax.servlet.MonitoringService;
+import javax.sdp.SdpParseException;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.AuthInfo;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipApplicationSessionEvent;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
+import javax.sip.header.RouteHeader;
+import javax.sip.message.Response;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
+
+import static akka.pattern.Patterns.ask;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -155,6 +158,9 @@ public final class CallManager extends UntypedActor {
 
     //Control whether Restcomm will patch Request-URI and SDP for B2BUA calls
     private boolean patchForNatB2BUASessions;
+
+    //List of extensions for CallManager
+    List<RestcommExtensionGeneric> extensions;
 
     // used for sending warning and error logs to notification engine and to the console
     private void sendNotification(String errMessage, int errCode, String errType, boolean createNotification) {
@@ -247,6 +253,13 @@ public final class CallManager extends UntypedActor {
 
         //Monitoring Service
         this.monitoring = (ActorRef) context.getAttribute(MonitoringService.class.getName());
+
+        extensions = ExtensionController.getInstance().getExtensions(ExtensionType.CallManager);
+        if (logger.isInfoEnabled()) {
+            if (extensions != null) {
+                logger.info("CallManager extensions: "+extensions.size());
+            }
+        }
     }
 
     private ActorRef call() {
@@ -383,66 +396,18 @@ public final class CallManager extends UntypedActor {
                 boolean callToSipUri = false;
                 // proxy DID or number if the outbound proxy fields are not empty in the restcomm.xml
                 if (proxyURI != null && !proxyURI.isEmpty()) {
-                    final Configuration runtime = configuration.subset("runtime-settings");
-                    final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address", false);
-                    final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean(
-                            "outboudproxy-user-at-from-header", true);
-
-                    final String fromHost = ((SipURI) request.getFrom().getURI()).getHost();
-                    final String fromHostIpAddress = InetAddress.getByName(fromHost).getHostAddress();
-//                    final String fromPort = String.valueOf(((SipURI) request.getFrom().getURI()).getPort()).equalsIgnoreCase("-1") ? "5060"
-//                            : String.valueOf(((SipURI) request.getFrom().getURI()).getHost());
-
-                    if(logger.isInfoEnabled()) {
-                        logger.info("fromHost: " + fromHost + "fromHostIP: " + fromHostIpAddress + "myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
-                        + " toHost: " + toHost + " toHostIP: " + toHostIpAddress + " proxyUri: " + proxyURI);
-                    }
-                    if ((myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost)) ||
-                            (myHostIp.equalsIgnoreCase(toHostIpAddress) || mediaExternalIp.equalsIgnoreCase(toHostIpAddress))
-                            // https://github.com/RestComm/Restcomm-Connect/issues/1357
-                            || (fromHost.equalsIgnoreCase(toHost) || fromHost.equalsIgnoreCase(toHostIpAddress))
-                            || (fromHostIpAddress.equalsIgnoreCase(toHost) || fromHostIpAddress.equalsIgnoreCase(toHostIpAddress))) {
-                        if(logger.isInfoEnabled()) {
-                            logger.info("Call to NUMBER.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
-                            + " toHost: " + toHost + " proxyUri: " + proxyURI);
-                        }
-                        try {
-                            if (useLocalAddressAtFromHeader) {
-                                if (outboudproxyUserAtFromHeader) {
-                                    from = (SipURI) sipFactory.createSipURI(proxyUsername,
-                                            mediaExternalIp + ":" + outboundIntf.getPort());
-                                } else {
-                                    from = sipFactory.createSipURI(((SipURI) request.getFrom().getURI()).getUser(),
-                                            mediaExternalIp + ":" + outboundIntf.getPort());
-                                }
-                            } else {
-                                if (outboudproxyUserAtFromHeader) {
-                                    // https://telestax.atlassian.net/browse/RESTCOMM-633. Use the outbound proxy username as
-                                    // the userpart of the sip uri for the From header
-                                    from = (SipURI) sipFactory.createSipURI(proxyUsername, proxyURI);
-                                } else {
-                                    from = sipFactory.createSipURI(((SipURI) request.getFrom().getURI()).getUser(), proxyURI);
-                                }
-                            }
-                            to = sipFactory.createSipURI(((SipURI) request.getTo().getURI()).getUser(), proxyURI);
-                        } catch (Exception exception) {
-                            if(logger.isInfoEnabled()) {
-                            logger.info("Exception: " + exception);
-                            }
-                        }
-                    } else {
-                        if(logger.isInfoEnabled()) {
-                        logger.info("Call to SIP URI. myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
-                            + " toHost: " + toHost + " proxyUri: " + proxyURI);
-                        }
-                        from = sipFactory.createSipURI(((SipURI) request.getFrom().getURI()).getUser(), outboundIntf.getHost()
-                                + ":" + outboundIntf.getPort());
-                        to = sipFactory.createSipURI(toUser, toHost + ":" + toPort);
-                        callToSipUri = true;
-                    }
-                    if (B2BUAHelper.redirectToB2BUA(request, client, from, to, proxyUsername, proxyPassword, storage,
-                            sipFactory, callToSipUri, patchForNatB2BUASessions)) {
+//                    String destination = ((SipURI)request.getTo().getURI()).getUser();
+                    CallRequest callRequest = new CallRequest(fromUser,toUser, CallRequest.Type.PSTN, client.getAccountSid());
+                    if (executePreOutboundAction(callRequest)) {
+                        proxyOut(request, client, toUser, toHost, toHostIpAddress, toPort, outboundIntf, proxyURI, proxyUsername, proxyPassword, from, to, callToSipUri);
                         return;
+                    } else {
+                        //log here
+                        final SipServletResponse response = request.createResponse(SC_FORBIDDEN);
+                        response.send();
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Call request rejected: "+callRequest.toString());
+                        }
                     }
                 } else {
                     String msg = "Restcomm tried to proxy this call to an outbound party but it seems the outbound proxy is not configured.";
@@ -463,6 +428,71 @@ public final class CallManager extends UntypedActor {
                 + "cannot be found or there is application attached to that";
         sendNotification(errMsg, 11005, "error", true);
 
+    }
+
+    private boolean proxyOut(SipServletRequest request, Client client, String toUser, String toHost, String toHostIpAddress, String toPort, SipURI outboundIntf, String proxyURI, String proxyUsername, String proxyPassword, SipURI from, SipURI to, boolean callToSipUri) throws UnknownHostException {
+        final Configuration runtime = configuration.subset("runtime-settings");
+        final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address", false);
+        final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean(
+                "outboudproxy-user-at-from-header", true);
+
+        final String fromHost = ((SipURI) request.getFrom().getURI()).getHost();
+        final String fromHostIpAddress = InetAddress.getByName(fromHost).getHostAddress();
+//                    final String fromPort = String.valueOf(((SipURI) request.getFrom().getURI()).getPort()).equalsIgnoreCase("-1") ? "5060"
+//                            : String.valueOf(((SipURI) request.getFrom().getURI()).getHost());
+
+        if(logger.isInfoEnabled()) {
+            logger.info("fromHost: " + fromHost + "fromHostIP: " + fromHostIpAddress + "myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
+            + " toHost: " + toHost + " toHostIP: " + toHostIpAddress + " proxyUri: " + proxyURI);
+        }
+        if ((myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost)) ||
+                (myHostIp.equalsIgnoreCase(toHostIpAddress) || mediaExternalIp.equalsIgnoreCase(toHostIpAddress))
+                // https://github.com/RestComm/Restcomm-Connect/issues/1357
+                || (fromHost.equalsIgnoreCase(toHost) || fromHost.equalsIgnoreCase(toHostIpAddress))
+                || (fromHostIpAddress.equalsIgnoreCase(toHost) || fromHostIpAddress.equalsIgnoreCase(toHostIpAddress))) {
+            if(logger.isInfoEnabled()) {
+                logger.info("Call to NUMBER.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
+                + " toHost: " + toHost + " proxyUri: " + proxyURI);
+            }
+            try {
+                if (useLocalAddressAtFromHeader) {
+                    if (outboudproxyUserAtFromHeader) {
+                        from = (SipURI) sipFactory.createSipURI(proxyUsername,
+                                mediaExternalIp + ":" + outboundIntf.getPort());
+                    } else {
+                        from = sipFactory.createSipURI(((SipURI) request.getFrom().getURI()).getUser(),
+                                mediaExternalIp + ":" + outboundIntf.getPort());
+                    }
+                } else {
+                    if (outboudproxyUserAtFromHeader) {
+                        // https://telestax.atlassian.net/browse/RESTCOMM-633. Use the outbound proxy username as
+                        // the userpart of the sip uri for the From header
+                        from = (SipURI) sipFactory.createSipURI(proxyUsername, proxyURI);
+                    } else {
+                        from = sipFactory.createSipURI(((SipURI) request.getFrom().getURI()).getUser(), proxyURI);
+                    }
+                }
+                to = sipFactory.createSipURI(((SipURI) request.getTo().getURI()).getUser(), proxyURI);
+            } catch (Exception exception) {
+                if(logger.isInfoEnabled()) {
+                logger.info("Exception: " + exception);
+                }
+            }
+        } else {
+            if(logger.isInfoEnabled()) {
+            logger.info("Call to SIP URI. myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
+                + " toHost: " + toHost + " proxyUri: " + proxyURI);
+            }
+            from = sipFactory.createSipURI(((SipURI) request.getFrom().getURI()).getUser(), outboundIntf.getHost()
+                    + ":" + outboundIntf.getPort());
+            to = sipFactory.createSipURI(toUser, toHost + ":" + toPort);
+            callToSipUri = true;
+        }
+        if (B2BUAHelper.redirectToB2BUA(request, client, from, to, proxyUsername, proxyPassword, storage,
+                sipFactory, callToSipUri, patchForNatB2BUASessions)) {
+            return true;
+        }
+        return false;
     }
 
     private boolean isWebRTC(final SipServletRequest request) {
@@ -1069,7 +1099,16 @@ public final class CallManager extends UntypedActor {
                 break;
             }
             case PSTN: {
-                outboundToPstn(request, sender);
+                CallRequest callRequest = new CallRequest(request.from(), request.to(), CallRequest.Type.valueOf(request.type().name()), request.accountId());
+                if (executePreOutboundAction(callRequest)) {
+                    outboundToPstn(request, sender);
+                } else {
+                    //Extensions didn't allowed this call
+                    final String errMsg = "Not Allowed to make this outbound call";
+                    logger.error(errMsg);
+                    sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+                }
+                executePostOutboundAction(request);
                 break;
             }
             case SIP: {
@@ -1077,6 +1116,21 @@ public final class CallManager extends UntypedActor {
                 break;
             }
         }
+    }
+
+    private boolean executePreOutboundAction(final Object message) {
+        if (extensions != null && extensions.size() > 0) {
+            for (RestcommExtensionGeneric extension : extensions) {
+                ExtensionResponse response = extension.preOutboundAction(message);
+                if (!response.isAllowed())
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean executePostOutboundAction(final CreateCall createCall) {
+        return false;
     }
 
     private void outboundToClient(final CreateCall request, final ActorRef sender) throws ServletParseException {
