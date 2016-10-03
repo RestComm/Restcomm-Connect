@@ -83,6 +83,9 @@ public class RasRestService extends SecuredRestService {
         projectService = new ProjectService(rvdContext,workspaceStorage);
     }
 
+    public RasRestService() {
+    }
+
     RasRestService(UserIdentityContext context) {
         super(context);
     }

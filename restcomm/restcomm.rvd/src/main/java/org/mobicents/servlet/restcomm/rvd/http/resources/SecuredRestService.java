@@ -25,6 +25,9 @@ public class SecuredRestService extends RestService {
         userIdentityContext = new UserIdentityContext(authorizationHeader, accountProvider);
     }
 
+    public SecuredRestService() {
+    }
+
     // used for testing
     SecuredRestService(UserIdentityContext context) {
         this.userIdentityContext = context;
