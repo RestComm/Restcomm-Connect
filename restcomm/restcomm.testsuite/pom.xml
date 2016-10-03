@@ -347,12 +347,6 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.extension.traffic.throttling</artifactId>
-			<version>${project.version}</version>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
 
 	<build>
