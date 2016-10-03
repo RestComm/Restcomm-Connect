@@ -33,6 +33,9 @@ public class LoginRestService extends SecuredRestService {
         super.init();
     }
 
+    public LoginRestService() {
+    }
+
     LoginRestService(UserIdentityContext context) {
         super(context);
     }

@@ -30,6 +30,9 @@ public class DesignerRestService extends SecuredRestService {
         rvdContext = new RvdContext(request, servletContext, applicationContext.getConfiguration());
     }
 
+    public DesignerRestService() {
+    }
+
     DesignerRestService(UserIdentityContext context) {
         super(context);
     }

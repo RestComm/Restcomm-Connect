@@ -70,6 +70,9 @@ public class SettingsRestService extends SecuredRestService {
         workspaceStorage = new WorkspaceStorage(settings.getWorkspaceBasePath(), marshaler);
     }
 
+    public SettingsRestService() {
+    }
+
     SettingsRestService(UserIdentityContext context) {
         super(context);
     }

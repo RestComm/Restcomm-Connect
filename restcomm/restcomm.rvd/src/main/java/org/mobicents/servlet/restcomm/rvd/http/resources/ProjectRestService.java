@@ -97,6 +97,9 @@ public class ProjectRestService extends SecuredRestService {
         projectService = new ProjectService(rvdContext, workspaceStorage);
     }
 
+    public ProjectRestService() {
+    }
+
     ProjectRestService(UserIdentityContext context) {
         super(context);
     }

@@ -76,6 +76,8 @@ public class RvdController extends SecuredRestService {
         workspaceStorage = rvdContext.getWorkspaceStorage();
     }
 
+    public RvdController() {}
+
     RvdController(UserIdentityContext context) {
         super(context);
     }
