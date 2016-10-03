@@ -295,14 +295,14 @@ public class MonitoringService extends UntypedActor{
         final AtomicInteger liveIncomingCalls = new AtomicInteger();
         final AtomicInteger liveOutgoingCalls = new AtomicInteger();
 
-        countersMap.put("TotalCallsSinceUptime",callsUpToNow.get());
-        countersMap.put("IncomingCallsSinceUptime", incomingCallsUpToNow.get());
-        countersMap.put("OutgoingCallsSinceUptime", outgoingCallsUpToNow.get());
-        countersMap.put("RegisteredUsers", registeredUsers.size());
-        countersMap.put("LiveCalls", callDetailsList.size());
-        countersMap.put("MaximumConcurrentCalls", maxConcurrentCalls.get());
-        countersMap.put("MaximumConcurrentIncomingCalls", maxConcurrentIncomingCalls.get());
-        countersMap.put("MaximumConcurrentOutgoingCalls", maxConcurrentOutgoingCalls.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_TOTAL_CALLS_SINCE_UPTIME,callsUpToNow.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_INCOMING_CALLS_SINCE_UPTIME, incomingCallsUpToNow.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_OUTGOING_CALL_SINCE_UPTIME, outgoingCallsUpToNow.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_REGISTERED_USERS, registeredUsers.size());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_LIVE_CALLS, callDetailsList.size());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_MAXIMUM_CONCURRENT_CALLS, maxConcurrentCalls.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_MAXIMUM_CONCURRENT_INCOMING_CALLS, maxConcurrentIncomingCalls.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_MAXIMUM_CONCURRENT_OUTGOING_CALLS, maxConcurrentOutgoingCalls.get());
 
         Double averageCallDurationLast24Hours = null;
         Double averageCallDurationLastHour = null;
@@ -324,8 +324,8 @@ public class MonitoringService extends UntypedActor{
             averageCallDurationLastHour = 0.0;
         }
 
-        durationMap.put("AverageCallDurationInSecondsLast24Hours", averageCallDurationLast24Hours);
-        durationMap.put("AverageCallDurationInSecondsLastHour", averageCallDurationLastHour);
+        durationMap.put(MonitoringMetrics.DURATION_MAP_AVERAGE_CALL_DURATION_IN_SECONDS_LAST_24_HOURS, averageCallDurationLast24Hours);
+        durationMap.put(MonitoringMetrics.DURATION_MAP_AVERAGE_CALL_DURATION_IN_SECONDS_LAST_HOUR, averageCallDurationLastHour);
 
         for (CallInfo callInfo : callDetailsList) {
             if (callInfo.direction().equalsIgnoreCase("inbound")) {
@@ -334,20 +334,20 @@ public class MonitoringService extends UntypedActor{
                 liveOutgoingCalls.incrementAndGet();
             }
         }
-        countersMap.put("LiveIncomingCalls", liveIncomingCalls.get());
-        countersMap.put("LiveOutgoingCalls", liveOutgoingCalls.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_LIVE_INCOMING_CALLS, liveIncomingCalls.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_LIVE_OUTGOING_CALLS, liveOutgoingCalls.get());
 
-        countersMap.put("CompletedCalls", completedCalls.get());
-        countersMap.put("NoAnswerCalls", noAnswerCalls.get());
-        countersMap.put("BusyCalls", busyCalls.get());
-        countersMap.put("FailedCalls", failedCalls.get());
-        countersMap.put("NotFoundCalls", notFoundCalls.get());
-        countersMap.put("CanceledCalls", canceledCalls.get());
-        countersMap.put("TextMessageInboundToApp", textInboundToApp.get());
-        countersMap.put("TextMessageInboundToClient", textInboundToClient.get());
-        countersMap.put("TextMessageInboundToProxyOut", textInboundToProxyOut.get());
-        countersMap.put("TextMessageNotFound", textNotFound.get());
-        countersMap.put("TextMessageOutbound", textOutbound.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_COMPLETED_CALLS, completedCalls.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_NO_ANSWER_CALLS, noAnswerCalls.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_BUSY_CALLS, busyCalls.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_FAILED_CALLS, failedCalls.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_NOT_FOUND_CALLS, notFoundCalls.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_CANCELED_CALLS, canceledCalls.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_TEXT_MESSAGE_INBOUND_TO_APP, textInboundToApp.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_TEXT_MESSAGE_INBOUND_TO_CLIENT, textInboundToClient.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_TEXT_MESSAGE_INBOUND_TO_PROXY_OUT, textInboundToProxyOut.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_TEXT_MESSAGE_NOT_FOUND, textNotFound.get());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_TEXT_MESSAGE_OUTBOUND, textOutbound.get());
 
         MonitoringServiceResponse callInfoList = new MonitoringServiceResponse(instanceId, callDetailsList, countersMap, durationMap);
         sender.tell(callInfoList, self);
