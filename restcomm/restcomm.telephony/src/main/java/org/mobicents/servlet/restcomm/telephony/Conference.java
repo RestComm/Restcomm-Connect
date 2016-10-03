@@ -94,6 +94,8 @@ public final class Conference extends UntypedActor {
     private final DaoManager storage;
     private int globalNoOfParticipants;
 
+    private ConferenceStateChanged.State waitingState;
+
     public Conference(final String name, final ActorRef msController, final DaoManager storage) {
         super();
         final ActorRef source = self();
@@ -249,11 +251,11 @@ public final class Conference extends UntypedActor {
             String stateStr= mediaServerConferenceControllerStateChanged.conferenceState();
 
             //this is to cover the scenario where initial state is not moderatorAbsent and maybe moderator is present on another node.
-            ConferenceStateChanged.State initialState = ConferenceStateChanged.translateState(stateStr, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT);
+            waitingState = ConferenceStateChanged.translateState(stateStr, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT);
             if(logger.isInfoEnabled()) {
-                logger.info("################################## Conference " + name + " has sid: "+sid +" initial state: "+initialState);
+                logger.info("################################## Conference " + name + " has sid: "+sid +" stateStr: "+stateStr+" initial state: "+waitingState);
             }
-            broadcast(new ConferenceStateChanged(name, initialState));
+            broadcast(new ConferenceStateChanged(name, waitingState));
         }
     }
 
@@ -364,7 +366,7 @@ public final class Conference extends UntypedActor {
         ConferenceInfo information = null;
         int globalNoOfParticipants = getGlobalNoOfParticipants();
         if (is(waiting)) {
-            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT, name, moderatorPresent, globalNoOfParticipants);
+            information = new ConferenceInfo(sid, calls, waitingState, name, moderatorPresent, globalNoOfParticipants);
         } else if (is(running)) {
             information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT, name, moderatorPresent, globalNoOfParticipants);
         } else if (is(stopped)) {

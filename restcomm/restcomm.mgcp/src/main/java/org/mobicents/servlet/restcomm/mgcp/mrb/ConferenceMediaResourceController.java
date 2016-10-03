@@ -20,6 +20,8 @@
  */
 package org.mobicents.servlet.restcomm.mgcp.mrb;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -31,10 +33,7 @@ import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.dao.MediaResourceBrokerDao;
 import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
-import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntity;
-import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntityFilter;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
@@ -42,6 +41,10 @@ import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mgcp.ConnectionStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.CreateBridgeEndpoint;
+import org.mobicents.servlet.restcomm.dao.MediaResourceBrokerDao;
+import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntity;
+import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntityFilter;
+
 import org.mobicents.servlet.restcomm.mgcp.CreateConferenceEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.CreateConnection;
 import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
@@ -69,6 +72,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecording;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
+import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -219,6 +223,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         transitions.add(new Transition(acquiringMasterConferenceEndpoint, acquiringRemoteConnectionWithMasterMS));
         transitions.add(new Transition(acquiringRemoteConnectionWithMasterMS, initializingRemoteConnectionWithMasterMS));
         transitions.add(new Transition(initializingRemoteConnectionWithMasterMS, openingRemoteConnectionWithMasterMS));
+        transitions.add(new Transition(openingRemoteConnectionWithMasterMS, failed));
         transitions.add(new Transition(openingRemoteConnectionWithMasterMS, updatingRemoteConnectionWithLocalMS));
         transitions.add(new Transition(updatingRemoteConnectionWithLocalMS, creatingMediaGroup));
         transitions.add(new Transition(creatingMediaGroup, preActive));
@@ -483,7 +488,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
-        if (is(active) && !playing) {
+        if (!playing) {
             this.playing = Boolean.TRUE;
             this.mediaGroup.tell(message, self);
         }
@@ -512,7 +517,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     }
 
     private void onMediaGroupResponse(MediaGroupResponse<String> message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active) && this.playing) {
+        if (this.playing) {
             this.playing = Boolean.FALSE;
         }
     }
@@ -952,8 +957,11 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     updateConferenceStatus("COMPLETED");
                     // Destroy Media Group
                     mediaGroup.tell(new StopMediaGroup(), super.source);
+                }else{
+                    playBeepOnExit(self());
                 }
             }else{
+                playBeepOnExit(self());
                 logger.info("CMRC is STOPPING Slave NOW...");
                 removeSlaveRecord();
                 //check if it is last to leave in entire cluster then distroymaster conf EP as well
@@ -966,6 +974,17 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 }
             }
         }
+    }
+
+    private void playBeepOnExit(final ActorRef source) throws URISyntaxException{
+        //TODO: read it from config after testing
+        String path = "/restcomm/audio/";
+        String entryAudio = "alert.wav";
+        path += entryAudio == null || entryAudio.equals("") ? "beep.wav" : entryAudio;
+        URI uri = null;
+        uri = UriUtils.resolve(new URI(path));
+        final Play play = new Play(uri, 1);
+        onPlay(play, self(), sender());
     }
 
     private abstract class FinalState extends AbstractAction {
