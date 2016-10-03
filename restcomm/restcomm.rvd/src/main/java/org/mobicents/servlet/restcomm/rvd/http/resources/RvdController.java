@@ -34,6 +34,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.CallControlExce
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.CallControlInvalidConfigurationException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.UnauthorizedCallControlAccess;
 import org.mobicents.servlet.restcomm.rvd.identity.AccountProvider;
+import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RemoteServiceError;
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
@@ -69,14 +70,18 @@ public class RvdController extends SecuredRestService {
     @PostConstruct
     public void init() {
         super.init();
-        rvdContext = new ProjectAwareRvdContext(request, servletContext);
+        rvdContext = new ProjectAwareRvdContext(request, servletContext, applicationContext.getConfiguration());
         rvdSettings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();
         workspaceStorage = rvdContext.getWorkspaceStorage();
     }
 
+    RvdController(UserIdentityContext context) {
+        super(context);
+    }
+
     private Response runInterpreter(String appname, HttpServletRequest httpRequest,
-            MultivaluedMap<String, String> requestParams) {
+                                    MultivaluedMap<String, String> requestParams) {
         String rcmlResponse;
         try {
             if (!FsProjectStorage.projectExists(appname, workspaceStorage))
@@ -84,7 +89,7 @@ public class RvdController extends SecuredRestService {
 
             String targetParam = requestParams.getFirst("target");
             Interpreter interpreter = new Interpreter(rvdContext, targetParam, appname, httpRequest, requestParams,
-                    workspaceStorage);
+                    workspaceStorage,applicationContext);
             rcmlResponse = interpreter.interpret();
 
             // logging rcml response, if configured
@@ -220,11 +225,11 @@ public class RvdController extends SecuredRestService {
             throw new UnauthorizedCallControlAccess("WebTrigger authorization error");
 
         // guess restcomm location
-        URI restcommBaseUri = RvdConfiguration.getInstance().getRestcommBaseUri();
+        URI restcommBaseUri = applicationContext.getConfiguration().getRestcommBaseUri();
         // initialize a restcomm client object using various information sources
         RestcommClient restcommClient;
         try {
-            restcommClient = new RestcommClient(restcommBaseUri, effectiveAuthHeader);
+            restcommClient = new RestcommClient(restcommBaseUri, effectiveAuthHeader,applicationContext.getHttpClientBuilder());
         } catch (RestcommClient.RestcommClientInitializationException e) {
             throw new CallControlException("WebTrigger",e);
         }
@@ -317,7 +322,7 @@ public class RvdController extends SecuredRestService {
         String selectedMediaType = MediaType.TEXT_HTML;
         try {
             rvdContext.setProjectName(projectName);
-            AccountProvider accountProvider = AccountProvider.getInstance();
+            AccountProvider accountProvider = applicationContext.getAccountProvider();
             RestcommCallArray calls = executeAction(projectName, request, toParam, fromParam, accessToken, ui, accountProvider);
             // build call-sid part of message
             StringBuffer messageBuffer = new StringBuffer("[");
@@ -357,7 +362,7 @@ public class RvdController extends SecuredRestService {
         String selectedMediaType = MediaType.APPLICATION_JSON;
         try {
             rvdContext.setProjectName(projectName);
-            AccountProvider accountProvider = AccountProvider.getInstance();
+            AccountProvider accountProvider = applicationContext.getAccountProvider();
             RestcommCallArray calls = executeAction(projectName, request, toParam, fromParam, accessToken, ui, accountProvider);
             return buildWebTriggerJsonResponse(CallControlAction.createCall, CallControlStatus.success, 200, calls);
         } catch (UnauthorizedCallControlAccess e) {

@@ -13,10 +13,10 @@ public class RvdContext {
     private ServletContext servletContext;
     protected WorkspaceStorage workspaceStorage;
 
-    public RvdContext(HttpServletRequest request,  ServletContext servletContext) {
+    public RvdContext(HttpServletRequest request,  ServletContext servletContext, RvdConfiguration config) {
         if (request == null || servletContext == null)
             throw new IllegalArgumentException();
-        this.settings = RvdConfiguration.getInstance();
+        this.settings = config;
         this.marshaler = new ModelMarshaler();
         this.workspaceStorage = new WorkspaceStorage(settings.getWorkspaceBasePath(), marshaler);
         this.servletContext = servletContext;

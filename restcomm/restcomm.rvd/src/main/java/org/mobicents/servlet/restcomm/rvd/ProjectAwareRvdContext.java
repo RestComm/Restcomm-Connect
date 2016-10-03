@@ -14,15 +14,15 @@ public class ProjectAwareRvdContext extends RvdContext {
     private ProjectLogger projectLogger;
     private ProjectSettings projectSettings;
 
-    public ProjectAwareRvdContext(String projectName, HttpServletRequest request, ServletContext servletContext) throws StorageException {
-        super(request, servletContext);
+    public ProjectAwareRvdContext(String projectName, HttpServletRequest request, ServletContext servletContext, RvdConfiguration configuration) throws StorageException {
+        super(request, servletContext, configuration);
         if (projectName == null)
             throw new IllegalArgumentException();
         setProjectName(projectName);
     }
 
-    public ProjectAwareRvdContext(HttpServletRequest request, ServletContext servletContext) {
-        super(request, servletContext);
+    public ProjectAwareRvdContext(HttpServletRequest request, ServletContext servletContext, RvdConfiguration configuration) {
+        super(request, servletContext, configuration);
     }
 
     public ProjectLogger getProjectLogger() {

@@ -37,6 +37,7 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.UserProfile;
 import org.mobicents.servlet.restcomm.rvd.model.client.SettingsModel;
@@ -64,9 +65,13 @@ public class SettingsRestService extends SecuredRestService {
     @PostConstruct
     public void init() {
         super.init();
-        settings = RvdConfiguration.getInstance();
+        settings = applicationContext.getConfiguration();
         marshaler = new ModelMarshaler();
         workspaceStorage = new WorkspaceStorage(settings.getWorkspaceBasePath(), marshaler);
+    }
+
+    SettingsRestService(UserIdentityContext context) {
+        super(context);
     }
 
     @POST

@@ -13,6 +13,7 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -23,14 +24,14 @@ public class DesignerRestService extends SecuredRestService {
 
     RvdContext rvdContext;
 
-    public DesignerRestService() {
-        // TODO Auto-generated constructor stub
-    }
-
     @PostConstruct
     public void init() {
         super.init();
-        rvdContext = new RvdContext(request, servletContext);
+        rvdContext = new RvdContext(request, servletContext, applicationContext.getConfiguration());
+    }
+
+    DesignerRestService(UserIdentityContext context) {
+        super(context);
     }
 
     /**

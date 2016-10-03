@@ -19,6 +19,7 @@ import java.net.URLEncoder;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.ApplicationContext;
 import org.mobicents.servlet.restcomm.rvd.ProjectAwareRvdContext;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.ProjectLogger;
@@ -89,6 +90,7 @@ public class Interpreter {
     private HttpServletRequest httpRequest;
     private ProjectLogger projectLogger;
     private ProjectAwareRvdContext rvdContext;
+    private ApplicationContext applicationContext;
 
     public ProjectLogger getProjectLogger() {
         return projectLogger;
@@ -127,7 +129,8 @@ public class Interpreter {
         return "<Response><Hangup/></Response>";
     }
 
-    public Interpreter(ProjectAwareRvdContext rvdContext, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams, WorkspaceStorage workspaceStorage) {
+
+    public Interpreter(ProjectAwareRvdContext rvdContext, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams, WorkspaceStorage workspaceStorage, ApplicationContext applicationContext) {
         this.rvdContext = rvdContext;
         this.rvdSettings = rvdContext.getSettings();
         this.httpRequest = httpRequest;
@@ -138,6 +141,7 @@ public class Interpreter {
         this.workspaceStorage = workspaceStorage;
         this.marshaler = rvdContext.getMarshaler();
         this.projectLogger = rvdContext.getProjectLogger();
+        this.applicationContext = applicationContext;
 
         this.contextPath = httpRequest.getContextPath();
         init();
@@ -225,6 +229,9 @@ public class Interpreter {
         return appName;
     }
 
+    public ApplicationContext getApplicationContext() {
+        return applicationContext;
+    }
 
     public void setAppName(String appName) {
         this.appName = appName;

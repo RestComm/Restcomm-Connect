@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.IOUtils;
 import org.mobicents.servlet.restcomm.rvd.identity.AccountProvider;
+import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
 import org.mobicents.servlet.restcomm.rvd.model.LoginForm;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.identity.BasicAuthCredentials;
@@ -30,6 +31,10 @@ public class LoginRestService extends SecuredRestService {
     @PostConstruct
     public void init() {
         super.init();
+    }
+
+    LoginRestService(UserIdentityContext context) {
+        super(context);
     }
 
     /**
@@ -48,7 +53,7 @@ public class LoginRestService extends SecuredRestService {
         Gson gson = new Gson();
         LoginForm form = gson.fromJson(data,LoginForm.class);
 
-        AccountProvider accounts = AccountProvider.getInstance();
+        AccountProvider accounts = applicationContext.getAccountProvider();
         BasicAuthCredentials creds = new BasicAuthCredentials(form.getUsername(),form.getPassword());
         RestcommAccountInfoResponse accountInfo = accounts.getAccount(creds);
         if (accountInfo != null)

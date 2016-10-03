@@ -40,6 +40,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.ras.InvalidRestcommAppPacka
 import org.mobicents.servlet.restcomm.rvd.exceptions.ras.RestcommAppAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ras.UnsupportedRasApplicationVersion;
 import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
+import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.RappItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
@@ -74,12 +75,16 @@ public class RasRestService extends SecuredRestService {
     @PostConstruct
     public void init() {
         super.init();
-        rvdContext = new RvdContext(request, servletContext);
+        rvdContext = new RvdContext(request, servletContext,applicationContext.getConfiguration());
         settings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();
         workspaceStorage = new WorkspaceStorage(settings.getWorkspaceBasePath(), marshaler);
         rasService = new RasService(rvdContext, workspaceStorage);
         projectService = new ProjectService(rvdContext,workspaceStorage);
+    }
+
+    RasRestService(UserIdentityContext context) {
+        super(context);
     }
 
     /**
@@ -301,7 +306,7 @@ public class RasRestService extends SecuredRestService {
                         //projectService.addWavToProject(projectName, item.getName(), item.openStream());
                         // Create application
                         String tempName = "RasImport-" + UUID.randomUUID().toString().replace("-", "");
-                        applicationsApi = new ProjectApplicationsApi(getUserIdentityContext());
+                        applicationsApi = new ProjectApplicationsApi(getUserIdentityContext(),applicationContext);
                         applicationSid = applicationsApi.createApplication(tempName, "");
 
                         String effectiveProjectName = null;

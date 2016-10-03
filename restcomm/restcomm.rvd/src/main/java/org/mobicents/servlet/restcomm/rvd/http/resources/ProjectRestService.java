@@ -45,6 +45,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.project.ProjectException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.project.UnsupportedProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
+import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
 import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationException;
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
@@ -89,11 +90,15 @@ public class ProjectRestService extends SecuredRestService {
     @PostConstruct
     public void init() {
         super.init();
-        rvdContext = new RvdContext(request, servletContext);
+        rvdContext = new RvdContext(request, servletContext,applicationContext.getConfiguration());
         rvdSettings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();
         workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), marshaler);
         projectService = new ProjectService(rvdContext, workspaceStorage);
+    }
+
+    ProjectRestService(UserIdentityContext context) {
+        super(context);
     }
 
     /**
@@ -155,7 +160,7 @@ public class ProjectRestService extends SecuredRestService {
             logger.info("Creating project " + name);
         }
         try {
-            applicationsApi = new ProjectApplicationsApi(getUserIdentityContext());
+            applicationsApi = new ProjectApplicationsApi(getUserIdentityContext(),applicationContext);
             applicationSid = applicationsApi.createApplication(name, kind);
             ProjectState projectState = projectService.createProject(applicationSid, kind, getLoggedUsername());
             BuildService buildService = new BuildService(workspaceStorage);
@@ -300,7 +305,7 @@ public class ProjectRestService extends SecuredRestService {
         if (!RvdUtils.isEmpty(applicationSid) && !RvdUtils.isEmpty(projectNewName)) {
             assertProjectAvailable(applicationSid);
             try {
-                ProjectApplicationsApi applicationsApi = new ProjectApplicationsApi(getUserIdentityContext());
+                ProjectApplicationsApi applicationsApi = new ProjectApplicationsApi(getUserIdentityContext(),applicationContext);
                 try {
                     applicationsApi.renameApplication(applicationSid, projectNewName);
                 } catch (ApplicationApiNotSynchedException e) {
@@ -355,7 +360,7 @@ public class ProjectRestService extends SecuredRestService {
         secure();
         if (!RvdUtils.isEmpty(applicationSid)) {
             try {
-                ProjectApplicationsApi applicationsApi = new ProjectApplicationsApi(getUserIdentityContext());
+                ProjectApplicationsApi applicationsApi = new ProjectApplicationsApi(getUserIdentityContext(),applicationContext);
                 applicationsApi.removeApplication(applicationSid);
                 projectService.deleteProject(applicationSid);
                 return Response.ok().build();
@@ -422,7 +427,7 @@ public class ProjectRestService extends SecuredRestService {
                     if (item.getName() != null) {
                         // Create application
                         String tempName = "RvdImport-" + UUID.randomUUID().toString().replace("-", "");
-                        applicationsApi = new ProjectApplicationsApi(getUserIdentityContext());
+                        applicationsApi = new ProjectApplicationsApi(getUserIdentityContext(),applicationContext);
                         applicationSid = applicationsApi.createApplication(tempName, "");
 
                         String effectiveProjectName = null;
