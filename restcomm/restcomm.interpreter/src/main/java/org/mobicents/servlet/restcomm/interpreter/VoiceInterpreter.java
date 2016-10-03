@@ -214,6 +214,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     // Call bridging
     private final ActorRef bridgeManager;
     private ActorRef bridge;
+    private boolean beep;
 
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
@@ -609,8 +610,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         self().tell(stop, self());
                         return;
                     }
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("going to play conference-exit-audio beep");
+                    if (logger.isInfoEnabled()) {
+                        logger.info("going to play conference-exit-audio beep");
                     }
                     final Play play = new Play(uri, 1);
                     conference.tell(play, self());
@@ -2430,7 +2431,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             if (conferenceInfo.globalParticipants() < maxParticipantLimit) {
                 // Play beep.
-                boolean beep = true;
+                beep = true;
                 attribute = child.attribute("beep");
                 if (attribute != null) {
                     final String value = attribute.value();
@@ -2442,29 +2443,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Only play beep if conference is already running
                 // Do not play it while participants are listening to background music
                 if (beep && ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT.equals(conferenceInfo.state())) {
-                    String path = configuration.subset("runtime-settings").getString("prompts-uri");
-                    if (!path.endsWith("/")) {
-                        path += "/";
+                    playBeepOnEnter(source);
+                }else{
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Wont play beep bcz: beep="+beep+" AND conferenceInfo.state()="+conferenceInfo.state());
                     }
-                    String entryAudio = configuration.subset("runtime-settings").getString("conference-entry-audio");
-                    path += entryAudio == null || entryAudio.equals("") ? "beep.wav" : entryAudio;
-                    URI uri = null;
-                    try {
-                        uri = UriUtils.resolve(new URI(path));
-                    } catch (final Exception exception) {
-                        final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
-                        final NotificationsDao notifications = storage.getNotificationsDao();
-                        notifications.addNotification(notification);
-                        sendMail(notification);
-                        final StopInterpreter stop = new StopInterpreter();
-                        source.tell(stop, source);
-                        return;
-                    }
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("going to play conference-entry-audio beep");
-                    }
-                    final Play play = new Play(uri, 1);
-                    conference.tell(play, source);
                 }
                 if (logger.isInfoEnabled()) {
                     logger.info("About to join call to Conference: "+conferenceInfo.name()+", with state: "+conferenceInfo.state()+", with moderator present: "+conferenceInfo.isModeratorPresent()+", and current participants: "+conferenceInfo.globalParticipants());
@@ -2652,7 +2635,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Tell the conference the moderator is now present
                 // Causes background music to stop playing and all participants will be unmuted
                 conference.tell(new ConferenceModeratorPresent(), source);
-
+                if (beep) {
+                    playBeepOnEnter(source);
+                }else{
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Wont play beep bcz: beep="+beep+" AND conferenceInfo.state()="+conferenceInfo.state());
+                    }
+                }
                 // Check if moderator wants to record the conference
                 Attribute record = verb.attribute("record");
                 if (record != null && "true".equalsIgnoreCase(record.value())) {
@@ -2681,6 +2670,31 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
+    protected void playBeepOnEnter(ActorRef source){
+        String path = configuration.subset("runtime-settings").getString("prompts-uri");
+        if (!path.endsWith("/")) {
+            path += "/";
+        }
+        String entryAudio = configuration.subset("runtime-settings").getString("conference-entry-audio");
+        path += entryAudio == null || entryAudio.equals("") ? "beep.wav" : entryAudio;
+        URI uri = null;
+        try {
+            uri = UriUtils.resolve(new URI(path));
+        } catch (final Exception exception) {
+            final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
+            final NotificationsDao notifications = storage.getNotificationsDao();
+            notifications.addNotification(notification);
+            sendMail(notification);
+            final StopInterpreter stop = new StopInterpreter();
+            source.tell(stop, source);
+            return;
+        }
+        if (logger.isInfoEnabled()) {
+            logger.info("going to play conference-entry-audio beep");
+        }
+        final Play play = new Play(uri, 1);
+        conference.tell(play, source);
+    }
     //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
     protected void playWaitUrl(final List<URI> waitUrls, final ActorRef source) {
         conference.tell(new Play(waitUrls, Short.MAX_VALUE, confModeratorPresent), source);

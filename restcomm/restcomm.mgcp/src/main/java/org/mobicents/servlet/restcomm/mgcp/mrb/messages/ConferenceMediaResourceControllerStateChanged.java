@@ -37,9 +37,9 @@ public class ConferenceMediaResourceControllerStateChanged {
     private final MediaServerControllerState state;
     private final String conferenceState;
 
-    public ConferenceMediaResourceControllerStateChanged(MediaServerControllerState state, final String ConferenceState) {
+    public ConferenceMediaResourceControllerStateChanged(MediaServerControllerState state, final String conferenceState) {
         this.state = state;
-        this.conferenceState = ConferenceState;
+        this.conferenceState = conferenceState;
     }
 
     public MediaServerControllerState state() {
