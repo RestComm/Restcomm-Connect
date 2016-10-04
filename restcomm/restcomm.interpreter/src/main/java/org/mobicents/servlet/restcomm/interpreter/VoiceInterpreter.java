@@ -580,7 +580,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     private void onConferenceCenterResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         if (is(startDialing)) {
-            fsm.transition(message, acquiringConferenceInfo);
+        	ConferenceCenterResponse ccReponse = (ConferenceCenterResponse)message;
+        	if(ccReponse.succeeded()){
+            	fsm.transition(message, acquiringConferenceInfo);
+        	}else{
+            	fsm.transition(message, hangingUp);
+        	}
         }
     }
 
