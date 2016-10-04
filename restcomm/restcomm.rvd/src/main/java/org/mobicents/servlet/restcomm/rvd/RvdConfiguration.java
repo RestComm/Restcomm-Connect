@@ -59,32 +59,11 @@ public class RvdConfiguration {
     private String contextRootPath;
     private URI restcommBaseUri;
 
-    public static RvdConfiguration getInstance() {
-        if ( instance == null ) {
-            throw new IllegalStateException("RVD configuration has not been loaded.");
-        }
-        return instance;
+    // package-private constructor to be used from RvdConfigurationBuilder
+    RvdConfiguration() {
     }
 
-    public static RvdConfiguration createOnce(ServletContext servletContext) {
-        synchronized (RvdConfiguration.class) {
-            if ( instance == null ) {
-                instance = new RvdConfiguration(servletContext);
-            }
-            return instance;
-        }
-    }
-
-    public static RvdConfiguration createOnce(String contextRootPath) {
-        synchronized (RvdConfiguration.class) {
-            if ( instance == null ) {
-                instance = new RvdConfiguration(contextRootPath);
-            }
-            return instance;
-        }
-    }
-
-    private RvdConfiguration(ServletContext servletContext) {
+    public RvdConfiguration(ServletContext servletContext) {
         contextRootPath = servletContext.getRealPath("/");
         if(logger.isInfoEnabled()) {
             logger.info("contextRootPath: " + contextRootPath);
@@ -92,7 +71,7 @@ public class RvdConfiguration {
         load();
     }
 
-    private RvdConfiguration(String contextRootPath) {
+    public RvdConfiguration(String contextRootPath) {
         this.contextRootPath = contextRootPath;
         if(logger.isInfoEnabled()) {
             logger.info("contextRootPath: " + contextRootPath);
@@ -273,5 +252,10 @@ public class RvdConfiguration {
      */
     public String getApplicationsRelativeUrl() {
         return "/restcomm-rvd/services/apps";
+    }
+
+    // package private setter to be used from RvdConfigurationBuilder only
+    void setRestcommBaseUri(URI uri) {
+        this.restcommBaseUri = uri;
     }
 }
