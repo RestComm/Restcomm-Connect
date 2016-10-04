@@ -63,6 +63,7 @@ public class RvdConfiguration {
     RvdConfiguration() {
     }
 
+
     public RvdConfiguration(ServletContext servletContext) {
         contextRootPath = servletContext.getRealPath("/");
         if(logger.isInfoEnabled()) {
@@ -77,6 +78,14 @@ public class RvdConfiguration {
             logger.info("contextRootPath: " + contextRootPath);
         }
         load();
+    }
+
+    public RvdConfiguration(String workspaceBasePath, RvdConfig rvdConfig, RestcommConfig restcommConfig, String contextRootPath, URI restcommBaseUri) {
+        this.workspaceBasePath = workspaceBasePath;
+        this.rvdConfig = rvdConfig;
+        this.restcommConfig = restcommConfig;
+        this.contextRootPath = contextRootPath;
+        this.restcommBaseUri = restcommBaseUri;
     }
 
     private void load() {
@@ -258,4 +267,5 @@ public class RvdConfiguration {
     void setRestcommBaseUri(URI uri) {
         this.restcommBaseUri = uri;
     }
+
 }

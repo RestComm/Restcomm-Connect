@@ -18,31 +18,18 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.rvd.identity;
+package org.mobicents.servlet.restcomm.rvd.http.resources;
 
-import org.mobicents.servlet.restcomm.rvd.commons.http.CustomHttpClientBuilder;
+import org.junit.Test;
 
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public class AccountProviderBuilder {
-    private String restcommUrl;
-    private CustomHttpClientBuilder httpClientbuilder;
+public class NotificationsRestServiceMockedTest extends RestServiceMockedTest {
 
-    public AccountProviderBuilder() {}
-
-    public AccountProviderBuilder setRestcommUrl(String restcommUrl) {
-        this.restcommUrl = restcommUrl;
-        return this;
-    }
-
-    public AccountProviderBuilder setHttpClientbuilder(CustomHttpClientBuilder httpClientbuilder) {
-        this.httpClientbuilder = httpClientbuilder;
-        return this;
-    }
-
-    public AccountProvider build() {
-        AccountProvider instance = new AccountProvider(restcommUrl, httpClientbuilder);
-        return instance;
+    @Test
+    public void footest() {
+        NotificationsRestService endpoint = new NotificationsRestService(userIdentityContext);
+        endpoint.postNotification(NotificationsRestService.NotificationType.applicationRemoved,"AC1234");
     }
 }
