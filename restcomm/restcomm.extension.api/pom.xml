@@ -5,14 +5,14 @@
 	<modelVersion>4.0.0</modelVersion>
 
     <parent>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm</artifactId>
+		<groupId>org.restcomm</groupId>
+		<artifactId>restcomm-connect</artifactId>
 		<version>8.0.0-SNAPSHOT</version>
 	</parent>
 
-	<groupId>com.telestax.servlet</groupId>
-	<artifactId>restcomm.extension.api</artifactId>
-	<name>restcomm.extension.api</name>
+	<groupId>org.restcomm</groupId>
+	<artifactId>restcomm-connect.extension.api</artifactId>
+	<name>restcomm-connect.extension.api</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -20,13 +20,13 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.telephony.api</artifactId>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.telephony.api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
         <dependency>
-            <groupId>com.telestax.servlet</groupId>
-            <artifactId>restcomm.dao</artifactId>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.dao</artifactId>
             <version>8.0.0-SNAPSHOT</version>
         </dependency>
     </dependencies>

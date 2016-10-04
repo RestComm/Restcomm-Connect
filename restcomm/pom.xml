@@ -2,11 +2,11 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.telestax.servlet</groupId>
-  <artifactId>restcomm</artifactId>
+  <groupId>org.restcomm</groupId>
+  <artifactId>restcomm-connect</artifactId>
   <version>8.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>RestComm</name>
+  <name>RestComm-Connect</name>
   <description>A unified communications platform for web developers.</description>
   <url>http://www.restcomm.org</url>
 
@@ -166,8 +166,8 @@
 			<!-- SMPP Testing -->
 
 			<dependency>
-				<groupId>com.telestax.servlet</groupId>
-				<artifactId>restcomm.sms.api</artifactId>
+				<groupId>org.restcomm</groupId>
+				<artifactId>restcomm-connect.sms.api</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

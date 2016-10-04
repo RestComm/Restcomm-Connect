@@ -3,14 +3,14 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>com.telestax.servlet</groupId>
-    <artifactId>restcomm</artifactId>
+    <groupId>org.restcomm</groupId>
+    <artifactId>restcomm-connect</artifactId>
     <version>8.0.0-SNAPSHOT</version>
   </parent>
-  <groupId>com.telestax.servlet</groupId>
-  <artifactId>restcomm.routing</artifactId>
+  <groupId>org.restcomm</groupId>
+  <artifactId>restcomm-connect.routing</artifactId>
   <version>8.0.0-SNAPSHOT</version>
-  <name>restcomm.routing</name>
+  <name>restcomm-connect.routing</name>
   <url>http://maven.apache.org</url>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

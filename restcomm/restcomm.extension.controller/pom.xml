@@ -5,14 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.telestax.servlet</groupId>
-        <artifactId>restcomm</artifactId>
+        <groupId>org.restcomm</groupId>
+        <artifactId>restcomm-connect</artifactId>
         <version>8.0.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.telestax.servlet</groupId>
-    <artifactId>restcomm.extension.controller</artifactId>
-    <name>restcomm.extension.controller</name>
+    <groupId>org.restcomm</groupId>
+    <artifactId>restcomm-connect.extension.controller</artifactId>
+    <name>restcomm-connect.extension.controller</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -35,8 +35,8 @@
         </dependency>
 
         <dependency>
-            <groupId>com.telestax.servlet</groupId>
-            <artifactId>restcomm.extension.api</artifactId>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.extension.api</artifactId>
             <version>${project.version}</version>
         </dependency>
 
