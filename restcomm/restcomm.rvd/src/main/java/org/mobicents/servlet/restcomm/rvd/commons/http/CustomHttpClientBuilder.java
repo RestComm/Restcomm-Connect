@@ -25,13 +25,17 @@ import javax.net.ssl.SSLContext;
  */
 
 public class CustomHttpClientBuilder {
+    private SslMode sslMode;
 
     private CustomHttpClientBuilder() {
     }
 
+    public CustomHttpClientBuilder(RvdConfiguration configuration) {
+        this.sslMode = configuration.getSslMode();
+    }
+
     // returns an apache http client
-    public static CloseableHttpClient buildHttpClient() {
-        SslMode sslMode = RvdConfiguration.getInstance().getSslMode();
+    public CloseableHttpClient buildHttpClient() {
         if ( sslMode == SslMode.strict ) {
             return buildStrictClient();
         }
@@ -51,7 +55,7 @@ public class CustomHttpClientBuilder {
     }
     */
 
-    private static CloseableHttpClient buildStrictClient() {
+    private CloseableHttpClient buildStrictClient() {
         String[] protocols = getSSLPrototocolsFromSystemProperties();
         if (protocols == null)
             return HttpClients.createDefault();
@@ -64,7 +68,7 @@ public class CustomHttpClientBuilder {
         return httpclient;
     }
 
-    private static CloseableHttpClient buildAllowallClient() {
+    private CloseableHttpClient buildAllowallClient() {
         String[] protocols = getSSLPrototocolsFromSystemProperties();
         //SSLContext sslcontext = SSLContexts.createDefault();
         SSLContext sslcontext;
@@ -80,7 +84,7 @@ public class CustomHttpClientBuilder {
         return httpclient;
     }
 
-    private static String[] getSSLPrototocolsFromSystemProperties() {
+    private String[] getSSLPrototocolsFromSystemProperties() {
         String protocols = System.getProperty("jdk.tls.client.protocols");
         if (protocols == null)
             protocols = System.getProperty("https.protocols");
