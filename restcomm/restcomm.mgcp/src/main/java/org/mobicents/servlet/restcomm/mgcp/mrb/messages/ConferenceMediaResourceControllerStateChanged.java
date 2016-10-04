@@ -42,6 +42,10 @@ public class ConferenceMediaResourceControllerStateChanged {
         this.conferenceState = conferenceState;
     }
 
+    public ConferenceMediaResourceControllerStateChanged(MediaServerControllerState state) {
+        this(state, null);
+    }
+
     public MediaServerControllerState state() {
         return state;
     }

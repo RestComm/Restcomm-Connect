@@ -62,6 +62,7 @@ import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StopConferenceMediaResou
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
@@ -69,6 +70,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecording;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
@@ -218,12 +220,10 @@ public class ConferenceMediaResourceController extends UntypedActor{
         transitions.add(new Transition(acquiringMediaSessionWithMasterMS, acquiringRemoteConnectionWithLocalMS));
         transitions.add(new Transition(acquiringRemoteConnectionWithLocalMS, initializingRemoteConnectionWithLocalMS));
         transitions.add(new Transition(initializingRemoteConnectionWithLocalMS, openingRemoteConnectionWithLocalMS));
-        transitions.add(new Transition(openingRemoteConnectionWithLocalMS, failed));
         transitions.add(new Transition(openingRemoteConnectionWithLocalMS, acquiringMasterConferenceEndpoint));
         transitions.add(new Transition(acquiringMasterConferenceEndpoint, acquiringRemoteConnectionWithMasterMS));
         transitions.add(new Transition(acquiringRemoteConnectionWithMasterMS, initializingRemoteConnectionWithMasterMS));
         transitions.add(new Transition(initializingRemoteConnectionWithMasterMS, openingRemoteConnectionWithMasterMS));
-        transitions.add(new Transition(openingRemoteConnectionWithMasterMS, failed));
         transitions.add(new Transition(openingRemoteConnectionWithMasterMS, updatingRemoteConnectionWithLocalMS));
         transitions.add(new Transition(updatingRemoteConnectionWithLocalMS, creatingMediaGroup));
         transitions.add(new Transition(creatingMediaGroup, preActive));
@@ -234,6 +234,10 @@ public class ConferenceMediaResourceController extends UntypedActor{
         transitions.add(new Transition(openingRemoteConnectionWithBridgeMS, active));
         transitions.add(new Transition(active, stopping));
         transitions.add(new Transition(stopping, inactive));
+        transitions.add(new Transition(openingRemoteConnectionWithLocalMS, failed));
+        transitions.add(new Transition(openingRemoteConnectionWithMasterMS, failed));
+        transitions.add(new Transition(openingRemoteConnectionWithBridgeMS, failed));
+        transitions.add(new Transition(updatingRemoteConnectionWithLocalMS, failed));
 
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
@@ -989,19 +993,25 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
     private abstract class FinalState extends AbstractAction {
 
-        public FinalState(ActorRef source) {
+        private final ConferenceMediaResourceControllerStateChanged.MediaServerControllerState state;
+
+        public FinalState(ActorRef source, final ConferenceMediaResourceControllerStateChanged.MediaServerControllerState state) {
             super(source);
+            this.state = state;
         }
 
         @Override
         public void execute(Object message) throws Exception {
+            // Notify observers the controller has stopped
+            broadcast(new ConferenceMediaResourceControllerStateChanged(state));
         }
-   }
+
+    }
 
     private final class Inactive extends FinalState {
 
         public Inactive(final ActorRef source) {
-            super(source);
+            super(source, ConferenceMediaResourceControllerStateChanged.MediaServerControllerState.INACTIVE);
         }
 
     }
@@ -1009,7 +1019,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private final class Failed extends FinalState {
 
         public Failed(final ActorRef source) {
-            super(source);
+            super(source, ConferenceMediaResourceControllerStateChanged.MediaServerControllerState.FAILED);
         }
 
     }
