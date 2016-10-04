@@ -20,7 +20,7 @@ import static org.mockito.Mockito.when;
 
 
 /**
- * Created by nando on 10/4/16.
+ * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 public class RestServiceMockedTest {
 
@@ -28,27 +28,20 @@ public class RestServiceMockedTest {
     HttpServletRequest request;
     RvdConfiguration configuration;
     UserIdentityContext userIdentityContext;
+    AccountProvider accountProvider;
 
-    @Before
-    public void before() {
-        // setup wiremock server to simulate authentication
-        stubFor(get(urlMatching("/restcomm/2012-04-24/Accounts.json/administrator@company.com"))
-//                .withHeader("Accept", equalTo("text/xml"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("{\"sid\":\"ACae6e420f425248d6a26948c17a9e2acf\",\"email_address\":\"administrator@company.com\",\"status\":\"active\",\"role\":\"administrator\"}")));
+    public void setupMocks() {
         // mock HttpServletRequest object
         request = Mockito.mock(HttpServletRequest.class);
-        String authorizationHeader = "Basic YWRtaW5pc3RyYXRvckBjb21wYW55LmNvbTo3N2Y4YzEyY2M3YjhmODQyM2U1YzM4YjAzNTI0OTE2Ng==";
+        String authorizationHeader = "Basic YWRtaW5pc3RyYXRvckBjb21wYW55LmNvbTo3N2Y4YzEyY2M3YjhmODQyM2U1YzM4YjAzNTI0OTE2Ng=="; // any password will pass
         when(request.getHeader("Authorization")).thenReturn(authorizationHeader);
         // RvdConfiguration
         configuration = new RvdConfigurationBuilder()
-                .setRestcommBaseUri("http://127.0.0.1:8089")
+                .setRestcommBaseUri("http://127.0.0.1:8099")
                 .setRestcommConfig(new RestcommConfigBuilder().build())
                 .build(); // point that to wiremock
         CustomHttpClientBuilder httpClientBuilder = new CustomHttpClientBuilder(configuration);
-        AccountProvider accountProvider = new AccountProviderBuilder()
+        accountProvider = new AccountProviderBuilder()
                 .setRestcommUrl(configuration.getRestcommBaseUri().toString())
                 .setHttpClientbuilder(httpClientBuilder)
                 .build();
@@ -56,7 +49,16 @@ public class RestServiceMockedTest {
         userIdentityContext = new UserIdentityContext(authorizationHeader,accountProvider);
     }
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8089);
+    protected void addLegitimateAccount(String email, String accountSid) {
+        stubFor(get(urlMatching("/restcomm/2012-04-24/Accounts.json/" + email))
+//                .withHeader("Accept", equalTo("text/xml"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"sid\":\"" + accountSid + "\",\"email_address\":\"" + email + "\",\"status\":\"active\",\"role\":\"administrator\"}")));
+    }
 
+
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule(8099);
 }

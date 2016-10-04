@@ -21,7 +21,16 @@
 package org.mobicents.servlet.restcomm.rvd.http.resources;
 
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.ProjectService;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.RvdContext;
+import org.mobicents.servlet.restcomm.rvd.exceptions.AuthorizationException;
+import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
+import org.mobicents.servlet.restcomm.rvd.model.project.RvdProject;
+import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.Consumes;
@@ -43,31 +52,26 @@ public class NotificationsRestService extends SecuredRestService {
         applicationRemoved
     }
 
-    /*
-    @PostConstruct
-    public void init() {
-        super.init();
-        rvdContext = new RvdContext(request, servletContext);
-        rvdSettings = rvdContext.getSettings();
-        marshaler = rvdContext.getMarshaler();
-        workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), marshaler);
-        projectService = new ProjectService(rvdContext, workspaceStorage);
-    }
-    */
+    private ProjectService projectService;
+
 
     @PostConstruct
     public void init() {
-        super.init(); // setup userIdentityContext
+        super.init();  // setup userIdentityContext
+        RvdContext rvdContext = new RvdContext(request, servletContext,applicationContext.getConfiguration());
+        WorkspaceStorage storage = new WorkspaceStorage(applicationContext.getConfiguration().getWorkspaceBasePath(), rvdContext.getMarshaler());
+        projectService = new ProjectService(rvdContext, storage);
     }
 
     // used for testing
-    NotificationsRestService(UserIdentityContext userIdentityContext) {
+    NotificationsRestService(UserIdentityContext userIdentityContext, ProjectService projectService) {
         super(userIdentityContext);
+        this.projectService = projectService;
     }
 
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
-    public Response postNotification(final MultivaluedMap<String, String> data) {
+    public Response notifyApplicationRemoved(final MultivaluedMap<String, String> data) {
         secure();
         logger.info("received notification");
         try {
@@ -75,22 +79,28 @@ public class NotificationsRestService extends SecuredRestService {
             String applicationSid = null;
             if (type == NotificationType.applicationRemoved) {
                 applicationSid = data.getFirst("applicationSid");
+                notifyApplicationRemoved(applicationSid);
             }
-            postNotification(type,applicationSid);
         } catch (IllegalArgumentException e) {
             logger.error(e);
             return Response.status(Response.Status.BAD_REQUEST).build();
+        } catch (ProjectDoesNotExist e) {
+            logger.error(e);
+            return Response.status(Response.Status.NOT_FOUND).build(); // this catch may be a little too generic and we will need to handle per case
         }
-        catch (Exception e) {
+        catch (RvdException e) {
             logger.error(e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
         return Response.ok().build();
     }
 
-    void postNotification(NotificationType type, String applicationSid) {
-        logger.info("asdf");
-        return;
+    void notifyApplicationRemoved(String applicationSid) throws RvdException {
+        // check if the operating user has the permission to remove the project (i.e. is the project owner)
+        RvdProject project = projectService.load(applicationSid);
+        if (! getLoggedUsername().equalsIgnoreCase(project.getState().getHeader().getOwner()))
+            throw new AuthorizationException();
+        projectService.deleteProject(applicationSid);
     }
 
 }
