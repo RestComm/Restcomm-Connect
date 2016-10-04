@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.TooManyListenersException;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl;
 import org.mobicents.servlet.restcomm.util.RevolvingCounter;
 
 import akka.actor.Actor;
@@ -35,7 +34,6 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import jain.protocol.ip.mgcp.CreateProviderException;
 import jain.protocol.ip.mgcp.DeleteProviderException;
 import jain.protocol.ip.mgcp.JainMgcpCommandEvent;
 import jain.protocol.ip.mgcp.JainMgcpEvent;
@@ -254,12 +252,14 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         useNat = request.useNat();
         externalIp = request.getExternalIp();
         timeout = request.getTimeout();
-        stack = new JainMgcpStackImpl(localIp, localPort);
+        stack = request.getStack();
+        provider = request.getProvider();
+        //stack = new JainMgcpStackImpl(localIp, localPort);
         try {
-            provider = stack.createProvider();
+            //provider = stack.createProvider();
             provider.addJainMgcpListener(this);
-        } catch (final TooManyListenersException ignored) {
-        } catch (final CreateProviderException exception) {
+        } catch (final TooManyListenersException exception) {
+        //} catch (final CreateProviderException exception) {
             logger.error(exception, "Could not create a JAIN MGCP provider.");
         }
         agent = new NotifiedEntity("restcomm", localIp.getHostAddress(), localPort);

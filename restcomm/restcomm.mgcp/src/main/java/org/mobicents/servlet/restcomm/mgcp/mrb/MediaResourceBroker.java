@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -55,6 +56,9 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.CreateProviderException;
+import jain.protocol.ip.mgcp.JainMgcpProvider;
+import jain.protocol.ip.mgcp.JainMgcpStack;
 
 public class MediaResourceBroker extends UntypedActor{
 
@@ -102,6 +106,16 @@ public class MediaResourceBroker extends UntypedActor{
         int mgcpMediaServerListSize = mgcpMediaServers.size();
         logger.info("total available Media Server in database are: "+mgcpMediaServerListSize);
 
+        JainMgcpStack stack = null;
+        JainMgcpProvider provider = null;
+
+        stack = new JainMgcpStackImpl(InetAddress.getByName(localIpAdressForMediaGateway), localPortAdressForMediaGateway);
+        try {
+            provider = stack.createProvider();
+        } catch (final CreateProviderException exception) {
+            logger.error(exception, "Could not create a JAIN MGCP provider.");
+        }
+
         for (MediaServerEntity mse : mgcpMediaServers) {
             final ActorRef gateway = system.actorOf(new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
@@ -135,7 +149,11 @@ public class MediaResourceBroker extends UntypedActor{
             }
 
             builder.setTimeout(Long.parseLong(mse.getResponseTimeout()));
+            builder.setStack(stack);
+            builder.setProvider(provider);
+
             final PowerOnMediaGateway powerOn = builder.build();
+
             gateway.tell(powerOn, null);
 
             gateways.put(mse.getMsId()+"", gateway);
