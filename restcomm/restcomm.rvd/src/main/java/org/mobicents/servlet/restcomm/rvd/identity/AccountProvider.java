@@ -7,7 +7,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
-import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.commons.http.CustomHttpClientBuilder;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
@@ -28,11 +27,14 @@ import java.net.URISyntaxException;
 public class AccountProvider {
 
     String restcommUrl;
+    CustomHttpClientBuilder httpClientBuilder;
 
-    AccountProvider(String restcommUrl) {
+
+    public AccountProvider(String restcommUrl, CustomHttpClientBuilder httpClientBuilder) {
         if (restcommUrl == null)
             throw new IllegalStateException("restcommUrl cannot be null");
         this.restcommUrl = sanitizeRestcommUrl(restcommUrl);
+        this.httpClientBuilder = httpClientBuilder;
     }
 
     private String sanitizeRestcommUrl(String restcommUrl) {
@@ -62,7 +64,7 @@ public class AccountProvider {
      * @return
      */
     public RestcommAccountInfoResponse getAccount(String username, String authorizationHeader) {
-        CloseableHttpClient client = CustomHttpClientBuilder.buildHttpClient();
+        CloseableHttpClient client = httpClientBuilder.buildHttpClient();
         HttpGet GETRequest = new HttpGet(buildAccountQueryUrl(username));
         GETRequest.addHeader("Authorization", authorizationHeader);
         try {
@@ -87,16 +89,5 @@ public class AccountProvider {
         String header = "Basic " + RvdUtils.buildHttpAuthorizationToken(creds.getUsername(),creds.getPassword());
         return getAccount(creds.getUsername(), header);
     }
-
-    // singleton stuff
-    private static AccountProvider instance;
-    public static AccountProvider getInstance() {
-        if (instance == null) {
-            String restcommUrl = RvdConfiguration.getInstance().getRestcommBaseUri().toString();
-            instance = new AccountProvider(restcommUrl);
-        }
-        return instance;
-    }
-
 }
 

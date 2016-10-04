@@ -23,7 +23,9 @@ package org.mobicents.servlet.restcomm.rvd.restcomm;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.TestUtils;
+import org.mobicents.servlet.restcomm.rvd.commons.http.CustomHttpClientBuilder;
 import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
 
 import java.net.URI;
@@ -35,16 +37,18 @@ import java.net.URISyntaxException;
 public class RestcommClientTest {
 
     private static URI fallbackUri;
+    private static RvdConfiguration configuration;
 
     @BeforeClass
     public static void init() {
         fallbackUri = URI.create("http://123.123.123.123:7070");
-        TestUtils.initRvdConfiguration();
+        configuration = TestUtils.initRvdConfiguration();
     }
 
     @Test(expected=RestcommClient.RestcommClientInitializationException.class)
     public void exceptionThrownWhenNoCredentialsCanBeDetermined() throws RestcommClient.RestcommClientInitializationException, URISyntaxException {
-        RestcommClient client = new RestcommClient(null, null);
+        CustomHttpClientBuilder httpClientBuilder = new CustomHttpClientBuilder(configuration);
+        RestcommClient client = new RestcommClient(null, null,httpClientBuilder);
     }
 
 }

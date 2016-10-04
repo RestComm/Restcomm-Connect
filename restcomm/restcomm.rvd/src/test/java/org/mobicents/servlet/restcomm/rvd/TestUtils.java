@@ -65,12 +65,10 @@ public class TestUtils {
         } catch (URISyntaxException e) {
             return null;
         }
-        RvdConfiguration.createOnce(rvdRoot.getPath() + "/");
-        return RvdConfiguration.getInstance();
+        return new RvdConfiguration(rvdRoot.getPath() + "/");
     }
 
     public static RvdConfiguration initRvdConfiguration() {
         return initRvdConfiguration("default");
     }
-
 }
