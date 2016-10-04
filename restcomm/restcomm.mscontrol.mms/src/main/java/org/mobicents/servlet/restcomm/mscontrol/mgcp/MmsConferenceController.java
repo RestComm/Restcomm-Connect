@@ -276,11 +276,20 @@ public final class MmsConferenceController extends MediaServerController {
         if(logger.isDebugEnabled())
             logger.debug("onConferenceMediaResourceControllerStateChanged: "+message.state());
         switch (message.state()) {
+
             case ACTIVE:
                 if (is(acquiringCnfMediaResourceController)) {
                     fsm.transition(message, active);
                 }
                 break;
+
+            case FAILED:
+                fsm.transition(message, failed);
+            	break;
+
+            case INACTIVE:
+            	break;
+
             default:
                 break;
         }

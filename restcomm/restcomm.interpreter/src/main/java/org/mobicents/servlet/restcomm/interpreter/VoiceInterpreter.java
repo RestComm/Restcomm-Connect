@@ -657,6 +657,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     private void onConferenceStateChanged(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         final ConferenceStateChanged event = (ConferenceStateChanged) message;
+        if(logger.isInfoEnabled()) {
+            logger.info("onConferenceStateChanged: "+event.state());
+        }
         switch (event.state()) {
             case RUNNING_MODERATOR_PRESENT:
                 conferenceState = event.state();
