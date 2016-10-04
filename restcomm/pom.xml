@@ -54,24 +54,25 @@
 	</licenses>
 
 	<scm>
-		<connection>scm:git:git@bitbucket.org:telestax/telscale-restcomm.git</connection>
-		<developerConnection>scm:git:git@bitbucket.org:telestax/telscale-restcomm.git</developerConnection>
-		<url>https://bitbucket.org/telestax/telscale-restcomm</url>
-		<tag>HEAD</tag>
+		<connection>scm:git:https://github.com/RestComm/Restcomm-Connect.git</connection>
+		<developerConnection>scm:git:git@github.com:RestComm/Restcomm-Connect.git</developerConnection>
+		<url>https://github.com/RestComm/Restcomm-Connect</url>
 	</scm>
 
 	<distributionManagement>
 		<repository>
-			<id>telscale-releases-repository</id>
-			<name>TelScale Releases Repository</name>
-			<url>http://telestax.artifactoryonline.com/telestax/releases</url>
+			<id>restcomm-releases-repository</id>
+			<name>Restcomm Releases Repository</name>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2
+			</url>
 		</repository>
 		<snapshotRepository>
-			<id>telscale-snapshots-repository</id>
-			<name>TelScale Snapshots Repository</name>
-			<url>http://telestax.artifactoryonline.com/telestax/snapshots</url>
+			<id>restcomm-snapshots-repository</id>
+			<name>Restcomm Snapshots Repository</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
+
 	<properties>
 		<scala-lang.version>2.10.1</scala-lang.version>
 		<akka.version>2.1.2</akka.version>
