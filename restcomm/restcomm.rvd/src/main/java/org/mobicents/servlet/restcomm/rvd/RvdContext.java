@@ -42,4 +42,8 @@ public class RvdContext {
         return workspaceStorage;
     }
 
+    public String getServletContextPath() {
+        return servletContext.getContextPath();
+    }
+
 }
