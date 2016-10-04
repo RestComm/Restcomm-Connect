@@ -276,7 +276,7 @@ public class MediaResourceBroker extends UntypedActor{
         builder.setExternalAddress(externalAddress);
 
         MediaServersDao dao = storage.getMediaServersDao();
-        final MediaServerEntity freshMediaServerEntity = builder.build();
+        MediaServerEntity freshMediaServerEntity = builder.build();
         final List<MediaServerEntity> existingMediaServersForSameIP = dao.getMediaServerEntityByIP(remoteIpAddress);
 
         if(existingMediaServersForSameIP == null || existingMediaServersForSameIP.size()==0){
@@ -285,6 +285,7 @@ public class MediaResourceBroker extends UntypedActor{
             this.msId = newMediaServerEntity.get(0).getMsId()+"";
         }else{
             this.msId = existingMediaServersForSameIP.get(0).getMsId()+"";
+            freshMediaServerEntity = freshMediaServerEntity.setMsId(Integer.parseInt(this.msId));
             dao.updateMediaServer(freshMediaServerEntity);
             if(existingMediaServersForSameIP.size()>1)
                 logger.error("in DB: there are multiple media servers registered for same IP address");

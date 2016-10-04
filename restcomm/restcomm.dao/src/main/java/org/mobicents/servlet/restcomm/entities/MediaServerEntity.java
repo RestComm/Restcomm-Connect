@@ -85,6 +85,10 @@ public final class MediaServerEntity {
         return this.externalAddress;
     }
 
+    public MediaServerEntity setMsId(int msId) {
+        return new MediaServerEntity(msId, compatibility, localIpAddress, localPort, remoteIpAddress, remotePort, responseTimeout, externalAddress);
+    }
+
     @NotThreadSafe
     public static final class Builder {
         private int msId;
