@@ -7,6 +7,7 @@ import org.mobicents.servlet.restcomm.rvd.http.ProjectDoesNotExistMapper;
 import org.mobicents.servlet.restcomm.rvd.http.StorageExceptionMapper;
 import org.mobicents.servlet.restcomm.rvd.http.resources.DesignerRestService;
 import org.mobicents.servlet.restcomm.rvd.http.resources.LoginRestService;
+import org.mobicents.servlet.restcomm.rvd.http.resources.NotificationsRestService;
 import org.mobicents.servlet.restcomm.rvd.http.resources.ProjectRestService;
 import org.mobicents.servlet.restcomm.rvd.http.resources.RasRestService;
 import org.mobicents.servlet.restcomm.rvd.http.resources.RvdController;
@@ -31,6 +32,8 @@ public class RvdRestApplication extends Application {
         classes.add(LoginRestService.class);
         classes.add(SettingsRestService.class);
         classes.add(DesignerRestService.class);
+        classes.add(NotificationsRestService.class);
+        // and exception mappers
         classes.add(ProjectDoesNotExistMapper.class);
         classes.add(StorageExceptionMapper.class);
         classes.add(AuthorizationExceptionMapper.class);
