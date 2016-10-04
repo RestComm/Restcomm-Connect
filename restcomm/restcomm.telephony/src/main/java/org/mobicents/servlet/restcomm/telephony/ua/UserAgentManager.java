@@ -24,18 +24,27 @@ import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.util.Timeout;
 import com.telestax.servlet.MonitoringService;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
+import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
+import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.telephony.CallInfo;
+import org.mobicents.servlet.restcomm.telephony.CallResponse;
+import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
+import org.mobicents.servlet.restcomm.telephony.Hangup;
 import org.mobicents.servlet.restcomm.telephony.UserRegistration;
 import org.mobicents.servlet.restcomm.util.DigestAuthentication;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
 import javax.servlet.ServletContext;
@@ -49,6 +58,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import javax.sip.header.ContactHeader;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -58,6 +68,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static akka.pattern.Patterns.ask;
 import static java.lang.Integer.parseInt;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
 import static javax.servlet.sip.SipServletResponse.SC_OK;
@@ -154,6 +165,36 @@ public final class UserAgentManager extends UntypedActor {
                 }
                 registrations.removeRegistration(result);
                 monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
+                checkForActiveCalls(result);
+            }
+        }
+    }
+
+    private void checkForActiveCalls(Registration result) {
+        final String user = result.getUserName();
+        final String contact = result.getAddressOfRecord();
+        final Client client = storage.getClientsDao().getClient(user);
+        final CallDetailRecordsDao cdrDao = storage.getCallDetailRecordsDao();
+        final List<CallDetailRecord> cdrs = cdrDao.getCallDetailRecords(client.getAccountSid());
+        for (CallDetailRecord cdr: cdrs) {
+            //Disconnect all call legs that this account created.
+            String path = cdr.getCallPath();
+            ActorRef call = getContext().actorFor(path);
+            if (call != null) {
+                 String contactHeader = null;
+                try {
+                    final Timeout expires = new Timeout(Duration.create(3, TimeUnit.SECONDS));
+                    Future<Object> future = (Future<Object>) ask(call, new GetCallInfo(), expires);
+                    CallResponse<CallInfo> response = (CallResponse<CallInfo>) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+                    CallInfo callInfo = response.get();
+                    if (callInfo != null && callInfo.invite() != null) {
+                        contactHeader = callInfo.invite().getAddressHeader(ContactHeader.NAME).getURI().toString();
+                    }
+                } catch (Exception e) {}
+
+                if (contactHeader != null && contactHeader.equalsIgnoreCase(contact)) {
+                        call.tell(new Hangup(), null);
+                }
             }
         }
     }

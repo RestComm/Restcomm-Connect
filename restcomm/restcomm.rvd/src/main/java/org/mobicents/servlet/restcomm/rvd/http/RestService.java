@@ -11,6 +11,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.mobicents.servlet.restcomm.rvd.ApplicationContext;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlAction;
 import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlStatus;
@@ -25,6 +26,11 @@ public class RestService {
     protected HttpServletRequest request;
     @Context
     protected ServletContext servletContext;
+    protected ApplicationContext applicationContext;
+
+    protected void init() {
+        this.applicationContext = (ApplicationContext) servletContext.getAttribute(ApplicationContext.class.getName());
+    }
 
     protected Response buildErrorResponse(Response.Status httpStatus, RvdResponse.Status rvdStatus, RvdException exception) {
         RvdResponse rvdResponse = new RvdResponse(rvdStatus).setException(exception);
