@@ -121,7 +121,7 @@ public class MediaResourceBroker extends UntypedActor{
 
             builder.setLocalIP(InetAddress.getByName(localIpAdressForMediaGateway));
 
-            builder.setLocalPort(localPortAdressForMediaGateway++); //incremented port so that next mgcp stack binding is with new port.
+            builder.setLocalPort(localPortAdressForMediaGateway); //incremented port so that next mgcp stack binding is with new port.
 
             builder.setRemoteIP(InetAddress.getByName(mse.getRemoteIpAddress()));
 

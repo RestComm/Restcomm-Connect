@@ -285,10 +285,10 @@ public final class MmsConferenceController extends MediaServerController {
 
             case FAILED:
                 fsm.transition(message, failed);
-            	break;
+                break;
 
             case INACTIVE:
-            	break;
+                break;
 
             default:
                 break;
