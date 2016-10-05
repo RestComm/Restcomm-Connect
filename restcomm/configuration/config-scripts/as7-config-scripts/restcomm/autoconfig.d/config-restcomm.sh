@@ -98,7 +98,7 @@ configDidProvisionManager() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
     if [[ "$PROVISION_PROVIDER" == "VI" || "$PROVISION_PROVIDER" == "vi" ]]; then
-        sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
+        sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
 
         sed -e "/<voip-innovations>/ {
             N; s|<login>.*</login>|<login>$1</login>|
@@ -109,7 +109,7 @@ configDidProvisionManager() {
         echo 'Configured Voip Innovation credentials'
     else
         if [[ "$PROVISION_PROVIDER" == "BW" || "$PROVISION_PROVIDER" == "bw" ]]; then
-        sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.bandwidth.BandwidthNumberProvisioningManager\"|" $FILE > $FILE.bak
+        sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"BandwidthNumberProvisioningManager\"|" $FILE > $FILE.bak
 
         sed -e "/<bandwidth>/ {
             N; s|<username>.*</username>|<username>$1</username>|
@@ -122,7 +122,7 @@ configDidProvisionManager() {
         else
             if [[ "$PROVISION_PROVIDER" == "NX" || "$PROVISION_PROVIDER" == "nx" ]]; then
                 echo "Nexmo PROVISION_PROVIDER"
-                sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager\"|" $FILE
+                sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"NexmoPhoneNumberProvisioningManager\"|" $FILE
 
                 sed -i "/<callback-urls>/ {
                     N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"$5:$8\" method=\"SIP\" />|
@@ -143,7 +143,7 @@ configDidProvisionManager() {
             else
                 if [[ "$PROVISION_PROVIDER" == "VB" || "$PROVISION_PROVIDER" == "vb" ]]; then
                 echo "Voxbone PROVISION_PROVIDER"
-                sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.voxbone.VoxbonePhoneNumberProvisioningManager\"|" $FILE
+                sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"VoxbonePhoneNumberProvisioningManager\"|" $FILE
 
                 sed -i "/<callback-urls>/ {
                     N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"\+\{E164\}\@$5:$8\" method=\"SIP\" />|
@@ -221,7 +221,7 @@ configSpeechSynthesizers() {
 configAcapela() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
-	sed -e "/<speech-synthesizer class=\"org.mobicents.servlet.restcomm.tts.AcapelaSpeechSynthesizer\">/ {
+	sed -e "/<speech-synthesizer class=\"AcapelaSpeechSynthesizer\">/ {
 		N
 		N; s|<application>.*</application>|<application>$1</application>|
 		N; s|<login>.*</login>|<login>$2</login>|

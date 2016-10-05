@@ -58,7 +58,7 @@
 		<display-name>RestComm</display-name>
 		<description>The RestComm Servlet.</description>
 		<servlet-class>
-			org.mobicents.servlet.restcomm.Bootstrapper
+			org.restcomm.connect.application.Bootstrapper
 		</servlet-class>
 		<load-on-startup>0</load-on-startup>
 	</servlet>
@@ -68,7 +68,7 @@
 		<display-name>SmsService</display-name>
 		<description>SMS Service.</description>
 		<servlet-class>
-			org.mobicents.servlet.restcomm.sms.SmsServiceProxy
+			org.restcomm.connect.sms.SmsServiceProxy
 		</servlet-class>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
@@ -78,7 +78,7 @@
 		<display-name>CallManager</display-name>
 		<description>The RestComm Call Manager.</description>
 		<servlet-class>
-			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
+			org.restcomm.connect.telephony.CallManagerProxy
 		</servlet-class>
 		<load-on-startup>2</load-on-startup>
 	</servlet>
@@ -88,7 +88,7 @@
 		<display-name>UserAgentManager</display-name>
 		<description>The RestComm User Agent Manager.</description>
 		<servlet-class>
-			org.mobicents.servlet.restcomm.telephony.ua.UserAgentManagerProxy
+			org.restcomm.connect.telephony.ua.UserAgentManagerProxy
 		</servlet-class>
 		<load-on-startup>3</load-on-startup>
 	</servlet>
@@ -98,34 +98,34 @@
 		<display-name>ProxyManager</display-name>
 		<description>The RestComm Proxy Manager.</description>
 		<servlet-class>
-			org.mobicents.servlet.restcomm.telephony.proxy.ProxyManagerProxy
+			org.restcomm.connect.telephony.proxy.ProxyManagerProxy
 		</servlet-class>
 		<load-on-startup>4</load-on-startup>
 	</servlet>
 
 	<listener>
 		<listener-class>
-			org.mobicents.servlet.restcomm.Bootstrapper
+			org.restcomm.connect.application.Bootstrapper
 		</listener-class>
 	</listener>
 	<listener>
 		<listener-class>
-			org.mobicents.servlet.restcomm.sms.SmsServiceProxy
+			org.restcomm.connect.sms.SmsServiceProxy
 		</listener-class>
 	</listener>
 	<listener>
 		<listener-class>
-			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
+			org.restcomm.connect.telephony.CallManagerProxy
 		</listener-class>
 	</listener>
 	<listener>
 		<listener-class>
-			org.mobicents.servlet.restcomm.telephony.ua.UserAgentManagerProxy
+			org.restcomm.connect.telephony.ua.UserAgentManagerProxy
 		</listener-class>
 	</listener>
 	<listener>
 		<listener-class>
-			org.mobicents.servlet.restcomm.telephony.proxy.ProxyManagerProxy
+			org.restcomm.connect.telephony.proxy.ProxyManagerProxy
 		</listener-class>
 	</listener>
 </sip-app>
