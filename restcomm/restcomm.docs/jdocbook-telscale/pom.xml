@@ -2,12 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<parent>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm-docs</artifactId>
+		<groupId>org.restcomm</groupId>
+		<artifactId>restcomm-connect-docs</artifactId>
 		<version>7.6.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>restcomm-docs-jdocbook-telscale</artifactId>
+	<artifactId>restcomm-connect-docs-jdocbook-telscale</artifactId>
 
 	<modelVersion>4.0.0</modelVersion>
 
@@ -29,7 +29,7 @@
 							<artifactItems>
 								<artifactItem>
 									<groupId>${pom.groupId}</groupId>
-									<artifactId>restcomm-docs-sources-telscale</artifactId>
+									<artifactId>restcomm-connect-docs-sources-telscale</artifactId>
 									<version>${pom.version}</version>
 									<type>jar</type>
 									<overWrite>true</overWrite>

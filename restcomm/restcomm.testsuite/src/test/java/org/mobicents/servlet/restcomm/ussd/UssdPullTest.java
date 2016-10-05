@@ -416,7 +416,7 @@ public class UssdPullTest {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
         final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
-                .resolve("com.telestax.servlet:restcomm.application:war:" + version).withoutTransitivity()
+                .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");

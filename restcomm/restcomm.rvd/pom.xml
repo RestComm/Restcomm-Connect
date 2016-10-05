@@ -3,17 +3,17 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm</artifactId>
+		<groupId>org.restcomm</groupId>
+		<artifactId>restcomm-connect</artifactId>
 		<version>8.0.0-SNAPSHOT</version>
 	</parent>
 
-	<!-- <groupId>com.telestax.servlet</groupId> <version>7.1.4-TelScale-SNAPSHOT</version> -->
+	<!-- <groupId>org.restcomm</groupId> <version>7.1.4-TelScale-SNAPSHOT</version> -->
 
-	<artifactId>restcomm-rvd</artifactId>
+	<artifactId>restcomm-connect-rvd</artifactId>
 	<packaging>war</packaging>
 
-	<name>restcomm visual designer</name>
+	<name>restcomm-connect visual designer</name>
 
 
 	<properties>

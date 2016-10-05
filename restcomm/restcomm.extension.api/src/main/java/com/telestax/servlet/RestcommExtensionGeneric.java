@@ -20,6 +20,7 @@
  */
 package com.telestax.servlet;
 
+import javax.servlet.ServletContext;
 import javax.servlet.sip.SipServletRequest;
 
 import org.mobicents.servlet.restcomm.telephony.CreateCall;
@@ -32,7 +33,7 @@ public interface RestcommExtensionGeneric {
     /**
      * Use this method to initialize the Extension
      */
-    void init();
+    void init(ServletContext context);
     /**
      * Method that will be executed BEFORE the process of an Incoming session
      * Implement this method so you will be able to check the Incoming session
@@ -53,7 +54,7 @@ public interface RestcommExtensionGeneric {
      * and either block/allow it or modify the session before Restcomm process it
      * @return ExtensionResponse see com.telestax.servlet.ExtensionResponse
      */
-    ExtensionResponse preOutboundAction(CreateCall createCallRequest);
+    ExtensionResponse preOutboundAction(Object message);
     /**
      * Method that will be executed AFTER the process of an Outbound session
      * Implement this method so you will be able to check the Outgoing session

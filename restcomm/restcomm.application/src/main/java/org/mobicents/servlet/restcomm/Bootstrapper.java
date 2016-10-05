@@ -1,21 +1,13 @@
 package org.mobicents.servlet.restcomm;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Properties;
-
-import javax.media.mscontrol.MsControlException;
-import javax.media.mscontrol.MsControlFactory;
-import javax.media.mscontrol.spi.Driver;
-import javax.media.mscontrol.spi.DriverManager;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.sip.SipServlet;
-import javax.servlet.sip.SipServletContextEvent;
-import javax.servlet.sip.SipServletListener;
-import javax.servlet.sip.SipURI;
-
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import com.telestax.servlet.MonitoringService;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -36,16 +28,20 @@ import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsControllerFactory;
 import org.mobicents.servlet.restcomm.telephony.config.ConfigurationStringLookup;
 import org.mobicents.servlet.sip.SipConnector;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-
-import com.telestax.servlet.MonitoringService;
+import javax.media.mscontrol.MsControlException;
+import javax.media.mscontrol.MsControlFactory;
+import javax.media.mscontrol.spi.Driver;
+import javax.media.mscontrol.spi.DriverManager;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipServletContextEvent;
+import javax.servlet.sip.SipServletListener;
+import javax.servlet.sip.SipURI;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.List;
+import java.util.Properties;
 
 /**
  *
@@ -272,18 +268,25 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             ConfigurationInterpolator.registerGlobalLookup("restcomm", strings);
             // Load the RestComm configuration file.
             Configuration xml = null;
+            XMLConfiguration extensionConf = null;
             try {
                 XMLConfiguration xmlConfiguration = new XMLConfiguration();
                 xmlConfiguration.setDelimiterParsingDisabled(true);
                 xmlConfiguration.setAttributeSplittingDisabled(true);
                 xmlConfiguration.load(path);
                 xml = xmlConfiguration;
+
+                extensionConf = new XMLConfiguration();
+                extensionConf.setDelimiterParsingDisabled(true);
+                extensionConf.setAttributeSplittingDisabled(true);
+                extensionConf.load(extensionConfigurationPath);
             } catch (final ConfigurationException exception) {
                 logger.error(exception);
             }
             xml.setProperty("runtime-settings.home-directory", home(context));
             xml.setProperty("runtime-settings.root-uri", uri(context));
             context.setAttribute(Configuration.class.getName(), xml);
+            context.setAttribute("ExtensionConfiguration", extensionConf);
             // Initialize global dependencies.
             final ClassLoader loader = getClass().getClassLoader();
             // Create the actor system.
@@ -327,8 +330,13 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             } catch (final ConfigurationException exception) {
 //                logger.error(exception);
             }
-            ExtensionScanner extensionScanner = new ExtensionScanner(extensionConfiguration);
-            extensionScanner.start();
+
+            ExtensionBootstrapper extensionBootstrapper = new ExtensionBootstrapper(context, extensionConfiguration);
+            try {
+                extensionBootstrapper.start();
+            } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+                logger.error("Exception during extension scanner start: "+e.getStackTrace());
+            }
 
             // Create the media server controller factory
             MediaServerControllerFactory mscontrollerFactory = null;
