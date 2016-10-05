@@ -18,7 +18,7 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.rvd;
+package org.restcomm.connect.rvd;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -66,7 +66,7 @@ public class NotificationRestServiceTest extends RestServiceTest {
         logger.info("version");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm-rvd.war");
         final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
-                .resolve("com.telestax.servlet:restcomm-rvd:war:" + version).withoutTransitivity()
+                .resolve("org.restcomm:restcomm-connect-rvd:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
 

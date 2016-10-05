@@ -18,7 +18,7 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.rvd.http.resources;
+package org.restcomm.connect.rvd.http.resources;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import junit.framework.Assert;
@@ -38,7 +38,6 @@ import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
-import org.restcomm.connect.rvd.http.resources.NotificationsRestService;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
