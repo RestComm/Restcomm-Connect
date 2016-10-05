@@ -40,6 +40,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
+import org.restcomm.connect.sms.SmsService;
 import org.restcomm.connect.ussd.telephony.UssdCallManager;
 
 import akka.actor.ActorRef;
@@ -197,7 +198,7 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
             final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
             final ActorRef conferences = conferences(mscontrolFactory, storage);
             final ActorRef bridges = bridges(mscontrolFactory);
-            final ActorRef sms = (ActorRef) context.getAttribute("SmsService");
+            final ActorRef sms = (ActorRef) context.getAttribute(SmsService.class.getName());
             manager = manager(configuration, context, mscontrolFactory, conferences, bridges, sms, factory, storage);
             ussdManager = ussdManager(configuration, context, conferences, bridges, sms, factory, storage);
             context.setAttribute(CallManager.class.getName(), manager);

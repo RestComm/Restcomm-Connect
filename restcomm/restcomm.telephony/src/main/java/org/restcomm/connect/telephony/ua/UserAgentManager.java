@@ -19,33 +19,21 @@
  */
 package org.restcomm.connect.telephony.ua;
 
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.util.Timeout;
-import org.restcomm.connect.monitoringservice.MonitoringService;
-import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.ClientsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.RegistrationsDao;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
-import org.restcomm.connect.dao.entities.Client;
-import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.dao.entities.Sid;
-import org.restcomm.connect.telephony.api.CallInfo;
-import org.restcomm.connect.telephony.api.CallResponse;
-import org.restcomm.connect.telephony.api.GetCallInfo;
-import org.restcomm.connect.telephony.api.Hangup;
-import org.restcomm.connect.telephony.api.UserRegistration;
-import org.restcomm.connect.commons.util.DigestAuthentication;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
+import static akka.pattern.Patterns.ask;
+import static java.lang.Integer.parseInt;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
+import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
+
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -59,21 +47,35 @@ import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 import javax.sip.header.ContactHeader;
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
-import static akka.pattern.Patterns.ask;
-import static java.lang.Integer.parseInt;
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
-import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
+import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.util.DigestAuthentication;
+import org.restcomm.connect.dao.CallDetailRecordsDao;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.RegistrationsDao;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.Registration;
+import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.monitoringservice.MonitoringService;
+import org.restcomm.connect.telephony.api.CallInfo;
+import org.restcomm.connect.telephony.api.CallResponse;
+import org.restcomm.connect.telephony.api.GetCallInfo;
+import org.restcomm.connect.telephony.api.Hangup;
+import org.restcomm.connect.telephony.api.UserRegistration;
+
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -337,7 +339,9 @@ public final class UserAgentManager extends UntypedActor {
             // RESTCOMM-301 NPE in RestComm Ping
             toTransport = "udp";
         }
-        /*if (toTransport.equalsIgnoreCase("ws") || toTransport.equalsIgnoreCase("wss")) {
+        /* sometime users on webrtc clients like olympus, closes the tab instead of properly hangup.
+         * so removing this check so we could send OPTIONS to WebRtc clients as well:
+         * if (toTransport.equalsIgnoreCase("ws") || toTransport.equalsIgnoreCase("wss")) {
             return;
         }*/
         final SipURI outboundInterface = outboundInterface(toTransport);
