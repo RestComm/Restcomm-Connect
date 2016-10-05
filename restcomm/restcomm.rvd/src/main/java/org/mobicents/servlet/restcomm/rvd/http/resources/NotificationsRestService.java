@@ -22,7 +22,6 @@ package org.mobicents.servlet.restcomm.rvd.http.resources;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
-import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.exceptions.AuthorizationException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
@@ -30,7 +29,6 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
 import org.mobicents.servlet.restcomm.rvd.model.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.Consumes;
@@ -54,6 +52,8 @@ public class NotificationsRestService extends SecuredRestService {
 
     private ProjectService projectService;
 
+    public NotificationsRestService() {
+    }
 
     @PostConstruct
     public void init() {
