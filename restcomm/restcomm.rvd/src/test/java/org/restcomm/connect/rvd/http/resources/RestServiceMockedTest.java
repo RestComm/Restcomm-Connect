@@ -22,13 +22,13 @@ package org.restcomm.connect.rvd.http.resources;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.junit.Rule;
-import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
-import org.mobicents.servlet.restcomm.rvd.RvdConfigurationBuilder;
-import org.mobicents.servlet.restcomm.rvd.commons.http.CustomHttpClientBuilder;
+import org.restcomm.connect.rvd.RvdConfiguration;
+import org.restcomm.connect.rvd.RvdConfigurationBuilder;
+import org.restcomm.connect.rvd.commons.http.CustomHttpClientBuilder;
 import org.restcomm.connect.rvd.configuration.RestcommConfigBuilder;
-import org.mobicents.servlet.restcomm.rvd.identity.AccountProvider;
-import org.mobicents.servlet.restcomm.rvd.identity.AccountProviderBuilder;
-import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
+import org.restcomm.connect.rvd.identity.AccountProvider;
+import org.restcomm.connect.rvd.identity.AccountProviderBuilder;
+import org.restcomm.connect.rvd.identity.UserIdentityContext;
 import org.mockito.Mockito;
 
 import javax.servlet.ServletContext;
