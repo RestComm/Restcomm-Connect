@@ -70,10 +70,12 @@ public class MediaResourceBroker extends UntypedActor{
     private String localMsId;
     private Map<String, ActorRef> mediaGatewayMap;
 
-    JainMgcpStack mgcpStack;
-    JainMgcpProvider mgcpProvider;
+    private JainMgcpStack mgcpStack;
+    private JainMgcpProvider mgcpProvider;
 
     private final List<ActorRef> observers;
+
+	private MediaServerEntity localMediaServerEntity;
 
     public MediaResourceBroker(ActorSystem system, Configuration configuration, DaoManager storage, final ClassLoader loader) throws UnknownHostException{
         super();
@@ -86,7 +88,7 @@ public class MediaResourceBroker extends UntypedActor{
         // Observers
         this.observers = new ArrayList<ActorRef>(1);
 
-        MediaServerEntity localMediaServerEntity = uploadLocalMediaServersInDataBase();
+        localMediaServerEntity = uploadLocalMediaServersInDataBase();
         bindMGCPStack(localMediaServerEntity.getLocalIpAddress(), localMediaServerEntity.getLocalPort());
         this.localMediaGateway = turnOnMediaGateway(localMediaServerEntity);
         this.mediaGatewayMap = new HashMap<String, ActorRef>();
@@ -102,7 +104,7 @@ public class MediaResourceBroker extends UntypedActor{
         }
     }
 
-    private ActorRef turnOnMediaGateway(MediaServerEntity localMediaServerEntity) throws UnknownHostException {
+    private ActorRef turnOnMediaGateway(MediaServerEntity mediaServerEntity) throws UnknownHostException {
 
         final ActorRef gateway = system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
@@ -118,21 +120,22 @@ public class MediaResourceBroker extends UntypedActor{
         builder.setName(configuration.getString("mgcp-server[@name]"));
 
         if(logger.isInfoEnabled())
-            logger.info("localIpAdressForMediaGateway: "+localMediaServerEntity.getLocalIpAddress()+" localPortAdressForMediaGateway: "+localMediaServerEntity.getLocalPort());
+            logger.info("turnOnMediaGateway local ip: "+localMediaServerEntity.getLocalIpAddress()+" local port: "+localMediaServerEntity.getLocalPort()
+            +" remote ip: "+mediaServerEntity.getRemoteIpAddress()+" remote port: "+mediaServerEntity.getRemotePort());
 
         builder.setLocalIP(InetAddress.getByName(localMediaServerEntity.getLocalIpAddress()));
         builder.setLocalPort(localMediaServerEntity.getLocalPort());
-        builder.setRemoteIP(InetAddress.getByName(localMediaServerEntity.getRemoteIpAddress()));
-        builder.setRemotePort(localMediaServerEntity.getRemotePort());
+        builder.setRemoteIP(InetAddress.getByName(mediaServerEntity.getRemoteIpAddress()));
+        builder.setRemotePort(mediaServerEntity.getRemotePort());
 
-        if (localMediaServerEntity.getExternalAddress() != null) {
-            builder.setExternalIP(InetAddress.getByName(localMediaServerEntity.getExternalAddress()));
+        if (mediaServerEntity.getExternalAddress() != null) {
+            builder.setExternalIP(InetAddress.getByName(mediaServerEntity.getExternalAddress()));
             builder.setUseNat(true);
         } else {
             builder.setUseNat(false);
         }
 
-        builder.setTimeout(Long.parseLong(localMediaServerEntity.getResponseTimeout()));
+        builder.setTimeout(Long.parseLong(mediaServerEntity.getResponseTimeout()));
         builder.setStack(mgcpStack);
         builder.setProvider(mgcpProvider);
 
