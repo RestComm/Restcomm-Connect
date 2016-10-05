@@ -263,7 +263,7 @@
 		<data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
 		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
 	</dao-manager> -->
-	<dao-manager class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
+	<dao-manager class="org.restcomm.connect.dao.mybatis.MybatisDaoManager">
         <configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml</configuration-file>
         <data-files></data-files>
         <sql-files>${restcomm:home}/WEB-INF/scripts/mariadb/sql</sql-files>
