@@ -22,7 +22,7 @@ package org.restcomm.connect.mgcp;
 import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.mgcp.routing.SimpleRoundRobin;
 
 import akka.actor.ActorRef;

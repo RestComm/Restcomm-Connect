@@ -19,8 +19,8 @@
  */
 package org.restcomm.connect.mgcp.mrb.messages;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
-import org.mobicents.servlet.restcomm.entities.Sid;
+import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.dao.entities.Sid;
 
 import akka.actor.ActorRef;
 

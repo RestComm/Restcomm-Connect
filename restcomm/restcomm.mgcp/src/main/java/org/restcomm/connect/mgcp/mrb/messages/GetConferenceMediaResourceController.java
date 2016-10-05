@@ -21,8 +21,7 @@
 
 package org.restcomm.connect.mgcp.mrb.messages;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
-import org.mobicents.servlet.restcomm.entities.Sid;
+import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 /**
  * @author Maria Farooq (maria.farooq@telestax.com)
@@ -30,20 +29,14 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 @Immutable
 public final class GetConferenceMediaResourceController {
     private final String conferenceName;
-    private final Sid conferenceSid;
 
-    public GetConferenceMediaResourceController(final String conferenceName, final Sid conferenceSid) {
+    public GetConferenceMediaResourceController(final String conferenceName) {
         super();
         this.conferenceName = conferenceName;
-        this.conferenceSid = conferenceSid;
     }
 
     public String getConferenceName() {
         return conferenceName;
-    }
-
-    public Sid getConferenceSid() {
-        return conferenceSid;
     }
 
 }

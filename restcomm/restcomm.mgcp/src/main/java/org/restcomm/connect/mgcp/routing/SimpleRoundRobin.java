@@ -19,7 +19,7 @@
  */
 package org.restcomm.connect.mgcp.routing;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 @ThreadSafe
 public class SimpleRoundRobin {

@@ -31,20 +31,18 @@ import java.util.Map;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl;
-import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
-import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
-import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.MediaServersDao;
-import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
-import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
-import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.MediaServerEntity;
-import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.loader.ObjectFactory;
-import org.mobicents.servlet.restcomm.mgcp.MediaResourceBrokerResponse;
-import org.mobicents.servlet.restcomm.mgcp.PowerOnMediaGateway;
-import org.mobicents.servlet.restcomm.telephony.ConferenceInfo;
-import org.mobicents.servlet.restcomm.telephony.ConferenceStateChanged;
+import org.restcomm.connect.commons.loader.ObjectFactory;
+import org.restcomm.connect.dao.CallDetailRecordsDao;
+import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
+import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
+import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.mgcp.MediaResourceBrokerResponse;
+import org.restcomm.connect.mgcp.PowerOnMediaGateway;
 import org.restcomm.connect.mgcp.mrb.messages.GetConferenceMediaResourceController;
 import org.restcomm.connect.mgcp.mrb.messages.GetMediaGateway;
 import org.restcomm.connect.mgcp.mrb.messages.MediaGatewayForConference;
@@ -190,15 +188,15 @@ public class MediaResourceBroker extends UntypedActor{
     }
 
     private void onGetMediaGateway(GetMediaGateway message, ActorRef self, ActorRef sender) throws Exception {
-        final ConferenceInfo conferenceInfo = message.conferenceInfo();
+        final String conferenceName = message.conferenceName();
         final Sid callSid = message.callSid();
 
         // if its not request for conference return home media-gateway (media-server associated with this RC instance)
-        if(conferenceInfo == null){
+        if(conferenceName == null){
             updateMSIdinCallDetailRecord(msId, callSid);
             sender.tell(new MediaResourceBrokerResponse<ActorRef>(mediaGateway), self);
         }else{
-            final Sid conferenceSid = addConferenceDetailRecord(conferenceInfo, callSid);
+            final Sid conferenceSid = addConferenceDetailRecord(conferenceName, callSid);
             sender.tell(new MediaResourceBrokerResponse<MediaGatewayForConference>(new MediaGatewayForConference(conferenceSid, mediaGateway)), self);
         }
     }
@@ -221,10 +219,10 @@ public class MediaResourceBroker extends UntypedActor{
 
     }
 
-    private Sid addConferenceDetailRecord(final ConferenceInfo conferenceInfo, final Sid callSid) throws Exception {
+    private Sid addConferenceDetailRecord(final String conferenceName, final Sid callSid) throws Exception {
        Sid sid = null;
-        if(conferenceInfo == null || conferenceInfo.name() == null){
-            logger.info("provided conference info/sid is null, this can lead to problems in future of this call");
+        if(conferenceName == null ){
+            logger.error("provided conference name is null, this can lead to problems in future of this call");
         }else{
             CallDetailRecordsDao callDao = storage.getCallDetailRecordsDao();
             CallDetailRecord callRecord = callDao.getCallDetailRecord(callSid);
@@ -232,7 +230,7 @@ public class MediaResourceBroker extends UntypedActor{
                 ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
 
                 // check if a conference with same name/account is running.
-                final String[] cnfNameAndAccount = conferenceInfo.name().split(":");
+                final String[] cnfNameAndAccount = conferenceName.split(":");
                 final String accountSid = cnfNameAndAccount[0];
                 final String friendlyName = cnfNameAndAccount[1];
 
@@ -252,7 +250,7 @@ public class MediaResourceBroker extends UntypedActor{
                     conferenceBuilder.setDateCreated(DateTime.now());
 
                     conferenceBuilder.setAccountSid(new Sid(accountSid));
-                    conferenceBuilder.setStatus(ConferenceStateChanged.State.RUNNING_INITIALIZING.toString());
+                    conferenceBuilder.setStatus("RUNNING_INITIALIZING");
                     conferenceBuilder.setApiVersion(callRecord.getApiVersion());
                     final StringBuilder UriBuffer = new StringBuilder();
                     UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountSid).append("/Conferences/");
@@ -268,10 +266,10 @@ public class MediaResourceBroker extends UntypedActor{
                     //getting CDR again as it is a conditional insert(select if exists or insert) to handle concurrency (incase another participant joins on another instance at very same time)
                     cdr = dao.getConferenceDetailRecords(filter).get(0);
                     sid = cdr.getSid();
-                    logger.info("addConferenceDetailRecord: SID: "+sid+" NAME: "+conferenceInfo.name()+" STATE: "+conferenceInfo.state());
+                    logger.info("addConferenceDetailRecord: SID: "+sid+" NAME: "+conferenceName);
                 }
             }else{
-                logger.info("call record is null");
+                logger.error("call record is null");
             }
         }
         return sid;
