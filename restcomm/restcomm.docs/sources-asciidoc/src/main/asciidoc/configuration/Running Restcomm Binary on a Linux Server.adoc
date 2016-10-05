@@ -45,7 +45,7 @@ Once you have the API key, open the `$RESTCOMM_HOME/standalone/deployments/restc
 
 ....
 <speech-synthesizer
-        class="org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer">
+        class="VoiceRSSSpeechSynthesizer">
         <service-root>http://api.voicerss.org</service-root>
         <apikey>2901c0aXXXXXXXXXXXXXX</apikey>
 ....
