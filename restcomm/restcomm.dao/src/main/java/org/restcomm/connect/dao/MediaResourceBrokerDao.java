@@ -17,30 +17,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.entities;
+package org.restcomm.connect.dao;
 
-import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import java.util.List;
+
+import org.restcomm.connect.dao.entities.MediaResourceBrokerEntity;
+import org.restcomm.connect.dao.entities.MediaResourceBrokerEntityFilter;
+import org.restcomm.connect.dao.entities.Sid;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
+public interface MediaResourceBrokerDao {
 
-@Immutable
-public class MediaResourceBrokerEntityFilter {
+    void addMediaResourceBrokerEntity(MediaResourceBrokerEntity ms);
 
-    private final String conferenceSid;
-    private String slaveMsId;
+    List<MediaResourceBrokerEntity> getMediaResourceBrokerEntities();
 
-    public MediaResourceBrokerEntityFilter(String conferenceSid, String slaveMsId) {
-        this.conferenceSid = conferenceSid;
-        this.slaveMsId = slaveMsId;
-    }
+    List<MediaResourceBrokerEntity> getConnectedSlaveEntitiesByConfSid(Sid conferenceSid);
 
-    public String getConferenceSid() {
-        return conferenceSid;
-    }
+    void removeMediaResourceBrokerEntity(MediaResourceBrokerEntityFilter filter);
 
-    public String getSlaveMsId() {
-        return slaveMsId;
-    }
+    void updateMediaResource(MediaResourceBrokerEntity ms);
 }

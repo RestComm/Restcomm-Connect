@@ -97,7 +97,7 @@ public final class MmsConferenceController extends MediaServerController {
     private ActorRef cnfEndpoint;
 
     // Conference runtime stuff
-    private ActorRef conference;
+    //private ActorRef conference;
     //private ActorRef mediaGroup;
     private ActorRef conferenceMediaResourceController;
     private boolean firstJoinSent = false;
@@ -296,7 +296,7 @@ public final class MmsConferenceController extends MediaServerController {
 
     private void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
         if (is(uninitialized)) {
-            this.conference = sender;
+            //this.conference = sender;
             fsm.transition(message, acquiringMediaGateway);
         }
     }

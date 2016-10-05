@@ -24,22 +24,21 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl;
-import org.mobicents.servlet.restcomm.dao.MediaServersDao;
-import org.mobicents.servlet.restcomm.entities.MediaServerEntity;
 import org.restcomm.connect.commons.loader.ObjectFactory;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.MediaServersDao;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
+import org.restcomm.connect.dao.entities.MediaServerEntity;
 import org.restcomm.connect.dao.entities.Sid;
 import org.restcomm.connect.mgcp.MediaResourceBrokerResponse;
 import org.restcomm.connect.mgcp.PowerOnMediaGateway;
@@ -66,17 +65,15 @@ public class MediaResourceBroker extends UntypedActor{
     private final Configuration configuration;
     private final DaoManager storage;
     private final ClassLoader loader;
-    private final ActorRef mediaGateway;
-    private String msId;
-    private String localIpAdressForMediaGateway;
-    private int localPortAdressForMediaGateway;
+    private final ActorRef localMediaGateway;
+    private String localMsId;
+    private Map<String, ActorRef> mediaGatewayMap;
 
-    private final Map<String, ActorRef> mediaGatewayMap;
-    //private final MediaServerRouter msRouter;
-    // Observer pattern
+    JainMgcpStack mgcpStack;
+    JainMgcpProvider mgcpProvider;
+
     private final List<ActorRef> observers;
 
-    //public MediaResourceBroker(ActorSystem system, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
     public MediaResourceBroker(ActorSystem system, Configuration configuration, DaoManager storage, final ClassLoader loader) throws UnknownHostException{
         super();
 
@@ -84,80 +81,62 @@ public class MediaResourceBroker extends UntypedActor{
         this.configuration = configuration;
         this.storage = storage;
         this.loader = loader;
-        //this.msRouter = new MediaServerRouter(gateways, configuration);
 
         // Observers
         this.observers = new ArrayList<ActorRef>(1);
 
-        uploadLocalMediaServersInDataBase();
-
-        this.mediaGatewayMap = turnOnMediaGateways();
-        this.mediaGateway = mediaGatewayMap.get(this.msId);
+        MediaServerEntity localMediaServerEntity = uploadLocalMediaServersInDataBase();
+        bindMGCPStack(localMediaServerEntity.getLocalIpAddress(), localMediaServerEntity.getLocalPort());
+        this.localMediaGateway = turnOnMediaGateway(localMediaServerEntity);
     }
 
-    private Map<String, ActorRef> turnOnMediaGateways() throws UnknownHostException {
-        Map<String, ActorRef> gateways = new HashMap<String, ActorRef>();
-
-        MediaServersDao dao = storage.getMediaServersDao();
-        List<MediaServerEntity> mgcpMediaServers = dao.getMediaServers();
-
-        int mgcpMediaServerListSize = mgcpMediaServers.size();
-        logger.info("total available Media Server in database are: "+mgcpMediaServerListSize);
-
-        JainMgcpStack stack = null;
-        JainMgcpProvider provider = null;
-
-        stack = new JainMgcpStackImpl(InetAddress.getByName(localIpAdressForMediaGateway), localPortAdressForMediaGateway);
+    private void bindMGCPStack(String ip, int port) throws UnknownHostException {
+        mgcpStack = new JainMgcpStackImpl(InetAddress.getByName(ip), port);
         try {
-            provider = stack.createProvider();
+            mgcpProvider = mgcpStack.createProvider();
         } catch (final CreateProviderException exception) {
             logger.error(exception, "Could not create a JAIN MGCP provider.");
         }
+    }
 
-        for (MediaServerEntity mse : mgcpMediaServers) {
-            final ActorRef gateway = system.actorOf(new Props(new UntypedActorFactory() {
-                private static final long serialVersionUID = 1L;
+    private ActorRef turnOnMediaGateway(MediaServerEntity localMediaServerEntity) throws UnknownHostException {
 
-                @Override
-                public UntypedActor create() throws Exception {
-                    final String classpath = configuration.getString("mgcp-server[@class]");
-                    return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
-                }
-            }));
+        final ActorRef gateway = system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
 
-            final PowerOnMediaGateway.Builder builder = PowerOnMediaGateway.builder();
-            builder.setName(configuration.getString("mgcp-server[@name]"));
-
-            if(logger.isInfoEnabled())
-                logger.info("localIpAdressForMediaGateway: "+localIpAdressForMediaGateway+" localPortAdressForMediaGateway: "+localPortAdressForMediaGateway);
-
-            builder.setLocalIP(InetAddress.getByName(localIpAdressForMediaGateway));
-
-            builder.setLocalPort(localPortAdressForMediaGateway); //incremented port so that next mgcp stack binding is with new port.
-
-            builder.setRemoteIP(InetAddress.getByName(mse.getRemoteIpAddress()));
-
-            builder.setRemotePort(mse.getRemotePort());
-
-            if (mse.getExternalAddress() != null) {
-                builder.setExternalIP(InetAddress.getByName(mse.getExternalAddress()));
-                builder.setUseNat(true);
-            } else {
-                builder.setUseNat(false);
+            @Override
+            public UntypedActor create() throws Exception {
+                final String classpath = configuration.getString("mgcp-server[@class]");
+                return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
+        }));
 
-            builder.setTimeout(Long.parseLong(mse.getResponseTimeout()));
-            builder.setStack(stack);
-            builder.setProvider(provider);
+        final PowerOnMediaGateway.Builder builder = PowerOnMediaGateway.builder();
+        builder.setName(configuration.getString("mgcp-server[@name]"));
 
-            final PowerOnMediaGateway powerOn = builder.build();
+        if(logger.isInfoEnabled())
+            logger.info("localIpAdressForMediaGateway: "+localMediaServerEntity.getLocalIpAddress()+" localPortAdressForMediaGateway: "+localMediaServerEntity.getLocalPort());
 
-            gateway.tell(powerOn, null);
+        builder.setLocalIP(InetAddress.getByName(localMediaServerEntity.getLocalIpAddress()));
+        builder.setLocalPort(localMediaServerEntity.getLocalPort());
+        builder.setRemoteIP(InetAddress.getByName(localMediaServerEntity.getRemoteIpAddress()));
+        builder.setRemotePort(localMediaServerEntity.getRemotePort());
 
-            gateways.put(mse.getMsId()+"", gateway);
+        if (localMediaServerEntity.getExternalAddress() != null) {
+            builder.setExternalIP(InetAddress.getByName(localMediaServerEntity.getExternalAddress()));
+            builder.setUseNat(true);
+        } else {
+            builder.setUseNat(false);
         }
 
-        return gateways;
+        builder.setTimeout(Long.parseLong(localMediaServerEntity.getResponseTimeout()));
+        builder.setStack(mgcpStack);
+        builder.setProvider(mgcpProvider);
+
+        final PowerOnMediaGateway powerOn = builder.build();
+        gateway.tell(powerOn, null);
+
+        return gateway;
     }
 
     private ActorRef getConferenceMediaResourceController() {
@@ -166,7 +145,7 @@ public class MediaResourceBroker extends UntypedActor{
 
             @Override
             public UntypedActor create() throws Exception {
-                return new ConferenceMediaResourceController(msId, mediaGatewayMap, configuration, storage);
+                return new ConferenceMediaResourceController(localMsId, localMediaGateway, configuration, storage, self());
             }
         }));
     }
@@ -188,32 +167,46 @@ public class MediaResourceBroker extends UntypedActor{
     }
 
     private void onGetMediaGateway(GetMediaGateway message, ActorRef self, ActorRef sender) throws Exception {
-        final String conferenceName = message.conferenceName();
-        final Sid callSid = message.callSid();
+        // if a specific MS is not asked return local MS.
+        if(message.msId() == null){
+            final String conferenceName = message.conferenceName();
+            final Sid callSid = message.callSid();
 
-        // if its not request for conference return home media-gateway (media-server associated with this RC instance)
-        if(conferenceName == null){
-            updateMSIdinCallDetailRecord(msId, callSid);
-            sender.tell(new MediaResourceBrokerResponse<ActorRef>(mediaGateway), self);
+            // if its not request for conference return home media-gateway (media-server associated with this RC instance)
+            if(conferenceName == null){
+                updateMSIdinCallDetailRecord(localMsId, callSid);
+                sender.tell(new MediaResourceBrokerResponse<ActorRef>(localMediaGateway), self);
+            }else{
+                final Sid conferenceSid = addConferenceDetailRecord(conferenceName, callSid);
+                sender.tell(new MediaResourceBrokerResponse<MediaGatewayForConference>(new MediaGatewayForConference(conferenceSid, localMediaGateway)), self);
+            }
         }else{
-            final Sid conferenceSid = addConferenceDetailRecord(conferenceName, callSid);
-            sender.tell(new MediaResourceBrokerResponse<MediaGatewayForConference>(new MediaGatewayForConference(conferenceSid, mediaGateway)), self);
+            ActorRef remoteMediaGateway;
+            // check if this MS is already available
+            if(mediaGatewayMap.containsKey(message.msId())){
+                remoteMediaGateway = mediaGatewayMap.get(message.msId());
+            }else{
+                //if not then fetch it from DB and turn it on as well add to local map.
+                MediaServersDao dao = storage.getMediaServersDao();
+                MediaServerEntity remoteMediaServerEntity = dao.getMediaServer(message.msId());
+                remoteMediaGateway = turnOnMediaGateway(remoteMediaServerEntity);
+                mediaGatewayMap.put(message.msId(), remoteMediaGateway);
+            }
+            sender.tell(new MediaResourceBrokerResponse<ActorRef>(remoteMediaGateway), self);
         }
     }
 
     private void updateMSIdinCallDetailRecord(final String msId, final Sid callSid){
         if(callSid == null){
-            logger.info("Call Id is not specisfied");
+            logger.error("Call Id is not specisfied");
         }else{
-            logger.info("msId: "+msId+" callSid: "+ callSid.toString());
-
             CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
             CallDetailRecord cdr = dao.getCallDetailRecord(callSid);
             if(cdr != null){
                 cdr = cdr.setMsId(msId);
                 dao.updateCallDetailRecord(cdr);
             }else{
-                logger.info("provided call id did not found");
+                logger.warning("provided call id did not found");
             }
         }
 
@@ -258,7 +251,7 @@ public class MediaResourceBroker extends UntypedActor{
                     final URI uri = URI.create(UriBuffer.toString());
                     conferenceBuilder.setUri(uri);
                     conferenceBuilder.setFriendlyName(friendlyName);
-                    conferenceBuilder.setMasterMsId(msId);
+                    conferenceBuilder.setMasterMsId(localMsId);
 
                     ConferenceDetailRecord cdr = conferenceBuilder.build();
                     dao.addConferenceDetailRecord(cdr);
@@ -275,9 +268,9 @@ public class MediaResourceBroker extends UntypedActor{
         return sid;
     }
 
-    private void uploadLocalMediaServersInDataBase() {
-        localIpAdressForMediaGateway = configuration.getString("mgcp-server.local-address");
-        localPortAdressForMediaGateway = Integer.parseInt(configuration.getString("mgcp-server.local-port"));
+    private MediaServerEntity uploadLocalMediaServersInDataBase() {
+        String localIpAdressForMediaGateway = configuration.getString("mgcp-server.local-address");
+        int localPortAdressForMediaGateway = Integer.parseInt(configuration.getString("mgcp-server.local-port"));
         String remoteIpAddress = configuration.getString("mgcp-server.remote-address");
         int remotePort = Integer.parseInt(configuration.getString("mgcp-server.remote-port"));
         String responseTimeout = configuration.getString("mgcp-server.response-timeout");
@@ -292,20 +285,21 @@ public class MediaResourceBroker extends UntypedActor{
         builder.setExternalAddress(externalAddress);
 
         MediaServersDao dao = storage.getMediaServersDao();
-        MediaServerEntity freshMediaServerEntity = builder.build();
+        MediaServerEntity mediaServerEntity = builder.build();
         final List<MediaServerEntity> existingMediaServersForSameIP = dao.getMediaServerEntityByIP(remoteIpAddress);
 
         if(existingMediaServersForSameIP == null || existingMediaServersForSameIP.size()==0){
-            dao.addMediaServer(freshMediaServerEntity);
+            dao.addMediaServer(mediaServerEntity);
             final List<MediaServerEntity> newMediaServerEntity = dao.getMediaServerEntityByIP(remoteIpAddress);
-            this.msId = newMediaServerEntity.get(0).getMsId()+"";
+            this.localMsId = newMediaServerEntity.get(0).getMsId()+"";
         }else{
-            this.msId = existingMediaServersForSameIP.get(0).getMsId()+"";
-            freshMediaServerEntity = freshMediaServerEntity.setMsId(Integer.parseInt(this.msId));
-            dao.updateMediaServer(freshMediaServerEntity);
+            this.localMsId = existingMediaServersForSameIP.get(0).getMsId()+"";
+            mediaServerEntity = mediaServerEntity.setMsId(Integer.parseInt(this.localMsId));
+            dao.updateMediaServer(mediaServerEntity);
             if(existingMediaServersForSameIP.size()>1)
                 logger.error("in DB: there are multiple media servers registered for same IP address");
         }
+        return mediaServerEntity;
     }
 
     @Override
@@ -321,40 +315,4 @@ public class MediaResourceBroker extends UntypedActor{
     }
 
     protected void cleanup() {}
-
-/*
- *
-    private String getMSIdinCallDetailRecord(Sid callSid){
-        CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
-        CallDetailRecord cdr = dao.getCallDetailRecord(callSid);
-
-        return cdr.getMsId();
-    }
-
-    private void onGetMediaGateway(GetMediaGateway message, ActorRef self, ActorRef sender) {
-        final ConferenceInfo conferenceInfo = message.conferenceInfo();
-        final Sid callSid = message.callSid();
-        String msId = null;
-        ActorRef mediaGateway = null;
-
-        // if its not request for conference return media-gateway according to algo.
-        if(conferenceInfo == null){
-            msId = msRouter.getNextMediaServerKey();
-            logger.info("msId: "+msId);
-            mediaGateway = mediaGatewayMap.get(msId);
-            updateMSIdinCallDetailRecord(msId, callSid);
-        }else{
-            // get the call and see where it is connected and return same msId so call and its conferenceEndpoint are on same mediaserver
-            msId = getMSIdinCallDetailRecord(callSid);
-            if(msId == null){
-                //TODO handle it more gracefully
-                logger.info("invalid callSid");
-                return;
-            }
-            mediaGateway = mediaGatewayMap.get(msId);
-            addConferenceDetailRecord(conferenceInfo, msId, callSid);
-        }
-
-        sender.tell(new MediaResourceBrokerResponse<ActorRef>(mediaGateway), self);
-    }*/
 }

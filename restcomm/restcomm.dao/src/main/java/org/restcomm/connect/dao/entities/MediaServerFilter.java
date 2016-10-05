@@ -17,26 +17,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.dao;
+package org.restcomm.connect.dao.entities;
 
-import java.util.List;
+import java.text.ParseException;
 
-import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntity;
-import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntityFilter;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 /**
- * @author maria.farooq@telestax.com (Maria Farooq)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
-public interface MediaResourceBrokerDao {
 
-    void addMediaResourceBrokerEntity(MediaResourceBrokerEntity ms);
+@Immutable
+public class MediaServerFilter {
 
-    List<MediaResourceBrokerEntity> getMediaResourceBrokerEntities();
+    private final String msIpAddress;
+    private final String msPort;
 
-    List<MediaResourceBrokerEntity> getConnectedSlaveEntitiesByConfSid(Sid conferenceSid);
+    public MediaServerFilter(final String msIpAddress, final String msPort) throws ParseException {
+        this.msIpAddress = msIpAddress;
+        this.msPort = msPort;
+    }
 
-    void removeMediaResourceBrokerEntity(MediaResourceBrokerEntityFilter filter);
+    public String getMsIpAddress() {
+        return msIpAddress;
+    }
 
-    void updateMediaResource(MediaResourceBrokerEntity ms);
+    public String getMsPort() {
+        return msPort;
+    }
+
 }

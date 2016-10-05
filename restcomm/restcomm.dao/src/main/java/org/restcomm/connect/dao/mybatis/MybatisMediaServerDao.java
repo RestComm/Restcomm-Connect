@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.dao.mybatis;
+package org.restcomm.connect.dao.mybatis;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,10 +26,10 @@ import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.mobicents.servlet.restcomm.dao.MediaServersDao;
-import org.mobicents.servlet.restcomm.entities.MediaServerEntity;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.DaoUtils;
+import org.restcomm.connect.dao.MediaServersDao;
+import org.restcomm.connect.dao.entities.MediaServerEntity;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -95,6 +95,21 @@ public final class MybatisMediaServerDao implements MediaServersDao {
                 }
             }
             return msList;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public MediaServerEntity getMediaServer(String msId) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Map<String, Object> result = session.selectOne(namespace + "getMediaServer", msId);
+            if (result != null) {
+                return toMediaServer(result);
+            } else {
+                return null;
+            }
         } finally {
             session.close();
         }

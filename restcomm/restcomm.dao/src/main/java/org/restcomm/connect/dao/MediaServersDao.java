@@ -17,11 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.dao;
+package org.restcomm.connect.dao;
 
 import java.util.List;
 
-import org.mobicents.servlet.restcomm.entities.MediaServerEntity;
+import org.restcomm.connect.dao.entities.MediaServerEntity;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -33,6 +33,8 @@ public interface MediaServersDao {
     List<MediaServerEntity> getMediaServerEntityByIP(String msIPAddres);
 
     List<MediaServerEntity> getMediaServers();
+
+    MediaServerEntity getMediaServer(String msId);
 
     void removeMediaServerEntity(String msId);
 

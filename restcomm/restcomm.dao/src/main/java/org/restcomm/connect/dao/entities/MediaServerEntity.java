@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.entities;
+package org.restcomm.connect.dao.entities;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;

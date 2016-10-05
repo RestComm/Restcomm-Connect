@@ -18,6 +18,10 @@
     SELECT * FROM media_servers;
   </select>
   
+  <select id="getMediaServers" resultType="hashmap" parameterType="string">
+    SELECT * FROM media_servers where ms_id=#{ms_id};
+  </select>
+  
   <delete id="removeMediaServerEntity" parameterType="string">
     DELETE FROM media_servers WHERE ms_id=#{ms_id};
   </delete>

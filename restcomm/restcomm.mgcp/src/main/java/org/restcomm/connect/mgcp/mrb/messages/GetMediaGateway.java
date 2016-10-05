@@ -31,15 +31,21 @@ import org.restcomm.connect.dao.entities.Sid;
 public final class GetMediaGateway {
     private final Sid callSid;
     private final String conferenceName;
+    private final String msId;
 
-    public GetMediaGateway(final Sid callSid, final String conferenceName) {
+    public GetMediaGateway(final Sid callSid, final String conferenceName, final String msId) {
         super();
         this.callSid = callSid;
         this.conferenceName = conferenceName;
+        this.msId = msId;
     }
 
-    public GetMediaGateway(final Sid callSid){
-        this(callSid, null);
+    public GetMediaGateway(final Sid callSid, final String msId){
+        this(callSid, null, msId);
+    }
+
+    public GetMediaGateway(final String msId) {
+        this(null, msId);
     }
 
     public Sid callSid() {
@@ -48,6 +54,10 @@ public final class GetMediaGateway {
 
     public String conferenceName() {
         return conferenceName;
+    }
+
+    public String msId(){
+        return msId;
     }
 
 }
