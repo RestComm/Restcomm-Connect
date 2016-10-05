@@ -3,13 +3,13 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm</artifactId>
+		<groupId>org.restcomm</groupId>
+		<artifactId>restcomm-connect</artifactId>
 		<version>8.0.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>restcomm.tts.api</artifactId>
-	<name>restcomm.tts.api</name>
+	<artifactId>restcomm-connect.tts.api</artifactId>
+	<name>restcomm-connect.tts.api</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
@@ -18,8 +18,8 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.commons</artifactId>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.commons</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>

@@ -91,6 +91,7 @@ import org.mobicents.servlet.restcomm.sms.SmsSessionInfo;
 import org.mobicents.servlet.restcomm.sms.SmsSessionRequest;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
+import org.mobicents.servlet.restcomm.telephony.CallManagerResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
@@ -1226,6 +1227,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             // Hang up the call.
             if (ParserFailed.class.equals(klass)) {
                 call.tell(new Hangup("Problem_to_parse_downloaded_RCML"), source);
+            } else if (CallManagerResponse.class.equals(klass)) {
+                String reason = ((CallManagerResponse)message).cause().getMessage().replaceAll("\\s","_");
+                call.tell(new Hangup(reason), source);
             } else {
                 call.tell(new Hangup(), source);
             }

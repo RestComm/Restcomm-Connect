@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm-docs</artifactId>
+		<groupId>org.restcomm</groupId>
+		<artifactId>restcomm-connect-docs</artifactId>
 		<version>7.6.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>restcomm-docs-sources-telscale</artifactId>
+	<artifactId>restcomm-connect-docs-sources-telscale</artifactId>
 
 	<properties>
 		<platform.name>TelScale</platform.name>
@@ -43,7 +43,7 @@
 							<artifactItems>
 								<artifactItem>
 									<groupId>${pom.groupId}</groupId>
-									<artifactId>restcomm-docs-sources</artifactId>
+									<artifactId>restcomm-connect-docs-sources</artifactId>
 									<version>${pom.version}</version>
 									<type>jar</type>
 									<overWrite>true</overWrite>
