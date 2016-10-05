@@ -55,7 +55,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
-//import org.mobicents.servlet.restcomm.telephony.Version;
+//import org.restcomm.connect.telephony.Version;
 import org.restcomm.connect.testsuite.telephony.security.DigestServerAuthenticationMethod;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;

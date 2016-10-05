@@ -49,7 +49,7 @@ import java.util.logging.Logger;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-//import org.mobicents.servlet.restcomm.telephony.Version;
+//import org.restcomm.connect.telephony.Version;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

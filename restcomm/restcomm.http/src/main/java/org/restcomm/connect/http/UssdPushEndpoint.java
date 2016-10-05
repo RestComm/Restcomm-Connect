@@ -89,7 +89,7 @@ public class UssdPushEndpoint extends SecuredEndpoint {
     public void init() {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
-        ussdCallManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.ussd.telephony.UssdCallManager");
+        ussdCallManager = (ActorRef) context.getAttribute("org.restcomm.connect.ussd.telephony.UssdCallManager");
         daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
         super.init(configuration);
         CallDetailRecordConverter converter = new CallDetailRecordConverter(configuration);

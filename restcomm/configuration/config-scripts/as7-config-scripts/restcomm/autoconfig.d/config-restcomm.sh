@@ -340,12 +340,12 @@ configSMPPAccount() {
 	destinationMap="$8"
 
 
-	sed -i "s|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\".*\">|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\"$activate\">|g" $FILE
+	sed -i "s|<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\" activateSmppConnection =\".*\">|<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\" activateSmppConnection =\"$activate\">|g" $FILE
 	#Add sourceMap && destinationMap
 
 
 	if [ "$activate" == "true" ] || [ "$activate" == "TRUE" ]; then
-		sed -e	"/<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\"/{
+		sed -e	"/<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\"/{
 			N
 			N
 			N
@@ -365,7 +365,7 @@ configSMPPAccount() {
 		echo 'Configured SMPP Account Details'
 
 	else
-		sed -e	"/<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\"/{
+		sed -e	"/<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\"/{
 			N
 			N
 			N

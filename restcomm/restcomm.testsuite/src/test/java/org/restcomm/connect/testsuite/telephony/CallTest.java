@@ -45,7 +45,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
-//import org.mobicents.servlet.restcomm.telephony.Version;
+//import org.restcomm.connect.telephony.Version;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

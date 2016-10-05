@@ -104,7 +104,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         dao = storage.getSmsMessagesDao();
-        aggregator = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.sms.SmsService");
+        aggregator = (ActorRef) context.getAttribute("org.restcomm.connect.sms.SmsService");
         system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
         super.init(configuration);
         final SmsMessageConverter converter = new SmsMessageConverter(configuration);

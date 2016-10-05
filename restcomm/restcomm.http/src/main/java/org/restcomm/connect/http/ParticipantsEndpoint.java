@@ -108,7 +108,7 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
     public void init() {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
-        callManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.CallManager");
+        callManager = (ActorRef) context.getAttribute("org.restcomm.connect.telephony.CallManager");
         daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
         accountsDao = daos.getAccountsDao();
         recordingsDao = daos.getRecordingsDao();

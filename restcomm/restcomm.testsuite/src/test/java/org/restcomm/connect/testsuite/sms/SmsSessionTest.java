@@ -35,7 +35,7 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-//import org.mobicents.servlet.restcomm.sms.Version;
+//import org.restcomm.connect.sms.Version;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonArray;
