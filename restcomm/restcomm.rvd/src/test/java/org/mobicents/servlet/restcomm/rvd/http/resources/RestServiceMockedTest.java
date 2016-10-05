@@ -1,12 +1,11 @@
 package org.mobicents.servlet.restcomm.rvd.http.resources;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import org.junit.Before;
 import org.junit.Rule;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.RvdConfigurationBuilder;
 import org.mobicents.servlet.restcomm.rvd.commons.http.CustomHttpClientBuilder;
-import org.mobicents.servlet.restcomm.rvd.configuration.RestcommConfigBuilder;
+import org.restcomm.connect.rvd.configuration.RestcommConfigBuilder;
 import org.mobicents.servlet.restcomm.rvd.identity.AccountProvider;
 import org.mobicents.servlet.restcomm.rvd.identity.AccountProviderBuilder;
 import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;

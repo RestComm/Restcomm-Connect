@@ -117,7 +117,7 @@ Make sure the *SIP client port* above (**5070**)matches the port defined in the 
 
 [source,lang:xml,decode:true]
 ----
-<sms-aggregator class="org.mobicents.servlet.restcomm.sms.SmsService"> 
+<sms-aggregator class="SmsService">
 	<outbound-prefix></outbound-prefix> 
 	<outbound-endpoint>127.0.0.1:**5070**</outbound-endpoint> 
 </sms-aggregator>   

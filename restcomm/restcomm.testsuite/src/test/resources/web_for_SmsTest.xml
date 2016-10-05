@@ -23,7 +23,7 @@
   
     <servlet>
     <servlet-name>SmsRcmlServlet</servlet-name>
-    <servlet-class>org.mobicents.servlet.restcomm.sms.SmsRcmlServlet</servlet-class>
+    <servlet-class>org.restcomm.connect.testsuite.sms.SmsRcmlServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
   
