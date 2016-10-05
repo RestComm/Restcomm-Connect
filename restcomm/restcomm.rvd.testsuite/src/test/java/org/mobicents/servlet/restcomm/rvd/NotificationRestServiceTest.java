@@ -33,6 +33,7 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.restcomm.connect.commons.Version;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -42,7 +43,7 @@ import javax.ws.rs.core.MultivaluedMap;
 @RunWith(Arquillian.class)
 public class NotificationRestServiceTest extends RestServiceTest {
     private final static Logger logger = Logger.getLogger(NotificationRestServiceTest.class);
-    private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
+    private static final String version = Version.getVersion();
 
     @Test
     public void notifyApplicationRemovalWorks() {

@@ -1,6 +1,6 @@
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2011-2016, Telestax Inc and individual contributors
+ * Copyright 2011-2014, Telestax Inc and individual contributors
  * by the @authors tag.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -32,6 +32,7 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.*;
 import org.junit.runner.RunWith;
+import org.restcomm.connect.commons.Version;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
@@ -42,7 +43,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 public class ProjectRestServiceTest extends RestServiceTest {
 
     private final static Logger logger = Logger.getLogger(ProjectRestServiceTest.class);
-    private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
+    private static final String version = Version.getVersion();
 
     static final String username = "administrator@company.com";
     static final String password = "adminpass";

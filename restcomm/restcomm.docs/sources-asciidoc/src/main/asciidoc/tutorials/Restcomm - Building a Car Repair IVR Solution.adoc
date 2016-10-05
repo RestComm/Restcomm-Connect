@@ -33,7 +33,7 @@ You also need to add the Restcomm.xml configuration section that allows you to s
         <!-- The SMS aggregator is responsible for the handling of SMS messages
                              inside of RestComm. Refer to the org.mobicents.servlet.sip.restcomm.SmsAggregator
                                              interface for more information. -->
-        <sms-aggregator class="org.mobicents.servlet.restcomm.sms.SmsService">
+        <sms-aggregator class="SmsService">
                         <outbound-prefix>#</outbound-prefix>
                         <outbound-endpoint>64.136.174.30</outbound-endpoint>
        </sms-aggregator>

@@ -18,7 +18,7 @@
 
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/110 -->
-	<select id="getTotalCallDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter" resultType="int">
+	<select id="getTotalCallDetailRecordByUsingFilters" parameterType="org.restcomm.connect.dao.entities.CallDetailRecordFilter" resultType="int">
 		SELECT COUNT(*) FROM "restcomm_call_detail_records" WHERE
 
 		<!-- are we counting cdrs from a single account or from an account set -->
@@ -67,7 +67,7 @@
 
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/110 -->
-	<select id="getCallDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter" resultType="hashmap">
+	<select id="getCallDetailRecordByUsingFilters" parameterType="org.restcomm.connect.dao.entities.CallDetailRecordFilter" resultType="hashmap">
 		SELECT * FROM "restcomm_call_detail_records" AS "restcomm_call_detail_records" WHERE
 
 		<!-- are we retrieving cdrs from a single account or from an account set -->
