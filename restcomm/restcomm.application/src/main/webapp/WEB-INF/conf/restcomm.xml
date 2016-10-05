@@ -258,11 +258,7 @@
 		<port></port>
 	</smtp-service>
 
-<<<<<<< HEAD
-	<!-- <dao-manager class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
-=======
-	<dao-manager class="org.restcomm.connect.dao.mybatis.MybatisDaoManager">
->>>>>>> master
+	<!-- <dao-manager class="org.restcomm.connect.dao.mybatis.MybatisDaoManager">
 		<configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml</configuration-file>
 		<data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
 		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
