@@ -447,7 +447,7 @@ public final class MmsConferenceController extends MediaServerController {
             String conferenceName = createMediaSession.conferenceName();
             //TODO: temporary log
             logger.info( "MMSConferenceController: GetMediaGatewayFromMRB: conferenceName = " + conferenceName  );
-            mrb.tell(new GetMediaGateway(createMediaSession.callSid(), conferenceName), self());
+            mrb.tell(new GetMediaGateway(createMediaSession.callSid(), conferenceName, null), self());
         }
     }
 

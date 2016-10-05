@@ -746,7 +746,7 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            mrb.tell(new GetMediaGateway(callId, null), self());
+            mrb.tell(new GetMediaGateway(callId), self());
         }
     }
 
