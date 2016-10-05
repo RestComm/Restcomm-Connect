@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.mobicents.servlet.restcomm.mgcp.MediaResourceBrokerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.fsm.Action;
@@ -42,6 +41,7 @@ import org.restcomm.connect.mgcp.DestroyEndpoint;
 import org.restcomm.connect.mgcp.EndpointState;
 import org.restcomm.connect.mgcp.EndpointStateChanged;
 import org.restcomm.connect.mgcp.MediaGatewayResponse;
+import org.restcomm.connect.mgcp.MediaResourceBrokerResponse;
 import org.restcomm.connect.mgcp.MediaSession;
 import org.restcomm.connect.mgcp.mrb.messages.ConferenceMediaResourceControllerStateChanged;
 import org.restcomm.connect.mgcp.mrb.messages.GetConferenceMediaResourceController;
@@ -61,7 +61,6 @@ import org.restcomm.connect.mscontrol.api.messages.StartRecording;
 import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StopRecording;
-import org.restcomm.connect.telephony.api.ConferenceInfo;
 
 import akka.actor.ActorRef;
 import akka.event.Logging;
@@ -445,12 +444,10 @@ public final class MmsConferenceController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             CreateMediaSession createMediaSession = (CreateMediaSession) message;
-            ConferenceInfo conferenceInfo = createMediaSession.conferenceInfo();
-            conferenceName = conferenceInfo.name();
-            conferenceSid = conferenceInfo.sid();
+            String conferenceName = createMediaSession.conferenceName();
             //TODO: temporary log
-            logger.info( "MMSConferenceController: GetMediaGatewayFromMRB: conferenceName = " + conferenceName + " conferenceSid: " + conferenceSid );
-            mrb.tell(new GetMediaGateway(createMediaSession.callSid(), createMediaSession.conferenceInfo()), self());
+            logger.info( "MMSConferenceController: GetMediaGatewayFromMRB: conferenceName = " + conferenceName  );
+            mrb.tell(new GetMediaGateway(createMediaSession.callSid(), conferenceName), self());
         }
     }
 
@@ -463,7 +460,7 @@ public final class MmsConferenceController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             logger.info("MMSConferenceController: GettingCnfMediaResourceController: conferenceName = "+conferenceName+" conferenceSid: "+conferenceSid+" cnfenpointID: "+cnfEndpoint);
-            mrb.tell(new GetConferenceMediaResourceController(conferenceName, conferenceSid), self());
+            mrb.tell(new GetConferenceMediaResourceController(conferenceName), self());
         }
     }
 

@@ -74,22 +74,15 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.dao</artifactId>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.dao</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
-			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.telephony.api</artifactId>
-			<version>${project.version}</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.mscontrol.api</artifactId>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.mscontrol.api</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>

@@ -19,15 +19,11 @@
  */
 package org.restcomm.connect.interpreter;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.servlet.sip.SipServletResponse;
-
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActorContext;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -64,6 +60,7 @@ import org.restcomm.connect.telephony.api.CreateCall;
 import org.restcomm.connect.telephony.api.DestroyCall;
 import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
+
 import javax.servlet.sip.SipServletResponse;
 import java.io.IOException;
 import java.net.URI;

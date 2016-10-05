@@ -21,9 +21,8 @@
 
 package org.restcomm.connect.mgcp.mrb.messages;
 
-import org.mobicents.servlet.restcomm.entities.Sid;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
-import org.restcomm.connect.telephony.api.ConferenceInfo;
+import org.restcomm.connect.dao.entities.Sid;
 
 /**
  * @author Maria Farooq (maria.farooq@telestax.com)
@@ -31,14 +30,12 @@ import org.restcomm.connect.telephony.api.ConferenceInfo;
 @Immutable
 public final class GetMediaGateway {
     private final Sid callSid;
-    //private final boolean conference;
-    //private final String conferenceName;
-    private final ConferenceInfo conferenceInfo;
+    private final String conferenceName;
 
-    public GetMediaGateway(final Sid callSid, final ConferenceInfo conferenceInfo) {
+    public GetMediaGateway(final Sid callSid, final String conferenceName) {
         super();
         this.callSid = callSid;
-        this.conferenceInfo = conferenceInfo;
+        this.conferenceName = conferenceName;
     }
 
     public GetMediaGateway(final Sid callSid){
@@ -49,8 +46,8 @@ public final class GetMediaGateway {
         return callSid;
     }
 
-    public ConferenceInfo conferenceInfo() {
-        return conferenceInfo;
+    public String conferenceName() {
+        return conferenceName;
     }
 
 }

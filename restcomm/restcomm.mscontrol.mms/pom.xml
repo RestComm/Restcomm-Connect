@@ -68,8 +68,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.telephony.api</artifactId>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.telephony.api</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>

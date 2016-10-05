@@ -241,7 +241,7 @@ public final class Conference extends UntypedActor {
             ConferenceInfo information = createConferenceInfo();
             logger.info("ConferenceInfo: "+information);
             // Initialize the MS Controller
-            final CreateMediaSession createMediaSession = new CreateMediaSession(startConference.callSid(), information);
+            final CreateMediaSession createMediaSession = new CreateMediaSession(startConference.callSid(), information.name());
             mscontroller.tell(createMediaSession, super.source);
         }
 
