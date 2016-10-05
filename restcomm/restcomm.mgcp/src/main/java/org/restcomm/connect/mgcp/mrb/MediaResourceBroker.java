@@ -75,7 +75,7 @@ public class MediaResourceBroker extends UntypedActor{
 
     private final List<ActorRef> observers;
 
-	private MediaServerEntity localMediaServerEntity;
+    private MediaServerEntity localMediaServerEntity;
 
     public MediaResourceBroker(ActorSystem system, Configuration configuration, DaoManager storage, final ClassLoader loader) throws UnknownHostException{
         super();
