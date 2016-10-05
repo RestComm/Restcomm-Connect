@@ -19,9 +19,6 @@
  */
 package org.mobicents.servlet.restcomm.dao.mybatis;
 
-import static org.mobicents.servlet.restcomm.dao.DaoUtils.readInteger;
-import static org.mobicents.servlet.restcomm.dao.DaoUtils.readString;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,9 +26,10 @@ import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.MediaServersDao;
 import org.mobicents.servlet.restcomm.entities.MediaServerEntity;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.dao.DaoUtils;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -114,14 +112,14 @@ public final class MybatisMediaServerDao implements MediaServersDao {
     }
 
     private MediaServerEntity toMediaServer(final Map<String, Object> map) {
-        final int msId = readInteger(map.get("ms_id"));
-        final String compatibility = readString(map.get("compatibility"));
-        final String localIpAddress = readString(map.get("local_ip"));
-        final int localPort = readInteger(map.get("local_port"));
-        final String remoteIpAddress = readString(map.get("remote_ip"));
-        final int remotePort = readInteger(map.get("remote_port"));
-        final String responseTimeout = readString(map.get("response_timeout"));
-        final String externalAddress = readString(map.get("external_address"));
+        final int msId = DaoUtils.readInteger(map.get("ms_id"));
+        final String compatibility = DaoUtils.readString(map.get("compatibility"));
+        final String localIpAddress = DaoUtils.readString(map.get("local_ip"));
+        final int localPort = DaoUtils.readInteger(map.get("local_port"));
+        final String remoteIpAddress = DaoUtils.readString(map.get("remote_ip"));
+        final int remotePort = DaoUtils.readInteger(map.get("remote_port"));
+        final String responseTimeout = DaoUtils.readString(map.get("response_timeout"));
+        final String externalAddress = DaoUtils.readString(map.get("external_address"));
 
         return new MediaServerEntity(msId, compatibility, localIpAddress, localPort, remoteIpAddress, remotePort, responseTimeout, externalAddress);
     }

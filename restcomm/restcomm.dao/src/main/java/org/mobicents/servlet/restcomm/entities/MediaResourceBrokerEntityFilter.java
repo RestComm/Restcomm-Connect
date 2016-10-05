@@ -19,7 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.entities;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)

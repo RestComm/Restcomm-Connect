@@ -19,11 +19,6 @@
  */
 package org.mobicents.servlet.restcomm.dao.mybatis;
 
-import static org.mobicents.servlet.restcomm.dao.DaoUtils.readBoolean;
-import static org.mobicents.servlet.restcomm.dao.DaoUtils.readSid;
-import static org.mobicents.servlet.restcomm.dao.DaoUtils.readString;
-import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeSid;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,11 +26,12 @@ import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.MediaResourceBrokerDao;
 import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntity;
 import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntityFilter;
-import org.mobicents.servlet.restcomm.entities.Sid;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.dao.DaoUtils;
+import org.restcomm.connect.dao.entities.Sid;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -122,18 +118,18 @@ public final class MybatisMediaResourceBrokerDao implements MediaResourceBrokerD
     }
 
     private MediaResourceBrokerEntity toMRBEntity(final Map<String, Object> map) {
-        final Sid conferenceSid = readSid(map.get("conference_sid"));
-        final String slaveMsId = readString(map.get("slave_ms_id"));
-        final String slaveMsBridgeEpId = readString(map.get("slave_ms_bridge_ep_id"));
-        final String slaveMsCnfEpId = readString(map.get("slave_ms_cnf_ep_id"));
-        final boolean isBridgedTogether = readBoolean(map.get("is_bridged_together"));
+        final Sid conferenceSid = DaoUtils.readSid(map.get("conference_sid"));
+        final String slaveMsId = DaoUtils.readString(map.get("slave_ms_id"));
+        final String slaveMsBridgeEpId = DaoUtils.readString(map.get("slave_ms_bridge_ep_id"));
+        final String slaveMsCnfEpId = DaoUtils.readString(map.get("slave_ms_cnf_ep_id"));
+        final boolean isBridgedTogether = DaoUtils.readBoolean(map.get("is_bridged_together"));
 
         return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether);
     }
 
     private Map<String, Object> toMap(final MediaResourceBrokerEntity ms) {
         final Map<String, Object> map = new HashMap<String, Object>();
-        map.put("conference_sid", writeSid(ms.getConferenceSid()));
+        map.put("conference_sid", DaoUtils.writeSid(ms.getConferenceSid()));
         map.put("slave_ms_id", ms.getSlaveMsId());
         map.put("slave_ms_bridge_ep_id", ms.getSlaveMsBridgeEpId());
         map.put("slave_ms_cnf_ep_id", ms.getSlaveMsCnfEpId());

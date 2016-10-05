@@ -21,8 +21,10 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.messages;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
-import org.mobicents.servlet.restcomm.entities.Sid;
+import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.mscontrol.api.messages.MediaServerControllerStateChanged;
+import org.restcomm.connect.mscontrol.api.messages.MediaSessionInfo;
 
 /**
  * @author Maria

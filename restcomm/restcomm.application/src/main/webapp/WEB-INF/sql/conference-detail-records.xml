@@ -26,7 +26,7 @@
     <select id="getConferenceDetailRecordsByDateUpdated" parameterType="date" resultType="hashmap">
 		SELECT * FROM "restcomm_conference_detail_records" WHERE "date_updated"&lt;=#{date_updated};
     </select>
-    <select id="getTotalConferenceDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter" resultType="int">
+    <select id="getTotalConferenceDetailRecordByUsingFilters" parameterType="org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter" resultType="int">
 		SELECT COUNT(*) FROM "restcomm_conference_detail_records" WHERE "account_sid"=#{accountSid}
 		<if test="status != null">
 			AND "status" like #{status}
@@ -45,7 +45,7 @@
 		</if>
 
 	</select>
-	<select id="getConferenceDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter" resultType="hashmap">
+	<select id="getConferenceDetailRecordByUsingFilters" parameterType="org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter" resultType="hashmap">
 		SELECT * FROM "restcomm_conference_detail_records" AS "restcomm_conference_detail_records" WHERE "account_sid"=#{accountSid}
         <if test="status != null">
 			AND "status" like #{status}
