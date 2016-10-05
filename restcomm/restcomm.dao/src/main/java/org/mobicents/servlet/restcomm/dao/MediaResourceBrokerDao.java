@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntity;
 import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntityFilter;
-import org.mobicents.servlet.restcomm.entities.Sid;
+import org.restcomm.connect.dao.entities.Sid;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)

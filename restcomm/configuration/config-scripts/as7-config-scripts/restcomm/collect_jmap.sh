@@ -44,7 +44,7 @@ if [[ -z "$RESTCOMM_PID" ]]; then
     echo "****************************************************************" > $JMAP_DIR/restcomm_mem
     echo "GC Histogram before GC.run" >> $JMAP_DIR/restcomm_mem
     echo "****************************************************************" >> $JMAP_DIR/restcomm_mem
-    jcmd $RESTCOMM_PID GC.class_histogram  | grep org.mobicents.servlet.restcomm >> $JMAP_DIR/restcomm_mem
+    jcmd $RESTCOMM_PID GC.class_histogram  | grep org.restcomm.connect >> $JMAP_DIR/restcomm_mem
 
     jcmd $RESTCOMM_PID GC.run
     sleep 5
@@ -52,7 +52,7 @@ if [[ -z "$RESTCOMM_PID" ]]; then
     echo "****************************************************************" >> $JMAP_DIR/restcomm_mem
     echo "GC Histogram after GC.run" >> $JMAP_DIR/restcomm_mem
     echo "****************************************************************" >> $JMAP_DIR/restcomm_mem
-    jcmd $RESTCOMM_PID GC.class_histogram  | grep org.mobicents.servlet.restcomm >> $JMAP_DIR/restcomm_mem
+    jcmd $RESTCOMM_PID GC.class_histogram  | grep org.restcomm.connect >> $JMAP_DIR/restcomm_mem
 
     echo "****************************************************************" >> $JMAP_DIR/restcomm_mem
     echo "JVMTop" >> $JMAP_DIR/restcomm_mem

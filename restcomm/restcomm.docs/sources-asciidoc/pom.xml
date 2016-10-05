@@ -4,13 +4,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<parent>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm-docs</artifactId>
+		<groupId>org.restcomm</groupId>
+		<artifactId>restcomm-connect-docs</artifactId>
 		<version>8.0.0-SNAPSHOT</version>
 	</parent>
 	
-	<artifactId>restcomm-docs-sources</artifactId>
-	<name>RestComm Connect :: Docs :: ${pom.artifactId}</name>
+	<artifactId>restcomm-connect-docs-sources</artifactId>
+	<name>restcomm-connect Connect :: Docs :: ${pom.artifactId}</name>
 
 	<properties>
 		<asciidoctor.maven.plugin.version>1.5.3</asciidoctor.maven.plugin.version>
