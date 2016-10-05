@@ -18,7 +18,7 @@
     SELECT * FROM media_servers;
   </select>
   
-  <select id="getMediaServers" resultType="hashmap" parameterType="string">
+  <select id="getMediaServer" resultType="hashmap" parameterType="string">
     SELECT * FROM media_servers where ms_id=#{ms_id};
   </select>
   
