@@ -18,7 +18,7 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.rvd;
+package org.restcomm.connect.rvd;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.sun.jersey.api.client.Client;
