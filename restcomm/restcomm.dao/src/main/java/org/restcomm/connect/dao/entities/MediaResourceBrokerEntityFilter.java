@@ -17,33 +17,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.entities;
-
-import java.text.ParseException;
+package org.restcomm.connect.dao.entities;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 /**
- * @author maria-farooq@live.com (Maria Farooq)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 
 @Immutable
-public class MediaServerFilter {
+public class MediaResourceBrokerEntityFilter {
 
-    private final String msIpAddress;
-    private final String msPort;
+    private final String conferenceSid;
+    private String slaveMsId;
 
-    public MediaServerFilter(final String msIpAddress, final String msPort) throws ParseException {
-        this.msIpAddress = msIpAddress;
-        this.msPort = msPort;
+    public MediaResourceBrokerEntityFilter(String conferenceSid, String slaveMsId) {
+        this.conferenceSid = conferenceSid;
+        this.slaveMsId = slaveMsId;
     }
 
-    public String getMsIpAddress() {
-        return msIpAddress;
+    public String getConferenceSid() {
+        return conferenceSid;
     }
 
-    public String getMsPort() {
-        return msPort;
+    public String getSlaveMsId() {
+        return slaveMsId;
     }
-
 }

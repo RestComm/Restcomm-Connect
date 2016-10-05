@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.dao.mybatis;
+package org.restcomm.connect.dao.mybatis;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,11 +26,11 @@ import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.mobicents.servlet.restcomm.dao.MediaResourceBrokerDao;
-import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntity;
-import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntityFilter;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.DaoUtils;
+import org.restcomm.connect.dao.MediaResourceBrokerDao;
+import org.restcomm.connect.dao.entities.MediaResourceBrokerEntity;
+import org.restcomm.connect.dao.entities.MediaResourceBrokerEntityFilter;
 import org.restcomm.connect.dao.entities.Sid;
 
 /**

@@ -19,8 +19,6 @@
  */
 package org.restcomm.connect.dao;
 
-import org.mobicents.servlet.restcomm.dao.MediaResourceBrokerDao;
-import org.mobicents.servlet.restcomm.dao.MediaServersDao;
 import org.restcomm.connect.commons.Configurable;
 import org.restcomm.connect.commons.LifeCycle;
 
