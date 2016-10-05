@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -88,6 +89,8 @@ public class MediaResourceBroker extends UntypedActor{
         MediaServerEntity localMediaServerEntity = uploadLocalMediaServersInDataBase();
         bindMGCPStack(localMediaServerEntity.getLocalIpAddress(), localMediaServerEntity.getLocalPort());
         this.localMediaGateway = turnOnMediaGateway(localMediaServerEntity);
+        this.mediaGatewayMap = new HashMap<String, ActorRef>();
+        mediaGatewayMap.put(localMediaServerEntity.getMsId()+"", localMediaGateway);
     }
 
     private void bindMGCPStack(String ip, int port) throws UnknownHostException {
