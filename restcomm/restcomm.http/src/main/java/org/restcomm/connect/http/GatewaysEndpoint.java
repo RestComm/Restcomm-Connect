@@ -70,7 +70,7 @@ public class GatewaysEndpoint extends SecuredEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new GatewayListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
-        proxyManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.proxy.ProxyManager");
+        proxyManager = (ActorRef) context.getAttribute("org.restcomm.connect.telephony.proxy.ProxyManager");
     }
 
     private Gateway createFrom(final MultivaluedMap<String, String> data) {
@@ -137,7 +137,7 @@ public class GatewaysEndpoint extends SecuredEndpoint {
         final Gateway gateway = createFrom(data);
         dao.addGateway(gateway);
         if (proxyManager == null) {
-            proxyManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.proxy.ProxyManager");
+            proxyManager = (ActorRef) context.getAttribute("org.restcomm.connect.telephony.proxy.ProxyManager");
         }
         proxyManager.tell(new RegisterGateway(gateway), null);
         if (APPLICATION_XML_TYPE == responseType) {

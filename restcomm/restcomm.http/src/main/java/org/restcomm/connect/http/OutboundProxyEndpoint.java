@@ -78,7 +78,7 @@ public class OutboundProxyEndpoint extends SecuredEndpoint {
     public void init() {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
-        callManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.CallManager");
+        callManager = (ActorRef) context.getAttribute("org.restcomm.connect.telephony.CallManager");
         super.init(configuration);
         builder = new GsonBuilder();
         builder.setPrettyPrinting();

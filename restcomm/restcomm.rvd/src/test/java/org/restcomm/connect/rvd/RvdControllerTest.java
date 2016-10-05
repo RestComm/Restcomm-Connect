@@ -16,7 +16,7 @@ public class RvdControllerTest {
     public static WebArchive createDeployment() {
         WebArchive archive = ShrinkWrap.create(WebArchive.class);
         archive.addClass(BuildService.class);
-        archive.addPackage("org.mobicents.servlet.restcomm.rvd.model");
+        archive.addPackage("org.restcomm.connect.rvd.model");
         archive.addAsLibraries( Maven.resolver().resolve("com.google.code.gson:gson:2.1").withTransitivity().asFile() );
         archive.addAsLibraries( Maven.resolver().resolve("commons-io:commons-io:2.4").withTransitivity().asFile() );
         archive.addAsLibraries( Maven.resolver().resolve("log4j:log4j:1.2.16").withTransitivity().asFile() );

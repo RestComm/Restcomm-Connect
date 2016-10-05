@@ -39,9 +39,9 @@ public class RvdManagerTest {
        archive.setWebXML(new File("src/main/webapp/WEB-INF/web.xml"));
        archive.addClass(RvdRestApplication.class);
        archive.addClass(ProjectRestService.class);
-       archive.addPackage("org.mobicents.servlet.restcomm.rvd");
-       archive.addPackage("org.mobicents.servlet.restcomm.rvd.exceptions");
-       archive.addPackage("org.mobicents.servlet.restcomm.rvd.model.client");
+       archive.addPackage("org.restcomm.connect.rvd");
+       archive.addPackage("org.restcomm.connect.rvd.exceptions");
+       archive.addPackage("org.restcomm.connect.rvd.model.client");
               
        //archive.addAsWebResource(new File("src/main/webapp/workspace/_proto/state"), ArchivePaths.create("/workspace/_proto/state" ));
        //archive.addAsWebResource(new File("src/main/webapp/workspace/_proto/data/project"), ArchivePaths.create("/workspace/_proto/data/project" ));

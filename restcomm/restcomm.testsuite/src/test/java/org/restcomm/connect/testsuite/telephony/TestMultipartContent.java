@@ -279,7 +279,7 @@ public class TestMultipartContent {
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("dial-conference-entry.xml");
-        archive.addPackage("org.mobicents.servlet.restcomm.telephony.RestResources");
+        archive.addPackage("org.restcomm.connect.telephony.RestResources");
         logger.info("Packaged Test App");
         return archive;
     }

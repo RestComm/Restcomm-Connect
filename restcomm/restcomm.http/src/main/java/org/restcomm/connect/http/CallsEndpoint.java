@@ -119,7 +119,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
     public void init() {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
-        callManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.CallManager");
+        callManager = (ActorRef) context.getAttribute("org.restcomm.connect.telephony.CallManager");
         daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
         accountsDao = daos.getAccountsDao();
         recordingsDao = daos.getRecordingsDao();
@@ -329,7 +329,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
             }
             create.setCreateCDR(false);
             if (callManager == null)
-                callManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.CallManager");
+                callManager = (ActorRef) context.getAttribute("org.restcomm.connect.telephony.CallManager");
             Future<Object> future = (Future<Object>) ask(callManager, create, expires);
             Object object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
             Class<?> klass = object.getClass();

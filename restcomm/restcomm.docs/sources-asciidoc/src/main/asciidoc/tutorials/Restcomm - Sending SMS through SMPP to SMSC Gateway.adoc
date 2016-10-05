@@ -114,8 +114,8 @@ If SMPP is correctly started, you should see an output similar to the one below 
 
 [source,lang:default,decode:true]
 ----
-08:19:22,697 INFO  [org.mobicents.servlet.restcomm.smpp.SmppClientOpsThread] (Thread-602) SmppClientOpsThread started.
-08:19:22,697 INFO  [org.mobicents.servlet.restcomm.smpp.SmppService] (RestComm-akka.actor.default-dispatcher-6) SMPP Service started
+08:19:22,697 INFO  [org.restcomm.connect.smpp.SmppClientOpsThread] (Thread-602) SmppClientOpsThread started.
+08:19:22,697 INFO  [org.restcomm.connect.smpp.SmppService] (RestComm-akka.actor.default-dispatcher-6) SMPP Service started
 08:19:22,796 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015961: Http management interface listening on http://127.0.0.1:9990/management
 08:19:22,797 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015951: Admin console listening on http://127.0.0.1:9990
 08:19:22,797 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015874: JBoss AS 7.2.0.Final "Janus" started in 10923ms - Started 477 of 557 services (79 services are passive or on-demand)
@@ -149,7 +149,7 @@ In the Restcomm console, you should see a message similar to the one below
 
 [source,lang:default,decode:true]
 ----
-09:51:37,815 INFO  [org.mobicents.servlet.restcomm.smpp.SmppHandlerInboundForwarder] (RestComm-akka.actor.default-dispatcher-39) SMPP Message Accepted - 
+09:51:37,815 INFO  [org.restcomm.connect.smpp.SmppHandlerInboundForwarder] (RestComm-akka.actor.default-dispatcher-39) SMPP Message Accepted -
 A Restcomm Hosted App is Found for Number : 1111
 ----
 
