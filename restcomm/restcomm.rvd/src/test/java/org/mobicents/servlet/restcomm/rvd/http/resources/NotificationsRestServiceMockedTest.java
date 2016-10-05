@@ -119,6 +119,7 @@ public class NotificationsRestServiceMockedTest extends RestServiceMockedTest {
         MultivaluedMap<String,String> params = new MultivaluedMapImpl();
         params.add("type","applicationRemoved");
         params.add("applicationSid","AP1235");
+        // an autohrization exception should be thrown
         exception.expect(AuthorizationException.class); //authorization exception is handled at ExceptionMapper level
         Response response = endpoint.notifyApplicationRemoved(params);
     }
