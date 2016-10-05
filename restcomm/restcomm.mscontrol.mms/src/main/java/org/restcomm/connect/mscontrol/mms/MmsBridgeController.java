@@ -401,7 +401,7 @@ public class MmsBridgeController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            mrb.tell(new GetMediaGateway(callSid, null), self());
+            mrb.tell(new GetMediaGateway(callSid), self());
         }
     }
 

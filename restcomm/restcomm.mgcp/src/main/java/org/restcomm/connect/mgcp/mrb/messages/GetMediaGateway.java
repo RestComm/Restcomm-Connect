@@ -40,12 +40,12 @@ public final class GetMediaGateway {
         this.msId = msId;
     }
 
-    public GetMediaGateway(final Sid callSid, final String msId){
-        this(callSid, null, msId);
+    public GetMediaGateway(final Sid callSid){
+        this(callSid, null, null);
     }
 
     public GetMediaGateway(final String msId) {
-        this(null, msId);
+        this(null, null, msId);
     }
 
     public Sid callSid() {
