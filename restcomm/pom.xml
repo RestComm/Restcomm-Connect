@@ -159,7 +159,9 @@
 		<module>restcomm.extension.traffic.throttling</module>
 		<module>restcomm.identity</module>
     <module>restcomm.monitoring.service</module>
-  </modules>
+	 <module>restcomm.docs</module>
+	 <module>restcomm.docs</module>
+	</modules>
 
 	<dependencyManagement>
 		<dependencies>
