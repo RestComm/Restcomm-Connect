@@ -127,7 +127,7 @@
 	</runtime-settings>
 
 	<!-- Configuration for the VoIP Innovations provisioning API. -->
-	<phone-number-provisioning class="VoxbonePhoneNumberProvisioningManager">
+	<phone-number-provisioning class="org.restcomm.connect.provisioning.number.voxbone.VoxbonePhoneNumberProvisioningManager">
 		<callback-urls>
 			<voice url="+{E164}@192.168.0.14:5080" method="SIP"/>
 			<sms url="+{E164}@192.168.0.14:5080" method="SIP"/>

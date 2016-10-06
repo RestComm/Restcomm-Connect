@@ -130,7 +130,7 @@
 
 	<!-- Configuration for the VoIP Innovations provisioning API. -->
 	<phone-number-provisioning
-		class="BandwidthNumberProvisioningManager">
+		class="org.restcomm.connect.provisioning.number.bandwidth.BandwidthNumberProvisioningManager">
 		<callback-urls>
 			<voice url="localhost:5080" method="SIP" />
 			<sms url="localhost:5080" method="SIP" />
