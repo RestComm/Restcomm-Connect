@@ -502,8 +502,15 @@ public final class Conference extends UntypedActor {
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
         if (isRunning()) {
             moderatorPresent = message.isConfModeratorPresent();
+            if (logger.isInfoEnabled()) {
+                logger.info("Received Play message for conference: "+this.name+" , number of participants: "+this.calls.size()+" , isRunning: "+isRunning()+" ,isModeratorPresent: "+this.moderatorPresent);
+            }
             // Forward message to media server controller
             this.mscontroller.tell(message, sender);
+        } else {
+            if (logger.isInfoEnabled()) {
+                logger.info("Play will not be processed for conference: "+this.name+" , number of participants: "+this.calls.size()+" , isRunning: "+isRunning()+" ,isModeratorPresent: "+this.moderatorPresent);
+            }
         }
     }
 

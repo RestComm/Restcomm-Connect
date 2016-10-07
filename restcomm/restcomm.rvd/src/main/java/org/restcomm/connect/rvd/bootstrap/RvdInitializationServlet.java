@@ -30,7 +30,7 @@ public class RvdInitializationServlet extends HttpServlet {
         ServletContext servletContext = config.getServletContext();
         RvdConfiguration rvdConfiguration = new RvdConfiguration(servletContext);
         CustomHttpClientBuilder httpClientBuilder = new CustomHttpClientBuilder(rvdConfiguration);
-        AccountProvider accountProvider = new AccountProvider(rvdConfiguration.getRestcommBaseUri().toString(), httpClientBuilder);
+        AccountProvider accountProvider = new AccountProvider(rvdConfiguration, httpClientBuilder);
         ApplicationContext appContext = new ApplicationContextBuilder()
                 .setConfiguration(rvdConfiguration)
                 .setHttpClientBuilder(httpClientBuilder)
