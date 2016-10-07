@@ -396,8 +396,10 @@
 		<api-key production="false"></api-key>
 	</speech-recognizer>
 
+	<speech-synthesizer active="voicerss"/>
+
 	<!-- The Speech Synthesizer is responsible for turning text in to speech for play back by the media gateway. -->
-		<!--speech-synthesizer class="org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer">
+		<acapela class="org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer">
 			<service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
 			<application></application>
 			<login></login>
@@ -426,9 +428,9 @@
 				<swedish> <female>elin8k</female> <male>emil8k</male> </swedish>
 				<turkish> <female>ipek8k</female> <male></male> </turkish>
 			</speakers>
-		</speech-synthesizer-->
+		</acapela>
 
-	<!--speech-synthesizer class="org.restcomm.connect.tts.voicerss.VoiceRSSSpeechSynthesizer">
+	<voicerss class="org.restcomm.connect.tts.voicerss.VoiceRSSSpeechSynthesizer">
 		<service-root>http://api.voicerss.org</service-root>
 		<apikey></apikey>
 		<languages>
@@ -459,7 +461,7 @@
 			<spanish-spain>es-es</spanish-spain>
 			<swedish>sv-se</swedish>
 		</languages>
-	</speech-synthesizer-->
+	</voicerss>
 
 	<!-- AT&T Speech Synthesizer plugin -->
 	<!-- <speech-synthesizer class="org.restcomm.connect.tts.att.AttSpeechSynthesizer">
