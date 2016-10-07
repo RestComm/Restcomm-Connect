@@ -337,9 +337,11 @@ public final class UserAgentManager extends UntypedActor {
             // RESTCOMM-301 NPE in RestComm Ping
             toTransport = "udp";
         }
-        if (toTransport.equalsIgnoreCase("ws") || toTransport.equalsIgnoreCase("wss")) {
+        /* sometime users on webrtc clients like olympus, closes the tab instead of properly hangup.
+         * so removing this check so we could send OPTIONS to WebRtc clients as well:
+         * if (toTransport.equalsIgnoreCase("ws") || toTransport.equalsIgnoreCase("wss")) {
             return;
-        }
+        }*/
         final SipURI outboundInterface = outboundInterface(toTransport);
         StringBuilder buffer = new StringBuilder();
         buffer.append("sip:restcomm").append("@").append(outboundInterface.getHost());
