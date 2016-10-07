@@ -212,8 +212,11 @@ configSpeechRecognizer() {
 ## Description: Configures available speech synthesizers
 ## Parameters : none
 configSpeechSynthesizers() {
-	configAcapela $ACAPELA_APPLICATION $ACAPELA_LOGIN $ACAPELA_PASSWORD
-	configVoiceRSS $VOICERSS_KEY
+	if [[ "$TTSSYSTEM" == "voicerss" ]]; then
+	    configVoiceRSS $VOICERSS_KEY
+	else
+	    configAcapela $ACAPELA_APPLICATION $ACAPELA_LOGIN $ACAPELA_PASSWORD
+	 fi
 }
 
 ## Description: Configures Acapela Speech Synthesizer
@@ -222,26 +225,20 @@ configSpeechSynthesizers() {
 ## 				3.Password
 configAcapela() {
  if [[ -z $ACAPELA_APPLICATION || -z $ACAPELA_LOGIN || -z $ACAPELA_PASSWORD ]]; then
-        echo 'NOT going to use ACAPELA TTS'
+        echo '!Please make sure that all necessary settings for acapela are set!'
  else
          FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+         sed -i 's|<speech-synthesizer active=".*"/>|<speech-synthesizer active="acapela"/>|' $FILE
 
-        if  grep -q '<!--speech-synthesizer class=\"org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer\">' $FILE
-        then
-            sed -e 's/<!--speech-synthesizer class=\"org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer\">/<speech-synthesizer class=\"org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer\">/'  $FILE > $FILE.bak
-
-	        sed -e "/<speech-synthesizer class=\"org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer\">/,+28 {
+	        sed -e "/<acapela class=\"org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer\">/ {
 		        N
 		        N; s|<application>.*</application>|<application>$1</application>|
 		        N; s|<login>.*</login>|<login>$2</login>|
 		        N; s|<password>.*</password>|<password>$3</password>|
-		        N; s|</speech-synthesizer-->|</speech-synthesizer>|
-	        }" $FILE.bak > $FILE
+	        }" $FILE > $FILE.bak
 
-	        echo 'Configured Acapela Speech Synthesizer'
-	    else
-	        echo 'Acapela Speech Synthesizer Already Configured'
-	    fi
+        mv $FILE.bak $FILE
+        echo 'Configured Acapela Speech Synthesizer'
  fi
 }
 
@@ -251,21 +248,17 @@ configAcapela() {
 configVoiceRSS() {
     if [ -n "$VOICERSS_KEY" ]; then
         FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+         sed -i 's|<speech-synthesizer active=".*"/>|<speech-synthesizer active="voicerss"/>|' $FILE
 
-        if  grep -q '<!--speech-synthesizer class=\"org.restcomm.connect.tts.voicerss.VoiceRSSSpeechSynthesizer\">' $FILE
-                sed -e 's/<!--speech-synthesizer class=\"org.restcomm.connect.tts.voicerss.VoiceRSSSpeechSynthesizer\">/<speech-synthesizer class=\"org.restcomm.connect.tts.voicerss.VoiceRSSSpeechSynthesizer\">/'  $FILE > $FILE.bak
-                then
-                    sed -e "/<service-root>http:\/\/api.voicerss.org<\/service-root>/,+31 {
-                    N; s|<apikey>.*</apikey>|<apikey>$1</apikey>|
-                    N; s|</speech-synthesizer-->|</speech-synthesizer>|
-                    }" $FILE.bak > $FILE
+         sed -e "/<service-root>http:\/\/api.voicerss.org<\/service-root>/ {
+         N; s|<apikey>.*</apikey>|<apikey>$1</apikey>|
+         }" $FILE > $FILE.bak
 
-                echo 'Configured VoiceRSS Speech Synthesizer'
-         else
-                echo 'VoiceRSS Speech Synthesizer already Configured'
-          fi
+         mv $FILE.bak $FILE
+         echo 'Configured VoiceRSS Speech Synthesizer'
+
  	else
- 	     echo 'NOT going to use VoiceRSS TTS'
+ 	     echo 'Please set KEY for VoiceRSS TTS'
     fi
 }
 
