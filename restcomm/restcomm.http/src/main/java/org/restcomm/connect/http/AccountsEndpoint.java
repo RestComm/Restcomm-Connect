@@ -203,22 +203,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
     */
 
     /**
-     * Removes all resources belonging to an account and sets its status to CLOSED. If a notificationApi object
-     * is there also send notification to application server
-     *
-     * @param closedAccount
-     * @param notificationApi
-     */
-    private void closeSingleAccount(Account closedAccount, RcmlserverApi notificationApi) {
-        removeAccoundDependencies(closedAccount.getSid());
-        if (notificationApi != null)
-            notifyAccountRemoved(closedAccount, userIdentityContext.getEffectiveAccount(), notificationApi);
-        // finally, set account status to closed.
-        closedAccount = closedAccount.setStatus(Account.Status.CLOSED);
-        accountsDao.updateAccount(closedAccount);
-    }
-
-    /**
      * Notify application server that an account has been removed
      */
     void notifyAccountRemoved(Account closedAccount, Account notifierAccount, RcmlserverApi api) {
@@ -491,6 +475,22 @@ public class AccountsEndpoint extends SecuredEndpoint {
         }
     }
 
+    /**
+     * Removes all resources belonging to an account and sets its status to CLOSED. If a notificationApi object
+     * is there also send notification to application server
+     *
+     * @param closedAccount
+     * @param notificationApi
+     */
+    private void closeSingleAccount(Account closedAccount, RcmlserverApi notificationApi) {
+        removeAccoundDependencies(closedAccount.getSid());
+        if (notificationApi != null)
+            notifyAccountRemoved(closedAccount, userIdentityContext.getEffectiveAccount(), notificationApi);
+        // finally, set account status to closed.
+        closedAccount = closedAccount.setStatus(Account.Status.CLOSED);
+        accountsDao.updateAccount(closedAccount);
+    }
+
     private void closeAccountTree(Account closedAccount) {
         // do we need to also notify the application sever (RVD) ?
         RcmlserverApi api = null;
@@ -517,8 +517,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 }
             }
         }
-        // remove the parent resources too
-        removeAccoundDependencies(closedAccount.getSid());
+        // close parent account too
+        closeSingleAccount(closedAccount,api);
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {

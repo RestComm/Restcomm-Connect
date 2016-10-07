@@ -44,7 +44,7 @@ import org.restcomm.connect.rvd.model.UserProfile;
 import org.restcomm.connect.rvd.model.callcontrol.CallControlAction;
 import org.restcomm.connect.rvd.model.callcontrol.CallControlStatus;
 import org.restcomm.connect.rvd.model.client.StateHeader;
-import org.restcomm.connect.rvd.restcomm.RestcommAccountInfoResponse;
+import org.restcomm.connect.rvd.restcomm.RestcommAccountInfo;
 import org.restcomm.connect.rvd.restcomm.RestcommClient;
 import org.restcomm.connect.rvd.restcomm.RestcommCallArray;
 import org.restcomm.connect.rvd.storage.FsProfileDao;
@@ -209,7 +209,7 @@ public class RvdController extends SecuredRestService {
                 if (profile == null)
                     throw new UnauthorizedCallControlAccess("No user profile found for user '" + owner + "'. Web trigger cannot be used for project belonging to this user.");
                 effectiveAuthHeader = RvdUtils.isEmpty(profile.getUsername()) ? null : ("Basic "  + RvdUtils.buildHttpAuthorizationToken(profile.getUsername(), profile.getToken()));
-                RestcommAccountInfoResponse accountInfo = accountProvider.getAccount(profile.getUsername(), effectiveAuthHeader);
+                RestcommAccountInfo accountInfo = accountProvider.getAccount(profile.getUsername(), effectiveAuthHeader);
                 if (accountInfo == null)
                     throw new UnauthorizedCallControlAccess("WebTrigger authorization error");
                 accountSid = accountInfo.getSid();
@@ -297,8 +297,8 @@ public class RvdController extends SecuredRestService {
 
             // Find the account sid for the apiUsername is not available
             if (RvdUtils.isEmpty(accountSid)) {
-                RestcommAccountInfoResponse accountResponse = restcommClient.get("/restcomm/2012-04-24/Accounts.json/" + getLoggedUsername()).done(
-                        marshaler.getGson(), RestcommAccountInfoResponse.class);
+                RestcommAccountInfo accountResponse = restcommClient.get("/restcomm/2012-04-24/Accounts.json/" + getLoggedUsername()).done(
+                        marshaler.getGson(), RestcommAccountInfo.class);
                 accountSid = accountResponse.getSid();
             }
             // Create the call

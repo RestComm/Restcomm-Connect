@@ -38,7 +38,6 @@ import org.restcomm.connect.rvd.model.ModelMarshaler;
 import org.restcomm.connect.rvd.model.client.ProjectState;
 import org.restcomm.connect.rvd.storage.WorkspaceStorage;
 import org.restcomm.connect.rvd.storage.exceptions.StorageException;
-import org.restcomm.connect.rvd.identity.AccountProvider;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -81,7 +80,7 @@ public class NotificationsRestServiceMockedTest extends RestServiceMockedTest {
     @Test
     public void applicationRemovalNotification() throws RvdException {
         NotificationsRestService endpoint = new NotificationsRestService(userIdentityContext,projectService); // user identity context not needed
-        endpoint.notifyApplicationRemoved("AP1234");
+        endpoint.processApplicationRemovalNotification("AP1234");
     }
 
 
@@ -91,13 +90,13 @@ public class NotificationsRestServiceMockedTest extends RestServiceMockedTest {
         MultivaluedMap<String,String> params = new MultivaluedMapImpl();
         params.add("type","applicationRemoved");
         params.add("applicationSid","AP1235");
-        Response response = endpoint.notifyApplicationRemoved(params);
+        Response response = endpoint.postNotification(params);
         Assert.assertEquals(200, response.getStatus());
         // if application is missing, we should get a 404
         params = new MultivaluedMapImpl();
         params.add("type","applicationRemoved");
         params.add("applicationSid","AP0000");
-        response = endpoint.notifyApplicationRemoved(params);
+        response = endpoint.postNotification(params);
         Assert.assertEquals(404, response.getStatus());
     }
 
@@ -108,7 +107,7 @@ public class NotificationsRestServiceMockedTest extends RestServiceMockedTest {
     public void missingApplicationThrowsException() throws RvdException {
         NotificationsRestService endpoint = new NotificationsRestService(null,projectService);
         exception.expect(ProjectDoesNotExist.class);
-        endpoint.notifyApplicationRemoved("AP0000");
+        endpoint.processApplicationRemovalNotification("AP0000");
     }
 
     @Test
@@ -121,7 +120,7 @@ public class NotificationsRestServiceMockedTest extends RestServiceMockedTest {
         params.add("applicationSid","AP1235");
         // an autohrization exception should be thrown
         exception.expect(AuthorizationException.class); //authorization exception is handled at ExceptionMapper level
-        Response response = endpoint.notifyApplicationRemoved(params);
+        Response response = endpoint.postNotification(params);
     }
 
 
