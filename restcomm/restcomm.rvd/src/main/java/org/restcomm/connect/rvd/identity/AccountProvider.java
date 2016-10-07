@@ -8,6 +8,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.restcomm.connect.rvd.commons.GenericResponse;
+import org.restcomm.connect.rvd.RvdConfiguration;
 import org.restcomm.connect.rvd.commons.http.CustomHttpClientBuilder;
 import org.restcomm.connect.rvd.restcomm.RestcommAccountInfo;
 import org.restcomm.connect.rvd.utils.RvdUtils;
@@ -27,15 +28,36 @@ import java.net.URISyntaxException;
  */
 public class AccountProvider {
 
-    String restcommUrl;
+    String restcommUrl = null; // this is initialized lazily. Access it through its private getter.
+    private boolean restcommUrlInitialized = false;
     CustomHttpClientBuilder httpClientBuilder;
+    RvdConfiguration configuration;
 
-
+/*
     public AccountProvider(String restcommUrl, CustomHttpClientBuilder httpClientBuilder) {
         if (restcommUrl == null)
             throw new IllegalStateException("restcommUrl cannot be null");
         this.restcommUrl = sanitizeRestcommUrl(restcommUrl);
         this.httpClientBuilder = httpClientBuilder;
+    }
+    */
+
+    public AccountProvider(RvdConfiguration configuration, CustomHttpClientBuilder httpClientBuilder) {
+        this.configuration = configuration;
+        this.httpClientBuilder = httpClientBuilder;
+    }
+
+
+    private String getRestcommUrl() {
+        if (!restcommUrlInitialized) {
+            URI uriFromConfig = configuration.getRestcommBaseUri();
+            if (uriFromConfig == null)
+                throw new IllegalStateException("restcommUrl cannot be null");
+            String url = uriFromConfig.toString();
+            this.restcommUrl = sanitizeRestcommUrl(url);
+            restcommUrlInitialized = true;
+        }
+        return restcommUrl;
     }
 
     private String sanitizeRestcommUrl(String restcommUrl) {
