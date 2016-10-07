@@ -775,13 +775,15 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     public ActorRef getSynthesizer() {
         if (synthesizer == null || (synthesizer != null && synthesizer.isTerminated())) {
-            synthesizer = tts(configuration.subset("speech-synthesizer"));
+            String ttsEngine = configuration.subset("speech-synthesizer").getString("[@active]");
+            Configuration ttsConf = configuration.subset(ttsEngine);
+            synthesizer = tts(ttsConf);
         }
         return synthesizer;
     }
 
-    ActorRef tts(final Configuration configuration) {
-        final String classpath = configuration.getString("[@class]");
+    ActorRef tts(final Configuration ttsConf) {
+        final String classpath = ttsConf.getString("[@class]");
 
         final UntypedActorContext context = getContext();
         return context.actorOf(new Props(new UntypedActorFactory() {
@@ -789,7 +791,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
             @Override
             public Actor create() throws Exception {
-                return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(configuration);
+                return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(ttsConf);
             }
         }));
     }
