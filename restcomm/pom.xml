@@ -101,6 +101,7 @@
 		<shiroweb.version>1.2.0</shiroweb.version>
 		<jersey.version>1.13</jersey.version>
 		<httpclient.version>4.5.2</httpclient.version>
+		<httpasyncclient.version>4.1.2</httpasyncclient.version>
 		<gson.version>2.3.1</gson.version>
 		<xstream.version>1.4.2</xstream.version>
 		<mongodb.version>2.7.2</mongodb.version>
@@ -351,6 +352,12 @@
 				<groupId>org.apache.httpcomponents</groupId>
 				<artifactId>httpclient</artifactId>
 				<version>${httpclient.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpasyncclient</artifactId>
+				<version>${httpasyncclient.version}</version>
 			</dependency>
 
 			<dependency>

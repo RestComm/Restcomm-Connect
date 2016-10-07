@@ -44,6 +44,8 @@ import static javax.ws.rs.core.Response.Status.*;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.configuration.sets.RcmlServerConfigurationSet;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
@@ -58,6 +60,7 @@ import org.restcomm.connect.http.exceptions.AuthorizationException;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
 import org.restcomm.connect.commons.util.StringUtils;
+import org.restcomm.connect.http.rcmlserver.RcmlserverApi;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -200,14 +203,28 @@ public class AccountsEndpoint extends SecuredEndpoint {
     */
 
     /**
-     * Removes all resources belonging to an account and sets its status to CLOSED
+     * Removes all resources belonging to an account and sets its status to CLOSED. If a notificationApi object
+     * is there also send notification to application server
      *
      * @param closedAccount
+     * @param notificationApi
      */
-    private void closeSingleAccount(Account closedAccount) {
-        closedAccount = closedAccount.setStatus(Account.Status.CLOSED);
+    private void closeSingleAccount(Account closedAccount, RcmlserverApi notificationApi) {
         removeAccoundDependencies(closedAccount.getSid());
+        if (notificationApi != null)
+            notifyAccountRemoved(closedAccount, userIdentityContext.getEffectiveAccount(), notificationApi);
+        // finally, set account status to closed.
+        closedAccount = closedAccount.setStatus(Account.Status.CLOSED);
         accountsDao.updateAccount(closedAccount);
+    }
+
+    /**
+     * Notify application server that an account has been removed
+     */
+    void notifyAccountRemoved(Account closedAccount, Account notifierAccount, RcmlserverApi api) {
+        Account loggedAccount = userIdentityContext.getEffectiveAccount();
+        // notifications are sent in the name of the logged user.
+        api.notifyAccountRemovalAsync(closedAccount,loggedAccount.getSid().toString(), loggedAccount.getAuthToken());
     }
 
     /**
@@ -434,24 +451,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
             secure(modifiedAccount, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
             // are we closing the account ?
             if (account.getStatus() != Account.Status.CLOSED && modifiedAccount.getStatus() == Account.Status.CLOSED) {
-                List<String> closedSubAccounts = accountsDao.getSubAccountSidsRecursive(modifiedAccount.getSid());
-                if (closedSubAccounts != null && !closedSubAccounts.isEmpty()) {
-                    int i = closedSubAccounts.size(); // is is the count of accounts left to process
-                    // we iterate backwards to handle child accounts first, parent accounts next
-                    while (i > 0) {
-                        i --;
-                        String removedSid = closedSubAccounts.get(i);
-                        try {
-                            Account subAccount = accountsDao.getAccount(new Sid(removedSid));
-                            closeSingleAccount(subAccount);
-                        } catch (Exception e) {
-                            // if anything bad happens, log the error and continue removing the rest of the accounts.
-                            logger.error("Failed removing (child) account '" + removedSid + "'");
-                        }
-                    }
-                }
-                // remove the parent resources too
-                removeAccoundDependencies(modifiedAccount.getSid());
+                closeAccountTree(modifiedAccount);
+                accountsDao.updateAccount(modifiedAccount);
             } else {
                 // if we're not closing the account, update SIP client of the corresponding Account.
                 // Password and FriendlyName fields are synched.
@@ -476,8 +477,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
                         clientDao.updateClient(client);
                     }
                 }
+                accountsDao.updateAccount(modifiedAccount);
             }
-            accountsDao.updateAccount(modifiedAccount); // includes setting Status to CLOSED
 
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
@@ -488,6 +489,36 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 return null;
             }
         }
+    }
+
+    private void closeAccountTree(Account closedAccount) {
+        // do we need to also notify the application sever (RVD) ?
+        RcmlserverApi api = null;
+        RestcommConfiguration rcommConfiguration = RestcommConfiguration.getInstance();
+        RcmlServerConfigurationSet config = rcommConfiguration.getRcmlserver();
+        if (config != null && config.getNotify()) {
+            // create an RcmlserverApi object only if we will need to notify
+            api = new RcmlserverApi(rcommConfiguration.getMain(), rcommConfiguration.getRcmlserver());
+        }
+
+        List<String> closedSubAccounts = accountsDao.getSubAccountSidsRecursive(closedAccount.getSid());
+        if (closedSubAccounts != null && !closedSubAccounts.isEmpty()) {
+            int i = closedSubAccounts.size(); // is is the count of accounts left to process
+            // we iterate backwards to handle child accounts first, parent accounts next
+            while (i > 0) {
+                i --;
+                String removedSid = closedSubAccounts.get(i);
+                try {
+                    Account subAccount = accountsDao.getAccount(new Sid(removedSid));
+                    closeSingleAccount(subAccount,api);
+                } catch (Exception e) {
+                    // if anything bad happens, log the error and continue removing the rest of the accounts.
+                    logger.error("Failed removing (child) account '" + removedSid + "'");
+                }
+            }
+        }
+        // remove the parent resources too
+        removeAccoundDependencies(closedAccount.getSid());
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
