@@ -376,8 +376,15 @@ public final class MmsConferenceController extends MediaServerController {
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
         if (is(active) && !playing) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Received Play message, isActive: "+is(active)+" , is playing: "+playing);
+            }
             this.playing = Boolean.TRUE;
             this.mediaGroup.tell(message, self);
+        } else {
+            if (logger.isInfoEnabled()) {
+                logger.info("Received Play message but wont process it, isActive: "+is(active)+" , is playing: "+playing);
+            }
         }
     }
 
