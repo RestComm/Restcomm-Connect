@@ -1,9 +1,9 @@
 #!/bin/bash
 export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m"
 export ANT_HOME=/opt/ant/apache-ant-1.8.3
-export WORKSPACE=/tmp/workspace
-mkdir $WORKSPACE
-cp -ar ../* $WORKSPACE
+#export WORKSPACE=/tmp/workspace
+#mkdir $WORKSPACE
+#cp -ar ../* $WORKSPACE
 
 CURRENT_BRANCH=`git rev-parse --abbrev-ref HEAD`
 export MAJOR_VERSION_NUMBER=7.8.0
