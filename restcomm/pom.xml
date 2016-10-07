@@ -133,7 +133,6 @@
 	<modules>
 		<!-- <module>restcomm.docs</module> -->
 		<module>restcomm.application</module>
-		<module>restcomm.dao</module>
 		<module>restcomm.asr</module>
 		<module>restcomm.tts.acapela</module>
 		<module>restcomm.mgcp</module>
@@ -145,7 +144,6 @@
 		<module>restcomm.telephony.api</module>
 		<module>restcomm.interpreter</module>
 		<module>restcomm.http</module>
-		<module>restcomm.sms</module>
 		<module>restcomm.provisioning.number.api</module>
 		<module>restcomm.provisioning.number.vi</module>
 		<module>restcomm.provisioning.number.nexmo</module>

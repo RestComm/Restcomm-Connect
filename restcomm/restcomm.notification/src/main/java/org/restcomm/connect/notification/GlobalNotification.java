@@ -3,15 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.mobicents.servlet.restcomm.notification;
+package org.restcomm.connect.notification;
 
 import java.net.URI;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
-import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.dao.NotificationsDao;
-import org.mobicents.servlet.restcomm.entities.Notification;
-import org.mobicents.servlet.restcomm.entities.Sid;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.dao.entities.Sid;
+
 
 
 /**
