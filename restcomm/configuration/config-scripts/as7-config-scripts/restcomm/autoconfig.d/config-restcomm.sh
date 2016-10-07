@@ -197,14 +197,16 @@ configSmsAggregator() {
 ## Description: Configures Speech Recognizer
 ## Parameters : 1.iSpeech Key
 configSpeechRecognizer() {
-	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    if [ -n "$ISPEECH_KEY" ]; then
+        FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
-	sed -e "/<speech-recognizer.*>/ {
-		N; s|<api-key.*></api-key>|<api-key production=\"true\">$1</api-key>|
-	}" $FILE > $FILE.bak
+        sed -e "/<speech-recognizer.*>/ {
+            N; s|<api-key.*></api-key>|<api-key production=\"true\">$1</api-key>|
+        }" $FILE > $FILE.bak
 
-	mv $FILE.bak $FILE
-	echo 'Configured the Speech Recognizer'
+        mv $FILE.bak $FILE
+        echo 'Configured the Speech Recognizer'
+    fi
 }
 
 ## Description: Configures available speech synthesizers
@@ -219,30 +221,52 @@ configSpeechSynthesizers() {
 ## 				2.Login
 ## 				3.Password
 configAcapela() {
-	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+ if [[ -z $ACAPELA_APPLICATION || -z $ACAPELA_LOGIN || -z $ACAPELA_PASSWORD ]]; then
+        echo 'NOT going to use ACAPELA TTS'
+ else
+         FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
-	sed -e "/<speech-synthesizer class=\"AcapelaSpeechSynthesizer\">/ {
-		N
-		N; s|<application>.*</application>|<application>$1</application>|
-		N; s|<login>.*</login>|<login>$2</login>|
-		N; s|<password>.*</password>|<password>$3</password>|
-	}" $FILE > $FILE.bak
+        if  grep -q '<!--speech-synthesizer class=\"AcapelaSpeechSynthesizer\">' $FILE
+        then
+            sed -e 's/<!--speech-synthesizer class=\"AcapelaSpeechSynthesizer\">/<speech-synthesizer class=\"AcapelaSpeechSynthesizer\">/'  $FILE > $FILE.bak
 
-	mv $FILE.bak $FILE
-	echo 'Configured Acapela Speech Synthesizer'
+	        sed -e "/<speech-synthesizer class=\"AcapelaSpeechSynthesizer\">/,+28 {
+		        N
+		        N; s|<application>.*</application>|<application>$1</application>|
+		        N; s|<login>.*</login>|<login>$2</login>|
+		        N; s|<password>.*</password>|<password>$3</password>|
+		        N; s|</speech-synthesizer-->|</speech-synthesizer>|
+	        }" $FILE.bak > $FILE
+
+	        echo 'Configured Acapela Speech Synthesizer'
+	    else
+	        echo 'Acapela Speech Synthesizer Already Configured'
+	    fi
+ fi
 }
+
 
 ## Description: Configures VoiceRSS Speech Synthesizer
 ## Parameters : 1.API key
 configVoiceRSS() {
-	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    if [ -n "$VOICERSS_KEY" ]; then
+        FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
-	sed -e "/<service-root>http:\/\/api.voicerss.org<\/service-root>/ {
-		N; s|<apikey>.*</apikey>|<apikey>$1</apikey>|
-	}" $FILE > $FILE.bak
+        if  grep -q '<!--speech-synthesizer class=\"org.restcomm.connect.tts.voicerss.VoiceRSSSpeechSynthesizer\">' $FILE
+                sed -e 's/<!--speech-synthesizer class=\"org.restcomm.connect.tts.voicerss.VoiceRSSSpeechSynthesizer\">/<speech-synthesizer class=\"org.restcomm.connect.tts.voicerss.VoiceRSSSpeechSynthesizer\">/'  $FILE > $FILE.bak
+                then
+                    sed -e "/<service-root>http:\/\/api.voicerss.org<\/service-root>/,+31 {
+                    N; s|<apikey>.*</apikey>|<apikey>$1</apikey>|
+                    N; s|</speech-synthesizer-->|</speech-synthesizer>|
+                    }" $FILE.bak > $FILE
 
-	mv $FILE.bak $FILE
-	echo 'Configured VoiceRSS Speech Synthesizer'
+                echo 'Configured VoiceRSS Speech Synthesizer'
+         else
+                echo 'VoiceRSS Speech Synthesizer already Configured'
+          fi
+ 	else
+ 	     echo 'NOT going to use VoiceRSS TTS'
+    fi
 }
 
 ## Description: Updates RestComm DARS properties for RestComm
