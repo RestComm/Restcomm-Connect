@@ -58,7 +58,7 @@ public class LoginRestService extends SecuredRestService {
 
         AccountProvider accounts = applicationContext.getAccountProvider();
         BasicAuthCredentials creds = new BasicAuthCredentials(form.getUsername(),form.getPassword());
-        RestcommAccountInfo accountInfo = accounts.getAccount(creds);
+        RestcommAccountInfo accountInfo = accounts.getAccount(creds).get();
         if (accountInfo != null)
             return Response.ok().build();
         else

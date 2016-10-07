@@ -33,7 +33,6 @@ import org.restcomm.connect.rvd.model.client.ProjectItem;
 import org.restcomm.connect.rvd.model.project.RvdProject;
 import org.restcomm.connect.rvd.restcomm.RestcommAccountInfo;
 import org.restcomm.connect.rvd.storage.WorkspaceStorage;
-import sun.net.www.content.text.Generic;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.Consumes;

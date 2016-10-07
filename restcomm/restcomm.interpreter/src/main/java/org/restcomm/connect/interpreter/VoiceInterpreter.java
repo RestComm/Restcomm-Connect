@@ -2434,6 +2434,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         source.tell(stop, source);
                         return;
                     }
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Will ask conference: "+conferenceInfo.name()+" ,to play beep: "+uri);
+                    }
                     final Play play = new Play(uri, 1);
                     conference.tell(play, source);
                 }
