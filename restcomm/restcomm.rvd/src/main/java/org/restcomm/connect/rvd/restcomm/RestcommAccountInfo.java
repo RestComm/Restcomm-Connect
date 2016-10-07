@@ -26,14 +26,14 @@ package org.restcomm.connect.rvd.restcomm;
  * sense and are used by RVD.
  *
  */
-public class RestcommAccountInfoResponse {
+public class RestcommAccountInfo {
     String sid;
     String friendly_name;
     String email_address;
     String status;
     String role;
 
-    public RestcommAccountInfoResponse() {
+    public RestcommAccountInfo() {
         // TODO Auto-generated constructor stub
     }
 

@@ -5,7 +5,7 @@ import org.restcomm.connect.rvd.exceptions.AuthorizationException;
 import org.restcomm.connect.rvd.http.RestService;
 import org.restcomm.connect.rvd.identity.AccountProvider;
 import org.restcomm.connect.rvd.identity.UserIdentityContext;
-import org.restcomm.connect.rvd.restcomm.RestcommAccountInfoResponse;
+import org.restcomm.connect.rvd.restcomm.RestcommAccountInfo;
 
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
@@ -41,7 +41,7 @@ public class SecuredRestService extends RestService {
      * Makes sure the request is done by an authenticated user.
      */
     protected void secure() {
-        RestcommAccountInfoResponse account = userIdentityContext.getAccountInfo();
+        RestcommAccountInfo account = userIdentityContext.getAccountInfo();
         if (account == null || !"active".equals(account.getStatus()) ) {
             throw new AuthorizationException();
         }
