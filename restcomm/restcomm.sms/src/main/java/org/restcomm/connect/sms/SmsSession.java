@@ -60,6 +60,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.mobicents.servlet.restcomm.notification.GlobalNotification;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -92,6 +93,8 @@ public final class SmsSession extends UntypedActor {
     private ActorRef smppMessageHandler;
 
     private final ActorRef monitoringService;
+    
+
 
     public SmsSession(final Configuration configuration, final SipFactory factory, final SipURI transport,
                       final DaoManager storage, final ActorRef monitoringService, final ServletContext servletContext) {
@@ -339,7 +342,10 @@ public final class SmsSession extends UntypedActor {
                 smppMessageHandler.tell(sms, null);
             }catch (final Exception exception) {
                 // Log the exception.
-                logger.error("There was an error sending SMS to SMPP endpoint : " + exception);
+                String errorMessage = "There was an error sending SMS to SMPP endpoint : " + exception;
+                logger.error(errorMessage);
+                final GlobalNotification globalNotification = new GlobalNotification(configuration,storage);
+                globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION() , 10001, errorMessage);
             }
             return true;
         }

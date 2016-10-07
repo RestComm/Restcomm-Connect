@@ -13,9 +13,7 @@
 
 	<packaging>pom</packaging>
 
-	<modules>
-		<module>sources-asciidoc</module>
-	</modules>
+	<modules></modules>
 
 	<!--profiles>
 		<profile>

@@ -115,6 +115,12 @@
 			<scope>test</scope>
 		</dependency>
 
+	 <dependency>
+	  <groupId>org.mobicents.servlet.sip</groupId>
+	  <artifactId>restcomm.dao</artifactId>
+	  <version>1.0.0.FINAL</version>
+	  <type>jar</type>
+	 </dependency>
 	</dependencies>
 
 	<build>
