@@ -12,7 +12,7 @@
 <!-- The Speech Synthesizer is responsible for turning text in to speech 
 	for play back by the media gateway. -->
 <speech-synthesizer
-	class="org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer">
+	class="org.restcomm.connect.tts.voicerss.VoiceRSSSpeechSynthesizer">
 	<service-root>http://api.voicerss.org</service-root>
 	<apikey>c58e134224704b0182f2e2eaef59f8d8</apikey>
 	<languages>
