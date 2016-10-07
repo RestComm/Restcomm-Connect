@@ -7,7 +7,7 @@
     <parent>
 		<groupId>org.restcomm</groupId>
 		<artifactId>restcomm-connect</artifactId>
-		<version>8.0.0-SNAPSHOT</version>
+		<version>8.0.0.1037</version>
 	</parent>
 
 	<groupId>org.restcomm</groupId>
@@ -27,7 +27,7 @@
         <dependency>
             <groupId>org.restcomm</groupId>
             <artifactId>restcomm-connect.dao</artifactId>
-            <version>8.0.0-SNAPSHOT</version>
+            <version>8.0.0.1037</version>
         </dependency>
     </dependencies>
 </project>
