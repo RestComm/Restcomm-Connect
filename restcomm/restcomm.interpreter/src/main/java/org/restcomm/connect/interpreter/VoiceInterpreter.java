@@ -683,6 +683,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     private void onReceiveTimeout(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        if (logger.isInfoEnabled()) {
+            logger.info("Timeout received");
+        }
         if (is(pausing)) {
             fsm.transition(message, ready);
         } else if (is(conferencing)) {
@@ -2277,7 +2280,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 logger.info("FinishDialing, current state: " + state);
             }
 
-            if (message instanceof ReceiveTimeout && dialBranches != null) {
+            if (message instanceof ReceiveTimeout) {
                 if(logger.isInfoEnabled()) {
                     logger.info("Received timeout, will cancel branches, current VoiceIntepreter state: " + state);
                 }
@@ -2296,6 +2299,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (outboundCall != null) {
                     outboundCall.tell(new Cancel(), source);
+                    call.tell(new Hangup(), self());
                 }
                 dialChildren = null;
                 callback();
