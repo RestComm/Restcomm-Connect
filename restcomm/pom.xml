@@ -2,11 +2,17 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.telestax.servlet</groupId>
-  <artifactId>restcomm</artifactId>
-  <version>7.9.0-SNAPSHOT</version>
+	<parent>
+		<groupId>org.restcomm</groupId>
+		<artifactId>restcomm-parent</artifactId>
+		<version>3.0.4</version>
+	</parent>
+
+  <groupId>org.restcomm</groupId>
+  <artifactId>restcomm-connect</artifactId>
+  <version>8.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>RestComm</name>
+  <name>RestComm-Connect</name>
   <description>A unified communications platform for web developers.</description>
   <url>http://www.restcomm.org</url>
 
@@ -54,24 +60,25 @@
 	</licenses>
 
 	<scm>
-		<connection>scm:git:git@bitbucket.org:telestax/telscale-restcomm.git</connection>
-		<developerConnection>scm:git:git@bitbucket.org:telestax/telscale-restcomm.git</developerConnection>
-		<url>https://bitbucket.org/telestax/telscale-restcomm</url>
-		<tag>HEAD</tag>
+		<connection>scm:git:https://github.com/RestComm/Restcomm-Connect.git</connection>
+		<developerConnection>scm:git:git@github.com:RestComm/Restcomm-Connect.git</developerConnection>
+		<url>https://github.com/RestComm/Restcomm-Connect</url>
 	</scm>
 
 	<distributionManagement>
 		<repository>
-			<id>telscale-releases-repository</id>
-			<name>TelScale Releases Repository</name>
-			<url>http://telestax.artifactoryonline.com/telestax/releases</url>
+			<id>restcomm-releases-repository</id>
+			<name>Restcomm Releases Repository</name>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2
+			</url>
 		</repository>
 		<snapshotRepository>
-			<id>telscale-snapshots-repository</id>
-			<name>TelScale Snapshots Repository</name>
-			<url>http://telestax.artifactoryonline.com/telestax/snapshots</url>
+			<id>restcomm-snapshots-repository</id>
+			<name>Restcomm Snapshots Repository</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
+
 	<properties>
 		<scala-lang.version>2.10.1</scala-lang.version>
 		<akka.version>2.1.2</akka.version>
@@ -80,6 +87,8 @@
 		<slf4j.version>1.5.5</slf4j.version>
 		<commons-configuration.version>1.7</commons-configuration.version>
 		<commons-io.version>2.4</commons-io.version>
+		<commons-codec.version>1.10</commons-codec.version>
+		<commons-lang.version>2.6</commons-lang.version>
 		<jain.mgcp.version>1.0</jain.mgcp.version>
 		<mobicents.mgcp.impl.version>3.0.2.FINAL</mobicents.mgcp.impl.version>
 		<javamail.version>1.4</javamail.version>
@@ -156,7 +165,7 @@
 		<module>restcomm.email</module>
 		<module>restcomm.email.api</module>
 		<module>restcomm.extension.api</module>
-		<module>restcomm.extension.traffic.throttling</module>
+		<module>restcomm.extension.controller</module>
 		<module>restcomm.identity</module>
     <module>restcomm.monitoring.service</module>
 	 <module>restcomm.docs</module>
@@ -168,8 +177,8 @@
 			<!-- SMPP Testing -->
 
 			<dependency>
-				<groupId>com.telestax.servlet</groupId>
-				<artifactId>restcomm.sms.api</artifactId>
+				<groupId>org.restcomm</groupId>
+				<artifactId>restcomm-connect.sms.api</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -242,6 +251,18 @@
 				<groupId>commons-io</groupId>
 				<artifactId>commons-io</artifactId>
 				<version>${commons-io.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>commons-codec</groupId>
+				<artifactId>commons-codec</artifactId>
+				<version>${commons-codec.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>commons-lang</groupId>
+				<artifactId>commons-lang</artifactId>
+				<version>${commons-lang.version}</version>
 			</dependency>
 
 			<dependency>
@@ -597,6 +618,18 @@
 			<groupId>org.mobicents</groupId>
 			<artifactId>checkstyle</artifactId>
 			<version>${mobicents.checkstyle.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>${commons-codec.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>${commons-lang.version}</version>
 		</dependency>
 
 		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId>

@@ -2,7 +2,7 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('LogsTranscriptionsCtrl', function ($scope, $resource, $timeout, $modal, SessionService, RCommLogsTranscriptions) {
+rcMod.controller('LogsTranscriptionsCtrl', function ($scope, $resource, $timeout, $uibModal, SessionService, RCommLogsTranscriptions) {
 
   $scope.Math = window.Math;
 
@@ -21,9 +21,11 @@ rcMod.controller('LogsTranscriptionsCtrl', function ($scope, $resource, $timeout
     $scope.noOfPages = Math.ceil($scope.filtered.length / $scope.entryLimit);
   };
 
+/*
   $scope.setPage = function(pageNo) {
     $scope.currentPage = pageNo;
   };
+  */
 
   $scope.filter = function() {
     $timeout(function() { //wait for 'filtered' to be changed
@@ -34,7 +36,7 @@ rcMod.controller('LogsTranscriptionsCtrl', function ($scope, $resource, $timeout
 
   // Modal : Transcription Details
   $scope.showTranscriptionDetailsModal = function (transcription) {
-    $modal.open({
+    $uibModal.open({
       controller: 'LogsTranscriptionsDetailsCtrl',
       scope: $scope,
       templateUrl: 'modules/modals/modal-logs-transcriptions.html',
@@ -70,12 +72,12 @@ $scope.sortBy = function(field) {
 
 });
 
-rcMod.controller('LogsTranscriptionsDetailsCtrl', function($scope, $stateParams, $resource, $modalInstance, SessionService, RCommLogsTranscriptions, transcriptionSid) {
+rcMod.controller('LogsTranscriptionsDetailsCtrl', function($scope, $stateParams, $resource, $uibModalInstance, SessionService, RCommLogsTranscriptions, transcriptionSid) {
   $scope.sid = SessionService.get("sid");
   $scope.transcriptionSid = $stateParams.transcriptionSid || transcriptionSid;
 
   $scope.closeTranscriptionDetails = function () {
-    $modalInstance.dismiss('cancel');
+    $uibModalInstance.dismiss('cancel');
   };
 
   $scope.transcriptionDetails = RCommLogsTranscriptions.view({accountSid: $scope.sid, transcriptionSid:$scope.transcriptionSid});

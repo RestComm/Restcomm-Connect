@@ -3,13 +3,13 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>restcomm</artifactId>
-        <groupId>com.telestax.servlet</groupId>
-        <version>7.9.0-SNAPSHOT</version>
+        <artifactId>restcomm-connect</artifactId>
+        <groupId>org.restcomm</groupId>
+        <version>8.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>restcomm.provisioning.number.bandwidth</artifactId>
+    <artifactId>restcomm-connect.provisioning.number.bandwidth</artifactId>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -66,42 +66,42 @@
         </dependency>
 
         <dependency>
-            <groupId>com.telestax.servlet</groupId>
-            <artifactId>restcomm.commons</artifactId>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.commons</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.telestax.servlet</groupId>
-            <artifactId>restcomm.dao</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.telestax.servlet</groupId>
-            <artifactId>restcomm.sms.api</artifactId>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.dao</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
-            <groupId>com.telestax.servlet</groupId>
-            <artifactId>restcomm.provisioning.number.api</artifactId>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.sms.api</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
-            <groupId>com.telestax.servlet</groupId>
-            <artifactId>restcomm.telephony.api</artifactId>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.provisioning.number.api</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
-            <groupId>com.telestax.servlet</groupId>
-            <artifactId>restcomm.interpreter</artifactId>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.telephony.api</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.interpreter</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>

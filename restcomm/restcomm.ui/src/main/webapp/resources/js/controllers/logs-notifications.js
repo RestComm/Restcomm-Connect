@@ -2,7 +2,7 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout, $modal, SessionService, RCommLogsNotifications) {
+rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout, $uibModal, SessionService, RCommLogsNotifications) {
 
   $scope.Math = window.Math;
 
@@ -21,9 +21,11 @@ rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout,
     $scope.noOfPages = Math.ceil($scope.filtered.length / $scope.entryLimit);
   };
 
+/*
   $scope.setPage = function(pageNo) {
     $scope.currentPage = pageNo;
   };
+  */
 
   $scope.filter = function() {
     $timeout(function() { //wait for 'filtered' to be changed
@@ -45,7 +47,7 @@ rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout,
 
   // Modal : Notification Details
   $scope.showNotificationDetailsModal = function (notification) {
-    $modal.open({
+    $uibModal.open({
       controller: 'LogsNotificationsDetailsCtrl',
       scope: $scope,
       templateUrl: 'modules/modals/modal-logs-notifications.html',
@@ -82,12 +84,12 @@ $scope.sortBy = function(field) {
 
 });
 
-rcMod.controller('LogsNotificationsDetailsCtrl', function($scope, $stateParams, $resource, $modalInstance, SessionService, RCommLogsNotifications, notificationSid) {
+rcMod.controller('LogsNotificationsDetailsCtrl', function($scope, $stateParams, $resource, $uibModalInstance, SessionService, RCommLogsNotifications, notificationSid) {
   $scope.sid = SessionService.get("sid");
   $scope.notificationSid = $stateParams.notificationSid || notificationSid;
 
   $scope.closeNotificationDetails = function () {
-    $modalInstance.dismiss('cancel');
+    $uibModalInstance.dismiss('cancel');
   };
 
   $scope.notificationDetails = RCommLogsNotifications.view({accountSid: $scope.sid, notificationSid:$scope.notificationSid});

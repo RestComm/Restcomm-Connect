@@ -703,7 +703,7 @@ The application bound to the number 1234 can be found at
 			<programlisting>
 <![CDATA[
 <speech-synthesizer
-		class="org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer">
+		class="org.restcomm.connect.tts.voicerss.VoiceRSSSpeechSynthesizer">
 		<service-root>http://api.voicerss.org</service-root>
 		<apikey>2901c0aXXXXXXXXXXXXXX</apikey>
 ]]>

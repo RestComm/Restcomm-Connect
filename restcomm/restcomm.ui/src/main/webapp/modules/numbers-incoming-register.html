@@ -13,14 +13,14 @@
                 <br>
                 <script type="text/ng-template" id="countriesTemplate.html">
                     <a class="clickable f16" style="width: 400px;">
-                        <span class="flag {{match.model.code|lowercase}}" style="padding-left: 20px;" bind-html-unsafe="match.label | typeaheadHighlight:query"></span>
+                        <span class="flag {{match.model.code|lowercase}}" style="padding-left: 20px;" ng-bind-html="match.label | uibTypeaheadHighlight:query"></span>
                     </a>
                 </script>
                 <form class="form-inline" role="form">
                     <div class="form-group col-md-4" style="padding-left: 0;">
                         <div class="input-group f16">
                             <span class="input-group-addon"><span ng-show="newNumber.countryCode" class="flag {{newNumber.countryCode.code|lowercase}}"></span><span ng-hide="newNumber.countryCode"><i class="fa fa-globe"></i></span></span>
-                            <input type="text" ng-model="newNumber.countryCode" placeholder="Country" typeahead="country as (country.name + ' (' + country.dial_code + ')') for country in countries | filter:$viewValue | limitTo: 10 " typeahead-template-url="countriesTemplate.html" typeahead-editable="false" class="form-control" autofocus>
+                            <input type="text" ng-model="newNumber.countryCode" placeholder="Country" uib-typeahead="country as (country.name + ' (' + country.dial_code + ')') for country in countries | filter:$viewValue | limitTo: 10 " typeahead-template-url="countriesTemplate.html" typeahead-editable="false" class="form-control" autofocus>
                             <div class="input-group-btn" ng-if="newNumber.countryCode.code === 'US'" ng-init="newNumber.area_code = undefined">
                                 <button class="btn btn-default dropdown-toggle" style="width: 100px;" type="button" id="dropdownMenu1" data-toggle="dropdown">
                                     {{newNumber.area_code || "Area Code"}} <span class="caret"></span>
@@ -125,7 +125,7 @@
                 <td><h5 class="text-center">-</h5></td>
                 <td>
                     <h4 class="text-center">
-                        <span ng-show="pn.voiceCapable"> <i class="fa fa-microphone available-feature" tooltip="Voice Capable"></i> <small> Voice </small> </span>
+                        <span ng-show="pn.voiceCapable"> <i class="fa fa-microphone available-feature" uib-tooltip="Voice Capable"></i> <small> Voice </small> </span>
                         <span class="opacity30" ng-hide="pn.voiceCapable"><i class="fa fa-microphone-slash unavailable-feature"></i> <small> Not Voice Capable </small></span>
                     </h4>
                 </td>

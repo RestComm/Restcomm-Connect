@@ -3,13 +3,13 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm</artifactId>
-		<version>7.9.0-SNAPSHOT</version>
+		<groupId>org.restcomm</groupId>
+		<artifactId>restcomm-connect</artifactId>
+		<version>8.0.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>restcomm.mscontrol.mms</artifactId>
-	<name>restcomm.mscontrol.mms</name>
+	<artifactId>restcomm-connect.mscontrol.mms</artifactId>
+	<name>restcomm-connect.mscontrol.mms</name>
 
 	<dependencies>
 		<dependency>
@@ -34,15 +34,15 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.dao</artifactId>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.dao</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
-			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.commons</artifactId>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.commons</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
@@ -54,15 +54,15 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.mscontrol.api</artifactId>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.mscontrol.api</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
-			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.mgcp</artifactId>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.mgcp</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>

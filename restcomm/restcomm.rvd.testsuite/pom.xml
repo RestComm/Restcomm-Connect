@@ -23,15 +23,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>restcomm.rvd.testsuite</artifactId>
+    <artifactId>restcomm-connect.rvd.testsuite</artifactId>
 
     <parent>
-        <groupId>com.telestax.servlet</groupId>
-        <artifactId>restcomm</artifactId>
-        <version>7.9.0-SNAPSHOT</version>
+        <groupId>org.restcomm</groupId>
+        <artifactId>restcomm-connect</artifactId>
+        <version>8.0.0-SNAPSHOT</version>
     </parent>
 <!--
-    <groupId>com.telestax.servlet</groupId>
+    <groupId>org.restcomm</groupId>
     <version>7.9.0-SNAPSHOT</version>-->
 
 <!--
@@ -88,8 +88,8 @@
         </dependency>
 
         <dependency>
-            <groupId>com.telestax.servlet</groupId>
-            <artifactId>restcomm.commons</artifactId>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.commons</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
