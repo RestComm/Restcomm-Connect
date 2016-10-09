@@ -506,7 +506,7 @@ otherRestCommConf(){
     mv $FILE.bak $FILE
 
     echo "CACHE_NO_WAV $CACHE_NO_WAV"
-    sed -i "s|<cache-no-wav>.*</cache-no-wav>|<cache-no-wav>${CACHE_NO_WAV}</cache-no-wav|" $FILE
+    sed -i "s|<cache-no-wav>.*</cache-no-wav>|<cache-no-wav>${CACHE_NO_WAV}</cache-no-wav>|" $FILE
 
     echo "End Rest RestComm configuration"
 }
