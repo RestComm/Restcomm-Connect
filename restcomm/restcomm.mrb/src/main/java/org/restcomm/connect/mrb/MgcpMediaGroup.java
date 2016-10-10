@@ -18,7 +18,7 @@
  *
  */
 
-package org.restcomm.connect.mgcp.mrb;
+package org.restcomm.connect.mrb;
 
 import java.net.URI;
 import java.util.ArrayList;

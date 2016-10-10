@@ -18,7 +18,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.restcomm.connect.mgcp.mrb;
+package org.restcomm.connect.mrb;
 
 import java.net.InetAddress;
 import java.net.URI;
@@ -57,7 +57,7 @@ import jain.protocol.ip.mgcp.CreateProviderException;
 import jain.protocol.ip.mgcp.JainMgcpProvider;
 import jain.protocol.ip.mgcp.JainMgcpStack;
 
-public class MediaResourceBroker extends UntypedActor{
+public class MediaResourceBrokerGeneric extends UntypedActor{
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -73,7 +73,7 @@ public class MediaResourceBroker extends UntypedActor{
 
     private MediaServerEntity localMediaServerEntity;
 
-    public MediaResourceBroker(){
+    public MediaResourceBrokerGeneric(){
         super();
     }
 
@@ -163,7 +163,7 @@ public class MediaResourceBroker extends UntypedActor{
 
             @Override
             public UntypedActor create() throws Exception {
-                return new ConferenceMediaResourceController(localMsId, localMediaGateway, configuration, storage, self());
+                return new ConferenceMediaResourceControllerGeneric(localMsId, localMediaGateway, configuration, storage, self());
             }
         }));
     }
