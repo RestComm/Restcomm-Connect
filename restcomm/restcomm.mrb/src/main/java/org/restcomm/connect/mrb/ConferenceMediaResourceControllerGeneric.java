@@ -18,7 +18,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.restcomm.connect.mgcp.mrb;
+package org.restcomm.connect.mrb;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -88,7 +88,7 @@ import jain.protocol.ip.mgcp.message.parms.EndpointIdentifier;
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
-public class ConferenceMediaResourceController extends UntypedActor{
+public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -174,7 +174,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private String masterIVRConnectionIdentifier;
     private final ActorRef mrb;
 
-    public ConferenceMediaResourceController(final String localMsId, ActorRef localMediaGateway, final Configuration configuration, final DaoManager storage, final ActorRef mrb){
+    public ConferenceMediaResourceControllerGeneric(final String localMsId, ActorRef localMediaGateway, final Configuration configuration, final DaoManager storage, final ActorRef mrb){
     //public ConferenceMediaResourceController(final String localMsId, final Map<String, ActorRef> gateways, final Configuration configuration, final DaoManager storage){
         super();
         final ActorRef source = self();
