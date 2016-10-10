@@ -1495,11 +1495,9 @@ public class TestDialVerbPartTwo {
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
-        archive.delete("/WEB-INF/conf/extensions.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("extensions.xml", "conf/extensions.xml");
         archive.addAsWebInfResource("restcomm.script_dialTest_new", "data/hsql/restcomm.script");
         archive.addAsWebResource("hello-play.xml");
         logger.info("Packaged Test App");
