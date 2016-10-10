@@ -17,17 +17,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.mgcp.mrb.messages;
+package org.restcomm.connect.mrb.api;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.dao.entities.Sid;
+
+import akka.actor.ActorRef;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
-public final class StopConferenceMediaResourceController {
+public final class StartConferenceMediaResourceController {
 
-    public StopConferenceMediaResourceController() {
+    private final ActorRef cnfEndpoint;
+    private final Sid conferenceSid;
+
+    public StartConferenceMediaResourceController(final ActorRef cnfEndpoint, final Sid conferenceSid) {
         super();
+        this.cnfEndpoint = cnfEndpoint;
+        this.conferenceSid = conferenceSid;
+    }
+
+    public ActorRef cnfEndpoint() {
+        return cnfEndpoint;
+    }
+
+    public Sid conferenceSid() {
+        return conferenceSid;
     }
 }

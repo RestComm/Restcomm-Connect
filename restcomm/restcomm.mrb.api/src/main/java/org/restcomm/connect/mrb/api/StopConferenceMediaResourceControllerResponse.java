@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.mgcp.mrb.messages;
+package org.restcomm.connect.mrb.api;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
