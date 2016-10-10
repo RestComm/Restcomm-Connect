@@ -23,7 +23,6 @@ package org.restcomm.connect.mgcp.mrb;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,15 +71,10 @@ public class MediaResourceBroker extends UntypedActor{
     private JainMgcpStack mgcpStack;
     private JainMgcpProvider mgcpProvider;
 
-    private final List<ActorRef> observers;
-
     private MediaServerEntity localMediaServerEntity;
 
-    public MediaResourceBroker() throws UnknownHostException{
+    public MediaResourceBroker(){
         super();
-
-        // Observers
-        this.observers = new ArrayList<ActorRef>(1);
     }
 
     @Override
@@ -314,9 +308,6 @@ public class MediaResourceBroker extends UntypedActor{
     public void postStop() {
         // Cleanup resources
         cleanup();
-
-        // Clean observers
-        observers.clear();
 
         // Terminate actor
         getContext().stop(self());
