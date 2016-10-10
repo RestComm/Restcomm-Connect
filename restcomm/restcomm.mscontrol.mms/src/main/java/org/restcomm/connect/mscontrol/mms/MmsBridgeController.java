@@ -52,7 +52,7 @@ import org.restcomm.connect.mgcp.EndpointStateChanged;
 import org.restcomm.connect.mgcp.MediaGatewayResponse;
 import org.restcomm.connect.mgcp.MediaResourceBrokerResponse;
 import org.restcomm.connect.mgcp.MediaSession;
-import org.restcomm.connect.mgcp.mrb.messages.GetMediaGateway;
+import org.restcomm.connect.mrb.api.GetMediaGateway;
 import org.restcomm.connect.mscontrol.api.MediaServerController;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.JoinBridge;

@@ -43,12 +43,13 @@ import org.restcomm.connect.mgcp.EndpointStateChanged;
 import org.restcomm.connect.mgcp.MediaGatewayResponse;
 import org.restcomm.connect.mgcp.MediaResourceBrokerResponse;
 import org.restcomm.connect.mgcp.MediaSession;
-import org.restcomm.connect.mgcp.mrb.messages.ConferenceMediaResourceControllerStateChanged;
-import org.restcomm.connect.mgcp.mrb.messages.GetConferenceMediaResourceController;
-import org.restcomm.connect.mgcp.mrb.messages.GetMediaGateway;
-import org.restcomm.connect.mgcp.mrb.messages.MediaGatewayForConference;
-import org.restcomm.connect.mgcp.mrb.messages.StopConferenceMediaResourceController;
-import org.restcomm.connect.mgcp.mrb.messages.StopConferenceMediaResourceControllerResponse;
+import org.restcomm.connect.mrb.api.ConferenceMediaResourceControllerStateChanged;
+import org.restcomm.connect.mrb.api.GetConferenceMediaResourceController;
+import org.restcomm.connect.mrb.api.GetMediaGateway;
+import org.restcomm.connect.mrb.api.MediaGatewayForConference;
+import org.restcomm.connect.mrb.api.StartConferenceMediaResourceController;
+import org.restcomm.connect.mrb.api.StopConferenceMediaResourceController;
+import org.restcomm.connect.mrb.api.StopConferenceMediaResourceControllerResponse;
 import org.restcomm.connect.mscontrol.api.MediaServerController;
 import org.restcomm.connect.mscontrol.api.messages.CloseMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
@@ -267,7 +268,7 @@ public final class MmsConferenceController extends MediaServerController {
         }else if(is(acquiringCnfMediaResourceController)){
             conferenceMediaResourceController = (ActorRef) message.get();
             conferenceMediaResourceController.tell(new Observe(self), self);
-            conferenceMediaResourceController.tell(new org.restcomm.connect.mgcp.mrb.messages.StartConferenceMediaResourceController(this.cnfEndpoint, this.conferenceSid), self);
+            conferenceMediaResourceController.tell(new StartConferenceMediaResourceController(this.cnfEndpoint, this.conferenceSid), self);
         }
     }
 

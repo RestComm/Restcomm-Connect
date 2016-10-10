@@ -19,24 +19,32 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.restcomm.connect.mgcp.mrb.messages;
+package org.restcomm.connect.mrb.api;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.dao.entities.Sid;
+
+import akka.actor.ActorRef;
 
 /**
  * @author Maria Farooq (maria.farooq@telestax.com)
  */
 @Immutable
-public final class GetConferenceMediaResourceController {
-    private final String conferenceName;
+public final class MediaGatewayForConference {
+    private final Sid conferenceSid;
+    private final ActorRef mediaGateway;
 
-    public GetConferenceMediaResourceController(final String conferenceName) {
+    public MediaGatewayForConference(final Sid conferenceSid, final ActorRef mediaGateway) {
         super();
-        this.conferenceName = conferenceName;
+        this.conferenceSid = conferenceSid;
+        this.mediaGateway = mediaGateway;
     }
 
-    public String getConferenceName() {
-        return conferenceName;
+    public Sid conferenceSid() {
+        return conferenceSid;
     }
 
+    public ActorRef mediaGateway() {
+        return mediaGateway;
+    }
 }

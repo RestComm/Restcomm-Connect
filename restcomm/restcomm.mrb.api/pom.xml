@@ -6,8 +6,8 @@
     <version>8.0.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>restcomm-connect.mgcp</artifactId>
-  <name>restcomm-connect.mgcp</name>
+  <artifactId>restcomm-connect.mrb.api</artifactId>
+  <name>restcomm-connect.mrb.api</name>
 
   <properties>
 	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -36,37 +36,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>jain</groupId>
-			<artifactId>jain-mgcp-ri</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.mobicents.media.client</groupId>
-			<artifactId>mgcp-driver</artifactId>
-			<version>${mobicents.mgcp.impl.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>apache-xerces</groupId>
-					<artifactId>xml-apis</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>apache-xerces</groupId>
-					<artifactId>xercesImpl</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>sun-jaxb</groupId>
-					<artifactId>jaxb-api</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
-		<dependency>
-			<groupId>org.mobicents.media</groupId>
-			<artifactId>concurrent</artifactId>
-			<version>${mobicents.mgcp.impl.version}</version>
-		</dependency>
-
-		<dependency>
 			<groupId>org.restcomm</groupId>
 			<artifactId>restcomm-connect.commons</artifactId>
 			<version>${project.version}</version>
@@ -75,7 +44,7 @@
 
 		<dependency>
 			<groupId>org.restcomm</groupId>
-			<artifactId>restcomm-connect.mscontrol.api</artifactId>
+			<artifactId>restcomm-connect.dao</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>

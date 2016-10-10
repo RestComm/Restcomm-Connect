@@ -43,9 +43,9 @@ import org.restcomm.connect.dao.entities.MediaServerEntity;
 import org.restcomm.connect.dao.entities.Sid;
 import org.restcomm.connect.mgcp.MediaResourceBrokerResponse;
 import org.restcomm.connect.mgcp.PowerOnMediaGateway;
-import org.restcomm.connect.mgcp.mrb.messages.GetConferenceMediaResourceController;
-import org.restcomm.connect.mgcp.mrb.messages.GetMediaGateway;
-import org.restcomm.connect.mgcp.mrb.messages.MediaGatewayForConference;
+import org.restcomm.connect.mrb.api.GetConferenceMediaResourceController;
+import org.restcomm.connect.mrb.api.GetMediaGateway;
+import org.restcomm.connect.mrb.api.MediaGatewayForConference;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;

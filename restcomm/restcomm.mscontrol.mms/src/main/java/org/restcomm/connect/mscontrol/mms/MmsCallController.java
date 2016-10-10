@@ -66,7 +66,7 @@ import org.restcomm.connect.mgcp.OpenConnection;
 import org.restcomm.connect.mgcp.OpenLink;
 import org.restcomm.connect.mgcp.UpdateConnection;
 import org.restcomm.connect.mgcp.UpdateLink;
-import org.restcomm.connect.mgcp.mrb.messages.GetMediaGateway;
+import org.restcomm.connect.mrb.api.GetMediaGateway;
 import org.restcomm.connect.mscontrol.api.MediaServerController;
 import org.restcomm.connect.mscontrol.api.messages.CloseMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.Collect;
