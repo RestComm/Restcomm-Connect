@@ -1,35 +1,11 @@
 package org.restcomm.connect.application;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import org.restcomm.connect.extension.controller.ExtensionBootstrapper;
-import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.monitoringservice.MonitoringService;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
-import org.apache.log4j.Logger;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.entities.InstanceId;
-import org.restcomm.connect.dao.entities.shiro.ShiroResources;
-import org.restcomm.connect.identity.IdentityContext;
-import org.restcomm.connect.commons.loader.ObjectFactory;
-import org.restcomm.connect.commons.loader.ObjectInstantiationException;
-import org.restcomm.connect.mgcp.PowerOnMediaGateway;
-import org.restcomm.connect.mgcp.mrb.MediaResourceBroker;
-import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
-import org.restcomm.connect.mscontrol.api.MediaServerInfo;
-import org.restcomm.connect.mscontrol.jsr309.Jsr309ControllerFactory;
-import org.restcomm.connect.mscontrol.mms.MmsControllerFactory;
-import org.restcomm.connect.application.config.ConfigurationStringLookup;
-import org.mobicents.servlet.sip.SipConnector;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import javax.media.mscontrol.MsControlException;
 import javax.media.mscontrol.MsControlFactory;
@@ -42,12 +18,38 @@ import javax.servlet.sip.SipServletContextEvent;
 import javax.servlet.sip.SipServletListener;
 import javax.servlet.sip.SipURI;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
+import org.apache.log4j.Logger;
+import org.mobicents.servlet.sip.SipConnector;
+import org.restcomm.connect.application.config.ConfigurationStringLookup;
+import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.loader.ObjectFactory;
+import org.restcomm.connect.commons.loader.ObjectInstantiationException;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.InstanceId;
+import org.restcomm.connect.dao.entities.shiro.ShiroResources;
+import org.restcomm.connect.extension.controller.ExtensionBootstrapper;
+import org.restcomm.connect.identity.IdentityContext;
+import org.restcomm.connect.mgcp.PowerOnMediaGateway;
+import org.restcomm.connect.monitoringservice.MonitoringService;
+import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
+import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
+import org.restcomm.connect.mscontrol.api.MediaServerInfo;
+import org.restcomm.connect.mscontrol.jsr309.Jsr309ControllerFactory;
+import org.restcomm.connect.mscontrol.mms.MmsControllerFactory;
+
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 
 /**
  *
@@ -194,16 +196,18 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return result;
     }
 
-    //private ActorRef mediaResourceBroker(final Map<String, ActorRef> gateways, final Configuration configuration, final DaoManager storage) {
     private ActorRef mediaResourceBroker(final Configuration configuration, final DaoManager storage, final ClassLoader loader) throws UnknownHostException{
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        ActorRef mrb = system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new MediaResourceBroker(system, configuration, storage, loader);
+                final String classpath = configuration.getString("mrb[@class]");
+                return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
         }));
+        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader), null);
+        return mrb;
     }
 
     private Map<String, ActorRef> gateways(final Configuration settings, final ClassLoader loader) throws UnknownHostException {

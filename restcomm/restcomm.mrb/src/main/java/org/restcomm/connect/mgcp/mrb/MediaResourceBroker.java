@@ -46,9 +46,9 @@ import org.restcomm.connect.mgcp.PowerOnMediaGateway;
 import org.restcomm.connect.mrb.api.GetConferenceMediaResourceController;
 import org.restcomm.connect.mrb.api.GetMediaGateway;
 import org.restcomm.connect.mrb.api.MediaGatewayForConference;
+import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -62,11 +62,10 @@ public class MediaResourceBroker extends UntypedActor{
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final ActorSystem system;
-    private final Configuration configuration;
-    private final DaoManager storage;
-    private final ClassLoader loader;
-    private final ActorRef localMediaGateway;
+    private Configuration configuration;
+    private DaoManager storage;
+    private ClassLoader loader;
+    private ActorRef localMediaGateway;
     private String localMsId;
     private Map<String, ActorRef> mediaGatewayMap;
 
@@ -77,17 +76,36 @@ public class MediaResourceBroker extends UntypedActor{
 
     private MediaServerEntity localMediaServerEntity;
 
-    public MediaResourceBroker(ActorSystem system, Configuration configuration, DaoManager storage, final ClassLoader loader) throws UnknownHostException{
+    public MediaResourceBroker() throws UnknownHostException{
         super();
-
-        this.system = system;
-        this.configuration = configuration;
-        this.storage = storage;
-        this.loader = loader;
 
         // Observers
         this.observers = new ArrayList<ActorRef>(1);
+    }
 
+    @Override
+    public void onReceive(Object message) throws Exception {
+        final Class<?> klass = message.getClass();
+        final ActorRef sender = sender();
+        ActorRef self = self();
+
+        if (logger.isInfoEnabled()) {
+            logger.info(" ********** MediaResourceBroker " + self().path() + " Processing Message: " + klass.getName());
+        }
+        if (StartMediaResourceBroker.class.equals(klass)) {
+            onStartMediaResourceBroker((StartMediaResourceBroker)message, self, sender);
+        } else if (GetMediaGateway.class.equals(klass)) {
+            onGetMediaGateway((GetMediaGateway) message, self, sender);
+        } else if (GetConferenceMediaResourceController.class.equals(klass)){
+            sender.tell(new MediaResourceBrokerResponse<ActorRef>(getConferenceMediaResourceController()), self);
+        }
+    }
+
+    private void onStartMediaResourceBroker(StartMediaResourceBroker message, ActorRef self, ActorRef sender) throws UnknownHostException{
+    	this.configuration = message.configuration();
+    	this.storage = message.storage();
+    	this.loader = message.loader();
+    	
         localMediaServerEntity = uploadLocalMediaServersInDataBase();
         bindMGCPStack(localMediaServerEntity.getLocalIpAddress(), localMediaServerEntity.getLocalPort());
         this.localMediaGateway = turnOnMediaGateway(localMediaServerEntity);
@@ -106,7 +124,7 @@ public class MediaResourceBroker extends UntypedActor{
 
     private ActorRef turnOnMediaGateway(MediaServerEntity mediaServerEntity) throws UnknownHostException {
 
-        final ActorRef gateway = system.actorOf(new Props(new UntypedActorFactory() {
+        final ActorRef gateway = getContext().system().actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -146,7 +164,7 @@ public class MediaResourceBroker extends UntypedActor{
     }
 
     private ActorRef getConferenceMediaResourceController() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return getContext().system().actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -154,22 +172,6 @@ public class MediaResourceBroker extends UntypedActor{
                 return new ConferenceMediaResourceController(localMsId, localMediaGateway, configuration, storage, self());
             }
         }));
-    }
-
-    @Override
-    public void onReceive(Object message) throws Exception {
-        final Class<?> klass = message.getClass();
-        final ActorRef sender = sender();
-        ActorRef self = self();
-
-        if (logger.isInfoEnabled()) {
-            logger.info(" ********** MediaResourceBroker " + self().path() + " Processing Message: " + klass.getName());
-        }
-        if (GetMediaGateway.class.equals(klass)) {
-            onGetMediaGateway((GetMediaGateway) message, self, sender);
-        } else if (GetConferenceMediaResourceController.class.equals(klass)){
-            sender.tell(new MediaResourceBrokerResponse<ActorRef>(getConferenceMediaResourceController()), self);
-        }
     }
 
     private void onGetMediaGateway(GetMediaGateway message, ActorRef self, ActorRef sender) throws Exception {
@@ -317,7 +319,7 @@ public class MediaResourceBroker extends UntypedActor{
         observers.clear();
 
         // Terminate actor
-        system.stop(self());
+        getContext().stop(self());
     }
 
     protected void cleanup() {}

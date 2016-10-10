@@ -317,6 +317,8 @@
             <response-timeout>500</response-timeout>
             <external-address><null/></external-address>
         </mgcp-server>
+		<mrb class="org.restcomm.connect.mgcp.mrb.MediaResourceBroker" name="Community MediaResourceBroker">
+		</mrb>>
 	</media-server-manager>
 	<!-- media-server-routing Defines routing rules for media server traffic with following parameters:
 	<algorithm> - Defines routing algorithm, possible values are: 
