@@ -96,10 +96,10 @@ public class MediaResourceBroker extends UntypedActor{
     }
 
     private void onStartMediaResourceBroker(StartMediaResourceBroker message, ActorRef self, ActorRef sender) throws UnknownHostException{
-    	this.configuration = message.configuration();
-    	this.storage = message.storage();
-    	this.loader = message.loader();
-    	
+        this.configuration = message.configuration();
+        this.storage = message.storage();
+        this.loader = message.loader();
+
         localMediaServerEntity = uploadLocalMediaServersInDataBase();
         bindMGCPStack(localMediaServerEntity.getLocalIpAddress(), localMediaServerEntity.getLocalPort());
         this.localMediaGateway = turnOnMediaGateway(localMediaServerEntity);

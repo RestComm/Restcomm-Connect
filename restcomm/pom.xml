@@ -167,6 +167,8 @@
 		<module>restcomm.extension.api</module>
 		<module>restcomm.extension.controller</module>
 		<module>restcomm.identity</module>
+		<module>restcomm.mrb</module>
+                <module>restcomm.mrb.api</module>
     <module>restcomm.monitoring.service</module>
   </modules>
 
