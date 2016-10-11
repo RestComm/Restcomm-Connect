@@ -29,21 +29,21 @@ public class ExtensionConfigurationProperty {
     private String extension;
     private String property;
     private String extraParameter;
-    private String value;
+    private String propertyValue;
     private DateTime dateCreated;
     private DateTime dateUpdated;
 
-    public ExtensionConfigurationProperty(final String extension, final String property, final String extraParameter, final String value, final DateTime dateCreated, final DateTime dateUpdated) {
+    public ExtensionConfigurationProperty(final String extension, final String property, final String extraParameter, final String propertyValue, final DateTime dateCreated, final DateTime dateUpdated) {
         this.extension = extension;
         this.property = property;
         this.extraParameter = extraParameter;
-        this.value = value;
+        this.propertyValue = propertyValue;
         this.dateCreated = dateCreated;
         this.dateUpdated = dateUpdated;
     }
 
-    public ExtensionConfigurationProperty(String extension, String property, String extraParameter, String value) {
-        this(extension, property, extraParameter, value, DateTime.now(), DateTime.now());
+    public ExtensionConfigurationProperty(String extension, String property, String extraParameter, String propertyValue) {
+        this(extension, property, extraParameter, propertyValue, DateTime.now(), DateTime.now());
     }
 
     public ExtensionConfigurationProperty(String extension, String property, String extraParameter) {
@@ -74,12 +74,12 @@ public class ExtensionConfigurationProperty {
         this.property = property;
     }
 
-    public String getValue() {
-        return value;
+    public String getPropertyValue() {
+        return propertyValue;
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    public void setPropertyValue(String propertyValue) {
+        this.propertyValue = propertyValue;
     }
 
     public String getExtraParameter() {
