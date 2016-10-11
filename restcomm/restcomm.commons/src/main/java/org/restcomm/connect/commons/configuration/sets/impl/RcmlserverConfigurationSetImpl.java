@@ -18,12 +18,36 @@
  *
  */
 
-package org.restcomm.connect.commons.configuration.sets;
+package org.restcomm.connect.commons.configuration.sets.impl;
+
+import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
+import org.restcomm.connect.commons.configuration.sources.ConfigurationSource;
 
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public interface RcmlServerConfigurationSet {
-    String getBaseUrl();
-    Boolean getNotify();
+public class RcmlserverConfigurationSetImpl extends ConfigurationSet implements RcmlserverConfigurationSet {
+    private String baseUrl;
+    private Boolean notify;
+
+
+    public RcmlserverConfigurationSetImpl(ConfigurationSource source) {
+        super(source);
+    }
+
+    public RcmlserverConfigurationSetImpl(String baseUrl, Boolean notify) {
+        super(null);
+        this.baseUrl = baseUrl;
+        this.notify = notify;
+    }
+
+    @Override
+    public String getBaseUrl() {
+        return baseUrl;
+    }
+
+    @Override
+    public Boolean getNotify() {
+        return notify;
+    }
 }

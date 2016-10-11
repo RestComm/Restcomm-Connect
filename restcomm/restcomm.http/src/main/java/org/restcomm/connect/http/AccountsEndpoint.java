@@ -45,7 +45,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.commons.configuration.sets.RcmlServerConfigurationSet;
+import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
@@ -60,7 +60,7 @@ import org.restcomm.connect.http.exceptions.AuthorizationException;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
 import org.restcomm.connect.commons.util.StringUtils;
-import org.restcomm.connect.http.rcmlserver.RcmlserverApi;
+import org.restcomm.connect.http.client.RcmlserverApi;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -491,17 +491,23 @@ public class AccountsEndpoint extends SecuredEndpoint {
         accountsDao.updateAccount(closedAccount);
     }
 
-    private void closeAccountTree(Account closedAccount) {
+    /**
+     * Closes an account along with all its children (the whole tree). Dependent entities are removed and,
+     * if configured, notification are sent to the rcml server (RVD) as well.
+     *
+     * @param parentAccount
+     */
+    private void closeAccountTree(Account parentAccount) {
         // do we need to also notify the application sever (RVD) ?
         RcmlserverApi api = null;
         RestcommConfiguration rcommConfiguration = RestcommConfiguration.getInstance();
-        RcmlServerConfigurationSet config = rcommConfiguration.getRcmlserver();
+        RcmlserverConfigurationSet config = rcommConfiguration.getRcmlserver();
         if (config != null && config.getNotify()) {
             // create an RcmlserverApi object only if we will need to notify
             api = new RcmlserverApi(rcommConfiguration.getMain(), rcommConfiguration.getRcmlserver());
         }
-
-        List<String> closedSubAccounts = accountsDao.getSubAccountSidsRecursive(closedAccount.getSid());
+        // close child accounts
+        List<String> closedSubAccounts = accountsDao.getSubAccountSidsRecursive(parentAccount.getSid());
         if (closedSubAccounts != null && !closedSubAccounts.isEmpty()) {
             int i = closedSubAccounts.size(); // is is the count of accounts left to process
             // we iterate backwards to handle child accounts first, parent accounts next
@@ -518,7 +524,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             }
         }
         // close parent account too
-        closeSingleAccount(closedAccount,api);
+        closeSingleAccount(parentAccount,api);
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {

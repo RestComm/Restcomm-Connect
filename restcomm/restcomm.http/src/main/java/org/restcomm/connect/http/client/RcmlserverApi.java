@@ -18,7 +18,7 @@
  *
  */
 
-package org.restcomm.connect.http.rcmlserver;
+package org.restcomm.connect.http.client;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -30,7 +30,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.common.http.CustomHttpClientBuilder;
 import org.restcomm.connect.commons.configuration.sets.MainConfigurationSet;
-import org.restcomm.connect.commons.configuration.sets.RcmlServerConfigurationSet;
+import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.util.SecurityUtils;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.entities.Account;
@@ -57,7 +57,7 @@ public class RcmlserverApi {
     URI apiUrl;
     MainConfigurationSet mainConfig;
 
-    public RcmlserverApi(MainConfigurationSet mainConfig, RcmlServerConfigurationSet rcmlserverConfig) {
+    public RcmlserverApi(MainConfigurationSet mainConfig, RcmlserverConfigurationSet rcmlserverConfig) {
         try {
             // resolve() should be run lazily to work. Make sure this constructor is invoked after the JBoss connectors have been set up.
             apiUrl = UriUtils.resolve(new URI(rcmlserverConfig.getBaseUrl()));
@@ -111,7 +111,7 @@ public class RcmlserverApi {
 
     /**
      * Transmits account-removal notifications to the application server in an asynchronous way
-     * 
+     *
      * @param closedAccounts
      * @param notifierUsername
      * @param notifierPassword

@@ -233,16 +233,6 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
             }, function() { // error
                 Notifications.error("Can't close Account '" + account.friendly_name + "'");
             });
-
-            RCommAccounts.remove({accountSid: account.sid}, function () {
-                Notifications.success('Account  "' + account.friendly_name + '" removed.');
-                if (account.sid == $stateParams.accountSid) // if we removed the account we're currently viewing, switch to logged user profile
-                    $location.path("/profile/" + loggedUserAccount.sid);
-                else
-                    $scope.getAccounts(); // otherwise we just reload the accounts on the left
-            }, function () {
-                Notifications.error("Can't remove Account '" + account.friendly_name + "'");
-            });
         }
     });
   }

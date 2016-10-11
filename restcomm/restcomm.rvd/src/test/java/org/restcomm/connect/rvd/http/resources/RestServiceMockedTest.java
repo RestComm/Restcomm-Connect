@@ -27,7 +27,6 @@ import org.restcomm.connect.rvd.RvdConfigurationBuilder;
 import org.restcomm.connect.rvd.commons.http.CustomHttpClientBuilder;
 import org.restcomm.connect.rvd.configuration.RestcommConfigBuilder;
 import org.restcomm.connect.rvd.identity.AccountProvider;
-import org.restcomm.connect.rvd.identity.AccountProviderBuilder;
 import org.restcomm.connect.rvd.identity.UserIdentityContext;
 import org.mockito.Mockito;
 
@@ -60,10 +59,7 @@ public class RestServiceMockedTest {
                 .setRestcommConfig(new RestcommConfigBuilder().build())
                 .build(); // point that to wiremock
         CustomHttpClientBuilder httpClientBuilder = new CustomHttpClientBuilder(configuration);
-        accountProvider = new AccountProviderBuilder()
-                .setRestcommUrl(configuration.getRestcommBaseUri().toString())
-                .setHttpClientbuilder(httpClientBuilder)
-                .build();
+        accountProvider = new AccountProvider(configuration, httpClientBuilder);
         // mock UserIdentityContext that is required for creating SecuredEndpoint
         userIdentityContext = new UserIdentityContext(authorizationHeader,accountProvider);
     }
