@@ -26,6 +26,7 @@ import org.restcomm.connect.commons.configuration.sets.MainConfigurationSet;
 import org.restcomm.connect.commons.configuration.sets.impl.MainConfigurationSetImpl;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.http.client.RcmlserverApi;
 
 import java.net.URI;
 import java.net.URISyntaxException;
