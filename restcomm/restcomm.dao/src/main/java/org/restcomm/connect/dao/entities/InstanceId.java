@@ -21,6 +21,7 @@
 package org.restcomm.connect.dao.entities;
 
 import org.joda.time.DateTime;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>

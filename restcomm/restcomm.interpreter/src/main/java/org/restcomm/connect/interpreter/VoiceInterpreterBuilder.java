@@ -30,7 +30,7 @@ import java.net.URI;
 import org.apache.commons.configuration.Configuration;
 
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

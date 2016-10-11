@@ -23,7 +23,7 @@ import java.net.URI;
 
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * Use this to notify a Call object that needs to Record

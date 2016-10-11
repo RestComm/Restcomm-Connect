@@ -40,7 +40,7 @@ import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.extension.api.ApiRequest;
 import org.restcomm.connect.http.converter.AvailableCountriesConverter;
 import org.restcomm.connect.http.converter.AvailableCountriesList;

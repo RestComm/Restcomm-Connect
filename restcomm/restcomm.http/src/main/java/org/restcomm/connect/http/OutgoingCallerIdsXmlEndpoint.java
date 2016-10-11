@@ -36,7 +36,7 @@ import static javax.ws.rs.core.Response.*;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.OutgoingCallerId;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

@@ -131,6 +131,11 @@ public class DaoManagerMock implements DaoManager {
     }
 
     @Override
+    public ExtensionsConfigurationDao getExtensionsConfigurationDao() {
+        return null;
+    }
+
+    @Override
     public void configure(Configuration configuration) {
 
     }

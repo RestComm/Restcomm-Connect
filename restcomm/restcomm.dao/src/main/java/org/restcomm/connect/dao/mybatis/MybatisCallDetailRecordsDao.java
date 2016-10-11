@@ -40,7 +40,7 @@ import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**

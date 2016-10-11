@@ -4,7 +4,7 @@ import java.net.URI;
 
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.telephony.api.CallInfo;
 
 import akka.actor.ActorRef;

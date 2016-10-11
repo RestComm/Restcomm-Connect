@@ -14,7 +14,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.AnnouncementsDao;
 import org.restcomm.connect.dao.entities.Announcement;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">George Vagenas</a>

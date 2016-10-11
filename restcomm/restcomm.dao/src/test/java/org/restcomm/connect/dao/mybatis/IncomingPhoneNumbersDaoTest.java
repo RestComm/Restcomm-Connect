@@ -34,10 +34,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
-import org.restcomm.connect.dao.mybatis.MybatisDaoManager;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

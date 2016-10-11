@@ -25,7 +25,7 @@ import java.util.Currency;
 import java.util.Date;
 
 import org.joda.time.DateTime;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
