@@ -33,16 +33,13 @@ import org.restcomm.connect.commons.configuration.sets.MainConfigurationSet;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.util.SecurityUtils;
 import org.restcomm.connect.commons.util.UriUtils;
-import org.restcomm.connect.dao.entities.Account;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
 
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
@@ -78,6 +75,7 @@ public class RcmlserverApi {
      *
      * @param accountToBeRemoved
      */
+    /*
     public Future<HttpResponse> notifyAccountRemovalAsync(Account accountToBeRemoved, String notifierUsername, String notifierPassword) {
         CloseableHttpAsyncClient client = CustomHttpClientBuilder.buildAsync(mainConfig);
 
@@ -108,31 +106,28 @@ public class RcmlserverApi {
             }
         }
     }
+    */
 
     /**
      * Transmits account-removal notifications to the application server in an asynchronous way
      *
-     * @param closedAccounts
+     * @param closedAccountSids
      * @param notifierUsername
      * @param notifierPassword
      * @return
      */
-    public Thread notifyAccountsRemovalAsync(final List<Account> closedAccounts, final String notifierUsername, final String notifierPassword) {
+    public Thread notifyAccountsRemovalAsync(final List<String> closedAccountSids, final String notifierUsername, final String notifierPassword) {
         // first, create the batch of requests
         String notificationUrl = apiUrl + "/notifications";
         final List<HttpPost> requests = new ArrayList<HttpPost>();
         final List<String> accountSids = new ArrayList<String>();
-        for (Account closedAccount : closedAccounts) {
+        for (String closedAccountSid : closedAccountSids) {
             HttpPost request = new HttpPost(notificationUrl);
             List<NameValuePair> nvps = new ArrayList<NameValuePair>();
             nvps.add(new BasicNameValuePair("type", NotificationType.accountRemoved.toString()));
-            nvps.add(new BasicNameValuePair("accountSid", closedAccount.getSid().toString()));
+            nvps.add(new BasicNameValuePair("accountSid", closedAccountSid));
             String authHeader;
-            if (notifierUsername != null) {
-                authHeader = SecurityUtils.buildBasicAuthHeader(notifierUsername, notifierPassword);
-            } else {
-                authHeader = SecurityUtils.buildBasicAuthHeader(closedAccount.getSid().toString(), closedAccount.getAuthToken());
-            }
+            authHeader = SecurityUtils.buildBasicAuthHeader(notifierUsername, notifierPassword);
             request.setHeader("Authorization", authHeader );
             try {
                 request.setEntity(new UrlEncodedFormEntity(nvps));
@@ -140,7 +135,7 @@ public class RcmlserverApi {
                 throw new IllegalArgumentException(e); // crappy input
             }
             requests.add(request);
-            accountSids.add(closedAccount.getSid().toString());
+            accountSids.add(closedAccountSid);
         }
         // Start an async thread and send notifications tom rcml server
         // No data is shared between the async thread and current thread.

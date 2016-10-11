@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- This is free software; you can redistribute it and/or modify it under 
+<!--
+  ~ TeleStax, Open Source Cloud Communications
+  ~ Copyright 2011-2014, Telestax Inc and individual contributors
+  ~ by the @authors tag.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation; either version 3 of
+  ~ the License, or (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>
+  ~
+  -->
+
+<!-- This is free software; you can redistribute it and/or modify it under
 	the terms of the GNU Lesser General Public License as published by the Free 
 	Software Foundation; either version 2.1 of the License, or (at your option) 
 	any later version. This software is distributed in the hope that it will 
@@ -249,6 +269,12 @@
 		<!-- Optionally provide the hostname to be used, otherwise Java will try to get the hostname of the machine JVM is running -->
 		<hostname></hostname>
 	</http-client>
+
+	<rcmlserver-api>
+		<!-- points to Wiremock server for arquilian testing -->
+		<base-url>http://localhost:8089/restcomm-rvd/services</base-url>
+		<notifications>true</notifications>
+	</rcmlserver-api>
 
 	<!-- The SMS aggregator is responsible for the handling of SMS messages 
 		inside of RestComm. Refer to the org.mobicents.servlet.sip.restcomm.SmsAggregator 

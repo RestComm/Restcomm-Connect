@@ -54,7 +54,7 @@ public class RestcommConfiguration {
 
         addConfigurationSet("main", new MainConfigurationSetImpl(apacheCfgSrc));
         addConfigurationSet("cache", new CacheConfigurationSetImpl(apacheCfgSrc));
-        addConfigurationSet("rcmlserver", new RcmlserverConfigurationSetImpl("/restcomm-rvd/services",true)); // TODO load configuraiton from restcomm.xml
+        addConfigurationSet("rcmlserver", new RcmlserverConfigurationSetImpl(apacheCfgSrc));
 
         // addConfigurationSet("identity", new IdentityConfigurationSet( new DbConfigurationSource(dbConf)));
         // ...
