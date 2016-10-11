@@ -38,8 +38,6 @@ import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.Sid;
-import org.restcomm.connect.mgcp.EndpointCredentials;
-import org.restcomm.connect.mgcp.InviteEndpoint;
 import org.restcomm.connect.mgcp.MediaGatewayResponse;
 import org.restcomm.connect.mgcp.MediaSession;
 import org.restcomm.connect.mrb.api.ConferenceMediaResourceControllerStateChanged;
@@ -62,7 +60,6 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import jain.protocol.ip.mgcp.message.parms.EndpointIdentifier;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -76,9 +73,6 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
     private final State uninitialized;
     private final State acquiringConferenceInfo;
     private final State creatingMediaGroup;
-    //for Master
-    private final State acquiringConferenceEndpointID;
-    private final State acquiringIVREndpointID;
 
     private final State preActive;
     private final State active;
@@ -88,13 +82,9 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
     private final ActorRef localMediaGateway;
     private ActorRef mediaGroup;
-
-    private EndpointIdentifier masterConfernceEndpointId;
-    private EndpointIdentifier masterIVREndpointId;
     private String masterIVREndpointIdName;
     private MediaSession localMediaSession;
     private ActorRef localConfernceEndpoint;
-    private ActorRef masterIVREndpoint;
     private ActorRef connectionWithLocalMS;
     private ActorRef connectionWithMasterMS;
 
@@ -111,7 +101,6 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
     // Observer pattern
     private final List<ActorRef> observers;
-    private String masterIVRConnectionIdentifier;
     private final ActorRef mrb;
 
     public ConferenceMediaResourceControllerGeneric(final String localMsId, ActorRef localMediaGateway, final Configuration configuration, final DaoManager storage, final ActorRef mrb){
@@ -122,8 +111,6 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         this.uninitialized = new State("uninitialized", null, null);
         this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(source), null);
         this.acquiringConferenceInfo = new State("getting Conference Info From DB", new AcquiringConferenceInfo(source), null);
-        this.acquiringIVREndpointID=new State("acquiring IVR endpoint ID", new AcquiringIVREndpointID(source), new SavingIVREndpointID(source));
-        this.acquiringConferenceEndpointID=new State("acquiring ConferenceEndpoint ID", new AcquiringConferenceEndpointID(source), new SavingConferenceEndpointID(source));
         this.preActive = new State("pre active", new PreActive(source));
         this.active = new State("active", new Active(source));
         this.stopping = new State("stopping", new Stopping(source));
@@ -135,11 +122,8 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         //states for master
         transitions.add(new Transition(uninitialized, acquiringConferenceInfo));
         transitions.add(new Transition(acquiringConferenceInfo, creatingMediaGroup));
-        transitions.add(new Transition(creatingMediaGroup, acquiringIVREndpointID));
-        transitions.add(new Transition(acquiringIVREndpointID, acquiringConferenceEndpointID));
-        transitions.add(new Transition(acquiringConferenceEndpointID, preActive));
-        transitions.add(new Transition(preActive, active));
         transitions.add(new Transition(creatingMediaGroup, preActive));
+        transitions.add(new Transition(preActive, active));
         transitions.add(new Transition(active, stopping));
         transitions.add(new Transition(stopping, inactive));
 
@@ -199,8 +183,6 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         } else if (MediaGatewayResponse.class.equals(klass)) {
             logger.info("going to call onMediaGatewayResponse");
             onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
-        } else if (EndpointCredentials.class.equals(klass)) {
-            onEndpointCredentials((EndpointCredentials) message, self, sender);
         } else if (MediaGroupStateChanged.class.equals(klass)) {
             onMediaGroupStateChanged((MediaGroupStateChanged) message, self, sender);
         } else if (StopMediaGroup.class.equals(klass)) {
@@ -244,15 +226,6 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         }
     }
 
-    private void onEndpointCredentials(EndpointCredentials message, ActorRef self, ActorRef sender) throws Exception{
-        logger.info("onEndpointCredentials state = "+fsm.state());
-        if(is(acquiringIVREndpointID)){
-            fsm.transition(message, acquiringConferenceEndpointID);
-        } else {
-            fsm.transition(message, preActive);
-        }
-    }
-
     private void onMediaGatewayResponse(MediaGatewayResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
         logger.info("inside onMediaGatewayResponse: state = "+fsm.state());
         if (is(acquiringConferenceInfo)){
@@ -267,7 +240,6 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         if(logger.isInfoEnabled())
             logger.info("onStopConferenceMediaResourceController");
         sender.tell(new StopConferenceMediaResourceControllerResponse(true), sender);
-    
         fsm.transition(message, stopping);
     }
 
@@ -277,9 +249,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         switch (message.state()) {
             case ACTIVE:
                 if (is(creatingMediaGroup)) {
-                    this.masterIVREndpoint = message.ivr();
-                    this.masterIVRConnectionIdentifier = message.connectionIdentifier().toString();
-                    fsm.transition(message, acquiringIVREndpointID);
+                    fsm.transition(message, preActive);
                 }
                 break;
 
@@ -399,7 +369,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
                 @Override
                 public UntypedActor create() throws Exception {
-                	return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint, masterIVREndpointIdName);
+                    return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint, masterIVREndpointIdName);
                 }
             }));
         }
@@ -409,62 +379,6 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
             mediaGroup = createMediaGroup(message);
             mediaGroup.tell(new Observe(super.source), super.source);
             mediaGroup.tell(new StartMediaGroup(), super.source);
-        }
-    }
-
-    private final class AcquiringIVREndpointID extends AbstractAction {
-        public AcquiringIVREndpointID(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            if (masterIVREndpoint != null) {
-                final InviteEndpoint invite = new InviteEndpoint();
-                masterIVREndpoint.tell(invite, source);
-            }
-        }
-    }
-
-    private final class SavingIVREndpointID extends AbstractAction {
-        public SavingIVREndpointID(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            final EndpointCredentials response = (EndpointCredentials) message;
-            masterIVREndpointId = response.endpointId();
-            masterIVREndpointIdName = masterIVREndpointId.getLocalEndpointName();
-            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ masterIVREndpointId:"+masterIVREndpointIdName+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-        }
-    }
-
-    private final class AcquiringConferenceEndpointID extends AbstractAction {
-        public AcquiringConferenceEndpointID(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            if (localConfernceEndpoint != null) {
-                final InviteEndpoint invite = new InviteEndpoint();
-                localConfernceEndpoint.tell(invite, source);
-            }
-        }
-    }
-
-    private final class SavingConferenceEndpointID extends AbstractAction {
-        public SavingConferenceEndpointID(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            final EndpointCredentials response = (EndpointCredentials) message;
-            masterConfernceEndpointId = response.endpointId();
-            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ localConfernceEndpointId:"+masterConfernceEndpointId+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-            updateMasterConferenceEndpointId();
         }
     }
 
@@ -572,19 +486,6 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
      * Database Utility Functions
      *
      */
-
-    private void updateMasterConferenceEndpointId(){
-        if(cdr != null){
-            logger.info("updateMasterConferenceEndpointId: localConfernceEndpointId.getLocalEndpointName(): "+masterConfernceEndpointId.getLocalEndpointName()+" masterIVREndpointIdName: "+masterIVREndpointIdName+" setMasterIVREndpointSessionId: "+localMediaSession.id());
-            final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
-            cdr = dao.getConferenceDetailRecord(conferenceSid);
-            cdr = cdr.setMasterConfernceEndpointId(masterConfernceEndpointId.getLocalEndpointName());
-            cdr = cdr.setMasterIVREndpointId(masterIVREndpointIdName);
-            cdr = cdr.setMasterIVREndpointSessionId(localMediaSession.id()+"");
-            cdr = cdr.setMasterIVRConnectionIdentifier(masterIVRConnectionIdentifier);
-            dao.updateConferenceDetailRecordMasterEndpointID(cdr);
-        }
-    }
 
     private void updateConferenceStatus(String status){
         if(cdr != null){
