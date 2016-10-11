@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.restcomm</groupId>
 		<artifactId>restcomm-connect</artifactId>
-		<version>8.0.0-SNAPSHOT</version>
+		<version>8.0.0.1041</version>
 	</parent>
 
 	<artifactId>restcomm-connect.identity</artifactId>
