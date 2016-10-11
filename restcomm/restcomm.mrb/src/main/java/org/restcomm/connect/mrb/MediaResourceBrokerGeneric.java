@@ -169,32 +169,16 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
     }
 
     private void onGetMediaGateway(GetMediaGateway message, ActorRef self, ActorRef sender) throws Exception {
-        // if a specific MS is not asked return local MS.
-        if(message.msId() == null){
-            final String conferenceName = message.conferenceName();
-            final Sid callSid = message.callSid();
+        final String conferenceName = message.conferenceName();
+        final Sid callSid = message.callSid();
 
-            // if its not request for conference return home media-gateway (media-server associated with this RC instance)
-            if(conferenceName == null){
-                updateMSIdinCallDetailRecord(localMsId, callSid);
-                sender.tell(new MediaResourceBrokerResponse<ActorRef>(localMediaGateway), self);
-            }else{
-                final Sid conferenceSid = addConferenceDetailRecord(conferenceName, callSid);
-                sender.tell(new MediaResourceBrokerResponse<MediaGatewayForConference>(new MediaGatewayForConference(conferenceSid, localMediaGateway)), self);
-            }
+        // if its not request for conference return home media-gateway (media-server associated with this RC instance)
+        if(conferenceName == null){
+            updateMSIdinCallDetailRecord(localMsId, callSid);
+            sender.tell(new MediaResourceBrokerResponse<ActorRef>(localMediaGateway), self);
         }else{
-            ActorRef remoteMediaGateway;
-            // check if this MS is already available
-            if(mediaGatewayMap.containsKey(message.msId())){
-                remoteMediaGateway = mediaGatewayMap.get(message.msId());
-            }else{
-                //if not then fetch it from DB and turn it on as well add to local map.
-                MediaServersDao dao = storage.getMediaServersDao();
-                MediaServerEntity remoteMediaServerEntity = dao.getMediaServer(message.msId());
-                remoteMediaGateway = turnOnMediaGateway(remoteMediaServerEntity);
-                mediaGatewayMap.put(message.msId(), remoteMediaGateway);
-            }
-            sender.tell(new MediaResourceBrokerResponse<ActorRef>(remoteMediaGateway), self);
+            final Sid conferenceSid = addConferenceDetailRecord(conferenceName, callSid);
+            sender.tell(new MediaResourceBrokerResponse<MediaGatewayForConference>(new MediaGatewayForConference(conferenceSid, localMediaGateway)), self);
         }
     }
 

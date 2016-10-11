@@ -318,7 +318,7 @@
             <external-address><null/></external-address>
         </mgcp-server>
 		<mrb class="org.restcomm.connect.mrb.MediaResourceBrokerGeneric" name="Community MediaResourceBroker">
-		</mrb>>
+		</mrb>
 	</media-server-manager>
 	<!-- media-server-routing Defines routing rules for media server traffic with following parameters:
 	<algorithm> - Defines routing algorithm, possible values are: 
