@@ -62,4 +62,17 @@ public interface RestcommExtensionGeneric {
      * @return ExtensionResponse see ExtensionResponse
      */
     ExtensionResponse postOutboundAction(CreateCall createCallRequest);
+
+    /**
+     * Method that will be executed before the process of an API action, such as DID purchase (but after security checks)
+     * @return ExtensionResponse see ExtensionResponse
+     */
+    ExtensionResponse preApiAction(ApiRequest apiRequest);
+
+    /**
+     * Method that will be executed after the process of an API action, such as DID purchase
+     * @return
+     */
+    ExtensionResponse postApiAction(ApiRequest apiRequest);
+
 }
