@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -35,7 +36,6 @@ import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
-import org.restcomm.connect.dao.entities.Sid;
 import org.restcomm.connect.mgcp.CreateConferenceEndpoint;
 import org.restcomm.connect.mgcp.DestroyEndpoint;
 import org.restcomm.connect.mgcp.EndpointState;
