@@ -314,7 +314,7 @@ script VARCHAR(255) NOT NULL,
 date_executed DATETIME NOT NULL
 );
 
-CREATE TABLE media_servers (
+CREATE TABLE restcomm_media_servers (
 ms_id INT PRIMARY KEY AUTO_INCREMENT, 
 local_ip VARCHAR(34) NOT NULL, 
 local_port INT NOT NULL,
@@ -325,7 +325,7 @@ response_timeout VARCHAR(34),
 external_address VARCHAR(34)
 );
 
-CREATE TABLE media_resource_broker_entity (
+CREATE TABLE restcomm_media_resource_broker_entity (
 conference_sid VARCHAR(34) NOT NULL, 
 slave_ms_id VARCHAR(34) NOT NULL, 
 slave_ms_bridge_ep_id VARCHAR(34),
