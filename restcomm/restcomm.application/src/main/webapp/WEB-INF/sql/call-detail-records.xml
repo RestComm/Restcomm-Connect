@@ -179,6 +179,10 @@
     SELECT * FROM "restcomm_call_detail_records" WHERE "ms_id"=#{ms_id};
   </select>
   
+  <select id="getTotalRunningCallDetailRecordsByConferenceSid" parameterType="string" resultType="int">
+    SELECT COUNT(*) FROM "restcomm_call_detail_records" WHERE "conference_sid"=#{conference_sid} and "status" ='in-progress';
+  </select>
+  
   <delete id="removeCallDetailRecord" parameterType="string">
     DELETE FROM "restcomm_call_detail_records" WHERE "sid"=#{sid};
   </delete>
