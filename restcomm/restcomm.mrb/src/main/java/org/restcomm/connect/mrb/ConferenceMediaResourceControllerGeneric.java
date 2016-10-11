@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -37,7 +38,6 @@ import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
-import org.restcomm.connect.dao.entities.Sid;
 import org.restcomm.connect.mgcp.MediaGatewayResponse;
 import org.restcomm.connect.mgcp.MediaSession;
 import org.restcomm.connect.mrb.api.ConferenceMediaResourceControllerStateChanged;
