@@ -2,9 +2,7 @@ package org.restcomm.connect.application;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.media.mscontrol.MsControlException;
@@ -34,7 +32,6 @@ import org.restcomm.connect.dao.entities.InstanceId;
 import org.restcomm.connect.dao.entities.shiro.ShiroResources;
 import org.restcomm.connect.extension.controller.ExtensionBootstrapper;
 import org.restcomm.connect.identity.IdentityContext;
-import org.restcomm.connect.mgcp.PowerOnMediaGateway;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
@@ -81,10 +78,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         MediaServerControllerFactory factory;
         switch (compatibility) {
             case "rms":
-                Map<String, ActorRef> gateways;
                 try {
                     settings = configuration.subset("media-server-manager");
-                    //gateways = gateways(settings, loader);
                     ActorRef mrb = mediaResourceBroker(settings, storage, loader);
                     factory = new MmsControllerFactory(this.system, mrb, configuration.subset("media-server-routing"));
                 } catch (UnknownHostException e) {
@@ -208,60 +203,6 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         }));
         mrb.tell(new StartMediaResourceBroker(configuration, storage, loader), null);
         return mrb;
-    }
-
-    private Map<String, ActorRef> gateways(final Configuration settings, final ClassLoader loader) throws UnknownHostException {
-        // List of available gateways
-        //List<ActorRef> gateways = new ArrayList<ActorRef>(1);
-        Map<String, ActorRef> gateways = new HashMap<String, ActorRef>();
-
-        List<Object> mgcpMediaServers = settings.getList("mgcp-servers.mgcp-server.local-address");
-        int mgcpMediaServerListSize = mgcpMediaServers.size();
-        //TODO remove this log line after completion
-        logger.info("Available Media gateways are: "+mgcpMediaServerListSize);
-
-        for (int count = 0; count < mgcpMediaServerListSize; count++) {
-            final ActorRef gateway = system.actorOf(new Props(new UntypedActorFactory() {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public UntypedActor create() throws Exception {
-                    final String classpath = settings.getString("mgcp-servers[@class]");
-                    return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
-                }
-            }));
-            final PowerOnMediaGateway.Builder builder = PowerOnMediaGateway.builder();
-            builder.setName(settings.getString("mgcp-servers[@name]"));
-            String address = settings.getString("mgcp-servers.mgcp-server(" + count + ").local-address");
-            logger.info("mgcp-servers.mgcp-server(" + count + ").local-address: "+address);
-            builder.setLocalIP(InetAddress.getByName(address));
-            String port = settings.getString("mgcp-servers.mgcp-server(" + count + ").local-port");
-            logger.info("mgcp-servers.mgcp-server(" + count + ").local-port: "+port);
-            builder.setLocalPort(Integer.parseInt(port));
-            address = settings.getString("mgcp-servers.mgcp-server(" + count + ").remote-address");
-            logger.info("mgcp-servers.mgcp-server(" + count + ").remote-address: "+address);
-            builder.setRemoteIP(InetAddress.getByName(address));
-            port = settings.getString("mgcp-servers.mgcp-server(" + count + ").remote-port");
-            logger.info("mgcp-servers.mgcp-server(" + count + ").remote-port: "+port);
-            builder.setRemotePort(Integer.parseInt(port));
-            address = settings.getString("mgcp-servers.mgcp-server(" + count + ").external-address");
-            logger.info("mgcp-servers.mgcp-server(" + count + ").external-address: "+ address);
-            if (address != null) {
-                builder.setExternalIP(InetAddress.getByName(address));
-                builder.setUseNat(true);
-            } else {
-                builder.setUseNat(false);
-            }
-            final String timeout = settings.getString("mgcp-servers.mgcp-server(" + count + ").response-timeout");
-            builder.setTimeout(Long.parseLong(timeout));
-            final PowerOnMediaGateway powerOn = builder.build();
-            gateway.tell(powerOn, null);
-
-            String msId = settings.getString("mgcp-servers.mgcp-server(" + count + ").ms-id");
-            gateways.put(msId, gateway);
-        }
-
-        return gateways;
     }
 
     private String home(final ServletContext context) {

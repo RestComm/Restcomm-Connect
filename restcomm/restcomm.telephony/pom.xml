@@ -96,13 +96,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.mgcp</artifactId>
-			<version>${project.version}</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>org.restcomm</groupId>
 			<artifactId>restcomm-connect.sms</artifactId>
 			<version>${project.version}</version>

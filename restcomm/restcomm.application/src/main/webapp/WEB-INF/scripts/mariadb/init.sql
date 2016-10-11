@@ -331,7 +331,6 @@ slave_ms_id VARCHAR(34) NOT NULL,
 slave_ms_bridge_ep_id VARCHAR(34),
 slave_ms_cnf_ep_id VARCHAR(34),
 is_bridged_together BOOLEAN NOT NULL DEFAULT FALSE, 
-slave_ms_sdp VARCHAR(2000),
 PRIMARY KEY (conference_sid , slave_ms_id)
 );
 

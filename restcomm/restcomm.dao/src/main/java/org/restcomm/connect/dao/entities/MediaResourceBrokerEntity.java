@@ -67,26 +67,6 @@ public final class MediaResourceBrokerEntity {
         return isBridgedTogether;
     }
 
-    public MediaResourceBrokerEntity setSlaveMsId(String slaveMsId) {
-        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether);
-    }
-
-    public MediaResourceBrokerEntity setSlaveMsBridgeEpId(String slaveMsBridgeEpId) {
-        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether);
-    }
-
-    public MediaResourceBrokerEntity setSlaveMsCnfEpId(String slaveMsCnfEpId) {
-        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether);
-    }
-
-    public MediaResourceBrokerEntity setBridgedTogether(boolean isBridgedTogether) {
-        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether);
-    }
-
-    public MediaResourceBrokerEntity setSlaveMsSDP(String slaveMsSDP) {
-        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether);
-    }
-
     @NotThreadSafe
     public static final class Builder {
         private Sid conferenceSid;
@@ -94,7 +74,6 @@ public final class MediaResourceBrokerEntity {
         private String slaveMsBridgeEpId;
         private String slaveMsCnfEpId;
         private boolean isBridgedTogether;
-        private String slaveMsSDP;
 
         private Builder() {
             super();
@@ -102,7 +81,6 @@ public final class MediaResourceBrokerEntity {
             slaveMsId = null;
             slaveMsBridgeEpId = null;
             slaveMsCnfEpId = null;
-            slaveMsSDP = null;
         }
 
         public MediaResourceBrokerEntity build() {
@@ -127,10 +105,6 @@ public final class MediaResourceBrokerEntity {
 
         public void setBridgedTogether(boolean isBridgedTogether) {
             this.isBridgedTogether = isBridgedTogether;
-        }
-
-        public void setSlaveMsSDP(String slaveMsSDP) {
-            this.slaveMsSDP = slaveMsSDP;
         }
     }
 }
