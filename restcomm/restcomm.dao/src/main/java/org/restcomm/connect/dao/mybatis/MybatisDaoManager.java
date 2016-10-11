@@ -37,6 +37,7 @@ import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.ExtensionsConfigurationDao;
 import org.restcomm.connect.dao.GatewaysDao;
 import org.restcomm.connect.dao.HttpCookiesDao;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
@@ -82,6 +83,7 @@ public final class MybatisDaoManager implements DaoManager {
     private InstanceIdDao instanceIdDao;
     private MediaServersDao mediaServersDao;
     private MediaResourceBrokerDao mediaResourceBrokerDao;
+    private ExtensionsConfigurationDao extensionsConfigurationDao;
 
     public MybatisDaoManager() {
         super();
@@ -200,6 +202,11 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
+    public ExtensionsConfigurationDao getExtensionsConfigurationDao() {
+        return extensionsConfigurationDao;
+    }
+
+    @Override
     public void shutdown() {
         // Nothing to do.
     }
@@ -268,5 +275,6 @@ public final class MybatisDaoManager implements DaoManager {
         instanceIdDao = new MybatisInstanceIdDao(sessions);
         mediaServersDao = new MybatisMediaServerDao(sessions);
         mediaResourceBrokerDao = new MybatisMediaResourceBrokerDao(sessions);
+        extensionsConfigurationDao = new MybatisExtensionsConfigurationDao(sessions);
     }
 }

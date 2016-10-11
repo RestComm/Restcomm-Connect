@@ -24,7 +24,7 @@ import java.net.URI;
 import javax.ws.rs.core.MultivaluedMap;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.StringUtils;
 
 import com.google.i18n.phonenumbers.NumberParseException;

@@ -45,7 +45,7 @@ import org.restcomm.connect.http.converter.UsageListConverter;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.UsageDao;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Usage;
 import org.restcomm.connect.dao.entities.UsageList;
 import org.restcomm.connect.http.converter.UsageConverter;
