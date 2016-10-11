@@ -12,7 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 public class AccountsDaoTest extends DaoTest {
     private static MybatisDaoManager manager;

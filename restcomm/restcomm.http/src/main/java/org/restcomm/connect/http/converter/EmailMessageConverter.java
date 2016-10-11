@@ -25,7 +25,7 @@ import java.lang.reflect.Type;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.email.api.Mail;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 
 import com.google.gson.JsonElement;

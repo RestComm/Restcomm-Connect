@@ -27,11 +27,11 @@ import java.util.Map;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.MediaResourceBrokerDao;
 import org.restcomm.connect.dao.entities.MediaResourceBrokerEntity;
 import org.restcomm.connect.dao.entities.MediaResourceBrokerEntityFilter;
-import org.restcomm.connect.dao.entities.Sid;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)

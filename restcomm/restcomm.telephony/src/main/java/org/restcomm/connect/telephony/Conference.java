@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -38,7 +39,6 @@ import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
-import org.restcomm.connect.dao.entities.Sid;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.JoinCall;
 import org.restcomm.connect.mscontrol.api.messages.JoinComplete;
@@ -70,6 +70,7 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author amit.bhayani@telestax.com (Amit Bhayani)
  * @author henrique.rosa@telestax.com (Henrique Rosa)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
 public final class Conference extends UntypedActor {

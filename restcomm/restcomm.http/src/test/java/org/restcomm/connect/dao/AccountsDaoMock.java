@@ -22,7 +22,7 @@ package org.restcomm.connect.dao;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 import java.util.ArrayList;
 import java.util.List;

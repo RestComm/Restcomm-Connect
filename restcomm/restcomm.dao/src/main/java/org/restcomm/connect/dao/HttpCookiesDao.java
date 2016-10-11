@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.http.cookie.Cookie;
 
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

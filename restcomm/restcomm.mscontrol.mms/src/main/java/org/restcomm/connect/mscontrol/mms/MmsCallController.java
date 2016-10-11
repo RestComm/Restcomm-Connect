@@ -33,6 +33,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
@@ -43,7 +44,6 @@ import org.restcomm.connect.commons.util.WavUtils;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.entities.Recording;
-import org.restcomm.connect.dao.entities.Sid;
 import org.restcomm.connect.mgcp.CloseConnection;
 import org.restcomm.connect.mgcp.CloseLink;
 import org.restcomm.connect.mgcp.ConnectionStateChanged;

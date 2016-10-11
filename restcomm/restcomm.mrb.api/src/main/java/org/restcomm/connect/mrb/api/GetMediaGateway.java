@@ -22,7 +22,7 @@
 package org.restcomm.connect.mrb.api;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author Maria Farooq (maria.farooq@telestax.com)

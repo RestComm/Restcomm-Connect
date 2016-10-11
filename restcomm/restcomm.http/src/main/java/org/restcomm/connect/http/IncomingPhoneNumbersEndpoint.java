@@ -19,19 +19,38 @@
  */
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.noContent;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.NumberParseException.ErrorType;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import com.thoughtworks.xstream.XStream;
+import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.loader.ObjectFactory;
+import org.restcomm.connect.commons.loader.ObjectInstantiationException;
+import org.restcomm.connect.commons.util.StringUtils;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
+import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumberList;
+import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.extension.api.ApiRequest;
+import org.restcomm.connect.http.converter.AvailableCountriesConverter;
+import org.restcomm.connect.http.converter.AvailableCountriesList;
+import org.restcomm.connect.http.converter.IncomingPhoneNumberConverter;
+import org.restcomm.connect.http.converter.IncomingPhoneNumberListConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.provisioning.number.api.ContainerConfiguration;
+import org.restcomm.connect.provisioning.number.api.PhoneNumberParameters;
+import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
+import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -41,39 +60,19 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.http.converter.AvailableCountriesConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.converter.AvailableCountriesList;
-import org.restcomm.connect.http.converter.IncomingPhoneNumberConverter;
-import org.restcomm.connect.http.converter.IncomingPhoneNumberListConverter;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
-import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
-import org.restcomm.connect.dao.entities.IncomingPhoneNumberList;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.dao.entities.Sid;
-import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.commons.loader.ObjectFactory;
-import org.restcomm.connect.commons.loader.ObjectInstantiationException;
-import org.restcomm.connect.provisioning.number.api.ContainerConfiguration;
-import org.restcomm.connect.provisioning.number.api.PhoneNumberParameters;
-import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
-import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
-import org.restcomm.connect.commons.util.StringUtils;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.NumberParseException.ErrorType;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-import com.thoughtworks.xstream.XStream;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.noContent;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -294,7 +293,18 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             org.restcomm.connect.provisioning.number.api.PhoneNumber phoneNumber = convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber);
             boolean hasSuceeded = false;
             if(phoneNumberProvisioningManager != null && isSIP == null) {
-                hasSuceeded = phoneNumberProvisioningManager.buyNumber(phoneNumber, phoneNumberParameters);
+                ApiRequest apiRequest = new ApiRequest(accountSid, data, ApiRequest.Type.INCOMINGPHONENUMBER);
+                //Before proceed to buy the DID, check with the extensions if the purchase is allowed or not
+                if (executePreApiAction(apiRequest)) {
+                    hasSuceeded = phoneNumberProvisioningManager.buyNumber(phoneNumber, phoneNumberParameters);
+                } else {
+                    //Extensions didn't allowed this API action
+                    hasSuceeded = false;
+                    if (logger.isInfoEnabled()) {
+                        logger.info("DID purchase is now allowed for this account");
+                    }
+                }
+                executePostApiAction(apiRequest);
             } else if (isSIP != null) {
                 hasSuceeded = true;
             }

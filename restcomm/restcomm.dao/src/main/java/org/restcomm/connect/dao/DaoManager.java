@@ -67,4 +67,7 @@ public interface DaoManager extends Configurable, LifeCycle {
     MediaServersDao getMediaServersDao();
 
     MediaResourceBrokerDao getMediaResourceBrokerDao();
+
+    ExtensionsConfigurationDao getExtensionsConfigurationDao();
+
 }

@@ -21,6 +21,7 @@ package org.restcomm.connect.dao.entities;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
