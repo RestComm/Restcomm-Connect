@@ -29,6 +29,7 @@ import junit.framework.Assert;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -36,6 +37,7 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -46,6 +48,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
+@RunWith(Arquillian.class)
 public class AccountsEndpointRemovalTest extends EndpointTest {
     private final static Logger logger = Logger.getLogger(AccountsEndpointRemovalTest.class.getName());
 
@@ -60,7 +63,7 @@ public class AccountsEndpointRemovalTest extends EndpointTest {
     String toplevelKey = "77f8c12cc7b8f8423e5c38b035249166";
 
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8099);
+    public WireMockRule wireMockRule = new WireMockRule(8089);
 
     @Before
     public void before() {
@@ -96,7 +99,7 @@ public class AccountsEndpointRemovalTest extends EndpointTest {
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
+        archive.addAsWebInfResource("restcomm-accountRemoval.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_account_removal_test", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");
         return archive;

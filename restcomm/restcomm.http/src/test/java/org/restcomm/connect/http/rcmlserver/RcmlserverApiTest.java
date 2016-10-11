@@ -24,8 +24,6 @@ import org.junit.Test;
 import org.restcomm.connect.commons.common.http.SslMode;
 import org.restcomm.connect.commons.configuration.sets.MainConfigurationSet;
 import org.restcomm.connect.commons.configuration.sets.impl.MainConfigurationSetImpl;
-import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Sid;
 import org.restcomm.connect.http.client.RcmlserverApi;
 
 import java.net.URI;
@@ -41,20 +39,14 @@ public class RcmlserverApiTest {
     public void notifyAccountsRemoval() throws URISyntaxException, InterruptedException {
 
         MainConfigurationSet mainConfig = new MainConfigurationSetImpl(SslMode.strict,5000,false,null,null,false);
-        List<Account> closedAccounts = new ArrayList<Account>();
-        closedAccounts.add(createAccount("AC00000000000000000000000000000001"));
-        closedAccounts.add(createAccount("AC00000000000000000000000000000002"));
-        closedAccounts.add(createAccount("AC00000000000000000000000000000003"));
-        closedAccounts.add(createAccount("AC00000000000000000000000000000004"));
+        List<String> closedAccounts = new ArrayList<String>();
+        closedAccounts.add("AC00000000000000000000000000000001");
+        closedAccounts.add("AC00000000000000000000000000000002");
+        closedAccounts.add("AC00000000000000000000000000000003");
+        closedAccounts.add("AC00000000000000000000000000000004");
         RcmlserverApi api = new RcmlserverApi(mainConfig,new URI("http://192.168.2.4:8095/restcomm-rvd/services"));
         Thread thread = api.notifyAccountsRemovalAsync(closedAccounts,"administrator@company.com", "RestComm");
         thread.join();
-    }
-
-    private Account createAccount(String sid) {
-        Account.Builder builder = Account.builder();
-        builder.setSid(new Sid(sid));
-        return builder.build();
     }
 
 }

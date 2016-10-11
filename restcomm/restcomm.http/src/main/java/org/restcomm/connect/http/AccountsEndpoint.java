@@ -203,15 +203,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
     */
 
     /**
-     * Notify application server that an account has been removed
-     */
-    void notifyAccountRemoved(Account closedAccount, Account notifierAccount, RcmlserverApi api) {
-        Account loggedAccount = userIdentityContext.getEffectiveAccount();
-        // notifications are sent in the name of the logged user.
-        api.notifyAccountRemovalAsync(closedAccount,loggedAccount.getSid().toString(), loggedAccount.getAuthToken());
-    }
-
-    /**
      * Removes all dependent resources of an account. Some resources like
      * CDRs are excluded.
      *
@@ -476,16 +467,12 @@ public class AccountsEndpoint extends SecuredEndpoint {
     }
 
     /**
-     * Removes all resources belonging to an account and sets its status to CLOSED. If a notificationApi object
-     * is there also send notification to application server
+     * Removes all resources belonging to an account and sets its status to CLOSED.
      *
      * @param closedAccount
-     * @param notificationApi
      */
-    private void closeSingleAccount(Account closedAccount, RcmlserverApi notificationApi) {
+    private void closeSingleAccount(Account closedAccount) {
         removeAccoundDependencies(closedAccount.getSid());
-        if (notificationApi != null)
-            notifyAccountRemoved(closedAccount, userIdentityContext.getEffectiveAccount(), notificationApi);
         // finally, set account status to closed.
         closedAccount = closedAccount.setStatus(Account.Status.CLOSED);
         accountsDao.updateAccount(closedAccount);
@@ -498,33 +485,38 @@ public class AccountsEndpoint extends SecuredEndpoint {
      * @param parentAccount
      */
     private void closeAccountTree(Account parentAccount) {
-        // do we need to also notify the application sever (RVD) ?
-        RcmlserverApi api = null;
-        RestcommConfiguration rcommConfiguration = RestcommConfiguration.getInstance();
-        RcmlserverConfigurationSet config = rcommConfiguration.getRcmlserver();
-        if (config != null && config.getNotify()) {
-            // create an RcmlserverApi object only if we will need to notify
-            api = new RcmlserverApi(rcommConfiguration.getMain(), rcommConfiguration.getRcmlserver());
-        }
         // close child accounts
-        List<String> closedSubAccounts = accountsDao.getSubAccountSidsRecursive(parentAccount.getSid());
-        if (closedSubAccounts != null && !closedSubAccounts.isEmpty()) {
-            int i = closedSubAccounts.size(); // is is the count of accounts left to process
+        List<String> subAccountsToClose = accountsDao.getSubAccountSidsRecursive(parentAccount.getSid());
+        List<String> closedSubAccounts = new ArrayList<String>();
+        if (subAccountsToClose != null && !subAccountsToClose.isEmpty()) {
+            int i = subAccountsToClose.size(); // is is the count of accounts left to process
             // we iterate backwards to handle child accounts first, parent accounts next
             while (i > 0) {
                 i --;
-                String removedSid = closedSubAccounts.get(i);
+                String removedSid = subAccountsToClose.get(i);
                 try {
                     Account subAccount = accountsDao.getAccount(new Sid(removedSid));
-                    closeSingleAccount(subAccount,api);
+                    closeSingleAccount(subAccount);
+                    closedSubAccounts.add(subAccount.getSid().toString());
                 } catch (Exception e) {
                     // if anything bad happens, log the error and continue removing the rest of the accounts.
                     logger.error("Failed removing (child) account '" + removedSid + "'");
+                    closedSubAccounts.add(removedSid.toString()); // we choose to remove remove projects for this account. TODO review this bahavior
                 }
             }
         }
         // close parent account too
-        closeSingleAccount(parentAccount,api);
+        closeSingleAccount(parentAccount);
+        closedSubAccounts.add(parentAccount.getSid().toString());
+        // do we need to also notify the application sever (RVD) ?
+        RestcommConfiguration rcommConfiguration = RestcommConfiguration.getInstance();
+        RcmlserverConfigurationSet config = rcommConfiguration.getRcmlserver();
+        if (config != null && config.getNotify()) {
+            // create an RcmlserverApi object only if we will need to notify
+            RcmlserverApi api = new RcmlserverApi(rcommConfiguration.getMain(), rcommConfiguration.getRcmlserver());
+            Account loggedAccount = userIdentityContext.getEffectiveAccount();
+            api.notifyAccountsRemovalAsync(closedSubAccounts, loggedAccount.getSid().toString(), loggedAccount.getAuthToken() );
+        }
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {

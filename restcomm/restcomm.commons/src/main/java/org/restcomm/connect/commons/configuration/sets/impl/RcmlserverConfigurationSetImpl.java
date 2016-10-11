@@ -20,6 +20,7 @@
 
 package org.restcomm.connect.commons.configuration.sets.impl;
 
+import org.apache.commons.lang.StringUtils;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.configuration.sources.ConfigurationSource;
 
@@ -27,12 +28,28 @@ import org.restcomm.connect.commons.configuration.sources.ConfigurationSource;
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 public class RcmlserverConfigurationSetImpl extends ConfigurationSet implements RcmlserverConfigurationSet {
-    private String baseUrl;
-    private Boolean notify;
-
+    private static final String BASE_URL_KEY = "rcmlserver-api.base-url";
+    private static final String NOTIFY_KEY = "rcmlserver-api.notifications";
+    private String baseUrl = null;
+    private Boolean notify = false;
 
     public RcmlserverConfigurationSetImpl(ConfigurationSource source) {
         super(source);
+
+        String value = source.getProperty(BASE_URL_KEY);
+        if ( !StringUtils.isEmpty(value) ) {
+            value = value.trim();
+            if (value.endsWith("/")) // remove trailing '/' if present
+                value = value.substring(0,value.length()-2);
+            this.baseUrl = value;
+        }
+
+        value = source.getProperty(NOTIFY_KEY);
+        try {
+            this.notify = Boolean.parseBoolean(value);
+        } catch (Exception e) {
+            // do nothing ?
+        }
     }
 
     public RcmlserverConfigurationSetImpl(String baseUrl, Boolean notify) {
