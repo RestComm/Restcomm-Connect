@@ -271,9 +271,7 @@ public final class CallManager extends UntypedActor {
 
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.CallManager);
         if (logger.isInfoEnabled()) {
-            if (extensions != null) {
-                logger.info("CallManager extensions: "+extensions.size());
-            }
+            logger.info("CallManager extensions: "+(extensions != null ? extensions.size() : "0"));
         }
     }
 
