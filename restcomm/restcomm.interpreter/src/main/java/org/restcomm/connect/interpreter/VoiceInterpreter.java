@@ -135,6 +135,7 @@ import scala.concurrent.duration.Duration;
  * @author gvagenas@telestax.com
  * @author amit.bhayani@telestax.com (Amit Bhayani)
  * @author pavel.slegr@telestax.com
+ * @author maria.farooq@telestax.com
  */
 public final class VoiceInterpreter extends BaseVoiceInterpreter {
     // Logger.
@@ -166,8 +167,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     // FSM.
     // The conference manager.
     private final ActorRef conferenceManager;
-    // A conference detail record.
-    //private ConferenceDetailRecord  conferenceDetailRecord = null;
 
     // State for outbound calls.
     private boolean isForking;
@@ -1488,21 +1487,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             } else if (Tag.class.equals(klass)) {
                 // Update the interpreter state.
                 verb = (Tag) message;
-                logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"+verb+"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-                final List<Tag> children = verb.children();
-                for (final Tag child : children) {
-                    logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"+child.name()+"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-                }
-                // if verb is conference we can extract name from it and in case we found name then get mediagateway info against that name
+
                 // Answer the call.
-                // final Tag child = conference(verb);
-                /* if (child != null) {
-                    final String name = child.text();
-                    final StringBuilder buffer = new StringBuilder();
-                    buffer.append(accountId.toString()).append(":").append(name);
-                    final CreateConference create = new CreateConference(buffer.toString());
-                    conferenceManager.tell(create, source);
-                } */
                 call.tell(new Answer(callRecord.getSid()), source);
             }
         }
