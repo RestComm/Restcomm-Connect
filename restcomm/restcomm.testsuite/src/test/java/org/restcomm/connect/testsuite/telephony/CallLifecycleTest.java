@@ -1156,11 +1156,9 @@ public class CallLifecycleTest {
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
-        archive.delete("/WEB-INF/conf/extensions.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm_calllifecycle.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("extensions.xml", "conf/extensions.xml");
         archive.addAsWebInfResource("restcomm.script_callLifecycleTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("dial-client-entry_wActionUrl.xml");
         logger.info("Packaged Test App");
