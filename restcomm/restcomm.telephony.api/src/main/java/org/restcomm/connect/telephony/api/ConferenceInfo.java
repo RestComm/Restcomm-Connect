@@ -24,7 +24,7 @@ import akka.actor.ActorRef;
 import java.util.List;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

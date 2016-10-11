@@ -40,7 +40,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

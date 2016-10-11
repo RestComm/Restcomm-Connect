@@ -24,7 +24,7 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author maria-farooq@live.com (Maria Farooq)

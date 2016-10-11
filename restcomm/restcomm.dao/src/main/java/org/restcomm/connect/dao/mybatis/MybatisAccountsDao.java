@@ -25,7 +25,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 import java.net.URI;
 import java.util.ArrayList;

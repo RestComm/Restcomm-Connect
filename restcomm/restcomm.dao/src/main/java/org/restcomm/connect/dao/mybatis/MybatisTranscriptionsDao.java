@@ -34,7 +34,7 @@ import org.joda.time.DateTime;
 
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.TranscriptionsDao;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Transcription;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 

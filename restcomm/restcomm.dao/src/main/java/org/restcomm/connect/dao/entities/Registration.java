@@ -22,6 +22,7 @@ package org.restcomm.connect.dao.entities;
 import org.joda.time.DateTime;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

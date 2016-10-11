@@ -41,7 +41,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.telephony.api.GetActiveProxy;
 import org.restcomm.connect.telephony.api.GetProxies;
 import org.restcomm.connect.telephony.api.SwitchProxy;

@@ -71,7 +71,7 @@ import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.interpreter.StopInterpreter;
 import org.restcomm.connect.interpreter.VoiceInterpreterBuilder;
@@ -1121,7 +1121,7 @@ public final class CallManager extends UntypedActor {
                     logger.error(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
                 }
-                executePostOutboundAction(request);
+                executePostOutboundAction(callRequest);
                 break;
             }
             case SIP: {
@@ -1142,7 +1142,7 @@ public final class CallManager extends UntypedActor {
         return true;
     }
 
-    private boolean executePostOutboundAction(final CreateCall createCall) {
+    private boolean executePostOutboundAction(final CallRequest callRequest) {
         return false;
     }
 

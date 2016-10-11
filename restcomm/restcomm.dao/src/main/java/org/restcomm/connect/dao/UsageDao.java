@@ -20,7 +20,7 @@
 package org.restcomm.connect.dao;
 
 import org.joda.time.DateTime;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Usage;
 
 import java.util.List;

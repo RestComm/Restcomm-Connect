@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
 
 import com.google.gson.JsonObject;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>

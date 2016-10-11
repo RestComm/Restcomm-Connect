@@ -304,6 +304,15 @@ script VARCHAR(255) NOT NULL,
 date_executed DATETIME NOT NULL
 );
 
+CREATE TABLE restcomm_extensions_configuration (
+extension VARCHAR(255) NOT NULL,
+property VARCHAR(255),
+extra_parameter VARCHAR(255),
+value VARCHAR(255),
+date_created DATETIME NOT NULL,
+date_updated DATETIME
+)
+
 INSERT INTO restcomm_accounts VALUES (
 "ACae6e420f425248d6a26948c17a9e2acf",
 Date("2012-04-24"),
