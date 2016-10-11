@@ -125,10 +125,10 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
         final String extension = (String) map.get("extension");
         final String property = (String) map.get("property");
         final String extra_parameter = (String) map.get("extra_parameter");
-        final String value = (String) map.get("value");
+        final String propertyValue = (String) map.get("getPropertyValue");
         final DateTime dateCreated = readDateTime(map.get("date_created"));
         final DateTime dateUpdated = readDateTime(map.get("date_updated"));
-        return new ExtensionConfigurationProperty(extension, property, extra_parameter, value, dateCreated, dateUpdated);
+        return new ExtensionConfigurationProperty(extension, property, extra_parameter, propertyValue, dateCreated, dateUpdated);
     }
 
     private Map<String, Object> toMap(final ExtensionConfigurationProperty extensionConfigurationProperty) {
@@ -139,8 +139,8 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
             map.put("property", extensionConfigurationProperty.getProperty());
         if (extensionConfigurationProperty.getExtraParameter() != null)
             map.put("extra_parameter", extensionConfigurationProperty.getExtraParameter());
-        if (extensionConfigurationProperty.getValue() != null)
-            map.put("value", extensionConfigurationProperty.getValue());
+        if (extensionConfigurationProperty.getPropertyValue() != null)
+            map.put("property_value", extensionConfigurationProperty.getPropertyValue());
         if (extensionConfigurationProperty.getDateCreated() != null)
             map.put("date_created", DaoUtils.writeDateTime(extensionConfigurationProperty.getDateCreated()));
         if (extensionConfigurationProperty.getDateUpdated() != null)

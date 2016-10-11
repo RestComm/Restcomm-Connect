@@ -308,7 +308,7 @@ CREATE TABLE restcomm_extensions_configuration (
 extension VARCHAR(255) NOT NULL,
 property VARCHAR(255),
 extra_parameter VARCHAR(255),
-value VARCHAR(255),
+property_value VARCHAR(255),
 date_created DATETIME NOT NULL,
 date_updated DATETIME
 )
