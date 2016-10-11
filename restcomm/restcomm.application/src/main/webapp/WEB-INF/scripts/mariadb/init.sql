@@ -320,7 +320,7 @@ local_ip VARCHAR(34) NOT NULL,
 local_port INT NOT NULL,
 remote_ip VARCHAR(34) NOT NULL UNIQUE,
 remote_port INT NOT NULL, 
-compatibility VARCHAR(34) DEFAULT 'mms', 
+compatibility VARCHAR(34) DEFAULT 'rms', 
 response_timeout VARCHAR(34),
 external_address VARCHAR(34)
 );
