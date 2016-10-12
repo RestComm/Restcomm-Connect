@@ -1275,7 +1275,7 @@ image:images/RestComm_GSM_Immediate_Geolocation.png[image,width=633,height=230]
 
 Next diagram exhibits a Notification type of Geolocation signal flow in 3G cellular networks. An Immediate type of Geolocation signal flow in the same environment would be identical, except for the event detection and its derived signals. Besides, for the sake of simplicity, it only shows a single event detection.
 
-image:images/RestComm_UMTS_Notification_Geolocation.png[image,width=1000,height=750]
+image:images/RestComm_UMTS_Notification_Geolocation.png[image,width=750,height=400]
 
 
 
@@ -1283,7 +1283,7 @@ Next diagram is the analogue of the latter, but for EPS networks or LTE location
 
 
 
-image:images/RestComm_LTE_Notification_Geolocation.png[image,width=1000,height=750]
+image:images/RestComm_LTE_Notification_Geolocation.png[image,width=750,height=400]
 
 == Geolocation Status Callbacks Sequence Diagram
 
