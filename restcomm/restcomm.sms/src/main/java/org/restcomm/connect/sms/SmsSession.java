@@ -34,6 +34,7 @@ import org.restcomm.connect.sms.api.SmsSessionRequest;
 import org.restcomm.connect.sms.api.SmsSessionResponse;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.notification.GlobalNotification;
 import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.Registration;
@@ -60,7 +61,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.mobicents.servlet.restcomm.notification.GlobalNotification;
+
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -93,7 +94,6 @@ public final class SmsSession extends UntypedActor {
     private ActorRef smppMessageHandler;
 
     private final ActorRef monitoringService;
-    
 
 
     public SmsSession(final Configuration configuration, final SipFactory factory, final SipURI transport,
@@ -344,8 +344,8 @@ public final class SmsSession extends UntypedActor {
                 // Log the exception.
                 String errorMessage = "There was an error sending SMS to SMPP endpoint : " + exception;
                 logger.error(errorMessage);
-                final GlobalNotification globalNotification = new GlobalNotification(configuration,storage);
-                globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION() , 10001, errorMessage);
+                GlobalNotification globalNotification = new GlobalNotification(configuration,storage);
+                globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION() , 13001, errorMessage);
             }
             return true;
         }

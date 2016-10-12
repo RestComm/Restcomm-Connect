@@ -47,7 +47,7 @@ public class GlobalNotification {
     //private HttpRequestDescriptor request;
     //private HttpResponseDescriptor response;
     //notifications.addNotification(notification);
-    private URI uri = URI.create("http://documentation.telestax.com");
+    private URI uri = URI.create("http://documentation.telestax.com/connect/api/");
     public void sendNotification(final int errorWarningCode, final int apiErrorCode, final String errorMessage) {
         notification = notification(errorWarningCode, apiErrorCode, errorMessage, uri,"","","");
         notifications = storage.getNotificationsDao();

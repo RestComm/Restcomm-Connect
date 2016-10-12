@@ -140,7 +140,6 @@
                <module>restcomm.mscontrol.api</module>
                <module>restcomm.mscontrol.mms</module>
                <module>restcomm.mscontrol.jsr309</module>
-		<module>restcomm.sms.api</module>
 		<module>restcomm.telephony.api</module>
 		<module>restcomm.interpreter</module>
 		<module>restcomm.http</module>
@@ -156,7 +155,6 @@
 		<module>restcomm.rvd</module>
 		<module>restcomm.rvd.testsuite</module>
 		<module>restcomm.tts.att</module>
-		<module>restcomm.ussd</module>
 		<module>restcomm.routing</module>
 		<module>restcomm.email</module>
 		<module>restcomm.email.api</module>
@@ -165,6 +163,7 @@
 		<module>restcomm.identity</module>
     <module>restcomm.monitoring.service</module>
 	 <module>restcomm.notification</module>
+	 <module>restcomm.sms</module>
 	</modules>
 
 	<dependencyManagement>
