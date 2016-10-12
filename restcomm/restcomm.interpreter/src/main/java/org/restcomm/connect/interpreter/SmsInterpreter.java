@@ -49,7 +49,7 @@ import org.restcomm.connect.email.api.EmailRequest;
 import org.restcomm.connect.email.api.EmailResponse;
 import org.restcomm.connect.email.api.Mail;
 import org.restcomm.connect.dao.entities.Notification;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Direction;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;

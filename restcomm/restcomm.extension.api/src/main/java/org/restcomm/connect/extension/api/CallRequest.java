@@ -1,6 +1,7 @@
 package org.restcomm.connect.extension.api;
 
-import org.restcomm.connect.dao.entities.Sid;
+
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * Created by gvagenas on 27/09/16.

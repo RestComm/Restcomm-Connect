@@ -52,7 +52,7 @@ import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.ApplicationList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.StringUtils;
 
 import com.google.gson.Gson;

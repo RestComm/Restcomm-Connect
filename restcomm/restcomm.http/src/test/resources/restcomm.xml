@@ -338,7 +338,7 @@
     </speech-recognizer>
 
     <!-- The Speech Synthesizer is responsible for turning text in to speech
-        for play back by the media gateway. <speech-synthesizer class="AcapelaSpeechSynthesizer">
+        for play back by the media gateway. <speech-synthesizer class="org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer">
         <service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
         <application></application> <login></login> <password></password> <speakers>
         <belgium-french> <female>justine8k</female> <male></male> </belgium-french>
@@ -407,7 +407,7 @@
     </speech-synthesizer>
 
     <!-- AT&T Speech Synthesizer plugin -->
-    <!-- <speech-synthesizer class="AttSpeechSynthesizer">
+    <!-- <speech-synthesizer class="org.restcomm.connect.tts.att.AttSpeechSynthesizer">
         <host>127.0.0.1</host> <port>7000</port> <tts-client-directory></tts-client-directory>
         <verbose-output>false</verbose-output> <speakers> <english> <female>crystal8</female>
         <male>mike8</male> </english> <english-uk> <female>audrey8</female> <male>charles8</male>

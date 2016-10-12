@@ -32,7 +32,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.entities.Recording;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.amazonS3.S3AccessTool;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.util.UriUtils;

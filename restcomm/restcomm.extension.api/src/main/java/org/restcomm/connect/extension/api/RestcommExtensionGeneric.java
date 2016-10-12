@@ -23,8 +23,6 @@ package org.restcomm.connect.extension.api;
 import javax.servlet.ServletContext;
 import javax.servlet.sip.SipServletRequest;
 
-import org.restcomm.connect.telephony.api.CreateCall;
-
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
@@ -61,5 +59,18 @@ public interface RestcommExtensionGeneric {
      * and either block or allow or modify the session after Restcomm process it
      * @return ExtensionResponse see ExtensionResponse
      */
-    ExtensionResponse postOutboundAction(CreateCall createCallRequest);
+    ExtensionResponse postOutboundAction(CallRequest callRequest);
+
+    /**
+     * Method that will be executed before the process of an API action, such as DID purchase (but after security checks)
+     * @return ExtensionResponse see ExtensionResponse
+     */
+    ExtensionResponse preApiAction(ApiRequest apiRequest);
+
+    /**
+     * Method that will be executed after the process of an API action, such as DID purchase
+     * @return
+     */
+    ExtensionResponse postApiAction(ApiRequest apiRequest);
+
 }

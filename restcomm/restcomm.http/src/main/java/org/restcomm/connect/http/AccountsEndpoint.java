@@ -52,7 +52,7 @@ import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.AccountList;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.http.converter.AccountConverter;
 import org.restcomm.connect.http.converter.AccountListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;

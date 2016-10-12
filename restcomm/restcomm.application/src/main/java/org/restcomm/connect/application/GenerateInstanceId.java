@@ -25,7 +25,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.InstanceIdDao;
 import org.restcomm.connect.dao.entities.InstanceId;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 import javax.servlet.ServletContext;
 import javax.servlet.sip.SipURI;

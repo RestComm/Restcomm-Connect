@@ -24,7 +24,7 @@ import java.lang.reflect.Type;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.StringUtils;
 
 import com.google.gson.JsonElement;

@@ -19,21 +19,24 @@
  */
 package org.restcomm.connect.http;
 
-import java.util.Set;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
-import org.restcomm.connect.http.exceptions.AuthorizationException;
-import org.restcomm.connect.http.exceptions.NotAuthenticated;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.extension.api.ApiRequest;
+import org.restcomm.connect.extension.api.ExtensionResponse;
+import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
+import org.restcomm.connect.extension.controller.ExtensionController;
+import org.restcomm.connect.http.exceptions.AuthorizationException;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
+import org.restcomm.connect.http.exceptions.NotAuthenticated;
 import org.restcomm.connect.identity.AuthOutcome;
 import org.restcomm.connect.identity.IdentityContext;
 import org.restcomm.connect.identity.UserIdentityContext;
@@ -42,6 +45,8 @@ import org.restcomm.connect.identity.shiro.RestcommRoles;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
+import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -74,6 +79,9 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     @Context
     HttpServletRequest request;
 
+    //List of extensions for RestAPI
+    protected List<RestcommExtensionGeneric> extensions;
+
     public SecuredEndpoint() {
         super();
     }
@@ -90,6 +98,12 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         this.accountsDao = storage.getAccountsDao();
         this.identityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
         this.userIdentityContext = new UserIdentityContext(request, accountsDao);
+        extensions = ExtensionController.getInstance().getExtensions(ExtensionType.RestApi);
+        if (logger.isInfoEnabled()) {
+            if (extensions != null) {
+                logger.info("RestAPI extensions: "+(extensions != null ? extensions.size() : "0"));
+            }
+        }
     }
 
     /**
@@ -350,6 +364,21 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      */
     protected String getAdministratorRole() {
         return "Administrator";
+    }
+
+    protected boolean executePreApiAction(final ApiRequest apiRequest) {
+        if (extensions != null && extensions.size() > 0) {
+            for (RestcommExtensionGeneric extension : extensions) {
+                ExtensionResponse response = extension.preApiAction(apiRequest);
+                if (!response.isAllowed())
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    protected boolean executePostApiAction(final ApiRequest apiRequest) {
+        return false;
     }
 
 }

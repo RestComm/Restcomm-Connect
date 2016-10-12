@@ -23,7 +23,7 @@ import java.net.URI;
 
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;

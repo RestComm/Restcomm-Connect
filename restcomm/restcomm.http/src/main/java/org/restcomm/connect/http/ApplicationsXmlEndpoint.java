@@ -37,7 +37,7 @@ import javax.ws.rs.core.Response;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author guilherme.jansen@telestax.com

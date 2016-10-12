@@ -37,7 +37,7 @@ import org.restcomm.connect.telephony.api.GetConferenceInfo;
 import org.restcomm.connect.telephony.api.RemoveParticipant;
 import org.restcomm.connect.telephony.api.StartConference;
 import org.restcomm.connect.telephony.api.StopConference;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;

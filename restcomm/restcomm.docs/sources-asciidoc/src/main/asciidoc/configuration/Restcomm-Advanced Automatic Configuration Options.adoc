@@ -171,6 +171,9 @@ INITIAL_ADMIN_PASSWORD=''
 SSLSNI=TRUE #Enable/disable SNI (Server Name Indication).
 #Used to set HTTP Response timeout for RC to download the RCML.
 HTTP_RESPONSE_TIMEOUT=5000
+
+#If set to true RestComm will NOT use cache for *.wav files playback.If set to false RestComm will use cache for *.wav files playback.
+CACHE_NO_WAV=false
 ----
 
 

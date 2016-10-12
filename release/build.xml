@@ -9,11 +9,11 @@
   <property location="${release.dir}/docs/restcomm" name="restcomm.docs.dir"/>
   <property location="${release.tomcat.dir}/docs/restcomm" name="restcomm.docs.tomcat.dir"/>
   <property location="${release.as7.dir}/docs/restcomm" name="restcomm.docs.as7.dir"/>
-  <property name="olympus.build" value="13"/>
+  <property name="olympus.build" value="14"/>
   <property location="${workspace.restcomm.dir}/configuration" name="configuration.directory"/>
 
   <!--mobicents binaries versions-->
-  <property name="sipservlets-build" value="765"/>
+  <property name="sipservlets-build" value="767"/>
   <property name="restcomm-sipservlets-as7.version" value="3.1.${sipservlets-build}"/>
   <!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
   <property name="restcomm-media.version" value="4.1.0"/>
@@ -33,7 +33,8 @@
   <property name="restcomm-media.download.url" value="https://mobicents.ci.cloudbees.com/view/MediaServer/job/Restcomm-MediaServer-4.x/${restcomm-media.build}/artifact/bootstrap/target/restcomm-media-server.zip"/>
   <property name="restcomm-media.distro.zip.path" value="${checkout.dir}/${restcomm-media.download.distro.file}"/>
 
-  <property name="restcomm-olympus.download.url" value="https://mobicents.ci.cloudbees.com/job/Olympus/${olympus.build}/artifact/target/olympus.war"/>
+  <!-- <property name="restcomm-olympus.download.url" value="https://mobicents.ci.cloudbees.com/job/Olympus/${olympus.build}/artifact/target/olympus.war"/> -->
+  <property name="restcomm-olympus.download.url" value="https://mobicents.ci.cloudbees.com/job/Olympus/lastSuccessfulBuild/artifact/target/olympus.war"/>
   <property name="restcomm-olympus.path" value="${configuration.directory}/olympus.war"/>
 
   <property name="release.build.goals" value="clean install -Dmaven.test.skip=true"/>

@@ -3,7 +3,7 @@ package org.restcomm.connect.dao;
 import java.util.List;
 
 import org.restcomm.connect.dao.entities.Announcement;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">George Vagenas</a>

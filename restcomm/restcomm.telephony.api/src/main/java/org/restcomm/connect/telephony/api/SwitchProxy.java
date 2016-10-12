@@ -21,7 +21,7 @@
 package org.restcomm.connect.telephony.api;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
