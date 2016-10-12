@@ -19,7 +19,7 @@
 |12003|SMS||
 |12004|SMS||
 
-|13001|SMPP||
+|13001|SMPP|There was an error sending SMS to SMPP endpoint|Make sure SMPP is correctly configured in the advanced.conf file
 |13002|SMPP||
 |13003|SMPP||
 |13004|SMPP||
