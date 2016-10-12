@@ -85,7 +85,13 @@ public class AccountProvider {
         }
     }
 
-
+    /**
+     * Retrieves account 'accountName' from restcomm using creds as credentials.
+     * If the authentication fails or the account is not found it returns null.
+     *
+     * TODO we need to treat differently missing accounts and failed authentications.
+     *
+     */
     public GenericResponse<RestcommAccountInfo> getAccount(String accountName, String authorizationHeader) {
         CloseableHttpClient client = httpClientBuilder.buildHttpClient();
         HttpGet GETRequest = new HttpGet(buildAccountQueryUrl(accountName));
@@ -98,8 +104,7 @@ public class AccountProvider {
                     String accountJson = EntityUtils.toString(entity);
                     Gson gson = new Gson();
                     RestcommAccountInfo accountResponse = gson.fromJson(accountJson, RestcommAccountInfo.class);
-                    if ("active".equals(accountResponse.getStatus()))
-                        return new GenericResponse<>(accountResponse);
+                    return new GenericResponse<>(accountResponse);
                 }
             } else
                 return new GenericResponse<>(response.getStatusLine().getStatusCode());
@@ -109,21 +114,18 @@ public class AccountProvider {
         return new GenericResponse<>("Something went wrong while retrieving account " + accountName);
     }
 
-    /**
-     * Retrieves account 'accountName' from restcomm using creds as credentials.
-     * If the authentication fails or the account is not found it returns null.
-     *
-     * TODO we need to treat differently missing accounts and failed authentications.
-     *
-     */
-    public GenericResponse<RestcommAccountInfo> getAccount(BasicAuthCredentials creds, String accountName) {
-        String header = "Basic " + RvdUtils.buildHttpAuthorizationToken(creds.getUsername(),creds.getPassword());
-        return getAccount(accountName, header);
+    public GenericResponse<RestcommAccountInfo> getActiveAccount(String accountName, String authorizationHeader) {
+        GenericResponse<RestcommAccountInfo> response = getAccount(accountName, authorizationHeader);
+        // if the account is not active, we need to set success status to false
+        if ( !"active".equals(response.get().getStatus()) ) {
+            return new GenericResponse<>("Account is not active"); // make this an error
+        } else
+            return response;
     }
 
-    public GenericResponse<RestcommAccountInfo> getAccount(BasicAuthCredentials creds) {
+    public GenericResponse<RestcommAccountInfo> getActiveAccount(BasicAuthCredentials creds) {
         String header = "Basic " + RvdUtils.buildHttpAuthorizationToken(creds.getUsername(),creds.getPassword());
-        return getAccount(creds.getUsername(), header);
+        return getActiveAccount(creds.getUsername(), header);
     }
 }
 

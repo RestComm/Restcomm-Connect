@@ -144,7 +144,7 @@ public class NotificationsRestService extends SecuredRestService {
             }
         } else {
             // logged  account is different than the one that is being removed. Let's check if logged user has
-            // read access to removed account. If that's the case, we will remove the apps.
+            // read access to removed account. If that's the case, we will remove the apps. Even a closed account will do.
             GenericResponse<RestcommAccountInfo> response = applicationContext.getAccountProvider().getAccount(removedAccountSid, getUserIdentityContext().getEffectiveAuthorizationHeader());
             // we don't care whether this account is closed or not here. We will proceed with application removal
             if (response.succeeded()) {
@@ -155,13 +155,15 @@ public class NotificationsRestService extends SecuredRestService {
                 }
             } else {
                 // error retrieving the removed account. Something seems wrong here
-                if (404 == response.getHttpFailureStatus()) {
-                    throw new NotificationProcessingError("Cannot find removed account '" + removedAccountSid + "'" + ". No projects will be removed", NotificationProcessingError.Type.AccountIsMissing);
-                } else
-                if (403 == response.getHttpFailureStatus()) {
-                    throw new NotificationProcessingError("User " + getLoggedUsername() + " can't access account " + removedAccountSid + " and remove its projects", NotificationProcessingError.Type.AccountNotAccessible);
-                } else
-                    throw new NotificationProcessingError("User " + getLoggedUsername() + " failed removing account " + removedAccountSid);
+                if ( response.getHttpFailureStatus() != null ) {
+                    if (404 == response.getHttpFailureStatus()) {
+                        throw new NotificationProcessingError("Cannot find removed account '" + removedAccountSid + "'" + ". No projects will be removed", NotificationProcessingError.Type.AccountIsMissing);
+                    } else
+                    if (403 == response.getHttpFailureStatus()) {
+                        throw new NotificationProcessingError("User " + getLoggedUsername() + " can't access account " + removedAccountSid + " and remove its projects", NotificationProcessingError.Type.AccountNotAccessible);
+                    }
+                }
+                throw new NotificationProcessingError("User " + getLoggedUsername() + " failed removing account " + removedAccountSid);
             }
         }
     }
