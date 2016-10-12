@@ -81,7 +81,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 try {
                     settings = configuration.subset("media-server-manager");
                     ActorRef mrb = mediaResourceBroker(settings, storage, loader);
-                    factory = new MmsControllerFactory(this.system, mrb, configuration.subset("media-server-routing"));
+                    factory = new MmsControllerFactory(this.system, mrb);
                 } catch (UnknownHostException e) {
                     throw new ServletException(e);
                 }
