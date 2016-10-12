@@ -30,9 +30,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.restcomm.connect.dao.RegistrationsDao;
-import org.restcomm.connect.dao.mybatis.MybatisDaoManager;
 import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

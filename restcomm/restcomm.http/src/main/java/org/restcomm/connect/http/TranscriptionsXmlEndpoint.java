@@ -28,7 +28,7 @@ import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.*;
 
 import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Transcription;
 
 /**

@@ -52,7 +52,7 @@ import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
   * Helper methods for proxying SIP messages between Restcomm clients that are connecting in peer to peer mode

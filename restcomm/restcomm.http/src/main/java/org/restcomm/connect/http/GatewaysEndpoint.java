@@ -28,7 +28,7 @@ import org.restcomm.connect.dao.GatewaysDao;
 import org.restcomm.connect.dao.entities.Gateway;
 import org.restcomm.connect.dao.entities.GatewayList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.http.converter.GatewayListConverter;
 import org.restcomm.connect.telephony.api.RegisterGateway;
 import org.restcomm.connect.commons.util.StringUtils;

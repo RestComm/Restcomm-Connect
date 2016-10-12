@@ -27,7 +27,7 @@ import java.util.Locale;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;

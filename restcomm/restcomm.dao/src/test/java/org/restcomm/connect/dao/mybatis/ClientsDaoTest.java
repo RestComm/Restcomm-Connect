@@ -31,9 +31,8 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import org.restcomm.connect.dao.ClientsDao;
-import org.restcomm.connect.dao.mybatis.MybatisDaoManager;
 import org.restcomm.connect.dao.entities.Client;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

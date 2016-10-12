@@ -18,11 +18,13 @@ public class ExtensionController {
     private List callManagerExtensions;
     private List smsSessionExtensions;
     private List ussdCallManagerExtensions;
+    private List restApiExtensions;
 
     private ExtensionController(){
         this.callManagerExtensions = new CopyOnWriteArrayList();
         this.smsSessionExtensions = new CopyOnWriteArrayList();
         this.ussdCallManagerExtensions = new CopyOnWriteArrayList();
+        this.restApiExtensions = new CopyOnWriteArrayList();
     }
 
     public static ExtensionController getInstance() {
@@ -40,6 +42,8 @@ public class ExtensionController {
             return smsSessionExtensions;
         } else if (type.equals(ExtensionType.UssdCallManager) && (ussdCallManagerExtensions != null && ussdCallManagerExtensions.size() > 0)) {
             return ussdCallManagerExtensions;
+        } else if (type.equals(ExtensionType.RestApi) && (restApiExtensions != null && restApiExtensions.size() > 0)) {
+            return restApiExtensions;
         } else {
             return null;
         }
@@ -48,15 +52,31 @@ public class ExtensionController {
     public void registerExtension(final RestcommExtensionGeneric extension) {
         //scan the annotation to see what this extension supports
         ExtensionType[] types = extension.getClass().getAnnotation(RestcommExtension.class).type();
+        String extensionName = extension.getClass().getName();
         for (ExtensionType type : types) {
             if (type.equals(ExtensionType.CallManager)) {
                 callManagerExtensions.add(extension);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("CallManager extension added: "+extensionName);
+                }
             }
             if (type.equals(ExtensionType.SmsSession)) {
                 smsSessionExtensions.add(extension);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("SmsSession extension added: "+extensionName);
+                }
             }
             if (type.equals(ExtensionType.UssdCallManager)) {
                 ussdCallManagerExtensions.add(extension);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("UssdCallManager extension added: "+extensionName);
+                }
+            }
+            if (type.equals(ExtensionType.RestApi)) {
+                restApiExtensions.add(extension);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("RestApi extension added: "+extensionName);
+                }
             }
         }
     }

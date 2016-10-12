@@ -58,7 +58,7 @@ import org.restcomm.connect.email.EmailService;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.Recording;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Direction;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;
@@ -775,13 +775,15 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     public ActorRef getSynthesizer() {
         if (synthesizer == null || (synthesizer != null && synthesizer.isTerminated())) {
-            synthesizer = tts(configuration.subset("speech-synthesizer"));
+            String ttsEngine = configuration.subset("speech-synthesizer").getString("[@active]");
+            Configuration ttsConf = configuration.subset(ttsEngine);
+            synthesizer = tts(ttsConf);
         }
         return synthesizer;
     }
 
-    ActorRef tts(final Configuration configuration) {
-        final String classpath = configuration.getString("[@class]");
+    ActorRef tts(final Configuration ttsConf) {
+        final String classpath = ttsConf.getString("[@class]");
 
         final UntypedActorContext context = getContext();
         return context.actorOf(new Props(new UntypedActorFactory() {
@@ -789,7 +791,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
             @Override
             public Actor create() throws Exception {
-                return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(configuration);
+                return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(ttsConf);
             }
         }));
     }
