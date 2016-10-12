@@ -21,7 +21,11 @@
 package org.restcomm.connect.rvd.http.resources;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.sun.jersey.core.util.Base64;
+import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
+import org.restcomm.connect.rvd.ApplicationContext;
+import org.restcomm.connect.rvd.ApplicationContextBuilder;
 import org.restcomm.connect.rvd.RvdConfiguration;
 import org.restcomm.connect.rvd.RvdConfigurationBuilder;
 import org.restcomm.connect.rvd.commons.http.CustomHttpClientBuilder;
@@ -29,9 +33,14 @@ import org.restcomm.connect.rvd.configuration.RestcommConfigBuilder;
 import org.restcomm.connect.rvd.identity.AccountProvider;
 import org.restcomm.connect.rvd.identity.UserIdentityContext;
 import org.mockito.Mockito;
+import org.restcomm.connect.rvd.model.ModelMarshaler;
+import org.restcomm.connect.rvd.model.client.ProjectState;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+
+import java.io.File;
+import java.io.IOException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.mockito.Mockito.when;
@@ -43,16 +52,19 @@ import static org.mockito.Mockito.when;
 public class RestServiceMockedTest {
 
     ServletContext servletContext;
-    HttpServletRequest request;
+    //HttpServletRequest request;
     RvdConfiguration configuration;
-    UserIdentityContext userIdentityContext;
+    //UserIdentityContext userIdentityContext;
     AccountProvider accountProvider;
+    File workspaceDir;
+    ModelMarshaler marshaler;
+    ApplicationContext appContext;
 
     public void setupMocks() {
         // mock HttpServletRequest object
-        request = Mockito.mock(HttpServletRequest.class);
-        String authorizationHeader = "Basic YWRtaW5pc3RyYXRvckBjb21wYW55LmNvbTo3N2Y4YzEyY2M3YjhmODQyM2U1YzM4YjAzNTI0OTE2Ng=="; // any password will pass
-        when(request.getHeader("Authorization")).thenReturn(authorizationHeader);
+        //request = Mockito.mock(HttpServletRequest.class);
+        //String authorizationHeader = "Basic YWRtaW5pc3RyYXRvckBjb21wYW55LmNvbTo3N2Y4YzEyY2M3YjhmODQyM2U1YzM4YjAzNTI0OTE2Ng=="; // any password will pass
+        //when(request.getHeader("Authorization")).thenReturn(authorizationHeader);
         // RvdConfiguration
         configuration = new RvdConfigurationBuilder()
                 .setRestcommBaseUri("http://127.0.0.1:8099")
@@ -60,8 +72,7 @@ public class RestServiceMockedTest {
                 .build(); // point that to wiremock
         CustomHttpClientBuilder httpClientBuilder = new CustomHttpClientBuilder(configuration);
         accountProvider = new AccountProvider(configuration, httpClientBuilder);
-        // mock UserIdentityContext that is required for creating SecuredEndpoint
-        userIdentityContext = new UserIdentityContext(authorizationHeader,accountProvider);
+        appContext = new ApplicationContextBuilder().setAccountProvider(accountProvider).setConfiguration(configuration).setHttpClientBuilder(httpClientBuilder).build();
     }
 
     protected void addLegitimateAccount(String email, String accountSid) {
@@ -72,6 +83,33 @@ public class RestServiceMockedTest {
                         .withHeader("Content-Type", "application/json")
                         .withBody("{\"sid\":\"" + accountSid + "\",\"email_address\":\"" + email + "\",\"status\":\"active\",\"role\":\"administrator\"}")));
     }
+
+    protected void addMissingAccount(String email, String accountSid) {
+        stubFor(get(urlMatching("/restcomm/2012-04-24/Accounts.json/" + email)).willReturn(aResponse().withStatus(404)));
+        stubFor(get(urlMatching("/restcomm/2012-04-24/Accounts.json/" + accountSid)).willReturn(aResponse().withStatus(404)));
+    }
+
+    protected void addForbiddenAccount(String email, String accountSid) {
+        stubFor(get(urlMatching("/restcomm/2012-04-24/Accounts.json/" + email)).willReturn(aResponse().withStatus(403)));
+        stubFor(get(urlMatching("/restcomm/2012-04-24/Accounts.json/" + accountSid)).willReturn(aResponse().withStatus(403)));
+    }
+
+    protected void createProject(String projectName, String owner) throws IOException {
+        new File(workspaceDir.getPath() + "/" + projectName).mkdir();
+        String state = marshaler.toData(ProjectState.createEmptyVoice(owner));
+        FileUtils.writeStringToFile(new File(workspaceDir.getPath() + "/" + projectName + "/state"), state );
+    }
+
+    protected boolean projectExists(String projectName) {
+        File projectDir = new File(workspaceDir.getPath() + "/" + projectName);
+        return projectDir.exists();
+    }
+
+    protected UserIdentityContext signIn(String username, String authToken) {
+        String authorizationHeader = "Basic " + new String(Base64.encode(username + ":" + authToken));
+        return new UserIdentityContext(authorizationHeader, accountProvider);
+    }
+
 
 
     @Rule

@@ -21,13 +21,14 @@
 package org.restcomm.connect.rvd.http.resources;
 
 import org.apache.log4j.Logger;
+import org.restcomm.connect.rvd.ApplicationContext;
 import org.restcomm.connect.rvd.ProjectService;
 import org.restcomm.connect.rvd.RvdContext;
 import org.restcomm.connect.rvd.commons.GenericResponse;
 import org.restcomm.connect.rvd.exceptions.AuthorizationException;
+import org.restcomm.connect.rvd.exceptions.NotificationProcessingError;
 import org.restcomm.connect.rvd.exceptions.ProjectDoesNotExist;
 import org.restcomm.connect.rvd.exceptions.RvdException;
-import org.restcomm.connect.rvd.exceptions.UnexpectedRestcommState;
 import org.restcomm.connect.rvd.identity.UserIdentityContext;
 import org.restcomm.connect.rvd.model.client.ProjectItem;
 import org.restcomm.connect.rvd.model.project.RvdProject;
@@ -54,7 +55,7 @@ public class NotificationsRestService extends SecuredRestService {
 
     enum NotificationType {
         applicationRemoved,
-        accountRemoved
+        accountClosed
     }
 
     private ProjectService projectService;
@@ -76,6 +77,12 @@ public class NotificationsRestService extends SecuredRestService {
         this.projectService = projectService;
     }
 
+    // used for testing
+    public NotificationsRestService(ApplicationContext applicationContext, UserIdentityContext userIdentityContext, ProjectService projectService) {
+        super(applicationContext, userIdentityContext);
+        this.projectService = projectService;
+    }
+
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response postNotification(final MultivaluedMap<String, String> data) {
@@ -88,9 +95,21 @@ public class NotificationsRestService extends SecuredRestService {
                 applicationSid = data.getFirst("applicationSid");
                 processApplicationRemovalNotification(applicationSid);
             } else
-            if (type == NotificationType.accountRemoved) {
+            if (type == NotificationType.accountClosed) {
                 String accountSid = data.getFirst("accountSid");
-                processAccountRemovalNotification(accountSid);
+                try {
+                    processAccountRemovalNotification(accountSid);
+                } catch (NotificationProcessingError e) {
+                    logger.error(e);
+                    if (e.getType() == NotificationProcessingError.Type.AccountIsMissing)
+                        return Response.status(Response.Status.BAD_REQUEST).build(); // the removed account was not found when trying to authorize against restcomm
+                    else
+                    if (e.getType() == NotificationProcessingError.Type.AccountNotAccessible)
+                        return Response.status(Response.Status.FORBIDDEN).build();
+                    else {
+                        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+                    }
+                }
             }
 
         } catch (IllegalArgumentException e) {
@@ -126,7 +145,7 @@ public class NotificationsRestService extends SecuredRestService {
         } else {
             // logged  account is different than the one that is being removed. Let's check if logged user has
             // read access to removed account. If that's the case, we will remove the apps.
-            GenericResponse<RestcommAccountInfo> response = applicationContext.getAccountProvider().getAccount(getUserIdentityContext().getEffectiveAuthorizationHeader(), removedAccountSid);
+            GenericResponse<RestcommAccountInfo> response = applicationContext.getAccountProvider().getAccount(removedAccountSid, getUserIdentityContext().getEffectiveAuthorizationHeader());
             // we don't care whether this account is closed or not here. We will proceed with application removal
             if (response.succeeded()) {
                 String closedAccountEmail = response.get().getEmail_address();
@@ -136,10 +155,14 @@ public class NotificationsRestService extends SecuredRestService {
                 }
             } else {
                 // error retrieving the removed account. Something seems wrong here
-                // TODO handle this error in a better way
-                throw new UnexpectedRestcommState("Cannot find removed account '" + removedAccountSid + "'" + ". No projects will be removed");
+                if (404 == response.getHttpFailureStatus()) {
+                    throw new NotificationProcessingError("Cannot find removed account '" + removedAccountSid + "'" + ". No projects will be removed", NotificationProcessingError.Type.AccountIsMissing);
+                } else
+                if (403 == response.getHttpFailureStatus()) {
+                    throw new NotificationProcessingError("User " + getLoggedUsername() + " can't access account " + removedAccountSid + " and remove its projects", NotificationProcessingError.Type.AccountNotAccessible);
+                } else
+                    throw new NotificationProcessingError("User " + getLoggedUsername() + " failed removing account " + removedAccountSid);
             }
         }
     }
-
 }
