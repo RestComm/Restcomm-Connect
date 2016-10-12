@@ -27,12 +27,9 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.util.StringUtils;
-import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.extension.api.ExtensionConfigurationProperty;
 
 import java.lang.reflect.Type;
-import java.text.SimpleDateFormat;
-import java.util.Locale;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

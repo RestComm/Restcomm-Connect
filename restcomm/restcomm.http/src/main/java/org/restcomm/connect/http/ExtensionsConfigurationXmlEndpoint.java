@@ -19,14 +19,6 @@
 
 package org.restcomm.connect.http;
 
-import com.google.gson.Gson;
-import com.thoughtworks.xstream.XStream;
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.ExtensionsConfigurationDao;
-
-import javax.annotation.PostConstruct;
-
 /**
  * Created by gvagenas on 12/10/2016.
  */
