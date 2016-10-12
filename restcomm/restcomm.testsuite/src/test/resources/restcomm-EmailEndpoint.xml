@@ -219,6 +219,8 @@
 				<response-timeout>1500</response-timeout>
 				<!-- <external-address></external-address> -->
 			</mgcp-server>
+		<mrb class="org.restcomm.connect.mrb.MediaResourceBrokerGeneric" name="Community MediaResourceBroker">
+		</mrb>
 	</media-server-manager>
 	
 		<!-- Adjust http client behaviour for outgoing requests -->
