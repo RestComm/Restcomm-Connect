@@ -5,7 +5,7 @@
 -->
 <configuration>
 <environments default="mariadb">
-      <!-- <environment id="production">
+      <environment id="production">
       <transactionManager type="JDBC"/>
       <dataSource type="POOLED">
         <property name="driver" value="org.hsqldb.jdbcDriver"/>
@@ -13,8 +13,8 @@
         <property name="username" value="sa"/>
         <property name="password" value=""/>
       </dataSource>
-    </environment> -->
-    <environment id="mariadb">
+    </environment>
+    <!-- <environment id="mariadb">
       <transactionManager type="JDBC"/>
       <dataSource type="POOLED">
         <property name="driver" value="com.mysql.jdbc.Driver"/>
@@ -22,7 +22,7 @@
         <property name="username" value="root"/>
         <property name="password" value="1234"/>
       </dataSource>
-    </environment>
+    </environment> -->
     
   </environments>
   
