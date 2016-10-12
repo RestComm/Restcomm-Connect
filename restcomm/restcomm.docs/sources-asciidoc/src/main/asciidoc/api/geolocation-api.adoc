@@ -379,7 +379,6 @@ positioning procedure:
    <DateUpdated>Mon, 25 Jan 2016 16:36:12 -0500</DateUpdated>
    <DateExecuted>Mon, 25 Jan 2016 16:36:10 -0500</DateExecuted>
    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-   <Source>david@cloud.restcomm.com</Source>
    <DeviceIdentifier>client:david</DeviceIdentifier>
    <GeolocationType>immediate</GeolocationType>
    <ResponseStatus>partially-successful</ResponseStatus>
@@ -415,7 +414,6 @@ not accomplished yet):
    <DateUpdated>Mon, 25 Jan 2016 16:36:25 -0500</DateUpdated>
    <DateExecuted>Mon, 25 Jan 2016 16:36:10 -0500</DateExecuted>
    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-   <Source>david@cloud.restcomm.com</Source>
    <DeviceIdentifier>client:david</DeviceIdentifier>
    <GeolocationType>immediate</GeolocationType>
    <ResponseStatus>partially-successful</ResponseStatus>
@@ -449,7 +447,6 @@ accuracy is accomplished through GPS assistance:
    <DateUpdated>Mon, 25 Jan 2016 16:38:24 -0500</DateUpdated>
    <DateExecuted>Mon, 25 Jan 2016 16:36:10 -0500</DateExecuted>
    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-   <Source>david@cloud.restcomm.com</Source>
    <DeviceIdentifier>client:david</DeviceIdentifier>
    <GeolocationType>immediate</GeolocationType>
    <ResponseStatus>partially-successful</ResponseStatus>
@@ -500,7 +497,6 @@ See the corresponding response below:
    <DateUpdated>Mon, 25 Jan 2016 16:37:21 -0300</DateUpdated>
    <DateExecuted>Mon, 25 Jan 2016 16:36:10 -0300</DateExecuted>
    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-   <Source>598995498785</Source>
    <DeviceIdentifier>59897018375</DeviceIdentifier>
    <GeolocationType>immediate</GeolocationType>
    <ResponseStatus>successful</ResponseStatus>
@@ -552,7 +548,6 @@ See the corresponding response below:
    <DateUpdated>Mon, 25 Jan 2016 16:36:11 +0200</DateUpdated>
    <DateExecuted>Mon, 25 Jan 2016 16:36:10 +0200</DateExecuted>
    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-   <Source>eTop</Source>
    <DeviceIdentifier>39897018375</DeviceIdentifier>
    <GeolocationType>immediate</GeolocationType>
    <ResponseStatus>partially-successful</ResponseStatus>
@@ -597,7 +592,6 @@ See the corresponding response below:
    <DateUpdated>Mon, 25 Jan 2016 16:36:37 -0500</DateUpdated>
    <DateExecuted>Mon, 25 Jan 2016 16:36:10 -0500</DateExecuted>
    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-   <Source>david@cloud.restcomm.com</Source>
    <DeviceIdentifier>sip:david@65.17.24.177</DeviceIdentifier>
    <GeolocationType>immediate</GeolocationType>
    <ResponseStatus>failed</ResponseStatus>
@@ -631,7 +625,6 @@ See the corresponding response below:
     <DateUpdated>Mon, 25 Jan 2016 20:40:10 -0500</DateUpdated>
     <DateExecuted>Mon, 25 Jan 2016 16:36:10 -0500</DateExecuted>
     <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-    <Source>david@cloud.restcomm.com</Source>
     <DeviceIdentifier>sip:david@65.17.24.177</DeviceIdentifier>
     <GeolocationType>Immediate</GeolocationType>
     <ResponseStatus>last-known</ResponseStatus>
@@ -667,7 +660,6 @@ See the corresponding JSON response below (the XML response would be exactly as 
   "date_updated": "Mon, 25 Jan 2016 20:40:10 -0500",
   "date_executed": "Mon, 25 Jan 2016 16:36:10 -0500",
   "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
-  "source": "david@cloud.restcomm.com",
   "device_identifier": "sip:david@65.17.24.177",
   "geolocation_type": "Immediate",
   "response_status": "last-known",
@@ -867,7 +859,6 @@ is obtained:
    <DateUpdated>Mon, 25 Jan 2016 16:36:15 -0500</DateUpdated>
    <DateExecuted>Mon, 25 Jan 2016 16:36:10 -0500</DateExecuted>
    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-   </Source>BLE002</Source>
    <DeviceIdentifier>56790122158</DeviceIdentifier>
    <GeolocationType>notification</GeolocationType>
    <ResponseStatus>partially-successful</ResponseStatus>
@@ -902,7 +893,6 @@ not accomplished yet):
    <DateUpdated>Mon, 25 Jan 2016 16:36:44 -0500</DateUpdated>
    <DateExecuted>Mon, 25 Jan 2016 16:36:10 -0500</DateExecuted>
    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-   </Source>BLE002</Source>
    <DeviceIdentifier>56790122158</DeviceIdentifier>
    <GeolocationType>notification</GeolocationType>
    <ResponseStatus>partially-successful</ResponseStatus>
@@ -935,7 +925,6 @@ accuracy is accomplished through GPS assistance:
    <DateUpdated>Mon, 25 Jan 2016 16:37:04 -0500</DateUpdated>
    <DateExecuted>Mon, 25 Jan 2016 16:36:10 -0500</DateExecuted>
    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-   </Source>BLE002</Source>
    <DeviceIdentifier>56790122158</DeviceIdentifier>
    <GeolocationType>notification</GeolocationType>
    <ResponseStatus>partially-successful</ResponseStatus>
@@ -1056,7 +1045,6 @@ See the corresponding response below:
    <DateUpdated>Mon, 25 Jan 2016 16:41:10 +0900</DateUpdated>
    <DateExecuted>Mon, 25 Jan 2016 16:36:10 +0900</DateExecuted>
    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-   </Source>SW123</Source>
    <DeviceIdentifier>SB7089A</DeviceIdentifier>
    <GeolocationType>notification</GeolocationType>
    <ResponseStatus>successful</ResponseStatus>
@@ -1119,7 +1107,6 @@ See the corresponding response below:
    <DateUpdated>Mon, 25 Jan 2016 16:37:18 -0300</DateUpdated>
    <DateExecuted>Mon, 25 Jan 2016 16:36:10 -0300</DateExecuted>
    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-   <Source>59897018375</Source>
    <DeviceIdentifier>59897018375</DeviceIdentifier>
    <GeolocationType>notification</GeolocationType>
    <ResponseStatus>successful</ResponseStatus>
@@ -1173,7 +1160,6 @@ See the corresponding response below:
    <DateUpdated>Mon, 25 Jan 2016 16:39:18 -0300</DateUpdated>
    <DateExecuted>Mon, 25 Jan 2016 16:36:10 -0300</DateExecuted>
    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-   <Source>59897018375</Source>
    <DeviceIdentifier>59897018375</DeviceIdentifier>
    <GeolocationType>notification</GeolocationType>
    <ResponseStatus>partially-successful</ResponseStatus>
@@ -1220,7 +1206,6 @@ See the corresponding JSON response below (the XML response would be exactly as 
   "date_updated": "Mon, 25 Jan 2016 16:39:18 -0300",
   "date_executed": "Mon, 25 Jan 2016 16:36:10 -0300",
   "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
-  "source": "59897018375",
   "device_identifier": "59897018375",
   "geolocation_type": "Notification",
   "response_status": "partially-successful",
@@ -1271,7 +1256,7 @@ Clients and RestComm Mobile/Web SDKs
 
 
 
-image:IPGeolocationSequenceDiagram.gif[image,width=633,height=230]
+image:images/IPGeolocationSequenceDiagram.gif[image,width=633,height=230]
 
 
 
@@ -1279,7 +1264,26 @@ For the Notification case the diagram is similar, except that the device
 can store the information and notify RestComm when it approaches a
 certain location area.
 
+== Cellular Geolocation Sequence Diagrams
 
+
+Next diagram shows the interaction between RestComm and GMLC within a GSM network, from where location services are reduced to retrieving Global Cell Identity, Age of Location information and network node address at which the target mobile subscriber is
+currently currently attached.
+
+image:images/RestComm_GSM_Immediate_Geolocation.png[image,width=633,height=230]
+
+
+Next diagram exhibits a Notification type of Geolocation signal flow in 3G cellular networks. An Immediate type of Geolocation signal flow in the same environment would be identical, except for the event detection and its derived signals. Besides, for the sake of simplicity, it only shows a single event detection.
+
+image:images/RestComm_UMTS_Notification_Geolocation.png[image,width=1000,height=750]
+
+
+
+Next diagram is the analogue of the latter, but for EPS networks or LTE location services (where SS7/MAP operations do not apply anymore, but their analogous Diameter procedures with EPC and E-UTRAN entities).
+
+
+
+image:images/RestComm_LTE_Notification_Geolocation.png[image,width=1000,height=750]
 
 == Geolocation Status Callbacks Sequence Diagram
 
@@ -1298,7 +1302,7 @@ last status callback, as the desired accuracy is ultimately achieved.
 
 
 
-image:GeolocationStatusCallbacksSequenceDiagram.gif[image,width=633,height=348]
+image:images/GeolocationStatusCallbacksSequenceDiagram.gif[image,width=633,height=348]
 
 
 
