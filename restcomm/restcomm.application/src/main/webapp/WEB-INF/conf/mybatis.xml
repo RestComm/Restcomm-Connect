@@ -4,7 +4,7 @@
   @author thomas.quintana@telestax.com (Thomas Quintana)
 -->
 <configuration>
-<environments default="mariadb">
+<environments default="production">
       <environment id="production">
       <transactionManager type="JDBC"/>
       <dataSource type="POOLED">
