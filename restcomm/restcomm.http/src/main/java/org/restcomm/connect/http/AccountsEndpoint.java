@@ -116,7 +116,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         final Account.Type type = Account.Type.FULL;
         Account.Status status = Account.Status.ACTIVE;
         if (data.containsKey("Status")) {
-            status = Account.Status.valueOf(data.getFirst("Status"));
+            status = Account.Status.getValueOf(data.getFirst("Status").toLowerCase());
         }
         final String password = data.getFirst("Password");
         final String authToken = new Md5Hash(password).toString();

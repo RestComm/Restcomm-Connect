@@ -147,18 +147,18 @@ public class RcmlserverApi {
                         httpclient.start();
                         final CountDownLatch latch = new CountDownLatch(requests.size());
                         for (int i = 0; i < requests.size(); i ++) {
-                            final int index = i; // use a final variable that is accessibly from the asynchronous handler below
+                            final int index = i; // use a final variable that is accessible from the asynchronous handler below
                             final HttpPost request = requests.get(i);
                             httpclient.execute(request, new FutureCallback<HttpResponse>() {
                                 @Override
                                 public void completed(final HttpResponse response) {
                                     latch.countDown();
-                                    System.out.println("Account-closing notification for " + accountSids.get(index) + " successfully sent - " + response.getStatusLine());
+                                    logger.info("Account-closing notification for " + accountSids.get(index) + " successfully sent - " + response.getStatusLine());
                                 }
                                 @Override
                                 public void failed(final Exception ex) {
                                     latch.countDown();
-                                    System.out.println("Account-closing notification for " + accountSids.get(index) + " failed - " + ex.getMessage());
+                                    logger.error("Account-closing notification for " + accountSids.get(index) + " failed (" + request.getRequestLine() + ") - " + ex.getMessage(), ex);
                                 }
                                 @Override
                                 public void cancelled() {
