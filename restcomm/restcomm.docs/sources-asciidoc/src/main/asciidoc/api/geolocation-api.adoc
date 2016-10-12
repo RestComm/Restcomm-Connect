@@ -1256,7 +1256,7 @@ Clients and RestComm Mobile/Web SDKs
 
 
 
-image:IPGeolocationSequenceDiagram.gif[image,width=633,height=230]
+image:images/IPGeolocationSequenceDiagram.gif[image,width=633,height=230]
 
 
 
@@ -1264,7 +1264,26 @@ For the Notification case the diagram is similar, except that the device
 can store the information and notify RestComm when it approaches a
 certain location area.
 
+== Cellular Geolocation Sequence Diagrams
 
+
+Next diagram shows the interaction between RestComm and GMLC within a GSM network, from where location services are reduced to retrieving Global Cell Identity, Age of Location information and network node address at which the target mobile subscriber is
+currently currently attached.
+
+image:images/RestComm_GSM_Immediate_Geolocation.png[image,width=633,height=230]
+
+
+Next diagram exhibits a Notification type of Geolocation signal flow in 3G cellular networks. An Immediate type of Geolocation signal flow in the same environment would be identical, except for the event detection and its derived signals. Besides, for the sake of simplicity, it only shows a single event detection.
+
+image:images/RestComm_UMTS_Notification_Geolocation.png[image,width=633,height=230]
+
+
+
+Next diagram is the analogue of the latter, but for EPS networks or LTE location services (where SS7/MAP operations do not apply anymore, but their analogous Diameter procedures with EPC and E-UTRAN entities).
+
+
+
+image:images/RestComm_LTE_Notification_Geolocation.png[image,width=633,height=230]
 
 == Geolocation Status Callbacks Sequence Diagram
 
@@ -1283,7 +1302,7 @@ last status callback, as the desired accuracy is ultimately achieved.
 
 
 
-image:GeolocationStatusCallbacksSequenceDiagram.gif[image,width=633,height=348]
+image:images/GeolocationStatusCallbacksSequenceDiagram.gif[image,width=633,height=348]
 
 
 
