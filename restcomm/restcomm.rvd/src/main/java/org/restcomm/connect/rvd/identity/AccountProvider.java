@@ -33,14 +33,21 @@ public class AccountProvider {
     CustomHttpClientBuilder httpClientBuilder;
     RvdConfiguration configuration;
 
-/*
+    /**
+     * This constructor directly initializes restcommUrl without going through RvdConfiguration
+     * and UriUtils. Make sure restcommUrl parameter is properly set.
+     *
+     * @param restcommUrl
+     * @param httpClientBuilder
+     */
     public AccountProvider(String restcommUrl, CustomHttpClientBuilder httpClientBuilder) {
         if (restcommUrl == null)
             throw new IllegalStateException("restcommUrl cannot be null");
         this.restcommUrl = sanitizeRestcommUrl(restcommUrl);
+        this.restcommUrlInitialized = true;
         this.httpClientBuilder = httpClientBuilder;
     }
-    */
+
 
     public AccountProvider(RvdConfiguration configuration, CustomHttpClientBuilder httpClientBuilder) {
         this.configuration = configuration;
@@ -70,7 +77,7 @@ public class AccountProvider {
     private URI buildAccountQueryUrl(String usernameOrSid) {
         try {
             // TODO url-encode the username
-            URI uri = new URIBuilder(restcommUrl).setPath("/restcomm/2012-04-24/Accounts.json/" + usernameOrSid).build();
+            URI uri = new URIBuilder(getRestcommUrl()).setPath("/restcomm/2012-04-24/Accounts.json/" + usernameOrSid).build();
             return uri;
         } catch (URISyntaxException e) {
             // something really wrong has happened
@@ -79,7 +86,7 @@ public class AccountProvider {
     }
 
 
-    public GenericResponse<RestcommAccountInfo> getAccount(String authorizationHeader, String accountName) {
+    public GenericResponse<RestcommAccountInfo> getAccount(String accountName, String authorizationHeader) {
         CloseableHttpClient client = httpClientBuilder.buildHttpClient();
         HttpGet GETRequest = new HttpGet(buildAccountQueryUrl(accountName));
         GETRequest.addHeader("Authorization", authorizationHeader);
@@ -111,12 +118,12 @@ public class AccountProvider {
      */
     public GenericResponse<RestcommAccountInfo> getAccount(BasicAuthCredentials creds, String accountName) {
         String header = "Basic " + RvdUtils.buildHttpAuthorizationToken(creds.getUsername(),creds.getPassword());
-        return getAccount(header, accountName);
+        return getAccount(accountName, header);
     }
 
     public GenericResponse<RestcommAccountInfo> getAccount(BasicAuthCredentials creds) {
         String header = "Basic " + RvdUtils.buildHttpAuthorizationToken(creds.getUsername(),creds.getPassword());
-        return getAccount(header, creds.getUsername());
+        return getAccount(creds.getUsername(), header);
     }
 }
 

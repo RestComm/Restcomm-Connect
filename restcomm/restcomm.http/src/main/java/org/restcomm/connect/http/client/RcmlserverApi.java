@@ -48,7 +48,7 @@ public class RcmlserverApi {
     static final Logger logger = Logger.getLogger(RcmlserverApi.class.getName());
 
     enum NotificationType {
-        accountRemoved
+        accountClosed
     }
 
     URI apiUrl;
@@ -83,7 +83,7 @@ public class RcmlserverApi {
             client.start();
             HttpPost request = new HttpPost(apiUrl + "/notifications");
             List<NameValuePair> nvps = new ArrayList<NameValuePair>();
-            nvps.add(new BasicNameValuePair("type", NotificationType.accountRemoved.toString()));
+            nvps.add(new BasicNameValuePair("type", NotificationType.accountClosed.toString()));
             nvps.add(new BasicNameValuePair("accountSid", accountToBeRemoved.getSid().toString()));
             String authHeader;
             if (notifierUsername != null) {
@@ -124,7 +124,7 @@ public class RcmlserverApi {
         for (String closedAccountSid : closedAccountSids) {
             HttpPost request = new HttpPost(notificationUrl);
             List<NameValuePair> nvps = new ArrayList<NameValuePair>();
-            nvps.add(new BasicNameValuePair("type", NotificationType.accountRemoved.toString()));
+            nvps.add(new BasicNameValuePair("type", NotificationType.accountClosed.toString()));
             nvps.add(new BasicNameValuePair("accountSid", closedAccountSid));
             String authHeader;
             authHeader = SecurityUtils.buildBasicAuthHeader(notifierUsername, notifierPassword);

@@ -1,5 +1,6 @@
 package org.restcomm.connect.rvd.http.resources;
 
+import org.restcomm.connect.rvd.ApplicationContext;
 import org.restcomm.connect.rvd.RvdConfiguration;
 import org.restcomm.connect.rvd.exceptions.AuthorizationException;
 import org.restcomm.connect.rvd.http.RestService;
@@ -31,6 +32,12 @@ public class SecuredRestService extends RestService {
     // used for testing
     SecuredRestService(UserIdentityContext context) {
         this.userIdentityContext = context;
+    }
+
+    // used for testing
+    public SecuredRestService(ApplicationContext applicationContext, UserIdentityContext userIdentityContext) {
+        super(applicationContext);
+        this.userIdentityContext = userIdentityContext;
     }
 
     public UserIdentityContext getUserIdentityContext() {

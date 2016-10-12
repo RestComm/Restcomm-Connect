@@ -47,29 +47,26 @@ import java.io.IOException;
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public class NotificationsRestServiceMockedTest extends RestServiceMockedTest {
+public class ApplicationRemovalNotificationTests extends RestServiceMockedTest {
 
     ProjectService projectService;
     WorkspaceStorage storage;
-    File workspaceDir;
+    UserIdentityContext userIdentityContext;
 
     @Before
     public void before() throws IOException {
-        addLegitimateAccount("administrator@company.com", "ACae6e420f425248d6a26948c17a9e2acf");
         //addLegitimateAccount("orestis@company.com", "AC1234");
         setupMocks();
         workspaceDir = TestUtils.createTempWorkspace();
-        ModelMarshaler marshaler = new ModelMarshaler();
+        marshaler = new ModelMarshaler();
         storage = new WorkspaceStorage(workspaceDir.getPath(), marshaler);
         // create projects in the workspace
-        new File(workspaceDir.getPath() + "/AP1234").mkdir();
-        String state = marshaler.toData(ProjectState.createEmptyVoice("administrator@company.com"));
-        FileUtils.writeStringToFile(new File(workspaceDir.getPath() + "/AP1234/state"), state );
-        new File(workspaceDir.getPath() + "/AP1235").mkdir();
-        state = marshaler.toData(ProjectState.createEmptyVoice("administrator@company.com"));
-        FileUtils.writeStringToFile(new File(workspaceDir.getPath() + "/AP1235/state"), state );
-
+        createProject("AP1234","administrator@company.com");
+        createProject("AP1235","administrator@company.com");
         projectService = new ProjectService(configuration,storage,marshaler,"/restcomm-rvd");
+
+        addLegitimateAccount("administrator@company.com", "ACae6e420f425248d6a26948c17a9e2acf");
+        userIdentityContext = signIn("administrator@company.com", "RestComm");
     }
 
     @After
@@ -78,9 +75,12 @@ public class NotificationsRestServiceMockedTest extends RestServiceMockedTest {
     }
 
     @Test
-    public void applicationRemovalNotification() throws RvdException {
+    public void processApplicationRemovalNotificationTest() throws RvdException {
+        File applicationDir = new File(workspaceDir.getPath() + "/AP1234");
+        Assert.assertTrue(applicationDir.exists());
         NotificationsRestService endpoint = new NotificationsRestService(userIdentityContext,projectService); // user identity context not needed
         endpoint.processApplicationRemovalNotification("AP1234");
+        Assert.assertFalse(applicationDir.exists());
     }
 
 

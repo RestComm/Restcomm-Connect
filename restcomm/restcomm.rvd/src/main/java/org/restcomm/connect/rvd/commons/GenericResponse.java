@@ -83,7 +83,12 @@ public class GenericResponse<T> {
 
     @Override
     public String toString() {
-        return (new StringBuffer("GenericResponse [succeeded=").append(succeeded).append(", cause=").append(cause)
-                .append(", message=").append(message).append(", object=").append(object).append("]")).toString();
+        return "GenericResponse{" +
+                "succeeded=" + succeeded +
+                ", cause=" + cause +
+                ", message='" + message + '\'' +
+                ", object=" + object +
+                ", httpFailureStatus=" + httpFailureStatus +
+                '}';
     }
 }

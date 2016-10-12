@@ -21,14 +21,28 @@
 package org.restcomm.connect.rvd.exceptions;
 
 /**
- * RVD encountered an unexpected condition that probably means that it is out of sync with restcomm.
- * Probably something about applications-to-projects relation, accounts/users/emails missing etc.
- *
- *
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public class UnexpectedRestcommState extends RvdException {
-    public UnexpectedRestcommState(String message) {
+public class NotificationProcessingError extends RvdException {
+    public enum Type {
+        AccountIsMissing,
+        AccountNotAccessible,
+        GeneralFailure
+    }
+
+    Type type;
+
+    public NotificationProcessingError(String message, Type type) {
         super(message);
+        this.type = type;
+    }
+
+    public NotificationProcessingError(String message) {
+        super(message);
+        this.type = Type.GeneralFailure;
+    }
+
+    public Type getType() {
+        return type;
     }
 }
