@@ -21,7 +21,6 @@
 
 package org.restcomm.connect.mscontrol.mms;
 
-import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 
 import akka.actor.Actor;
@@ -39,24 +38,17 @@ import akka.actor.UntypedActorFactory;
 public class MmsControllerFactory implements MediaServerControllerFactory {
 
     private final ActorSystem system;
-    //private final ActorRef mediaGateway;
-    // A list of media gateways.
-    //private final List<ActorRef> mediaGateways;
     private final CallControllerFactory callControllerFactory;
     private final ConferenceControllerFactory conferenceControllerFactory;
     private final BridgeControllerFactory bridgeControllerFactory;
-    // configurations
-    //private final Configuration configuration;
     private final ActorRef mrb;
 
-    public MmsControllerFactory(ActorSystem system, ActorRef mrb, Configuration configuration) {
+    public MmsControllerFactory(ActorSystem system, ActorRef mrb) {
         super();
         this.system = system;
-        //this.mediaGateways = mediaGateways;
         this.callControllerFactory = new CallControllerFactory();
         this.conferenceControllerFactory = new ConferenceControllerFactory();
         this.bridgeControllerFactory = new BridgeControllerFactory();
-        //this.configuration = configuration;
         this.mrb = mrb;
     }
 

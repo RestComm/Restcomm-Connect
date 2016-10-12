@@ -320,13 +320,6 @@
 		<mrb class="org.restcomm.connect.mrb.MediaResourceBrokerGeneric" name="Community MediaResourceBroker">
 		</mrb>
 	</media-server-manager>
-	<!-- media-server-routing Defines routing rules for media server traffic with following parameters:
-	<algorithm> - Defines routing algorithm, possible values are: 
-				  'roundrobin' 
-	 -->
-	<media-server-routing>
-		<algorithm>roundrobin</algorithm>
-	</media-server-routing>
 	<!-- Adjust http client behaviour for outgoing requests -->
 	<http-client>
 		<response-timeout>5000</response-timeout>
