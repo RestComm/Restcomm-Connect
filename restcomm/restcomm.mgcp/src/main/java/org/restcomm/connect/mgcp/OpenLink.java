@@ -19,23 +19,39 @@
  */
 package org.restcomm.connect.mgcp;
 
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
-
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
 public final class OpenLink {
+    private final String primaryEndpointId;
+    private final String secondaryEndpointId;
     private final ConnectionMode mode;
 
     public OpenLink(final ConnectionMode mode) {
+        this(mode, null, null);
+    }
+
+    public OpenLink(final ConnectionMode mode, final String primaryEndpointId, final String secondaryEndpointId) {
         super();
         this.mode = mode;
+        this.primaryEndpointId = primaryEndpointId;
+        this.secondaryEndpointId = secondaryEndpointId;
     }
 
     public ConnectionMode mode() {
         return mode;
+    }
+
+    public String primaryEndpointId() {
+        return primaryEndpointId;
+    }
+
+    public String secondaryEndpointId() {
+        return secondaryEndpointId;
     }
 }
