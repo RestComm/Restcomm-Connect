@@ -86,7 +86,7 @@ public class NotificationsRestService extends SecuredRestService {
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response postNotification(final MultivaluedMap<String, String> data) {
-        secure();
+        secure(SecureBehavior.AllowNonActive);
         logger.info("received notification");
         try {
             NotificationType type = NotificationType.valueOf(data.getFirst("type"));

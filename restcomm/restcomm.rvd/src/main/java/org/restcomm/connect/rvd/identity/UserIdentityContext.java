@@ -47,7 +47,7 @@ public class UserIdentityContext {
         basicCredentials = extractBasicAuthCredentials(authorizationHeader);
         // try to initialize effective account using basic auth creds
         if (basicCredentials != null) {
-            this.accountInfo = accountProvider.getActiveAccount(basicCredentials.getUsername(), authorizationHeader).get();
+            this.accountInfo = accountProvider.getAccount(basicCredentials.getUsername(), authorizationHeader).get();
             if (this.accountInfo != null) {
                 authType = AuthType.Basic;
                 effectiveAuthHeader = authorizationHeader;

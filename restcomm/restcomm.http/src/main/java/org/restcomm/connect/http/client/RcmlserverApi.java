@@ -163,19 +163,19 @@ public class RcmlserverApi {
                                 @Override
                                 public void cancelled() {
                                     latch.countDown();
-                                    System.out.println("Account-closing notification for " + accountSids.get(index) + " cancelled");
+                                    logger.error("Account-closing notification for " + accountSids.get(index) + " cancelled");
                                 }
                             });
                         }
                         latch.await();
                     } catch (InterruptedException e) {
-                        System.err.println("Interrupted");
+                        logger.error("Asynchronous RcmlServer notification thread interrupted",e);
                     }
-                    System.out.println("Asyncronous account-closing notification thread ended" );
+                    logger.info("Asyncronous account-closing notification thread ended");
                 }
 
             });
-            System.out.println("Starting asyncronous account-closing notification thread - " + t.getId());
+            logger.info("Starting asyncronous account-closing notification thread - " + t.getId());
             t.start();
             return t;
         }
