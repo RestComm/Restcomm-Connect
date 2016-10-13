@@ -118,6 +118,11 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
 
     private ActorRef turnOnMediaGateway(MediaServerEntity mediaServerEntity) throws UnknownHostException {
 
+        if (logger.isDebugEnabled()) {
+            String mgcpServer = configuration.getString("mgcp-server[@class]");
+            logger.debug("Will switch on media gateway: "+mgcpServer);
+        }
+
         final ActorRef gateway = getContext().system().actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
