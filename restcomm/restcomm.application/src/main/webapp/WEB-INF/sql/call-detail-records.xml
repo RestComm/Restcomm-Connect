@@ -55,9 +55,6 @@
 		<if test="conferenceSid != null">
 			AND "conference_sid" like #{conferenceSid}
 		</if>
-		<if test="msId != null">
-			AND "ms_id" like #{msId}
-		</if>
 		<!-- select * from "restcomm_call_detail_records" where "start_time" >= '2013-08-23' order by "start_time" ; -->
 		<if test="startTime != null">
 		    AND "start_time" &gt;= #{startTime}
@@ -106,9 +103,6 @@
 		</if>
 		<if test="conferenceSid != null">
 			AND "conference_sid" like #{conferenceSid}
-		</if>
-		<if test="msId != null">
-			AND "ms_id" like #{msId}
 		</if>
 		<!-- select * from "restcomm_call_detail_records" where "start_time" >= '2013-08-23' order by "start_time" ; -->
 		<if test="startTime != null">
