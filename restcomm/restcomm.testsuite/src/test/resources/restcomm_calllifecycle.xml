@@ -233,7 +233,7 @@
 		the maximum amount of time to wait for a response from the media server before 
 		abandoning the request. This does NOT apply to RQNT/NOTIFY request/response. -->
 	<media-server-manager>
-		<mgcp-server class="org.mobicents.servlet.restcomm.mgcp.MockMediaGateway"
+		<mgcp-server class="org.restcomm.connect.mgcp.MockMediaGateway"
 			name="Mobicents Media Server">
 				<local-address>127.0.0.1</local-address>
 				<local-port>2727</local-port>
