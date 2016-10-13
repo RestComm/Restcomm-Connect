@@ -36,10 +36,7 @@
 		<if test="dateUpdated != null">
 			AND "date_updated" &lt;= DATE_ADD(#{dateUpdated},INTERVAL 1 DAY) order by "date_created"
 		</if>
-		<if test="msId != null">
-			AND "ms_id" like #{ms_id}
-		</if>
-;
+		;
 	</select>
 	<select id="getConferenceDetailRecordByUsingFilters" parameterType="org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter" resultType="hashmap">
 		SELECT * FROM "restcomm_conference_detail_records" AS "restcomm_conference_detail_records" WHERE "account_sid"=#{accountSid}
@@ -54,9 +51,6 @@
 		</if>
 		<if test="dateUpdated != null">
 			AND "date_updated" &lt;= DATE_ADD(#{dateUpdated},INTERVAL 1 DAY) order by "date_created"
-		</if>
-		<if test="msId != null">
-			AND "ms_id" like #{ms_id}
 		</if>
 
 		LIMIT #{limit} OFFSET #{offset};
