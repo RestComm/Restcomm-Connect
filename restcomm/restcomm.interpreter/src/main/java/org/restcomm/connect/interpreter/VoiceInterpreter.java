@@ -806,6 +806,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     private void onTagMessage(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         verb = (Tag) message;
+        if (logger.isDebugEnabled()) {
+            logger.debug("Tag received, name: "+verb.name()+", text: "+verb.text());
+        }
         if (playWaitUrlPending) {
             if (!(Verbs.play.equals(verb.name()) || Verbs.say.equals(verb.name()))) {
                 if (logger.isInfoEnabled()) {
