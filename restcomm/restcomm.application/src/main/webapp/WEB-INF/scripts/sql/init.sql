@@ -305,6 +305,6 @@ CREATE TABLE "restcomm_media_resource_broker_entity" (
 "slave_ms_id" VARCHAR(34) NOT NULL, 
 "slave_ms_bridge_ep_id" VARCHAR(34) NOT NULL,
 "slave_ms_cnf_ep_id" VARCHAR(34) NOT NULL,
-"is_bridged_together" BOOLEAN NOT NULL DEFAULT FALSE, 
+"is_bridged_together" BOOLEAN DEFAULT FALSE, 
 "slave_ms_sdp" VARCHAR(2000) NOT NULL
 );
