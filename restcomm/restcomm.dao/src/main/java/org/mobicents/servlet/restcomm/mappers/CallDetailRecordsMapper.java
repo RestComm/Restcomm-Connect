@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
-import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
+import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -33,6 +33,20 @@ public interface CallDetailRecordsMapper {
         String UPDATE_CALL_DETAIL="UPDATE \"restcomm_call_detail_records\" SET \"date_updated\"=#{date_updated}, \"status\"=#{status}, \"start_time\"=#{start_time}, \"end_time\"=#{end_time}, \"duration\"=#{duration},\"price\"=#{price}, \"answered_by\"=#{answered_by}, \"ring_duration\"=#{ring_duration}, \"conference_sid\"=#{conference_sid}, \"muted\"=#{muted}, \"start_conference_on_enter\"=#{start_conference_on_enter}, \"end_conference_on_exit\"=#{end_conference_on_exit}, \"on_hold\"=#{on_hold} WHERE \"sid\"=#{sid}";
         String SELECT_TOTAL_CALL_DETAIL_RECORD_USING_FILTER="<script>\n"
             + "SELECT COUNT(*) FROM \"restcomm_call_detail_records\" WHERE \"account_sid\"=#{accountSid}\n"
+            + "<if test=\"accountSidSet == null\">"
+            + "    \"account_sid\"=#{accountSid}"
+            + "</if>"
+            + "<if test=\"accountSidSet != null\">"
+            + "    <if test=\"!accountSidSet.isEmpty()\">"
+            + "        \"account_sid\" IN"
+            + "        <foreach item=\"item\" index=\"index\" collection=\"accountSidSet\" open=\"(\" separator=\",\" close=\")\">"
+            + "        #{item}"
+            + "        </foreach>"
+            + "    </if>"
+            + "    <if test=\"accountSidSet.isEmpty()\">"
+            + "    \"account_sid\"=''"
+            + "    </if>"
+            + "</if>"
             + "    <if test=\"instanceid != null\">"
             + "        AND \"instanceid\" like #{instanceid}"
             + "    </if>\n"

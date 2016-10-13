@@ -47,7 +47,7 @@ public interface CallDetailRecordsDao {
 
     List<CallDetailRecord> getCallDetailRecordsByEndTime(DateTime endTime);
 
-    List<CallDetailRecord> getCallDetailRecordsByStarTimeAndEndTime(DateTime endTime);
+    List<CallDetailRecord> getCallDetailRecordsByStarTimeAndEndTime(DateTime startTime, DateTime endTime);
 
     List<CallDetailRecord> getCallDetailRecordsByParentCall(Sid parentCallSid);
 
@@ -69,4 +69,5 @@ public interface CallDetailRecordsDao {
     List<CallDetailRecord> getCallDetailRecords(CallDetailRecordFilter filter);
 
     Integer getTotalCallDetailRecords(CallDetailRecordFilter filter);
+
 }

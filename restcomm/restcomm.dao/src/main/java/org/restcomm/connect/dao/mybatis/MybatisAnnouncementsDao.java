@@ -10,7 +10,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
 import org.joda.time.DateTime;
-
+import org.mobicents.servlet.restcomm.mappers.AnnouncementsMapper;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.AnnouncementsDao;
 import org.restcomm.connect.dao.entities.Announcement;
@@ -18,6 +18,7 @@ import org.restcomm.connect.dao.entities.Sid;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">George Vagenas</a>
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 
 public final class MybatisAnnouncementsDao implements AnnouncementsDao {
@@ -34,7 +35,8 @@ public final class MybatisAnnouncementsDao implements AnnouncementsDao {
     public void addAnnouncement(Announcement announcement) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addAnnouncement", toMap(announcement));
+            AnnouncementsMapper mapper=session.getMapper(AnnouncementsMapper.class);
+            mapper.addAnnouncement(toMap(announcement));
             session.commit();
         } finally {
             session.close();
@@ -45,7 +47,8 @@ public final class MybatisAnnouncementsDao implements AnnouncementsDao {
     public Announcement getAnnouncement(Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + "getAnnouncement", sid.toString());
+            AnnouncementsMapper mapper=session.getMapper(AnnouncementsMapper.class);
+            final Map<String, Object> result = mapper.getAnnouncement(sid.toString());
             if (result != null) {
                 return toAnnouncement(result);
             } else {
@@ -60,7 +63,8 @@ public final class MybatisAnnouncementsDao implements AnnouncementsDao {
     public List<Announcement> getAnnouncements(Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getAnnouncements", accountSid.toString());
+            AnnouncementsMapper mapper=session.getMapper(AnnouncementsMapper.class);
+            final List<Map<String, Object>> results = mapper.getAnnouncements(accountSid.toString());
             final List<Announcement> announcements = new ArrayList<Announcement>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -75,22 +79,26 @@ public final class MybatisAnnouncementsDao implements AnnouncementsDao {
 
     @Override
     public void removeAnnouncement(Sid sid) {
-        deleteAnnouncement(namespace + "removeAnnouncement", sid);
+        final SqlSession session = sessions.openSession();
+        try {
+            AnnouncementsMapper mapper=session.getMapper(AnnouncementsMapper.class);
+            mapper.removeAnnouncement(sid.toString());
+            session.commit();
+         } finally {
+             session.close();
+         }
     }
 
     @Override
     public void removeAnnouncements(Sid accountSid) {
-        deleteAnnouncement(namespace + "removeAnnouncements", accountSid);
-    }
-
-    private void deleteAnnouncement(final String selector, final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            session.delete(selector, sid.toString());
+            AnnouncementsMapper mapper=session.getMapper(AnnouncementsMapper.class);
+            mapper.removeAnnouncement(accountSid.toString());
             session.commit();
-        } finally {
-            session.close();
-        }
+            } finally {
+                session.close();
+            }
     }
 
     private Map<String, Object> toMap(final Announcement announcement) {

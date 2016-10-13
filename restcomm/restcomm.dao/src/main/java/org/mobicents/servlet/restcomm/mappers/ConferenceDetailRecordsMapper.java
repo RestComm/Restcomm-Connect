@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
-import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter;
+import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
 
 /**
  * @author maria-farooq@live.com (Maria Farooq

@@ -29,7 +29,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
 import org.joda.time.DateTime;
-
+import org.mobicents.servlet.restcomm.mappers.GatewaysMapper;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.GatewaysDao;
 import org.restcomm.connect.dao.entities.Gateway;
@@ -53,7 +53,8 @@ public final class MybatisGatewaysDao implements GatewaysDao {
     public void addGateway(final Gateway gateway) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addGateway", toMap(gateway));
+            GatewaysMapper mapper=session.getMapper(GatewaysMapper.class);
+            mapper.addGateway(toMap(gateway));
             session.commit();
         } finally {
             session.close();
@@ -64,7 +65,8 @@ public final class MybatisGatewaysDao implements GatewaysDao {
     public Gateway getGateway(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + "getGateway", sid.toString());
+            GatewaysMapper mapper=session.getMapper(GatewaysMapper.class);
+            final Map<String, Object> result = mapper.getGateway(sid.toString());
             if (result != null) {
                 return toGateway(result);
             } else {
@@ -79,7 +81,8 @@ public final class MybatisGatewaysDao implements GatewaysDao {
     public List<Gateway> getGateways() {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getGateways");
+            GatewaysMapper mapper=session.getMapper(GatewaysMapper.class);
+            final List<Map<String, Object>> results = mapper.getGateways();
             final List<Gateway> gateways = new ArrayList<Gateway>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -96,7 +99,8 @@ public final class MybatisGatewaysDao implements GatewaysDao {
     public void removeGateway(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            session.delete(namespace + "removeGateway", sid.toString());
+            GatewaysMapper mapper=session.getMapper(GatewaysMapper.class);
+            mapper.removeGateway(sid.toString());
             session.commit();
         } finally {
             session.close();
@@ -107,7 +111,8 @@ public final class MybatisGatewaysDao implements GatewaysDao {
     public void updateGateway(final Gateway gateway) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateGateway", toMap(gateway));
+            GatewaysMapper mapper=session.getMapper(GatewaysMapper.class);
+            mapper.updateGateway(toMap(gateway));
             session.commit();
         } finally {
             session.close();

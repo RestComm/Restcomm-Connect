@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
@@ -45,6 +46,12 @@ public interface AccountsMapper {
     + " \"role\"=#{role}"
     + " WHERE"
     + " \"sid\"=#{sid}";
+    String SELECT_SUBACCOUNT_SIDS="<script>"
+    + "    SELECT \"sid\" FROM \"restcomm_accounts\" WHERE \"account_sid\" IN"
+    + "    <foreach item=\"item\" index=\"index\" collection=\"list\" open=\"(\" separator=\",\" close=\")\">"
+    + "    #{item}"
+    + "    </foreach>"
+    + "</script>";
 
     @Select(SELECT_ACOUNT)
     Map<String,Object> getAccount(String sid);
@@ -66,4 +73,7 @@ public interface AccountsMapper {
 
     @Update(UPDATE_ACCOUNT)
     void updateAccount(Map map);
+
+    @Select(SELECT_SUBACCOUNT_SIDS)
+    List<String> getSubAccountSids(List<String> list);
 }
