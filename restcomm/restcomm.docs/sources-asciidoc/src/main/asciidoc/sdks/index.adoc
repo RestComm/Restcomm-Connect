@@ -1,21 +1,25 @@
 = Restcomm SDKs
 
-Restcomm comes with three powerful WebRTC SDKs that allows you to embed Communications as a feature in your Web, iOS and Android Native Applications.
+Restcomm comes with three powerful WebRTC SDKs that allow you to embed Communications as a feature in your Web, iOS and Android Native Applications. Moreover, there's Olympus, a full fledged Client that take advantage of the respective Restcomm SDKs and provides webrtc video/audio calling and messaging capabilities on each of Web, iOS and Android platforms out of the box.
 
 Web SDK
 ~~~~~~~
 
 * <<restcomm-client-web-sdk-quick-start.adoc#web-sdk-guide,Restcomm Web SDK Quick Start Guide>>
 * link:http://documentation.telestax.com/restcomm-web-sdk/doc/[Restcomm Web SDK Reference Documentation]
+* <<restcomm-web-olympus-user-guide.adoc#web-olympus-guide,Restcomm Web Olympus App User Guide>>
+
 
 iOS SDK
 ~~~~~~~
 
 * <<restcomm-client-ios-sdk-quick-start.adoc#ios-sdk-guide,Restcomm iOS SDK Quick Start Guide>>
 * link:http://documentation.telestax.com/restcomm-ios-sdk/doc/html/[Restcomm iOS SDK Reference Documentation]
+* <<restcomm-ios-olympus-user-guide.adoc#ios-olympus-guide,Restcomm iOS Olympus App User Guide>>
 
 Android SDK
 ~~~~~~~~~~~
 
 * <<restcomm-client-android-sdk-quick-start.adoc#android-sdk-guide,Restcomm Android SDK Quick Start Guide>>
 * link:http://documentation.telestax.com/restcomm-android-sdk/doc/[Restcomm Android SDK Reference Documentation]
+* <<restcomm-android-olympus-user-guide.adoc#android-olympus-guide,Restcomm Android Olympus App User Guide>>
