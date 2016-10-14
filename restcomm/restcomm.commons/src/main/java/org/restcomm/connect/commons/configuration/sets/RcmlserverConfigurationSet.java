@@ -27,4 +27,5 @@ public interface RcmlserverConfigurationSet {
     String getBaseUrl();
     Boolean getNotify();
     Integer getTimeout(); // how much to wait for response to a notification request before giving up
+    Integer getTimeoutPerNotification(); // now much more to increase timeout for each notification that is sent
 }
