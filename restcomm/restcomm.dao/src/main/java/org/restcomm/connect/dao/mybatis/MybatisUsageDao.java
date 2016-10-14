@@ -25,7 +25,7 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.UsageDao;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Usage;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 

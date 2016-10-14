@@ -46,7 +46,7 @@ import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.NotificationList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
 
 /**

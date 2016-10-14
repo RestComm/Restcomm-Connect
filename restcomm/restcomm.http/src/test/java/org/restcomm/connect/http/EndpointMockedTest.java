@@ -28,7 +28,7 @@ import org.restcomm.connect.dao.AccountsDaoMock;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.DaoManagerMock;
 import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.mockito.Mockito;
 
 import javax.servlet.ServletContext;

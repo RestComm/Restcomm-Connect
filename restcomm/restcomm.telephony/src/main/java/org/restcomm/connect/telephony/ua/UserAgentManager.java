@@ -36,7 +36,7 @@ import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.GetCallInfo;
@@ -220,7 +220,7 @@ public final class UserAgentManager extends UntypedActor {
 
     private void keepAlive() throws Exception {
         final RegistrationsDao registrations = storage.getRegistrationsDao();
-        final List<Registration> results = registrations.getRegistrations();
+        final List<Registration> results = registrations.getRegistrationsByInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
         for (final Registration result : results) {
             final String to = result.getLocation();
             ping(to);

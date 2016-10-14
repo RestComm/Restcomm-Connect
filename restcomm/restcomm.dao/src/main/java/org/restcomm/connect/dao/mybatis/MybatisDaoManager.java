@@ -29,6 +29,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
+import org.restcomm.connect.dao.ExtensionsConfigurationDao;
 import org.restcomm.connect.dao.OutgoingCallerIdsDao;
 import org.restcomm.connect.dao.UsageDao;
 import org.restcomm.connect.dao.AnnouncementsDao;
@@ -78,6 +79,7 @@ public final class MybatisDaoManager implements DaoManager {
     private GatewaysDao gatewaysDao;
     private AnnouncementsDao announcementsDao;
     private InstanceIdDao instanceIdDao;
+    private ExtensionsConfigurationDao extensionsConfigurationDao;
 
     public MybatisDaoManager() {
         super();
@@ -186,6 +188,11 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
+    public ExtensionsConfigurationDao getExtensionsConfigurationDao() {
+        return extensionsConfigurationDao;
+    }
+
+    @Override
     public void shutdown() {
         // Nothing to do.
     }
@@ -252,5 +259,6 @@ public final class MybatisDaoManager implements DaoManager {
         transcriptionsDao = new MybatisTranscriptionsDao(sessions);
         gatewaysDao = new MybatisGatewaysDao(sessions);
         instanceIdDao = new MybatisInstanceIdDao(sessions);
+        extensionsConfigurationDao = new MybatisExtensionsConfigurationDao(sessions);
     }
 }

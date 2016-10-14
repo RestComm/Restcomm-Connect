@@ -21,7 +21,7 @@ package org.restcomm.connect.dao;
 
 import java.util.List;
 
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Application;
 
 /**

@@ -54,7 +54,7 @@ import org.restcomm.connect.dao.OutgoingCallerIdsDao;
 import org.restcomm.connect.dao.entities.OutgoingCallerId;
 import org.restcomm.connect.dao.entities.OutgoingCallerIdList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.commons.util.StringUtils;
 

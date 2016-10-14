@@ -32,8 +32,7 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.restcomm.connect.dao.SmsMessagesDao;
-import org.restcomm.connect.dao.mybatis.MybatisDaoManager;
-import org.restcomm.connect.dao.entities.Sid;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.SmsMessage;
 
 /**
