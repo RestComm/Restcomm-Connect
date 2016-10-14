@@ -8,12 +8,12 @@ USE ${RESTCOMM_DBNAME};
 DELIMITER //
 CREATE PROCEDURE updateProcedure()
  BEGIN
- SELECT DISTINCTROW IFNULL(table_name, '') INTO @tblName801
+ SELECT DISTINCTROW IFNULL(table_name, '') INTO @tblName792
  FROM information_schema.columns
  WHERE table_schema='${RESTCOMM_DBNAME}'
  AND table_name = 'restcomm_media_servers';
 
-	IF @tblName801 IS NULL THEN
+	IF @tblName792 IS NULL THEN
 		CREATE TABLE restcomm_media_servers (
 			ms_id INT PRIMARY KEY AUTO_INCREMENT, 
 			local_ip VARCHAR(34) NOT NULL, 

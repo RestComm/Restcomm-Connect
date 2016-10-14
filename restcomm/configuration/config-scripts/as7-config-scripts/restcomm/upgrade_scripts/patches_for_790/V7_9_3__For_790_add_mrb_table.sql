@@ -8,12 +8,12 @@ USE ${RESTCOMM_DBNAME};
 DELIMITER //
 CREATE PROCEDURE updateProcedure()
  BEGIN
- SELECT DISTINCTROW IFNULL(table_name, '') INTO @tblName802
+ SELECT DISTINCTROW IFNULL(table_name, '') INTO @tblName793
  FROM information_schema.columns
  WHERE table_schema='${RESTCOMM_DBNAME}'
  AND table_name = 'restcomm_media_resource_broker_entity';
 
-	IF @tblName802 IS NULL THEN
+	IF @tblName793 IS NULL THEN
 		CREATE TABLE restcomm_media_resource_broker_entity (
 		conference_sid VARCHAR(34) NOT NULL, 
 		slave_ms_id VARCHAR(34) NOT NULL, 
