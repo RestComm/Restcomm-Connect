@@ -52,8 +52,8 @@ public class RcmlserverApi {
     }
 
     URI apiUrl;
-    Integer timeout;
     MainConfigurationSet mainConfig;
+    RcmlserverConfigurationSet rcmlserverConfig;
 
     public RcmlserverApi(MainConfigurationSet mainConfig, RcmlserverConfigurationSet rcmlserverConfig) {
         try {
@@ -62,14 +62,8 @@ public class RcmlserverApi {
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
-        this.timeout = rcmlserverConfig.getTimeout();
+        this.rcmlserverConfig = rcmlserverConfig;
         this.mainConfig = mainConfig;
-    }
-
-    public RcmlserverApi(MainConfigurationSet mainConfig, URI apiUrl, Integer timeout) {
-        this.mainConfig = mainConfig;
-        this.apiUrl = apiUrl;
-        this.timeout = timeout;
     }
 
     public void transmitNotifications(List<JsonObject> notifications, String notifierUsername, String notifierPassword) throws RcmlserverNotifyError {
@@ -81,8 +75,10 @@ public class RcmlserverApi {
         Gson gson = new Gson();
         String json = gson.toJson(notifications);
         request.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
-        HttpClient httpClient = CustomHttpClientBuilder.build(mainConfig, timeout);
+        Integer totalTimeout = rcmlserverConfig.getTimeout() + notifications.size() * rcmlserverConfig.getTimeoutPerNotification();
+        HttpClient httpClient = CustomHttpClientBuilder.build(mainConfig, totalTimeout);
         try {
+            logger.info("Will transmit a set of " + notifications.size() + " notifications and wait at most for " + totalTimeout);
             HttpResponse response = httpClient.execute(request);
             if (response.getStatusLine().getStatusCode() != 200) {
                 throw new RcmlserverNotifyError(true); // TODO refine critical-ity of exceptions thrown based on status code
@@ -101,5 +97,7 @@ public class RcmlserverApi {
         jsonObject.addProperty("accountSid", closedAccount.getSid().toString());
         return jsonObject;
     }
+
+
 
 }

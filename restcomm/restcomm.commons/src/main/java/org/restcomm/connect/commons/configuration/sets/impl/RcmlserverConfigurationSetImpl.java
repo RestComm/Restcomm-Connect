@@ -31,9 +31,11 @@ public class RcmlserverConfigurationSetImpl extends ConfigurationSet implements 
     private static final String BASE_URL_KEY = "rcmlserver-api.base-url";
     private static final String NOTIFY_KEY = "rcmlserver-api.notifications";
     private static final String TIMEOUT_KEY = "rcmlserver-api.timeout";
+    private static final String TIMEOUT_PER_NOTIFICATION_KEY = "rcmlserver-api.timeout-per-notification";
     private String baseUrl = null;
     private Boolean notify = false;
     private Integer timeout = 5000;
+    private Integer timeoutPerNotification = 500;
 
     public RcmlserverConfigurationSetImpl(ConfigurationSource source) {
         super(source);
@@ -49,15 +51,25 @@ public class RcmlserverConfigurationSetImpl extends ConfigurationSet implements 
         value = source.getProperty(NOTIFY_KEY);
         try {
             this.notify = Boolean.parseBoolean(value);
-        } catch (Exception e) {
-            // do nothing ?
-        }
+        } catch (Exception e) {}
+
+        value = source.getProperty(TIMEOUT_KEY);
+        try {
+            this.timeout = Integer.parseInt(value);
+        } catch (Exception e) {}
+
+        value = source.getProperty(TIMEOUT_PER_NOTIFICATION_KEY);
+        try {
+            this.timeoutPerNotification= Integer.parseInt(value);
+        } catch (Exception e) {}
     }
 
-    public RcmlserverConfigurationSetImpl(String baseUrl, Boolean notify) {
-        super(null);
+    public RcmlserverConfigurationSetImpl(ConfigurationSource source, String baseUrl, Boolean notify, Integer timeout, Integer timeoutPerNotification) {
+        super(source);
         this.baseUrl = baseUrl;
         this.notify = notify;
+        this.timeout = timeout;
+        this.timeoutPerNotification = timeoutPerNotification;
     }
 
     @Override
@@ -73,6 +85,11 @@ public class RcmlserverConfigurationSetImpl extends ConfigurationSet implements 
     @Override
     public Integer getTimeout() {
         return this.timeout;
+    }
+
+    @Override
+    public Integer getTimeoutPerNotification() {
+        return this.timeoutPerNotification;
     }
 
 }
