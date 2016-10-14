@@ -6,11 +6,6 @@
 
     <insert id="addConferenceDetailRecord" parameterType="map">
 		INSERT INTO "restcomm_conference_detail_records" ("sid", "date_created", "date_updated", "account_sid", "status", "friendly_name", "api_version", "uri", "master_ms_id", "master_present") VALUES (#{sid}, #{date_created}, #{date_updated}, #{account_sid}, #{status}, #{friendly_name}, #{api_version}, #{uri}, #{master_ms_id}, #{master_present});
-		<!--call "addConferenceDetailRecord"( #{sid}, #{date_created}, #{date_updated}, #{account_sid}, #{status}, #{friendly_name}, #{api_version}, #{uri}, #{master_ms_id}, #{master_present} );-->
-		<!--IF NOT EXISTS(SELECT * FROM "restcomm_conference_detail_records" WHERE "friendly_name"=${friendly_name} AND "status" LIKE 'RUNNING%')-->
-		<!--THEN-->
-		<!--INSERT INTO restcomm_conference_detail_records ("sid", "date_created", "date_updated", "account_sid", "status", "friendly_name", "api_version", "uri", "master_ms_id", "master_present") VALUES (#{sid}, #{date_created}, #{date_updated}, #{account_sid}, #{status}, #{friendly_name}, #{api_version}, #{uri}, #{master_ms_id}, #{master_present});-->
-		<!--END IF;-->
     </insert>
 	<select id="getConferenceDetailRecord" parameterType="string" resultType="hashmap">
 		SELECT * FROM "restcomm_conference_detail_records" WHERE "sid"=#{sid};

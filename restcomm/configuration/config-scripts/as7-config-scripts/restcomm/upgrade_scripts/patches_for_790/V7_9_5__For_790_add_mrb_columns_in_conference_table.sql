@@ -17,13 +17,13 @@ USE ${RESTCOMM_DBNAME};
 DELIMITER //
 CREATE PROCEDURE updateProcedure()
  BEGIN
-   SELECT DISTINCTROW IFNULL(column_name, '') INTO @colName804
+   SELECT DISTINCTROW IFNULL(column_name, '') INTO @colName794
    FROM information_schema.columns
    WHERE table_schema='${RESTCOMM_DBNAME}'
    AND table_name = 'restcomm_conference_detail_records'
    AND column_name = 'master_ms_id';
 
-  IF @colName804 IS NULL THEN
+  IF @colName794 IS NULL THEN
   CREATE TABLE temp_table LIKE restcomm_conference_detail_records;
   ALTER TABLE temp_table ADD master_ms_id VARCHAR(34);
   ALTER TABLE temp_table ADD master_conference_endpoint_id VARCHAR(20);
