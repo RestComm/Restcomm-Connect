@@ -49,8 +49,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 @RunWith(Arquillian.class)
-public class AccountsEndpointRemovalTest extends EndpointTest {
-    private final static Logger logger = Logger.getLogger(AccountsEndpointRemovalTest.class.getName());
+public class AccountsEndpointClosingTest extends EndpointTest {
+    private final static Logger logger = Logger.getLogger(AccountsEndpointClosingTest.class.getName());
 
     private static final String version = Version.getVersion();
 
@@ -81,12 +81,13 @@ public class AccountsEndpointRemovalTest extends EndpointTest {
         ClientResponse response = resource.put(ClientResponse.class,params);
         Assert.assertEquals(200, response.getStatus());
         // wait until all asynchronous request have been sent to RVD
-        Thread.sleep(3000);
-        verify(6, postRequestedFor(urlEqualTo("/restcomm-rvd/services/notifications")));
-
+        verify(postRequestedFor(urlMatching("/restcomm-rvd/services/notifications"))
+                .withHeader("Content-Type", containing("application/json"))
+                .withRequestBody(equalToJson("[{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000005\"},{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000004\"},{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000003\"},{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000002\"},{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000001\"},{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000000\"}]")
+                ));
     }
 
-    @Deployment(name = "AccountsEndpointRemovalTest", managed = true, testable = false)
+    @Deployment(name = "AccountsEndpointClosingTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         logger.info("version");

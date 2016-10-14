@@ -18,13 +18,14 @@
  *
  */
 
-package org.restcomm.connect.commons.configuration.sets;
+package org.restcomm.connect.http.client.rcmlserver;
+
+import com.google.gson.JsonObject;
+
+import java.util.ArrayList;
 
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public interface RcmlserverConfigurationSet {
-    String getBaseUrl();
-    Boolean getNotify();
-    Integer getTimeout(); // how much to wait for response to a notification request before giving up
+public class RcmlserverNotifications extends ArrayList<JsonObject> {
 }

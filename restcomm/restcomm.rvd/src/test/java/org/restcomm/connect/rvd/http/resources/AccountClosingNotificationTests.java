@@ -25,15 +25,21 @@ import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.restcomm.connect.rvd.ProjectService;
 import org.restcomm.connect.rvd.TestUtils;
 import org.restcomm.connect.rvd.identity.UserIdentityContext;
 import org.restcomm.connect.rvd.model.ModelMarshaler;
 import org.restcomm.connect.rvd.storage.WorkspaceStorage;
 
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+
+import static org.mockito.Mockito.when;
 
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
@@ -44,18 +50,15 @@ public class AccountClosingNotificationTests extends RestServiceMockedTest {
 
     @Before
     public void before() throws IOException {
-        addLegitimateAccount("administrator@company.com", "ACae6e420f425248d6a26948c17a9e2acf");
-        //addLegitimateAccount("orestis@company.com", "AC1234");
+        addLegitimateAccount("administrator@company.com", "ACA1000000000000000000000000000000");
         setupMocks();
         workspaceDir = TestUtils.createTempWorkspace();
         marshaler = new ModelMarshaler();
         storage = new WorkspaceStorage(workspaceDir.getPath(), marshaler);
         // create projects in the workspace
-        createProject("APA0001","administrator@company.com");
-        createProject("APA0002","administrator@company.com");
-        createProject("APA0003","administrator@company.com");
-        createProject("APB0001","orestis@company.com");
-        createProject("APB0002","orestis@company.com");
+        createProject("APA0000","administrator@company.com");
+        createProject("APB0001","sub1@company.com");
+        createProject("APB0002","sub2@company.com");
         createProject("APB0003","orestis@company.com");
 
         projectService = new ProjectService(configuration,storage,marshaler,"/restcomm-rvd");
@@ -67,35 +70,29 @@ public class AccountClosingNotificationTests extends RestServiceMockedTest {
     }
 
     @Test
-    public void processAccountClosingNotificationTest() {
-        addLegitimateAccount("administrator@company.com", "ACae6e420f425248d6a26948c17a9e2acf");
-        addMissingAccount("missing@company.com", "AC_MISSING");
-        addForbiddenAccount("forbidden@company.com", "AC_FORBIDDEN");
+    public void processAccountClosingNotificationsTest() throws IOException {
+        addLegitimateAccount("sub1@company.com","ACA1000000000000000000000000000001");
+        addLegitimateAccount("sub2@company.com","ACA1000000000000000000000000000002");
         UserIdentityContext userIdentityContext = signIn("administrator@company.com", "RestComm");
-
         NotificationsRestService endpoint = new NotificationsRestService(appContext,userIdentityContext,projectService);
-        MultivaluedMap<String,String> params = new MultivaluedMapImpl();
-        // removing project of valid and logged account should work
-        params.add("type", NotificationsRestService.NotificationType.accountClosed.toString());
-        params.add("accountSid","ACae6e420f425248d6a26948c17a9e2acf");
-        Response response = endpoint.postNotification(params);
+
+        // mock input stream
+        final ByteArrayInputStream is = new ByteArrayInputStream("[{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000005\"},{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000004\"},{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000003\"},{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000002\"},{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000001\"},{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000000\"}]".getBytes());
+        ServletInputStream sis = new ServletInputStream() {
+            @Override
+            public int read() throws IOException {
+                return is.read();
+            }
+        };
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        when(request.getInputStream()).thenReturn(sis);
+
+        Response response = endpoint.postNotifications(request);
         Assert.assertEquals(200, response.getStatus());
-        Assert.assertFalse(projectExists("APA0001"));
-        Assert.assertFalse(projectExists("APA0002"));
-        Assert.assertFalse(projectExists("APA0003"));
-        Assert.assertTrue(projectExists("APB0001"));
-        // notifications about accounts that do not exist in restcomm should return 400 - BAD_REQUEST. Remember, CLOSED accounts are still there and returned
-        params.clear();
-        params.add("type", NotificationsRestService.NotificationType.accountClosed.toString());
-        params.add("accountSid","AC_MISSING");
-        response = endpoint.postNotification(params);
-        Assert.assertEquals(400, response.getStatus());
-        // notifications about accounts that the logged user doesn't have access to should return 403
-        params.clear();
-        params.add("type", NotificationsRestService.NotificationType.accountClosed.toString());
-        params.add("accountSid","AC_FORBIDDEN");
-        response = endpoint.postNotification(params);
-        Assert.assertEquals(403, response.getStatus());
+        Assert.assertFalse(projectExists("APA0000"));
+        Assert.assertFalse(projectExists("APB0001"));
+        Assert.assertFalse(projectExists("APB0002"));
+        Assert.assertTrue(projectExists("APB0003"));
     }
 
 }

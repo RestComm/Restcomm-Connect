@@ -18,13 +18,31 @@
  *
  */
 
-package org.restcomm.connect.commons.configuration.sets;
+package org.restcomm.connect.http.exceptions;
 
 /**
+ * Thrown when notification submission to rcmlserver failed for some reason.
+ *
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public interface RcmlserverConfigurationSet {
-    String getBaseUrl();
-    Boolean getNotify();
-    Integer getTimeout(); // how much to wait for response to a notification request before giving up
+public class RcmlserverNotifyError extends Exception {
+    private final boolean critical;
+
+    public RcmlserverNotifyError(String message, boolean critical) {
+        super(message);
+        this.critical = critical;
+    }
+
+    public RcmlserverNotifyError(boolean critical) {
+        this.critical = critical;
+    }
+
+    public RcmlserverNotifyError(String message, Throwable cause, boolean critical) {
+        super(message, cause);
+        this.critical = critical;
+    }
+
+    public boolean isCritical() {
+        return critical;
+    }
 }

@@ -77,11 +77,16 @@ public class RestServiceMockedTest {
 
     protected void addLegitimateAccount(String email, String accountSid) {
         stubFor(get(urlMatching("/restcomm/2012-04-24/Accounts.json/" + email))
-//                .withHeader("Accept", equalTo("text/xml"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody("{\"sid\":\"" + accountSid + "\",\"email_address\":\"" + email + "\",\"status\":\"active\",\"role\":\"administrator\"}")));
+        stubFor(get(urlMatching("/restcomm/2012-04-24/Accounts.json/" + accountSid))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"sid\":\"" + accountSid + "\",\"email_address\":\"" + email + "\",\"status\":\"active\",\"role\":\"administrator\"}")));
+
     }
 
     protected void addMissingAccount(String email, String accountSid) {
