@@ -419,6 +419,12 @@ public final class Link extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             final OpenLink request = (OpenLink) message;
+
+            if(request.primaryEndpointId() != null)
+                primaryEndpointId = new EndpointIdentifier(request.primaryEndpointId(), primaryEndpointId.getDomainName());
+            if(request.secondaryEndpointId() != null)
+                secondaryEndpointId =  new EndpointIdentifier(request.secondaryEndpointId(), secondaryEndpointId.getDomainName());
+
             final String sessionId = Integer.toString(session.id());
             final CallIdentifier callId = new CallIdentifier(sessionId);
             final CreateConnection crcx = new CreateConnection(source, callId, primaryEndpointId, request.mode());
