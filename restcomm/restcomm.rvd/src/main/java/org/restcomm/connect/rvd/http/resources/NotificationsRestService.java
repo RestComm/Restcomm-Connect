@@ -20,6 +20,9 @@
 
 package org.restcomm.connect.rvd.http.resources;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.rvd.ApplicationContext;
 import org.restcomm.connect.rvd.ProjectService;
@@ -36,15 +39,18 @@ import org.restcomm.connect.rvd.restcomm.RestcommAccountInfo;
 import org.restcomm.connect.rvd.storage.WorkspaceStorage;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.List;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 /**
  * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
@@ -53,7 +59,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 public class NotificationsRestService extends SecuredRestService {
     static final Logger logger = Logger.getLogger(NotificationsRestService.class.getName());
 
-    enum NotificationType {
+    public enum NotificationType {
         applicationRemoved,
         accountClosed
     }
@@ -84,40 +90,56 @@ public class NotificationsRestService extends SecuredRestService {
     }
 
     @POST
-    @Consumes(APPLICATION_FORM_URLENCODED)
-    public Response postNotification(final MultivaluedMap<String, String> data) {
-        secure(SecureBehavior.AllowNonActive);
-        logger.info("received notification");
+    @Consumes(APPLICATION_JSON)
+    public Response postNotifications(@Context HttpServletRequest req) {
+        secure();
+        logger.info("received notifications");
+        // Note that most know errors respond with 200 OK in case a notification is syntactically correct and. An exception
+        // is logged though.
         try {
-            NotificationType type = NotificationType.valueOf(data.getFirst("type"));
-            String applicationSid = null;
-            if (type == NotificationType.applicationRemoved) {
-                applicationSid = data.getFirst("applicationSid");
-                processApplicationRemovalNotification(applicationSid);
-            } else
-            if (type == NotificationType.accountClosed) {
-                String accountSid = data.getFirst("accountSid");
-                try {
-                    processAccountRemovalNotification(accountSid);
-                } catch (NotificationProcessingError e) {
-                    logger.error(e);
-                    if (e.getType() == NotificationProcessingError.Type.AccountIsMissing)
-                        return Response.status(Response.Status.BAD_REQUEST).build(); // the removed account was not found when trying to authorize against restcomm
-                    else
-                    if (e.getType() == NotificationProcessingError.Type.AccountNotAccessible)
-                        return Response.status(Response.Status.FORBIDDEN).build();
-                    else {
-                        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            JsonParser parse = new JsonParser();
+            JsonArray notifications;
+            try {
+                notifications = parse.parse(new InputStreamReader(req.getInputStream(), Charset.forName("UTF-8"))).getAsJsonArray();
+            } catch (IOException e) {
+                logger.error(e);
+                return Response.status(Response.Status.BAD_REQUEST).build();
+            }
+
+            for (int i = 0; i< notifications.size(); i++) {
+                JsonObject notif = notifications.get(i).getAsJsonObject();
+                String type = notif.get("type").getAsString();
+                if (NotificationType.accountClosed.toString().equals(type)) {
+                    String accountSid = notif.get("accountSid").getAsString();
+                    try {
+                        processAccountRemovalNotification(accountSid);
+                    } catch (NotificationProcessingError e) {
+                        // ignore most errors. Technically, the notification was properly received.
+                        logger.error(e);
+                        if (e.getType() == NotificationProcessingError.Type.AccountIsMissing) {
+                            //return Response.status(Response.Status.OK).build(); // the removed account was not found when trying to authorize against restcomm
+                            continue;
+                        }
+                        else
+                        if (e.getType() == NotificationProcessingError.Type.AccountNotAccessible) {
+                            //return Response.status(Response.Status.OK).build();
+                            continue;
+                        }
+                        else {
+                            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+                        }
                     }
+                } else
+                if (NotificationType.applicationRemoved.equals(type)) {
+                    String applicationSid = notif.get("applicationSid").getAsString();
+                    processApplicationRemovalNotification(applicationSid);
                 }
             }
 
-        } catch (IllegalArgumentException e) {
-            logger.error(e);
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            // TODO refine error handling here
         } catch (ProjectDoesNotExist e) {
             logger.error(e);
-            return Response.status(Response.Status.NOT_FOUND).build(); // this catch may be a little too generic and we will need to handle per case
+            return Response.status(Response.Status.OK).build();
         }
         catch (RvdException e) {
             logger.error(e);

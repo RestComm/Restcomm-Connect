@@ -30,8 +30,10 @@ import org.restcomm.connect.commons.configuration.sources.ConfigurationSource;
 public class RcmlserverConfigurationSetImpl extends ConfigurationSet implements RcmlserverConfigurationSet {
     private static final String BASE_URL_KEY = "rcmlserver-api.base-url";
     private static final String NOTIFY_KEY = "rcmlserver-api.notifications";
+    private static final String TIMEOUT_KEY = "rcmlserver-api.timeout";
     private String baseUrl = null;
     private Boolean notify = false;
+    private Integer timeout = 5000;
 
     public RcmlserverConfigurationSetImpl(ConfigurationSource source) {
         super(source);
@@ -67,4 +69,10 @@ public class RcmlserverConfigurationSetImpl extends ConfigurationSet implements 
     public Boolean getNotify() {
         return notify;
     }
+
+    @Override
+    public Integer getTimeout() {
+        return this.timeout;
+    }
+
 }
