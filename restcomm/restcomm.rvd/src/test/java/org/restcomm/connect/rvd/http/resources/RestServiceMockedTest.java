@@ -32,18 +32,15 @@ import org.restcomm.connect.rvd.commons.http.CustomHttpClientBuilder;
 import org.restcomm.connect.rvd.configuration.RestcommConfigBuilder;
 import org.restcomm.connect.rvd.identity.AccountProvider;
 import org.restcomm.connect.rvd.identity.UserIdentityContext;
-import org.mockito.Mockito;
 import org.restcomm.connect.rvd.model.ModelMarshaler;
 import org.restcomm.connect.rvd.model.client.ProjectState;
 
 import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
 
 import java.io.File;
 import java.io.IOException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.mockito.Mockito.when;
 
 
 /**
@@ -52,20 +49,13 @@ import static org.mockito.Mockito.when;
 public class RestServiceMockedTest {
 
     ServletContext servletContext;
-    //HttpServletRequest request;
     RvdConfiguration configuration;
-    //UserIdentityContext userIdentityContext;
     AccountProvider accountProvider;
     File workspaceDir;
     ModelMarshaler marshaler;
     ApplicationContext appContext;
 
     public void setupMocks() {
-        // mock HttpServletRequest object
-        //request = Mockito.mock(HttpServletRequest.class);
-        //String authorizationHeader = "Basic YWRtaW5pc3RyYXRvckBjb21wYW55LmNvbTo3N2Y4YzEyY2M3YjhmODQyM2U1YzM4YjAzNTI0OTE2Ng=="; // any password will pass
-        //when(request.getHeader("Authorization")).thenReturn(authorizationHeader);
-        // RvdConfiguration
         configuration = new RvdConfigurationBuilder()
                 .setRestcommBaseUri("http://127.0.0.1:8099")
                 .setRestcommConfig(new RestcommConfigBuilder().build())

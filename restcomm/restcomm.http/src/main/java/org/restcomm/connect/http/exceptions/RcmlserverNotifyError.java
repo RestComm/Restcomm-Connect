@@ -26,23 +26,16 @@ package org.restcomm.connect.http.exceptions;
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 public class RcmlserverNotifyError extends Exception {
-    private final boolean critical;
 
-    public RcmlserverNotifyError(String message, boolean critical) {
+    public RcmlserverNotifyError(String message) {
         super(message);
-        this.critical = critical;
     }
 
-    public RcmlserverNotifyError(boolean critical) {
-        this.critical = critical;
+    public RcmlserverNotifyError() {
     }
 
-    public RcmlserverNotifyError(String message, Throwable cause, boolean critical) {
+    public RcmlserverNotifyError(String message, Throwable cause) {
         super(message, cause);
-        this.critical = critical;
     }
 
-    public boolean isCritical() {
-        return critical;
-    }
 }

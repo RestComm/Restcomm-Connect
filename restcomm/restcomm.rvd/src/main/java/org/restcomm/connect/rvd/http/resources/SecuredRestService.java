@@ -1,6 +1,5 @@
 package org.restcomm.connect.rvd.http.resources;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.restcomm.connect.rvd.ApplicationContext;
 import org.restcomm.connect.rvd.RvdConfiguration;
 import org.restcomm.connect.rvd.exceptions.AuthorizationException;
@@ -14,11 +13,6 @@ import org.restcomm.connect.rvd.restcomm.RestcommAccountInfo;
  */
 public class SecuredRestService extends RestService {
     private UserIdentityContext userIdentityContext;
-
-    public enum SecureBehavior {
-        AllowNonActive, //  secure() won't fail if an account is not in active state
-        Default
-    }
 
     public void init() {
         super.init();
@@ -54,21 +48,10 @@ public class SecuredRestService extends RestService {
      * Makes sure the request is done by an authenticated user.
      */
     protected void secure() {
-        secure(SecureBehavior.Default);
-    }
-
-    protected void secure(SecureBehavior policy) {
         RestcommAccountInfo account = userIdentityContext.getAccountInfo();
         if (account != null) {
-            if (policy == SecureBehavior.AllowNonActive) {
-                return;
-            } else if (policy == SecureBehavior.Default){
-                if ( "active".equals(account.getStatus())) {
+            if ( "active".equals(account.getStatus()))
                     return;
-                }
-            } else {
-                throw new NotImplementedException("RVD secure() behavior not defined:  " + policy.toString());
-            }
         }
         throw new AuthorizationException();
     }

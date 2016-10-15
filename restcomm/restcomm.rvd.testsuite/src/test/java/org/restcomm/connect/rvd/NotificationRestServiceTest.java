@@ -20,6 +20,7 @@
 
 package org.restcomm.connect.rvd;
 
+import com.google.gson.JsonObject;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -35,6 +36,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 /**
@@ -49,15 +51,10 @@ public class NotificationRestServiceTest extends RestServiceTest {
     public void notifyApplicationRemovalWorks() {
         Client jersey = getClient("administrator@company.com", "RestComm");
         WebResource resource = jersey.resource( getResourceUrl("/services/notifications") );
-        MultivaluedMap<String,String> params = new MultivaluedMapImpl();
-        params.add("type","applicationRemoved");
-        params.add("applicationSid","AP81cf45088cba4abcac1261385916d582");
-        ClientResponse response = resource.post(ClientResponse.class,params);
+        String body = "[{\"type\":\"accountClosed\",\"accountSid\":\"ACae6e420f425248d6a26948c17a9e2acf\"}]";
+        ClientResponse response = resource.type(MediaType.APPLICATION_JSON_TYPE).post(ClientResponse.class,body);
         // first time we shoud get a 200
         Assert.assertEquals(200, response.getStatus());
-        // if we replay the request we should get a 404
-        response = resource.post(ClientResponse.class,params);
-        Assert.assertEquals(404, response.getStatus());
     }
 
     @Deployment(name = "NotificationsRestServiceTest", managed = true, testable = false)

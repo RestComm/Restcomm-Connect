@@ -63,7 +63,6 @@ public class RvdConfiguration {
     RvdConfiguration() {
     }
 
-
     public RvdConfiguration(ServletContext servletContext) {
         contextRootPath = servletContext.getRealPath("/");
         if(logger.isInfoEnabled()) {
@@ -267,5 +266,4 @@ public class RvdConfiguration {
     void setRestcommBaseUri(URI uri) {
         this.restcommBaseUri = uri;
     }
-
 }

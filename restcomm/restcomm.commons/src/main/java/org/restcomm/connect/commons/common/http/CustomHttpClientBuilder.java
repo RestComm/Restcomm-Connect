@@ -26,15 +26,12 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.restcomm.connect.commons.HttpConnector;
 import org.restcomm.connect.commons.HttpConnectorList;
 import org.restcomm.connect.commons.configuration.sets.MainConfigurationSet;
 import org.restcomm.connect.commons.util.UriUtils;
 
-import javax.net.ssl.SSLContext;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -52,6 +49,7 @@ public class CustomHttpClientBuilder {
         // TODO Auto-generated constructor stub
     }
 
+
     public static HttpClient build(MainConfigurationSet config) {
         int timeoutConnection = config.getResponseTimeout();
         return build(config, timeoutConnection);
@@ -68,21 +66,6 @@ public class CustomHttpClientBuilder {
             return  HttpClients.custom().setDefaultRequestConfig(requestConfig).build();
         } else {
             return buildAllowallClient(requestConfig);
-        }
-    }
-
-    public static CloseableHttpAsyncClient buildAsync(MainConfigurationSet config) {
-        SslMode mode = config.getSslMode();
-        int timeoutConnection = config.getResponseTimeout();
-        RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(timeoutConnection)
-                .setConnectionRequestTimeout(timeoutConnection)
-                .setSocketTimeout(timeoutConnection)
-                .setCookieSpec(CookieSpecs.STANDARD).build();
-        if ( mode == SslMode.strict ) {
-            return HttpAsyncClients.custom().setDefaultRequestConfig(requestConfig).build();
-        } else {
-            return buildAllowallAsyncClient(requestConfig);
         }
     }
 
@@ -109,34 +92,6 @@ public class CustomHttpClientBuilder {
         }
         if (httpClient == null) {
             httpClient = HttpClients.custom().setDefaultRequestConfig(requestConfig).build();
-        }
-
-        return httpClient;
-    }
-
-    private static CloseableHttpAsyncClient buildAllowallAsyncClient(RequestConfig requestConfig) {
-        HttpConnectorList httpConnectorList = UriUtils.getHttpConnectorList();
-        CloseableHttpAsyncClient httpClient = null;
-        //Enable SSL only if we have HTTPS connector
-        List<HttpConnector> connectors = httpConnectorList.getConnectors();
-        Iterator<HttpConnector> iterator = connectors.iterator();
-        while (iterator.hasNext()) {
-            HttpConnector connector = iterator.next();
-            if (connector.isSecure()) {
-                SSLConnectionSocketFactory sslsf;
-                try {
-                    SSLContextBuilder builder = new SSLContextBuilder();
-                    builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
-                    SSLContext sslContext = builder.build();
-                    httpClient = HttpAsyncClients.custom().setDefaultRequestConfig(requestConfig).setSSLContext(sslContext).build(); // TODO use of SSLContext is not really tested
-                } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
-                    throw new RuntimeException("Error creating HttpClient", e);
-                }
-                break;
-            }
-        }
-        if (httpClient == null) {
-            httpClient = HttpAsyncClients.custom().setDefaultRequestConfig(requestConfig).build();
         }
 
         return httpClient;

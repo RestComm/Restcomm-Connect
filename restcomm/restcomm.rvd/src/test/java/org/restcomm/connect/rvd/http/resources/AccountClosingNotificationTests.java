@@ -20,7 +20,6 @@
 
 package org.restcomm.connect.rvd.http.resources;
 
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
@@ -34,7 +33,6 @@ import org.restcomm.connect.rvd.storage.WorkspaceStorage;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

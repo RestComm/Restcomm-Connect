@@ -42,6 +42,8 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 /**
+ * Utility class that handles notification submission to rcmlserver (typically RVD)
+ *
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 public class RcmlserverApi {
@@ -81,13 +83,13 @@ public class RcmlserverApi {
             logger.info("Will transmit a set of " + notifications.size() + " notifications and wait at most for " + totalTimeout);
             HttpResponse response = httpClient.execute(request);
             if (response.getStatusLine().getStatusCode() != 200) {
-                throw new RcmlserverNotifyError(true); // TODO refine critical-ity of exceptions thrown based on status code
+                throw new RcmlserverNotifyError();
             }
             logger.info("Transmitted a set of " + notifications.size() + " notification(s) to rcmlserver");
         } catch (IOException e) {
             // TODO throw serious exception if the error signifies problem reaching rcmlserver that would affect subsequent
             // request too
-            throw new RcmlserverNotifyError("Transmission of " + notifications.size() + " notifications failed.",e,true);
+            throw new RcmlserverNotifyError("Transmission of " + notifications.size() + " notifications failed.",e);
         }
     }
 
