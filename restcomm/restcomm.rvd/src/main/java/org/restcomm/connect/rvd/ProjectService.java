@@ -10,7 +10,6 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.FileUtils;
-
 import org.restcomm.connect.rvd.exceptions.InvalidServiceParameters;
 import org.restcomm.connect.rvd.exceptions.ProjectDoesNotExist;
 import org.restcomm.connect.rvd.exceptions.RvdException;
@@ -50,8 +49,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class ProjectService {
-
-    //static final Logger logger = Logger.getLogger(ProjectService.class.getName());
 
     public enum Status {
         OK, UNKNOWN_VERSION, BAD, TOO_OLD, SHOULD_UPGRADE
