@@ -31,7 +31,7 @@ A *Call* represents a connection between a phone or user agent and RestComm. Thi
 |ApiVersion |Displays the current API version
 |ForwardFrom |If this call was an incoming call forwarded from another number, the forwarding phone number (depends on carrier supporting forwarding). Empty otherwise.
 |CallerName |If this call was an incoming call, the caller's name. Empty otherwise.
-|Uri |The URI for this account, relative to http://localhost:port/restcomm.
+|Uri |The URI for this account, relative to https://localhost:port/restcomm.
 |======================================================================================================================================================================
 
 === Supported Operations
@@ -66,7 +66,7 @@ A *Call* represents a connection between a phone or user agent and RestComm. Thi
 Restcomm will make a call to any SIP account that is reachable. It the example below, the *SIP* account is listening on port **5060**. When you make the call, the SIP phone on which Alice is registered will ring and the hello-play.xml file will be played.
 
 ....
-curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=sip:alice@127.0.0.1:5060" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=sip:alice@127.0.0.1:5060" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
 ....
 
 == Making a call to a Restcomm client
@@ -74,7 +74,7 @@ curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 You must first create a RestComm client. In the example below, the Restcomm client created is called Alice. When you make the call, the SIP phone on which Alice is registered will ring and the *hello-play.xml* file will be played.
 
 ....
-curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=client:alice" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=client:alice" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
 ....
 
 == Calling a DID number
@@ -85,7 +85,7 @@ The above example shows how to make a call to a SIP number. If you want to make 
 Using filter is a good practice on a server with thousands or millions of calls
 
 ....
-curl -X GET  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls
+curl -X GET  https://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls
 ....
 
 If the system hasn't received any calls, you will see the the output below
