@@ -33,11 +33,13 @@ import akka.actor.ActorRef;
 public final class MediaGatewayForConference {
     private final Sid conferenceSid;
     private final ActorRef mediaGateway;
+    private final String masterConfernceEndpointIdName;
 
-    public MediaGatewayForConference(final Sid conferenceSid, final ActorRef mediaGateway) {
+    public MediaGatewayForConference(final Sid conferenceSid, final ActorRef mediaGateway, final String masterConfernceEndpointIdName) {
         super();
         this.conferenceSid = conferenceSid;
         this.mediaGateway = mediaGateway;
+        this.masterConfernceEndpointIdName = masterConfernceEndpointIdName;
     }
 
     public Sid conferenceSid() {
@@ -46,5 +48,9 @@ public final class MediaGatewayForConference {
 
     public ActorRef mediaGateway() {
         return mediaGateway;
+    }
+
+    public String masterConfernceEndpointIdName() {
+        return masterConfernceEndpointIdName;
     }
 }
