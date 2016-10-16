@@ -114,6 +114,7 @@ public final class MmsConferenceController extends MediaServerController {
     private final ActorRef mrb;
     private String conferenceName;
     private Sid conferenceSid;
+    private String conferenceEndpointIdName;
 
     private ConnectionMode connectionMode;
 
@@ -264,6 +265,7 @@ public final class MmsConferenceController extends MediaServerController {
             MediaGatewayForConference mgc = (MediaGatewayForConference) message.get();
             mediaGateway = mgc.mediaGateway();
             this.conferenceSid = mgc.conferenceSid();
+            this.conferenceEndpointIdName = mgc.masterConfernceEndpointIdName();
             fsm.transition(message, acquiringMediaSession);
         }else if(is(acquiringCnfMediaResourceController)){
             conferenceMediaResourceController = (ActorRef) message.get();
@@ -453,8 +455,6 @@ public final class MmsConferenceController extends MediaServerController {
         public void execute(final Object message) throws Exception {
             CreateMediaSession createMediaSession = (CreateMediaSession) message;
             String conferenceName = createMediaSession.conferenceName();
-            //TODO: temporary log
-            logger.info( "MMSConferenceController: GetMediaGatewayFromMRB: conferenceName = " + conferenceName  );
             mrb.tell(new GetMediaGateway(createMediaSession.callSid(), conferenceName, null), self());
         }
     }
@@ -492,7 +492,7 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            mediaGateway.tell(new CreateConferenceEndpoint(mediaSession), super.source);
+            mediaGateway.tell(new CreateConferenceEndpoint(mediaSession, conferenceEndpointIdName), super.source);
         }
     }
 
