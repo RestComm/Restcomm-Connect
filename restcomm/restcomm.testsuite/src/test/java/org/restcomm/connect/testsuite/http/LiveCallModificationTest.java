@@ -159,6 +159,65 @@ public class LiveCallModificationTest {
     }
 
     @Test
+    // Terminate a call in-progress using the Live Call Modification API. Non-regression test for issue:
+    // https://bitbucket.org/telestax/telscale-restcomm/issue/139
+    public void terminateInProgressCallAlreadyTerminated() throws Exception {
+
+        SipCall bobCall = bobPhone.createSipCall();
+        bobCall.listenForIncomingCall();
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        String from = "+15126002188";
+        String to = bobContact;
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+
+        JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl);
+        assertNotNull(callResult);
+        String callSid = callResult.get("sid").getAsString();
+
+        assertTrue(bobCall.waitForIncomingCall(5000));
+        String receivedBody = new String(bobCall.getLastReceivedRequest().getRawContent());
+        assertTrue(bobCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Bob", 3600));
+        assertTrue(bobCall
+                .sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, receivedBody, "application", "sdp", null, null));
+
+        // Restcomm now should execute RCML that will create a call to +131313 (george's phone)
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
+                null, null));
+
+        Thread.sleep(1000);
+
+        bobCall.listenForDisconnect();
+        georgeCall.listenForDisconnect();
+
+        callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
+                callSid, "completed", null);
+
+        assertTrue(georgeCall.waitForDisconnect(5000));
+        assertTrue(georgeCall.respondToDisconnect());
+
+        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        Thread.sleep(1000);
+
+        callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
+                callSid, "completed", null);
+
+        assertNotNull(callResult);
+
+        georgeCall.dispose();
+        bobCall.dispose();
+    }
+
+    @Test
     // Terminate a call that is ringing using the Live Call Modification API. Non-regression test for issue:
     // https://bitbucket.org/telestax/telscale-restcomm/issue/139
     public void terminateRingingCall() throws Exception {

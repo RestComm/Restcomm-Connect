@@ -33,6 +33,8 @@ public interface RegistrationsDao {
 
     Registration getRegistrationByInstanceId(String User, String instanceId);
 
+    List<Registration> getRegistrationsByInstanceId(String instanceId);
+
     List<Registration> getRegistrations(String user);
 
     List<Registration> getRegistrations();
