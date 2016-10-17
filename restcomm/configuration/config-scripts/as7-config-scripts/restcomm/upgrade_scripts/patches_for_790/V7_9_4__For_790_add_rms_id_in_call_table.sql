@@ -42,7 +42,7 @@ INSERT INTO temp_table
     ring_duration,
     instanceid,
     conference_sid,
-    muted
+    muted,
     start_conference_on_enter,
     end_conference_on_exit,
     on_hold
