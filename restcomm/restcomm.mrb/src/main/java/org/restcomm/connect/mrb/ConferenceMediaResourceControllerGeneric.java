@@ -181,7 +181,6 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         } else if (StartConferenceMediaResourceController.class.equals(klass)){
             onStartConferenceMediaResourceController((StartConferenceMediaResourceController) message, self, sender);
         } else if (MediaGatewayResponse.class.equals(klass)) {
-            logger.info("going to call onMediaGatewayResponse");
             onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
         } else if (MediaGroupStateChanged.class.equals(klass)) {
             onMediaGroupStateChanged((MediaGroupStateChanged) message, self, sender);
@@ -219,7 +218,8 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
     private void onStartConferenceMediaResourceController(StartConferenceMediaResourceController message, ActorRef self, ActorRef sender) throws Exception{
         if (is(uninitialized)) {
-            logger.info("onStartConferenceMediaResourceController: conferenceSid: "+message.conferenceSid()+" cnfEndpoint: "+message.cnfEndpoint());
+        	if(logger.isInfoEnabled())
+                logger.info("onStartConferenceMediaResourceController: conferenceSid: "+message.conferenceSid()+" cnfEndpoint: "+message.cnfEndpoint());
             this.localConfernceEndpoint = message.cnfEndpoint();
             this.conferenceSid = message.conferenceSid();
             fsm.transition(message, acquiringConferenceInfo);
@@ -229,7 +229,6 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
     private void onMediaGatewayResponse(MediaGatewayResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
         logger.info("inside onMediaGatewayResponse: state = "+fsm.state());
         if (is(acquiringConferenceInfo)){
-            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringMediaSession ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             this.localMediaSession = (MediaSession) message.get();
             this.fsm.transition(message, creatingMediaGroup);
         }
@@ -390,7 +389,8 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("CMRC is in pre ACTIVE NOW...");
+        	if(logger.isInfoEnabled())
+                logger.info("CMRC is in pre ACTIVE NOW...");
             // later Conference will update the status as per informed by VI as per RCML
             updateConferenceStatus("RUNNING_MODERATOR_ABSENT");
             broadcast(new ConferenceMediaResourceControllerStateChanged(ConferenceMediaResourceControllerStateChanged.MediaServerControllerState.ACTIVE, cdr.getStatus()));
@@ -406,7 +406,8 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("CMRC is ACTIVE NOW...");
+        	if(logger.isInfoEnabled())
+                logger.info("CMRC is ACTIVE NOW...");
         }
     }
 
@@ -418,8 +419,8 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
         @Override
         public void execute(Object message) throws Exception {
-            logger.info("CMRC is STOPPING NOW...");
-            logger.info("CMRC is STOPPING Master NOW...");
+        	if(logger.isInfoEnabled())
+                logger.info("CMRC is STOPPING NOW...");
             updateConferenceStatus("COMPLETED");
             // Destroy Media Group
             mediaGroup.tell(new StopMediaGroup(), super.source);
@@ -489,7 +490,6 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
     private void updateConferenceStatus(String status){
         if(cdr != null){
-            logger.info("updateConferenceStatus called");
             final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
             cdr = dao.getConferenceDetailRecord(conferenceSid);
             cdr = cdr.setStatus(status);

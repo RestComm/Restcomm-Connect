@@ -96,8 +96,6 @@ public class MmsBridgeController extends MediaServerController {
     private Boolean fail;
 
     // MGCP runtime stuff
-    //private final ActorRef mediaGateway;
-    // TODO rename following variable to 'mediaGateway'
     private ActorRef mediaGateway;
     private MediaSession mediaSession;
     private ActorRef endpoint;
@@ -117,7 +115,6 @@ public class MmsBridgeController extends MediaServerController {
 
     private Sid callSid;
 
-    //public MmsBridgeController(final List<ActorRef> mediaGateways, final Configuration configuration) {
     public MmsBridgeController(final ActorRef mrb) {
         final ActorRef self = self();
 
@@ -255,8 +252,7 @@ public class MmsBridgeController extends MediaServerController {
     }
 
     private void onMediaResourceBrokerResponse(MediaResourceBrokerResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
-        logger.info("got MRB response in bridge controller");
-        this.mediaGateway = (ActorRef) message.get();
+    	this.mediaGateway = (ActorRef) message.get();
         fsm.transition(message, acquiringMediaSession);
 
     }
