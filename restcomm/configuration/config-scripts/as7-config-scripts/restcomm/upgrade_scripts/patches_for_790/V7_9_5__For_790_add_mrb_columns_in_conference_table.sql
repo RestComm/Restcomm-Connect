@@ -1,29 +1,20 @@
 --SQL Script for MySQL/MariaDB to update DB with the schema changes for issue #1104
---Date: Jan 21, 2016
---Author: George Vagenas
+--Date: Oct 17, 2016
+--Author: Maria Farooq
 
---Modify TABLE restcomm_conference_detail_records add columns master_ms_id VARCHAR(34),
-master_conference_endpoint_id VARCHAR(20),
-master_present BOOLEAN NOT NULL DEFAULT TRUE, 
-master_ivr_endpoint_id VARCHAR(20),
-master_ivr_endpoint_session_id VARCHAR(200),
-master_bridge_endpoint_id VARCHAR(20),
-master_bridge_endpoint_session_id VARCHAR(200),
-master_bridge_conn_id VARCHAR(200),
-master_ivr_conn_id VARCHAR(200)
-);
+--Modify TABLE restcomm_conference_detail_records add columns master_ms_id VARCHAR(34),master_conference_endpoint_id VARCHAR(20),master_present BOOLEAN NOT NULL DEFAULT TRUE, master_ivr_endpoint_id VARCHAR(20),master_ivr_endpoint_session_id VARCHAR(200),master_bridge_endpoint_id VARCHAR(20),master_bridge_endpoint_session_id VARCHAR(200),master_bridge_conn_id VARCHAR(200),master_ivr_conn_id VARCHAR(200));
 
 USE ${RESTCOMM_DBNAME};
 DELIMITER //
 CREATE PROCEDURE updateProcedure()
  BEGIN
-   SELECT DISTINCTROW IFNULL(column_name, '') INTO @colName794
+   SELECT DISTINCTROW IFNULL(column_name, '') INTO @colName795
    FROM information_schema.columns
    WHERE table_schema='${RESTCOMM_DBNAME}'
    AND table_name = 'restcomm_conference_detail_records'
    AND column_name = 'master_ms_id';
 
-  IF @colName794 IS NULL THEN
+  IF @colName795 IS NULL THEN
   CREATE TABLE temp_table LIKE restcomm_conference_detail_records;
   ALTER TABLE temp_table ADD master_ms_id VARCHAR(34);
   ALTER TABLE temp_table ADD master_conference_endpoint_id VARCHAR(20);
