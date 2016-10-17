@@ -1,8 +1,8 @@
---SQL Script for MySQL/MariaDB to update DB with the schema changes for issue #1104
---Date: Oct 17, 2016
---Author: Maria Farooq
+-- SQL Script for MySQL/MariaDB to update DB with the schema changes for issue #1104
+-- Date: Oct 17, 2016
+-- Author: Maria Farooq
 
---Modify TABLE restcomm_conference_detail_records add columns master_ms_id VARCHAR(34),master_conference_endpoint_id VARCHAR(20),master_present BOOLEAN NOT NULL DEFAULT TRUE, master_ivr_endpoint_id VARCHAR(20),master_ivr_endpoint_session_id VARCHAR(200),master_bridge_endpoint_id VARCHAR(20),master_bridge_endpoint_session_id VARCHAR(200),master_bridge_conn_id VARCHAR(200),master_ivr_conn_id VARCHAR(200));
+-- Modify TABLE restcomm_conference_detail_records add columns master_ms_id VARCHAR(34),master_conference_endpoint_id VARCHAR(20),master_present BOOLEAN NOT NULL DEFAULT TRUE, master_ivr_endpoint_id VARCHAR(20),master_ivr_endpoint_session_id VARCHAR(200),master_bridge_endpoint_id VARCHAR(20),master_bridge_endpoint_session_id VARCHAR(200),master_bridge_conn_id VARCHAR(200),master_ivr_conn_id VARCHAR(200));
 
 USE ${RESTCOMM_DBNAME};
 DELIMITER //
