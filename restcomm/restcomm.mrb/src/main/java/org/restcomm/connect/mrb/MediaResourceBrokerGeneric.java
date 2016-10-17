@@ -219,13 +219,13 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
                 final String friendlyName = cnfNameAndAccount[1];
 
                 ConferenceDetailRecordFilter filter = new ConferenceDetailRecordFilter(accountSid, "RUNNING%", null, null, friendlyName, 1, 0);
-                logger.info("ConferenceDetailRecordFilter: "+filter.toString());
                 List<ConferenceDetailRecord> records = dao.getConferenceDetailRecords(filter);
 
                 if(records != null && records.size()>0){
                     final ConferenceDetailRecord cdr = records.get(0);
                     sid = cdr.getSid();
-                    logger.info("A conference with same name is running. According to database record. given SID is: "+sid);
+                    if(logger.isInfoEnabled())
+                        logger.info("A conference with same name is running. According to database record. given SID is: "+sid);
                 }else{
                     // this is first record of this conference on all instances of
                     final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
@@ -250,7 +250,8 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
                     //getting CDR again as it is a conditional insert(select if exists or insert) to handle concurrency (incase another participant joins on another instance at very same time)
                     cdr = dao.getConferenceDetailRecords(filter).get(0);
                     sid = cdr.getSid();
-                    logger.info("addConferenceDetailRecord: SID: "+sid+" NAME: "+conferenceName);
+                    if(logger.isInfoEnabled())
+                        logger.info("addConferenceDetailRecord: SID: "+sid+" NAME: "+conferenceName);
                 }
             }else{
                 logger.error("call record is null");
