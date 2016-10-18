@@ -191,8 +191,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             final List<Account> accounts = new ArrayList<Account>();
-            accounts.add(account);
-            accounts.addAll(accountsDao.getAccounts(account.getSid()));
+//            accounts.add(account);
+            accounts.addAll(accountsDao.getChildAccounts(account.getSid()));
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(new AccountList(accounts));
                 return ok(xstream.toXML(response), APPLICATION_XML).build();

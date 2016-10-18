@@ -121,10 +121,10 @@ public final class MybatisAccountsDao implements AccountsDao {
     }
 
     @Override
-    public List<Account> getAccounts(final Sid accountSid) {
+    public List<Account> getChildAccounts(final Sid parentSid) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getAccounts", accountSid.toString());
+            final List<Map<String, Object>> results = session.selectList(namespace + "getChildAccounts", parentSid.toString());
             final List<Account> accounts = new ArrayList<Account>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -201,13 +201,13 @@ public final class MybatisAccountsDao implements AccountsDao {
         final DateTime dateUpdated = readDateTime(map.get("date_updated"));
         final String emailAddress = readString(map.get("email_address"));
         final String friendlyName = readString(map.get("friendly_name"));
-        final Sid accountSid = readSid(map.get("account_sid"));
+        final Sid parentSid = readSid(map.get("parent_sid"));
         final Account.Type type = readAccountType(map.get("type"));
         final Account.Status status = readAccountStatus(map.get("status"));
         final String authToken = readString(map.get("auth_token"));
         final String role = readString(map.get("role"));
         final URI uri = readUri(map.get("uri"));
-        return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, accountSid, type, status, authToken,
+        return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, parentSid, type, status, authToken,
                 role, uri);
     }
 
@@ -218,7 +218,7 @@ public final class MybatisAccountsDao implements AccountsDao {
         map.put("date_updated", writeDateTime(account.getDateUpdated()));
         map.put("email_address", account.getEmailAddress());
         map.put("friendly_name", account.getFriendlyName());
-        map.put("account_sid", writeSid(account.getAccountSid()));
+        map.put("parent_sid", writeSid(account.getParentSid()));
         map.put("type", writeAccountType(account.getType()));
         map.put("status", writeAccountStatus(account.getStatus()));
         map.put("auth_token", account.getAuthToken());
