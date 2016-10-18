@@ -252,7 +252,7 @@ public class MmsBridgeController extends MediaServerController {
     }
 
     private void onMediaResourceBrokerResponse(MediaResourceBrokerResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
-    	this.mediaGateway = (ActorRef) message.get();
+        this.mediaGateway = (ActorRef) message.get();
         fsm.transition(message, acquiringMediaSession);
 
     }
