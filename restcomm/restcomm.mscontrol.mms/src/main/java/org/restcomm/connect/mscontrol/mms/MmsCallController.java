@@ -459,8 +459,6 @@ public class MmsCallController extends MediaServerController {
     }
 
     private void onMediaResourceBrokerResponse(MediaResourceBrokerResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
-        logger.info("got MRB response in call controller");
-        //TODO: check state here and then do the transition
         this.mediaGateway = (ActorRef) message.get();
         fsm.transition(message, acquiringMediaGatewayInfo);
 

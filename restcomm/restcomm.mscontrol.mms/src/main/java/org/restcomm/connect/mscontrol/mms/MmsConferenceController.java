@@ -114,6 +114,7 @@ public final class MmsConferenceController extends MediaServerController {
     private final ActorRef mrb;
     private String conferenceName;
     private Sid conferenceSid;
+    private String conferenceEndpointIdName;
 
     private ConnectionMode connectionMode;
 
@@ -251,7 +252,8 @@ public final class MmsConferenceController extends MediaServerController {
     }
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
-        logger.info("got JoinComplete in conference controller");
+    	if(logger.isInfoEnabled())
+    	    logger.info("got JoinComplete in conference controller");
         if(!firstJoinSent){
             firstJoinSent = true;
             conferenceMediaResourceController.tell(message, self);
@@ -259,11 +261,13 @@ public final class MmsConferenceController extends MediaServerController {
     }
 
     private void onMediaResourceBrokerResponse(MediaResourceBrokerResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
-        logger.info("got MRB response in conference controller");
+        if(logger.isInfoEnabled())
+            logger.info("got MRB response in conference controller");
         if(is(acquiringMediaGateway)){
             MediaGatewayForConference mgc = (MediaGatewayForConference) message.get();
             mediaGateway = mgc.mediaGateway();
             this.conferenceSid = mgc.conferenceSid();
+            this.conferenceEndpointIdName = mgc.masterConfernceEndpointIdName();
             fsm.transition(message, acquiringMediaSession);
         }else if(is(acquiringCnfMediaResourceController)){
             conferenceMediaResourceController = (ActorRef) message.get();
@@ -453,8 +457,6 @@ public final class MmsConferenceController extends MediaServerController {
         public void execute(final Object message) throws Exception {
             CreateMediaSession createMediaSession = (CreateMediaSession) message;
             String conferenceName = createMediaSession.conferenceName();
-            //TODO: temporary log
-            logger.info( "MMSConferenceController: GetMediaGatewayFromMRB: conferenceName = " + conferenceName  );
             mrb.tell(new GetMediaGateway(createMediaSession.callSid(), conferenceName, null), self());
         }
     }
@@ -467,7 +469,8 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("MMSConferenceController: GettingCnfMediaResourceController: conferenceName = "+conferenceName+" conferenceSid: "+conferenceSid+" cnfenpointID: "+cnfEndpoint);
+        	if(logger.isInfoEnabled())
+        	    logger.info("MMSConferenceController: GettingCnfMediaResourceController: conferenceName = "+conferenceName+" conferenceSid: "+conferenceSid+" cnfenpointID: "+cnfEndpoint);
             mrb.tell(new GetConferenceMediaResourceController(conferenceName), self());
         }
     }
@@ -492,7 +495,7 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            mediaGateway.tell(new CreateConferenceEndpoint(mediaSession), super.source);
+            mediaGateway.tell(new CreateConferenceEndpoint(mediaSession, conferenceEndpointIdName), super.source);
         }
     }
 
@@ -556,7 +559,8 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("StoppingCMRC");
+        	if(logger.isInfoEnabled())
+        	    logger.info("StoppingCMRC");
             conferenceMediaResourceController.tell(new StopConferenceMediaResourceController(), super.source);
         }
     }
@@ -575,7 +579,8 @@ public final class MmsConferenceController extends MediaServerController {
                 // Destroy Bridge Endpoint and its connections
                 cnfEndpoint.tell(new DestroyEndpoint(), super.source);
             }else{
-                logger.info("CMRC have ask you not to destroy endpoint bcz master have left firt and other slaves are still connected to this conference endpoint");
+            	if(logger.isInfoEnabled())
+            	    logger.info("CMRC have ask you not to destroy endpoint bcz master have left firt and other slaves are still connected to this conference endpoint");
                 cnfEndpoint.tell(new StopObserving(self()), self());
                 context().stop(cnfEndpoint);
                 cnfEndpoint = null;
