@@ -167,6 +167,8 @@
 		<module>restcomm.extension.api</module>
 		<module>restcomm.extension.controller</module>
 		<module>restcomm.identity</module>
+                <module>restcomm.data.recorder</module>
+                <module>restcomm.data.recorder.api</module>
     	<module>restcomm.monitoring.service</module>
   </modules>
 
