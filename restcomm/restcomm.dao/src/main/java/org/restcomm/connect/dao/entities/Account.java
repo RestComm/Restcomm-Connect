@@ -38,7 +38,7 @@ public final class Account {
     private final DateTime dateUpdated;
     private final String emailAddress;
     private final String friendlyName;
-    private final Sid accountSid;
+    private final Sid parentSid;
     private final Type type;
     private final Status status;
     private final String authToken;
@@ -46,15 +46,15 @@ public final class Account {
     private final URI uri;
 
     public Account(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String emailAddress,
-            final String friendlyName, final Sid accountSid, final Type type, final Status status, final String authToken,
-            final String role, final URI uri) {
+                   final String friendlyName, final Sid parentSid, final Type type, final Status status, final String authToken,
+                   final String role, final URI uri) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
         this.dateUpdated = dateUpdated;
         this.emailAddress = emailAddress;
         this.friendlyName = friendlyName;
-        this.accountSid = accountSid;
+        this.parentSid = parentSid;
         this.type = type;
         this.status = status;
         this.authToken = authToken;
@@ -86,8 +86,8 @@ public final class Account {
         return friendlyName;
     }
 
-    public Sid getAccountSid() {
-        return accountSid;
+    public Sid getParentSid() {
+        return parentSid;
     }
 
     public Type getType() {
@@ -111,32 +111,32 @@ public final class Account {
     }
 
     public Account setEmailAddress(final String emailAddress) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, accountSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
                 role, uri);
     }
 
     public Account setFriendlyName(final String friendlyName) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, accountSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
                 role, uri);
     }
 
     public Account setType(final Type type) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, accountSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
                 role, uri);
     }
 
     public Account setStatus(final Status status) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, accountSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
                 role, uri);
     }
 
     public Account setAuthToken(final String authToken) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, accountSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
                 role, uri);
     }
 
     public Account setRole(final String role) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, accountSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
                 role, uri);
     }
 
@@ -194,7 +194,7 @@ public final class Account {
         private Sid sid;
         private String emailAddress;
         private String friendlyName;
-        private Sid accountSid;
+        private Sid parentSid;
         private Type type;
         private Status status;
         private String authToken;
@@ -207,7 +207,7 @@ public final class Account {
 
         public Account build() {
             final DateTime now = DateTime.now();
-            return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
+            return new Account(sid, now, now, emailAddress, friendlyName, parentSid, type, status, authToken, role, uri);
         }
 
         public void setSid(final Sid sid) {
@@ -222,8 +222,8 @@ public final class Account {
             this.friendlyName = friendlyName;
         }
 
-        public void setAccountSid(final Sid accountSid) {
-            this.accountSid = accountSid;
+        public void setParentSid(final Sid parentSid) {
+            this.parentSid = parentSid;
         }
 
         public void setType(final Type type) {

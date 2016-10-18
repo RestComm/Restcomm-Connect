@@ -22,7 +22,11 @@
   <select id="getRegistrationByInstanceId" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_registrations WHERE user_name=#{user_name} AND instanceid=#{instanceid};
   </select>
-  
+
+  <select id="getRegistrationsByInstanceId" parameterType="string" resultType="hashmap">
+    SELECT * FROM restcomm_registrations WHERE instanceid=#{instanceid};
+  </select>
+
   <select id="hasRegistration" parameterType="map" resultType="int">
     SELECT COUNT(*) FROM restcomm_registrations WHERE address_of_record=#{address_of_record} AND 
     display_name=#{display_name} AND location=#{location} AND user_agent=#{user_agent};
@@ -33,7 +37,7 @@
   </delete>
   
   <update id="updateRegistration" parameterType="map">
-    UPDATE restcomm_registrations SET ttl=#{ttl}, date_expires=#{date_expires}, date_updated=#{date_updated} WHERE address_of_record=#{address_of_record} AND
+    UPDATE restcomm_registrations SET ttl=#{ttl}, date_expires=#{date_expires}, date_updated=#{date_updated}, instanceid=#{instanceid} WHERE address_of_record=#{address_of_record} AND
     display_name=#{display_name} AND location=#{location} AND user_agent=#{user_agent};
   </update>
 </mapper>

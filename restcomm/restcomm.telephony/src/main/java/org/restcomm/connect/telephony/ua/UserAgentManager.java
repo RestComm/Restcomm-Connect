@@ -222,10 +222,12 @@ public final class UserAgentManager extends UntypedActor {
 
     private void keepAlive() throws Exception {
         final RegistrationsDao registrations = storage.getRegistrationsDao();
-        final List<Registration> results = registrations.getRegistrations();
-        for (final Registration result : results) {
-            final String to = result.getLocation();
-            ping(to);
+        final List<Registration> results = registrations.getRegistrationsByInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
+        if (results != null && results.size() > 0) {
+            for (final Registration result : results) {
+                final String to = result.getLocation();
+                ping(to);
+            }
         }
     }
 
