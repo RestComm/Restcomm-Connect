@@ -37,6 +37,7 @@ import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.exceptions.AuthorizationException;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.NotAuthenticated;
+import org.restcomm.connect.http.exceptions.OperatedAccountMissing;
 import org.restcomm.connect.identity.AuthOutcome;
 import org.restcomm.connect.identity.IdentityContext;
 import org.restcomm.connect.identity.UserIdentityContext;
@@ -154,9 +155,8 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         checkAuthenticatedAccount();
         checkPermission(permission); // check an authenticated account allowed to do "permission" is available
         if (operatedAccount == null) {
-            // if operatedAccount is NULL, nothing is really at stake here. Do NOT throw exception!
-            //throw new AuthorizationException();
-            return;
+            // if operatedAccount is NULL, we'll probably return a 404. But let's handle that in a central place.
+            throw new OperatedAccountMissing();
         }
         if (type == SecuredType.SECURED_STANDARD) {
             if (secureLevelControl(userIdentityContext.getEffectiveAccount(), operatedAccount, null) != AuthOutcome.OK )
@@ -289,6 +289,8 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
                 return AuthOutcome.FAILED;
             }
         } else if (resourceAccountSid != null && !operatingAccountSid.equals(resourceAccountSid)) {
+            // operating account equals operated account but they are both different that resource account
+            // resources can only be accessed under their owner account. Otherwise we have a bad request
             return AuthOutcome.FAILED;
         }
         return AuthOutcome.OK;

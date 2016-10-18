@@ -165,7 +165,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
         }
     }
 
-    /* // Account removal disabled as per https://github.com/RestComm/Restcomm-Connect/issues/1270
+    // Account removal disabled as per https://github.com/RestComm/Restcomm-Connect/issues/1270
+    /*
     protected Response deleteAccount(final String operatedSid) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Delete:Accounts");
@@ -201,9 +202,33 @@ public class AccountsEndpoint extends SecuredEndpoint {
         removeSingleAccount(operatedSid);
 
         return ok().build();
+    }*/
+
+    /*
+    protected Response deleteAccount(final String operatedSid) {
+        //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
+        checkPermission("RestComm:Delete:Accounts");
+        // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
+        final Sid accountSid = userIdentityContext.getEffectiveAccount().getSid();
+        final Sid sidToBeRemoved = new Sid(operatedSid);
+
+        Account removedAccount = accountsDao.getAccount(sidToBeRemoved);
+        secure(removedAccount, "RestComm:Delete:Accounts", SecuredType.SECURED_ACCOUNT);
+        // Prevent removal of Administrator account
+        if (operatedSid.equalsIgnoreCase(accountSid.toString()))
+            return status(BAD_REQUEST).build();
+
+        if (accountsDao.getAccount(sidToBeRemoved) == null)
+            return status(NOT_FOUND).build();
+
+        accountsDao.removeAccount(sidToBeRemoved);
+
+        // Remove its SIP client account
+        clientDao.removeClients(sidToBeRemoved);
+
+        return ok().build();
     }
     */
-
     /**
      * Removes all dependent resources of an account. Some resources like
      * CDRs are excluded.
@@ -404,7 +429,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             account = accountsDao.getAccount(sid);
         } catch (Exception e) {
             if (logger.isDebugEnabled()) {
-                logger.debug("At update account, exception trying to get SID. Seems we have email as identifier");
+                logger.debug("At update account, exception trying to get SID. Seems we have email as identifier"); // TODO check when this exception is thrown
             }
         }
         if (account == null) {
@@ -490,17 +515,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
      * @param parentAccount
      */
     private void closeAccountTree(Account parentAccount) {
-        // do we need to also notify the application sever (RVD) ?
-        RestcommConfiguration rcommConfiguration = RestcommConfiguration.getInstance();
-        RcmlserverConfigurationSet config = rcommConfiguration.getRcmlserver();
-        RcmlserverApi rcmlserverApi = null;
-        RcmlserverNotifications notifications = new RcmlserverNotifications();
-        if (config != null && config.getNotify()) {
-            // create an RcmlserverApi object only if we will need to notify
-            rcmlserverApi = new RcmlserverApi(rcommConfiguration.getMain(), rcommConfiguration.getRcmlserver());
-        }
         // close child accounts
         List<String> subAccountsToClose = accountsDao.getSubAccountSidsRecursive(parentAccount.getSid());
+        List<Account> closedSubAccounts = new ArrayList<Account>(); // the accounts that were really closed. Maybe these are not the same as those that were supposed to get closed
         if (subAccountsToClose != null && !subAccountsToClose.isEmpty()) {
             int i = subAccountsToClose.size(); // is is the count of accounts left to process
             // we iterate backwards to handle child accounts first, parent accounts next
@@ -510,18 +527,26 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 try {
                     Account subAccount = accountsDao.getAccount(new Sid(removedSid));
                     closeSingleAccount(subAccount,false);
-                    notifications.add(rcmlserverApi.buildAccountClosingNotification(subAccount));
+                    closedSubAccounts.add(subAccount);
                 } catch (Exception e) {
                     // if anything bad happens, log the error and continue removing the rest of the accounts.
                     logger.error("Failed removing (child) account '" + removedSid + "'");
                 }
             }
         }
-
-        // close parent account too. Skip status update. We need to send notifications first.
+        // close parent account too. Skip status update. We need to send notifications first if needed.
         closeSingleAccount(parentAccount,true);
-        notifications.add(rcmlserverApi.buildAccountClosingNotification(parentAccount));
-        if (rcmlserverApi != null) {
+        closedSubAccounts.add(parentAccount);
+        // do we need to also notify the application sever (RVD) ?
+        RestcommConfiguration rcommConfiguration = RestcommConfiguration.getInstance();
+        RcmlserverConfigurationSet config = rcommConfiguration.getRcmlserver();
+        if (config != null && config.getNotify()) {
+            RcmlserverApi rcmlserverApi = new RcmlserverApi(rcommConfiguration.getMain(), rcommConfiguration.getRcmlserver());
+            // build a list of notifications out of the accounts that we really need to update
+            RcmlserverNotifications notifications = new RcmlserverNotifications();
+            for (Account account : closedSubAccounts) {
+                notifications.add(rcmlserverApi.buildAccountClosingNotification(account));
+            }
             Account loggedAccount = userIdentityContext.getEffectiveAccount();
             try {
                 rcmlserverApi.transmitNotifications(notifications, loggedAccount.getSid().toString(), loggedAccount.getAuthToken() );
@@ -529,9 +554,11 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 logger.error(e.getMessage(),e); // just report
             }
         }
+        // now that the notifications are sent we can proceed and set parent account to CLOSED
+        // note, we have assumed that while 'parent account' is open, the same applies to the loggedAccount
+        // on whose behalf the notifications are sent.
         parentAccount = parentAccount.setStatus(Account.Status.CLOSED);
         accountsDao.updateAccount(parentAccount);
-
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {

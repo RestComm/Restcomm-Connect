@@ -38,6 +38,7 @@ import wiremock.org.apache.http.client.methods.CloseableHttpResponse;
 import wiremock.org.apache.http.client.methods.HttpDelete;
 import wiremock.org.apache.http.client.methods.HttpGet;
 import wiremock.org.apache.http.client.methods.HttpPost;
+import wiremock.org.apache.http.client.methods.HttpPut;
 import wiremock.org.apache.http.impl.client.CloseableHttpClient;
 import wiremock.org.apache.http.impl.client.HttpClients;
 import wiremock.org.apache.http.message.BasicNameValuePair;
@@ -91,6 +92,23 @@ public class RestcommMultitenancyTool {
         HttpDelete delete = new HttpDelete(url);
         delete.addHeader("Authorization", "Basic " + getAuthorizationToken(credentialUsername, credentialPassword));
         apiResponse = client.execute(delete);
+        return apiResponse.getStatusLine().getStatusCode();
+    }
+
+    public int update(String url, String credentialUsername, String credentialPassword, Map<String, String> params) throws ClientProtocolException,
+            IOException {
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse apiResponse = null;
+        HttpPut put = new HttpPut(url);
+        List<NameValuePair> values = new ArrayList<NameValuePair>();
+        Iterator it = params.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry) it.next();
+            values.add(new BasicNameValuePair(String.valueOf(pair.getKey()), String.valueOf(pair.getValue())));
+        }
+        put.setEntity(new UrlEncodedFormEntity(values));
+        put.addHeader("Authorization", "Basic " + getAuthorizationToken(credentialUsername, credentialPassword));
+        apiResponse = client.execute(put);
         return apiResponse.getStatusLine().getStatusCode();
     }
 
