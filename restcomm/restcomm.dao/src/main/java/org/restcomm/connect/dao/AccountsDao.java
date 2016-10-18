@@ -46,7 +46,7 @@ public interface AccountsDao {
      */
     Account getAccountToAuthenticate(String name);
 
-    List<Account> getAccounts(Sid sid);
+    List<Account> getChildAccounts(Sid parentSid);
 
     void removeAccount(Sid sid);
 
