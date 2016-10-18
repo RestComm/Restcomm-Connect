@@ -43,7 +43,7 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
         super();
     }
 
-    /* Account removal is disabled. Accounts can only be closed through update method
+    /*
     @Path("/{sid}")
     @DELETE
     public Response deleteAccountAsXml(@PathParam("sid") final String sid) {

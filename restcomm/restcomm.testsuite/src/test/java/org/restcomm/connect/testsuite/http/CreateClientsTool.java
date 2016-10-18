@@ -96,7 +96,8 @@ public class CreateClientsTool {
                 String res = EntityUtils.toString(entity);
                 JsonParser parser = new JsonParser();
                 JsonArray jArray = parser.parse(res).getAsJsonArray();
-                jsonResponse = jArray.get(0).getAsJsonObject();
+                if (jArray.size() > 0) // handle also empty arrays i.e. return null in such a case
+                    jsonResponse = jArray.get(0).getAsJsonObject();
             }
 
             httpGet.releaseConnection();

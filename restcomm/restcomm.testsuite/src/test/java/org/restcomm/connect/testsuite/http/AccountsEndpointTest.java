@@ -32,6 +32,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -103,21 +104,20 @@ public class AccountsEndpointTest extends EndpointTest {
 
     SipStack thinhSipStack;
     SipPhone thinhPhone;
-    String thinhContact = "sip:lyhungthinh@127.0.0.1:5090";
+    //String thinhContact = "sip:lyhungthinh@127.0.0.1:5090";
  
     @BeforeClass
     public static void beforeClass() {
         tool1 = new SipStackTool("AccountsEndpointTest");
     }
 
-    @Before
-    public void before() throws Exception {
+    public void startSipStack(String thinhContact) throws Exception {
         thinhSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
         thinhPhone = thinhSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, thinhContact);
     }
 
     @After
-    public void after() throws InterruptedException {
+    public void stopSipStack() throws InterruptedException {
         if (thinhPhone != null) {
             thinhPhone.dispose();
         }
@@ -315,92 +315,120 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
-    public void testCreateAccountCheckClientExisted() throws ClientProtocolException, IOException, ParseException {
-        String subAccountPassword = "mynewpassword";
-        String subAccountEmail = "lyhungthinh@gmail.com";
+    public void testCreateAccountCheckClientExisted() throws Exception {
+        try {
+            String thinhContact = "sip:lyhungthinh@127.0.0.1:5090";
+            startSipStack(thinhContact);
 
-        JsonObject subAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, subAccountEmail, subAccountPassword);
+            String subAccountPassword = "mynewpassword";
+            String subAccountEmail = "lyhungthinh@gmail.com";
 
-        JsonObject clientOfAccount = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
-                subAccountResponse, adminUsername, adminPassword);
-        assertNotNull(clientOfAccount);
+            JsonObject subAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                    adminUsername, adminAuthToken, subAccountEmail, subAccountPassword);
 
-        CreateClientsTool.getInstance().updateClientVoiceUrl(deploymentUrl.toString(), subAccountResponse,
-                clientOfAccount.get("sid").getAsString(), "http://127.0.0.1:8080/restcomm/demos/welcome.xml",
-                adminUsername, adminPassword);
+            JsonObject clientOfAccount = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
+                    subAccountResponse, adminUsername, adminPassword);
+            assertNotNull(clientOfAccount);
 
-        JsonObject clientOfAccountUpdated = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
-                subAccountResponse, adminUsername, adminPassword);
-        System.out.println(clientOfAccountUpdated);
+            CreateClientsTool.getInstance().updateClientVoiceUrl(deploymentUrl.toString(), subAccountResponse,
+                    clientOfAccount.get("sid").getAsString(), "http://127.0.0.1:8080/restcomm/demos/welcome.xml",
+                    adminUsername, adminPassword);
 
-        // Use the new client to register with Restcomm
-        SipURI reqUri = thinhSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+            JsonObject clientOfAccountUpdated = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
+                    subAccountResponse, adminUsername, adminPassword);
+            System.out.println(clientOfAccountUpdated);
 
-        assertTrue(thinhPhone.register(reqUri, "lyhungthinh", subAccountPassword, thinhContact, 1800, 1800));
-        assertTrue(thinhPhone.unregister(thinhContact, 0));
+            // Use the new client to register with Restcomm
+            SipURI reqUri = thinhSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
-        RestcommAccountsTool.getInstance().removeAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
-                subAccountResponse.get("sid").getAsString());
+            assertTrue(thinhPhone.register(reqUri, "lyhungthinh", subAccountPassword, thinhContact, 1800, 1800));
+            assertTrue(thinhPhone.unregister(thinhContact, 0));
+
+            //RestcommAccountsTool.getInstance().removeAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
+            //        subAccountResponse.get("sid").getAsString());
+        } finally {
+            stopSipStack();
+        }
     }
 
     @Test
-    public void testUpdateAccountCheckClient() throws IOException, ParseException {
-        String subAccountPassword = "mynewpassword";
-        String subAccountEmail = "lyhungthinh@gmail.com";
-        String subAccountNewPassword = "latestpassword";
-        String subAccountNewAuthToken = "fa1930301afe5ed93a2dec29a922728e";
-        JsonObject subAccountResponse;
+    public void testUpdateAccountCheckClient() throws Exception {
+        try {
+            String thinhContact = "sip:lyhungthinh2@127.0.0.1:5090";
+            startSipStack(thinhContact);
 
-        SipURI reqUri = thinhSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+            String subAccountPassword = "mynewpassword";
+            String subAccountEmail = "lyhungthinh2@gmail.com";
+            String subAccountNewPassword = "latestpassword";
+            String subAccountNewAuthToken = "fa1930301afe5ed93a2dec29a922728e";
+            JsonObject subAccountResponse;
 
-        subAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(), adminUsername,
-                adminAuthToken, subAccountEmail, subAccountPassword);
-        assertNotNull(subAccountResponse);
-        JsonObject clientOfAccount = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
-                subAccountResponse, adminUsername, adminPassword);
-        assertNotNull(clientOfAccount);
-        // Use the new client to register with Restcomm
-        assertTrue(thinhPhone.register(reqUri, "lyhungthinh", subAccountPassword, thinhContact, 1800, 1800));
-        assertTrue(thinhPhone.unregister(thinhContact, 0));
+            SipURI reqUri = thinhSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
-        subAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername,
-                adminAuthToken,subAccountResponse.get("sid").getAsString(), null, subAccountNewPassword, null, null, null);
-        assertTrue(subAccountResponse.get("auth_token").getAsString().equals(subAccountNewAuthToken));
-        assertTrue(thinhPhone.register(reqUri, "lyhungthinh", subAccountNewPassword, thinhContact, 1800, 1800));
-        assertTrue(thinhPhone.unregister(thinhContact, 0));
+            subAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(), adminUsername,
+                    adminAuthToken, subAccountEmail, subAccountPassword);
+            assertNotNull(subAccountResponse);
+            JsonObject clientOfAccount = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
+                    subAccountResponse, adminUsername, adminPassword);
+            assertNotNull(clientOfAccount);
+            // Use the new client to register with Restcomm
+            assertTrue(thinhPhone.register(reqUri, "lyhungthinh2", subAccountPassword, thinhContact, 1800, 1800));
+            assertTrue(thinhPhone.unregister(thinhContact, 0));
 
-        clientOfAccount = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
-                subAccountResponse, adminUsername, adminPassword);
-        assertTrue(clientOfAccount.get("password").getAsString().equals(subAccountNewPassword));
+            subAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername,
+                    adminAuthToken,subAccountResponse.get("sid").getAsString(), null, subAccountNewPassword, null, null, null);
+            assertTrue(subAccountResponse.get("auth_token").getAsString().equals(subAccountNewAuthToken));
+            assertTrue(thinhPhone.register(reqUri, "lyhungthinh2", subAccountNewPassword, thinhContact, 1800, 1800));
+            assertTrue(thinhPhone.unregister(thinhContact, 0));
 
-        RestcommAccountsTool.getInstance().removeAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
-                subAccountResponse.get("sid").getAsString());
+            clientOfAccount = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
+                    subAccountResponse, adminUsername, adminPassword);
+            assertTrue(clientOfAccount.get("password").getAsString().equals(subAccountNewPassword));
+
+            //RestcommAccountsTool.getInstance().removeAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
+            //        subAccountResponse.get("sid").getAsString());
+        } finally {
+            stopSipStack();
+        }
     }
     
     @Test
-    public void testRemoveAccountCheckClient() throws IOException, ParseException {
-        String subAccountPassword = "mynewpassword";
-        String subAccountEmail = "lyhungthinh@gmail.com";
-        JsonObject subAccountResponse;
+    public void testCloseAccountCheckClient() throws Exception {
+        try {
+            String thinhContact = "sip:lyhungthinh3@127.0.0.1:5090";
+            startSipStack(thinhContact);
 
-        SipURI reqUri = thinhSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+            String subAccountPassword = "mynewpassword";
+            String subAccountEmail = "lyhungthinh3@gmail.com";
+            JsonObject subAccountResponse;
 
-        subAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(), adminUsername,
-                adminAuthToken, subAccountEmail, subAccountPassword);
-        assertNotNull(subAccountResponse);
-        JsonObject clientOfAccount = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
-                subAccountResponse, adminUsername, adminPassword);
-        assertNotNull(clientOfAccount);
-        assertTrue(thinhPhone.register(reqUri, "lyhungthinh", subAccountPassword, thinhContact, 1800, 1800));
-        assertTrue(thinhPhone.unregister(thinhContact, 0));
+            SipURI reqUri = thinhSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
-        RestcommAccountsTool.getInstance().removeAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
-                subAccountResponse.get("sid").getAsString());
-        JsonObject clientOfAccount2 = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
-                subAccountResponse, adminUsername, adminPassword);
-        assertTrue(clientOfAccount2 == null);
-        assertFalse(thinhPhone.register(reqUri, "lyhungthinh", subAccountPassword, thinhContact, 1800, 1800));
+            subAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(), adminUsername,
+                    adminAuthToken, subAccountEmail, subAccountPassword);
+            assertNotNull(subAccountResponse);
+            JsonObject clientOfAccount = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
+                    subAccountResponse, adminUsername, adminPassword);
+            assertNotNull(clientOfAccount);
+            assertTrue(thinhPhone.register(reqUri, "lyhungthinh3", subAccountPassword, thinhContact, 1800, 1800));
+            assertTrue(thinhPhone.unregister(thinhContact, 0));
+            // close the account
+            Client jersey = getClient(adminUsername, adminPassword);
+            WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+subAccountEmail) );
+            MultivaluedMap<String,String> params = new MultivaluedMapImpl();
+            params.add("Status","closed");
+            ClientResponse response = resource.put(ClientResponse.class,params);
+            Assert.assertEquals(200, response.getStatus());
+            // and make sure the client is still there
+            //RestcommAccountsTool.getInstance().removeAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
+            //        subAccountResponse.get("sid").getAsString());
+            JsonObject clientOfAccount2 = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
+                    subAccountResponse, adminUsername, adminPassword);
+            assertTrue(clientOfAccount2 == null);
+            assertFalse(thinhPhone.register(reqUri, "lyhungthinh3", subAccountPassword, thinhContact, 1800, 1800));
+        } finally {
+            stopSipStack();
+        }
     }
 
     @Test
@@ -467,6 +495,7 @@ public class AccountsEndpointTest extends EndpointTest {
         Assert.assertEquals("Guest account should get get a 403 when retrieving accounts", 403, response.getStatus());
     }
 
+    @Ignore // ignored since account removal is disables as of #1270
     @Test
     public void testRemoveAccountAccess(){
         ClientResponse response = RestcommAccountsTool.getInstance().removeAccountResponse(deploymentUrl.toString(), unprivilegedUsername, unprivilegedAuthToken, removedSid + ".json" );
