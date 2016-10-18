@@ -218,7 +218,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
     private void onStartConferenceMediaResourceController(StartConferenceMediaResourceController message, ActorRef self, ActorRef sender) throws Exception{
         if (is(uninitialized)) {
-        	if(logger.isInfoEnabled())
+            if(logger.isInfoEnabled())
                 logger.info("onStartConferenceMediaResourceController: conferenceSid: "+message.conferenceSid()+" cnfEndpoint: "+message.cnfEndpoint());
             this.localConfernceEndpoint = message.cnfEndpoint();
             this.conferenceSid = message.conferenceSid();
@@ -389,7 +389,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
         @Override
         public void execute(final Object message) throws Exception {
-        	if(logger.isInfoEnabled())
+            if(logger.isInfoEnabled())
                 logger.info("CMRC is in pre ACTIVE NOW...");
             // later Conference will update the status as per informed by VI as per RCML
             updateConferenceStatus("RUNNING_MODERATOR_ABSENT");
@@ -406,7 +406,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
         @Override
         public void execute(final Object message) throws Exception {
-        	if(logger.isInfoEnabled())
+            if(logger.isInfoEnabled())
                 logger.info("CMRC is ACTIVE NOW...");
         }
     }
@@ -419,7 +419,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
         @Override
         public void execute(Object message) throws Exception {
-        	if(logger.isInfoEnabled())
+            if(logger.isInfoEnabled())
                 logger.info("CMRC is STOPPING NOW...");
             updateConferenceStatus("COMPLETED");
             // Destroy Media Group
