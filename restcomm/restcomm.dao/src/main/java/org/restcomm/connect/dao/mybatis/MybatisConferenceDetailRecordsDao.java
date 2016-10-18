@@ -212,12 +212,20 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         final String msId = DaoUtils.readString(map.get("master_ms_id"));
         final String masterConferenceEndpointId = DaoUtils.readString(map.get("master_conference_endpoint_id"));
         final String masterIVREndpointId = DaoUtils.readString(map.get("master_ivr_endpoint_id"));
-        final boolean masterPresent = DaoUtils.readBoolean(map.get("master_present"));
-        final String masterIVREndpointSessionId = DaoUtils.readString(map.get("master_ivr_endpoint_session_id"));
-        final String masterBridgeEndpointId = DaoUtils.readString(map.get("master_bridge_endpoint_id"));
-        final String masterBridgeEndpointSessionId = DaoUtils.readString(map.get("master_bridge_endpoint_session_id"));
-        final String masterBridgeConnectionIdentifier = DaoUtils.readString(map.get("master_bridge_conn_id"));
-        final String masterIVRConnectionIdentifier = DaoUtils.readString(map.get("master_ivr_conn_id"));
+        boolean masterPresent = false;
+        String masterIVREndpointSessionId = null;
+        String masterBridgeEndpointId = null;
+        String masterBridgeEndpointSessionId = null;
+        String masterBridgeConnectionIdentifier = null;
+        String masterIVRConnectionIdentifier = null;
+        try {
+            masterPresent = DaoUtils.readBoolean(map.get("master_present"));
+            masterIVREndpointSessionId = DaoUtils.readString(map.get("master_ivr_endpoint_session_id"));
+            masterBridgeEndpointId = DaoUtils.readString(map.get("master_bridge_endpoint_id"));
+            masterBridgeEndpointSessionId = DaoUtils.readString(map.get("master_bridge_endpoint_session_id"));
+            masterBridgeConnectionIdentifier = DaoUtils.readString(map.get("master_bridge_conn_id"));
+            masterIVRConnectionIdentifier = DaoUtils.readString(map.get("master_ivr_conn_id"));
+        } catch (Exception e) {}
         return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri, msId, masterConferenceEndpointId, masterPresent, masterIVREndpointId, masterIVREndpointSessionId, masterBridgeEndpointId, masterBridgeEndpointSessionId, masterBridgeConnectionIdentifier, masterIVRConnectionIdentifier);
     }
 
