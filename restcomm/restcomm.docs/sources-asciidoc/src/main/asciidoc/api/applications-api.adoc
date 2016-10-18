@@ -27,7 +27,7 @@ Considering the access control executed by multi-tenancy, each Application can b
 |AccountSid |The unique ID of the Account that owns this Application.
 |ApiVersion |Version of the API applied to this Application.
 |HasVoiceCallerIdLookup |Look up the caller’s caller-ID name from the CNAM database. Either true or false.
-|Uri |The URI for this Application, relative to http://localhost:port/restcomm.
+|Uri |The URI for this Application, relative to https://localhost:port/restcomm.
 |RcmlUrl |The HTTP address that RestComm will use to get the RCML of this Application.
 |Kind |The kind of this Application. (Supported values: voice, sms or ussd)
 |=========================================================================================================
