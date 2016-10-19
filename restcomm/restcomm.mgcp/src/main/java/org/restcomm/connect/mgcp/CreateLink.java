@@ -21,12 +21,23 @@ package org.restcomm.connect.mgcp;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
 public final class CreateLink extends AbstractCreateMessage {
+    private ConnectionIdentifier connectionIdentifier;
     public CreateLink(final MediaSession session) {
+        this(session, null);
+    }
+    public CreateLink(final MediaSession session, ConnectionIdentifier connectionIdentifier) {
         super(session);
+        this.connectionIdentifier = connectionIdentifier;
+    }
+
+    public ConnectionIdentifier connectionIdentifier(){
+        return connectionIdentifier;
     }
 }

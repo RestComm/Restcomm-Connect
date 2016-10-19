@@ -74,6 +74,11 @@
 			<scope>provided</scope>
 		</dependency>
 
-
-	</dependencies>
+        <dependency>
+            <groupId>javax.sip</groupId>
+            <artifactId>jain-sip-api</artifactId>
+			<version>${jain-sip-api.version}</version>
+			<scope>provided</scope>
+        </dependency>
+    </dependencies>
 </project>

@@ -21,23 +21,47 @@ package org.restcomm.connect.mscontrol.api.messages;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
+import akka.actor.ActorRef;
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
 public final class JoinComplete {
 
-    private final Object endpoint;
-
-    public JoinComplete(final Object endpoint) {
-        this.endpoint = endpoint;
-    }
+    private final ActorRef endpoint;
+    private int sessionid;
+    private ConnectionIdentifier connectionIdentifier;
 
     public JoinComplete() {
         this(null);
     }
 
+    public JoinComplete(final ActorRef endpoint) {
+        this.endpoint = endpoint;
+    }
+
+    public JoinComplete(ActorRef bridgeEndpoint, int sessionid) {
+        this(bridgeEndpoint, sessionid, null);
+    }
+
+    public JoinComplete(ActorRef bridgeEndpoint, int sessionid, ConnectionIdentifier connectionIdentifier) {
+        super();
+        this.endpoint = bridgeEndpoint;
+        this.sessionid = sessionid;
+        this.connectionIdentifier = connectionIdentifier;
+    }
+
     public Object endpoint() {
         return endpoint;
+    }
+
+    public int sessionid() {
+        return sessionid;
+    }
+
+    public ConnectionIdentifier connectionIdentifier() {
+        return connectionIdentifier;
     }
 }
