@@ -18,39 +18,31 @@
  *
  */
 
-package org.restcomm.connect.rvd;
-
-import org.restcomm.connect.rvd.configuration.RestcommConfig;
-
-import java.net.URI;
-import java.net.URISyntaxException;
+package org.restcomm.connect.rvd.exceptions;
 
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public class RvdConfigurationBuilder {
-    private URI restcommBaseUri;
-    private RestcommConfig restcommConfig;
-
-    public RvdConfigurationBuilder() {
+public class NotificationProcessingError extends RvdException {
+    public enum Type {
+        AccountIsMissing,
+        AccountNotAccessible,
+        GeneralFailure
     }
 
-    public RvdConfigurationBuilder setRestcommConfig(RestcommConfig restcommConfig) {
-        this.restcommConfig = restcommConfig;
-        return this;
+    Type type;
+
+    public NotificationProcessingError(String message, Type type) {
+        super(message);
+        this.type = type;
     }
 
-    public RvdConfigurationBuilder setRestcommBaseUri(String uriString) {
-        try {
-            this.restcommBaseUri = new URI(uriString);
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
-        return this;
+    public NotificationProcessingError(String message) {
+        super(message);
+        this.type = Type.GeneralFailure;
     }
 
-    public RvdConfiguration build() {
-        RvdConfiguration instance = new RvdConfiguration(null, null,restcommConfig,null,restcommBaseUri);
-        return instance;
+    public Type getType() {
+        return type;
     }
 }

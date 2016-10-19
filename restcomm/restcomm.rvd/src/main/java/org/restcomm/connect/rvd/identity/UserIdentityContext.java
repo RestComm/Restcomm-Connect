@@ -1,7 +1,7 @@
 package org.restcomm.connect.rvd.identity;
 
 import org.apache.commons.codec.binary.Base64;
-import org.restcomm.connect.rvd.restcomm.RestcommAccountInfoResponse;
+import org.restcomm.connect.rvd.restcomm.RestcommAccountInfo;
 import org.restcomm.connect.rvd.utils.RvdUtils;
 
 import java.nio.charset.Charset;
@@ -34,7 +34,7 @@ public class UserIdentityContext {
     // the following fields are independent form the authorization type (Basic or Oauth)
     private String effectiveAuthHeader;
     private AuthType authType = AuthType.None;
-    private RestcommAccountInfoResponse accountInfo;
+    private RestcommAccountInfo accountInfo;
     private Set<String> accountRoles;
 
     public enum AuthType {
@@ -47,7 +47,7 @@ public class UserIdentityContext {
         basicCredentials = extractBasicAuthCredentials(authorizationHeader);
         // try to initialize effective account using basic auth creds
         if (basicCredentials != null) {
-            this.accountInfo = accountProvider.getAccount(basicCredentials.getUsername(), authorizationHeader);
+            this.accountInfo = accountProvider.getAccount(basicCredentials.getUsername(), authorizationHeader).get();
             if (this.accountInfo != null) {
                 authType = AuthType.Basic;
                 effectiveAuthHeader = authorizationHeader;
@@ -62,7 +62,7 @@ public class UserIdentityContext {
         }
     }
 
-    public RestcommAccountInfoResponse getAccountInfo() {
+    public RestcommAccountInfo getAccountInfo() {
         return accountInfo;
     }
 
