@@ -19,87 +19,13 @@
  */
 package org.restcomm.connect.telephony;
 
-import akka.actor.ActorContext;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.util.Timeout;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import org.restcomm.connect.extension.api.CallRequest;
-import org.restcomm.connect.extension.api.ExtensionResponse;
-import org.restcomm.connect.extension.api.ExtensionType;
-import org.restcomm.connect.monitoringservice.MonitoringService;
-import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
-import gov.nist.javax.sip.header.UserAgent;
-import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.restcomm.connect.extension.controller.ExtensionController;
-import org.restcomm.connect.telephony.api.CallManagerResponse;
-import org.restcomm.connect.telephony.api.CallResponse;
-import org.restcomm.connect.telephony.api.CallStateChanged;
-import org.restcomm.connect.telephony.api.CreateCall;
-import org.restcomm.connect.telephony.api.DestroyCall;
-import org.restcomm.connect.telephony.api.ExecuteCallScript;
-import org.restcomm.connect.telephony.api.GetActiveProxy;
-import org.restcomm.connect.telephony.api.GetCall;
-import org.restcomm.connect.telephony.api.GetCallObservers;
-import org.restcomm.connect.telephony.api.GetProxies;
-import org.restcomm.connect.telephony.api.GetRelatedCall;
-import org.restcomm.connect.telephony.api.Hangup;
-import org.restcomm.connect.telephony.api.InitializeOutbound;
-import org.restcomm.connect.telephony.api.SwitchProxy;
-import org.restcomm.connect.telephony.api.UpdateCallScript;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.dao.AccountsDao;
-import org.restcomm.connect.dao.ApplicationsDao;
-import org.restcomm.connect.dao.ClientsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
-import org.restcomm.connect.dao.NotificationsDao;
-import org.restcomm.connect.dao.RegistrationsDao;
-import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Application;
-import org.restcomm.connect.dao.entities.Client;
-import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.dao.entities.Notification;
-import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.data.recorder.api.DataRecorderFactory;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.interpreter.StartInterpreter;
-import org.restcomm.connect.interpreter.StopInterpreter;
-import org.restcomm.connect.interpreter.VoiceInterpreterBuilder;
-import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
-import org.restcomm.connect.commons.patterns.StopObserving;
-import org.restcomm.connect.telephony.api.util.B2BUAHelper;
-import org.restcomm.connect.telephony.api.util.CallControlHelper;
-import org.restcomm.connect.commons.util.SdpUtils;
-import org.restcomm.connect.commons.util.UriUtils;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
+import static akka.pattern.Patterns.ask;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
 
-import javax.sdp.SdpParseException;
-import javax.servlet.ServletContext;
-import javax.servlet.sip.Address;
-import javax.servlet.sip.AuthInfo;
-import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipApplicationSessionEvent;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
-import javax.sip.header.RouteHeader;
-import javax.sip.message.Response;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
@@ -115,12 +41,89 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
-import static akka.pattern.Patterns.ask;
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
+import javax.sdp.SdpParseException;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.AuthInfo;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipApplicationSessionEvent;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
+import javax.sip.header.RouteHeader;
+import javax.sip.message.Response;
+
+import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.util.SdpUtils;
+import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.dao.AccountsDao;
+import org.restcomm.connect.dao.ApplicationsDao;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
+import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.RegistrationsDao;
+import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Application;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.dao.entities.Registration;
+import org.restcomm.connect.data.recorder.api.DataRecorderFactory;
+import org.restcomm.connect.extension.api.CallRequest;
+import org.restcomm.connect.extension.api.ExtensionResponse;
+import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
+import org.restcomm.connect.extension.controller.ExtensionController;
+import org.restcomm.connect.interpreter.StartInterpreter;
+import org.restcomm.connect.interpreter.StopInterpreter;
+import org.restcomm.connect.interpreter.VoiceInterpreterBuilder;
+import org.restcomm.connect.monitoringservice.MonitoringService;
+import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
+import org.restcomm.connect.telephony.api.CallManagerResponse;
+import org.restcomm.connect.telephony.api.CallResponse;
+import org.restcomm.connect.telephony.api.CallStateChanged;
+import org.restcomm.connect.telephony.api.CreateCall;
+import org.restcomm.connect.telephony.api.DestroyCall;
+import org.restcomm.connect.telephony.api.ExecuteCallScript;
+import org.restcomm.connect.telephony.api.GetActiveProxy;
+import org.restcomm.connect.telephony.api.GetCall;
+import org.restcomm.connect.telephony.api.GetCallObservers;
+import org.restcomm.connect.telephony.api.GetProxies;
+import org.restcomm.connect.telephony.api.GetRelatedCall;
+import org.restcomm.connect.telephony.api.Hangup;
+import org.restcomm.connect.telephony.api.InitializeOutbound;
+import org.restcomm.connect.telephony.api.SwitchProxy;
+import org.restcomm.connect.telephony.api.UpdateCallScript;
+import org.restcomm.connect.telephony.api.util.B2BUAHelper;
+import org.restcomm.connect.telephony.api.util.CallControlHelper;
+
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+
+import akka.actor.ActorContext;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.util.Timeout;
+import gov.nist.javax.sip.header.UserAgent;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -146,6 +149,7 @@ public final class CallManager extends UntypedActor {
     private final SipFactory sipFactory;
     private final DaoManager storage;
     private final ActorRef monitoring;
+    private final DataRecorderFactory dataRecorderFactory;
 
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
@@ -275,7 +279,7 @@ public final class CallManager extends UntypedActor {
             logger.info("CallManager extensions: "+(extensions != null ? extensions.size() : "0"));
         }
 
-        context.getAttribute(DataRecorderFactory.class.getName());
+        this.dataRecorderFactory = (DataRecorderFactory) context.getAttribute(DataRecorderFactory.class.getName());
     }
 
     private ActorRef call() {
@@ -284,7 +288,7 @@ public final class CallManager extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Call(sipFactory, msControllerFactory.provideCallController(), configuration, callDataRecorder());
+                return new Call(sipFactory, msControllerFactory.provideCallController(), configuration, dataRecorderFactory.getCallDataRecorder());
             }
         }));
     }

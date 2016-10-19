@@ -122,6 +122,7 @@ import scala.concurrent.duration.Duration;
  * @author amit.bhayani@telestax.com (Amit Bhayani)
  * @author gvagenas@telestax.com (George Vagenas)
  * @author henrique.rosa@telestax.com (Henrique Rosa)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  *
  */
 @Immutable
@@ -213,8 +214,9 @@ public final class Call extends UntypedActor {
     private boolean disableSdpPatchingOnUpdatingMediaSession;
 
     private Sid inboundCallSid;
+    private ActorRef callDataRecorder;
 
-    public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
+    public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration, final ActorRef callDataRecorder) {
         super();
         final ActorRef source = self();
 
@@ -320,6 +322,7 @@ public final class Call extends UntypedActor {
         this.configuration = configuration;
         //this.callDataRecorder = callDataRecorder;
         this.disableSdpPatchingOnUpdatingMediaSession = this.configuration.subset("runtime-settings").getBoolean("disable-sdp-patching-on-updating-mediasession", false);
+        this.callDataRecorder = callDataRecorder;
     }
 
     private boolean is(State state) {

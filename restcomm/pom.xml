@@ -172,7 +172,6 @@
     	        <module>restcomm.monitoring.service</module>
 		<module>restcomm.mrb</module>
                 <module>restcomm.mrb.api</module>
-                <module>restcomm.monitoring.service</module>
   </modules>
 
 	<dependencyManagement>
@@ -393,13 +392,6 @@
 				<groupId>com.googlecode.libphonenumber</groupId>
 				<artifactId>libphonenumber</artifactId>
 				<version>${libphonenumber.version}</version>
-			</dependency>
-			<!-- Testing -->
-			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>${junit.version}</version>
-				<scope>test</scope>
 			</dependency>
 
 			<dependency>
