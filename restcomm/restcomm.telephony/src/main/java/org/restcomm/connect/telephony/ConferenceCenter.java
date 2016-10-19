@@ -24,13 +24,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.telephony.api.ConferenceCenterResponse;
 import org.restcomm.connect.telephony.api.ConferenceStateChanged;
 import org.restcomm.connect.telephony.api.CreateConference;
 import org.restcomm.connect.telephony.api.DestroyConference;
 import org.restcomm.connect.telephony.api.StartConference;
-import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
-import org.restcomm.connect.commons.patterns.Observe;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -51,12 +52,14 @@ public final class ConferenceCenter extends UntypedActor {
     private final MediaServerControllerFactory factory;
     private final Map<String, ActorRef> conferences;
     private final Map<String, List<ActorRef>> initializing;
+    private final DaoManager storage;
 
-    public ConferenceCenter(final MediaServerControllerFactory factory) {
+    public ConferenceCenter(final MediaServerControllerFactory factory, final DaoManager storage) {
         super();
         this.factory = factory;
         this.conferences = new HashMap<String, ActorRef>();
         this.initializing = new HashMap<String, List<ActorRef>>();
+        this.storage = storage;
     }
 
     private ActorRef getConference(final String name) {
@@ -65,7 +68,8 @@ public final class ConferenceCenter extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Conference(name, factory.provideConferenceController());
+                //Here Here we can pass Gateway where call is connected
+                return new Conference(name, factory.provideConferenceController(), storage);
             }
         }));
     }
@@ -179,7 +183,7 @@ public final class ConferenceCenter extends UntypedActor {
             observers.add(sender);
             conference = getConference(name);
             conference.tell(new Observe(self), self);
-            conference.tell(new StartConference(), self);
+            conference.tell(new StartConference(request.initialitingCallSid()), self);
             initializing.put(name, observers);
         }
     }
