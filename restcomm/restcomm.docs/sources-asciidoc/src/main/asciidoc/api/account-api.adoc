@@ -182,7 +182,7 @@ NOTE: the **SID**, Email and the *AuthToken* (see output below) of the sub-accou
 curl -X PUT https://ACae6e420f425248d6a26948c17a9e2acf:PWD@127.0.0.1:8080/restcomm/2012-04-24/Accounts.json/AC3b8f0dd2e5026abde018446cbb3b185d -d "Status=closed"
 ----
 
-.JSON Account Closing
+.XML Account Closing
 ----
 curl -X PUT https://ACae6e420f425248d6a26948c17a9e2acf:PWD@127.0.0.1:8080/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d -d "Status=closed"
 ----
