@@ -217,7 +217,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
   };
 
   $scope.removeAccount = function (account) {
-    var title = 'Close Account ' + account.friendly_name;
+    var title = 'Close account';
     var msg = 'Are you sure you want to close account ' + account.sid + ' (' + account.friendly_name +  ') ? This action cannot be undone.';
     var btns = [{result:'cancel', label: 'Cancel', cssClass: 'btn-default'}, {result:'confirm', label: 'Close!', cssClass: 'btn-danger'}];
     // show configurmation

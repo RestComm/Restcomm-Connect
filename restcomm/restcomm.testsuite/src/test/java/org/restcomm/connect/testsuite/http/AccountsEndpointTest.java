@@ -314,6 +314,12 @@ public class AccountsEndpointTest extends EndpointTest {
         Assert.assertEquals("Did not retrieve a conflict HTTP status (409) while creating accounts with same email address", 409, createResponse2.getStatus());
     }
 
+    /**
+     * When creating a new account and the client with the same name is already there
+     * TODO [...]
+     *
+     * @throws Exception
+     */
     @Test
     public void testCreateAccountCheckClientExisted() throws Exception {
         try {
@@ -419,9 +425,9 @@ public class AccountsEndpointTest extends EndpointTest {
             params.add("Status","closed");
             ClientResponse response = resource.put(ClientResponse.class,params);
             Assert.assertEquals(200, response.getStatus());
-            // and make sure the client is still there
             //RestcommAccountsTool.getInstance().removeAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
             //        subAccountResponse.get("sid").getAsString());
+            // and make sure the client is gone and can't register
             JsonObject clientOfAccount2 = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
                     subAccountResponse, adminUsername, adminPassword);
             assertTrue(clientOfAccount2 == null);
