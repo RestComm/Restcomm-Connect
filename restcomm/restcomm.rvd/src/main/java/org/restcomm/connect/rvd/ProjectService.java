@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.FileUtils;
@@ -20,6 +19,7 @@ import org.restcomm.connect.rvd.jsonvalidation.ProjectValidator;
 import org.restcomm.connect.rvd.jsonvalidation.ValidationResult;
 import org.restcomm.connect.rvd.jsonvalidation.exceptions.ValidationException;
 import org.restcomm.connect.rvd.jsonvalidation.exceptions.ValidationFrameworkException;
+import org.restcomm.connect.rvd.model.ModelMarshaler;
 import org.restcomm.connect.rvd.model.client.ProjectItem;
 import org.restcomm.connect.rvd.model.client.ProjectState;
 import org.restcomm.connect.rvd.model.client.StateHeader;
@@ -28,6 +28,7 @@ import org.restcomm.connect.rvd.model.project.RvdProject;
 import org.restcomm.connect.rvd.storage.FsProjectStorage;
 import org.restcomm.connect.rvd.storage.WorkspaceStorage;
 import org.restcomm.connect.rvd.storage.exceptions.BadProjectHeader;
+import org.restcomm.connect.rvd.storage.exceptions.StorageEntityNotFound;
 import org.restcomm.connect.rvd.storage.exceptions.StorageException;
 import org.restcomm.connect.rvd.storage.exceptions.WavItemDoesNotExist;
 import org.restcomm.connect.rvd.upgrade.UpgradeService;
@@ -41,7 +42,6 @@ import java.nio.charset.Charset;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
 
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.google.gson.JsonElement;
@@ -50,24 +50,27 @@ import com.google.gson.JsonParser;
 
 public class ProjectService {
 
-    static final Logger logger = Logger.getLogger(ProjectService.class.getName());
-
     public enum Status {
         OK, UNKNOWN_VERSION, BAD, TOO_OLD, SHOULD_UPGRADE
     }
 
-    private ServletContext servletContext; // TODO we have to find way other that directly through constructor parameter.
-
-    RvdConfiguration settings;
-    RvdContext rvdContext;
+    RvdConfiguration configuration;
     WorkspaceStorage workspaceStorage;
+    ModelMarshaler marshaler;
+    String servletContextPath;
 
     public ProjectService(RvdContext rvdContext, WorkspaceStorage workspaceStorage) {
-        this.rvdContext = rvdContext;
-        this.servletContext = rvdContext.getServletContext();
-        //this.projectStorage = rvdContext.getProjectStorage();
-        this.settings = rvdContext.getSettings();
+        this.servletContextPath = rvdContext.getServletContext().getContextPath();
+        this.configuration = rvdContext.getSettings();
         this.workspaceStorage = workspaceStorage;
+        this.marshaler = rvdContext.getMarshaler();
+    }
+
+    public ProjectService(RvdConfiguration configuration, WorkspaceStorage workspaceStorage, ModelMarshaler marshaler, String servletContextPath) {
+        this.configuration = configuration;
+        this.workspaceStorage = workspaceStorage;
+        this.marshaler = marshaler;
+        this.servletContextPath = servletContextPath;
     }
 
     // Used for testing. TODO create a ProjectService interface, ProjectServiceBuilder and separate implementation
@@ -106,7 +109,7 @@ public class ProjectService {
      */
     public String buildStartUrl(String projectName) throws ProjectException {
         //servletContext.getS
-        String path = servletContext.getContextPath() + "/" + RvdConfiguration.REST_SERVICES_PATH + "/apps/" + projectName + "/controller";
+        String path = servletContextPath + "/" + RvdConfiguration.REST_SERVICES_PATH + "/apps/" + projectName + "/controller";
         URI uri;
         try {
             uri = new URI(null, null, path, null);
@@ -241,9 +244,9 @@ public class ProjectService {
 
         ValidationResult validationResult = validateProject(stateData);
         // then save
-        ProjectState state = rvdContext.getMarshaler().toModel(stateData, ProjectState.class);
+        ProjectState state = marshaler.toModel(stateData, ProjectState.class);
         // Make sure the current RVD project version is set
-        state.getHeader().setVersion(settings.getRvdProjectVersion());
+        state.getHeader().setVersion(configuration.getRvdProjectVersion());
         // preserve project owner
         state.getHeader().setOwner(existingProject.getHeader().getOwner());
         //projectStorage.storeProject(projectName, state, false);
@@ -290,7 +293,7 @@ public class ProjectService {
             JsonElement rootElement = parser.parse(reader);
             String version = rootElement.getAsJsonObject().get("header").getAsJsonObject().get("version").getAsString();
             // Create a temporary workspace storage.
-            WorkspaceStorage tempStorage = new WorkspaceStorage(tempProjectDir.getParent(), rvdContext.getMarshaler());
+            WorkspaceStorage tempStorage = new WorkspaceStorage(tempProjectDir.getParent(), marshaler);
             // is this project compatible (current RVD can open and run without upgrading) ?
             if ( ! UpgradeService.checkBackwardCompatible(version, RvdConfiguration.getRvdProjectVersion()) ) {
                 if ( UpgradeService.checkUpgradability(version, RvdConfiguration.getRvdProjectVersion()) == UpgradeService.UpgradabilityStatus.UPGRADABLE ) {
@@ -344,7 +347,12 @@ public class ProjectService {
      */
 
     public RvdProject load(String projectName) throws RvdException {
-        String projectJson = FsProjectStorage.loadProjectString(projectName, workspaceStorage);
+        String projectJson;
+        try {
+            projectJson = FsProjectStorage.loadProjectString(projectName, workspaceStorage);
+        } catch (StorageEntityNotFound e) {
+            throw new ProjectDoesNotExist("Error loading project " + projectName, e);
+        }
         RvdProject project = RvdProject.fromJson(projectName, projectJson);
         return project;
     }

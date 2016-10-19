@@ -1,6 +1,6 @@
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2011-2016, Telestax Inc and individual contributors
+ * Copyright 2011-2014, Telestax Inc and individual contributors
  * by the @authors tag.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,14 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
+
 package org.restcomm.connect.http.exceptions;
 
 /**
- * General type of authorization exceptions. All security-related exceptions
- * in REST endpoints should extend this.
+ * Thrown when a resource (like Clients, Numbers etc.) is accessed under an account
+ * that does not own them.
  *
- * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
+ * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-
-public class AuthorizationException extends RestcommRuntimeException {
+public class ResourceAccountMissmatch extends RestcommRuntimeException {
 }

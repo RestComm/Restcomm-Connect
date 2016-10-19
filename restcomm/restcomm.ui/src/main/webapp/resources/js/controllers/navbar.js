@@ -78,14 +78,16 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
 
 rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, RCommAccounts,Notifications) {
 	$scope.predicate = 'name';  
-    $scope.reverse = false;  
+    $scope.reverse = false;
+    $scope.search = {};
     $scope.currentPage = 1;  
      $scope.maxSize = 5; //pagination max size
     $scope.entryLimit = 10; //max rows for data table
      $scope.order = function (predicate) {  
     $scope.reverse = ($scope.predicate === predicate) ? !$scope.reverse : false;  
      $scope.predicate = predicate; 
-    };  
+    };
+    $scope.statusFilter = 'Any';
   
     var subAccountsList = RCommAccounts.query(function(list) {
 		// remove logged (parent) account from the list
@@ -111,12 +113,19 @@ rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, RC
       end = begin + $scope.entryLimit;  
       index = $scope.subAccountsList.indexOf(value);  
       return (begin <= index && index < end);  
-    };  
+    };
+
+    $scope.$watch('statusFilter', function (value) {
+        if (value == 'Any')
+            $scope.search.status = '';
+        else
+            $scope.search.status = value.toLowerCase();
+    });
   }); 
 
 
 
-rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService,AuthService, RCommAccounts, md5,Notifications) {
+rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService,AuthService, RCommAccounts, md5,Notifications, $location, $dialog) {
 
   //$scope.sid = SessionService.get('sid');
 
@@ -156,6 +165,10 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
     $scope.account = angular.copy(accountBackup);
     $scope.accountChanged = false;
   };
+
+  $scope.$on("account-created", function () {
+    $scope.getAccounts();
+   });
 
   $scope.updateProfile = function() {
     var params = {FriendlyName: $scope.account.friendly_name, Type: $scope.account.type, Status: $scope.account.status,Role: $scope.account.role};
@@ -202,6 +215,23 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
       $scope.resetChanges();
     });
   };
+
+  $scope.removeAccount = function (account) {
+    var title = 'Close account';
+    var msg = 'Are you sure you want to close account ' + account.sid + ' (' + account.friendly_name +  ') ? This action cannot be undone.';
+    var btns = [{result:'cancel', label: 'Cancel', cssClass: 'btn-default'}, {result:'confirm', label: 'Close!', cssClass: 'btn-danger'}];
+    // show configurmation
+    $dialog.messageBox(title, msg, btns).open().then(function (result) {
+        if (result == "confirm") {
+
+            RCommAccounts.update({accountSid:account.sid}, $.param({Status:"closed"}), function() { // success
+                $scope.getAccounts();
+            }, function() { // error
+                Notifications.error("Can't close Account '" + account.friendly_name + "'");
+            });
+        }
+    });
+  }
 
   $scope.getAccounts();
 

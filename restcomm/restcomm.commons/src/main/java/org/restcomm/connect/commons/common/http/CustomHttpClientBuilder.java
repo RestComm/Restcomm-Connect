@@ -51,12 +51,16 @@ public class CustomHttpClientBuilder {
 
 
     public static HttpClient build(MainConfigurationSet config) {
-        SslMode mode = config.getSslMode();
         int timeoutConnection = config.getResponseTimeout();
+        return build(config, timeoutConnection);
+    }
+
+    public static HttpClient build(MainConfigurationSet config, int timeout) {
+        SslMode mode = config.getSslMode();
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(timeoutConnection)
-                .setConnectionRequestTimeout(timeoutConnection)
-                .setSocketTimeout(timeoutConnection)
+                .setConnectTimeout(timeout)
+                .setConnectionRequestTimeout(timeout)
+                .setSocketTimeout(timeout)
                 .setCookieSpec(CookieSpecs.STANDARD).build();
         if ( mode == SslMode.strict ) {
             return  HttpClients.custom().setDefaultRequestConfig(requestConfig).build();

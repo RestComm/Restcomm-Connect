@@ -79,6 +79,14 @@ public class RvdConfiguration {
         load();
     }
 
+    public RvdConfiguration(String workspaceBasePath, RvdConfig rvdConfig, RestcommConfig restcommConfig, String contextRootPath, URI restcommBaseUri) {
+        this.workspaceBasePath = workspaceBasePath;
+        this.rvdConfig = rvdConfig;
+        this.restcommConfig = restcommConfig;
+        this.contextRootPath = contextRootPath;
+        this.restcommBaseUri = restcommBaseUri;
+    }
+
     private void load() {
         // load configuration from rvd.xml file
         rvdConfig = loadRvdXmlConfig(contextRootPath + "WEB-INF/rvd.xml");
