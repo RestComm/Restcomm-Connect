@@ -20,6 +20,16 @@
 package org.restcomm.connect.mgcp;
 
 import static jain.protocol.ip.mgcp.message.parms.ReturnCode.Transaction_Executed_Normally;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
+import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.StopObserving;
+
+import akka.actor.ActorRef;
 import jain.protocol.ip.mgcp.JainIPMgcpException;
 import jain.protocol.ip.mgcp.JainMgcpResponseEvent;
 import jain.protocol.ip.mgcp.message.NotificationRequest;
@@ -35,16 +45,6 @@ import jain.protocol.ip.mgcp.message.parms.RequestedEvent;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import jain.protocol.ip.mgcp.pkg.PackageName;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
-import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.StopObserving;
-
-import akka.actor.ActorRef;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -64,6 +64,11 @@ public final class IvrEndpoint extends GenericEndpoint {
 
     public IvrEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain, long timeout) {
         super(gateway, session, agent, new EndpointIdentifier("mobicents/ivr/$", domain), timeout);
+        this.agent = agent;
+    }
+
+    public IvrEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain, long timeout, String endpointName) {
+        super(gateway, session, agent, new EndpointIdentifier(endpointName, domain), timeout);
         this.agent = agent;
     }
 

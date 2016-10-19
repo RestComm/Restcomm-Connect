@@ -44,11 +44,17 @@ public interface ConferenceDetailRecordsDao {
 
     Integer getTotalConferenceDetailRecords(ConferenceDetailRecordFilter filter);
 
-    void addConferenceDetailRecord(ConferenceDetailRecord cdr);
+    int addConferenceDetailRecord(ConferenceDetailRecord cdr);
 
     void removeConferenceDetailRecord(Sid sid);
 
     void removeConferenceDetailRecords(Sid accountSid);
 
-    void updateConferenceDetailRecord(ConferenceDetailRecord cdr);
+    void updateConferenceDetailRecordStatus(ConferenceDetailRecord cdr);
+
+    void updateConferenceDetailRecordMasterEndpointID(ConferenceDetailRecord cdr);
+
+    void updateMasterPresent(ConferenceDetailRecord cdr);
+
+    void updateConferenceDetailRecordMasterBridgeEndpointID(ConferenceDetailRecord cdr);
 }
