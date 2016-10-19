@@ -175,6 +175,7 @@ public class NotificationsRestService extends SecuredRestService {
                 for (ProjectItem project : projects) {
                     projectService.deleteProject(project.getName());
                 }
+                logger.info("Removed projects for account " + closedAccountEmail + "(" + removedAccountSid + ")");
             } else {
                 // error retrieving the removed account. Something seems wrong here
                 if ( response.getHttpFailureStatus() != null ) {
