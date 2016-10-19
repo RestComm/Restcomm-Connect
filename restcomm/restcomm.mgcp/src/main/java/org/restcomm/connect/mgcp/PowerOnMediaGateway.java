@@ -23,6 +23,9 @@ import java.net.InetAddress;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
+import jain.protocol.ip.mgcp.JainMgcpProvider;
+import jain.protocol.ip.mgcp.JainMgcpStack;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
@@ -39,9 +42,11 @@ public final class PowerOnMediaGateway {
     private final InetAddress externalIp;
     // Used to detect dead media gateways.
     private final long timeout;
+    private final JainMgcpStack stack;
+    private final JainMgcpProvider provider;
 
     public PowerOnMediaGateway(final String name, final InetAddress localIp, final int localPort, final InetAddress remoteIp,
-            final int remotePort, final boolean useNat, final InetAddress externalIp, final long timeout) {
+            final int remotePort, final boolean useNat, final InetAddress externalIp, final long timeout, final JainMgcpStack stack, final JainMgcpProvider provider) {
         super();
         this.name = name;
         this.localIp = localIp;
@@ -51,6 +56,8 @@ public final class PowerOnMediaGateway {
         this.useNat = useNat;
         this.externalIp = externalIp;
         this.timeout = timeout;
+        this.stack = stack;
+        this.provider = provider;
     }
 
     public static Builder builder() {
@@ -89,6 +96,14 @@ public final class PowerOnMediaGateway {
         return timeout;
     }
 
+    public JainMgcpStack getStack() {
+        return stack;
+    }
+
+    public JainMgcpProvider getProvider() {
+        return provider;
+    }
+
     public static final class Builder {
         private String name;
         private InetAddress localIp;
@@ -98,13 +113,15 @@ public final class PowerOnMediaGateway {
         private boolean useNat;
         private InetAddress externalIp;
         private long timeout;
+        private JainMgcpStack stack;
+        private JainMgcpProvider provider;
 
         private Builder() {
             super();
         }
 
         public PowerOnMediaGateway build() {
-            return new PowerOnMediaGateway(name, localIp, localPort, remoteIp, remotePort, useNat, externalIp, timeout);
+            return new PowerOnMediaGateway(name, localIp, localPort, remoteIp, remotePort, useNat, externalIp, timeout, stack, provider);
         }
 
         public void setName(final String name) {
@@ -137,6 +154,14 @@ public final class PowerOnMediaGateway {
 
         public void setTimeout(final long timeout) {
             this.timeout = timeout;
+        }
+
+        public void setStack(JainMgcpStack stack) {
+            this.stack = stack;
+        }
+
+        public void setProvider(JainMgcpProvider provider) {
+            this.provider = provider;
         }
     }
 }

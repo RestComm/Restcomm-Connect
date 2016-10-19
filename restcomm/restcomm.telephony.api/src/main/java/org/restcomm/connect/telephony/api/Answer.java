@@ -19,14 +19,24 @@
  */
 package org.restcomm.connect.telephony.api;
 
+
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
 public final class Answer {
-    public Answer() {
+
+    private final Sid callSid;
+
+    public Answer(Sid callSid) {
         super();
+        this.callSid = callSid;
+    }
+
+    public Sid callSid() {
+        return callSid;
     }
 }

@@ -19,15 +19,37 @@
  */
 package org.restcomm.connect.telephony;
 
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.fsm.Action;
+import org.restcomm.connect.commons.fsm.FiniteStateMachine;
+import org.restcomm.connect.commons.fsm.State;
+import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.dao.CallDetailRecordsDao;
+import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
+import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
+import org.restcomm.connect.mscontrol.api.messages.JoinCall;
+import org.restcomm.connect.mscontrol.api.messages.JoinComplete;
+import org.restcomm.connect.mscontrol.api.messages.Leave;
+import org.restcomm.connect.mscontrol.api.messages.Left;
+import org.restcomm.connect.mscontrol.api.messages.MediaServerControllerStateChanged.MediaServerControllerState;
+import org.restcomm.connect.mscontrol.api.messages.Play;
+import org.restcomm.connect.mscontrol.api.messages.StartRecording;
+import org.restcomm.connect.mscontrol.api.messages.Stop;
+import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
+import org.restcomm.connect.mscontrol.api.messages.StopRecording;
 import org.restcomm.connect.telephony.api.AddParticipant;
 import org.restcomm.connect.telephony.api.ConferenceInfo;
 import org.restcomm.connect.telephony.api.ConferenceModeratorPresent;
@@ -37,36 +59,18 @@ import org.restcomm.connect.telephony.api.GetConferenceInfo;
 import org.restcomm.connect.telephony.api.RemoveParticipant;
 import org.restcomm.connect.telephony.api.StartConference;
 import org.restcomm.connect.telephony.api.StopConference;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.fsm.Action;
-import org.restcomm.connect.commons.fsm.FiniteStateMachine;
-import org.restcomm.connect.commons.fsm.State;
-import org.restcomm.connect.commons.fsm.Transition;
-import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
-import org.restcomm.connect.mscontrol.api.messages.JoinCall;
-import org.restcomm.connect.mscontrol.api.messages.JoinComplete;
-import org.restcomm.connect.mscontrol.api.messages.Leave;
-import org.restcomm.connect.mscontrol.api.messages.Left;
-import org.restcomm.connect.mscontrol.api.messages.MediaServerControllerStateChanged;
-import org.restcomm.connect.mscontrol.api.messages.MediaServerControllerStateChanged.MediaServerControllerState;
-import org.restcomm.connect.mscontrol.api.messages.Play;
-import org.restcomm.connect.mscontrol.api.messages.StartRecording;
-import org.restcomm.connect.mscontrol.api.messages.Stop;
-import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
-import org.restcomm.connect.mscontrol.api.messages.StopRecording;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author amit.bhayani@telestax.com (Amit Bhayani)
  * @author henrique.rosa@telestax.com (Henrique Rosa)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
 public final class Conference extends UntypedActor {
@@ -86,7 +90,9 @@ public final class Conference extends UntypedActor {
 
     // Runtime stuff
     private final String name;
-    private final Sid sid;
+    private final String accountSid;
+    private final String friendlyName;
+    private Sid sid;
     private final List<ActorRef> calls;
     private final List<ActorRef> observers;
 
@@ -95,7 +101,12 @@ public final class Conference extends UntypedActor {
     // Media Session Controller
     private final ActorRef mscontroller;
 
-    public Conference(final String name, final ActorRef msController) {
+    private final DaoManager storage;
+    private int globalNoOfParticipants;
+
+    private ConferenceStateChanged.State waitingState;
+
+    public Conference(final String name, final ActorRef msController, final DaoManager storage) {
         super();
         final ActorRef source = self();
 
@@ -129,7 +140,14 @@ public final class Conference extends UntypedActor {
 
         // Runtime stuff
         this.name = name;
-        this.sid = Sid.generate(Sid.Type.CONFERENCE);
+        final String[] cnfNameAndAccount = name.split(":");
+        accountSid = cnfNameAndAccount[0];
+        friendlyName = cnfNameAndAccount[1];
+
+        this.storage = storage;
+
+        //generate it later at MRB level, by watching if same conference is running on another RC instance.
+        //this.sid = Sid.generate(Sid.Type.CONFERENCE);
         this.mscontroller = msController;
         this.calls = new ArrayList<ActorRef>();
         this.observers = new ArrayList<ActorRef>();
@@ -184,8 +202,8 @@ public final class Conference extends UntypedActor {
             onLeft((Left) message, self, sender);
         } else if (JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
-        } else if (MediaServerControllerStateChanged.class.equals(klass)) {
-            onMediaServerControllerStateChanged((MediaServerControllerStateChanged) message, self, sender);
+        } else if (MediaServerConferenceControllerStateChanged.class.equals(klass)) {
+            onMediaServerControllerStateChanged((MediaServerConferenceControllerStateChanged) message, self, sender);
         } else if (Play.class.equals(klass)) {
             onPlay((Play) message, self, sender);
         } else if (StartRecording.class.equals(klass)) {
@@ -216,12 +234,14 @@ public final class Conference extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
+            StartConference startConference = (StartConference) message;
             // Start observing state changes in the MSController
             final Observe observe = new Observe(super.source);
             mscontroller.tell(observe, super.source);
 
+            ConferenceInfo information = createConferenceInfo();
             // Initialize the MS Controller
-            final CreateMediaSession createMediaSession = new CreateMediaSession();
+            final CreateMediaSession createMediaSession = new CreateMediaSession(startConference.callSid(), information.name());
             mscontroller.tell(createMediaSession, super.source);
         }
 
@@ -234,7 +254,17 @@ public final class Conference extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            broadcast(new ConferenceStateChanged(name, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT));
+            //As MRB have generated Sid for this conference and saved in db.
+            MediaServerConferenceControllerStateChanged mediaServerConferenceControllerStateChanged = (MediaServerConferenceControllerStateChanged) message;
+            sid = mediaServerConferenceControllerStateChanged.conferenceSid();
+            String stateStr= mediaServerConferenceControllerStateChanged.conferenceState();
+
+            //this is to cover the scenario where initial state is not moderatorAbsent and maybe moderator is present on another node.
+            waitingState = ConferenceStateChanged.translateState(stateStr, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT);
+            if(logger.isInfoEnabled()) {
+                logger.info("################################## Conference " + name + " has sid: "+sid +" stateStr: "+stateStr+" initial state: "+waitingState);
+            }
+            broadcast(new ConferenceStateChanged(name, waitingState));
         }
     }
 
@@ -247,7 +277,7 @@ public final class Conference extends UntypedActor {
         public void execute(final Object message) throws Exception {
             // Stop the background music if present
             mscontroller.tell(new StopMediaGroup(), super.source);
-
+            updateConferenceStatus(ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT);
             // Notify the observers
             broadcast(new ConferenceStateChanged(name, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT));
         }
@@ -338,15 +368,22 @@ public final class Conference extends UntypedActor {
     }
 
     private void onGetConferenceInfo(ActorRef self, ActorRef sender) throws Exception {
+        sender.tell(new ConferenceResponse<ConferenceInfo>(createConferenceInfo()), self);
+    }
+
+    private ConferenceInfo createConferenceInfo() throws Exception{
         ConferenceInfo information = null;
+        int globalNoOfParticipants = getGlobalNoOfParticipants();
         if (is(waiting)) {
-            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT, name, moderatorPresent);
+            information = new ConferenceInfo(sid, calls, waitingState, name, moderatorPresent, globalNoOfParticipants);
         } else if (is(running)) {
-            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT, name, moderatorPresent);
+            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT, name, moderatorPresent, globalNoOfParticipants);
         } else if (is(stopped)) {
-            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.COMPLETED, name, moderatorPresent);
+            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.COMPLETED, name, moderatorPresent, globalNoOfParticipants);
+        } else {
+            information = new ConferenceInfo(sid, calls, null, name, moderatorPresent, globalNoOfParticipants);
         }
-        sender.tell(new ConferenceResponse<ConferenceInfo>(information), self);
+        return information;
     }
 
     private void onStartConference(StartConference message, ActorRef self, ActorRef sender) throws Exception {
@@ -417,7 +454,7 @@ public final class Conference extends UntypedActor {
         }
     }
 
-    private void onMediaServerControllerStateChanged(MediaServerControllerStateChanged message, ActorRef self, ActorRef sender)
+    private void onMediaServerControllerStateChanged(MediaServerConferenceControllerStateChanged message, ActorRef self, ActorRef sender)
             throws Exception {
         MediaServerControllerState state = message.getState();
         switch (state) {
@@ -443,16 +480,19 @@ public final class Conference extends UntypedActor {
     }
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) throws Exception {
+        this.mscontroller.tell(message, sender);
         this.calls.add(sender);
         if (logger.isInfoEnabled()) {
             logger.info("Conference name: "+name+", path: "+self().path()+", received JoinComplete from Call: "+sender.path()+", number of participants currently: "+calls.size()+", will send conference info to observers");
         }
         if (observers != null && observers.size() > 0) {
             Iterator<ActorRef> iter = observers.iterator();
+            ConferenceInfo ci = createConferenceInfo();
+            sender.tell(new ConferenceResponse<ConferenceInfo>(createConferenceInfo()), self);
             while (iter.hasNext()) {
                 ActorRef observer = iter.next();
                 //First send conferenceInfo
-                onGetConferenceInfo(self(), observer);
+                observer.tell(new ConferenceResponse<ConferenceInfo>(ci), self());
                 //Next send the JoinComplete message
                 observer.tell(message, self());
             }
@@ -488,4 +528,28 @@ public final class Conference extends UntypedActor {
         }
     }
 
+    /**
+     * get global total no of participants from db
+     * @throws Exception
+     */
+    private int getGlobalNoOfParticipants() throws Exception{
+        if(sid == null){
+            globalNoOfParticipants = calls.size();
+        }else{
+            CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
+            globalNoOfParticipants = dao.getTotalRunningCallDetailRecordsByConferenceSid(sid);
+        }
+        if(logger.isInfoEnabled())
+            logger.info("sid: "+sid+"globalNoOfParticipants: "+globalNoOfParticipants);
+        return globalNoOfParticipants;
+    }
+
+    private void updateConferenceStatus(ConferenceStateChanged.State state){
+        if(sid != null){
+            final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
+            ConferenceDetailRecord cdr = dao.getConferenceDetailRecord(sid);
+            cdr = cdr.setStatus(state.name());
+            dao.updateConferenceDetailRecordStatus(cdr);
+        }
+    }
 }

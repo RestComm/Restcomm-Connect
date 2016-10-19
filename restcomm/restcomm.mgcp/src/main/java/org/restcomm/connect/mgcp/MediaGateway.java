@@ -19,6 +19,13 @@
  */
 package org.restcomm.connect.mgcp;
 
+import java.net.InetAddress;
+import java.util.Map;
+import java.util.TooManyListenersException;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.restcomm.connect.commons.util.RevolvingCounter;
+
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -27,8 +34,6 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
-import jain.protocol.ip.mgcp.CreateProviderException;
 import jain.protocol.ip.mgcp.DeleteProviderException;
 import jain.protocol.ip.mgcp.JainMgcpCommandEvent;
 import jain.protocol.ip.mgcp.JainMgcpEvent;
@@ -39,15 +44,8 @@ import jain.protocol.ip.mgcp.JainMgcpStack;
 import jain.protocol.ip.mgcp.message.Constants;
 import jain.protocol.ip.mgcp.message.NotificationRequest;
 import jain.protocol.ip.mgcp.message.Notify;
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
-
-import java.net.InetAddress;
-import java.util.Map;
-import java.util.TooManyListenersException;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl;
-import org.restcomm.connect.commons.util.RevolvingCounter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -104,28 +102,53 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         final CreateBridgeEndpoint request = (CreateBridgeEndpoint) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
+        final String endpointName = request.endpointName();
+        if(endpointName == null){
+            return getContext().actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
 
-            @Override
-            public Actor create() throws Exception {
-                return new BridgeEndpoint(gateway, session, agent, domain, timeout);
-            }
-        }));
+                @Override
+                public Actor create() throws Exception {
+                    return new BridgeEndpoint(gateway, session, agent, domain, timeout);
+                }
+            }));
+        }else{
+            return getContext().actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public Actor create() throws Exception {
+                    return new BridgeEndpoint(gateway, session, agent, domain, timeout, endpointName);
+                }
+            }));
+        }
+
     }
 
     private ActorRef getConferenceEndpoint(final Object message) {
         final ActorRef gateway = self();
         final CreateConferenceEndpoint request = (CreateConferenceEndpoint) message;
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
+        final String endpointName = request.endpointName();
+        if(endpointName == null){
+            return getContext().actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
 
-            @Override
-            public UntypedActor create() throws Exception {
-                return new ConferenceEndpoint(gateway, session, agent, domain, timeout);
-            }
-        }));
+                @Override
+                public UntypedActor create() throws Exception {
+                    return new ConferenceEndpoint(gateway, session, agent, domain, timeout);
+                }
+            }));
+        } else {
+            return getContext().actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public UntypedActor create() throws Exception {
+                    return new ConferenceEndpoint(gateway, session, agent, domain, timeout, endpointName);
+                }
+            }));
+        }
     }
 
     private MediaGatewayInfo getInfo(final Object message) {
@@ -136,26 +159,39 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         final ActorRef gateway = self();
         final CreateIvrEndpoint request = (CreateIvrEndpoint) message;
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
+        final String endpointName = request.endpointName();
+        if(endpointName == null){
+            return getContext().actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
 
-            @Override
-            public UntypedActor create() throws Exception {
-                return new IvrEndpoint(gateway, session, agent, domain, timeout);
-            }
-        }));
+                @Override
+                public UntypedActor create() throws Exception {
+                    return new IvrEndpoint(gateway, session, agent, domain, timeout);
+                }
+            }));
+        }else{
+            return getContext().actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public UntypedActor create() throws Exception {
+                    return new IvrEndpoint(gateway, session, agent, domain, timeout, endpointName);
+                }
+            }));
+        }
     }
 
     private ActorRef getLink(final Object message) {
         final CreateLink request = (CreateLink) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
+        final ConnectionIdentifier connectionIdentifier = request.connectionIdentifier();
         return getContext().actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Link(gateway, session, agent, timeout);
+                return new Link(gateway, session, agent, timeout, connectionIdentifier);
             }
         }));
     }
@@ -216,12 +252,14 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         useNat = request.useNat();
         externalIp = request.getExternalIp();
         timeout = request.getTimeout();
-        stack = new JainMgcpStackImpl(localIp, localPort);
+        stack = request.getStack();
+        provider = request.getProvider();
+        //stack = new JainMgcpStackImpl(localIp, localPort);
         try {
-            provider = stack.createProvider();
+            //provider = stack.createProvider();
             provider.addJainMgcpListener(this);
-        } catch (final TooManyListenersException ignored) {
-        } catch (final CreateProviderException exception) {
+        } catch (final TooManyListenersException exception) {
+        //} catch (final CreateProviderException exception) {
             logger.error(exception, "Could not create a JAIN MGCP provider.");
         }
         agent = new NotifiedEntity("restcomm", localIp.getHostAddress(), localPort);

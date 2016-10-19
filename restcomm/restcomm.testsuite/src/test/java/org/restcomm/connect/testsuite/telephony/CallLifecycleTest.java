@@ -328,10 +328,12 @@ public class CallLifecycleTest {
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
         assertTrue(response == Response.TRYING || response == Response.RINGING);
+        logger.info("Last response: "+response);
 
         if (response == Response.TRYING) {
             assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
         }
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -1162,9 +1164,11 @@ public class CallLifecycleTest {
         archive.delete("/WEB-INF/sip.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
+        archive.delete("/WEB-INF/classes/application.conf");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm_calllifecycle.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_callLifecycleTest", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
         archive.addAsWebResource("dial-client-entry_wActionUrl.xml");
         logger.info("Packaged Test App");
         return archive;

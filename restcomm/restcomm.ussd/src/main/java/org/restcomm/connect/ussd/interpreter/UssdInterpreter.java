@@ -48,19 +48,21 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.NotificationsDao;
-import org.restcomm.connect.email.EmailService;
-import org.restcomm.connect.email.api.EmailRequest;
-import org.restcomm.connect.email.api.Mail;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
-import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.dao.CallDetailRecordsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.email.EmailService;
+import org.restcomm.connect.email.api.EmailRequest;
+import org.restcomm.connect.email.api.Mail;
 import org.restcomm.connect.http.client.Downloader;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
@@ -73,7 +75,6 @@ import org.restcomm.connect.interpreter.rcml.GetNextVerb;
 import org.restcomm.connect.interpreter.rcml.Parser;
 import org.restcomm.connect.interpreter.rcml.ParserFailed;
 import org.restcomm.connect.interpreter.rcml.Tag;
-import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.telephony.api.Answer;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
@@ -83,10 +84,9 @@ import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.ussd.commons.UssdInfoRequest;
 import org.restcomm.connect.ussd.commons.UssdMessageType;
 import org.restcomm.connect.ussd.commons.UssdRestcommResponse;
-import org.restcomm.connect.commons.util.UriUtils;
 
-import akka.actor.ActorRef;
 import akka.actor.Actor;
+import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -497,7 +497,7 @@ public class UssdInterpreter extends UntypedActor {
                 }
                 final String direction = callInfo.direction();
                 if ("inbound".equals(direction)) {
-                    ussdCall.tell(new Answer(), source);
+                    ussdCall.tell(new Answer(callInfo.sid()), source);
                     // fsm.transition(message, downloadingRcml);
                 } else {
                     fsm.transition(message, downloadingRcml);
