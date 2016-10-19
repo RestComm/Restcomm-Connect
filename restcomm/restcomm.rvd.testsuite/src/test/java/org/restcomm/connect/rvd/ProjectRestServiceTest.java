@@ -1,6 +1,6 @@
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2011-2016, Telestax Inc and individual contributors
+ * Copyright 2011-2014, Telestax Inc and individual contributors
  * by the @authors tag.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,19 +18,15 @@
  *
  */
 
-package org.restcomm.connect.rvd.testsuite;
+package org.restcomm.connect.rvd;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.*;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.apache.log4j.Logger;
-import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
@@ -38,17 +34,13 @@ import org.junit.*;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
-import java.net.URL;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-
-
 
 /**
  * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
  */
 @RunWith(Arquillian.class)
-public class ProjectRestServiceTest {
+public class ProjectRestServiceTest extends RestServiceTest {
 
     private final static Logger logger = Logger.getLogger(ProjectRestServiceTest.class);
     private static final String version = Version.getVersion();
@@ -57,30 +49,6 @@ public class ProjectRestServiceTest {
     static final String password = "adminpass";
     private String accountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String accountAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-
-    @ArquillianResource
-    private Deployer deployer;
-    @ArquillianResource
-    URL deploymentUrl;
-
-    @Before
-    public void before() {
-        //stubFor(get(urlEqualTo("/restcomm/1012-04-24/Accounts.json/"+username))
-        stubFor(get(urlMatching("/restcomm/2012-04-24/Accounts.json/administrator@company.com"))
-//                .withHeader("Accept", equalTo("text/xml"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("{\"sid\":\"ACae6e420f425248d6a26948c17a9e2acf\",\"email_address\":\"administrator@company.com\",\"status\":\"active\",\"role\":\"administrator\"}")));
-    }
-
-    @After
-    public void after() throws InterruptedException {
-        Thread.sleep(1000);
-    }
-
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8089);
 
     @Test
     public void canRetrieveProjects() {
@@ -141,26 +109,6 @@ public class ProjectRestServiceTest {
 
     }
     */
-
-    protected Client getClient(String username, String password) {
-        Client jersey = Client.create();
-        jersey.addFilter(new HTTPBasicAuthFilter(username, password));
-        return jersey;
-    }
-
-    protected String getResourceUrl(String suffix) {
-        String urlString = deploymentUrl.toString();
-        if ( urlString.endsWith("/") )
-            urlString = urlString.substring(0,urlString.length()-1);
-
-        if ( suffix != null && !suffix.isEmpty()) {
-            if (!suffix.startsWith("/"))
-                suffix = "/" + suffix;
-            return urlString + suffix;
-        } else
-            return urlString;
-
-    }
 
     @Deployment(name = "ProjectRestServiceTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {

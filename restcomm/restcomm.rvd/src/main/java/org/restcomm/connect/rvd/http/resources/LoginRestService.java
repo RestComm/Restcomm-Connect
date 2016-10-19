@@ -18,7 +18,7 @@ import org.apache.commons.io.IOUtils;
 import org.restcomm.connect.rvd.identity.AccountProvider;
 import org.restcomm.connect.rvd.identity.UserIdentityContext;
 import org.restcomm.connect.rvd.model.LoginForm;
-import org.restcomm.connect.rvd.restcomm.RestcommAccountInfoResponse;
+import org.restcomm.connect.rvd.restcomm.RestcommAccountInfo;
 import org.restcomm.connect.rvd.identity.BasicAuthCredentials;
 
 import com.google.gson.Gson;
@@ -58,7 +58,7 @@ public class LoginRestService extends SecuredRestService {
 
         AccountProvider accounts = applicationContext.getAccountProvider();
         BasicAuthCredentials creds = new BasicAuthCredentials(form.getUsername(),form.getPassword());
-        RestcommAccountInfoResponse accountInfo = accounts.getAccount(creds);
+        RestcommAccountInfo accountInfo = accounts.getActiveAccount(creds).get();
         if (accountInfo != null)
             return Response.ok().build();
         else

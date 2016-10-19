@@ -11,7 +11,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
-import org.apache.http.annotation.NotThreadSafe;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.cache.DiskCacheFactory;
 import org.restcomm.connect.commons.cache.DiskCacheRequest;
@@ -47,7 +46,6 @@ import static javax.ws.rs.core.Response.ok;
 /**
  * @author <a href="mailto:gvagenas@gmail.com">George Vagenas</a>
  */
-@NotThreadSafe
 public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
     private static Logger logger = Logger.getLogger(AnnouncementsEndpoint.class);
 
