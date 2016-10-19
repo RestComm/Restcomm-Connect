@@ -328,6 +328,19 @@
 		<hostname></hostname>
 	</http-client>
 
+	<!-- Control notifications sent to rcmlserver (RVD)
+		base-url: relative path or absolute url where rcmlserver it located.
+		notifications: should notifications be sent or not ? defaults to 'false'
+		timeout: milis to wait response from rcmlserver before timing out when sending notifications. Defaults to 5000
+		timeout-per-notification: if several notifications are sent in one step, timeout increase for each. Defaults to 500.
+	-->
+	<rcmlserver-api>
+		<base-url>/restcomm-rvd/services</base-url>
+		<notifications>true</notifications>
+		<timeout>5000</timeout>
+		<timeout-per-notification>500</timeout-per-notification>
+	</rcmlserver-api>
+
 	<!-- The SMS aggregator is responsible for the handling of SMS messages 
 		inside of RestComm. Refer to the org.mobicents.servlet.sip.restcomm.SmsAggregator 
 		interface for more information. -->

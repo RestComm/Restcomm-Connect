@@ -71,7 +71,7 @@ public class AccountsDaoMock implements AccountsDao {
     }
 
     @Override
-    public List<Account> getAccounts(Sid sid) {
+    public List<Account> getChildAccounts(Sid sid) {
         throw new NotImplementedException();
     }
 
