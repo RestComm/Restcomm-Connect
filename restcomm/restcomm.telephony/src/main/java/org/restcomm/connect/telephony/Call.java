@@ -56,25 +56,7 @@ import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
-import org.restcomm.connect.telephony.api.Answer;
-import org.restcomm.connect.telephony.api.CallFail;
-import org.restcomm.connect.telephony.api.CallInfo;
-import org.restcomm.connect.telephony.api.CallResponse;
-import org.restcomm.connect.telephony.api.CallStateChanged;
-import org.restcomm.connect.telephony.api.Cancel;
-import org.restcomm.connect.telephony.api.ChangeCallDirection;
-import org.restcomm.connect.telephony.api.CreateCall;
-import org.restcomm.connect.telephony.api.Dial;
-import org.restcomm.connect.telephony.api.GetCallInfo;
-import org.restcomm.connect.telephony.api.GetCallObservers;
-import org.restcomm.connect.telephony.api.Hangup;
-import org.restcomm.connect.telephony.api.InitializeOutbound;
-import org.restcomm.connect.telephony.api.Reject;
-import org.restcomm.connect.telephony.api.RemoveParticipant;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -83,6 +65,13 @@ import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.commons.fsm.TransitionFailedException;
 import org.restcomm.connect.commons.fsm.TransitionNotFoundException;
 import org.restcomm.connect.commons.fsm.TransitionRollbackException;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.util.SdpUtils;
+import org.restcomm.connect.dao.CallDetailRecordsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.mscontrol.api.messages.CloseMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.Collect;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
@@ -103,10 +92,21 @@ import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StopRecording;
 import org.restcomm.connect.mscontrol.api.messages.Unmute;
 import org.restcomm.connect.mscontrol.api.messages.UpdateMediaSession;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
-import org.restcomm.connect.commons.util.SdpUtils;
+import org.restcomm.connect.telephony.api.Answer;
+import org.restcomm.connect.telephony.api.CallFail;
+import org.restcomm.connect.telephony.api.CallInfo;
+import org.restcomm.connect.telephony.api.CallResponse;
+import org.restcomm.connect.telephony.api.CallStateChanged;
+import org.restcomm.connect.telephony.api.Cancel;
+import org.restcomm.connect.telephony.api.ChangeCallDirection;
+import org.restcomm.connect.telephony.api.CreateCall;
+import org.restcomm.connect.telephony.api.Dial;
+import org.restcomm.connect.telephony.api.GetCallInfo;
+import org.restcomm.connect.telephony.api.GetCallObservers;
+import org.restcomm.connect.telephony.api.Hangup;
+import org.restcomm.connect.telephony.api.InitializeOutbound;
+import org.restcomm.connect.telephony.api.Reject;
+import org.restcomm.connect.telephony.api.RemoveParticipant;
 
 import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
@@ -209,9 +209,10 @@ public final class Call extends UntypedActor {
     // Runtime Setting
     private Configuration runtimeSettings;
     private Configuration configuration;
+    private final ActorRef callDataRecorder;
     private boolean disableSdpPatchingOnUpdatingMediaSession;
 
-    public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
+    public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration, final ActorRef callDataRecorder) {
         super();
         final ActorRef source = self();
 
@@ -315,6 +316,7 @@ public final class Call extends UntypedActor {
         this.liveCallModification = false;
         this.recording = false;
         this.configuration = configuration;
+        this.callDataRecorder = callDataRecorder;
         this.disableSdpPatchingOnUpdatingMediaSession = this.configuration.subset("runtime-settings").getBoolean("disable-sdp-patching-on-updating-mediasession", false);
     }
 

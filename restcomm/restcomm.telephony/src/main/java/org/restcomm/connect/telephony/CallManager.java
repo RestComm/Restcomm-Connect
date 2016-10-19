@@ -281,7 +281,18 @@ public final class CallManager extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Call(sipFactory, msControllerFactory.provideCallController(), configuration);
+                return new Call(sipFactory, msControllerFactory.provideCallController(), configuration, callDataRecorder());
+            }
+        }));
+    }
+
+    private ActorRef callDataRecorder() {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new CallDataRecorder(storage);
             }
         }));
     }
