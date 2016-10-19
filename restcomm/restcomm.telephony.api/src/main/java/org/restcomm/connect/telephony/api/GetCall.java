@@ -27,15 +27,15 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 @Immutable
 public final class GetCall {
 
-    private String callPath;
+    private String identifier;
 
-    public GetCall(final String callPath) {
+    public GetCall(final String identifier) {
         super();
-        this.callPath = callPath;
+        this.identifier= identifier;
     }
 
-    public String callPath() {
-        return callPath;
+    public String getIdentifier() {
+        return identifier;
     }
 
 }

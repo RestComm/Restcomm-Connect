@@ -19,21 +19,27 @@
  */
 package org.restcomm.connect.telephony.ua;
 
-import static akka.pattern.Patterns.ask;
-import static java.lang.Integer.parseInt;
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
-import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
-
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.DigestAuthentication;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.RegistrationsDao;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.Registration;
+import org.restcomm.connect.monitoringservice.MonitoringService;
+import org.restcomm.connect.telephony.CallManager;
+import org.restcomm.connect.telephony.api.DestroyCall;
+import org.restcomm.connect.telephony.api.GetCall;
+import org.restcomm.connect.telephony.api.Hangup;
+import org.restcomm.connect.telephony.api.UserRegistration;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -46,36 +52,19 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
-import javax.sip.header.ContactHeader;
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.util.DigestAuthentication;
-import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.ClientsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.RegistrationsDao;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
-import org.restcomm.connect.dao.entities.Client;
-import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.monitoringservice.MonitoringService;
-import org.restcomm.connect.telephony.api.CallInfo;
-import org.restcomm.connect.telephony.api.CallResponse;
-import org.restcomm.connect.telephony.api.GetCallInfo;
-import org.restcomm.connect.telephony.api.Hangup;
-import org.restcomm.connect.telephony.api.UserRegistration;
-
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.util.Timeout;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
+import static java.lang.Integer.parseInt;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
+import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -89,6 +78,8 @@ public final class UserAgentManager extends UntypedActor {
     private final ServletContext servletContext;
     private ActorRef monitoringService;
     private final int pingInterval;
+    private final String instanceId;
+    private ActorRef callManager;
 
     public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage,
             final ServletContext servletContext) {
@@ -101,8 +92,9 @@ public final class UserAgentManager extends UntypedActor {
         this.factory = factory;
         this.storage = storage;
         pingInterval = runtime.getInt("ping-interval", 60);
-        getContext().setReceiveTimeout(Duration.create(pingInterval, TimeUnit.SECONDS));
         logger.info("About to run firstTimeCleanup()");
+        instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
+        callManager = (ActorRef) servletContext.getAttribute(CallManager.class.getName());
         firstTimeCleanup();
     }
 
@@ -110,7 +102,7 @@ public final class UserAgentManager extends UntypedActor {
         if (logger.isInfoEnabled())
             logger.info("Initial registration cleanup. Will check existing registrations in DB and cleanup appropriately");
         final RegistrationsDao registrations = storage.getRegistrationsDao();
-        List<Registration> results = registrations.getRegistrations();
+        List<Registration> results = registrations.getRegistrationsByInstanceId(instanceId);
         for (final Registration result : results) {
             if (result.isWebRTC()) {
                 //If this is a WebRTC registration remove it since after restart the websocket connection is gone
@@ -126,6 +118,7 @@ public final class UserAgentManager extends UntypedActor {
                     }
                     registrations.removeRegistration(result);
                     monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
+                    monitoringService.tell(new GetCall(result.getLocation()), self());
                     return;
                 }
                 final DateTime updated = result.getDateUpdated();
@@ -137,17 +130,18 @@ public final class UserAgentManager extends UntypedActor {
                     }
                     registrations.removeRegistration(result);
                     monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
+                    monitoringService.tell(new GetCall(result.getLocation()), self());
                 }
             }
         }
-        results = registrations.getRegistrations();
+        results = registrations.getRegistrationsByInstanceId(instanceId);
         if (logger.isInfoEnabled())
             logger.info("Initial registration cleanup finished, starting Restcomm with "+results.size()+" registrations");
     }
 
     private void clean() {
         final RegistrationsDao registrations = storage.getRegistrationsDao();
-        final List<Registration> results = registrations.getRegistrations();
+        final List<Registration> results = registrations.getRegistrationsByInstanceId(instanceId);
         for (final Registration result : results) {
             final DateTime expires = result.getDateExpires();
             if (expires.isBeforeNow() || expires.isEqualNow()) {
@@ -167,36 +161,16 @@ public final class UserAgentManager extends UntypedActor {
                 }
                 registrations.removeRegistration(result);
                 monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
-                checkForActiveCalls(result);
             }
         }
     }
 
-    private void checkForActiveCalls(Registration result) {
-        final String user = result.getUserName();
-        final String contact = result.getAddressOfRecord();
-        final Client client = storage.getClientsDao().getClient(user);
-        final CallDetailRecordsDao cdrDao = storage.getCallDetailRecordsDao();
-        final List<CallDetailRecord> cdrs = cdrDao.getCallDetailRecords(client.getAccountSid());
-        for (CallDetailRecord cdr: cdrs) {
-            //Disconnect all call legs that this account created.
-            String path = cdr.getCallPath();
-            ActorRef call = getContext().actorFor(path);
-            if (call != null) {
-                 String contactHeader = null;
-                try {
-                    final Timeout expires = new Timeout(Duration.create(3, TimeUnit.SECONDS));
-                    Future<Object> future = (Future<Object>) ask(call, new GetCallInfo(), expires);
-                    CallResponse<CallInfo> response = (CallResponse<CallInfo>) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
-                    CallInfo callInfo = response.get();
-                    if (callInfo != null && callInfo.invite() != null) {
-                        contactHeader = callInfo.invite().getAddressHeader(ContactHeader.NAME).getURI().toString();
-                    }
-                } catch (Exception e) {}
-
-                if (contactHeader != null && contactHeader.equalsIgnoreCase(contact)) {
-                        call.tell(new Hangup(), null);
-                }
+    private void disconnectActiveCalls(ActorRef call) {
+        if (call != null && !call.isTerminated()) {
+            call.tell(new Hangup("Registration_Removed"), self());
+            callManager.tell(new DestroyCall(call), self());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Disconnected call: "+call.path()+" , after removed registration");
             }
         }
     }
@@ -222,7 +196,7 @@ public final class UserAgentManager extends UntypedActor {
 
     private void keepAlive() throws Exception {
         final RegistrationsDao registrations = storage.getRegistrationsDao();
-        final List<Registration> results = registrations.getRegistrationsByInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
+        final List<Registration> results = registrations.getRegistrationsByInstanceId(instanceId);
         if (results != null && results.size() > 0) {
             for (final Registration result : results) {
                 final String to = result.getLocation();
@@ -240,6 +214,9 @@ public final class UserAgentManager extends UntypedActor {
     @Override
     public void onReceive(final Object message) throws Exception {
         if (message instanceof ReceiveTimeout) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Timeout received, ping interval: "+pingInterval+" , will clean up registrations and send keep alive");
+            }
             clean();
             keepAlive();
         } else if (message instanceof SipServletRequest) {
@@ -272,6 +249,8 @@ public final class UserAgentManager extends UntypedActor {
             } else {
                 pong(message);
             }
+        } else if(message instanceof ActorRef && sender().equals(monitoringService)) {
+            disconnectActiveCalls((ActorRef) message);
         }
     }
 
@@ -301,6 +280,7 @@ public final class UserAgentManager extends UntypedActor {
 
                     regDao.removeRegistration(reg);
                     monitoringService.tell(new UserRegistration(reg.getUserName(), reg.getLocation(), false), self());
+                    monitoringService.tell(new GetCall(reg.getLocation()), self());
                 }
             }
         }
@@ -468,7 +448,7 @@ public final class UserAgentManager extends UntypedActor {
 
         boolean webRTC = isWebRTC(transport, ua);
 
-        final Registration registration = new Registration(sid, RestcommConfiguration.getInstance().getMain().getInstanceId(), now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent);
+        final Registration registration = new Registration(sid, instanceId, now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent);
         final RegistrationsDao registrations = storage.getRegistrationsDao();
 
         if (ttl == 0) {
