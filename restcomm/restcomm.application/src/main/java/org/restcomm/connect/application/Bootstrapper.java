@@ -30,6 +30,8 @@ import org.restcomm.connect.commons.loader.ObjectInstantiationException;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.InstanceId;
 import org.restcomm.connect.dao.entities.shiro.ShiroResources;
+import org.restcomm.connect.data.recorder.api.DataRecorderFactory;
+import org.restcomm.connect.data.recorder.impl.DataRecorderFactoryImpl;
 import org.restcomm.connect.extension.controller.ExtensionBootstrapper;
 import org.restcomm.connect.identity.IdentityContext;
 import org.restcomm.connect.monitoringservice.MonitoringService;
@@ -70,6 +72,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         system.awaitTermination();
     }
 
+    private DataRecorderFactory dataRecorderFactory(DaoManager storage){
+    	return new DataRecorderFactoryImpl(this.system, storage);
+    }
     private MediaServerControllerFactory mediaServerControllerFactory(final Configuration configuration, ClassLoader loader, DaoManager storage)
             throws ServletException {
         Configuration settings ;
@@ -315,7 +320,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 //                logger.error(exception);
             }
 
+            context.setAttribute(DataRecorderFactory.class.getName(), dataRecorderFactory(storage));
             ExtensionBootstrapper extensionBootstrapper = new ExtensionBootstrapper(context, extensionConfiguration);
+
             try {
                 extensionBootstrapper.start();
             } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {

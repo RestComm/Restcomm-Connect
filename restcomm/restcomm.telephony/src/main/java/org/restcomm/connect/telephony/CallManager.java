@@ -71,6 +71,7 @@ import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.Registration;
+import org.restcomm.connect.data.recorder.api.DataRecorderFactory;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.interpreter.StopInterpreter;
@@ -273,6 +274,8 @@ public final class CallManager extends UntypedActor {
         if (logger.isInfoEnabled()) {
             logger.info("CallManager extensions: "+(extensions != null ? extensions.size() : "0"));
         }
+
+        context.getAttribute(DataRecorderFactory.class.getName());
     }
 
     private ActorRef call() {

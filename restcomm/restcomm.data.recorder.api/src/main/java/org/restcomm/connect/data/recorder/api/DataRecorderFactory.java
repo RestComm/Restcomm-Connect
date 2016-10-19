@@ -32,20 +32,20 @@ public interface DataRecorderFactory {
     /**
      * @return DataRecorder for Calls
      */
-    public ActorRef getCallDataRecorder();
+    ActorRef getCallDataRecorder();
 
     /**
      * @return DataRecorder for Conference
      */
-    public ActorRef getConferenceDataRecorder();
+    ActorRef getConferenceDataRecorder();
 
     /**
      * @return DataRecorder for SMS
      */
-    public ActorRef getSMSDataRecorder();
+    ActorRef getSMSDataRecorder();
 
     /**
      * @return DataRecorder for USSD
      */
-    public ActorRef getUSSDDataRecorder();
+    ActorRef getUSSDDataRecorder();
 }

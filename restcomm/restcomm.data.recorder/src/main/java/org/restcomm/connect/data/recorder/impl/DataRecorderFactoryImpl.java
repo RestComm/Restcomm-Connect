@@ -33,16 +33,16 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActorFactory;
 
-public class DataRecordedFactoryImpl implements DataRecorderFactory {
+public class DataRecorderFactoryImpl implements DataRecorderFactory {
 
-	private final ActorSystem system;
-	private final DaoManager daoManager;
-	private final CallDataRecorderFactory callDataRecorderFactory;
-	private final ConferenceDataRecorderFactory conferenceDataRecorderFactory;
-	private final SmsDataRecorderFactory smsDataRecorderFactory;
-	private final UssdDataRecorderFactory ussdDataRecorderFactory;
+    private final ActorSystem system;
+    private final DaoManager daoManager;
+    private final CallDataRecorderFactory callDataRecorderFactory;
+    private final ConferenceDataRecorderFactory conferenceDataRecorderFactory;
+    private final SmsDataRecorderFactory smsDataRecorderFactory;
+    private final UssdDataRecorderFactory ussdDataRecorderFactory;
 
-    public DataRecordedFactoryImpl(ActorSystem system, final DaoManager daoManager) {
+    public DataRecorderFactoryImpl(ActorSystem system, final DaoManager daoManager) {
         super();
         this.system = system;
         this.daoManager = daoManager;
@@ -52,7 +52,7 @@ public class DataRecordedFactoryImpl implements DataRecorderFactory {
         ussdDataRecorderFactory = new UssdDataRecorderFactory();
     }
 
-	private final class CallDataRecorderFactory implements UntypedActorFactory {
+    private final class CallDataRecorderFactory implements UntypedActorFactory {
 
         private static final long serialVersionUID = -4649683839304615852L;
 
@@ -63,7 +63,7 @@ public class DataRecordedFactoryImpl implements DataRecorderFactory {
 
     }
 
-	private final class ConferenceDataRecorderFactory implements UntypedActorFactory {
+    private final class ConferenceDataRecorderFactory implements UntypedActorFactory {
 
         private static final long serialVersionUID = -4649683839304615853L;
 
@@ -74,7 +74,7 @@ public class DataRecordedFactoryImpl implements DataRecorderFactory {
 
     }
 
-	private final class SmsDataRecorderFactory implements UntypedActorFactory {
+    private final class SmsDataRecorderFactory implements UntypedActorFactory {
 
         private static final long serialVersionUID = -4649683839304615854L;
 
@@ -85,7 +85,7 @@ public class DataRecordedFactoryImpl implements DataRecorderFactory {
 
     }
 
-	private final class UssdDataRecorderFactory implements UntypedActorFactory {
+    private final class UssdDataRecorderFactory implements UntypedActorFactory {
 
         private static final long serialVersionUID = -4649683839304615855L;
 
@@ -98,22 +98,22 @@ public class DataRecordedFactoryImpl implements DataRecorderFactory {
 
     @Override
     public ActorRef getCallDataRecorder() {
-    	return system.actorOf(new Props(this.callDataRecorderFactory));
+        return system.actorOf(new Props(this.callDataRecorderFactory));
     }
 
     @Override
     public ActorRef getConferenceDataRecorder() {
-    	return system.actorOf(new Props(this.conferenceDataRecorderFactory));
+        return system.actorOf(new Props(this.conferenceDataRecorderFactory));
     }
 
     @Override
     public ActorRef getSMSDataRecorder() {
-    	return system.actorOf(new Props(this.smsDataRecorderFactory));
+        return system.actorOf(new Props(this.smsDataRecorderFactory));
     }
 
     @Override
     public ActorRef getUSSDDataRecorder() {
-    	return system.actorOf(new Props(this.ussdDataRecorderFactory));
+        return system.actorOf(new Props(this.ussdDataRecorderFactory));
     }
 
 }

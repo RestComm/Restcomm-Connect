@@ -118,13 +118,6 @@
 
 		<dependency>
 			<groupId>org.restcomm</groupId>
-			<artifactId>restcomm.data.recorder</artifactId>
-			<version>${project.version}</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.restcomm</groupId>
 			<artifactId>restcomm.data.recorder.api</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
