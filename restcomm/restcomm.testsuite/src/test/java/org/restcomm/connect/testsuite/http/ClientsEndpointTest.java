@@ -8,12 +8,16 @@ import java.net.URL;
 import java.text.ParseException;
 
 import javax.sip.address.SipURI;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 import junit.framework.Assert;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
@@ -135,6 +139,23 @@ public class ClientsEndpointTest {
         // re-removing the client should return a 404 (not a 200)
         response = resource.delete(ClientResponse.class);
         Assert.assertEquals("Removing a non-existing client did not return 404", 404, response.getStatus());
+    }
+
+    @Test
+    public void createClientWithWeakPasswordShouldFail() throws IOException {
+        HttpResponse response = CreateClientsTool.getInstance().createClientResponse(deploymentUrl.toString(), "fool", "1234", "http://127.0.0.1:8080/restcomm/demos/welcome.xml");
+        Assert.assertEquals(400, response.getStatusLine().getStatusCode());
+    }
+
+    @Test
+    public void updateClientWithWeakPasswordShouldFail() {
+        String updateClientSid = "CL00000000000000000000000000000001";
+        Client jersey = getClient(developerUsername, developeerAuthToken);
+        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients/" + updateClientSid ) );
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.add("Password","1234"); // this is a very weak password
+        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, params);
+        Assert.assertEquals(400, response.getStatus());
     }
 
     protected String getResourceUrl(String suffix) {
