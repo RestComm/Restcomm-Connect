@@ -19,11 +19,16 @@
  */
 package org.restcomm.connect.telephony.api;
 
+import java.math.BigDecimal;
+import java.net.URI;
+import java.util.Currency;
+
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 
 /**
@@ -33,6 +38,8 @@ import org.restcomm.connect.commons.dao.Sid;
 @Immutable
 public final class CallInfo {
     private final Sid sid;
+    private final Sid instanceSid;
+    private final Sid accountSid;
     private CallStateChanged.State state;
     private final CreateCall.Type type;
     private final String direction;
@@ -46,7 +53,26 @@ public final class CallInfo {
     private final SipServletResponse lastResponse;
     private final boolean webrtc;
     private boolean muted;
-
+    builder.setCallerName(name);
+    builder.setStartTime(new DateTime());
+    String fromString = (from.getUser() != null ? from.getUser() : "CALLS REST API");
+    builder.setFrom(fromString);
+    // builder.setForwardedFrom(callInfo.forwardedFrom());
+    // builder.setPhoneNumberSid(phoneId);
+    builder.setStatus(external.name());
+    builder.setDirection("outbound-api");
+    builder.setApiVersion(apiVersion);
+    builder.setPrice(new BigDecimal("0.00"));
+    // TODO implement currency property to be read from Configuration
+    builder.setPriceUnit(Currency.getInstance("USD"));
+    final StringBuilder buffer = new StringBuilder();
+    buffer.append("/").append(apiVersion).append("/Accounts/");
+    buffer.append(accountId.toString()).append("/Calls/");
+    buffer.append(id.toString());
+    final URI uri = URI.create(buffer.toString());
+    builder.setUri(uri);
+    builder.setCallPath(self().path().toString());
+    builder.setParentCallSid(parentCallSid);
     public CallInfo(final Sid sid, final CallStateChanged.State state, final CreateCall.Type type, final String direction,
                     final DateTime dateCreated, final String forwardedFrom, final String fromName, final String from, final String to,
                     final SipServletRequest invite, final SipServletResponse lastResponse, final boolean webrtc, final boolean muted, final DateTime dateConUpdated) {

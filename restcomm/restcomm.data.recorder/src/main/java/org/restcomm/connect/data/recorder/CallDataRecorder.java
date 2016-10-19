@@ -40,15 +40,17 @@ import akka.event.LoggingAdapter;
  *
  */
 @Immutable
-public final class CallLogger extends UntypedActor {
+public final class CallDataRecorder extends UntypedActor {
 
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private final List<ActorRef> observers;
+    private final DaoManager daoManager;
 
-    public CallLogger(final DaoManager daoManager) {
+    public CallDataRecorder(final DaoManager daoManager) {
         super();
         this.observers = Collections.synchronizedList(new ArrayList<ActorRef>());
+        this.daoManager = daoManager;
     }
 
     @Override
@@ -57,7 +59,7 @@ public final class CallLogger extends UntypedActor {
         final ActorRef self = self();
         final ActorRef sender = sender();
         if(logger.isInfoEnabled()) {
-            logger.info("********** Call Logger" + self().path() + " Processing Message: \"" + klass.getName() + " sender : "
+            logger.info("********** CallDataRecorder" + self().path() + " Processing Message: \"" + klass.getName() + " sender : "
                 + sender.path().toString());
         }
 
