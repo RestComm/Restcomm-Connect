@@ -26,7 +26,16 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class CreateConferenceEndpoint extends AbstractCreateMessage {
+    private String endpointName;
     public CreateConferenceEndpoint(final MediaSession session) {
         super(session);
+    }
+
+    public CreateConferenceEndpoint(final MediaSession session, final String endpointName) {
+         this(session);
+         this.endpointName = endpointName;
+    }
+    public String endpointName() {
+        return this.endpointName;
     }
 }
