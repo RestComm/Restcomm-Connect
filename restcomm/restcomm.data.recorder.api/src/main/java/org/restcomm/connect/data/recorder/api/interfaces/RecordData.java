@@ -17,9 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.data.recorder.api;
-
-import akka.actor.ActorRef;
+package org.restcomm.connect.data.recorder.api.interfaces;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
@@ -27,15 +25,5 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
-public final class LogCall {
-    private final ActorRef call;
-
-    public LogCall(final ActorRef call) {
-        super();
-        this.call = call;
-    }
-
-    public ActorRef call() {
-        return call;
-    }
+public interface RecordData {
 }

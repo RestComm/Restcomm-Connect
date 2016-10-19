@@ -18,12 +18,5 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>org.restcomm</groupId>
-			<artifactId>restcomm-connect.dao</artifactId>
-			<version>${project.version}</version>
-			<scope>provided</scope>
-		</dependency>
-
 	</dependencies>
 </project>

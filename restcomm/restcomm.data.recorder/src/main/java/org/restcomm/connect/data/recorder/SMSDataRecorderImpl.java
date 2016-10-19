@@ -29,6 +29,7 @@ import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.data.recorder.api.interfaces.SMSDataRecorder;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
@@ -40,14 +41,14 @@ import akka.event.LoggingAdapter;
  *
  */
 @Immutable
-public final class CallDataRecorder extends UntypedActor {
+public final class SMSDataRecorderImpl extends UntypedActor implements SMSDataRecorder{
 
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private final List<ActorRef> observers;
     private final DaoManager daoManager;
 
-    public CallDataRecorder(final DaoManager daoManager) {
+    public SMSDataRecorderImpl(final DaoManager daoManager) {
         super();
         this.observers = Collections.synchronizedList(new ArrayList<ActorRef>());
         this.daoManager = daoManager;
@@ -59,7 +60,7 @@ public final class CallDataRecorder extends UntypedActor {
         final ActorRef self = self();
         final ActorRef sender = sender();
         if(logger.isInfoEnabled()) {
-            logger.info("********** CallDataRecorder" + self().path() + " Processing Message: \"" + klass.getName() + " sender : "
+            logger.info("********** SMSDataRecorderImpl" + self().path() + " Processing Message: \"" + klass.getName() + " sender : "
                 + sender.path().toString());
         }
 
