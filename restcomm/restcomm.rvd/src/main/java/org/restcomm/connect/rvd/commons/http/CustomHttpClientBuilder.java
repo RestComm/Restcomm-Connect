@@ -27,9 +27,6 @@ import javax.net.ssl.SSLContext;
 public class CustomHttpClientBuilder {
     private SslMode sslMode;
 
-    private CustomHttpClientBuilder() {
-    }
-
     public CustomHttpClientBuilder(RvdConfiguration configuration) {
         this.sslMode = configuration.getSslMode();
     }
