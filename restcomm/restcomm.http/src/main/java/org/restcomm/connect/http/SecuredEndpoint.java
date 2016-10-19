@@ -283,7 +283,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
         if (!operatingAccountSid.equals(operatedAccountSid)) {
             Account account = accountsDao.getAccount(new Sid(operatedAccountSid));
-            if (!operatingAccountSid.equals(String.valueOf(account.getAccountSid()))) {
+            if (!operatingAccountSid.equals(String.valueOf(account.getParentSid()))) {
                 return AuthOutcome.FAILED;
             } else if (resourceAccountSid != null && !operatedAccountSid.equals(resourceAccountSid)) {
                 return AuthOutcome.FAILED;
@@ -344,7 +344,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         if (getAdministratorRole().equals(operatingAccount.getRole())) {
             // administrator can also operate on child accounts
             if (!String.valueOf(operatingAccount.getSid()).equals(String.valueOf(operatedAccount.getSid()))) {
-                if (!String.valueOf(operatingAccount.getSid()).equals(String.valueOf(operatedAccount.getAccountSid()))) {
+                if (!String.valueOf(operatingAccount.getSid()).equals(String.valueOf(operatedAccount.getParentSid()))) {
                     return AuthOutcome.FAILED;
                 }
             }
