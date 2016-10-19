@@ -1569,7 +1569,7 @@ public final class CallManager extends UntypedActor {
 
     public ActorRef lookup(final Object message) {
         final GetCall getCall = (GetCall) message;
-        final String callPath = getCall.callPath();
+        final String callPath = getCall.getIdentifier();
 
         final ActorContext context = getContext();
 

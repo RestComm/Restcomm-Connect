@@ -346,10 +346,15 @@ public class CallLifecycleTest {
                 null, null));
         assertTrue(aliceCall.waitForAck(5000));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        Thread.sleep(1000);
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==2);
+        assertTrue(liveIncomingCalls==1);
+        assertTrue(liveOutgoingCalls==1);
+        assertTrue(liveCallsArraySize==2);
 
 
         Thread.sleep(3000);
@@ -380,9 +385,9 @@ public class CallLifecycleTest {
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         assertNotNull(metrics);
-        int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+        liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
         logger.info("LiveCalls: "+liveCalls);
-        int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+        liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
         logger.info("LiveCallsArraySize: "+liveCallsArraySize);
         assertTrue(liveCalls==0);
         assertTrue(liveCallsArraySize==0);

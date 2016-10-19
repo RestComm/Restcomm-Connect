@@ -422,7 +422,7 @@ public final class Call extends UntypedActor {
         } else if (GetCallObservers.class.equals(klass)) {
             onGetCallObservers((GetCallObservers) message, self, sender);
         } else if (GetCallInfo.class.equals(klass)) {
-            onGetCallInfo((GetCallInfo) message, self, sender);
+            onGetCallInfo((GetCallInfo) message, sender);
         } else if (InitializeOutbound.class.equals(klass)) {
             onInitializeOutbound((InitializeOutbound) message, self, sender);
         } else if (ChangeCallDirection.class.equals(klass)) {
@@ -1376,8 +1376,8 @@ public final class Call extends UntypedActor {
         sender.tell(new CallResponse<List<ActorRef>>(this.observers), self);
     }
 
-    private void onGetCallInfo(GetCallInfo message, ActorRef self, ActorRef sender) throws Exception {
-        sender.tell(info(), self);
+    private void onGetCallInfo(GetCallInfo message, ActorRef sender) throws Exception {
+        sender.tell(info(), self());
     }
 
     private void onInitializeOutbound(InitializeOutbound message, ActorRef self, ActorRef sender) throws Exception {
@@ -1788,7 +1788,13 @@ public final class Call extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("Will sent out BYE to: " + bye.getRequestURI());
             }
-            bye.send();
+            try {
+                bye.send();
+            } catch (Exception e) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Exception during Send Bye: "+e.toString());
+                }
+            }
         }
     }
 
