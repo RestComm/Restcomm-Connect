@@ -19,21 +19,44 @@
  */
 package org.restcomm.connect.mgcp;
 
+import java.util.Map;
+
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
-public final class CreateConnection extends AbstractCreateMessage {
-	private final MgcpLocalOptions mgcpLocalOptions;
-    public CreateConnection(final MediaSession session, final MgcpLocalOptions mgcpLocalOptions) {
-        super(session);
-        this.mgcpLocalOptions = mgcpLocalOptions;
+public final class MgcpLocalOptions {
+    public static enum Option {
+        WEBRTC("webrtc"), SIPCALLID("X-Sip-CallId"), RESTCOMMCALLSID("X-Restcomm-CallSid"), RESTCOMMCONFSID("X-Restcomm-ConferenceSid");
+
+        private final String text;
+
+        private Option(final String text) {
+            this.text = text;
+        }
+
+        @Override
+        public String toString() {
+            return text;
+        }
+    };
+
+    private final Option option;
+    private final Map<Option, String> options;
+
+    public MgcpLocalOptions(final Option state, final Map<Option, String> options) {
+        super();
+        this.option = state;
+        this.options = options;
     }
 
-    public MgcpLocalOptions mgcpLocalOptions() {
-        return mgcpLocalOptions;
+    public Option option() {
+        return option;
+    }
+
+    public Map<Option, String> options() {
+        return options;
     }
 }

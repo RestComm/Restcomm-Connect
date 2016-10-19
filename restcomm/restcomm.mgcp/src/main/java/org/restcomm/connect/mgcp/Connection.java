@@ -403,8 +403,12 @@ public final class Connection extends UntypedActor {
                 crcx.setRemoteConnectionDescriptor(remoteDesc);
             }
             crcx.setNotifiedEntity(agent);
-            LocalOptionValue[] localOptions = new LocalOptionValue[] { new LocalOptionExtension("webrtc",
-                    String.valueOf(webrtc)) };
+            LocalOptionValue[] localOptions = new LocalOptionValue[] {
+            		new LocalOptionExtension(MgcpLocalOptions.Option.WEBRTC.name(), String.valueOf(webrtc)),
+            		new LocalOptionExtension(MgcpLocalOptions.Option.SIPCALLID.name(), String.valueOf(?),
+                    new LocalOptionExtension(MgcpLocalOptions.Option.RESTCOMMCALLSID.name(), String.valueOf(?)),
+                    new LocalOptionExtension(MgcpLocalOptions.Option.RESTCOMMCONFSID.name(), String.valueOf(?))
+            		};
             crcx.setLocalConnectionOptions(localOptions);
 
             gateway.tell(crcx, source);
