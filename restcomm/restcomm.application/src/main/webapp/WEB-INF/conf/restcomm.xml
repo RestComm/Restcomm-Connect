@@ -263,6 +263,11 @@
 		<data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
 		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
 	</dao-manager>
+	<!-- <dao-manager class="org.restcomm.connect.dao.mybatis.MybatisDaoManager">
+        <configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml</configuration-file>
+        <data-files></data-files>
+        <sql-files>${restcomm:home}/WEB-INF/scripts/mariadb/sql</sql-files>
+    </dao-manager> -->
 
 	<amazon-s3>
 		<enabled>false</enabled>
@@ -305,15 +310,16 @@
 		abandoning the request. This does NOT apply to RQNT/NOTIFY request/response. -->
 	<media-server-manager>
 		<mgcp-server class="org.restcomm.connect.mgcp.MediaGateway" name="Mobicents Media Server">
-			<local-address>127.0.0.1</local-address>
-			<local-port>2727</local-port>
-			<remote-address>127.0.0.1</remote-address>
-			<remote-port>2427</remote-port>
-			<response-timeout>500</response-timeout>
-			<!-- <external-address></external-address> -->
-		</mgcp-server>
+            <local-address>127.0.0.1</local-address>
+            <local-port>2727</local-port>
+            <remote-address>127.0.0.1</remote-address>
+            <remote-port>2427</remote-port>
+            <response-timeout>500</response-timeout>
+            <external-address><null/></external-address>
+        </mgcp-server>
+		<mrb class="org.restcomm.connect.mrb.MediaResourceBrokerGeneric" name="Community MediaResourceBroker">
+		</mrb>
 	</media-server-manager>
-	
 	<!-- Adjust http client behaviour for outgoing requests -->
 	<http-client>
 		<response-timeout>5000</response-timeout>

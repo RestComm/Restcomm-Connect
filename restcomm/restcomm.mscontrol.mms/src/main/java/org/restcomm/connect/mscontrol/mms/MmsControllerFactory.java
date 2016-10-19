@@ -38,18 +38,18 @@ import akka.actor.UntypedActorFactory;
 public class MmsControllerFactory implements MediaServerControllerFactory {
 
     private final ActorSystem system;
-    private final ActorRef mediaGateway;
     private final CallControllerFactory callControllerFactory;
     private final ConferenceControllerFactory conferenceControllerFactory;
     private final BridgeControllerFactory bridgeControllerFactory;
+    private final ActorRef mrb;
 
-    public MmsControllerFactory(ActorSystem system, ActorRef mediaGateway) {
+    public MmsControllerFactory(ActorSystem system, ActorRef mrb) {
         super();
         this.system = system;
-        this.mediaGateway = mediaGateway;
         this.callControllerFactory = new CallControllerFactory();
         this.conferenceControllerFactory = new ConferenceControllerFactory();
         this.bridgeControllerFactory = new BridgeControllerFactory();
+        this.mrb = mrb;
     }
 
     @Override
@@ -73,7 +73,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            return new MmsCallController(mediaGateway);
+            return new MmsCallController(mrb);
         }
 
     }
@@ -84,7 +84,8 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            return new MmsConferenceController(mediaGateway);
+            //return new MmsConferenceController(mediaGateways, configuration);
+            return new MmsConferenceController(mrb);
         }
 
     }
@@ -95,7 +96,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            return new MmsBridgeController(mediaGateway);
+            return new MmsBridgeController(mrb);
         }
 
     }

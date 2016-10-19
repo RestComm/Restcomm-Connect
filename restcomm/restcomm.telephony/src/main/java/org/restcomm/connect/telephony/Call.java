@@ -209,10 +209,12 @@ public final class Call extends UntypedActor {
     // Runtime Setting
     private Configuration runtimeSettings;
     private Configuration configuration;
-    private final ActorRef callDataRecorder;
+    //private final ActorRef callDataRecorder;
     private boolean disableSdpPatchingOnUpdatingMediaSession;
 
-    public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration, final ActorRef callDataRecorder) {
+    private Sid inboundCallSid;
+
+    public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
         super();
         final ActorRef source = self();
 
@@ -316,7 +318,7 @@ public final class Call extends UntypedActor {
         this.liveCallModification = false;
         this.recording = false;
         this.configuration = configuration;
-        this.callDataRecorder = callDataRecorder;
+        //this.callDataRecorder = callDataRecorder;
         this.disableSdpPatchingOnUpdatingMediaSession = this.configuration.subset("runtime-settings").getBoolean("disable-sdp-patching-on-updating-mediasession", false);
     }
 
@@ -424,7 +426,7 @@ public final class Call extends UntypedActor {
         } else if (GetCallObservers.class.equals(klass)) {
             onGetCallObservers((GetCallObservers) message, self, sender);
         } else if (GetCallInfo.class.equals(klass)) {
-            onGetCallInfo((GetCallInfo) message, self, sender);
+            onGetCallInfo((GetCallInfo) message, sender);
         } else if (InitializeOutbound.class.equals(klass)) {
             onInitializeOutbound((InitializeOutbound) message, self, sender);
         } else if (ChangeCallDirection.class.equals(klass)) {
@@ -1014,7 +1016,7 @@ public final class Call extends UntypedActor {
             // Initialize the MS Controller
             CreateMediaSession command = null;
             if (isOutbound()) {
-                command = new CreateMediaSession("sendrecv", "", true, webrtc);
+                command = new CreateMediaSession("sendrecv", "", true, webrtc, id);
             } else {
                 if (!liveCallModification) {
                     command = generateRequest(invite);
@@ -1044,7 +1046,7 @@ public final class Call extends UntypedActor {
             }
             final byte[] sdp = sipMessage.getRawContent();
             final String offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
-            return new CreateMediaSession("sendrecv", offer, false, webrtc);
+            return new CreateMediaSession("sendrecv", offer, false, webrtc, inboundCallSid);
         }
     }
 
@@ -1378,8 +1380,8 @@ public final class Call extends UntypedActor {
         sender.tell(new CallResponse<List<ActorRef>>(this.observers), self);
     }
 
-    private void onGetCallInfo(GetCallInfo message, ActorRef self, ActorRef sender) throws Exception {
-        sender.tell(info(), self);
+    private void onGetCallInfo(GetCallInfo message, ActorRef sender) throws Exception {
+        sender.tell(info(), self());
     }
 
     private void onInitializeOutbound(InitializeOutbound message, ActorRef self, ActorRef sender) throws Exception {
@@ -1398,6 +1400,7 @@ public final class Call extends UntypedActor {
     }
 
     private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
+        inboundCallSid = message.callSid();
         if (is(ringing) && !invite.getSession().getState().equals(SipSession.State.TERMINATED)) {
                 fsm.transition(message, initializing);
         } else {
@@ -1790,7 +1793,13 @@ public final class Call extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("Will sent out BYE to: " + bye.getRequestURI());
             }
-            bye.send();
+            try {
+                bye.send();
+            } catch (Exception e) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Exception during Send Bye: "+e.toString());
+                }
+            }
         }
     }
 

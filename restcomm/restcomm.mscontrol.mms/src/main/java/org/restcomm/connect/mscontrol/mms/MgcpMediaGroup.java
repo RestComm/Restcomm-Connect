@@ -20,8 +20,6 @@
 
 package org.restcomm.connect.mscontrol.mms;
 
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
-
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -32,6 +30,9 @@ import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.mgcp.CreateIvrEndpoint;
 import org.restcomm.connect.mgcp.CreateLink;
 import org.restcomm.connect.mgcp.DestroyEndpoint;
@@ -59,13 +60,11 @@ import org.restcomm.connect.mscontrol.api.messages.Record;
 import org.restcomm.connect.mscontrol.api.messages.StartMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
 
 import akka.actor.ActorRef;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
