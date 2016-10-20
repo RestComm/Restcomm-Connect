@@ -403,6 +403,7 @@ public final class Connection extends UntypedActor {
                 crcx.setRemoteConnectionDescriptor(remoteDesc);
             }
             crcx.setNotifiedEntity(agent);
+            jain.protocol.ip.mgcp.message.parms.
             LocalOptionValue[] localOptions = new LocalOptionValue[] {
             		new LocalOptionExtension(MgcpLocalOptions.Option.WEBRTC.name(), String.valueOf(webrtc)),
             		new LocalOptionExtension(MgcpLocalOptions.Option.SIPCALLID.name(), String.valueOf(?),
@@ -442,6 +443,7 @@ public final class Connection extends UntypedActor {
             ConnectionIdentifier requestedConnId = request.connectionIdentifier();
             requestedConnId = requestedConnId==null ? connId:requestedConnId;
             final ModifyConnection mdcx = new ModifyConnection(source, callId, endpointId, requestedConnId);
+
             final ConnectionMode mode = request.mode();
             if (mode != null) {
                 mdcx.setMode(mode);

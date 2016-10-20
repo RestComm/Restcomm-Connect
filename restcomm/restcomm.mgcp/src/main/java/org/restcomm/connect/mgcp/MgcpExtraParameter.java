@@ -27,13 +27,13 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
-public final class MgcpLocalOptions {
-    public static enum Option {
+public final class MgcpExtraParameter {
+    public static enum ExtraParameter {
         WEBRTC("webrtc"), SIPCALLID("X-Sip-CallId"), RESTCOMMCALLSID("X-Restcomm-CallSid"), RESTCOMMCONFSID("X-Restcomm-ConferenceSid");
 
         private final String text;
 
-        private Option(final String text) {
+        private ExtraParameter(final String text) {
             this.text = text;
         }
 
@@ -43,20 +43,20 @@ public final class MgcpLocalOptions {
         }
     };
 
-    private final Option option;
-    private final Map<Option, String> options;
+    private final ExtraParameter extraParameter;
+    private final Map<ExtraParameter, String> extraParameters;
 
-    public MgcpLocalOptions(final Option state, final Map<Option, String> options) {
+    public MgcpExtraParameter(final ExtraParameter extraParameter, final Map<ExtraParameter, String> extraParameters) {
         super();
-        this.option = state;
-        this.options = options;
+        this.extraParameter = extraParameter;
+        this.extraParameters = extraParameters;
     }
 
-    public Option option() {
-        return option;
+    public ExtraParameter option() {
+        return extraParameter;
     }
 
-    public Map<Option, String> options() {
-        return options;
+    public Map<ExtraParameter, String> extraParameters() {
+        return extraParameters;
     }
 }

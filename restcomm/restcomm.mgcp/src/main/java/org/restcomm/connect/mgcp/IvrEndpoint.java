@@ -98,6 +98,7 @@ public final class IvrEndpoint extends GenericEndpoint {
         signal[0] = new EventName(PACKAGE_NAME, AUMgcpEvent.aues);
         final RequestIdentifier requestId = new RequestIdentifier(DEFAULT_REQUEST_ID);
         final NotificationRequest request = new NotificationRequest(self(), id, requestId);
+        request.set
         request.setSignalRequests(signal);
         request.setNotifiedEntity(agent);
 //        request.setRequestedEvents(REQUESTED_EVENTS);

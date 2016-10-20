@@ -27,13 +27,13 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class CreateConnection extends AbstractCreateMessage {
-	private final MgcpLocalOptions mgcpLocalOptions;
-    public CreateConnection(final MediaSession session, final MgcpLocalOptions mgcpLocalOptions) {
+	private final MgcpExtraParameter mgcpLocalOptions;
+    public CreateConnection(final MediaSession session, final MgcpExtraParameter mgcpLocalOptions) {
         super(session);
         this.mgcpLocalOptions = mgcpLocalOptions;
     }
 
-    public MgcpLocalOptions mgcpLocalOptions() {
+    public MgcpExtraParameter mgcpLocalOptions() {
         return mgcpLocalOptions;
     }
 }

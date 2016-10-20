@@ -165,6 +165,7 @@ public final class Call extends UntypedActor {
     private String name;
     private SipURI from;
     private SipURI to;
+    private String sipCallId;
     // custom headers for SIP Out https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     private Map<String, String> headers;
     private String username;
@@ -705,6 +706,10 @@ public final class Call extends UntypedActor {
                 invite = (SipServletRequest) message;
                 from = (SipURI) invite.getFrom().getURI();
                 to = (SipURI) invite.getTo().getURI();
+                sipCallId = invite.getCallId();
+                if(logger.isInfoEnabled()) {
+                    logger.info("sip call id = "+sipCallId);
+                }
                 timeout = -1;
                 direction = INBOUND;
                 try {
