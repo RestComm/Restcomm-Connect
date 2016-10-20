@@ -129,18 +129,12 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
     var loggedUserAccount = AuthService.getAccount();
     // retrieve the account in the URL
     $scope.urlAccountSid = $stateParams.accountSid;
-    console.log("account SID from URL: " + $scope.urlAccountSid);
     // make a copy of the urlAccount to help detect changes in the form
     $scope.urlAccount = RCommAccounts.view({accountSid:$scope.urlAccountSid},function (data) {
-        console.log("received urlAccount");
         $scope.urlAccountBackup = angular.copy($scope.urlAccount);
     });
-    // make a copy of the urlAccount to help detect changes in the form
-    //var urlAccountBackup = angular.copy($scope.urlAccount);
     // retrieve the sub-account of the logged account
-    $scope.loggedSubAccounts = RCommAccounts.query(function () {
-        console.log("received sub-accounts for logged account: " + loggedUserAccount.sid );
-    });
+    $scope.loggedSubAccounts = RCommAccounts.query();
     $scope.accountChanged = false;
     $scope.formIsValid = false;
     $scope.passwordsDiffer = false;
@@ -185,11 +179,34 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
             Notifications.error('Failure updating profile. Please check data and try again.');
         });
     };
+    $scope.$on("account-created", function () {
+        console.log("Received account-created notification");
+        $scope.loggedSubAccounts = RCommAccounts.query();
+    });
+
+    $scope.closeAccount = function (account) {
+        var title = 'Close account';
+        var msg = 'Are you sure you want to close account ' + account.sid + ' (' + account.friendly_name +  ') ? This action cannot be undone.';
+        var btns = [{result:'cancel', label: 'Cancel', cssClass: 'btn-default'}, {result:'confirm', label: 'Close!', cssClass: 'btn-danger'}];
+        // show configurmation
+        $dialog.messageBox(title, msg, btns).open().then(function (result) {
+            if (result == "confirm") {
+                RCommAccounts.update({accountSid:account.sid}, $.param({Status:"closed"}), function() {
+                    $scope.urlAccount = RCommAccounts.view({accountSid:$scope.urlAccountSid},function (data) {
+                        $scope.urlAccountBackup = angular.copy($scope.urlAccount);
+                    });
+                    //$scope.getAccounts();
+                }, function() { // error
+                    Notifications.error("Can't close Account '" + account.friendly_name + "'");
+                });
+            }
+        });
+    }
 });
 
 // Register Account Modal
 
-var RegisterAccountModalCtrl = function ($scope, $uibModalInstance, RCommAccounts, Notifications, AuthService) {
+var RegisterAccountModalCtrl = function ($scope, $uibModalInstance, RCommAccounts, Notifications, AuthService, $rootScope) {
     var loggedUserAccount = AuthService.getAccount();
     $scope.statuses = ['ACTIVE','UNINITIALIZED','SUSPENDED','INACTIVE','CLOSED'];
     $scope.newAccount = {role: loggedUserAccount.role};
@@ -207,14 +224,11 @@ var RegisterAccountModalCtrl = function ($scope, $uibModalInstance, RCommAccount
         }),
         function() { // success
           Notifications.success('Account  "' + account.friendlyName + '" created successfully!');
-          $scope.$emit("account-created"); // handler should refresh sub-account list
+          $rootScope.$broadcast("account-created"); // handler should refresh sub-account list
           $uibModalInstance.close();
         },
-        function(response) { // error
-        	if (response.status == 409)
-        		Notifications.error("User already exists.");
-        	else
-        		Notifications.error('Required fields are missing.');
+        function(response, status) { // error
+            Notifications.error("Can't create account")
         }
       );
     }

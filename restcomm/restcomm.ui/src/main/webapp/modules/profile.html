@@ -111,7 +111,7 @@
         <div class="">
             <button class="btn btn-primary pull-right margin-left-10" ng-click="updateProfile()" ng-show="profileForm.$dirty" ng-disabled="(newPassword && pwdStrength < 50) || passwordsDiffer">Save</button>
             <button class="btn btn-default pull-right margin-left-10" ng-click="resetChanges()" ng-show="profileForm.$dirty">Reset Changes</button>
-            <button class="btn btn-danger pull-left" ng-show="urlAccount.status != 'closed'" ng-disabled="loggedAccount.sid == urlAccount.sid" ng-click="removeAccount(account)">Close Account</button>
+            <button class="btn btn-danger pull-left" ng-show="urlAccount.status != 'closed'" ng-disabled="loggedAccount.sid == urlAccount.sid" ng-click="closeAccount(urlAccount)">Close Account</button>
         </div>
     </div>
 </div>
