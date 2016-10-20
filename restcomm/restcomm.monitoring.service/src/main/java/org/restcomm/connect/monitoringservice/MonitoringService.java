@@ -165,6 +165,10 @@ public class MonitoringService extends UntypedActor{
                     logger.debug("MonitoringService onGetCall, Call is null");
                 }
             }
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("MonitoringService onGetCall, GetCall identifier location is null");
+            }
         }
     }
 
