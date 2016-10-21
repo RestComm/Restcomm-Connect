@@ -24,10 +24,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -38,16 +36,16 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 @Path("/ExtensionsConfiguration.json")
 public class ExtensionsConfigurationJsonEndpoint extends ExtensionsConfigurationEndpoint {
 
-    @Path("/{extension}")
+    @Path("/{extensionId}")
     @GET
-    public Response getConfigurationAsJson(@PathParam("extension") final String extension, @Context UriInfo info) {
-        return getConfiguration(extension, info, APPLICATION_JSON_TYPE);
+    public Response getConfigurationAsJson(@PathParam("extensionId") final String extension) {
+        return getConfiguration(extension, APPLICATION_JSON_TYPE);
     }
 
-    @Path("/{extension}")
+    @Path("/{extensionId}")
     @Consumes(APPLICATION_FORM_URLENCODED)
     @POST
-    public Response updateConfigurationAsJsonPost(@PathParam("extension") final String extension,
+    public Response updateConfigurationAsJsonPost(@PathParam("extensionId") final String extension,
                                             final MultivaluedMap<String, String> data) {
         return updateConfiguration(extension, data, APPLICATION_JSON_TYPE);
     }
