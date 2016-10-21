@@ -21,9 +21,9 @@
 
 package org.restcomm.connect.mscontrol.api.messages;
 
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
-
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telesta.com)

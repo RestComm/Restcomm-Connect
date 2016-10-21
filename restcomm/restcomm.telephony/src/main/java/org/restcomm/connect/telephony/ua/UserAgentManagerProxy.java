@@ -20,6 +20,7 @@
 package org.restcomm.connect.telephony.ua;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -30,6 +31,7 @@ import javax.servlet.sip.SipServletListener;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
+import akka.actor.ReceiveTimeout;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.dao.DaoManager;
@@ -39,6 +41,7 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -51,6 +54,7 @@ public final class UserAgentManagerProxy extends SipServlet implements SipServle
     private ActorSystem system;
     private ActorRef manager;
     private ServletContext servletContext;
+    private int pingInterval;
 
     private Configuration configuration;
 
@@ -114,6 +118,9 @@ public final class UserAgentManagerProxy extends SipServlet implements SipServle
             system = (ActorSystem) servletContext.getAttribute(ActorSystem.class.getName());
             logger.info("About to create new UserAgentManager");
             manager = manager(configuration, factory, storage);
+            pingInterval = configuration.subset("runtime-settings").getInt("ping-interval", 60);
+            system.scheduler().schedule(Duration.create(5, TimeUnit.SECONDS), Duration.create(pingInterval, TimeUnit.SECONDS),
+                    manager, ReceiveTimeout.getInstance(), system.dispatcher());
         }
     }
 }

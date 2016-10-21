@@ -310,7 +310,9 @@ public class DialConferenceTest {
         assertTrue(liveCalls == 0);
         assertTrue(liveCallsArraySize == 0);
         assertTrue(getConferencesSize()>=1);
-        assertTrue(getParticipantsSize(confRoom2)==0);
+        int confRoom2Participants = getParticipantsSize(confRoom2);
+        logger.info("&&&&& ConfRoom2Participants: "+confRoom2Participants);
+        assertTrue(confRoom2Participants==0);
     }
 
     private final String confRoom3 = "confRoom3";
@@ -354,7 +356,7 @@ public class DialConferenceTest {
 
         bobCall.listenForDisconnect();
 
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);

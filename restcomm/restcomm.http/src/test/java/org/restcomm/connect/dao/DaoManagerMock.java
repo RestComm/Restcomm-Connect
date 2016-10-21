@@ -131,6 +131,16 @@ public class DaoManagerMock implements DaoManager {
     }
 
     @Override
+    public MediaServersDao getMediaServersDao() {
+        return null;
+    }
+
+    @Override
+    public MediaResourceBrokerDao getMediaResourceBrokerDao() {
+        return null;
+    }
+
+    @Override
     public ExtensionsConfigurationDao getExtensionsConfigurationDao() {
         return null;
     }
