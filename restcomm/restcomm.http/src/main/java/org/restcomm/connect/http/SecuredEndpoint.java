@@ -116,6 +116,10 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         }
     }
 
+    /**
+     * Checks if the effective account is a super account (top level account)
+     * @return
+     */
     protected boolean isSuperAdmin() {
         return userIdentityContext.getEffectiveAccount().getParentSid() == null;
     }
