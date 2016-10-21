@@ -2,7 +2,7 @@
 
 If you don't use the hosted version of Restcomm, then you will need to install Restcomm in a local environment. The various guides below will guide you on how to do that and install, configure and start Restcomm to fit your local environment
 
-== Basic Configuration Resources
+== Getting Started with Restcomm
 
 There is two different ways to install Restcomm Connect. Either through Docker or through binary. You will find below instructions for both
 
@@ -25,6 +25,8 @@ There is two different ways to install Restcomm Connect. Either through Docker o
 * <<Restcomm - Installing on Google Cloud.adoc#google-cloud,Installing on Google Cloud>>
 * <<Starting Restcomm-Connect.adoc#start-restcomm-connect,Starting Restcomm-Connect>>
 
+== Advanced Configuration Resources
+
 === Database Configuration
 
 * <<How to get started with Restcomm-Connect and Mysql.adoc#restcomm-connect-mysql,How to get started with Restcomm-Connect and Mysql>>
@@ -39,8 +41,6 @@ There is two different ways to install Restcomm Connect. Either through Docker o
 * <<Restcomm - Connecting SMPP Endpoint through Nexmo.adoc#nexmo,Connecting SMPP Endpoint through Nexmo>>
 * <<Restcomm - Connecting to Bandwidth for DID Calls.adoc#badnwidth,Connecting to Bandwidth for DID Calls>>
 * <<Restcomm - Connecting to French Legos SIP BornSIP Trunk.adoc#legos,Connecting to French Legos SIP BornSIP Trunk>>
-
-== Advanced Configuration Resources
 
 === Upgrade
 
