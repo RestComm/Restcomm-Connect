@@ -23,7 +23,7 @@ The <Conference> represents a single conference originated and terminated from a
 |DateUpdated |The date that this conference was last updated.
 |AccountSid |The unique id of the Account that created this conference.
 |ApiVersion |Displays the current API version
-|Uri |The URI for this account, relative to http://localhost:port/restcomm.
+|Uri |The URI for this account, relative to https://localhost:port/restcomm.
 |======================================================================================================================================================================
 
 === Supported Operations
@@ -32,7 +32,7 @@ The <Conference> represents a single conference originated and terminated from a
 ==== Example: Get Conference by ConferenceSid
 
 ....
-curl -H "Authorization: Basic <MY_ENCODED_CREDENTIALS>" http://IP:8080/restcomm/2012-04-24/Accounts/{AccountSid}/Conferences/{ConferenceSid}
+curl -H "Authorization: Basic <MY_ENCODED_CREDENTIALS>" https://IP/restcomm/2012-04-24/Accounts/{AccountSid}/Conferences/{ConferenceSid}
 ....
 
 

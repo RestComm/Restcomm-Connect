@@ -27,29 +27,31 @@ import java.util.Properties;
 import org.apache.commons.configuration.Configuration;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-import org.restcomm.connect.dao.ApplicationsDao;
-import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.ExtensionsConfigurationDao;
-import org.restcomm.connect.dao.OutgoingCallerIdsDao;
-import org.restcomm.connect.dao.UsageDao;
+import org.restcomm.connect.commons.amazonS3.S3AccessTool;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.AnnouncementsDao;
+import org.restcomm.connect.dao.ApplicationsDao;
+import org.restcomm.connect.dao.AvailablePhoneNumbersDao;
+import org.restcomm.connect.dao.CallDetailRecordsDao;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.ExtensionsConfigurationDao;
 import org.restcomm.connect.dao.GatewaysDao;
 import org.restcomm.connect.dao.HttpCookiesDao;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.InstanceIdDao;
-import org.restcomm.connect.dao.RegistrationsDao;
-import org.restcomm.connect.dao.TranscriptionsDao;
-import org.restcomm.connect.dao.AccountsDao;
-import org.restcomm.connect.dao.AvailablePhoneNumbersDao;
-import org.restcomm.connect.dao.ClientsDao;
-import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
+import org.restcomm.connect.dao.MediaResourceBrokerDao;
+import org.restcomm.connect.dao.MediaServersDao;
 import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.OutgoingCallerIdsDao;
 import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.ShortCodesDao;
 import org.restcomm.connect.dao.SmsMessagesDao;
-import org.restcomm.connect.commons.amazonS3.S3AccessTool;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.dao.TranscriptionsDao;
+import org.restcomm.connect.dao.UsageDao;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -79,6 +81,8 @@ public final class MybatisDaoManager implements DaoManager {
     private GatewaysDao gatewaysDao;
     private AnnouncementsDao announcementsDao;
     private InstanceIdDao instanceIdDao;
+    private MediaServersDao mediaServersDao;
+    private MediaResourceBrokerDao mediaResourceBrokerDao;
     private ExtensionsConfigurationDao extensionsConfigurationDao;
 
     public MybatisDaoManager() {
@@ -188,6 +192,16 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
+    public MediaServersDao getMediaServersDao() {
+        return mediaServersDao;
+    }
+
+    @Override
+    public MediaResourceBrokerDao getMediaResourceBrokerDao() {
+        return mediaResourceBrokerDao;
+    }
+
+    @Override
     public ExtensionsConfigurationDao getExtensionsConfigurationDao() {
         return extensionsConfigurationDao;
     }
@@ -259,6 +273,8 @@ public final class MybatisDaoManager implements DaoManager {
         transcriptionsDao = new MybatisTranscriptionsDao(sessions);
         gatewaysDao = new MybatisGatewaysDao(sessions);
         instanceIdDao = new MybatisInstanceIdDao(sessions);
+        mediaServersDao = new MybatisMediaServerDao(sessions);
+        mediaResourceBrokerDao = new MybatisMediaResourceBrokerDao(sessions);
         extensionsConfigurationDao = new MybatisExtensionsConfigurationDao(sessions);
     }
 }

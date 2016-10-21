@@ -137,15 +137,11 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
                 for (final Map<String, Object> result : results) {
                     records.add(toPresenceRecord(result));
                 }
-                if (records.isEmpty()) {
-                    return null;
-                } else {
+                if (!records.isEmpty()) {
                     Collections.sort(records);
-                    return records;
                 }
-            } else {
-                return null;
             }
+            return records;
         } finally {
             session.close();
         }

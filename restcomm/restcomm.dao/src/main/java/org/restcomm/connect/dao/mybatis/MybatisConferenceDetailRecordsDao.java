@@ -28,12 +28,12 @@ import java.util.Map;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
  * @author maria-farooq@live.com (Maria Farooq)
@@ -49,14 +49,16 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     }
 
     @Override
-    public void addConferenceDetailRecord(ConferenceDetailRecord cdr) {
+    public int addConferenceDetailRecord(ConferenceDetailRecord cdr) {
         final SqlSession session = sessions.openSession();
+        int effectedRows = 0;
         try {
-            session.insert(namespace + "addConferenceDetailRecord", toMap(cdr));
+            effectedRows = session.insert(namespace + "addConferenceDetailRecord", toMap(cdr));
             session.commit();
         } finally {
             session.close();
         }
+        return effectedRows;
     }
 
     @Override
@@ -129,10 +131,43 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     }
 
     @Override
-    public void updateConferenceDetailRecord(ConferenceDetailRecord cdr) {
+    public void updateConferenceDetailRecordStatus(ConferenceDetailRecord cdr) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateConferenceDetailRecord", toMap(cdr));
+            session.update(namespace + "updateConferenceDetailRecordStatus", toMap(cdr));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void updateConferenceDetailRecordMasterEndpointID(ConferenceDetailRecord cdr) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateConferenceDetailRecordMasterEndpointID", toMap(cdr));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void updateConferenceDetailRecordMasterBridgeEndpointID(ConferenceDetailRecord cdr) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateConferenceDetailRecordMasterBridgeEndpointID", toMap(cdr));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void updateMasterPresent(ConferenceDetailRecord cdr) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateMasterPresent", toMap(cdr));
             session.commit();
         } finally {
             session.close();
@@ -174,7 +209,24 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         final String friendlyName = DaoUtils.readString(map.get("friendly_name"));
         final String apiVersion = DaoUtils.readString(map.get("api_version"));
         final URI uri = DaoUtils.readUri(map.get("uri"));
-        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri);
+        final String msId = DaoUtils.readString(map.get("master_ms_id"));
+        final String masterConferenceEndpointId = DaoUtils.readString(map.get("master_conference_endpoint_id"));
+        final String masterIVREndpointId = DaoUtils.readString(map.get("master_ivr_endpoint_id"));
+        boolean masterPresent = false;
+        String masterIVREndpointSessionId = null;
+        String masterBridgeEndpointId = null;
+        String masterBridgeEndpointSessionId = null;
+        String masterBridgeConnectionIdentifier = null;
+        String masterIVRConnectionIdentifier = null;
+        try {
+            masterPresent = DaoUtils.readBoolean(map.get("master_present"));
+            masterIVREndpointSessionId = DaoUtils.readString(map.get("master_ivr_endpoint_session_id"));
+            masterBridgeEndpointId = DaoUtils.readString(map.get("master_bridge_endpoint_id"));
+            masterBridgeEndpointSessionId = DaoUtils.readString(map.get("master_bridge_endpoint_session_id"));
+            masterBridgeConnectionIdentifier = DaoUtils.readString(map.get("master_bridge_conn_id"));
+            masterIVRConnectionIdentifier = DaoUtils.readString(map.get("master_ivr_conn_id"));
+        } catch (Exception e) {}
+        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri, msId, masterConferenceEndpointId, masterPresent, masterIVREndpointId, masterIVREndpointSessionId, masterBridgeEndpointId, masterBridgeEndpointSessionId, masterBridgeConnectionIdentifier, masterIVRConnectionIdentifier);
     }
 
     private Map<String, Object> toMap(final ConferenceDetailRecord cdr) {
@@ -187,6 +239,15 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         map.put("friendly_name", cdr.getFriendlyName());
         map.put("api_version", cdr.getApiVersion());
         map.put("uri", DaoUtils.writeUri(cdr.getUri()));
+        map.put("master_ms_id", cdr.getMasterMsId());
+        map.put("master_conference_endpoint_id", cdr.getMasterConferenceEndpointId());
+        map.put("master_ivr_endpoint_id", cdr.getMasterIVREndpointId());
+        map.put("master_ivr_endpoint_session_id", cdr.getMasterIVREndpointSessionId());
+        map.put("master_bridge_endpoint_id", cdr.getMasterBridgeEndpointId());
+        map.put("master_bridge_endpoint_session_id", cdr.getMasterBridgeEndpointSessionId());
+        map.put("master_present", cdr.isMasterPresent());
+        map.put("master_bridge_conn_id", cdr.getMasterBridgeConnectionIdentifier());
+        map.put("master_ivr_conn_id", cdr.getMasterIVRConnectionIdentifier());
         return map;
     }
 }
