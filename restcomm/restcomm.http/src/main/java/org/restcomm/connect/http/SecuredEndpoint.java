@@ -116,6 +116,10 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         }
     }
 
+    protected boolean isSuperAdmin() {
+        return userIdentityContext.getEffectiveAccount().getParentSid() == null;
+    }
+
     /**
      * Grants access by permission. If the effective account has a role that resolves
      * to the specified permission (accoording to mappings of restcomm.xml) access is granted.
