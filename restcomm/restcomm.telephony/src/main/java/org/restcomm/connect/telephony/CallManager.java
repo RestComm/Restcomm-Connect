@@ -77,6 +77,7 @@ import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.Registration;
 import org.restcomm.connect.data.recorder.api.DataRecorderFactory;
+import org.restcomm.connect.data.recorder.api.interfaces.CallDataRecorder;
 import org.restcomm.connect.extension.api.CallRequest;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
@@ -289,17 +290,6 @@ public final class CallManager extends UntypedActor {
             @Override
             public UntypedActor create() throws Exception {
                 return new Call(sipFactory, msControllerFactory.provideCallController(), configuration, dataRecorderFactory.getCallDataRecorder());
-            }
-        }));
-    }
-
-    private ActorRef callDataRecorder() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public UntypedActor create() throws Exception {
-                return new CallDataRecorder(storage);
             }
         }));
     }

@@ -21,11 +21,13 @@ package org.restcomm.connect.data.recorder.api.interfaces;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
+import akka.actor.UntypedActor;
+
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  *
  */
 @Immutable
-public interface CallDataRecorder{
+public abstract class CallDataRecorder extends UntypedActor {
 
 }

@@ -38,10 +38,10 @@ import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.data.recorder.api.RecordCallData;
 import org.restcomm.connect.data.recorder.api.interfaces.CallDataRecorder;
 import org.restcomm.connect.telephony.api.CallInfo;
+import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
 
 import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
@@ -50,7 +50,7 @@ import akka.event.LoggingAdapter;
  *
  */
 @Immutable
-public final class CallDataRecorderImpl extends UntypedActor implements CallDataRecorder{
+public final class CallDataRecorderImpl extends CallDataRecorder{
 
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -80,8 +80,8 @@ public final class CallDataRecorderImpl extends UntypedActor implements CallData
             onObserve((Observe) message, self, sender);
         } else if (StopObserving.class.equals(klass)) {
             onStopObserving((StopObserving) message, self, sender);
-        } else if(RecordCallData.class.equals(klass)){
-        	onRecordCallData((RecordCallData) message, self, sender);
+        } else if(CallResponse.class.equals(klass)){
+        	onCallResponse((CallResponse) message, self, sender);
         } else if(CallStateChanged.class.equals(klass)){
         	onCallStateChanged((CallStateChanged) message, self, sender);
         }
@@ -102,6 +102,13 @@ public final class CallDataRecorderImpl extends UntypedActor implements CallData
         }
     }
 
+    private void onCallResponse(CallResponse<CallInfo> message, ActorRef self, ActorRef sender) {
+        if(logger.isDebugEnabled()){
+            logger.debug("callInfo: "+callInfo.toString());
+        }
+        CallInfo ci = message.get();
+    }
+
     /**
      * @param message
      * @param self
@@ -113,7 +120,6 @@ public final class CallDataRecorderImpl extends UntypedActor implements CallData
             logger.debug("onCallStateChanged: "+callState.name());
         }
         CallDetailRecordsDao dao = daoManager.getCallDetailRecordsDao();
-        cdr = dao.getCallDetailRecord(sid);
         cdr = cdr.setStatus(callState.name());
         dao.updateCallDetailRecord(cdr);
     }
