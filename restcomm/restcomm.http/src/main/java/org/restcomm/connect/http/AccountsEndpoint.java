@@ -31,6 +31,8 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipURI;
 import javax.ws.rs.core.MediaType;
 
 import static javax.ws.rs.core.MediaType.*;
@@ -48,9 +50,11 @@ import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.AccountList;
 import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
@@ -63,12 +67,15 @@ import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
 import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
 import org.restcomm.connect.http.exceptions.RcmlserverNotifyError;
+import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
+import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerFactory;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public class AccountsEndpoint extends SecuredEndpoint {
-    protected Configuration configuration;
+    protected Configuration runtimeConfiguration;
+    protected Configuration rootConfiguration; // top-level configuration element
     protected Gson gson;
     protected XStream xstream;
     protected ClientsDao clientDao;
@@ -84,11 +91,11 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     @PostConstruct
     void init() {
-        configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-        configuration = configuration.subset("runtime-settings");
-        super.init(configuration);
+        rootConfiguration = (Configuration) context.getAttribute(Configuration.class.getName());
+        runtimeConfiguration = rootConfiguration.subset("runtime-settings");
+        super.init(runtimeConfiguration);
         clientDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getClientsDao();
-        final AccountConverter converter = new AccountConverter(configuration);
+        final AccountConverter converter = new AccountConverter(runtimeConfiguration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
         builder.setPrettyPrinting();
@@ -96,8 +103,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(converter);
-        xstream.registerConverter(new AccountListConverter(configuration));
-        xstream.registerConverter(new RestCommResponseConverter(configuration));
+        xstream.registerConverter(new AccountListConverter(runtimeConfiguration));
+        xstream.registerConverter(new RestCommResponseConverter(runtimeConfiguration));
         // Make sure there is an authenticated account present when this endpoint is used
         checkAuthenticatedAccount();
     }
@@ -123,7 +130,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         final String password = data.getFirst("Password");
         final String authToken = new Md5Hash(password).toString();
         final String role = data.getFirst("Role");
-        String rootUri = configuration.getString("root-uri");
+        String rootUri = runtimeConfiguration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
@@ -245,8 +252,43 @@ public class AccountsEndpoint extends SecuredEndpoint {
         daoManager.getTranscriptionsDao().removeTranscriptions(sid);
         daoManager.getRecordingsDao().removeRecordings(sid);
         daoManager.getApplicationsDao().removeApplications(sid);
-        daoManager.getIncomingPhoneNumbersDao().removeIncomingPhoneNumbers(sid);
+        removeIncomingPhoneNumbers(sid,daoManager.getIncomingPhoneNumbersDao());
         daoManager.getClientsDao().removeClients(sid);
+    }
+
+    /**
+     * Removes incoming phone numbers from database. For provided number the provider is also contacted
+     * so they are released.
+     *
+     * @param accountSid
+     * @param dao
+     */
+    private void removeIncomingPhoneNumbers(Sid accountSid, IncomingPhoneNumbersDao dao) {
+        List<IncomingPhoneNumber> numbers = dao.getIncomingPhoneNumbers(accountSid);
+        if (numbers != null && numbers.size() > 0) {
+            List<SipURI> uris = (List<SipURI>) context.getAttribute(SipServlet.OUTBOUND_INTERFACES);
+            PhoneNumberProvisioningManagerFactory factory = new PhoneNumberProvisioningManagerFactory(rootConfiguration, uris);
+            PhoneNumberProvisioningManager manager = factory.create(); // this may also be null
+            try {
+                for (IncomingPhoneNumber number : numbers) {
+                    // if this is not just a SIP number try to release it by contacting the provider
+                    if (number.isPureSip() == null || !number.isPureSip()) {
+                        if (manager != null) {
+                            try {
+                                manager.cancelNumber(IncomingPhoneNumbersEndpoint.convertIncomingPhoneNumbertoPhoneNumber(number));
+                            } catch (Exception e) {
+                                logger.error("Number cancelation failed for provided number '" + number.getPhoneNumber()+"'",e);
+                            }
+                        }
+                        else
+                            logger.error("Number cancelation failed for provided number '" + number.getPhoneNumber()+"'. Provisioning Manager was null");
+                    }
+                }
+            } finally {
+                // now remove all the number from the database in a single step
+                dao.removeIncomingPhoneNumbers(accountSid);
+            }
+        }
     }
 
     protected Response getAccounts(final MediaType responseType) {
@@ -342,7 +384,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         builder.setPassword(password);
         builder.setFriendlyName(data.getFirst("FriendlyName"));
         builder.setStatus(Client.ENABLED);
-        String rootUri = configuration.getString("root-uri");
+        String rootUri = runtimeConfiguration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())

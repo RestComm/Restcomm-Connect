@@ -484,7 +484,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         return uris;
     }
 
-    protected org.restcomm.connect.provisioning.number.api.PhoneNumber convertIncomingPhoneNumbertoPhoneNumber(IncomingPhoneNumber incomingPhoneNumber) {
+    public static org.restcomm.connect.provisioning.number.api.PhoneNumber convertIncomingPhoneNumbertoPhoneNumber(IncomingPhoneNumber incomingPhoneNumber) {
         return new org.restcomm.connect.provisioning.number.api.PhoneNumber(
                 incomingPhoneNumber.getFriendlyName(),
                 incomingPhoneNumber.getPhoneNumber(),
