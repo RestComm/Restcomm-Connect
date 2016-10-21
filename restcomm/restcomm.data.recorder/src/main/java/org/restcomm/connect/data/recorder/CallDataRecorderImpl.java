@@ -19,17 +19,26 @@
  */
 package org.restcomm.connect.data.recorder;
 
+import java.math.BigDecimal;
+import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
+import java.util.Currency;
 import java.util.List;
 
+import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.data.recorder.api.RecordCallData;
 import org.restcomm.connect.data.recorder.api.interfaces.CallDataRecorder;
+import org.restcomm.connect.telephony.api.CallInfo;
+import org.restcomm.connect.telephony.api.CallStateChanged;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
@@ -47,10 +56,13 @@ public final class CallDataRecorderImpl extends UntypedActor implements CallData
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private final List<ActorRef> observers;
     private final DaoManager daoManager;
+    private CallInfo callInfo;
+    private Sid sid;
+    private CallDetailRecord cdr;
 
     public CallDataRecorderImpl(final DaoManager daoManager) {
         super();
-        this.observers = Collections.synchronizedList(new ArrayList<ActorRef>());
+        this.observers = new ArrayList<ActorRef>();
         this.daoManager = daoManager;
     }
 
@@ -68,32 +80,96 @@ public final class CallDataRecorderImpl extends UntypedActor implements CallData
             onObserve((Observe) message, self, sender);
         } else if (StopObserving.class.equals(klass)) {
             onStopObserving((StopObserving) message, self, sender);
+        } else if(RecordCallData.class.equals(klass)){
+        	onRecordCallData((RecordCallData) message, self, sender);
+        } else if(CallStateChanged.class.equals(klass)){
+        	onCallStateChanged((CallStateChanged) message, self, sender);
         }
     }
 
     private void onObserve(Observe message, ActorRef self, ActorRef sender) throws Exception {
         final ActorRef observer = message.observer();
         if (observer != null) {
-            synchronized (this.observers) {
-                this.observers.add(observer);
-                observer.tell(new Observing(self), self);
-            }
+            this.observers.add(observer);
+            observer.tell(new Observing(self), self);
         }
     }
 
-    private void onStopObserving(StopObserving stopObservingMessage, ActorRef self, ActorRef sender) throws Exception {
-        final ActorRef observer = stopObservingMessage.observer();
+    private void onStopObserving(StopObserving message, ActorRef self, ActorRef sender) throws Exception {
+        final ActorRef observer = message.observer();
         if (observer != null) {
-            observer.tell(stopObservingMessage, self);
-            this.observers.remove(observer);
-        } else {
-            Iterator<ActorRef> observerIter = observers.iterator();
-            while (observerIter.hasNext()) {
-                ActorRef observerNext = observerIter.next();
-                observerNext.tell(stopObservingMessage, self);
-            }
-            this.observers.clear();
+            observers.remove(observer);
         }
+    }
+
+    /**
+     * @param message
+     * @param self
+     * @param sender
+     */
+    private void onCallStateChanged(CallStateChanged message, ActorRef self, ActorRef sender) {
+    	CallStateChanged.State callState = message.state();
+        if(logger.isDebugEnabled()){
+            logger.debug("onCallStateChanged: "+callState.name());
+        }
+        CallDetailRecordsDao dao = daoManager.getCallDetailRecordsDao();
+        cdr = dao.getCallDetailRecord(sid);
+        cdr = cdr.setStatus(callState.name());
+        dao.updateCallDetailRecord(cdr);
+    }
+
+    private void onRecordCallData(RecordCallData recordCallData, ActorRef self, ActorRef sender) throws Exception {
+    	CallInfo callInfo = recordCallData.callInfo();
+    	if(callInfo == null){
+    		logger.error("Received null CallInfo");
+    	}else{
+    		this.sid = callInfo.sid();
+    		CallDetailRecordsDao dao = daoManager.getCallDetailRecordsDao();
+            cdr = dao.getCallDetailRecord(sid);
+            if(cdr == null){
+            	// Create a call detail record for the call.
+                final CallDetailRecord.Builder builder = CallDetailRecord.builder();
+                builder.setSid(callInfo.sid());
+                builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
+                builder.setDateCreated(callInfo.dateCreated());
+                builder.setAccountSid(accountId);
+                builder.setTo(callInfo.to());
+                if (callInfo.fromName() != null) {
+                    builder.setCallerName(callInfo.fromName());
+                } else {
+                    builder.setCallerName("Unknown");
+                }
+                if (callInfo.from() != null) {
+                    builder.setFrom(callInfo.from());
+                } else {
+                    builder.setFrom("Unknown");
+                }
+                builder.setForwardedFrom(callInfo.forwardedFrom());
+                builder.setPhoneNumberSid(phoneId);
+                builder.setStatus(callState.toString());
+                final DateTime now = DateTime.now();
+                builder.setStartTime(now);
+                builder.setDirection(callInfo.direction());
+                builder.setApiVersion(version);
+                builder.setPrice(new BigDecimal("0.00"));
+                builder.setMuted(false);
+                builder.setOnHold(false);
+                // TODO implement currency property to be read from Configuration
+                builder.setPriceUnit(Currency.getInstance("USD"));
+                final StringBuilder buffer = new StringBuilder();
+                buffer.append("/").append(version).append("/Accounts/");
+                buffer.append(accountId.toString()).append("/Calls/");
+                buffer.append(callInfo.sid().toString());
+                final URI uri = URI.create(buffer.toString());
+                builder.setUri(uri);
+
+                builder.setCallPath(call.path().toString());
+
+                callRecord = builder.build();
+            }else{
+            	
+            }
+    	}
     }
 
     @Override
@@ -103,7 +179,7 @@ public final class CallDataRecorderImpl extends UntypedActor implements CallData
             getContext().stop(self());
         } catch (Exception exception) {
             if(logger.isInfoEnabled()) {
-                logger.info("Exception during Call postStop while trying to remove observers: "+exception);
+                logger.info("Exception during CallDataRecorderImpl postStop while trying to remove observers: "+exception);
             }
         }
         super.postStop();

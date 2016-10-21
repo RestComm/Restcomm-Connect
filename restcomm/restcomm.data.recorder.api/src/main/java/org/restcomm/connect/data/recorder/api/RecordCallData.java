@@ -20,30 +20,22 @@
 package org.restcomm.connect.data.recorder.api;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
-import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.data.recorder.api.interfaces.RecordData;
-
-import akka.actor.ActorRef;
+import org.restcomm.connect.telephony.api.CallInfo;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
-public final class RecordCall implements RecordData{
-    private final ActorRef call;
-    private final Sid sid;
+public final class RecordCallData implements RecordData {
+	private final CallInfo callInfo;
 
-    public RecordCall(final ActorRef call, final Sid sid) {
+    public RecordCallData(final CallInfo callInfo) {
         super();
-        this.call = call;
-        this.sid = sid;
+        this.callInfo = callInfo;
     }
 
-    public ActorRef call() {
-        return call;
-    }
-
-    public Sid sid() {
-        return sid;
+    public CallInfo callInfo() {
+        return callInfo;
     }
 }
