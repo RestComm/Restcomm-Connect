@@ -1263,6 +1263,11 @@ public final class Call extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("Completing Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" current external state: "+external);
             }
+            if (conferencing) {
+                // Tell conference to remove the call from participants list
+                // before moving to a stopping state
+                conference.tell(new RemoveParticipant(self()), self());
+            }
 
             //In the case of canceled that reach the completed method, don't change the external state
             if (!external.equals(CallStateChanged.State.CANCELED)) {
