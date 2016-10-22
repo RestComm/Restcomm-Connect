@@ -24,6 +24,8 @@ import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.loader.ObjectFactory;
 import org.restcomm.connect.commons.loader.ObjectInstantiationException;
 
+import javax.servlet.ServletContext;
+import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipURI;
 import java.util.List;
 
@@ -32,17 +34,17 @@ import java.util.List;
  *
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public class PhoneNumberProvisioningManagerFactory {
+public class PhoneNumberProvisioningManagerProvider {
     Configuration configuration;
-    List<SipURI> uris;
+    ServletContext context;
 
-    public PhoneNumberProvisioningManagerFactory(Configuration configuration, List<SipURI> uris) {
+    public PhoneNumberProvisioningManagerProvider(Configuration configuration, ServletContext context) {
         this.configuration = configuration;
-        this.uris = uris;
+        this.context = context;
     }
 
-    @SuppressWarnings("unchecked")
     private List<SipURI> getOutboundInterfaces() {
+        final List<SipURI> uris = (List<SipURI>) context.getAttribute(SipServlet.OUTBOUND_INTERFACES);
         return uris;
     }
 
@@ -60,6 +62,23 @@ public class PhoneNumberProvisioningManagerFactory {
             throw new RuntimeException(e);
         }
         return phoneNumberProvisioningManager;
+    }
+
+    /**
+     * Tries to retrieve the manager from the Servlet context. If it's not there it creates is, stores it
+     * in the context and also returns it.
+     *
+     * @param context
+     * @return
+     */
+    public PhoneNumberProvisioningManager get() {
+        PhoneNumberProvisioningManager manager = (PhoneNumberProvisioningManager) context.getAttribute("PhoneNumberProvisioningManager");
+        if (manager != null) // ok, it's already in the context. Return it
+            return manager;
+        manager = create();
+        // put it into the context for next time that is requested
+        context.setAttribute("PhoneNumberProvisioningManager", manager);
+        return manager;
     }
 
 }
