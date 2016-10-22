@@ -31,8 +31,6 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.sip.SipServlet;
-import javax.servlet.sip.SipURI;
 import javax.ws.rs.core.MediaType;
 
 import static javax.ws.rs.core.MediaType.*;
@@ -68,7 +66,7 @@ import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
 import org.restcomm.connect.http.exceptions.RcmlserverNotifyError;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
-import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerFactory;
+import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -257,8 +255,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
     }
 
     /**
-     * Removes incoming phone numbers from database. For provided number the provider is also contacted
-     * so they are released.
+     * Removes incoming phone numbers that belong to an account from the database.
+     * For provided numbers the provider is also contacted to get them released.
      *
      * @param accountSid
      * @param dao
@@ -266,30 +264,37 @@ public class AccountsEndpoint extends SecuredEndpoint {
     private void removeIncomingPhoneNumbers(Sid accountSid, IncomingPhoneNumbersDao dao) {
         List<IncomingPhoneNumber> numbers = dao.getIncomingPhoneNumbers(accountSid);
         if (numbers != null && numbers.size() > 0) {
-            List<SipURI> uris = (List<SipURI>) context.getAttribute(SipServlet.OUTBOUND_INTERFACES);
-            PhoneNumberProvisioningManagerFactory factory = new PhoneNumberProvisioningManagerFactory(rootConfiguration, uris);
-            PhoneNumberProvisioningManager manager = factory.create(); // this may also be null
-            try {
-                for (IncomingPhoneNumber number : numbers) {
-                    // if this is not just a SIP number try to release it by contacting the provider
-                    if (number.isPureSip() == null || !number.isPureSip()) {
-                        if (manager != null) {
-                            try {
-                                manager.cancelNumber(IncomingPhoneNumbersEndpoint.convertIncomingPhoneNumbertoPhoneNumber(number));
-                            } catch (Exception e) {
-                                logger.error("Number cancelation failed for provided number '" + number.getPhoneNumber()+"'",e);
+            // manager is retrieved in a lazy way. If any number needs it, it will be first retrieved
+            // from the servlet context. If not there it will be created, stored in context and returned.
+            boolean managerQueried = false;
+            PhoneNumberProvisioningManager manager = null;
+            for (IncomingPhoneNumber number : numbers) {
+                // if this is not just a SIP number try to release it by contacting the provider
+                if (number.isPureSip() == null || !number.isPureSip()) {
+                    if ( ! managerQueried )
+                        manager = new PhoneNumberProvisioningManagerProvider(rootConfiguration,context).get(); // try to retrieve/build manager only once
+                    if (manager != null) {
+                        try {
+                            if  (! manager.cancelNumber(IncomingPhoneNumbersEndpoint.convertIncomingPhoneNumbertoPhoneNumber(number)) ) {
+                                logger.error("Number cancelation failed for provided number '" + number.getPhoneNumber()+"'. Number entity " + number.getSid() + " will stay in database");
+                            } else {
+                                dao.removeIncomingPhoneNumber(number.getSid());
                             }
+                        } catch (Exception e) {
+                            logger.error("Number cancelation failed for provided number '" + number.getPhoneNumber()+"'",e);
                         }
-                        else
-                            logger.error("Number cancelation failed for provided number '" + number.getPhoneNumber()+"'. Provisioning Manager was null");
                     }
+                    else
+                        logger.error("Number cancelation failed for provided number '" + number.getPhoneNumber()+"'. Provisioning Manager was null. "+"Number entity " + number.getSid() + " will stay in database");
+                } else {
+                    // pureSIP numbers only to be removed from database. No need to contact provider
+                    dao.removeIncomingPhoneNumber(number.getSid());
                 }
-            } finally {
-                // now remove all the number from the database in a single step
-                dao.removeIncomingPhoneNumbers(accountSid);
             }
         }
     }
+
+
 
     protected Response getAccounts(final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
