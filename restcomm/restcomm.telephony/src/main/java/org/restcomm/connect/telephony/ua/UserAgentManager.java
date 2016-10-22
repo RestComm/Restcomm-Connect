@@ -198,9 +198,16 @@ public final class UserAgentManager extends UntypedActor {
         final RegistrationsDao registrations = storage.getRegistrationsDao();
         final List<Registration> results = registrations.getRegistrationsByInstanceId(instanceId);
         if (results != null && results.size() > 0) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Registrations for InstanceId: "+ instanceId +" , returned "+results.size()+" registrations");
+            }
             for (final Registration result : results) {
                 final String to = result.getLocation();
                 ping(to);
+            }
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Registrations for InstanceId: "+ instanceId +" , returned no registrations");
             }
         }
     }
@@ -249,7 +256,7 @@ public final class UserAgentManager extends UntypedActor {
             } else {
                 pong(message);
             }
-        } else if(message instanceof ActorRef && sender().equals(monitoringService)) {
+        } else if(message instanceof ActorRef) {
             disconnectActiveCalls((ActorRef) message);
         }
     }
