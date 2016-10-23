@@ -20,6 +20,7 @@ Downloads
 ========
 
 Use [the Docker image](http://documentation.telestax.com/connect/configuration/docker/Restcomm%20-%20Docker%20Quick%20Start%20Guide.html#restcomm-docker/). It only takes a few minutes to set it up and running.
+Alternatively, you can download the [Binary zip](https://github.com/RestComm/Restcomm-Connect/releases/latest) as well
 
 Documentation
 ========

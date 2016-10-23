@@ -165,7 +165,7 @@
 
     <!-- Configuration for the VoIP Innovations provisioning API. -->
     <phone-number-provisioning
-            class="org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
+            class="org.restcomm.connect.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
         <callback-urls>
             <voice url="localhost:5080" method="SIP" />
             <sms url="localhost:5080" method="SIP" />
@@ -199,7 +199,7 @@
     </smtp-service>
 
     <dao-manager
-            class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
+            class="org.restcomm.connect.dao.mybatis.MybatisDaoManager">
         <configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml
         </configuration-file>
         <data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
@@ -245,7 +245,7 @@
         the maximum amount of time to wait for a response from the media server before
         abandoning the request. This does NOT apply to RQNT/NOTIFY request/response. -->
     <media-server-manager>
-        <mgcp-server class="org.mobicents.servlet.restcomm.mgcp.MockMediaGateway"
+        <mgcp-server class="MockMediaGateway"
                      name="Mobicents Media Server">
             <local-address>127.0.0.1</local-address>
             <local-port>2727</local-port>
@@ -254,6 +254,8 @@
             <response-timeout>1500</response-timeout>
             <!-- <external-address></external-address> -->
         </mgcp-server>
+		<mrb class="org.restcomm.connect.mrb.MediaResourceBrokerGeneric" name="Community MediaResourceBroker">
+		</mrb>
     </media-server-manager>
 
     <!-- Adjust http client behaviour for outgoing requests -->
@@ -273,14 +275,14 @@
     <!-- The SMS aggregator is responsible for the handling of SMS messages
         inside of RestComm. Refer to the org.mobicents.servlet.sip.restcomm.SmsAggregator
         interface for more information. -->
-    <sms-aggregator class="org.mobicents.servlet.restcomm.sms.SmsService">
+    <sms-aggregator class="SmsService">
         <outbound-prefix></outbound-prefix>
         <outbound-endpoint>127.0.0.1:5090</outbound-endpoint>
     </sms-aggregator>
 
     <!-- by default activateSmppConnection is set to false -->
 
-    <smpp class="org.mobicents.servlet.restcomm.smpp.SmppService" activateSmppConnection ="false">
+    <smpp class="org.restcomm.connect.sms.smpp.SmppService" activateSmppConnection ="false">
         <connections>
             <connection activateAddressMapping="false" sourceAddressMap="" destinationAddressMap="" tonNpiValue="1">
                 <!-- Name must be unique for each connection -->
@@ -327,18 +329,18 @@
     </smpp>
 
     <!-- The Fax Service is used to send and receive faxes on behalf of RestComm. -->
-    <fax-service class="org.mobicents.servlet.restcomm.fax.InterfaxService">
+    <fax-service class="org.restcomm.connect.fax.InterfaxService">
         <user></user>
         <password></password>
     </fax-service>
 
     <!-- The Speech Recognizer is responsible for turning speech in to text. -->
-    <speech-recognizer class="org.mobicents.servlet.restcomm.asr.ISpeechAsr">
+    <speech-recognizer class="org.restcomm.connect.asr.ISpeechAsr">
         <api-key production="false"></api-key>
     </speech-recognizer>
 
     <!-- The Speech Synthesizer is responsible for turning text in to speech
-        for play back by the media gateway. <speech-synthesizer class="org.mobicents.servlet.restcomm.tts.AcapelaSpeechSynthesizer">
+        for play back by the media gateway. <speech-synthesizer class="org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer">
         <service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
         <application></application> <login></login> <password></password> <speakers>
         <belgium-french> <female>justine8k</female> <male></male> </belgium-french>
@@ -362,7 +364,7 @@
         <turkish> <female>ipek8k</female> <male></male> </turkish> </speakers> </speech-synthesizer> -->
 
     <speech-synthesizer
-            class="org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer">
+            class="org.restcomm.connect.tts.voicerss.VoiceRSSSpeechSynthesizer">
         <service-root>http://api.voicerss.org</service-root>
         <apikey>16824850f3634b9eb8a464350c0b133d</apikey>
         <languages>
@@ -407,7 +409,7 @@
     </speech-synthesizer>
 
     <!-- AT&T Speech Synthesizer plugin -->
-    <!-- <speech-synthesizer class="org.mobicents.servlet.restcomm.tts.AttSpeechSynthesizer">
+    <!-- <speech-synthesizer class="org.restcomm.connect.tts.att.AttSpeechSynthesizer">
         <host>127.0.0.1</host> <port>7000</port> <tts-client-directory></tts-client-directory>
         <verbose-output>false</verbose-output> <speakers> <english> <female>crystal8</female>
         <male>mike8</male> </english> <english-uk> <female>audrey8</female> <male>charles8</male>

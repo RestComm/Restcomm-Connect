@@ -218,7 +218,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     // Call it when authenticated and in Restcomm auth mode
     function updatePassword(newPassword) {
         var deferred = $q.defer();
-        var apiPath = "/restcomm/2012-04-24/Accounts/" + account.sid + ".json";
+        var apiPath = "/restcomm/2012-04-24/Accounts.json/" + account.sid;
         var auth_header = basicAuthHeader(account.sid, account.auth_token, true)
         var params = {Auth_Token: md5.createHash(newPassword)};
         var update = $http({
@@ -466,6 +466,7 @@ rcServices.factory('RCommAccounts', function($resource) {
       },
       update: {
         method:'PUT',
+        url: '/restcomm/2012-04-24/Accounts.:format/:accountSid',
         headers : {
           'Content-Type': 'application/x-www-form-urlencoded'
         }

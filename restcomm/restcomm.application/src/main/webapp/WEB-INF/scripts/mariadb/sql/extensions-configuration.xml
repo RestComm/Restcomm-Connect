@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~  TeleStax, Open Source Cloud Communications
+  ~  Copyright 2011-2016, Telestax Inc and individual contributors
+  ~  by the @authors tag.
+  ~
+  ~  This program is free software: you can redistribute it and/or modify
+  ~  under the terms of the GNU Affero General Public License as
+  ~  published by the Free Software Foundation; either version 3 of
+  ~  the License, or (at your option) any later version.
+  ~
+  ~  This program is distributed in the hope that it will be useful,
+  ~  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~  GNU Affero General Public License for more details.
+  ~
+  ~  You should have received a copy of the GNU Affero General Public License
+  ~  along with this program.  If not, see <http://www.gnu.org/licenses/>
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author gvagenas@telestax.com (George Vagenas)
+-->
+<mapper namespace="org.restcomm.connect.dao.ExtensionsConfigurationDao">
+  <insert id="addProperty" parameterType="map">
+    INSERT INTO restcomm_extensions_configuration (extension, property, extra_parameter, property_value, date_created, date_updated) VALUES
+    (#{extension}, #{property}, #{extra_parameter}, #{property_value}, #{date_created}, #{date_updated});
+  </insert>
+
+  <update id="updateProperty" parameterType="map">
+    UPDATE restcomm_extensions_configuration SET property_value=#{property_value}, extra_parameter=#{extra_parameter}, date_updated=#{date_updated}
+    WHERE extension=#{extension} AND property=#{property};
+  </update>
+
+  <select id="getProperty" parameterType="map" resultType="hashmap">
+    SELECT * FROM restcomm_extensions_configuration WHERE extension=#{extension} AND property=#{property};
+  </select>
+
+  <select id="getPropertyByExtraParameter" parameterType="map" resultType="hashmap">
+    SELECT * FROM restcomm_extensions_configuration WHERE extension=#{extension} AND property=#{property} AND extra_parameter=#{extra_parameter};
+  </select>
+
+  <select id="getConfigurationByExtension" parameterType="string" resultType="hashmap">
+    SELECT * FROM restcomm_extensions_configuration WHERE extension=#{extension};
+  </select>
+</mapper>

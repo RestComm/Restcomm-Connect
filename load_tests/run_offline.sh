@@ -8,10 +8,11 @@ export CURRENT_FOLDER=`pwd`
 export RESTCOMM_HOME=/tmp/workspace/Restcomm-JBoss-AS7-7.8.0.master-local
 export WARMUP=false
 export COLLECT_JMAP=true
+#export USE_RMS_PID=true
 
 export LOGLEVEL=INFO
 
-export PERFRECORDER_VERSION=14
+export PERFRECORDER_VERSION=27
 
 export RESULTS_FOLDER=$CURRENT_FOLDER/results
 if [ ! -d "$RESULTS_FOLDER" ]; then
@@ -27,7 +28,7 @@ export CALL_RATE=$5
 
 #export COLLECT_JMAP=$6
 
-export TEST_NAME="${6,,}"
+export TEST_NAME=$6
 
 export VOICERSS=c58e134224704b0182f2e2eaef59f8d8
 #export VOICERSS=
@@ -40,7 +41,7 @@ fi
 
 #prepare PerfCorder tool
 echo "Preparing PerfRecorder"
-cp -ar ../../telscale-commons/jenkins-aws/Jenkins-Jobs/performance/mss-proxy-goals.xsl ./
+cp -aR ../../telscale-commons/jenkins-aws/Jenkins-Jobs/performance/mss-proxy-goals.xsl ./
 export TOOLS_DIR=$CURRENT_FOLDER/report-tools
 export GOALS_FILE=$CURRENT_FOLDER/mss-proxy-goals.xsl
 rm -fr $TOOLS_DIR/*
@@ -52,3 +53,5 @@ chmod 777 $TOOLS_DIR/*.sh
 cd $CURRENT_FOLDER
 
 $CURRENT_FOLDER/run.sh $RESTCOMM_ADDRESS $LOCAL_ADDRESS $SIMULTANEOUS_CALLS $MAXIMUM_CALLS $CALL_RATE $TEST_NAME
+echo "Creating PerfCorder HTML ... "
+cat $RESULTS_FOLDER/PerfCorderAnalysis.xml | $TOOLS_DIR/pc_html_gen.sh > $RESULTS_FOLDER/PerfCorderAnalysis.html 2> $RESULTS_FOLDER/htmlgen.log

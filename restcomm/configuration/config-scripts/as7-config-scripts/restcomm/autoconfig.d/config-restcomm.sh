@@ -98,7 +98,7 @@ configDidProvisionManager() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
     if [[ "$PROVISION_PROVIDER" == "VI" || "$PROVISION_PROVIDER" == "vi" ]]; then
-        sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
+        sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.restcomm.connect.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
 
         sed -e "/<voip-innovations>/ {
             N; s|<login>.*</login>|<login>$1</login>|
@@ -109,7 +109,7 @@ configDidProvisionManager() {
         echo 'Configured Voip Innovation credentials'
     else
         if [[ "$PROVISION_PROVIDER" == "BW" || "$PROVISION_PROVIDER" == "bw" ]]; then
-        sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.bandwidth.BandwidthNumberProvisioningManager\"|" $FILE > $FILE.bak
+        sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.restcomm.connect.provisioning.number.bandwidth.BandwidthNumberProvisioningManager\"|" $FILE > $FILE.bak
 
         sed -e "/<bandwidth>/ {
             N; s|<username>.*</username>|<username>$1</username>|
@@ -122,7 +122,7 @@ configDidProvisionManager() {
         else
             if [[ "$PROVISION_PROVIDER" == "NX" || "$PROVISION_PROVIDER" == "nx" ]]; then
                 echo "Nexmo PROVISION_PROVIDER"
-                sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager\"|" $FILE
+                sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.restcomm.connect.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager\"|" $FILE
 
                 sed -i "/<callback-urls>/ {
                     N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"$5:$8\" method=\"SIP\" />|
@@ -143,7 +143,7 @@ configDidProvisionManager() {
             else
                 if [[ "$PROVISION_PROVIDER" == "VB" || "$PROVISION_PROVIDER" == "vb" ]]; then
                 echo "Voxbone PROVISION_PROVIDER"
-                sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.voxbone.VoxbonePhoneNumberProvisioningManager\"|" $FILE
+                sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.restcomm.connect.provisioning.number.voxbone.VoxbonePhoneNumberProvisioningManager\"|" $FILE
 
                 sed -i "/<callback-urls>/ {
                     N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"\+\{E164\}\@$5:$8\" method=\"SIP\" />|
@@ -197,21 +197,26 @@ configSmsAggregator() {
 ## Description: Configures Speech Recognizer
 ## Parameters : 1.iSpeech Key
 configSpeechRecognizer() {
-	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    if [ -n "$ISPEECH_KEY" ]; then
+        FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
-	sed -e "/<speech-recognizer.*>/ {
-		N; s|<api-key.*></api-key>|<api-key production=\"true\">$1</api-key>|
-	}" $FILE > $FILE.bak
+        sed -e "/<speech-recognizer.*>/ {
+            N; s|<api-key.*></api-key>|<api-key production=\"true\">$1</api-key>|
+        }" $FILE > $FILE.bak
 
-	mv $FILE.bak $FILE
-	echo 'Configured the Speech Recognizer'
+        mv $FILE.bak $FILE
+        echo 'Configured the Speech Recognizer'
+    fi
 }
 
 ## Description: Configures available speech synthesizers
 ## Parameters : none
 configSpeechSynthesizers() {
-	configAcapela $ACAPELA_APPLICATION $ACAPELA_LOGIN $ACAPELA_PASSWORD
-	configVoiceRSS $VOICERSS_KEY
+	if [[ "$TTSSYSTEM" == "voicerss" ]]; then
+	    configVoiceRSS $VOICERSS_KEY
+	else
+	    configAcapela $ACAPELA_APPLICATION $ACAPELA_LOGIN $ACAPELA_PASSWORD
+	 fi
 }
 
 ## Description: Configures Acapela Speech Synthesizer
@@ -219,30 +224,42 @@ configSpeechSynthesizers() {
 ## 				2.Login
 ## 				3.Password
 configAcapela() {
-	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+ if [[ -z $ACAPELA_APPLICATION || -z $ACAPELA_LOGIN || -z $ACAPELA_PASSWORD ]]; then
+        echo '!Please make sure that all necessary settings for acapela are set!'
+ else
+         FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+         sed -i 's|<speech-synthesizer active=".*"/>|<speech-synthesizer active="acapela"/>|' $FILE
 
-	sed -e "/<speech-synthesizer class=\"org.mobicents.servlet.restcomm.tts.AcapelaSpeechSynthesizer\">/ {
-		N
-		N; s|<application>.*</application>|<application>$1</application>|
-		N; s|<login>.*</login>|<login>$2</login>|
-		N; s|<password>.*</password>|<password>$3</password>|
-	}" $FILE > $FILE.bak
+	        sed -e "/<acapela class=\"org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer\">/ {
+		        N
+		        N; s|<application>.*</application>|<application>$1</application>|
+		        N; s|<login>.*</login>|<login>$2</login>|
+		        N; s|<password>.*</password>|<password>$3</password>|
+	        }" $FILE > $FILE.bak
 
-	mv $FILE.bak $FILE
-	echo 'Configured Acapela Speech Synthesizer'
+        mv $FILE.bak $FILE
+        echo 'Configured Acapela Speech Synthesizer'
+ fi
 }
+
 
 ## Description: Configures VoiceRSS Speech Synthesizer
 ## Parameters : 1.API key
 configVoiceRSS() {
-	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    if [ -n "$VOICERSS_KEY" ]; then
+        FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+         sed -i 's|<speech-synthesizer active=".*"/>|<speech-synthesizer active="voicerss"/>|' $FILE
 
-	sed -e "/<service-root>http:\/\/api.voicerss.org<\/service-root>/ {
-		N; s|<apikey>.*</apikey>|<apikey>$1</apikey>|
-	}" $FILE > $FILE.bak
+         sed -e "/<service-root>http:\/\/api.voicerss.org<\/service-root>/ {
+         N; s|<apikey>.*</apikey>|<apikey>$1</apikey>|
+         }" $FILE > $FILE.bak
 
-	mv $FILE.bak $FILE
-	echo 'Configured VoiceRSS Speech Synthesizer'
+         mv $FILE.bak $FILE
+         echo 'Configured VoiceRSS Speech Synthesizer'
+
+ 	else
+ 	     echo 'Please set KEY for VoiceRSS TTS'
+    fi
 }
 
 ## Description: Updates RestComm DARS properties for RestComm
@@ -340,12 +357,12 @@ configSMPPAccount() {
 	destinationMap="$8"
 
 
-	sed -i "s|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\".*\">|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\"$activate\">|g" $FILE
+	sed -i "s|<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\" activateSmppConnection =\".*\">|<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\" activateSmppConnection =\"$activate\">|g" $FILE
 	#Add sourceMap && destinationMap
 
 
 	if [ "$activate" == "true" ] || [ "$activate" == "TRUE" ]; then
-		sed -e	"/<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\"/{
+		sed -e	"/<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\"/{
 			N
 			N
 			N
@@ -365,7 +382,7 @@ configSMPPAccount() {
 		echo 'Configured SMPP Account Details'
 
 	else
-		sed -e	"/<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\"/{
+		sed -e	"/<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\"/{
 			N
 			N
 			N
@@ -487,6 +504,9 @@ otherRestCommConf(){
 			N; s|<response-timeout>.*</response-timeout>|<response-timeout>$HTTP_RESPONSE_TIMEOUT</response-timeout>|
 		}" $FILE > $FILE.bak
     mv $FILE.bak $FILE
+
+    echo "CACHE_NO_WAV $CACHE_NO_WAV"
+    sed -i "s|<cache-no-wav>.*</cache-no-wav>|<cache-no-wav>${CACHE_NO_WAV}</cache-no-wav>|" $FILE
 
     echo "End Rest RestComm configuration"
 }

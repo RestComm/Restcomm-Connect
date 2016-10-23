@@ -12,6 +12,6 @@
 <!--
 	The Speech Recognizer is responsible for turning speech in to text.
 -->
-<speech-recognizer class="org.mobicents.servlet.restcomm.asr.ISpeechRecognizer">
+<speech-recognizer class="org.restcomm.connect.asr.ISpeechRecognizer">
 	<api-key production="false">1da57e282a615ddd2661c58d50524486</api-key>
 </speech-recognizer>

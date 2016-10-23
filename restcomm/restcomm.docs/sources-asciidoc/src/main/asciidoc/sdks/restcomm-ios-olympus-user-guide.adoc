@@ -1,0 +1,43 @@
+The Restcomm iOS SDK comes with Olympus Client iOS App that taps into  the SDK and presents to the user a full fledged application capable of video/audio WebRTC calls and text messages. If we add Restcomm Platform to the mix, we get full telecom programmability and access to PSTN/SMS. Let's see how this works.
+
+You can get the latest version of iOS Olympus .ipa from the link found  https://github.com/RestComm/restcomm-ios-sdk#latest-olympus-ipa[here]. For the TADHack event you will also need to register for a new account https://accounts.restcomm.com/tadhackRegistration.jsp[here] and follow along the registration process until you get your password via email. 
+
+Before you launch the App you need to trust Telestax Inc. on your iOS device by following this https://support.apple.com/en-us/HT204460[Apple Guide]. Then you need to launch the Olympus iOS App and use the user part of your email and the password you received in the first, wizard screen. Also, you will need to change domain to tadhack.restcomm.com and tap Done:
+
+image:./images/ios-olympus-signup.png[ios-olympus-signup]
+
+Once you login, you can call any of the default contacts, be it a Restcomm Application, like +1235 or another client like Bob who needs to be registered from another Olympus or generic SIP client. Here's the contacts screen:
+
+image:./images/ios-olympus-contacts.png[ios-olympus-contacts]
+
+[[calling-a-restcomm-application]]
+Calling a Restcomm Application
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Let's first try an audio call towards Restcomm Application +1235 that uses Text-to-Speech to greet you with and audio message. Tap on the little (i) icon on the right of the 'Say App' and on the new screen that opens tap on the Audio Call:
+
+image:./images/ios-olympus-calling-restcomm-app.png[ios-olympus-calling-restcomm-app]
+
+[[calling-another-restcomm-client]]
+Calling another Restcomm Client
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now let's try a Client to Client video call. 
+
+* Back in the Contacts screen tap on the plus sign on the top right corner to create a new contact, add the client's details and tap Done:
+
+image:./images/ios-olympus-add-contact.png[ios-olympus-add-contact]
+
+* Tap on the new contact (not on the (i) icon but anywhere else) so that a video call is made to that contact. Remember that the called client (in my case Despina) needs to be registered from another device. Once you answser from the called client you should see something like this:
+
+image:./images/ios-olympus-calling-olympus.jpg[ios-olympus-calling-olympus]
+
+[[sending-a-text-message-to-another-restcomm-client]]
+Sending a text message to another Restcomm Client
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Let's send a text message from Olympus to another client. Back to Contacts screen tap on the little (i) icon on the right of the peer you want to message (in my case Despina). On the new screen that opens tap on the Message and then write a message and tap Send:
+
+image:./images/ios-olympus-texting-olympus.png[ios-olympus-texting-olympus]
+
+That's about it. By taking further advantage of Restcomm's Apps capabilities you can now add a wealth of features in your flow, be it IVR, Conferencing, etc.

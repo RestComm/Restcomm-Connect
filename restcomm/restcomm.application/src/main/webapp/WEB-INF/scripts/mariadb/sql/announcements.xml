@@ -20,4 +20,8 @@
   <delete id="removeAnnouncement" parameterType="string">
     DELETE FROM restcomm_announcements WHERE sid=#{sid};
   </delete>
+
+  <delete id="removeAnnouncements" parameterType="string">
+    DELETE FROM restcomm_announcements WHERE account_sid=#{account_sid};
+  </delete>
 </mapper>

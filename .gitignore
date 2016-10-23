@@ -11,6 +11,5 @@ logs
 bin
 .DS_Store
 **/*~
-log
 csv
 .metadata

@@ -21,8 +21,6 @@ The following properties are available for phone numbers from the US and Canada:
 |PostalCode |The postal (zip) code of this phone number.
 |IsoCountry |The http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2[ISO country code] of this phone number.
 |Capabilities |This is a set of boolean properties that indicate whether a phone number can receive calls or messages. Possible capabilities are `Voice`, `SMS`, and `MMS` with each having a value of either `true` or `false`.
-|AddressRequirements |This indicates whether the phone number requires you or your customer to have an Address registered with Restcomm. Possible values are `none`, `any`, `local`, or `foreign`.
-|Beta |Phone numbers new to the Restcomm platform are marked as beta. Possible values are either `true` or `false`.
 |===============================================================================================================================================================================================================================
 
 The following properties are available for phone numbers outside the US and Canada:
@@ -31,11 +29,9 @@ The following properties are available for phone numbers outside the US and Cana
 |=================================================================================================================================================================================================================================================
 |Property |Description
 |FriendlyName |A nicely-formatted version of the phone number.
-|PhoneNumber |The phone number, in https://www.twilio.com/docs/api/rest/response#phone-numbers[E.164] (i.e. "+44") format.
+|PhoneNumber |The phone number, in [E.164] (i.e. "+44") format.
 |IsoCountry |The http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2[ISO country code] of this phone number.
 |Capabilities |This is a set of boolean properties that indicate whether a phone number can receive calls or messages. Possible capabilities are `Voice`, `SMS`, and `MMS` with each having a value of either `true` or `false`.
-|AddressRequirements |This indicates whether the phone number requires you or your customer to have an https://www.twilio.com/docs/api/rest/addresses[Address] registered with Restcomm. Possible values are `none`, `any`, `local`, or `foreign`.
-|Beta |Phone numbers new to the Restcomm platform are marked as beta. Possible values are either `true` or `false`.
 |=================================================================================================================================================================================================================================================
 
 [[address-requirement-values]]

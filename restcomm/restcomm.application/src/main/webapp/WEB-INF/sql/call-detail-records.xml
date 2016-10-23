@@ -6,10 +6,10 @@
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao">
   <insert id="addCallDetailRecord" parameterType="map">
     INSERT INTO "restcomm_call_detail_records" ("sid", "instanceid", "parent_call_sid", "date_created", "date_updated", "account_sid", "recipient", "sender", "phone_number_sid", "status",
-    "start_time", "end_time", "duration", "price", "direction", "answered_by", "api_version", "forwarded_from", "caller_name", "uri", "call_path", "ring_duration", "conference_sid", "muted", "start_conference_on_enter", "end_conference_on_exit", "on_hold") 
+    "start_time", "end_time", "duration", "price", "direction", "answered_by", "api_version", "forwarded_from", "caller_name", "uri", "call_path", "ring_duration", "conference_sid", "muted", "start_conference_on_enter", "end_conference_on_exit", "on_hold", "ms_id") 
     VALUES (#{sid}, #{instanceid}, #{parent_call_sid}, #{date_created},
     #{date_updated}, #{account_sid}, #{to}, #{from}, #{phone_number_sid}, #{status}, #{start_time}, #{end_time}, #{duration}, #{price}, #{direction},
-    #{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path}, #{ring_duration}, #{conference_sid}, #{muted}, #{start_conference_on_enter}, #{end_conference_on_exit}, #{on_hold});
+    #{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path}, #{ring_duration}, #{conference_sid}, #{muted}, #{start_conference_on_enter}, #{end_conference_on_exit}, #{on_hold}, #{ms_id});
   </insert>
   
   <select id="getCallDetailRecord" parameterType="string" resultType="hashmap">
@@ -18,7 +18,7 @@
 
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/110 -->
-	<select id="getTotalCallDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter" resultType="int">
+	<select id="getTotalCallDetailRecordByUsingFilters" parameterType="org.restcomm.connect.dao.entities.CallDetailRecordFilter" resultType="int">
 		SELECT COUNT(*) FROM "restcomm_call_detail_records" WHERE
 
 		<!-- are we counting cdrs from a single account or from an account set -->
@@ -67,7 +67,7 @@
 
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/110 -->
-	<select id="getCallDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter" resultType="hashmap">
+	<select id="getCallDetailRecordByUsingFilters" parameterType="org.restcomm.connect.dao.entities.CallDetailRecordFilter" resultType="hashmap">
 		SELECT * FROM "restcomm_call_detail_records" AS "restcomm_call_detail_records" WHERE
 
 		<!-- are we retrieving cdrs from a single account or from an account set -->
@@ -168,6 +168,14 @@
   <select id="getCallDetailRecordsByConferenceSid" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_call_detail_records" WHERE "conference_sid"=#{conference_sid};
   </select>
+
+  <select id="getCallDetailRecordsByMsId" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_call_detail_records" WHERE "ms_id"=#{ms_id};
+  </select>
+  
+  <select id="getTotalRunningCallDetailRecordsByConferenceSid" parameterType="string" resultType="int">
+    SELECT COUNT(*) FROM "restcomm_call_detail_records" WHERE "conference_sid"=#{conference_sid} and "status" ='in-progress';
+  </select>
   
   <delete id="removeCallDetailRecord" parameterType="string">
     DELETE FROM "restcomm_call_detail_records" WHERE "sid"=#{sid};
@@ -178,7 +186,10 @@
   </delete>
   
   <update id="updateCallDetailRecord" parameterType="map">
-    UPDATE "restcomm_call_detail_records" SET "date_updated"=#{date_updated}, "status"=#{status}, "start_time"=#{start_time}, "end_time"=#{end_time}, "duration"=#{duration},
-    "price"=#{price}, "answered_by"=#{answered_by}, "ring_duration"=#{ring_duration}, "conference_sid"=#{conference_sid}, "muted"=#{muted}, "start_conference_on_enter"=#{start_conference_on_enter}, "end_conference_on_exit"=#{end_conference_on_exit}, "on_hold"=#{on_hold} WHERE "sid"=#{sid};
+    UPDATE "restcomm_call_detail_records" 
+    	SET "date_updated"=#{date_updated}, "status"=#{status}, "start_time"=#{start_time}, "end_time"=#{end_time}, "duration"=#{duration},
+    		"price"=#{price}, "answered_by"=#{answered_by}, "ring_duration"=#{ring_duration}, "conference_sid"=#{conference_sid}, "muted"=#{muted}, "start_conference_on_enter"=#{start_conference_on_enter}, 
+    		"end_conference_on_exit"=#{end_conference_on_exit}, "on_hold"=#{on_hold}, "ms_id"=#{ms_id} 
+    WHERE "sid"=#{sid};
   </update>
 </mapper>
