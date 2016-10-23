@@ -20,7 +20,10 @@
 package org.restcomm.connect.http;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
@@ -30,6 +33,13 @@ import org.restcomm.connect.commons.util.StringUtils;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import org.restcomm.connect.dao.entities.RestCommResponse;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.ok;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -129,5 +139,14 @@ public abstract class AbstractEndpoint {
         if ( value.equals("") )
             return true;
         return false;
+    }
+
+    // Quick'n'dirty error response building
+    String buildErrorResponseBody(String message, MediaType type) {
+        if (!type.equals(MediaType.APPLICATION_XML_TYPE)) { // fallback to JSON if not XML
+            return "{\"message\":"+message+"}";
+        } else {
+            return "<RestcommResponse><Message>" + message + "</Message></RestcommResponse>";
+        }
     }
 }
