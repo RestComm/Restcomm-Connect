@@ -3,13 +3,13 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>com.telestax.servlet</groupId>
-		<artifactId>restcomm</artifactId>
+		<groupId>org.restcomm</groupId>
+		<artifactId>restcomm-connect</artifactId>
 		<version>8.0.0-SNAPSHOT</version>
 	</parent>
 
-	<groupId>com.telestax.servlet</groupId>
-	<artifactId>restcomm-docs</artifactId>
+	<groupId>org.restcomm</groupId>
+	<artifactId>restcomm-connect-docs</artifactId>
 
 	<packaging>pom</packaging>
 
@@ -17,43 +17,6 @@
 		<module>sources-asciidoc</module>
 	</modules>
 
-	<!--profiles>
-		<profile>
-			<id>release</id>
-			<modules>
-				<module>sources-mobicents</module>
-				<module>sources-telscale</module>
-				<module>jdocbook-mobicents</module>
-				<module>jdocbook-telscale</module>
-			</modules>
-		</profile>
-		<profile>
-			<id>all</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<modules>
-				<module>sources-mobicents</module>
-				<module>sources-telscale</module>
-				<module>jdocbook-mobicents</module>
-				<module>jdocbook-telscale</module>
-			</modules>
-		</profile>
-		<profile>
-			<id>mobicents</id>
-			<modules>
-				<module>sources-mobicents</module>
-				<module>jdocbook-mobicents</module>
-			</modules>
-		</profile>
-		<profile>
-			<id>telscale</id>
-			<modules>
-				<module>sources-telscale</module>
-				<module>jdocbook-telscale</module>
-			</modules>
-		</profile>
-	</profiles-->
 	<!-- repositories -->
 	<repositories>
 		<repository>

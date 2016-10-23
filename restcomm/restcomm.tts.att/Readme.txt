@@ -107,7 +107,7 @@ Configuration
 To configure the plugin, find the AT&T TTS configuration section at the standard Restcomm configuration file ($RESTCOMM/WEB-INF/conf/restcomm.xml).
 
 	<speech-synthesizer
-		class="org.mobicents.servlet.restcomm.tts.AttSpeechSynthesizer">
+		class="AttSpeechSynthesizer">
 		<host>127.0.0.1</host>
 		<port>7000</port>
 		<tts-client-directory></tts-client-directory>
@@ -158,7 +158,7 @@ User must provide the following:
 Example configuration:
 
 	<speech-synthesizer
-		class="org.mobicents.servlet.restcomm.tts.AttSpeechSynthesizer">
+		class="AttSpeechSynthesizer">
 		<host>127.0.0.1</host>
 		<port>7000</port>
 		<tts-client-directory>/home/user/att_naturalvoices_v5.1_server_live</tts-client-directory>
