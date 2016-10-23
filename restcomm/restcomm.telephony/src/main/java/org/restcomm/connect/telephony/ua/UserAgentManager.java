@@ -19,27 +19,19 @@
  */
 package org.restcomm.connect.telephony.ua;
 
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.util.DigestAuthentication;
-import org.restcomm.connect.dao.ClientsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.RegistrationsDao;
-import org.restcomm.connect.dao.entities.Client;
-import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.monitoringservice.MonitoringService;
-import org.restcomm.connect.telephony.CallManager;
-import org.restcomm.connect.telephony.api.DestroyCall;
-import org.restcomm.connect.telephony.api.GetCall;
-import org.restcomm.connect.telephony.api.Hangup;
-import org.restcomm.connect.telephony.api.UserRegistration;
+import static java.lang.Integer.parseInt;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
+import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
+
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -52,19 +44,28 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
-import static java.lang.Integer.parseInt;
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
-import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
+import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.DigestAuthentication;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.RegistrationsDao;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.Registration;
+import org.restcomm.connect.monitoringservice.MonitoringService;
+import org.restcomm.connect.telephony.CallManager;
+import org.restcomm.connect.telephony.api.GetCall;
+import org.restcomm.connect.telephony.api.Hangup;
+import org.restcomm.connect.telephony.api.UserRegistration;
+
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -168,7 +169,7 @@ public final class UserAgentManager extends UntypedActor {
     private void disconnectActiveCalls(ActorRef call) {
         if (call != null && !call.isTerminated()) {
             call.tell(new Hangup("Registration_Removed"), self());
-            callManager.tell(new DestroyCall(call), self());
+            //callManager.tell(new DestroyCall(call), self());
             if (logger.isDebugEnabled()) {
                 logger.debug("Disconnected call: "+call.path()+" , after removed registration");
             }
@@ -220,6 +221,11 @@ public final class UserAgentManager extends UntypedActor {
 
     @Override
     public void onReceive(final Object message) throws Exception {
+        final Class<?> klass = message.getClass();
+        final ActorRef sender = sender();
+        if (logger.isInfoEnabled()) {
+            logger.info("UserAgentManager Processing Message: \"" + klass.getName() + " sender : "+ sender.getClass()+" self is terminated: "+self().isTerminated());
+        }
         if (message instanceof ReceiveTimeout) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Timeout received, ping interval: "+pingInterval+" , will clean up registrations and send keep alive");
@@ -267,7 +273,7 @@ public final class UserAgentManager extends UntypedActor {
         String port = String.valueOf(((SipURI)sipServletMessage.getTo().getURI()).getPort());
         String transport = ((SipURI) sipServletMessage.getTo().getURI()).getTransportParam();
         if(logger.isDebugEnabled()) {
-            logger.debug("Error response for the OPTIONS to: "+sipServletMessage.getFrom().toString()+" will remove registration");
+            logger.debug("Error response for the OPTIONS to: "+sipServletMessage.getFrom().toString()+" will remove registration | sipServletMessage: "+sipServletMessage.toString());
         }
         final RegistrationsDao regDao = storage.getRegistrationsDao();
         List<Registration> registrations = regDao.getRegistrations(user);
