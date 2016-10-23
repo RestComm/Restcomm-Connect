@@ -385,12 +385,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 final String hash = new Md5Hash(data.getFirst("Password")).toString();
                 result = result.setAuthToken(hash);
             }
-            if (data.containsKey("Auth_Token")) {
-                result = result.setAuthToken(data.getFirst("Auth_Token"));
-                // if this is a reset-password operation, we also need to set the account status to active
-                if (account.getStatus() == Account.Status.UNINITIALIZED)
-                    isPasswordReset = true;
-            }
             if (newStatus != null) {
                 result = result.setStatus(newStatus);
             } else {
