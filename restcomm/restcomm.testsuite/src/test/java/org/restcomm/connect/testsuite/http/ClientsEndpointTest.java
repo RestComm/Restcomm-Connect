@@ -17,6 +17,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import junit.framework.Assert;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.cafesip.sipunit.SipPhone;
@@ -143,8 +144,14 @@ public class ClientsEndpointTest {
 
     @Test
     public void createClientWithWeakPasswordShouldFail() throws IOException {
-        HttpResponse response = CreateClientsTool.getInstance().createClientResponse(deploymentUrl.toString(), "fool", "1234", "http://127.0.0.1:8080/restcomm/demos/welcome.xml");
-        Assert.assertEquals(400, response.getStatusLine().getStatusCode());
+        Client jersey = getClient(developerUsername, developeerAuthToken);
+        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.add("Login","weakClient");
+        params.add("Password","1234"); // this is a very weak password
+        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(400, response.getStatus());
+        Assert.assertTrue("Response should contain 'weak' term", response.getEntity(String.class).toLowerCase().contains("weak"));
     }
 
     @Test
@@ -156,6 +163,7 @@ public class ClientsEndpointTest {
         params.add("Password","1234"); // this is a very weak password
         ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, params);
         Assert.assertEquals(400, response.getStatus());
+        Assert.assertTrue("Response should contain 'weak' term", response.getEntity(String.class).toLowerCase().contains("weak"));
     }
 
     protected String getResourceUrl(String suffix) {
