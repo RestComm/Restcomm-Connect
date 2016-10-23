@@ -88,22 +88,22 @@ public class ClientsEndpointTest {
 
         SipURI reqUri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
-        String clientSID = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "1234",
+        String clientSID = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "RestComm1234",
                 "http://127.0.0.1:8080/restcomm/demos/welcome.xml");
         assertNotNull(clientSID);
 
         Thread.sleep(3000);
 
-        String clientSID2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "1234",
+        String clientSID2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "RestComm1234",
                 "http://127.0.0.1:8080/restcomm/demos/welcome.xml");
         assertNotNull(clientSID2);
 
         Thread.sleep(3000);
 
         assertTrue(clientSID.equalsIgnoreCase(clientSID2));
-        assertTrue(bobPhone.register(reqUri, "bob", "1234", bobContact, 1800, 1800));
+        assertTrue(bobPhone.register(reqUri, "bob", "RestComm1234", bobContact, 1800, 1800));
         bobContact = "sip:mobile@127.0.0.1:5090";
-        assertTrue(bobPhone.register(reqUri, "bob", "1234", bobContact, 1800, 1800));
+        assertTrue(bobPhone.register(reqUri, "bob", "RestComm1234", bobContact, 1800, 1800));
         assertTrue(bobPhone.unregister(bobContact, 0));
     }
 
@@ -112,20 +112,20 @@ public class ClientsEndpointTest {
 
         SipURI reqUri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
-        String clientSID = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "1234", null);
+        String clientSID = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "RestComm1234", null);
         assertNotNull(clientSID);
 
         Thread.sleep(3000);
 
-        String clientSID2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "1234", null);
+        String clientSID2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "RestComm1234", null);
         assertNotNull(clientSID2);
 
         Thread.sleep(3000);
 
         assertTrue(clientSID.equalsIgnoreCase(clientSID2));
-        assertTrue(bobPhone.register(reqUri, "bob", "1234", bobContact, 1800, 1800));
+        assertTrue(bobPhone.register(reqUri, "bob", "RestComm1234", bobContact, 1800, 1800));
         bobContact = "sip:mobile@127.0.0.1:5090";
-        assertTrue(bobPhone.register(reqUri, "bob", "1234", bobContact, 1800, 1800));
+        assertTrue(bobPhone.register(reqUri, "bob", "RestComm1234", bobContact, 1800, 1800));
         assertTrue(bobPhone.unregister(bobContact, 0));
     }
 
