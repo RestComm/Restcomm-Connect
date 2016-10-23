@@ -156,6 +156,9 @@ public class MonitoringService extends UntypedActor{
     private void onGetCall(Object message, ActorRef self, ActorRef sender) throws ServletParseException {
         GetCall getCall = (GetCall)message;
         String location = getCall.getIdentifier();
+        if (logger.isDebugEnabled()) {
+            logger.debug("MonitoringService onGetCall, location: "+location);
+        }
         if (location != null) {
             ActorRef call = callLocationMap.get(location);
             if (call != null) {

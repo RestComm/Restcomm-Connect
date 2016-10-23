@@ -56,7 +56,6 @@ import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.Registration;
 import org.restcomm.connect.monitoringservice.MonitoringService;
-import org.restcomm.connect.telephony.CallManager;
 import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.UserRegistration;
@@ -80,7 +79,6 @@ public final class UserAgentManager extends UntypedActor {
     private ActorRef monitoringService;
     private final int pingInterval;
     private final String instanceId;
-    private ActorRef callManager;
 
     public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage,
             final ServletContext servletContext) {
@@ -95,7 +93,6 @@ public final class UserAgentManager extends UntypedActor {
         pingInterval = runtime.getInt("ping-interval", 60);
         logger.info("About to run firstTimeCleanup()");
         instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
-        callManager = (ActorRef) servletContext.getAttribute(CallManager.class.getName());
         firstTimeCleanup();
     }
 
@@ -118,8 +115,17 @@ public final class UserAgentManager extends UntypedActor {
                         logger.info("Registration: " + result.getLocation() + " expired and will be removed now");
                     }
                     registrations.removeRegistration(result);
-                    monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
+                    if (logger.isInfoEnabled()) {
+                        logger.info("after removeRegistration");
+                    }
                     monitoringService.tell(new GetCall(result.getLocation()), self());
+                    if (logger.isInfoEnabled()) {
+                        logger.info("after GetCall");
+                    }
+                    monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
+                    if (logger.isInfoEnabled()) {
+                        logger.info("after UserRegistration");
+                    }
                     return;
                 }
                 final DateTime updated = result.getDateUpdated();
@@ -140,7 +146,7 @@ public final class UserAgentManager extends UntypedActor {
             logger.info("Initial registration cleanup finished, starting Restcomm with "+results.size()+" registrations");
     }
 
-    private void clean() {
+    private void clean() throws ServletException {
         final RegistrationsDao registrations = storage.getRegistrationsDao();
         final List<Registration> results = registrations.getRegistrationsByInstanceId(instanceId);
         for (final Registration result : results) {
@@ -149,6 +155,7 @@ public final class UserAgentManager extends UntypedActor {
                 if(logger.isInfoEnabled()) {
                     logger.info("Registration: "+result.getAddressOfRecord()+" expired and will be removed now");
                 }
+                ping(result.getLocation());
                 registrations.removeRegistration(result);
                 monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
                 return;
@@ -160,6 +167,7 @@ public final class UserAgentManager extends UntypedActor {
                 if(logger.isInfoEnabled()) {
                     logger.info("Registration: "+result.getAddressOfRecord()+" didn't respond to OPTIONS and will be removed now");
                 }
+                ping(result.getLocation());
                 registrations.removeRegistration(result);
                 monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
             }
@@ -269,11 +277,8 @@ public final class UserAgentManager extends UntypedActor {
 
     private void removeRegistration(final SipServletMessage sipServletMessage) {
         String user = ((SipURI)sipServletMessage.getTo().getURI()).getUser();
-        String host = ((SipURI)sipServletMessage.getTo().getURI()).getHost();
-        String port = String.valueOf(((SipURI)sipServletMessage.getTo().getURI()).getPort());
-        String transport = ((SipURI) sipServletMessage.getTo().getURI()).getTransportParam();
         if(logger.isDebugEnabled()) {
-            logger.debug("Error response for the OPTIONS to: "+sipServletMessage.getFrom().toString()+" will remove registration | sipServletMessage: "+sipServletMessage.toString());
+            logger.debug("Error response for the OPTIONS to: "+sipServletMessage.getTo().toString()+" will remove registration");
         }
         final RegistrationsDao regDao = storage.getRegistrationsDao();
         List<Registration> registrations = regDao.getRegistrations(user);
@@ -286,9 +291,12 @@ public final class UserAgentManager extends UntypedActor {
                     regLocation = (SipURI) factory.createURI(reg.getLocation());
                 } catch (ServletParseException e) {}
 
+                if(logger.isDebugEnabled()) {
+                    logger.debug("regLocation: " + regLocation + " reg.getAddressOfRecord(): "+reg.getAddressOfRecord() +" reg.getLocation(): "+reg.getLocation());
+                }
                 if (regLocation != null && (reg.getAddressOfRecord().equalsIgnoreCase(regLocation.toString()) || reg.getLocation().equalsIgnoreCase(regLocation.toString()))) {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("Registration: " + reg.getLocation() + " failed to response to OPTIONS and will be removed");
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("Registration: " + reg.getLocation() + " failed to response to OPTIONS and will be removed");
                     }
 
                     regDao.removeRegistration(reg);
