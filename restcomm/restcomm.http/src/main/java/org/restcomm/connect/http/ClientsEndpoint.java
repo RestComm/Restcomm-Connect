@@ -202,7 +202,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             try {
                 client = createFrom(new Sid(accountSid), data);
             } catch (PasswordTooWeak passwordTooWeak) {
-                return status(BAD_REQUEST).build();
+                return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
             }
             dao.addClient(client);
         } else if (!client.getAccountSid().toString().equals(accountSid)) {
@@ -233,7 +233,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             try {
                 dao.updateClient(update(client, data));
             } catch (PasswordTooWeak passwordTooWeak) {
-                return status(BAD_REQUEST).build();
+                return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
             }
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(client);
