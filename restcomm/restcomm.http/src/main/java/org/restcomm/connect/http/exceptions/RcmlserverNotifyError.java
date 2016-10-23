@@ -1,7 +1,6 @@
-
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2016, Telestax Inc and individual contributors
+ * Copyright 2011-2014, Telestax Inc and individual contributors
  * by the @authors tag.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,39 +18,24 @@
  *
  */
 
-package org.restcomm.connect.rvd.restcomm;
+package org.restcomm.connect.http.exceptions;
 
 /**
- * A reduced entity for a Restcomm Account. It contains only the properties that make
- * sense and are used by RVD.
+ * Thrown when notification submission to rcmlserver failed for some reason.
  *
+ * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public class RestcommAccountInfoResponse {
-    String sid;
-    String friendly_name;
-    String email_address;
-    String status;
-    String role;
+public class RcmlserverNotifyError extends Exception {
 
-    public RestcommAccountInfoResponse() {
-        // TODO Auto-generated constructor stub
+    public RcmlserverNotifyError(String message) {
+        super(message);
     }
 
-    public String getSid() {
-        return sid;
+    public RcmlserverNotifyError() {
     }
 
-    public String getFriendly_name() {
-        return friendly_name;
+    public RcmlserverNotifyError(String message, Throwable cause) {
+        super(message, cause);
     }
 
-    public String getEmail_address() {
-        return email_address;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public String getRole() { return role; }
 }

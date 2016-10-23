@@ -46,7 +46,7 @@ public interface AccountsDao {
      */
     Account getAccountToAuthenticate(String name);
 
-    List<Account> getAccounts(Sid sid);
+    List<Account> getChildAccounts(Sid parentSid);
 
     void removeAccount(Sid sid);
 
@@ -54,7 +54,10 @@ public interface AccountsDao {
 
     /**
      * Returns a list of all sub-accounts under a parent account. All nested sub-accounts in
-     * any level will be returned.
+     * any level will be returned. Note:
+     * a) The parent account is not included in the results.
+     * b) The sub-account order in the returned list follows a top-down logic. So, higher hierarchy account list elements
+     *    always go before lower hierarchy accounts.
      *
      * It will return an empty array in case the parent has no children or the parent does
      * not exist.

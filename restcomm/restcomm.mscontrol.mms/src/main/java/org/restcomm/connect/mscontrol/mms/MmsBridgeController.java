@@ -33,20 +33,26 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.RecordingsDao;
-import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.util.WavUtils;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.mgcp.CreateConferenceEndpoint;
 import org.restcomm.connect.mgcp.DestroyEndpoint;
 import org.restcomm.connect.mgcp.EndpointState;
 import org.restcomm.connect.mgcp.EndpointStateChanged;
 import org.restcomm.connect.mgcp.MediaGatewayResponse;
+import org.restcomm.connect.mgcp.MediaResourceBrokerResponse;
 import org.restcomm.connect.mgcp.MediaSession;
+import org.restcomm.connect.mrb.api.GetMediaGateway;
 import org.restcomm.connect.mscontrol.api.MediaServerController;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.JoinBridge;
@@ -59,10 +65,6 @@ import org.restcomm.connect.mscontrol.api.messages.StartMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StartRecording;
 import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
-import org.restcomm.connect.commons.util.WavUtils;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -83,6 +85,7 @@ public class MmsBridgeController extends MediaServerController {
     // Finite State Machine
     private final FiniteStateMachine fsm;
     private final State uninitialized;
+    private final State getMediaGatewayFromMRB;
     private final State active;
     private final State acquiringMediaSession;
     private final State acquiringEndpoint;
@@ -93,9 +96,10 @@ public class MmsBridgeController extends MediaServerController {
     private Boolean fail;
 
     // MGCP runtime stuff
-    private final ActorRef mediaGateway;
+    private ActorRef mediaGateway;
     private MediaSession mediaSession;
     private ActorRef endpoint;
+    private final ActorRef mrb;
 
     // Conference runtime stuff
     private ActorRef bridge;
@@ -109,11 +113,14 @@ public class MmsBridgeController extends MediaServerController {
     // Observers
     private final List<ActorRef> observers;
 
-    public MmsBridgeController(ActorRef mediaGateway) {
+    private Sid callSid;
+
+    public MmsBridgeController(final ActorRef mrb) {
         final ActorRef self = self();
 
         // Finite states
         this.uninitialized = new State("uninitialized", null, null);
+        this.getMediaGatewayFromMRB = new State("get media gateway from mrb", new GetMediaGatewayFromMRB(self), null);
         this.active = new State("active", new Active(self), null);
         this.acquiringMediaSession = new State("acquiring media session", new AcquiringMediaSession(self), null);
         this.acquiringEndpoint = new State("acquiring endpoint", new AcquiringEndpoint(self), null);
@@ -124,7 +131,8 @@ public class MmsBridgeController extends MediaServerController {
 
         // Finite State Machine
         final Set<Transition> transitions = new HashSet<Transition>();
-        transitions.add(new Transition(uninitialized, acquiringMediaSession));
+        transitions.add(new Transition(uninitialized, getMediaGatewayFromMRB));
+        transitions.add(new Transition(getMediaGatewayFromMRB, acquiringMediaSession));
         transitions.add(new Transition(acquiringMediaSession, acquiringEndpoint));
         transitions.add(new Transition(acquiringMediaSession, inactive));
         transitions.add(new Transition(acquiringEndpoint, creatingMediaGroup));
@@ -138,7 +146,8 @@ public class MmsBridgeController extends MediaServerController {
         this.fail = Boolean.FALSE;
 
         // Media Components
-        this.mediaGateway = mediaGateway;
+        //this.mediaGateway = mediaGateway;
+        this.mrb = mrb;
 
         // Media Operations
         this.recording = Boolean.FALSE;
@@ -237,7 +246,15 @@ public class MmsBridgeController extends MediaServerController {
             onStartRecording((StartRecording) message, self, sender);
         }  else if(EndpointStateChanged.class.equals(klass)) {
             onEndpointStateChanged((EndpointStateChanged) message, self, sender);
+        } else if (MediaResourceBrokerResponse.class.equals(klass)) {
+            onMediaResourceBrokerResponse((MediaResourceBrokerResponse<?>) message, self, sender);
         }
+    }
+
+    private void onMediaResourceBrokerResponse(MediaResourceBrokerResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
+        this.mediaGateway = (ActorRef) message.get();
+        fsm.transition(message, acquiringMediaSession);
+
     }
 
     private void onObserve(Observe message, ActorRef self, ActorRef sender) {
@@ -260,7 +277,7 @@ public class MmsBridgeController extends MediaServerController {
     private void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
         if (is(uninitialized)) {
             this.bridge = sender;
-            this.fsm.transition(message, acquiringMediaSession);
+            this.fsm.transition(message, getMediaGatewayFromMRB);
         }
     }
 
@@ -369,6 +386,18 @@ public class MmsBridgeController extends MediaServerController {
         public AbstractAction(final ActorRef source) {
             super();
             this.source = source;
+        }
+    }
+
+    private final class GetMediaGatewayFromMRB extends AbstractAction {
+
+        public GetMediaGatewayFromMRB(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            mrb.tell(new GetMediaGateway(callSid), self());
         }
     }
 

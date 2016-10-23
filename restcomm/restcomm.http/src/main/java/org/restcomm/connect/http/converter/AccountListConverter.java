@@ -20,7 +20,6 @@
 package org.restcomm.connect.http.converter;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.http.annotation.ThreadSafe;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.AccountList;
 
@@ -30,7 +29,6 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@ThreadSafe
 public final class AccountListConverter extends AbstractConverter {
     public AccountListConverter(final Configuration configuration) {
         super(configuration);

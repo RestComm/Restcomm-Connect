@@ -25,10 +25,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.configuration.sets.CacheConfigurationSet;
+import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.configuration.sets.impl.CacheConfigurationSetImpl;
 import org.restcomm.connect.commons.configuration.sets.impl.ConfigurationSet;
 import org.restcomm.connect.commons.configuration.sets.MainConfigurationSet;
 import org.restcomm.connect.commons.configuration.sets.impl.MainConfigurationSetImpl;
+import org.restcomm.connect.commons.configuration.sets.impl.RcmlserverConfigurationSetImpl;
 import org.restcomm.connect.commons.configuration.sources.ApacheConfigurationSource;
 
 /**
@@ -52,6 +54,8 @@ public class RestcommConfiguration {
 
         addConfigurationSet("main", new MainConfigurationSetImpl(apacheCfgSrc));
         addConfigurationSet("cache", new CacheConfigurationSetImpl(apacheCfgSrc));
+        addConfigurationSet("rcmlserver", new RcmlserverConfigurationSetImpl(apacheCfgSrc));
+
         // addConfigurationSet("identity", new IdentityConfigurationSet( new DbConfigurationSource(dbConf)));
         // ...
     }
@@ -79,6 +83,8 @@ public class RestcommConfiguration {
     public CacheConfigurationSet getCache() {
         return (CacheConfigurationSet) sets.get("cache");
     }
+
+    public RcmlserverConfigurationSet getRcmlserver() { return (RcmlserverConfigurationSet) sets.get("rcmlserver"); }
 
     // singleton stuff
     private static RestcommConfiguration instance;

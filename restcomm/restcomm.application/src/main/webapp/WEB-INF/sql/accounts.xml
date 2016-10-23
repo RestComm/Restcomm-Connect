@@ -5,8 +5,8 @@
 -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.AccountsDao">
   <insert id="addAccount" parameterType="map">
-    INSERT INTO "restcomm_accounts" ("sid", "date_created", "date_updated", "email_address", "friendly_name", "account_sid", "type", "status", "auth_token", "role", "uri")
-    VALUES(#{sid}, #{date_created}, #{date_updated}, #{email_address}, #{friendly_name}, #{account_sid}, #{type}, #{status}, #{auth_token}, #{role}, #{uri});
+    INSERT INTO "restcomm_accounts" ("sid", "date_created", "date_updated", "email_address", "friendly_name", "parent_sid", "type", "status", "auth_token", "role", "uri")
+    VALUES(#{sid}, #{date_created}, #{date_updated}, #{email_address}, #{friendly_name}, #{parent_sid}, #{type}, #{status}, #{auth_token}, #{role}, #{uri});
   </insert>
   
   <select id="getAccount" parameterType="string" resultType="hashmap">
@@ -21,8 +21,8 @@
     SELECT * FROM "restcomm_accounts" WHERE "email_address"=#{name};
   </select>
   
-  <select id="getAccounts" parameterType="string" resultType="hashmap">
-    SELECT * FROM "restcomm_accounts" WHERE "account_sid"=#{account_sid};
+  <select id="getChildAccounts" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_accounts" WHERE "parent_sid"=#{parent_sid};
   </select>
   
   <delete id="removeAccount" parameterType="string">
@@ -35,7 +35,7 @@
   </update>
 
   <select id="getSubAccountSids" parameterType="java.util.List" resultType="string">
-    SELECT "sid" FROM "restcomm_accounts" WHERE "account_sid" IN
+    SELECT "sid" FROM "restcomm_accounts" WHERE "parent_sid" IN
     <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
       #{item}
     </foreach>

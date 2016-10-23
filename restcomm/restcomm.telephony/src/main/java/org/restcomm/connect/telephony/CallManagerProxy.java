@@ -142,13 +142,13 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
         }));
     }
 
-    private ActorRef conferences(final MediaServerControllerFactory factory) {
+    private ActorRef conferences(final MediaServerControllerFactory factory, final DaoManager storage) {
         return system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new ConferenceCenter(factory);
+                return new ConferenceCenter(factory, storage);
             }
         }));
     }
@@ -196,7 +196,7 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
                     .getAttribute(MediaServerControllerFactory.class.getName());
             // Create the call manager.
             final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
-            final ActorRef conferences = conferences(mscontrolFactory);
+            final ActorRef conferences = conferences(mscontrolFactory, storage);
             final ActorRef bridges = bridges(mscontrolFactory);
             final ActorRef sms = (ActorRef) context.getAttribute(SmsService.class.getName());
             manager = manager(configuration, context, mscontrolFactory, conferences, bridges, sms, factory, storage);

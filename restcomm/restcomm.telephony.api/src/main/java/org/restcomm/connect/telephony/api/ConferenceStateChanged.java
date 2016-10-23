@@ -25,7 +25,7 @@ package org.restcomm.connect.telephony.api;
  */
 public final class ConferenceStateChanged {
     public static enum State {
-        RUNNING_MODERATOR_ABSENT, RUNNING_MODERATOR_PRESENT, COMPLETED, FAILED
+        RUNNING_INITIALIZING, RUNNING_MODERATOR_ABSENT, RUNNING_MODERATOR_PRESENT, COMPLETED, FAILED
     };
 
     private final String name;
@@ -44,4 +44,36 @@ public final class ConferenceStateChanged {
     public State state() {
         return state;
     }
+
+    public static State translateState(String stateName, State defaultState) {
+        State converetedState = defaultState;
+        if(stateName!=null){
+            switch (stateName) {
+                case "RUNNING_MODERATOR_ABSENT":
+                    converetedState=State.RUNNING_MODERATOR_ABSENT;
+                    break;
+
+                case "RUNNING_MODERATOR_PRESENT":
+                    converetedState=State.RUNNING_MODERATOR_PRESENT;
+                    break;
+
+                case "RUNNING_INITIALIZING":
+                    converetedState=State.RUNNING_INITIALIZING;
+                    break;
+
+                case "COMPLETED":
+                    converetedState=State.COMPLETED;
+                    break;
+
+                case "FAILED":
+                    converetedState=State.FAILED;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        return converetedState;
+    }
+
 }
