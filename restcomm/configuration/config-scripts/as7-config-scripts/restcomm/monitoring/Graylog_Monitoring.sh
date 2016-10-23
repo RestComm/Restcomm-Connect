@@ -17,7 +17,7 @@ RCJVMonitor(){
     #FInd RMS process number
     rcprocess=$(jps | grep jboss-modules.jar | cut -d " " -f 1)
     #Run JVMTOP
-    jvmvars=` $BASEDIR/../jvmtop.sh -n1 --delay 3  | grep ${rcprocess}  | sed -e "s/  */ /g" | sed -e "s/%//g" | sed -e "s/m//g"  | cut -f3,4,5,6,7,8 -d ' ' `
+    jvmvars=` $BASEDIR/../jvmtop.sh --once  | grep ${rcprocess}  | sed -e "s/  */ /g" | sed -e "s/%//g" | sed -e "s/m//g"  | cut -f3,4,5,6,7,8 -d ' ' `
     #Send data to graylog
     IFS=" " read HPCUR HPMAX NHCUR NHMAX CPU GC <<< $jvmvars
     message={"\"host\"":"\"${SERVERLABEL}\"","\"message\"":"\"RC_JVM_STATS\"","\"_HPCUR\"":"${HPCUR}","\"_HPMAX\"":"${HPMAX}","\"_NHCUR\"":"${NHCUR}","\"_NHMAX\"":"${NHMAX}","\"_CPU\"":"${CPU}","\"_GC\"":"${GC}"}
@@ -36,7 +36,7 @@ RMSJVMonitor(){
    done < <(jps | grep Main | cut -d " " -f 1)
 
     #Run JVMTOP
-    jvmvars=` $BASEDIR/../jvmtop.sh -n1 --delay 3  | grep ${msprocess} | sed -e "s/  */ /g" | sed -e "s/%//g" | sed -e "s/m//g" | cut -f3,4,5,6,7,8 -d ' ' `
+    jvmvars=` $BASEDIR/../jvmtop.sh --once  | grep ${msprocess} | sed -e "s/  */ /g" | sed -e "s/%//g" | sed -e "s/m//g" | cut -f3,4,5,6,7,8 -d ' ' `
     #Send data to graylog
     IFS=" " read HPCUR HPMAX NHCUR NHMAX CPU GC <<< $jvmvars
     message={"\"host\"":"\"${SERVERLABEL}\"","\"message\"":"\"MS_JVM_STATS\"","\"_HPCUR\"":"${HPCUR}","\"_HPMAX\"":"${HPMAX}","\"_NHCUR\"":"${NHCUR}","\"_NHMAX\"":"${NHMAX}","\"_CPU\"":"${CPU}","\"_GC\"":"${GC}"}

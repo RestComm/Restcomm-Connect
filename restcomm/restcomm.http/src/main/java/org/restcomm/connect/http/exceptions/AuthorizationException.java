@@ -26,5 +26,5 @@ package org.restcomm.connect.http.exceptions;
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  */
 
-public class AuthorizationException extends RuntimeException {
+public class AuthorizationException extends RestcommRuntimeException {
 }

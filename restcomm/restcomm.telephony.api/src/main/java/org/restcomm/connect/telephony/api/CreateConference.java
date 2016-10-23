@@ -20,6 +20,7 @@
 package org.restcomm.connect.telephony.api;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -27,13 +28,19 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 @Immutable
 public final class CreateConference {
     private final String name;
+    private final Sid initialitingCallSid;
 
-    public CreateConference(final String name) {
+    public CreateConference(final String name, final Sid initialitingCallSid) {
         super();
         this.name = name;
+        this.initialitingCallSid = initialitingCallSid;
     }
 
     public String name() {
         return name;
+    }
+
+    public Sid initialitingCallSid(){
+        return initialitingCallSid;
     }
 }

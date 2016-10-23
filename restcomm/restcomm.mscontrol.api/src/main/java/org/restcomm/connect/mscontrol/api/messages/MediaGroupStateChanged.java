@@ -21,23 +21,50 @@ package org.restcomm.connect.mscontrol.api.messages;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
+import akka.actor.ActorRef;
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
 public final class MediaGroupStateChanged {
+    private ActorRef ivr;
+    private ConnectionIdentifier connectionIdentifier;
     public static enum State {
         ACTIVE, INACTIVE
     };
 
     private final State state;
 
+    public MediaGroupStateChanged(final State state, final ConnectionIdentifier connectionIdentifier) {
+        this(state, null, connectionIdentifier);
+    }
+
     public MediaGroupStateChanged(final State state) {
+        this(state, null, null);
+    }
+
+    public MediaGroupStateChanged(final State state, final ActorRef ivr) {
+        this(state, ivr, null);
+    }
+
+    public MediaGroupStateChanged(final State state, final ActorRef ivr, final ConnectionIdentifier connectionIdentifier) {
         super();
         this.state = state;
+        this.ivr = ivr;
+        this.connectionIdentifier = connectionIdentifier;
     }
 
     public State state() {
         return state;
+    }
+
+    public ActorRef ivr() {
+        return ivr;
+    }
+
+    public ConnectionIdentifier connectionIdentifier() {
+        return connectionIdentifier;
     }
 }

@@ -6,7 +6,7 @@
             <form class="form-horizontal" role="form">
                 <!--<div class="form-inline">-->
                 <div class="row">
-                    <div class="col-sm-4">
+                    <div class="col-sm-3">
                         <div class="input-group">
                             <span class="input-group-addon">Sid</span>
                             <input type="text"
@@ -14,7 +14,7 @@
 								ng-model="search.sid" />
                         </div>
                     </div>
-                    <div class="col-sm-4">
+                    <div class="col-sm-3">
                         <div class="input-group">
                             <span class="input-group-addon">Name</span>
                             <input type="text"
@@ -22,12 +22,23 @@
 								ng-model="search.friendly_name" />
                         </div>
                     </div>
-                    <div class="col-sm-4">
+                    <div class="col-sm-3">
                         <div class="input-group">
                             <span class="input-group-addon">Role</span>
                             <input type="text"
 								class="input-sm form-control" placeholder="Role"
 								ng-model="search.role" />
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="input-group">
+                            <span class="input-group-addon">Status</span>
+                            <select class="form-control" ng-model="statusFilter">
+                                <option value="Any">Any</option>
+                                <option value="ACTIVE">ACTIVE</option>
+                                <option value="CLOSED">CLOSED</option>
+                                <option value="SUSPENDED">SUSPENDED</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -78,6 +89,18 @@
                         </button>
                     </span>
                 </th>
+                <th class="width-10pc"
+                    style="border-bottom: 3px solid #428bca; text-align: center;">STATUS
+                    <span
+                            class="pull-right">
+                        <button
+                                style="border-style: solid; border-color: #DCDCDC; border-width: 0px; background-color: #fff;"
+                                ng-click="order('status')" ;toggleD=!toggleD;reverse=toggleD">
+                            <i
+                                    ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i>
+                        </button>
+                    </span>
+                </th>
             </thead>
             <tbody>
                 <tr ng-hide="subAccount.sid == sid"
@@ -94,6 +117,11 @@
                         <div class="text-center"
 							title="{{ notification.message_text }}">{{
 							subAccount.role}}</div>
+                    </td>
+                    <td>
+                        <div class="text-center text-muted"
+                             title="{{ notification.message_text }}" style="text-transform: uppercase">{{
+                            subAccount.status}}</div>
                     </td>
                 </tr>
             </tbody>
@@ -118,7 +146,7 @@
                         </div>
                     </form>
                 </td>
-                <td colspan=1>
+                <td colspan=2>
                     <uib-pagination total-items="totalItems"
 						ng-model="currentPage" max-size="maxSize" boundary-links="true"
 						items-per-page="entryLimit"
