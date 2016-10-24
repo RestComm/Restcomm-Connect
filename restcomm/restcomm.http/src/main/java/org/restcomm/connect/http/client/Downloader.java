@@ -107,10 +107,10 @@ public final class Downloader extends UntypedActor {
             logger.warning(httpErrorMessage);
         }
         } catch (IllegalArgumentException | URISyntaxException | IOException e) {
-        	if(logger.isDebugEnabled()){
-            	// https://github.com/RestComm/Restcomm-Connect/issues/1419 Moving to DEBUG level to avoid polluting the logs
-        		logger.debug("Issue during HTTP request execution: "+e.getCause());
-        	}
+            if(logger.isDebugEnabled()){
+                // https://github.com/RestComm/Restcomm-Connect/issues/1419 Moving to DEBUG level to avoid polluting the logs
+                logger.debug("Issue during HTTP request execution: "+e.getCause());
+            }
             HttpClientUtils.closeQuietly(client);
             client = null;
         } finally {
