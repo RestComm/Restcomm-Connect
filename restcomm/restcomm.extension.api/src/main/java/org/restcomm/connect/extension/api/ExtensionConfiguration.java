@@ -19,19 +19,67 @@
 
 package org.restcomm.connect.extension.api;
 
-import java.util.List;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * Created by gvagenas on 12/10/2016.
  */
 public class ExtensionConfiguration {
-    private List<ExtensionConfigurationProperty> configuration;
+    public enum configurationType {
+        XML, JSON
+    }
+    private Sid sid;
+    private String extensionName;
+    private Object configurationData;
+    private configurationType configurationType;
+    private DateTime dateCreated;
+    private DateTime dateUpdated;
 
-    public List<ExtensionConfigurationProperty> getConfiguration() {
-        return configuration;
+    public ExtensionConfiguration(Sid sid, String extensionName, Object configurationData,
+                                  configurationType configurationType, DateTime dateCreated, DateTime dateUpdated) {
+        this.sid = sid;
+        this.extensionName = extensionName;
+        this.configurationData = configurationData;
+        this.configurationType = configurationType;
+        this.dateCreated = dateCreated;
+        this.dateUpdated = dateUpdated;
     }
 
-    public void setConfiguration(List<ExtensionConfigurationProperty> configuration) {
-        this.configuration = configuration;
+    public ExtensionConfiguration(Sid sid, String extensionName, Object configurationData,
+                                  configurationType configurationType, DateTime dateCreated) {
+        this(sid, extensionName, configurationData, configurationType, dateCreated, DateTime.now());
+    }
+
+    public Sid getSid() {
+        return sid;
+    }
+
+    public String getExtensionName() {
+        return extensionName;
+    }
+
+    public Object getConfigurationData() {
+        return configurationData;
+    }
+
+    public configurationType getConfigurationType() { return configurationType; }
+
+    public DateTime getDateCreated() {
+        return dateCreated;
+    }
+
+    public DateTime getDateUpdated() {
+        return dateUpdated;
+    }
+
+    public void setDateUpdated(DateTime dateUpdated) {
+        this.dateUpdated = dateUpdated;
+    }
+
+    public void setConfigurationData(Object configurationData, configurationType configurationType) {
+        this.configurationData = configurationData;
+        this.configurationType = configurationType;
+        this.dateUpdated = DateTime.now();
     }
 }
