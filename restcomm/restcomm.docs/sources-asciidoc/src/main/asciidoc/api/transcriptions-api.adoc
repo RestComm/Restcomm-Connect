@@ -24,7 +24,7 @@ A Transcription resource represents a transcription of a recording. A transcript
 |RecordingSid |The unique id of the Recording this Transcription was made of.
 |Duration |The duration of the transcribed audio, in seconds.
 |TranscriptionText |The text content of the transcription.
-|Uri |The URI for this account, relative to http://localhost:port/restcomm.
+|Uri |The URI for this account, relative to https://localhost/restcomm.
 |======================================================================================================================
 
 ==== Supported Operations
