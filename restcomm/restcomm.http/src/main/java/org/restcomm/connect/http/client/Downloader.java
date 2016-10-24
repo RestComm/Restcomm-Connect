@@ -102,12 +102,15 @@ public final class Downloader extends UntypedActor {
             String requestUrl = request.getRequestLine().getUri();
             String errorReason = response.getStatusLine().getReasonPhrase();
             String httpErrorMessage = String.format(
-                    "Error while fetching http resource: %s \n Http error code: %d \n Http error message: %s", requestUrl,
+                    "Problem while fetching http resource: %s \n Http status code: %d \n Http status message: %s", requestUrl,
                     code, errorReason);
             logger.warning(httpErrorMessage);
         }
         } catch (IllegalArgumentException | URISyntaxException | IOException e) {
-            logger.error("Exception during HTTP request execution: "+e.getCause());
+        	if(logger.isDebugEnabled()){
+            	// https://github.com/RestComm/Restcomm-Connect/issues/1419 Moving to DEBUG level to avoid polluting the logs
+        		logger.debug("Issue during HTTP request execution: "+e.getCause());
+        	}
             HttpClientUtils.closeQuietly(client);
             client = null;
         } finally {

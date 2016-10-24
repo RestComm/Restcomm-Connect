@@ -130,7 +130,7 @@ public final class ConferenceCenter extends UntypedActor {
                 // A conference completed with errors
                 // Remove it from conference collection and stop the actor
                 if(logger.isInfoEnabled()) {
-                    logger.info("Conference " + name + " completed with errors");
+                    logger.info("Conference " + name + " completed with issues");
                 }
                 ActorRef conference = conferences.remove(update.name());
                 context().stop(conference);

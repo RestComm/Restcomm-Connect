@@ -87,7 +87,8 @@ public final class UserAgentManagerProxy extends SipServlet implements SipServle
     @Override
     protected void doErrorResponse(final SipServletResponse response) throws ServletException, IOException {
         if(logger.isDebugEnabled()) {
-            logger.debug("Error response: \n"+response.toString()+"\n");
+        	// https://github.com/RestComm/Restcomm-Connect/issues/1419 avoid using error to avoid polluting alerts on logentries.
+            logger.debug("response: \n"+response.toString()+"\n");
         }
         manager.tell(response, null);
     }
