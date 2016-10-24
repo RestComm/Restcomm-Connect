@@ -33,7 +33,9 @@ import org.restcomm.connect.dao.ExtensionsConfigurationDao;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.restcomm.connect.dao.DaoUtils.readDateTime;
@@ -112,6 +114,24 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
     }
 
     @Override
+    public List<ExtensionConfiguration> getAllConfiguration() {
+        final SqlSession session = sessions.openSession();
+        ExtensionConfiguration extensionConfiguration = null;
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getAllConfiguration");
+            final List<ExtensionConfiguration> confs = new ArrayList<ExtensionConfiguration>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    confs.add(toExtensionConfiguration(result));
+                }
+            }
+            return confs;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public void deleteConfigurationByName(String extensionName) {
         final SqlSession session = sessions.openSession();
         try {
@@ -131,6 +151,41 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
         } finally {
             session.close();
         }
+    }
+
+    @Override
+    public void addSpecificConfiguration(ExtensionConfiguration extensionConfiguration) {
+        final SqlSession session = sessions.openSession();
+        try {
+            if (extensionConfiguration != null && extensionConfiguration.getConfigurationData() != null) {
+                if (validate(extensionConfiguration)) {
+                    session.insert(namespace + "addSpecificConfiguration", toMap(extensionConfiguration));
+                    session.commit();
+                }
+            }
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void updateSpecificConfiguration(ExtensionConfiguration extensionConfiguration) {
+
+    }
+
+    @Override
+    public List<ExtensionConfiguration> getSpecificConfigurationBySid(Sid extensionSid) {
+        return null;
+    }
+
+    @Override
+    public List<ExtensionConfiguration> getAllSpecificConfiguration() {
+        return null;
+    }
+
+    @Override
+    public void deleteSpecificConfigurationBySid(Sid extensionSid) {
+
     }
 
     @Override

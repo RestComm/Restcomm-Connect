@@ -48,6 +48,10 @@
         SELECT * FROM "restcomm_extensions_configuration" WHERE "sid"=#{sid};
     </select>
 
+    <select id="getAllConfiguration" parameterType="map" resultType="hashmap">
+        SELECT * FROM "restcomm_extensions_configuration";
+    </select>
+
     <delete id="deleteConfigurationBySid" parameterType="string">
         DELETE FROM "restcomm_extensions_configuration" WHERE "sid"=#{sid};
     </delete>
