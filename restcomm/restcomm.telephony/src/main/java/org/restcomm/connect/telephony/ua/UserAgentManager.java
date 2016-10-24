@@ -146,12 +146,12 @@ public final class UserAgentManager extends UntypedActor {
                 if(logger.isInfoEnabled()) {
                     logger.info("Registration: "+result.getAddressOfRecord()+" expired and will be removed now");
                 }
-				//Instead of removing registrations we ping the client one last time to ensure it was not a temporary loss
-				// of connectivity. We don't need to remove the registration here. It will be handled only if the OPTIONS ping
-				// times out and the related calls from the client cleaned up as well
-				ping(result.getLocation());
-				//registrations.removeRegistration(result);
-				//monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
+                //Instead of removing registrations we ping the client one last time to ensure it was not a temporary loss
+                // of connectivity. We don't need to remove the registration here. It will be handled only if the OPTIONS ping
+                // times out and the related calls from the client cleaned up as well
+                ping(result.getLocation());
+                //registrations.removeRegistration(result);
+                //monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
             } else {
                 final DateTime updated = result.getDateUpdated();
                 Long pingIntervalMillis = new Long(pingInterval * 1000 * 3);

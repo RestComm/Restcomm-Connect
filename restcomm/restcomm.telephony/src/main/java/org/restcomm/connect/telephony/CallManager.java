@@ -183,28 +183,28 @@ public final class CallManager extends UntypedActor {
         Notification notification;
 
         if (errType == "warning") {
-        	if(logger.isDebugEnabled()) {
-        		// https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug to avoid polluting logs
-        		logger.debug(errMessage); // send message to console
-        	}
+            if(logger.isDebugEnabled()) {
+                // https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug to avoid polluting logs
+                logger.debug(errMessage); // send message to console
+            }
             if (createNotification) {
                 notification = notification(ERROR_NOTIFICATION, errCode, errMessage);
                 notifications.addNotification(notification);
             }
         } else if (errType == "error") {
-        	// https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug to avoid polluting logs
-        	if(logger.isDebugEnabled()) {
-        		logger.debug(errMessage); // send message to console
-        	}
+            // https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug to avoid polluting logs
+            if(logger.isDebugEnabled()) {
+                logger.debug(errMessage); // send message to console
+            }
             if (createNotification) {
                 notification = notification(ERROR_NOTIFICATION, errCode, errMessage);
                 notifications.addNotification(notification);
             }
         } else if (errType == "info") {
-        	// https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug to avoid polluting logs
-        	if(logger.isDebugEnabled()) {
-        		logger.debug(errMessage); // send message to console
-        	}
+            // https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug to avoid polluting logs
+            if(logger.isDebugEnabled()) {
+                logger.debug(errMessage); // send message to console
+            }
         }
 
     }

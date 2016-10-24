@@ -76,7 +76,7 @@ public final class ConferenceCenter extends UntypedActor {
 
     @Override
     public void onReceive(final Object message) throws Exception {
-    	if (logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info(" ********** ConferenceCenter " + self().path() + ", Processing Message: " + message.getClass().getName());
         }
         final Class<?> klass = message.getClass();
