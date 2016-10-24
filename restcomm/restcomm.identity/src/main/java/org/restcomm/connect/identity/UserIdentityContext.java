@@ -22,12 +22,14 @@ package org.restcomm.connect.identity;
 
 import java.nio.charset.Charset;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
+import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
 
@@ -41,6 +43,9 @@ public class UserIdentityContext {
     final AccountKey accountKey;
     final Account effectiveAccount; // if oauthToken is set get the account that maps to it. Otherwise use account from accountKey
     Set<String> effectiveAccountRoles;
+    List<String> accountLineage = null; // list of all parent account Sids up to the lop level account. It's initialized in a lazy way.
+
+    AccountsDao accountsDao;
 
     /**
      * After successfull creation of a UserIdentityContext object the following stands:
@@ -53,6 +58,7 @@ public class UserIdentityContext {
      * @param accountsDao
      */
     public UserIdentityContext(HttpServletRequest request, AccountsDao accountsDao) {
+        this.accountsDao = accountsDao;
         this.accountKey = extractAccountKey(request, accountsDao);
         if (accountKey != null) {
             if (accountKey.isVerified()) {
@@ -105,6 +111,25 @@ public class UserIdentityContext {
 
     public Set<String> getEffectiveAccountRoles() {
         return effectiveAccountRoles;
+    }
+
+    /**
+     * Returns the list of ancestors for the effective (the one specified in the credentials) account
+     * in a lazy way.
+     *
+     * @return
+     */
+    public List<String> getEffectiveAccountLineage() {
+        if (accountLineage == null) {
+            if (effectiveAccount != null) {
+                try {
+                    accountLineage = accountsDao.getAccountLineage(effectiveAccount);
+                } catch (AccountHierarchyDepthCrossed e) {
+                    throw new RuntimeException("Logged account has a very big line of ancestors. Something seems wrong. Account sid: " + effectiveAccount.getSid().toString(), e);
+                }
+            }
+        }
+        return accountLineage;
     }
 
 }

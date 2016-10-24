@@ -273,6 +273,13 @@ public class AccountsEndpoint extends SecuredEndpoint {
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Create:Accounts");
+        // check account level depth. If we're already at third level no sub-accounts are allowed to be created
+        List<String> accountLineage = userIdentityContext.getEffectiveAccountLineage();
+        if (accountLineage.size() >= 2) {
+            // there are already 2+1 account levels. Sub-accounts at 4th level are not allowed
+            return status(BAD_REQUEST).entity("This account is not allowed to have sub-accounts").build();
+        }
+
         // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
         final Sid sid = userIdentityContext.getEffectiveAccount().getSid();
         Account account = null;
