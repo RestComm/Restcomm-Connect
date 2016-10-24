@@ -76,6 +76,9 @@ public final class ConferenceCenter extends UntypedActor {
 
     @Override
     public void onReceive(final Object message) throws Exception {
+    	if (logger.isInfoEnabled()) {
+            logger.info(" ********** ConferenceCenter " + self().path() + ", Processing Message: " + message.getClass().getName());
+        }
         final Class<?> klass = message.getClass();
         final ActorRef sender = sender();
         if (CreateConference.class.equals(klass)) {
@@ -168,6 +171,9 @@ public final class ConferenceCenter extends UntypedActor {
         final ActorRef self = self();
         // Check to see if the conference already exists.
         ActorRef conference = conferences.get(name);
+        if(logger.isDebugEnabled()) {
+            logger.debug("ConferenceCenter conference: " + conference + " name: "+name);
+        }
         if (conference != null && !conference.isTerminated()) {
             sender.tell(new ConferenceCenterResponse(conference), self);
             return;
