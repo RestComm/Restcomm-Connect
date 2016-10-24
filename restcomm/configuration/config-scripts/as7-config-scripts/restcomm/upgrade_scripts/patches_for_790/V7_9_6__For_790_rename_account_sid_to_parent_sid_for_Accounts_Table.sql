@@ -29,7 +29,7 @@ type,
 status,
 auth_token,
 role,
-uri,
+uri
   ) SELECT
   sid as sid,
   date_created as date_created,
