@@ -168,7 +168,7 @@ public class MultitenancyAllowAccessApiTest {
             if (endpoint.get) {
                 String url = baseUrl + endpoint.name + "/" + endpoint.elementSameAccount + jsonExtension;
                 int statusCode = RestcommMultitenancyTool.getInstance().get(url, primaryUsername, accountsPassword);
-                assertTrue(statusCode == httpOk);
+                Assert.assertEquals(httpOk, statusCode);
                 logger.info("Tested endpoint " + endpoint.name + " (getElementSameAccount). Status code = " + statusCode);
             }
         }
