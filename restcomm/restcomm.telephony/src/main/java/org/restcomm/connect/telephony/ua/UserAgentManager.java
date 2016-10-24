@@ -150,17 +150,17 @@ public final class UserAgentManager extends UntypedActor {
                 }
                 registrations.removeRegistration(result);
                 monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
-                return;
-            }
-            final DateTime updated = result.getDateUpdated();
-            Long pingIntervalMillis = new Long(pingInterval * 1000 * 3);
-            if ( (DateTime.now().getMillis() - updated.getMillis()) >  pingIntervalMillis) {
-                //Last time this registration updated was older than (pingInterval * 3), looks like it doesn't respond to OPTIONS
-                if(logger.isInfoEnabled()) {
-                    logger.info("Registration: "+result.getAddressOfRecord()+" didn't respond to OPTIONS and will be removed now");
+            } else {
+                final DateTime updated = result.getDateUpdated();
+                Long pingIntervalMillis = new Long(pingInterval * 1000 * 3);
+                if ((DateTime.now().getMillis() - updated.getMillis()) > pingIntervalMillis) {
+                    //Last time this registration updated was older than (pingInterval * 3), looks like it doesn't respond to OPTIONS
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Registration: " + result.getAddressOfRecord() + " didn't respond to OPTIONS and will be removed now");
+                    }
+                    registrations.removeRegistration(result);
+                    monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
                 }
-                registrations.removeRegistration(result);
-                monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
             }
         }
     }
