@@ -27,7 +27,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.util.StringUtils;
-import org.restcomm.connect.extension.api.ExtensionConfigurationProperty;
+import org.restcomm.connect.extension.api.ExtensionConfiguration;
 
 import java.lang.reflect.Type;
 
@@ -35,11 +35,11 @@ import java.lang.reflect.Type;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe
-public final class ExtensionConfigurationPropertyConverter extends AbstractConverter implements JsonSerializer<ExtensionConfigurationProperty> {
+public final class ExtensionConfigurationConverter extends AbstractConverter implements JsonSerializer<ExtensionConfiguration> {
     private final String apiVersion;
     private final String rootUri;
 
-    public ExtensionConfigurationPropertyConverter(final Configuration configuration) {
+    public ExtensionConfigurationConverter(final Configuration configuration) {
         super(configuration);
         this.apiVersion = configuration.getString("api-version");
         rootUri = StringUtils.addSuffixIfNotPresent(configuration.getString("root-uri"), "/");
@@ -48,39 +48,33 @@ public final class ExtensionConfigurationPropertyConverter extends AbstractConve
     @SuppressWarnings("rawtypes")
     @Override
     public boolean canConvert(final Class klass) {
-        return ExtensionConfigurationProperty.class.equals(klass);
+        return ExtensionConfiguration.class.equals(klass);
     }
 
     @Override
     public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
-        final ExtensionConfigurationProperty extensionConfigurationProperty = (ExtensionConfigurationProperty) object;
-        writer.startNode("ExtensionConfigurationProperty");
+        final ExtensionConfiguration extensionConfiguration = (ExtensionConfiguration) object;
+        writer.startNode("ExtensionConfiguration");
+        writeSid(extensionConfiguration.getSid(),writer);
         writer.startNode("Extension");
-        writer.setValue(extensionConfigurationProperty.getExtension());
+        writer.setValue(extensionConfiguration.getExtensionName());
         writer.endNode();
-        writer.startNode("Property");
-        writer.setValue(extensionConfigurationProperty.getProperty());
+        writer.startNode("Configuration");
+        writer.setValue(extensionConfiguration.getConfigurationData().toString());
         writer.endNode();
-        writer.startNode("ExtraParameter");
-        writer.setValue(extensionConfigurationProperty.getExtraParameter());
-        writer.endNode();
-        writer.startNode("PropertyValue");
-        writer.setValue(extensionConfigurationProperty.getPropertyValue());
-        writer.endNode();
-        writeDateCreated(extensionConfigurationProperty.getDateCreated(),writer);
-        writeDateCreated(extensionConfigurationProperty.getDateUpdated(), writer);
+        writeDateCreated(extensionConfiguration.getDateCreated(),writer);
+        writeDateCreated(extensionConfiguration.getDateUpdated(), writer);
         writer.endNode();
     }
 
     @Override
-    public JsonElement serialize(final ExtensionConfigurationProperty extensionConfigurationProperty, final Type type, final JsonSerializationContext context) {
+    public JsonElement serialize(final ExtensionConfiguration extensionConfiguration, final Type type, final JsonSerializationContext context) {
         final JsonObject object = new JsonObject();
-        object.addProperty("extension", extensionConfigurationProperty.getExtension());
-        object.addProperty("property", extensionConfigurationProperty.getProperty());
-        object.addProperty("extraParameter", extensionConfigurationProperty.getExtraParameter());
-        object.addProperty("propertyValue", extensionConfigurationProperty.getPropertyValue());
-        writeDateCreated(extensionConfigurationProperty.getDateCreated(), object);
-        writeDateUpdated(extensionConfigurationProperty.getDateUpdated(), object);
+        writeSid(extensionConfiguration.getSid(), object);
+        object.addProperty("extension", extensionConfiguration.getExtensionName());
+        object.addProperty("configuration", ((JsonObject)extensionConfiguration.getConfigurationData()).toString());
+        writeDateCreated(extensionConfiguration.getDateCreated(), object);
+        writeDateUpdated(extensionConfiguration.getDateUpdated(), object);
         return object;
     }
 }
