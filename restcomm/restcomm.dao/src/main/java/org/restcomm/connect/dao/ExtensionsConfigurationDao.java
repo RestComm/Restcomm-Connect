@@ -21,6 +21,7 @@ package org.restcomm.connect.dao;
 
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
+import org.restcomm.connect.extension.api.ExtensionSpecificConfiguration;
 
 import java.util.List;
 
@@ -53,6 +54,52 @@ public interface ExtensionsConfigurationDao {
      * @return ExtensionConfiguration
      */
     ExtensionConfiguration getConfigurationBySid(Sid extensionSid);
+
+    /**
+     * Get all extension configuration
+     * @return List<ExtensionConfiguration>
+     */
+    List<ExtensionConfiguration> getAllConfiguration();
+
+    /**
+     * Delete extension configuration by extension name
+     * @param extensionName
+     */
+    void deleteConfigurationByName(String extensionName);
+
+    /**
+     * Delete extension configuration by Sid
+     * @param extensionSid
+     */
+    void deleteConfigurationBySid(Sid extensionSid);
+
+    sdsd
+
+    /**
+     * Add a new ExtensionSpecificConfiguration
+     * @param extensionSpecificConfiguration
+     */
+    void addSpecificConfiguration(ExtensionSpecificConfiguration extensionSpecificConfiguration);
+
+    /**
+     * Update an existing ExtensionConfiguration
+     * @param extensionSpecificConfiguration
+     */
+    void updateSpecificConfiguration(ExtensionSpecificConfiguration extensionSpecificConfiguration);
+
+    /**
+     * Get extension configuration by extension name
+     * @param extensionName
+     * @return ExtensionSpecificConfiguration
+     */
+    List<ExtensionSpecificConfiguration> getSpecificConfigurationByName(String extensionName);
+
+    /**
+     * Get extension configuration by Sid
+     * @param extensionSid
+     * @return ExtensionConfiguration
+     */
+    List<ExtensionSpecificConfiguration> getSpecificConfigurationByConfigurationSid(Sid extensionSid);
 
     /**
      * Get all extension configuration
