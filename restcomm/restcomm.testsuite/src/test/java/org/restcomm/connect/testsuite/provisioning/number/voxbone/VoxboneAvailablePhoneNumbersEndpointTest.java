@@ -29,6 +29,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
 
+import junit.framework.Assert;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -101,7 +102,7 @@ public class VoxboneAvailablePhoneNumbersEndpointTest {
                 queryParam("areaCode","501").
                 accept("application/json")
                 .get(ClientResponse.class);
-        assertTrue(clientResponse.getStatus() == 200);
+        Assert.assertEquals(200, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
