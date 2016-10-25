@@ -63,6 +63,9 @@ import org.restcomm.connect.http.exceptions.AuthorizationException;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
 import org.restcomm.connect.commons.util.StringUtils;
+import org.restcomm.connect.http.exceptions.PasswordTooWeak;
+import org.restcomm.connect.identity.passwords.PasswordValidator;
+import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
 import org.restcomm.connect.http.exceptions.RcmlserverNotifyError;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
@@ -107,7 +110,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         checkAuthenticatedAccount();
     }
 
-    private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
+    private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) throws PasswordTooWeak {
         validate(data);
 
         final DateTime now = DateTime.now();
@@ -126,6 +129,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
             status = Account.Status.getValueOf(data.getFirst("Status").toLowerCase());
         }
         final String password = data.getFirst("Password");
+        PasswordValidator validator = PasswordValidatorFactory.createDefault();
+        if (!validator.isStrongEnough(password))
+            throw new PasswordTooWeak();
         final String authToken = new Md5Hash(password).toString();
         final String role = data.getFirst("Role");
         String rootUri = runtimeConfiguration.getString("root-uri");
@@ -327,6 +333,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
             account = createFrom(sid, data);
         } catch (final NullPointerException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
+        } catch (PasswordTooWeak passwordTooWeak) {
+            return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
         }
 
         // If Account already exists don't add it again
@@ -406,7 +414,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
      * @return
      * @throws AccountAlreadyClosed
      */
-    private Account prepareAccountForUpdate(final Account account, final MultivaluedMap<String, String> data) throws AccountAlreadyClosed {
+    private Account prepareAccountForUpdate(final Account account, final MultivaluedMap<String, String> data) throws AccountAlreadyClosed, PasswordTooWeak {
         Account result = account;
         boolean isPasswordReset = false;
         Account.Status newStatus = null;
@@ -429,10 +437,15 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 if (account.getStatus() == Account.Status.UNINITIALIZED)
                     isPasswordReset = true;
 
+                String password = data.getFirst("Password");
+                PasswordValidator validator = PasswordValidatorFactory.createDefault();
+                if (!validator.isStrongEnough(password))
+                    throw new PasswordTooWeak();
                 final String hash = new Md5Hash(data.getFirst("Password")).toString();
                 result = result.setAuthToken(hash);
             }
             if (data.containsKey("Auth_Token")) {
+                // TODO cannot validate AuthToken strength since it's already hashed
                 result = result.setAuthToken(data.getFirst("Auth_Token"));
                 // if this is a reset-password operation, we also need to set the account status to active
                 if (account.getStatus() == Account.Status.UNINITIALIZED)
@@ -453,7 +466,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 } else
                     throw new AuthorizationException();
             }
-        } catch (AuthorizationException | AccountAlreadyClosed e) {
+        } catch (AuthorizationException | AccountAlreadyClosed | PasswordTooWeak e) {
             // some exceptions should reach outer layers and result in 403
             throw e;
         } catch (Exception e) {
@@ -495,6 +508,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 modifiedAccount = prepareAccountForUpdate(account, data);
             } catch (AccountAlreadyClosed accountAlreadyClosed) {
                 return status(BAD_REQUEST).build();
+            } catch (PasswordTooWeak passwordTooWeak) {
+                return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
             }
 
             secure(modifiedAccount, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
