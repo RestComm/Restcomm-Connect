@@ -484,6 +484,31 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    public void testSuspendAccount() {
+        // suspend parent account and check its children are suspended too
+        Client jersey = getClient("parentA@company.com", commonAuthToken);
+        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/ACA0000000000000000000000000000000") );
+        MultivaluedMap<String,String> params = new MultivaluedMapImpl();
+        params.add("Status","suspended");
+        ClientResponse response = resource.put(ClientResponse.class,params);
+        Assert.assertEquals(200, response.getStatus());
+        JsonParser parser = new JsonParser();
+        JsonObject jsonObject = parser.parse(response.getEntity(String.class)).getAsJsonObject();
+        Assert.assertEquals("suspended", jsonObject.get("status").getAsString());
+        // owned IncomingPhoneNumbers (pureSip) should still be there
+        // TODO
+        // retrieve child account using top-level account credentials since the parent cannot be used any more
+        jersey = getClient("administrator@company.com", commonAuthToken);
+        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/ACA0000000000000000000000000000001") );
+        response = resource.get(ClientResponse.class);
+        Assert.assertEquals(200, response.getStatus());
+        parser = new JsonParser();
+        jsonObject = parser.parse(response.getEntity(String.class)).getAsJsonObject();
+        // child account should be closed too
+        Assert.assertEquals("suspended", jsonObject.get("status").getAsString());
+    }
+
+    @Test
     public void testGetAccounts() throws InterruptedException {
         // Get Account using admin email address and user email address
         JsonObject account1 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,

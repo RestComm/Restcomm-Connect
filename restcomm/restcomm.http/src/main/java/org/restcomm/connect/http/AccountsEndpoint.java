@@ -250,7 +250,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         daoManager.getTranscriptionsDao().removeTranscriptions(sid);
         daoManager.getRecordingsDao().removeRecordings(sid);
         daoManager.getApplicationsDao().removeApplications(sid);
-        removeIncomingPhoneNumbers(sid,daoManager.getIncomingPhoneNumbersDao());
+        removeIncomingPhoneNumbers(sid,daoManager.getIncomingPhoneNumbersDao(), false);
         daoManager.getClientsDao().removeClients(sid);
     }
 
@@ -261,7 +261,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
      * @param accountSid
      * @param dao
      */
-    private void removeIncomingPhoneNumbers(Sid accountSid, IncomingPhoneNumbersDao dao) {
+    private void removeIncomingPhoneNumbers(Sid accountSid, IncomingPhoneNumbersDao dao, boolean skipPureSip) {
         List<IncomingPhoneNumber> numbers = dao.getIncomingPhoneNumbers(accountSid);
         if (numbers != null && numbers.size() > 0) {
             // manager is retrieved in a lazy way. If any number needs it, it will be first retrieved
@@ -288,7 +288,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
                         logger.error("Number cancelation failed for provided number '" + number.getPhoneNumber()+"'. Provisioning Manager was null. "+"Number entity " + number.getSid() + " will stay in database");
                 } else {
                     // pureSIP numbers only to be removed from database. No need to contact provider
-                    dao.removeIncomingPhoneNumber(number.getSid());
+                    if (!skipPureSip)
+                        dao.removeIncomingPhoneNumber(number.getSid());
                 }
             }
         }
@@ -419,7 +420,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 newStatus = Account.Status.getValueOf(data.getFirst("Status").toLowerCase());
                 if (newStatus == Account.Status.CLOSED)
                     return account.setStatus(Account.Status.CLOSED);
-                // if the status is switched to CLOSED, the rest of the updates are ignored.
+                else if (newStatus == Account.Status.SUSPENDED)
+                    return account.setStatus(Account.Status.SUSPENDED);
+                // if the status is switched to CLOSED or SUSPENDED the rest of the updates are ignored.
             }
             if (data.containsKey("FriendlyName")) {
                 result = result.setFriendlyName(data.getFirst("FriendlyName"));
@@ -501,7 +504,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
             // are we closing the account ?
             if (account.getStatus() != Account.Status.CLOSED && modifiedAccount.getStatus() == Account.Status.CLOSED) {
                 closeAccountTree(modifiedAccount);
-                accountsDao.updateAccount(modifiedAccount);
+            } else if (account.getStatus() != Account.Status.SUSPENDED && modifiedAccount.getStatus() == Account.Status.SUSPENDED) {
+                suspendAccountTree(modifiedAccount);
             } else {
                 // if we're not closing the account, update SIP client of the corresponding Account.
                 // Password and FriendlyName fields are synched.
@@ -584,6 +588,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         // close parent account too. Skip status update. We need to send notifications first if needed.
         closeSingleAccount(parentAccount,true);
         closedSubAccounts.add(parentAccount);
+
         // do we need to also notify the application sever (RVD) ?
         RestcommConfiguration rcommConfiguration = RestcommConfiguration.getInstance();
         RcmlserverConfigurationSet config = rcommConfiguration.getRcmlserver();
@@ -605,6 +610,29 @@ public class AccountsEndpoint extends SecuredEndpoint {
         // note, we have assumed that while 'parent account' is open, the same applies to the loggedAccount
         // on whose behalf the notifications are sent.
         parentAccount = parentAccount.setStatus(Account.Status.CLOSED);
+        accountsDao.updateAccount(parentAccount);
+    }
+
+    private void suspendAccountTree(Account parentAccount) {
+        DaoManager daoManager = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        IncomingPhoneNumbersDao numbersDao = daoManager.getIncomingPhoneNumbersDao();
+        List<String> subaccounts = accountsDao.getSubAccountSidsRecursive(parentAccount.getSid());
+        int i = subaccounts.size() - 1;
+        while ( i >= 0) {
+            String removedSid = subaccounts.get(i);
+            try {
+                Account subaccount = accountsDao.getAccount(new Sid(removedSid));
+                removeIncomingPhoneNumbers(subaccount.getSid(), numbersDao , true);
+                subaccount = subaccount.setStatus(Account.Status.SUSPENDED);
+                accountsDao.updateAccount(subaccount);
+            } catch (Exception e) {
+                // if anything bad happens, log the error and continue removing the rest of the accounts.
+                logger.error("Failed suspending (child) account '" + removedSid + "'");
+            }
+            i --;
+        }
+        // suspend parent account too
+        parentAccount = parentAccount.setStatus(Account.Status.SUSPENDED);
         accountsDao.updateAccount(parentAccount);
     }
 

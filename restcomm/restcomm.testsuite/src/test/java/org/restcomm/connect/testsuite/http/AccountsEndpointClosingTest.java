@@ -21,6 +21,8 @@
 package org.restcomm.connect.testsuite.http;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -123,6 +125,31 @@ public class AccountsEndpointClosingTest extends EndpointTest {
         response = resource.get(ClientResponse.class);
         Assert.assertEquals(200, response.getStatus());
     }
+
+    /*
+    @Test
+    public void testSuspendAccount() {
+        // suspend parent account and check its children
+        Client jersey = getClient("parentA1@company.com", commonAuthToken);
+        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/ACA0000000000000000000000000000000") );
+        MultivaluedMap<String,String> params = new MultivaluedMapImpl();
+        params.add("Status","suspended");
+        ClientResponse response = resource.put(ClientResponse.class,params);
+        org.junit.Assert.assertEquals(200, response.getStatus());
+        JsonParser parser = new JsonParser();
+        JsonObject jsonObject = parser.parse(response.getEntity(String.class)).getAsJsonObject();
+        org.junit.Assert.assertEquals("suspended", jsonObject.get("status").getAsString());
+        // retrieve child account using top-level account credentials since the parent cannot be used any more
+        jersey = getClient("administrator@company.com", commonAuthToken);
+        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/ACA0000000000000000000000000000001") );
+        response = resource.get(ClientResponse.class);
+        org.junit.Assert.assertEquals(200, response.getStatus());
+        parser = new JsonParser();
+        jsonObject = parser.parse(response.getEntity(String.class)).getAsJsonObject();
+        // child account should be closed too
+        org.junit.Assert.assertEquals("suspended", jsonObject.get("status").getAsString());
+    }
+    */
 
     @Deployment(name = "AccountsEndpointClosingTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
