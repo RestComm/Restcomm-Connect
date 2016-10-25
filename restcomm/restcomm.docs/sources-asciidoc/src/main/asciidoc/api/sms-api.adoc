@@ -25,7 +25,7 @@ A *SMS Message* resource represents an inbound or outbound SMS message.
 |Status |The status of this SMS message. Possible values are queued, sending, sent, failed, and received.
 |Direction |The direction of this SMS message. Possible values are incoming, outbound-api, outbound-call.
 |ApiVersion |The API version RestComm used to handle the SMS message.
-|Uri |The URI for this account, relative to https://localhost:port/restcomm.
+|Uri |The URI for this account, relative to https://localhost/restcomm.
 |========================================================================================================
 
 ==== Supported Operations
