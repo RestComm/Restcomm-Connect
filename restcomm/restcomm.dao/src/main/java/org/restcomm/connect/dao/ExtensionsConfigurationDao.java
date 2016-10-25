@@ -19,48 +19,73 @@
 
 package org.restcomm.connect.dao;
 
-import org.restcomm.connect.extension.api.ExtensionConfigurationProperty;
-
-import java.util.List;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.extension.api.ExtensionConfiguration;
 
 /**
  * Created by gvagenas on 11/10/2016.
  */
 public interface ExtensionsConfigurationDao {
     /**
-     * Add a new ExtensionConfiguration property
-     * @param extensionsConfigurationProperty
+     * Add a new ExtensionConfiguration
+     * @param extensionsConfiguration
      */
-    void addConfigurationProperty(ExtensionConfigurationProperty extensionsConfigurationProperty);
+    void addConfiguration(ExtensionConfiguration extensionsConfiguration);
 
     /**
-     * Update an existing ExtensionConfiguration property
-     * @param extensionConfigurationProperty
+     * Update an existing ExtensionConfiguration
+     * @param extensionConfiguration
      */
-    void updateConfigurationProperty(ExtensionConfigurationProperty extensionConfigurationProperty);
+    void updateConfiguration(ExtensionConfiguration extensionConfiguration);
 
     /**
-     * Get extension configuration property by extension name and property name
-     * @param extension
-     * @param property
-     * @return ExtensionConfigurationProperty
+     * Get extension configuration by extension name
+     * @param extensionName
+     * @return ExtensionConfiguration
      */
-    ExtensionConfigurationProperty getConfigurationProperty(String extension, String property);
+    ExtensionConfiguration getConfigurationByName(String extensionName);
 
     /**
-     * Get extension configuration property by extension name, property name and extra parameter.
-     * Extra parameter could be for example client name or account sid
-     * @param extension
-     * @param property
-     * @param extraParameter
-     * @return ExtensionConfigurationProperty
+     * Get extension configuration by Sid
+     * @param extensionSid
+     * @return ExtensionConfiguration
      */
-    ExtensionConfigurationProperty getConfigurationPropertyByExtraParameter(String extension, String property, String extraParameter);
+    ExtensionConfiguration getConfigurationBySid(Sid extensionSid);
 
     /**
-     * Get whole extension configuration by extension name
-     * @param extension
+     * Delete extension configuration by extension name
+     * @param extensionName
+     */
+    void deleteConfigurationByName(String extensionName);
+
+    /**
+     * Delete extension configuration by Sid
+     * @param extensionSid
+     */
+    void deleteConfigurationBySid(Sid extensionSid);
+
+
+    /**
+     * Validate extension configuration based on the type of the configuration data
+     * @param extensionConfiguration
      * @return
      */
-    List<ExtensionConfigurationProperty> getConfigurationByExtension(String extension);
+    boolean validate(ExtensionConfiguration extensionConfiguration);
+
+//    /**
+//     * Get extension configuration by extension name, property name and extra parameter.
+//     * Extra parameter could be for example client name or account sid
+//     * @param extension
+//     * @param property
+//     * @param extraParameter
+//     * @return ExtensionConfigurationProperty
+//     */
+//    ExtensionConfiguration getConfigurationPropertyByExtraParameter(String extension, String property, String extraParameter);
+//
+//    /**
+//     * Get whole extension configuration by extension name
+//     * @param extension
+//     * @return
+//     */
+//    List<ExtensionConfigurationProperty> getConfigurationByExtension(String extension);
 }

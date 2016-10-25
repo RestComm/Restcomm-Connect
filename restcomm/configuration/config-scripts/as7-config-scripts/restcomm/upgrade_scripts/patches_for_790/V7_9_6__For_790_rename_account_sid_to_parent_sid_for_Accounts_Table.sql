@@ -8,15 +8,15 @@ USE ${RESTCOMM_DBNAME};
 DELIMITER //
 CREATE PROCEDURE updateProcedure()
  BEGIN
- SELECT DISTINCTROW IFNULL(column_name, '') INTO @colName792
+ SELECT DISTINCTROW IFNULL(column_name, '') INTO @colName796
  FROM information_schema.columns
  WHERE table_schema='${RESTCOMM_DBNAME}'
  AND table_name = 'restcomm_accounts'
  AND column_name = 'parent_sid';
 
-IF @colName792 IS NULL THEN
+IF @colName796 IS NULL THEN
 CREATE TABLE temp_table LIKE restcomm_accounts;
-ALTER TABLE temp_table CHANGE COLUMN account_sid parent_sid VARCHAR(34) NOT NULL;
+ALTER TABLE temp_table CHANGE COLUMN account_sid parent_sid VARCHAR(34);
 INSERT INTO temp_table
   (
 sid,
@@ -29,7 +29,7 @@ type,
 status,
 auth_token,
 role,
-uri,
+uri
   ) SELECT
   sid as sid,
   date_created as date_created,

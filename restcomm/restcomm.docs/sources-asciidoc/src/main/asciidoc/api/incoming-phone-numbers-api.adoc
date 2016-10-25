@@ -346,7 +346,7 @@ Not Supported.  
 This one uses the default application
 
 ....
-curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=+15105555555" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+curl -X POST  https://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=+15105555555" -d "VoiceUrl=https://127.0.0.1/restcomm/demos/hello-play.xml"
 ....
 
 Result of the above command
@@ -357,7 +357,7 @@ Result of the above command
   "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
   "friendly_name": "15105555555",
   "phone_number": "+15105555555",
-  "voice_url": "http://127.0.0.1:8080/restcomm/demos/hello-play.xml",
+  "voice_url": "https://127.0.0.1/restcomm/demos/hello-play.xml",
   "voice_method": "POST",
   "voice_fallback_method": "POST",
   "status_callback_method": "POST",
@@ -378,7 +378,7 @@ IMPORTANT: If you are trying to attach a number that you didn't look up previous
 This one uses the default application
 
 ....
-curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=1234" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml" -d "isSIP=true"
+curl -X POST  https://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=1234" -d "VoiceUrl=https://127.0.0.1/restcomm/demos/hello-play.xml" -d "isSIP=true"
 ....
 
 Result of the above command
@@ -389,7 +389,7 @@ Result of the above command
   "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
   "friendly_name": "234",
   "phone_number": "+1234",
-  "voice_url": "http://127.0.0.1:8080/restcomm/demos/hello-play.xml",
+  "voice_url": "https://127.0.0.1/restcomm/demos/hello-play.xml",
   "voice_method": "POST",
   "voice_fallback_method": "POST",
   "status_callback_method": "POST",
@@ -409,7 +409,7 @@ Result of the above command
 You have to get the SID of the phone and use curl to delete as follows
 
 ....
-curl -X DELETE http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNdd7a0a0248244615978bd5781598e5eb
+curl -X DELETE https://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNdd7a0a0248244615978bd5781598e5eb
 ....
 
 == List of phone numbers
@@ -417,5 +417,5 @@ curl -X DELETE http://administrator%40company.com:77f8c12cc7b8f8423e5c38b0352491
 Gets all numbers created using *IncomingPhoneNumbers.json*
 
 ....
-curl -X GET  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json
+curl -X GET  https://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json
 ....
