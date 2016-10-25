@@ -26,21 +26,20 @@ import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.ExtensionsConfigurationDao;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.extension.api.ExtensionConfigurationProperty;
-import org.restcomm.connect.http.converter.AccountListConverter;
-import org.restcomm.connect.http.converter.ExtensionConfigurationPropertyConverter;
+import org.restcomm.connect.extension.api.ExtensionConfiguration;
+import org.restcomm.connect.http.converter.ExtensionConfigurationConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 /**
  * Created by gvagenas on 12/10/2016.
  */
 public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
+    protected Configuration allConfiguration;
     protected Configuration configuration;
     protected Gson gson;
     protected XStream xstream;
@@ -50,25 +49,25 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
 
     @PostConstruct
     void init() {
-        configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-        configuration = configuration.subset("runtime-settings");
+        allConfiguration = (Configuration) context.getAttribute(Configuration.class.getName());
+        configuration = allConfiguration.subset("runtime-settings");
         super.init(configuration);
         extensionsConfigurationDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getExtensionsConfigurationDao();
-        final ExtensionConfigurationPropertyConverter converter = new ExtensionConfigurationPropertyConverter(configuration);
+        final ExtensionConfigurationConverter converter = new ExtensionConfigurationConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(ExtensionConfigurationProperty.class, converter);
+        builder.registerTypeAdapter(ExtensionConfiguration.class, converter);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(converter);
-        xstream.registerConverter(new AccountListConverter(configuration));
+        xstream.registerConverter(new ExtensionConfigurationConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
         // Make sure there is an authenticated account present when this endpoint is used
         checkAuthenticatedAccount();
     }
 
-    protected Response getConfiguration(final String extension, final UriInfo info, final MediaType responseType) {
+    protected Response getConfiguration(final String extension, final MediaType responseType) {
         // The request might contain extension name and configuration property name in order to retreive specific configuration
         // Check for configuration property at info or otherwise get all configuration for the given extension
         return null;

@@ -7,11 +7,11 @@ Using *Outbound proxy* endpoint you can get the details of Primary and Backup ou
 
 === OutboundProxy Resource URI. 
 
-*/2012-04-24//Accounts/\{accountSid}/OutboundProxy*
+*/2012-04-24/Accounts/\{accountSid}/OutboundProxy*
 
 ==== Supported Operations
 
 *HTTP GET* Returns the list of outbound proxies.
 
-* HTTP GET */2012-04-24//Accounts/\{accountSid}/OutboundProxy/switchProxySwitch* the outbound proxy and returns the proxy in use
-* HTTP GET */2012-04-24//Accounts/\{accountSid}/OutboundProxy/getActiveProxyReturns* the currently active outbound proxy
+* HTTP GET */2012-04-24/Accounts/\{accountSid}/OutboundProxy/switchProxySwitch* the outbound proxy and returns the proxy in use
+* HTTP GET */2012-04-24/Accounts/\{accountSid}/OutboundProxy/getActiveProxyReturns* the currently active outbound proxy
