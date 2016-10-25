@@ -345,7 +345,8 @@ date_updated DATETIME
 
 CREATE TABLE restcomm_extensions_configuration_specific (
 sid VARCHAR(34) NOT NULL PRIMARY KEY,
-extension_sid VARCHAR(34) NOT NULL,
+specific_sid VARCHAR(34) NOT NULL,
+extension VARCHAR(255) NOT NULL,
 configuration_data LONGTEXT NOT NULL,
 configuration_type VARCHAR(255) NOT NULL,
 date_created DATETIME NOT NULL,
