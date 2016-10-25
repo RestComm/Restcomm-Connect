@@ -154,41 +154,6 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
     }
 
     @Override
-    public void addSpecificConfiguration(ExtensionConfiguration extensionConfiguration) {
-        final SqlSession session = sessions.openSession();
-        try {
-            if (extensionConfiguration != null && extensionConfiguration.getConfigurationData() != null) {
-                if (validate(extensionConfiguration)) {
-                    session.insert(namespace + "addSpecificConfiguration", toMap(extensionConfiguration));
-                    session.commit();
-                }
-            }
-        } finally {
-            session.close();
-        }
-    }
-
-    @Override
-    public void updateSpecificConfiguration(ExtensionConfiguration extensionConfiguration) {
-
-    }
-
-    @Override
-    public List<ExtensionConfiguration> getSpecificConfigurationBySid(Sid extensionSid) {
-        return null;
-    }
-
-    @Override
-    public List<ExtensionConfiguration> getAllSpecificConfiguration() {
-        return null;
-    }
-
-    @Override
-    public void deleteSpecificConfigurationBySid(Sid extensionSid) {
-
-    }
-
-    @Override
     public boolean validate(ExtensionConfiguration extensionConfiguration) {
         ExtensionConfiguration.configurationType configurationType = extensionConfiguration.getConfigurationType();
         if (configurationType.equals(ExtensionConfiguration.configurationType.JSON)) {
