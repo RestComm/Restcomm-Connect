@@ -8,12 +8,17 @@ import java.net.URL;
 import java.text.ParseException;
 
 import javax.sip.address.SipURI;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 import junit.framework.Assert;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
@@ -84,22 +89,22 @@ public class ClientsEndpointTest {
 
         SipURI reqUri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
-        String clientSID = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "1234",
+        String clientSID = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "RestComm1234",
                 "http://127.0.0.1:8080/restcomm/demos/welcome.xml");
         assertNotNull(clientSID);
 
         Thread.sleep(3000);
 
-        String clientSID2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "1234",
+        String clientSID2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "RestComm1234",
                 "http://127.0.0.1:8080/restcomm/demos/welcome.xml");
         assertNotNull(clientSID2);
 
         Thread.sleep(3000);
 
         assertTrue(clientSID.equalsIgnoreCase(clientSID2));
-        assertTrue(bobPhone.register(reqUri, "bob", "1234", bobContact, 1800, 1800));
+        assertTrue(bobPhone.register(reqUri, "bob", "RestComm1234", bobContact, 1800, 1800));
         bobContact = "sip:mobile@127.0.0.1:5090";
-        assertTrue(bobPhone.register(reqUri, "bob", "1234", bobContact, 1800, 1800));
+        assertTrue(bobPhone.register(reqUri, "bob", "RestComm1234", bobContact, 1800, 1800));
         assertTrue(bobPhone.unregister(bobContact, 0));
     }
 
@@ -108,20 +113,20 @@ public class ClientsEndpointTest {
 
         SipURI reqUri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
-        String clientSID = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "1234", null);
+        String clientSID = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "RestComm1234", null);
         assertNotNull(clientSID);
 
         Thread.sleep(3000);
 
-        String clientSID2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "1234", null);
+        String clientSID2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "RestComm1234", null);
         assertNotNull(clientSID2);
 
         Thread.sleep(3000);
 
         assertTrue(clientSID.equalsIgnoreCase(clientSID2));
-        assertTrue(bobPhone.register(reqUri, "bob", "1234", bobContact, 1800, 1800));
+        assertTrue(bobPhone.register(reqUri, "bob", "RestComm1234", bobContact, 1800, 1800));
         bobContact = "sip:mobile@127.0.0.1:5090";
-        assertTrue(bobPhone.register(reqUri, "bob", "1234", bobContact, 1800, 1800));
+        assertTrue(bobPhone.register(reqUri, "bob", "RestComm1234", bobContact, 1800, 1800));
         assertTrue(bobPhone.unregister(bobContact, 0));
     }
 
@@ -135,6 +140,30 @@ public class ClientsEndpointTest {
         // re-removing the client should return a 404 (not a 200)
         response = resource.delete(ClientResponse.class);
         Assert.assertEquals("Removing a non-existing client did not return 404", 404, response.getStatus());
+    }
+
+    @Test
+    public void createClientWithWeakPasswordShouldFail() throws IOException {
+        Client jersey = getClient(developerUsername, developeerAuthToken);
+        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.add("Login","weakClient");
+        params.add("Password","1234"); // this is a very weak password
+        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(400, response.getStatus());
+        Assert.assertTrue("Response should contain 'weak' term", response.getEntity(String.class).toLowerCase().contains("weak"));
+    }
+
+    @Test
+    public void updateClientWithWeakPasswordShouldFail() {
+        String updateClientSid = "CL00000000000000000000000000000001";
+        Client jersey = getClient(developerUsername, developeerAuthToken);
+        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients/" + updateClientSid ) );
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.add("Password","1234"); // this is a very weak password
+        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, params);
+        Assert.assertEquals(400, response.getStatus());
+        Assert.assertTrue("Response should contain 'weak' term", response.getEntity(String.class).toLowerCase().contains("weak"));
     }
 
     protected String getResourceUrl(String suffix) {

@@ -5,6 +5,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -127,15 +128,11 @@ public class CreateClientsTool {
         httpPost.releaseConnection();
     }
 
-    public String createClient(String deploymentUrl, String username, String password, String voiceUrl)
-            throws ClientProtocolException, IOException {
-
+    public HttpResponse createClientResponse(String deploymentUrl, String username, String password, String voiceUrl) throws IOException {
         String endpoint = getEndpoint(deploymentUrl).replaceAll("http://", "");
 
         String url = "http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@" + endpoint
                 + "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json";
-
-        String clientSid = null;
 
         HttpClient httpclient = new DefaultHttpClient();
 
@@ -149,6 +146,13 @@ public class CreateClientsTool {
 
         httpPost.setEntity(new UrlEncodedFormEntity(nvps));
         HttpResponse response = httpclient.execute(httpPost);
+        httpPost.releaseConnection();
+        return response;
+    }
+
+    public String createClient(String deploymentUrl, String username, String password, String voiceUrl) throws IOException {
+        HttpResponse response = createClientResponse(deploymentUrl,username,password,voiceUrl);
+        String clientSid = null;
 
         if (response.getStatusLine().getStatusCode() == 200) {
             HttpEntity entity = response.getEntity();
@@ -159,8 +163,6 @@ public class CreateClientsTool {
             String[] components = res.split(",");
             clientSid = (components[0].split(":")[1]).replaceAll("\"", "");
         }
-
-        httpPost.releaseConnection();
 
         return clientSid;
     }
