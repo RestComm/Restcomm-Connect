@@ -335,10 +335,10 @@ PRIMARY KEY (conference_sid , slave_ms_id)
 );
 
 CREATE TABLE restcomm_extensions_configuration (
+sid VARCHAR(34) NOT NULL PRIMARY KEY,
 extension VARCHAR(255) NOT NULL,
-property VARCHAR(255),
-extra_parameter VARCHAR(255),
-property_value VARCHAR(255),
+configuration_data LONGTEXT NOT NULL,
+configuration_type VARCHAR(255) NOT NULL,
 date_created DATETIME NOT NULL,
 date_updated DATETIME
 )
