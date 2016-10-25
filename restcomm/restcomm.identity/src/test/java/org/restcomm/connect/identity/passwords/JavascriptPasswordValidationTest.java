@@ -13,5 +13,6 @@ public class JavascriptPasswordValidationTest {
         Assert.assertFalse(validator.isStrongEnough("1234"));
         Assert.assertFalse(validator.isStrongEnough("asdf123"));
         Assert.assertTrue(validator.isStrongEnough("asd123$#@"));
+        Assert.assertTrue(validator.isStrongEnough("γιωργος123#!@"));
     }
 }
