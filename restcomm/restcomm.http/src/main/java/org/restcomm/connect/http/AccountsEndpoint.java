@@ -509,6 +509,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
+            // since the operated account exists, first thing to do is make sure we have access
+            secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
             // If the account is CLOSED, no updates are allowed. Return a BAD_REQUEST status code.
             Account modifiedAccount;
             try {
@@ -519,7 +521,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
             }
 
-            secure(modifiedAccount, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
             // are we closing the account ?
             if (account.getStatus() != Account.Status.CLOSED && modifiedAccount.getStatus() == Account.Status.CLOSED) {
                 closeAccountTree(modifiedAccount);
