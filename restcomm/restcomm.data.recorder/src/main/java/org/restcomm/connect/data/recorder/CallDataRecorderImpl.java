@@ -35,7 +35,6 @@ import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
-import org.restcomm.connect.data.recorder.api.RecordCallData;
 import org.restcomm.connect.data.recorder.api.interfaces.CallDataRecorder;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
@@ -56,9 +55,9 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private final List<ActorRef> observers;
     private final DaoManager daoManager;
-    private CallInfo callInfo;
     private Sid sid;
     private CallDetailRecord cdr;
+    private CallInfo callInfo;
 
     public CallDataRecorderImpl(final DaoManager daoManager) {
         super();
@@ -81,9 +80,9 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
         } else if (StopObserving.class.equals(klass)) {
             onStopObserving((StopObserving) message, self, sender);
         } else if(CallResponse.class.equals(klass)){
-        	onCallResponse((CallResponse) message, self, sender);
+            onCallResponse((CallResponse<?>) message, self, sender);
         } else if(CallStateChanged.class.equals(klass)){
-        	onCallStateChanged((CallStateChanged) message, self, sender);
+            onCallStateChanged((CallStateChanged) message, self, sender);
         }
     }
 
@@ -102,11 +101,70 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
         }
     }
 
-    private void onCallResponse(CallResponse<CallInfo> message, ActorRef self, ActorRef sender) {
-        if(logger.isDebugEnabled()){
-            logger.debug("callInfo: "+callInfo.toString());
+    private void onCallResponse(CallResponse<?> message, ActorRef self, ActorRef sender) {
+        if(!message.get().getClass().equals(CallInfo.class)){
+            if(logger.isInfoEnabled()){
+                logger.info("onCallResponse: message class name is: "+message.get().getClass() +" no further action will be taken by this actor..");
+            }
+        }else{
+            callInfo = (CallInfo)message.get();
+            if (callInfo == null) {
+                    logger.warning("onCallResponse: callInfo is null");
+            }else{
+                if(logger.isDebugEnabled()){
+                    logger.debug("onCallResponse: callInfo: "+callInfo);
+                }
+                final CallDetailRecordsDao dao = daoManager.getCallDetailRecordsDao();
+                sid = callInfo.sid();
+                CallDetailRecord cdr = dao.getCallDetailRecord(callInfo.sid());
+                if(cdr == null){
+                    //insert a new record
+                    final CallDetailRecord.Builder builder = CallDetailRecord.builder();
+                    builder.setSid(callInfo.sid());
+                    builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
+                    builder.setDateCreated(callInfo.dateCreated());
+                    builder.setAccountSid(callInfo.accountSid());
+                    builder.setTo(callInfo.to());
+                    builder.setStartTime(new DateTime());
+                    builder.setStatus(callInfo.state().toString());
+                    final DateTime now = DateTime.now();
+                    builder.setStartTime(now);
+                    builder.setDirection(callInfo.direction());
+                    builder.setApiVersion(callInfo.version());
+                    builder.setPrice(new BigDecimal("0.00"));
+                    // TODO implement currency property to be read from Configuration
+                    builder.setPriceUnit(Currency.getInstance("USD"));
+                    final StringBuilder buffer = new StringBuilder();
+                    buffer.append("/").append(callInfo.version()).append("/Accounts/");
+                    buffer.append(callInfo.accountSid().toString()).append("/Calls/");
+                    buffer.append(callInfo.sid().toString());
+                    final URI uri = URI.create(buffer.toString());
+                    builder.setUri(uri);
+                    builder.setCallPath(self().path().toString());
+
+                    if (callInfo.direction().equals("inbound")) {
+                        if (callInfo.from() != null) {
+                            builder.setFrom(callInfo.from());
+                        } else {
+                            builder.setFrom("Unknown");
+                        }
+                        builder.setForwardedFrom(callInfo.forwardedFrom());
+                        builder.setPhoneNumberSid(callInfo.phoneNumberSid());
+                    }else{
+                        String fromString = (callInfo.from() != null ? callInfo.from() : "CALLS REST API");
+                        builder.setFrom(fromString);
+                        builder.setParentCallSid(callInfo.parentCallSid());
+                    }
+                    cdr = builder.build();
+                    dao.addCallDetailRecord(cdr);                    
+                }else{
+                    //update existing record
+                    if(logger.isDebugEnabled()){
+                        logger.debug("onCallResponse: callInfo: CDR already exists.");
+                    }
+                }
+            }
         }
-        CallInfo ci = message.get();
     }
 
     /**
@@ -115,67 +173,37 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
      * @param sender
      */
     private void onCallStateChanged(CallStateChanged message, ActorRef self, ActorRef sender) {
-    	CallStateChanged.State callState = message.state();
-        if(logger.isDebugEnabled()){
-            logger.debug("onCallStateChanged: "+callState.name());
-        }
+        CallStateChanged.State callState = message.state();
         CallDetailRecordsDao dao = daoManager.getCallDetailRecordsDao();
+        cdr = dao.getCallDetailRecord(sid);
         cdr = cdr.setStatus(callState.name());
+        if(!callInfo.direction().equals("inbound"))
+            cdr = cdr.setRingDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
+
+        switch (callState) {
+	        case BUSY:
+	            cdr = cdr.setDuration(0);
+	            cdr = cdr.setRingDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
+	            break;
+	        case IN_PROGRESS:
+	            cdr = cdr.setAnsweredBy(callInfo.to());
+	            break;
+	        case COMPLETED:
+	            cdr = cdr.setEndTime(DateTime.now());
+	            cdr = cdr.setDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
+	            break;
+	
+	        case QUEUED:
+	        case NO_ANSWER:
+	        case NOT_FOUND:
+	        case CANCELED:
+	        case FAILED:
+	        case RINGING:
+	            break;
+	        default:
+	            break;
+        }
         dao.updateCallDetailRecord(cdr);
-    }
-
-    private void onRecordCallData(RecordCallData recordCallData, ActorRef self, ActorRef sender) throws Exception {
-    	CallInfo callInfo = recordCallData.callInfo();
-    	if(callInfo == null){
-    		logger.error("Received null CallInfo");
-    	}else{
-    		this.sid = callInfo.sid();
-    		CallDetailRecordsDao dao = daoManager.getCallDetailRecordsDao();
-            cdr = dao.getCallDetailRecord(sid);
-            if(cdr == null){
-            	// Create a call detail record for the call.
-                final CallDetailRecord.Builder builder = CallDetailRecord.builder();
-                builder.setSid(callInfo.sid());
-                builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
-                builder.setDateCreated(callInfo.dateCreated());
-                builder.setAccountSid(accountId);
-                builder.setTo(callInfo.to());
-                if (callInfo.fromName() != null) {
-                    builder.setCallerName(callInfo.fromName());
-                } else {
-                    builder.setCallerName("Unknown");
-                }
-                if (callInfo.from() != null) {
-                    builder.setFrom(callInfo.from());
-                } else {
-                    builder.setFrom("Unknown");
-                }
-                builder.setForwardedFrom(callInfo.forwardedFrom());
-                builder.setPhoneNumberSid(phoneId);
-                builder.setStatus(callState.toString());
-                final DateTime now = DateTime.now();
-                builder.setStartTime(now);
-                builder.setDirection(callInfo.direction());
-                builder.setApiVersion(version);
-                builder.setPrice(new BigDecimal("0.00"));
-                builder.setMuted(false);
-                builder.setOnHold(false);
-                // TODO implement currency property to be read from Configuration
-                builder.setPriceUnit(Currency.getInstance("USD"));
-                final StringBuilder buffer = new StringBuilder();
-                buffer.append("/").append(version).append("/Accounts/");
-                buffer.append(accountId.toString()).append("/Calls/");
-                buffer.append(callInfo.sid().toString());
-                final URI uri = URI.create(buffer.toString());
-                builder.setUri(uri);
-
-                builder.setCallPath(call.path().toString());
-
-                callRecord = builder.build();
-            }else{
-            	
-            }
-    	}
     }
 
     @Override

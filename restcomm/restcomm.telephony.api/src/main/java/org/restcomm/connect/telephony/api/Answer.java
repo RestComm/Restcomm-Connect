@@ -30,13 +30,19 @@ import org.restcomm.connect.commons.dao.Sid;
 public final class Answer {
 
     private final Sid callSid;
+    private final Sid phoneNumberSid;
 
-    public Answer(Sid callSid) {
+    public Answer(Sid callSid, Sid phoneNumberSid) {
         super();
         this.callSid = callSid;
+        this.phoneNumberSid = phoneNumberSid;
     }
 
     public Sid callSid() {
         return callSid;
+    }
+
+    public Sid phoneNumberSid() {
+        return phoneNumberSid;
     }
 }

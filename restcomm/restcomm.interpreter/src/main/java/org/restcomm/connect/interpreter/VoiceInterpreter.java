@@ -1492,7 +1492,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 verb = (Tag) message;
 
                 // Answer the call.
-                call.tell(new Answer(callRecord.getSid()), source);
+                call.tell(new Answer(callRecord.getSid(), phoneId), source);
             }
         }
     }
@@ -1535,11 +1535,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     builder.setCallerName(callInfo.fromName());
                 } else {
                     builder.setCallerName("Unknown");
-                }
-                if (callInfo.from() != null) {
-                    builder.setFrom(callInfo.from());
-                } else {
-                    builder.setFrom("Unknown");
                 }
                 builder.setForwardedFrom(callInfo.forwardedFrom());
                 builder.setPhoneNumberSid(phoneId);

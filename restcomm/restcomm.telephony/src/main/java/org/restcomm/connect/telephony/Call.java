@@ -214,7 +214,7 @@ public final class Call extends UntypedActor {
     private boolean disableSdpPatchingOnUpdatingMediaSession;
 
     private Sid inboundCallSid;
-    private ActorRef callDataRecorder;
+	private Sid phoneNumberSid;
 
     public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration, final ActorRef callDataRecorder) {
         super();
@@ -340,7 +340,7 @@ public final class Call extends UntypedActor {
     private CallResponse<CallInfo> info() {
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, callUpdatedTime);
+        final CallInfo info = new CallInfo(id, accountId, phoneNumberSid, parentCallSid, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, callUpdatedTime);
         return new CallResponse<CallInfo>(info);
     }
 
@@ -1404,6 +1404,7 @@ public final class Call extends UntypedActor {
 
     private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
         inboundCallSid = message.callSid();
+        phoneNumberSid = message.phoneNumberSid();
         if (is(ringing) && !invite.getSession().getState().equals(SipSession.State.TERMINATED)) {
                 fsm.transition(message, initializing);
         } else {
