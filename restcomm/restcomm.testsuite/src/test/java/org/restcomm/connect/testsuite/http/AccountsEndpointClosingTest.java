@@ -43,7 +43,14 @@ import org.restcomm.connect.commons.Version;
 import javax.ws.rs.core.MultivaluedMap;
 import java.net.URL;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
@@ -85,6 +92,36 @@ public class AccountsEndpointClosingTest extends EndpointTest {
                 .withHeader("Content-Type", containing("application/json"))
                 .withRequestBody(equalToJson("[{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000005\"},{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000004\"},{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000003\"},{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000002\"},{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000001\"},{\"type\":\"accountClosed\",\"accountSid\":\"ACA1000000000000000000000000000000\"}]")
                 ));
+    }
+
+    // verify that DID provider (nexmo) was contacted to cancel the numbers when the account is removed
+    @Test
+    public void removeAccountAndReleaseProvidedNumbers() {
+        stubFor(post(urlMatching("/nexmo/number/cancel/.*/.*/US/12223334444"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("")));
+        stubFor(post(urlMatching("/nexmo/number/cancel/.*/.*/US/12223334445"))
+                .willReturn(aResponse()
+                        .withStatus(404)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("")));
+
+        String closedParentSid = "ACA2000000000000000000000000000000";
+        Client jersey = getClient(toplevelSid, toplevelKey);
+        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/" + closedParentSid) );
+        MultivaluedMap<String,String> params = new MultivaluedMapImpl();
+        params.add("Status","closed");
+        ClientResponse response = resource.put(ClientResponse.class,params);
+        Assert.assertEquals(200, response.getStatus());
+        // make sure the request reached nexmo
+        verify(postRequestedFor(urlMatching("/nexmo/number/cancel/.*/.*/US/12223334444")));
+        verify(postRequestedFor(urlMatching("/nexmo/number/cancel/.*/.*/US/12223334445")));
+        // confirm that numbers that were not successfully released, are still in the database
+        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + closedParentSid + "/IncomingPhoneNumbers/PH00000000000000000000000000000002.json") );
+        response = resource.get(ClientResponse.class);
+        Assert.assertEquals(200, response.getStatus());
     }
 
     @Deployment(name = "AccountsEndpointClosingTest", managed = true, testable = false)

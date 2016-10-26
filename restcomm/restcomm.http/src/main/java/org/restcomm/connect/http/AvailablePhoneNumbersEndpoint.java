@@ -19,40 +19,35 @@
  */
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
+import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.loader.ObjectInstantiationException;
+import org.restcomm.connect.dao.entities.AvailablePhoneNumber;
+import org.restcomm.connect.dao.entities.AvailablePhoneNumberList;
+import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.http.converter.AvailablePhoneNumberConverter;
+import org.restcomm.connect.http.converter.AvailablePhoneNumberListConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.provisioning.number.api.PhoneNumber;
+import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
+import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
+import org.restcomm.connect.provisioning.number.api.PhoneNumberSearchFilters;
 
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.servlet.sip.SipServlet;
-import javax.servlet.sip.SipURI;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import org.restcomm.connect.http.converter.AvailablePhoneNumberConverter;
-import org.restcomm.connect.http.converter.AvailablePhoneNumberListConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.dao.entities.AvailablePhoneNumber;
-import org.restcomm.connect.dao.entities.AvailablePhoneNumberList;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.loader.ObjectFactory;
-import org.restcomm.connect.commons.loader.ObjectInstantiationException;
-import org.restcomm.connect.provisioning.number.api.ContainerConfiguration;
-import org.restcomm.connect.provisioning.number.api.PhoneNumberSearchFilters;
-import org.restcomm.connect.provisioning.number.api.PhoneNumber;
-import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.thoughtworks.xstream.XStream;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -75,6 +70,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends SecuredEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         super.init(configuration.subset("runtime-settings"));
 
+        /*
         phoneNumberProvisioningManager = (PhoneNumberProvisioningManager) context.getAttribute("PhoneNumberProvisioningManager");
         if(phoneNumberProvisioningManager == null) {
             final String phoneNumberProvisioningManagerClass = configuration.getString("phone-number-provisioning[@class]");
@@ -87,6 +83,10 @@ public abstract class AvailablePhoneNumbersEndpoint extends SecuredEndpoint {
             phoneNumberProvisioningManager.init(phoneNumberProvisioningConfiguration, telestaxProxyConfiguration, containerConfiguration);
             context.setAttribute("phoneNumberProvisioningManager", phoneNumberProvisioningManager);
         }
+        */
+        // get manager from context or create it if it does not exist
+        phoneNumberProvisioningManager = new PhoneNumberProvisioningManagerProvider(configuration, context).get();
+
 
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
@@ -170,9 +170,11 @@ public abstract class AvailablePhoneNumbersEndpoint extends SecuredEndpoint {
         return "0";
     }
 
+    /*
     @SuppressWarnings("unchecked")
     private List<SipURI> getOutboundInterfaces() {
         final List<SipURI> uris = (List<SipURI>) context.getAttribute(SipServlet.OUTBOUND_INTERFACES);
         return uris;
     }
+    */
 }
