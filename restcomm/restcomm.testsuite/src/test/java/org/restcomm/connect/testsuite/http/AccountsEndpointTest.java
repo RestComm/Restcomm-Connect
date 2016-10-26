@@ -65,8 +65,8 @@ public class AccountsEndpointTest extends EndpointTest {
 
     private String createdUsernanme = "created@company.com";
     private String createdAccountSid = "AC5ee3b351401804c2d064a33f762146fb";
-    private String createdPassword = "RestComm";
-    private String createdAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    private String createdPassword = "RestComm12";
+    private String createdAuthToken = "28f96b0fea1f9e33646f42026abdf305";
 
     private String updatedUsername = "updated@company.com";
     private String updatedAccountSid = "AC6b53c6ffa9fa7c4682dbcf4dec73012f";
@@ -159,9 +159,9 @@ public class AccountsEndpointTest extends EndpointTest {
         JsonObject getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
                 adminAuthToken, createdUsernanme);
         assertTrue(getAccountResponse.get("sid").getAsString().equals(createdAccountSid));
-        assertTrue(getAccountResponse.get("auth_token").getAsString().equals(createdAuthToken));
+        Assert.assertEquals(createdAuthToken, getAccountResponse.get("auth_token").getAsString());
         assertTrue(createAccountResponse.get("sid").getAsString().equals(createdAccountSid));
-        assertTrue(createAccountResponse.get("auth_token").getAsString().equals(createdAuthToken));
+        Assert.assertEquals(createdAuthToken, createAccountResponse.get("auth_token").getAsString());
     }
 
     @Test
@@ -300,10 +300,10 @@ public class AccountsEndpointTest extends EndpointTest {
     @Test
     public void testCreateAccountTwiceFails() {
         ClientResponse createResponse1 = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken,
-                "twice@company.com", "RestComm");
+                "twice@company.com", "RestComm12");
         Assert.assertEquals("Account twice@company.com could not be created even once", 200, createResponse1.getStatus());
         ClientResponse createResponse2 = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken,
-                "twice@company.com", "RestComm");
+                "twice@company.com", "RestComm12");
         Assert.assertEquals("Did not retrieve a conflict HTTP status (409) while creating accounts with same email address", 409, createResponse2.getStatus());
     }
 
@@ -319,7 +319,7 @@ public class AccountsEndpointTest extends EndpointTest {
             String thinhContact = "sip:lyhungthinh@127.0.0.1:5090";
             startSipStack(thinhContact);
 
-            String subAccountPassword = "mynewpassword";
+            String subAccountPassword = "mynewpassword12";
             String subAccountEmail = "lyhungthinh@gmail.com";
 
             JsonObject subAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
@@ -363,10 +363,10 @@ public class AccountsEndpointTest extends EndpointTest {
             String thinhContact = "sip:lyhungthinh2@127.0.0.1:5090";
             startSipStack(thinhContact);
 
-            String subAccountPassword = "mynewpassword";
+            String subAccountPassword = "mynewpassword12";
             String subAccountEmail = "lyhungthinh2@gmail.com";
-            String subAccountNewPassword = "latestpassword";
-            String subAccountNewAuthToken = "fa1930301afe5ed93a2dec29a922728e";
+            String subAccountNewPassword = "latestpassword12";
+            String subAccountNewAuthToken = "81eb94645c485fc39eedc5d46522e5ba";
             JsonObject subAccountResponse;
 
             SipURI reqUri = thinhSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -404,7 +404,7 @@ public class AccountsEndpointTest extends EndpointTest {
             String thinhContact = "sip:lyhungthinh3@127.0.0.1:5090";
             startSipStack(thinhContact);
 
-            String subAccountPassword = "mynewpassword";
+            String subAccountPassword = "mynewpassword12";
             String subAccountEmail = "lyhungthinh3@gmail.com";
             JsonObject subAccountResponse;
 
@@ -520,6 +520,28 @@ public class AccountsEndpointTest extends EndpointTest {
     public void testAccountAcccessUsingRoles() {
         ClientResponse response = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(),unprivilegedUsername, unprivilegedAuthToken, unprivilegedSid);
         Assert.assertEquals(200,response.getStatus());
+    }
+
+    @Test
+    public void testPasswordStrengthForAccountCreate() {
+        ClientResponse response = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, "weak@company.com", "1234");
+        Assert.assertEquals("Weak password account creation should fail with 400", 400, response.getStatus());
+        Assert.assertTrue("Response error message should contain 'weak' term", response.getEntity(String.class).toLowerCase().contains("weak"));
+        response = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, "weak@company.com", "1234asdf!@#");
+        Assert.assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    public void testPasswordStrengthForAccountUpdate() {
+        // updating an account with weak password should fail
+        ClientResponse response = RestcommAccountsTool.getInstance().updateAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, "updated-weak@company.com", null, "1234", null, null, null );
+        Assert.assertEquals(400, response.getStatus());
+        Assert.assertTrue("Response should contain 'weak' term", response.getEntity(String.class).toLowerCase().contains("weak"));
+        // updating an account with strong password should succeed
+        response = RestcommAccountsTool.getInstance().updateAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, "updated-weak@company.com", null, "RestComm12", null, null, null );
+        Assert.assertEquals(200, response.getStatus());
     }
 
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
