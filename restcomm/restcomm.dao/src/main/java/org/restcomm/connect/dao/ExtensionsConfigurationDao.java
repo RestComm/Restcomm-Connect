@@ -73,8 +73,6 @@ public interface ExtensionsConfigurationDao {
      */
     void deleteConfigurationBySid(Sid extensionSid);
 
-    sdsd
-
     /**
      * Add a new ExtensionSpecificConfiguration
      * @param extensionSpecificConfiguration
@@ -105,19 +103,19 @@ public interface ExtensionsConfigurationDao {
      * Get all extension configuration
      * @return List<ExtensionConfiguration>
      */
-    List<ExtensionConfiguration> getAllConfiguration();
+    List<ExtensionSpecificConfiguration> getAllSpecificConfiguration();
 
     /**
      * Delete extension configuration by extension name
      * @param extensionName
      */
-    void deleteConfigurationByName(String extensionName);
+    void deleteSpecificConfigurationByName(String extensionName);
 
     /**
      * Delete extension configuration by Sid
-     * @param extensionSid
+     * @param specificExtensionSid
      */
-    void deleteConfigurationBySid(Sid extensionSid);
+    void deleteSpecificConfigurationBySid(Sid specificExtensionSid);
 
     /**
      * Validate extension configuration based on the type of the configuration data
