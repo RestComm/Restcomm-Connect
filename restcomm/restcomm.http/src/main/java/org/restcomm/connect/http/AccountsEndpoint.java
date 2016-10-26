@@ -329,8 +329,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
         // check account level depth. If we're already at third level no sub-accounts are allowed to be created
         List<String> accountLineage = userIdentityContext.getEffectiveAccountLineage();
         if (accountLineage.size() >= 2) {
-            // there are already 2+1 account levels. Sub-accounts at 4th level are not allowed
-            return status(BAD_REQUEST).entity("This account is not allowed to have sub-accounts").build();
+            // there are already 2+1=3 account levels. Sub-accounts at 4th level are not allowed
+            return status(BAD_REQUEST).entity(buildErrorResponseBody("This account is not allowed to have sub-accounts",responseType)).type(responseType).build();
         }
 
         // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
