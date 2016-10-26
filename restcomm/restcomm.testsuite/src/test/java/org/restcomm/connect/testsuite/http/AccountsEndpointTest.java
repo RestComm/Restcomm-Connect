@@ -293,7 +293,7 @@ public class AccountsEndpointTest extends EndpointTest {
     @Test
     public void testCreateAdministratorAccountFails() {
         JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, "administrator@company.com", "1234");
+                adminUsername, adminAuthToken, "administrator@company.com", "RestComm12");
         assertNull(createAccountResponse);
     }
 
