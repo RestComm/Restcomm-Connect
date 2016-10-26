@@ -36,5 +36,6 @@
     <mapper resource="transcriptions.xml"/>
     <mapper resource="gateways.xml"/>
     <mapper resource="announcements.xml"/>
+    <mapper resource="extensions-configuration.xml"/>
   </mappers>
 </configuration>
