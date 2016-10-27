@@ -32,7 +32,7 @@ import org.restcomm.connect.extension.api.ExtensionConfiguration;
 import java.lang.reflect.Type;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author gvagenas@gmail.com
  */
 @ThreadSafe
 public final class ExtensionConfigurationConverter extends AbstractConverter implements JsonSerializer<ExtensionConfiguration> {

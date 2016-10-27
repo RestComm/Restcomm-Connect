@@ -31,7 +31,7 @@
 
   <update id="updateConfiguration" parameterType="map">
     UPDATE restcomm_extensions_configuration SET configuration_data=#{configuration_data}, configuration_type=#{configuration_type}, date_updated=#{date_updated}
-    WHERE extension=#{extension}
+    WHERE sid=#{sid}
   </update>
 
   <select id="getConfigurationByName" parameterType="map" resultType="hashmap">
