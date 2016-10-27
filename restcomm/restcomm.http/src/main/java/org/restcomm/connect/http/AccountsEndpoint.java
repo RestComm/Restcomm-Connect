@@ -48,9 +48,11 @@ import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.AccountList;
 import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
@@ -61,14 +63,20 @@ import org.restcomm.connect.http.exceptions.AuthorizationException;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
 import org.restcomm.connect.commons.util.StringUtils;
+import org.restcomm.connect.http.exceptions.PasswordTooWeak;
+import org.restcomm.connect.identity.passwords.PasswordValidator;
+import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
 import org.restcomm.connect.http.exceptions.RcmlserverNotifyError;
+import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
+import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public class AccountsEndpoint extends SecuredEndpoint {
-    protected Configuration configuration;
+    protected Configuration runtimeConfiguration;
+    protected Configuration rootConfiguration; // top-level configuration element
     protected Gson gson;
     protected XStream xstream;
     protected ClientsDao clientDao;
@@ -84,11 +92,11 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     @PostConstruct
     void init() {
-        configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-        configuration = configuration.subset("runtime-settings");
-        super.init(configuration);
+        rootConfiguration = (Configuration) context.getAttribute(Configuration.class.getName());
+        runtimeConfiguration = rootConfiguration.subset("runtime-settings");
+        super.init(runtimeConfiguration);
         clientDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getClientsDao();
-        final AccountConverter converter = new AccountConverter(configuration);
+        final AccountConverter converter = new AccountConverter(runtimeConfiguration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
         builder.setPrettyPrinting();
@@ -96,13 +104,13 @@ public class AccountsEndpoint extends SecuredEndpoint {
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(converter);
-        xstream.registerConverter(new AccountListConverter(configuration));
-        xstream.registerConverter(new RestCommResponseConverter(configuration));
+        xstream.registerConverter(new AccountListConverter(runtimeConfiguration));
+        xstream.registerConverter(new RestCommResponseConverter(runtimeConfiguration));
         // Make sure there is an authenticated account present when this endpoint is used
         checkAuthenticatedAccount();
     }
 
-    private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
+    private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) throws PasswordTooWeak {
         validate(data);
 
         final DateTime now = DateTime.now();
@@ -121,9 +129,12 @@ public class AccountsEndpoint extends SecuredEndpoint {
             status = Account.Status.getValueOf(data.getFirst("Status").toLowerCase());
         }
         final String password = data.getFirst("Password");
+        PasswordValidator validator = PasswordValidatorFactory.createDefault();
+        if (!validator.isStrongEnough(password))
+            throw new PasswordTooWeak();
         final String authToken = new Md5Hash(password).toString();
         final String role = data.getFirst("Role");
-        String rootUri = configuration.getString("root-uri");
+        String rootUri = runtimeConfiguration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
@@ -245,9 +256,51 @@ public class AccountsEndpoint extends SecuredEndpoint {
         daoManager.getTranscriptionsDao().removeTranscriptions(sid);
         daoManager.getRecordingsDao().removeRecordings(sid);
         daoManager.getApplicationsDao().removeApplications(sid);
-        daoManager.getIncomingPhoneNumbersDao().removeIncomingPhoneNumbers(sid);
+        removeIncomingPhoneNumbers(sid,daoManager.getIncomingPhoneNumbersDao());
         daoManager.getClientsDao().removeClients(sid);
     }
+
+    /**
+     * Removes incoming phone numbers that belong to an account from the database.
+     * For provided numbers the provider is also contacted to get them released.
+     *
+     * @param accountSid
+     * @param dao
+     */
+    private void removeIncomingPhoneNumbers(Sid accountSid, IncomingPhoneNumbersDao dao) {
+        List<IncomingPhoneNumber> numbers = dao.getIncomingPhoneNumbers(accountSid);
+        if (numbers != null && numbers.size() > 0) {
+            // manager is retrieved in a lazy way. If any number needs it, it will be first retrieved
+            // from the servlet context. If not there it will be created, stored in context and returned.
+            boolean managerQueried = false;
+            PhoneNumberProvisioningManager manager = null;
+            for (IncomingPhoneNumber number : numbers) {
+                // if this is not just a SIP number try to release it by contacting the provider
+                if (number.isPureSip() == null || !number.isPureSip()) {
+                    if ( ! managerQueried )
+                        manager = new PhoneNumberProvisioningManagerProvider(rootConfiguration,context).get(); // try to retrieve/build manager only once
+                    if (manager != null) {
+                        try {
+                            if  (! manager.cancelNumber(IncomingPhoneNumbersEndpoint.convertIncomingPhoneNumbertoPhoneNumber(number)) ) {
+                                logger.error("Number cancelation failed for provided number '" + number.getPhoneNumber()+"'. Number entity " + number.getSid() + " will stay in database");
+                            } else {
+                                dao.removeIncomingPhoneNumber(number.getSid());
+                            }
+                        } catch (Exception e) {
+                            logger.error("Number cancelation failed for provided number '" + number.getPhoneNumber()+"'",e);
+                        }
+                    }
+                    else
+                        logger.error("Number cancelation failed for provided number '" + number.getPhoneNumber()+"'. Provisioning Manager was null. "+"Number entity " + number.getSid() + " will stay in database");
+                } else {
+                    // pureSIP numbers only to be removed from database. No need to contact provider
+                    dao.removeIncomingPhoneNumber(number.getSid());
+                }
+            }
+        }
+    }
+
+
 
     protected Response getAccounts(final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
@@ -280,6 +333,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
             account = createFrom(sid, data);
         } catch (final NullPointerException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
+        } catch (PasswordTooWeak passwordTooWeak) {
+            return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
         }
 
         // If Account already exists don't add it again
@@ -342,7 +397,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         builder.setPassword(password);
         builder.setFriendlyName(data.getFirst("FriendlyName"));
         builder.setStatus(Client.ENABLED);
-        String rootUri = configuration.getString("root-uri");
+        String rootUri = runtimeConfiguration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
@@ -359,7 +414,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
      * @return
      * @throws AccountAlreadyClosed
      */
-    private Account prepareAccountForUpdate(final Account account, final MultivaluedMap<String, String> data) throws AccountAlreadyClosed {
+    private Account prepareAccountForUpdate(final Account account, final MultivaluedMap<String, String> data) throws AccountAlreadyClosed, PasswordTooWeak {
         Account result = account;
         boolean isPasswordReset = false;
         Account.Status newStatus = null;
@@ -382,6 +437,10 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 if (account.getStatus() == Account.Status.UNINITIALIZED)
                     isPasswordReset = true;
 
+                String password = data.getFirst("Password");
+                PasswordValidator validator = PasswordValidatorFactory.createDefault();
+                if (!validator.isStrongEnough(password))
+                    throw new PasswordTooWeak();
                 final String hash = new Md5Hash(data.getFirst("Password")).toString();
                 result = result.setAuthToken(hash);
             }
@@ -400,7 +459,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 } else
                     throw new AuthorizationException();
             }
-        } catch (AuthorizationException | AccountAlreadyClosed e) {
+        } catch (AuthorizationException | AccountAlreadyClosed | PasswordTooWeak e) {
             // some exceptions should reach outer layers and result in 403
             throw e;
         } catch (Exception e) {
@@ -442,6 +501,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 modifiedAccount = prepareAccountForUpdate(account, data);
             } catch (AccountAlreadyClosed accountAlreadyClosed) {
                 return status(BAD_REQUEST).build();
+            } catch (PasswordTooWeak passwordTooWeak) {
+                return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
             }
 
             secure(modifiedAccount, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
