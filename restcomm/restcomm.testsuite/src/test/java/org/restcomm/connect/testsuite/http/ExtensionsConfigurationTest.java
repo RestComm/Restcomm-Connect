@@ -61,9 +61,8 @@ public class ExtensionsConfigurationTest {
             "  \"enabed\": \"true\"\n" +
             "}";
 
-
     @Test
-    public void testCreateAndUpdateConfiguration() throws UnsupportedEncodingException {
+    public void testCreateAndUpdateJsonConfiguration() throws UnsupportedEncodingException {
         String extensionName = "testExtension";
         MultivaluedMap<String, String> configurationParams = new MultivaluedMapImpl();
         configurationParams.add("ExtensionName", extensionName);
@@ -93,7 +92,7 @@ public class ExtensionsConfigurationTest {
     }
 
     @Test
-    public void testCreateConfigurationAndGetBySid() throws UnsupportedEncodingException {
+    public void testCreateJsonConfigurationAndGetBySid() throws UnsupportedEncodingException {
         String extensionName = "testExtension2";
         MultivaluedMap<String, String> configurationParams = new MultivaluedMapImpl();
         configurationParams.add("ExtensionName", extensionName);
