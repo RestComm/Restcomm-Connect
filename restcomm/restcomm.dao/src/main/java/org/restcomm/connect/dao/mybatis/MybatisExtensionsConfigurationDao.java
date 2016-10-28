@@ -27,6 +27,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeComparator;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.ExtensionsConfigurationDao;
@@ -187,6 +188,50 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
     @Override
     public void deleteSpecificConfigurationBySid(Sid specificExtensionSid) {
 
+    }
+
+    @Override
+    public boolean isLatestVersionByName(String extensionName, DateTime dateTime) {
+        final SqlSession session = sessions.openSession();
+        boolean result = false;
+        int comp;
+        try {
+            final DateTime dateUpdated = new DateTime(session.selectOne(namespace + "getDateUpdatedByName", extensionName));
+            if (dateUpdated != null) {
+                comp = DateTimeComparator.getInstance().compare(dateTime, dateUpdated);
+                if (comp < 0) {
+                    //Negative value means that given dateTime is less than dateUpdated, which means that DB
+                    //has a newer cnfiguration
+                    result = true;
+                }
+            }
+
+        } finally {
+            session.close();
+        }
+        return result;
+    }
+
+    @Override
+    public boolean isLatestVersionBySid(Sid extensionSid, DateTime dateTime) {
+        final SqlSession session = sessions.openSession();
+        boolean result = false;
+        int comp;
+        try {
+            final DateTime dateUpdated = new DateTime(session.selectOne(namespace + "getDateUpdatedBySid", extensionSid.toString()));
+            if (dateUpdated != null) {
+                comp = DateTimeComparator.getInstance().compare(dateTime, dateUpdated);
+                if (comp < 0) {
+                    //Negative value means that given dateTime is less than dateUpdated, which means that DB
+                    //has a newer cnfiguration
+                    result = true;
+                }
+            }
+
+        } finally {
+            session.close();
+        }
+        return result;
     }
 
     @Override
