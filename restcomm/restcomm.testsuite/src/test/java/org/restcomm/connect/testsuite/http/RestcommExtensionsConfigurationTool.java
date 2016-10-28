@@ -44,16 +44,20 @@ public class RestcommExtensionsConfigurationTool {
         return accountsUrl;
     }
 
-
     public JsonObject postConfiguration(String deploymentUrl, String adminUsername, String adminAuthToken,
                                         MultivaluedMap<String, String> configurationParams) {
+        return postConfiguration(deploymentUrl, adminUsername, adminAuthToken, configurationParams, false);
+    }
+
+    public JsonObject postConfiguration(String deploymentUrl, String adminUsername, String adminAuthToken,
+                                        MultivaluedMap<String, String> configurationParams, Boolean xml) {
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = null;
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
-        String url = getUrl(deploymentUrl, false);
+        String url = getUrl(deploymentUrl, xml);
 
         WebResource webResource = jerseyClient.resource(url);
 
@@ -62,12 +66,15 @@ public class RestcommExtensionsConfigurationTool {
         return jsonResponse;
     }
 
-
     public JsonObject getConfiguration(String deploymentUrl, String adminUsername, String adminAuthToken, String extensionName) {
+        return getConfiguration(deploymentUrl, adminUsername, adminAuthToken, extensionName, false);
+    }
+
+    public JsonObject getConfiguration(String deploymentUrl, String adminUsername, String adminAuthToken, String extensionName, Boolean xml) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
-        WebResource webResource = jerseyClient.resource(getUrl(deploymentUrl, false));
+        WebResource webResource = jerseyClient.resource(getUrl(deploymentUrl, xml));
 
         String response = webResource.path(extensionName).get(String.class);
         JsonParser parser = new JsonParser();
@@ -78,13 +85,18 @@ public class RestcommExtensionsConfigurationTool {
 
     public JsonObject updateConfiguration(String deploymentUrl, String adminUsername, String adminAuthToken, String extensionSid,
                                           MultivaluedMap<String, String> configurationParams) {
+        return updateConfiguration(deploymentUrl, adminUsername, adminAuthToken, extensionSid, configurationParams, false);
+    }
+
+    public JsonObject updateConfiguration(String deploymentUrl, String adminUsername, String adminAuthToken, String extensionSid,
+                                          MultivaluedMap<String, String> configurationParams, Boolean xml) {
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = null;
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
-        String url = getUrl(deploymentUrl, false)+"/"+extensionSid;
+        String url = getUrl(deploymentUrl, xml)+"/"+extensionSid;
 
         WebResource webResource = jerseyClient.resource(url);
 
