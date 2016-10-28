@@ -77,7 +77,6 @@ import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.Registration;
 import org.restcomm.connect.data.recorder.api.DataRecorderFactory;
-import org.restcomm.connect.data.recorder.api.interfaces.CallDataRecorder;
 import org.restcomm.connect.extension.api.CallRequest;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
@@ -148,6 +147,7 @@ public final class CallManager extends UntypedActor {
     private final ActorRef bridges;
     private final ActorRef sms;
     private final SipFactory sipFactory;
+    private String apiVersion;
     private final DaoManager storage;
     private final ActorRef monitoring;
     private final DataRecorderFactory dataRecorderFactory;
@@ -289,7 +289,7 @@ public final class CallManager extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Call(sipFactory, msControllerFactory.provideCallController(), configuration, dataRecorderFactory.getCallDataRecorder());
+                return new Call(sipFactory, msControllerFactory.provideCallController(), configuration, dataRecorderFactory.getCallDataRecorder(), apiVersion);
             }
         }));
     }
@@ -540,6 +540,7 @@ public final class CallManager extends UntypedActor {
 
     private void proxyThroughMediaServer(final SipServletRequest request, final Client client, final String destNumber) {
         String rcml = "<Response><Dial>"+destNumber+"</Dial></Response>";
+        apiVersion = client.getApiVersion();
         final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
@@ -548,7 +549,7 @@ public final class CallManager extends UntypedActor {
         builder.setBridgeManager(bridges);
         builder.setSmsService(sms);
         builder.setAccount(client.getAccountSid());
-        builder.setVersion(client.getApiVersion());
+        builder.setVersion(apiVersion);
         final Account account = storage.getAccountsDao().getAccount(client.getAccountSid());
         builder.setEmailAddress(account.getEmailAddress());
         builder.setRcml(rcml);
@@ -661,6 +662,7 @@ public final class CallManager extends UntypedActor {
                 number = numbers.getIncomingPhoneNumber("*");
             }
             if (number != null) {
+                apiVersion = number.getApiVersion();
                 final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
                 builder.setConfiguration(configuration);
                 builder.setStorage(storage);
@@ -669,7 +671,7 @@ public final class CallManager extends UntypedActor {
                 builder.setBridgeManager(bridges);
                 builder.setSmsService(sms);
                 builder.setAccount(number.getAccountSid());
-                builder.setVersion(number.getApiVersion());
+                builder.setVersion(apiVersion);
                 final Account account = accounts.getAccount(number.getAccountSid());
                 builder.setEmailAddress(account.getEmailAddress());
                 final Sid sid = number.getVoiceApplicationSid();
@@ -739,6 +741,7 @@ public final class CallManager extends UntypedActor {
         boolean isClientManaged =( (applicationSid != null && !applicationSid.toString().isEmpty() && !applicationSid.toString().equals("")) ||
                 (clientAppVoiceUrl != null && !clientAppVoiceUrl.toString().isEmpty() &&  !clientAppVoiceUrl.toString().equals("")));
         if (isClientManaged) {
+            apiVersion = client.getApiVersion();
             final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
             builder.setConfiguration(configuration);
             builder.setStorage(storage);
@@ -747,7 +750,7 @@ public final class CallManager extends UntypedActor {
             builder.setBridgeManager(bridges);
             builder.setSmsService(sms);
             builder.setAccount(client.getAccountSid());
-            builder.setVersion(client.getApiVersion());
+            builder.setVersion(apiVersion);
             final Account account = accounts.getAccount(client.getAccountSid());
             builder.setEmailAddress(account.getEmailAddress());
             final Sid sid = client.getVoiceApplicationSid();
@@ -1360,13 +1363,14 @@ public final class CallManager extends UntypedActor {
         final String proxyUsername = (request.username() != null) ? request.username() : activeProxyUsername;
         final String proxyPassword = (request.password() != null) ? request.password() : activeProxyPassword;
 
+        apiVersion = runtime.getString("api-version");
         final ActorRef call = call();
         final ActorRef self = self();
         final boolean userAtDisplayedName = runtime.subset("outbound-proxy").getBoolean("user-at-displayed-name");
         InitializeOutbound init;
         if (request.from() != null && !request.from().contains("@") && userAtDisplayedName) {
             init = new InitializeOutbound(request.from(), from, to, proxyUsername, proxyPassword, request.timeout(),
-                    request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage, webRTC);
+                    request.isFromApi(), apiVersion, request.accountId(), request.type(), storage, webRTC);
         } else {
             init = new InitializeOutbound(null, from, to, proxyUsername, proxyPassword, request.timeout(), request.isFromApi(),
                     runtime.getString("api-version"), request.accountId(), request.type(), storage, webRTC);

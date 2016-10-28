@@ -47,8 +47,6 @@ import javax.servlet.sip.SipURI;
 
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -57,6 +55,8 @@ import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.dao.CallDetailRecordsDao;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.telephony.api.Answer;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
@@ -200,8 +200,8 @@ public class UssdCall extends UntypedActor  {
             to = (SipURI) invite.getTo().getURI();
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, direction, created, null, name, from, to, invite, lastResponse,
-                false, false, null);
+        final CallInfo info = new CallInfo(id, accountId, null, null, external, type, direction, created, null, name, from, to, invite, lastResponse,
+                false, false, null, apiVersion);
         return new CallResponse<CallInfo>(info);
     }
 

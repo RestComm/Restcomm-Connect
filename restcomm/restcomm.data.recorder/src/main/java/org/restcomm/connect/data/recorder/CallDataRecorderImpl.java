@@ -160,8 +160,11 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
                 }else{
                     //update existing record
                     if(logger.isDebugEnabled()){
-                        logger.debug("onCallResponse: callInfo: CDR already exists.");
+                        logger.debug("onCallResponse: callInfo: CDR already exists, will update existing record.");
                     }
+                    cdr = cdr.setRingDuration(seconds);
+                    cdr = cdr.setStartTime(DateTime.now());
+                    cdr = cdr.setStatus(external.name());
                 }
             }
         }
@@ -181,27 +184,27 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
             cdr = cdr.setRingDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
 
         switch (callState) {
-	        case BUSY:
-	            cdr = cdr.setDuration(0);
-	            cdr = cdr.setRingDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
-	            break;
-	        case IN_PROGRESS:
-	            cdr = cdr.setAnsweredBy(callInfo.to());
-	            break;
-	        case COMPLETED:
-	            cdr = cdr.setEndTime(DateTime.now());
-	            cdr = cdr.setDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
-	            break;
-	
-	        case QUEUED:
-	        case NO_ANSWER:
-	        case NOT_FOUND:
-	        case CANCELED:
-	        case FAILED:
-	        case RINGING:
-	            break;
-	        default:
-	            break;
+            case BUSY:
+                cdr = cdr.setDuration(0);
+                cdr = cdr.setRingDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
+                break;
+            case IN_PROGRESS:
+                cdr = cdr.setAnsweredBy(callInfo.to());
+                break;
+            case COMPLETED:
+                cdr = cdr.setEndTime(DateTime.now());
+                cdr = cdr.setDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
+                break;
+    
+            case QUEUED:
+            case NO_ANSWER:
+            case NOT_FOUND:
+            case CANCELED:
+            case FAILED:
+            case RINGING:
+                break;
+            default:
+                break;
         }
         dao.updateCallDetailRecord(cdr);
     }
