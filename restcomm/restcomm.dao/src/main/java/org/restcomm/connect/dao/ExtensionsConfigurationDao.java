@@ -19,6 +19,7 @@
 
 package org.restcomm.connect.dao;
 
+import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
 import org.restcomm.connect.extension.api.ExtensionSpecificConfiguration;
@@ -116,6 +117,23 @@ public interface ExtensionsConfigurationDao {
      * @param specificExtensionSid
      */
     void deleteSpecificConfigurationBySid(Sid specificExtensionSid);
+
+    /**
+     * Check if there is a newer version of the configuration in the DB using extension name
+     * @param extensionName
+     * @param dateTime
+     * @return
+     */
+    boolean isLatestVersionByName(String extensionName, DateTime dateTime);
+
+    /**
+     * Check if there is a newer version of the configuration in the DB using extension sid
+     * @param extensionSid
+     * @param dateTime
+     * @return
+     */
+    boolean isLatestVersionBySid(Sid extensionSid, DateTime dateTime);
+
 
     /**
      * Validate extension configuration based on the type of the configuration data

@@ -291,4 +291,55 @@ public class ExtensionConfigurationDaoTest {
         confs = extensionsConfigurationDao.getAllConfiguration();
         assertEquals(0, confs.size());
     }
+
+    @Test
+    public void testStoreUpdateAndRetrieveConfigurationByNameCheckVersionJson() {
+        String extName = "testExt";
+        ExtensionConfiguration originalExtensionConfiguration = new ExtensionConfiguration(Sid.generate(Sid.Type.EXTENSION_CONFIGURATION),
+                extName, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
+        extensionsConfigurationDao.addConfiguration(originalExtensionConfiguration);
+
+        ExtensionConfiguration retrievedConf = extensionsConfigurationDao.getConfigurationByName(extName);
+        assertNotNull(retrievedConf);
+        assertEquals(retrievedConf.getConfigurationData().toString(), originalExtensionConfiguration.getConfigurationData().toString());
+
+        DateTime originalDateUpdated = retrievedConf.getDateUpdated();
+
+        boolean isUpdated = extensionsConfigurationDao.isLatestVersionByName(extName, originalDateUpdated);
+        assertEquals(isUpdated , false);
+
+        originalExtensionConfiguration.setConfigurationData(updatedJsonObject, ExtensionConfiguration.configurationType.JSON);
+        extensionsConfigurationDao.updateConfiguration(originalExtensionConfiguration);
+
+        isUpdated = extensionsConfigurationDao.isLatestVersionByName(extName, originalDateUpdated);
+        assertEquals(isUpdated , true);
+
+        extensionsConfigurationDao.deleteConfigurationByName(extName);
+    }
+
+    @Test
+    public void testStoreUpdateAndRetrieveConfigurationBySidCheckVersionJson() {
+        String extName = "testExt";
+        Sid sid = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
+        ExtensionConfiguration originalExtensionConfiguration = new ExtensionConfiguration(sid,
+                extName, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
+        extensionsConfigurationDao.addConfiguration(originalExtensionConfiguration);
+
+        ExtensionConfiguration retrievedConf = extensionsConfigurationDao.getConfigurationBySid(sid);
+        assertNotNull(retrievedConf);
+        assertEquals(retrievedConf.getConfigurationData().toString(), originalExtensionConfiguration.getConfigurationData().toString());
+
+        DateTime originalDateUpdated = retrievedConf.getDateUpdated();
+
+        boolean isUpdated = extensionsConfigurationDao.isLatestVersionBySid(sid, originalDateUpdated);
+        assertEquals(isUpdated , false);
+
+        originalExtensionConfiguration.setConfigurationData(updatedJsonObject, ExtensionConfiguration.configurationType.JSON);
+        extensionsConfigurationDao.updateConfiguration(originalExtensionConfiguration);
+
+        isUpdated = extensionsConfigurationDao.isLatestVersionBySid(sid, originalDateUpdated);
+        assertEquals(isUpdated , true);
+
+        extensionsConfigurationDao.deleteConfigurationBySid(sid);
+    }
 }

@@ -59,4 +59,12 @@
     <delete id="deleteConfigurationByName" parameterType="string">
         DELETE FROM "restcomm_extensions_configuration" WHERE "extension"=#{extension};
     </delete>
+
+    <select id="getDateUpdatedByName" parameterType="String" resultType="date">
+        SELECT "date_updated" FROM "restcomm_extensions_configuration" WHERE "extension"=#{extension};
+    </select>
+
+    <select id="getDateUpdatedBySid" parameterType="String" resultType="date">
+        SELECT "date_updated" FROM "restcomm_extensions_configuration" WHERE "sid"=#{sid};
+    </select>
 </mapper>
