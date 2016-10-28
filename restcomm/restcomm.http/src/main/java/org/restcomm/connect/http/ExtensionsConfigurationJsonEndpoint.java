@@ -41,13 +41,13 @@ public class ExtensionsConfigurationJsonEndpoint extends ExtensionsConfiguration
     }
 
     @POST
-    public Response postConfiguration(final MultivaluedMap<String, String> data) {
+    public Response postConfigurationAsJson(final MultivaluedMap<String, String> data) {
         return postConfiguration(data, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{extensionSid}")
     @POST
-    public Response updateConfigurationAsJsonPost(@PathParam("extensionSid") final String extensionSid,
+    public Response updateConfigurationAsJson(@PathParam("extensionSid") final String extensionSid,
                                             final MultivaluedMap<String, String> data) {
         return updateConfiguration(extensionSid, data, APPLICATION_JSON_TYPE);
     }
