@@ -289,9 +289,19 @@ public final class UserAgentManager extends UntypedActor {
                 } catch (ServletParseException e) {}
 
                 if(logger.isDebugEnabled()) {
-                    logger.debug("regLocation: " + regLocation + " reg.getAddressOfRecord(): "+reg.getAddressOfRecord() +" reg.getLocation(): "+reg.getLocation());
+                    logger.debug("regLocation: " + regLocation + " reg.getAddressOfRecord(): "+reg.getAddressOfRecord() +
+                    		" reg.getLocation(): "+reg.getLocation() + ", reg.getDateExpires(): " + reg.getDateExpires() 
+                    		+ ", reg.getDateUpdated(): " + reg.getDateUpdated());
+                    if (reg.getDateExpires().isBeforeNow() || reg.getDateExpires().isEqualNow()) {
+                    	logger.debug("Registration: "+ reg.getAddressOfRecord()+" expired");
+                    }
+                    Long pingIntervalMillis = new Long(pingInterval * 1000 * 3);
+                    if ((DateTime.now().getMillis() - reg.getDateUpdated().getMillis()) > pingIntervalMillis) {
+                        logger.debug("Registration: " + reg.getAddressOfRecord() + " didn't respond to OPTIONS in " + pingIntervalMillis + "ms");
+                    }
                 }
                 if (regLocation != null && (reg.getAddressOfRecord().equalsIgnoreCase(regLocation.toString()) || reg.getLocation().equalsIgnoreCase(regLocation.toString()))) {
+                	
                     if(logger.isDebugEnabled()) {
                         logger.debug("Registration: " + reg.getLocation() + " failed to response to OPTIONS and will be removed");
                     }
