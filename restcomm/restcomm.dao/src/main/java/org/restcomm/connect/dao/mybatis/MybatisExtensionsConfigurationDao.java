@@ -67,7 +67,8 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
                     session.insert(namespace + "addConfiguration", toMap(extensionConfiguration));
                     session.commit();
                 } else {
-                    throw new ConfigurationException("Exception trying to add new configuration");
+                    throw new ConfigurationException("Exception trying to add new configuration, validation failed. configuration type: "
+                            + extensionConfiguration.getConfigurationType());
                 }
             }
         } finally {
@@ -83,7 +84,8 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
                 if (validate(extensionConfiguration)) {
                     session.update(namespace + "updateConfiguration", toMap(extensionConfiguration));
                 } else {
-                    throw new ConfigurationException("Exception trying to update configuration");
+                    throw new ConfigurationException("Exception trying to update configuration, validation failed. configuration type: "
+                            + extensionConfiguration.getConfigurationType());
                 }
             }
             session.commit();
