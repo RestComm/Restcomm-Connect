@@ -26,11 +26,13 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.io.IOUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeComparator;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.ExtensionsConfigurationDao;
+import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
 import org.restcomm.connect.extension.api.ExtensionSpecificConfiguration;
 
@@ -47,6 +49,7 @@ import static org.restcomm.connect.dao.DaoUtils.readDateTime;
  */
 public class MybatisExtensionsConfigurationDao implements ExtensionsConfigurationDao {
 
+    private static Logger logger = Logger.getLogger(MybatisExtensionsConfigurationDao.class);
     private static final String namespace = "org.restcomm.connect.dao.ExtensionsConfigurationDao.";
     private final SqlSessionFactory sessions;
 
@@ -56,13 +59,15 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
     }
 
     @Override
-    public void addConfiguration(ExtensionConfiguration extensionConfiguration) {
+    public void addConfiguration(ExtensionConfiguration extensionConfiguration) throws ConfigurationException {
         final SqlSession session = sessions.openSession();
         try {
             if (extensionConfiguration != null && extensionConfiguration.getConfigurationData() != null) {
                 if (validate(extensionConfiguration)) {
                     session.insert(namespace + "addConfiguration", toMap(extensionConfiguration));
                     session.commit();
+                } else {
+                    throw new ConfigurationException("Exception trying to add new configuration");
                 }
             }
         } finally {
@@ -71,12 +76,14 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
     }
 
     @Override
-    public void updateConfiguration(ExtensionConfiguration extensionConfiguration) {
+    public void updateConfiguration(ExtensionConfiguration extensionConfiguration) throws ConfigurationException {
         final SqlSession session = sessions.openSession();
         try {
             if (extensionConfiguration != null && extensionConfiguration.getConfigurationData() != null) {
                 if (validate(extensionConfiguration)) {
                     session.update(namespace + "updateConfiguration", toMap(extensionConfiguration));
+                } else {
+                    throw new ConfigurationException("Exception trying to update configuration");
                 }
             }
             session.commit();
@@ -244,7 +251,9 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
                 String json = new GsonBuilder().setPrettyPrinting().create().toJson(o);
                 return (json != null || !json.isEmpty());
             } catch (Exception e) {
-                System.out.println("invalid json format, exception: "+e);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("invalid json format, exception: "+e);
+                }
             } finally {
                 gson = null;
             }
@@ -259,7 +268,9 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
                 xml = xmlConfiguration;
                 return (xml != null || !xml.isEmpty());
             } catch (Exception e) {
-                System.out.println("invalid xml document, exception: "+e);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("invalid xml document, exception: "+e);
+                }
             } finally {
                 xml = null;
             }
