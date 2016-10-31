@@ -290,10 +290,10 @@ public final class UserAgentManager extends UntypedActor {
 
                 if(logger.isDebugEnabled()) {
                     logger.debug("regLocation: " + regLocation + " reg.getAddressOfRecord(): "+reg.getAddressOfRecord() +
-                    		" reg.getLocation(): "+reg.getLocation() + ", reg.getDateExpires(): " + reg.getDateExpires() 
-                    		+ ", reg.getDateUpdated(): " + reg.getDateUpdated());
+                            " reg.getLocation(): "+reg.getLocation() + ", reg.getDateExpires(): " + reg.getDateExpires()
+                            + ", reg.getDateUpdated(): " + reg.getDateUpdated());
                     if (reg.getDateExpires().isBeforeNow() || reg.getDateExpires().isEqualNow()) {
-                    	logger.debug("Registration: "+ reg.getAddressOfRecord()+" expired");
+                        logger.debug("Registration: "+ reg.getAddressOfRecord()+" expired");
                     }
                     Long pingIntervalMillis = new Long(pingInterval * 1000 * 3);
                     if ((DateTime.now().getMillis() - reg.getDateUpdated().getMillis()) > pingIntervalMillis) {
@@ -301,7 +301,7 @@ public final class UserAgentManager extends UntypedActor {
                     }
                 }
                 if (regLocation != null && (reg.getAddressOfRecord().equalsIgnoreCase(regLocation.toString()) || reg.getLocation().equalsIgnoreCase(regLocation.toString()))) {
-                	
+
                     if(logger.isDebugEnabled()) {
                         logger.debug("Registration: " + reg.getLocation() + " failed to response to OPTIONS and will be removed");
                     }
@@ -380,13 +380,13 @@ public final class UserAgentManager extends UntypedActor {
     private void pong(final Object message) {
         final SipServletResponse response = (SipServletResponse) message;
         if (response.getApplicationSession().isValid()) {
-        	try {
-        		response.getApplicationSession().invalidate();
-        	} catch (IllegalStateException ise) {
-        		if (logger.isDebugEnabled()) {
+            try {
+                response.getApplicationSession().invalidate();
+            } catch (IllegalStateException ise) {
+                if (logger.isDebugEnabled()) {
                     logger.debug("The session was already invalidated, nothing to do");
                 }
-        	}
+            }
         }
         final RegistrationsDao registrations = storage.getRegistrationsDao();
         Registration registration = registrations.getRegistration(((SipURI)response.getTo().getURI()).getUser());
