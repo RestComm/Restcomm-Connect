@@ -39,6 +39,7 @@ import org.restcomm.connect.data.recorder.api.interfaces.CallDataRecorder;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
+import org.restcomm.connect.telephony.api.UpdateCallInfo;
 
 import akka.actor.ActorRef;
 import akka.event.Logging;
@@ -83,10 +84,12 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
             onCallResponse((CallResponse<?>) message, self, sender);
         } else if(CallStateChanged.class.equals(klass)){
             onCallStateChanged((CallStateChanged) message, self, sender);
+        } else if(UpdateCallInfo.class.equals(klass)){
+        	onUpdateCallInfo((UpdateCallInfo) message, self, sender);
         }
     }
 
-    private void onObserve(Observe message, ActorRef self, ActorRef sender) throws Exception {
+	private void onObserve(Observe message, ActorRef self, ActorRef sender) throws Exception {
         final ActorRef observer = message.observer();
         if (observer != null) {
             this.observers.add(observer);
@@ -209,15 +212,20 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
         dao.updateCallDetailRecord(cdr);
     }
 
+    private void onUpdateCallInfo(UpdateCallInfo message, ActorRef self, ActorRef sender) {
+        if(logger.isDebugEnabled()){
+            logger.debug("onUpdateCallInfo: "+message.toString());
+        }
+        
+    }
+ 
     @Override
     public void postStop() {
         try {
             onStopObserving(new StopObserving(), self(), null);
             getContext().stop(self());
         } catch (Exception exception) {
-            if(logger.isInfoEnabled()) {
-                logger.info("Exception during CallDataRecorderImpl postStop while trying to remove observers: "+exception);
-            }
+        	logger.error("Exception during CallDataRecorderImpl postStop while trying to remove observers: "+exception);
         }
         super.postStop();
     }

@@ -107,6 +107,7 @@ import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.telephony.api.RemoveParticipant;
+import org.restcomm.connect.telephony.api.UpdateCallInfo;
 
 import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
@@ -1161,14 +1162,9 @@ public final class Call extends UntypedActor {
             callDataRecorder.tell(info(), self());
             //Update CDR for Outbound Call.
             if (recordsDao != null) {
-                if (outgoingCallRecord != null && isOutbound()) {
+            	if (isOutbound()) {
                     final int seconds = (int) ((DateTime.now().getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
-                    outgoingCallRecord = outgoingCallRecord.setRingDuration(seconds);
-                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
-                    outgoingCallRecord = outgoingCallRecord.setStartTime(DateTime.now());
-                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
-                    outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                    new UpdateCallInfo(external, DateTime.now(), null, null, seconds, null, null, null, null, null, null, null, null);
                 }
             }
 

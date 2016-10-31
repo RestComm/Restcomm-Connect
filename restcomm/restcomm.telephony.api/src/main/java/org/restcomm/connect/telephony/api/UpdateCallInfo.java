@@ -30,6 +30,7 @@ import org.restcomm.connect.commons.dao.Sid;
  */
 @Immutable
 public class UpdateCallInfo {
+	private final Sid sid;
     private final String status;
     private final DateTime startTime;
     private final DateTime endTime;
@@ -44,10 +45,11 @@ public class UpdateCallInfo {
     private final Boolean onHold;
     private final String msId;
 
-    public UpdateCallInfo(String status, DateTime startTime, DateTime endTime, Integer duration, Integer ringDuration,
+    public UpdateCallInfo(final Sid sid, String status, DateTime startTime, DateTime endTime, Integer duration, Integer ringDuration,
             BigDecimal price, String answeredBy, Sid conferenceSid, Boolean muted, Boolean startConferenceOnEnter,
             Boolean endConferenceOnExit, Boolean onHold, String msId) {
         super();
+        this.sid = sid;
         this.status = status;
         this.startTime = startTime;
         this.endTime = endTime;
@@ -61,6 +63,10 @@ public class UpdateCallInfo {
         this.endConferenceOnExit = endConferenceOnExit;
         this.onHold = onHold;
         this.msId = msId;
+    }
+
+    public Sid getSid() {
+        return sid;
     }
 
     public String getStatus() {
@@ -114,4 +120,13 @@ public class UpdateCallInfo {
     public String getMsId() {
         return msId;
     }
+
+	@Override
+	public String toString() {
+		return "UpdateCallInfo [sid=" + sid + ", status=" + status + ", startTime=" + startTime + ", endTime=" + endTime
+				+ ", duration=" + duration + ", ringDuration=" + ringDuration + ", price=" + price + ", answeredBy="
+				+ answeredBy + ", conferenceSid=" + conferenceSid + ", muted=" + muted + ", startConferenceOnEnter="
+				+ startConferenceOnEnter + ", endConferenceOnExit=" + endConferenceOnExit + ", onHold=" + onHold
+				+ ", msId=" + msId + "]";
+	}
 }
