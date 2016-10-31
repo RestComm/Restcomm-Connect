@@ -163,11 +163,8 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
                 }else{
                     //update existing record
                     if(logger.isDebugEnabled()){
-                        logger.debug("onCallResponse: callInfo: CDR already exists, will update existing record.");
+                        logger.debug("onCallResponse: callInfo: CDR already exists, nothing to do.");
                     }
-                    cdr = cdr.setRingDuration(seconds);
-                    cdr = cdr.setStartTime(DateTime.now());
-                    cdr = cdr.setStatus(external.name());
                 }
             }
         }
