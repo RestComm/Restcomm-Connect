@@ -85,11 +85,11 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
         } else if(CallStateChanged.class.equals(klass)){
             onCallStateChanged((CallStateChanged) message, self, sender);
         } else if(UpdateCallInfo.class.equals(klass)){
-        	onUpdateCallInfo((UpdateCallInfo) message, self, sender);
+            onUpdateCallInfo((UpdateCallInfo) message, self, sender);
         }
     }
 
-	private void onObserve(Observe message, ActorRef self, ActorRef sender) throws Exception {
+    private void onObserve(Observe message, ActorRef self, ActorRef sender) throws Exception {
         final ActorRef observer = message.observer();
         if (observer != null) {
             this.observers.add(observer);
@@ -180,8 +180,6 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
         CallDetailRecordsDao dao = daoManager.getCallDetailRecordsDao();
         cdr = dao.getCallDetailRecord(sid);
         cdr = cdr.setStatus(callState.name());
-        if(!callInfo.direction().equals("inbound"))
-            cdr = cdr.setRingDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
 
         switch (callState) {
             case BUSY:
@@ -235,7 +233,7 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
             onStopObserving(new StopObserving(), self(), null);
             getContext().stop(self());
         } catch (Exception exception) {
-        	logger.error("Exception during CallDataRecorderImpl postStop while trying to remove observers: "+exception);
+            logger.error("Exception during CallDataRecorderImpl postStop while trying to remove observers: "+exception);
         }
         super.postStop();
     }
