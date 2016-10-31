@@ -22,11 +22,18 @@ package org.restcomm.connect.commons.util;
 
 import org.apache.commons.codec.binary.Base64;
 
+import java.util.UUID;
+
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 public class SecurityUtils {
     public static String buildBasicAuthHeader(String username, String password) {
         return "Basic " + Base64.encodeBase64String((username + ":" + password).getBytes());
+    }
+
+    // TODO is this is random enough ? probably yes.
+    public static String generateAccountAuthToken() {
+        return UUID.randomUUID().toString().replace("-","");
     }
 }

@@ -41,12 +41,13 @@ public final class Account {
     private final Sid parentSid;
     private final Type type;
     private final Status status;
+    private final String password;
     private final String authToken;
     private final String role;
     private final URI uri;
 
     public Account(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String emailAddress,
-                   final String friendlyName, final Sid parentSid, final Type type, final Status status, final String authToken,
+                   final String friendlyName, final Sid parentSid, final Type type, final Status status, String password, final String authToken,
                    final String role, final URI uri) {
         super();
         this.sid = sid;
@@ -57,6 +58,7 @@ public final class Account {
         this.parentSid = parentSid;
         this.type = type;
         this.status = status;
+        this.password = password;
         this.authToken = authToken;
         this.role = role;
         this.uri = uri;
@@ -98,6 +100,10 @@ public final class Account {
         return status;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
     public String getAuthToken() {
         return authToken;
     }
@@ -111,32 +117,32 @@ public final class Account {
     }
 
     public Account setEmailAddress(final String emailAddress) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, password, authToken,
                 role, uri);
     }
 
     public Account setFriendlyName(final String friendlyName) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, password, authToken,
                 role, uri);
     }
 
     public Account setType(final Type type) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, password, authToken,
                 role, uri);
     }
 
     public Account setStatus(final Status status) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, password, authToken,
                 role, uri);
     }
 
     public Account setAuthToken(final String authToken) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, password, authToken,
                 role, uri);
     }
 
     public Account setRole(final String role) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, password, authToken,
                 role, uri);
     }
 
@@ -197,6 +203,7 @@ public final class Account {
         private Sid parentSid;
         private Type type;
         private Status status;
+        private String password;
         private String authToken;
         private String role;
         private URI uri;
@@ -207,7 +214,7 @@ public final class Account {
 
         public Account build() {
             final DateTime now = DateTime.now();
-            return new Account(sid, now, now, emailAddress, friendlyName, parentSid, type, status, authToken, role, uri);
+            return new Account(sid, now, now, emailAddress, friendlyName, parentSid, type, status, password, authToken, role, uri);
         }
 
         public void setSid(final Sid sid) {
@@ -232,6 +239,10 @@ public final class Account {
 
         public void setStatus(final Status status) {
             this.status = status;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
         }
 
         public void setAuthToken(final String authToken) {

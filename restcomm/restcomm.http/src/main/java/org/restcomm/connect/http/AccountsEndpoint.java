@@ -46,6 +46,7 @@ import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
+import org.restcomm.connect.commons.util.SecurityUtils;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
@@ -132,14 +133,15 @@ public class AccountsEndpoint extends SecuredEndpoint {
         PasswordValidator validator = PasswordValidatorFactory.createDefault();
         if (!validator.isStrongEnough(password))
             throw new PasswordTooWeak();
-        final String authToken = new Md5Hash(password).toString();
+        // AuthToken gets a random value
+        final String authToken = SecurityUtils.generateAccountAuthToken();
         final String role = data.getFirst("Role");
         String rootUri = runtimeConfiguration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
-        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
+        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, password, authToken, role, uri);
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
