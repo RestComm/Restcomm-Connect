@@ -379,9 +379,15 @@ public final class UserAgentManager extends UntypedActor {
 
     private void pong(final Object message) {
         final SipServletResponse response = (SipServletResponse) message;
-            if (response.getApplicationSession().isValid()) {
-                response.getApplicationSession().invalidate();
-            }
+        if (response.getApplicationSession().isValid()) {
+        	try {
+        		response.getApplicationSession().invalidate();
+        	} catch (IllegalStateException ise) {
+        		if (logger.isDebugEnabled()) {
+                    logger.debug("The session was already invalidated, nothing to do");
+                }
+        	}
+        }
         final RegistrationsDao registrations = storage.getRegistrationsDao();
         Registration registration = registrations.getRegistration(((SipURI)response.getTo().getURI()).getUser());
         //Registration here shouldn't be null. Update it
