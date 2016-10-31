@@ -163,21 +163,19 @@
 		</security-roles>
 	</runtime-settings>
 
-	<!-- Configuration for the VoIP Innovations provisioning API. -->
 	<phone-number-provisioning
-		class="org.restcomm.connect.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
+			class="org.restcomm.connect.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager">
 		<callback-urls>
 			<voice url="localhost:5080" method="SIP" />
 			<sms url="localhost:5080" method="SIP" />
 			<fax url="localhost:5080" method="SIP" />
 			<ussd url="localhost:5080" method="SIP" />
 		</callback-urls>
-		<voip-innovations>
-			<login></login>
-			<password></password>
-			<endpoint></endpoint>
-			<uri>https://backoffice.voipinnovations.com/api2.pl</uri>
-		</voip-innovations>
+		<nexmo>
+			<api-key>randomkey</api-key>
+			<api-secret>randomsecret</api-secret>
+			<uri>http://127.0.0.1:8089/nexmo</uri>
+		</nexmo>
 	</phone-number-provisioning>
 
 	<smtp-notify>

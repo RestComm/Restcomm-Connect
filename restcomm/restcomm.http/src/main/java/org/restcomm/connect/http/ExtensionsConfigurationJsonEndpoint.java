@@ -19,7 +19,6 @@
 
 package org.restcomm.connect.http;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -27,7 +26,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 /**
@@ -42,11 +40,15 @@ public class ExtensionsConfigurationJsonEndpoint extends ExtensionsConfiguration
         return getConfiguration(extension, APPLICATION_JSON_TYPE);
     }
 
-    @Path("/{extensionId}")
-    @Consumes(APPLICATION_FORM_URLENCODED)
     @POST
-    public Response updateConfigurationAsJsonPost(@PathParam("extensionId") final String extension,
+    public Response postConfigurationAsJson(final MultivaluedMap<String, String> data) {
+        return postConfiguration(data, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{extensionSid}")
+    @POST
+    public Response updateConfigurationAsJson(@PathParam("extensionSid") final String extensionSid,
                                             final MultivaluedMap<String, String> data) {
-        return updateConfiguration(extension, data, APPLICATION_JSON_TYPE);
+        return updateConfiguration(extensionSid, data, APPLICATION_JSON_TYPE);
     }
 }

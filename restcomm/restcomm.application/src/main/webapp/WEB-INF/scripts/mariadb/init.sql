@@ -341,7 +341,17 @@ configuration_data LONGTEXT NOT NULL,
 configuration_type VARCHAR(255) NOT NULL,
 date_created DATETIME NOT NULL,
 date_updated DATETIME
-)
+);
+
+CREATE TABLE restcomm_extensions_configuration_specific (
+sid VARCHAR(34) NOT NULL PRIMARY KEY,
+specific_sid VARCHAR(34) NOT NULL,
+extension VARCHAR(255) NOT NULL,
+configuration_data LONGTEXT NOT NULL,
+configuration_type VARCHAR(255) NOT NULL,
+date_created DATETIME NOT NULL,
+date_updated DATETIME
+);
 
 INSERT INTO restcomm_accounts VALUES (
 "ACae6e420f425248d6a26948c17a9e2acf",
