@@ -1106,13 +1106,21 @@ public final class CallManager extends UntypedActor {
 
     private void outbound(final Object message, final ActorRef sender) throws ServletParseException {
         final CreateCall request = (CreateCall) message;
+        CallRequest callRequest = new CallRequest(request.from(), request.to(), CallRequest.Type.valueOf(request.type().name()), request.accountId());
         switch (request.type()) {
             case CLIENT: {
-                outboundToClient(request, sender);
+                if (executePreOutboundAction(callRequest)) {
+                    outboundToClient(request, sender);
+                } else {
+                    //Extensions didn't allowed this call
+                    final String errMsg = "Not Allowed to make this outbound call";
+                    logger.error(errMsg);
+                    sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+                }
+                executePostOutboundAction(callRequest);
                 break;
             }
             case PSTN: {
-                CallRequest callRequest = new CallRequest(request.from(), request.to(), CallRequest.Type.valueOf(request.type().name()), request.accountId());
                 if (executePreOutboundAction(callRequest)) {
                     outboundToPstn(request, sender);
                 } else {
@@ -1125,7 +1133,15 @@ public final class CallManager extends UntypedActor {
                 break;
             }
             case SIP: {
-                outboundToSip(request, sender);
+                if (executePreOutboundAction(callRequest)) {
+                    outboundToSip(request, sender);
+                }  else {
+                    //Extensions didn't allowed this call
+                    final String errMsg = "Not Allowed to make this outbound call";
+                    logger.error(errMsg);
+                    sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+                }
+                executePostOutboundAction(callRequest);
                 break;
             }
         }
