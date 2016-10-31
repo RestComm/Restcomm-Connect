@@ -211,6 +211,9 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
         if(logger.isDebugEnabled()){
             logger.debug("onUpdateCallInfo: "+message.toString());
         }
+
+        cdr = daoManager.getCallDetailRecordsDao().getCallDetailRecord(message.getSid());
+
         cdr = message.getStatus() == null ? cdr : cdr.setStatus(message.getStatus());
         cdr = message.getStartTime() == null ? cdr : cdr.setStartTime(message.getStartTime());
         cdr = message.getEndTime() == null ? cdr : cdr.setEndTime(message.getEndTime());

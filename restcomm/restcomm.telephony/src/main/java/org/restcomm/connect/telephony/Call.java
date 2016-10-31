@@ -1284,21 +1284,7 @@ public final class Call extends UntypedActor {
                 logger.info("Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" new external state: "+external);
             }
 
-            // Record call data
-            if (outgoingCallRecord != null && isOutbound()) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(external.toString());
-                final DateTime now = DateTime.now();
-                outgoingCallRecord = outgoingCallRecord.setEndTime(now);
-                final int seconds = (int) ((now.getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
-                outgoingCallRecord = outgoingCallRecord.setDuration(seconds);
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-                if(logger.isDebugEnabled()) {
-                    logger.debug("Start: " + outgoingCallRecord.getStartTime());
-                    logger.debug("End: " + outgoingCallRecord.getEndTime());
-                    logger.debug("Duration: " + seconds);
-                    logger.debug("Just updated CDR for completed call");
-                }
-            }
+            // Record call data: no need bcz when CDRI will receive CallStateChanged as completed it will update endTime and duration for this call :)
         }
     }
 
