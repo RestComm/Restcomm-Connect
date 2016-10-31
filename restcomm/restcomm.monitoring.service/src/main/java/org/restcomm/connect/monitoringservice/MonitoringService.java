@@ -160,7 +160,13 @@ public class MonitoringService extends UntypedActor{
             logger.debug("MonitoringService onGetCall, location: "+location);
         }
         if (location != null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("onGetCall Before: callLocationMap: "+ callLocationMap.toString());
+            }
             ActorRef call = callLocationMap.get(location);
+            if (logger.isDebugEnabled()) {
+                logger.debug("onGetCall After: callLocationMap: "+ callLocationMap.toString());
+            }
             if (call != null) {
                 sender.tell(call, sender());
             } else {
@@ -236,7 +242,13 @@ public class MonitoringService extends UntypedActor{
         callMap.remove(senderPath);
         CallInfo callInfo = callDetailsMap.remove(senderPath);
         if (callInfo != null && callInfo.invite() != null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("onStopObserving Before: callLocationMap: "+ callLocationMap.toString());
+            }
             callLocationMap.remove(callInfo.invite().getAddressHeader(ContactHeader.NAME).getURI().toString());
+            if (logger.isDebugEnabled()) {
+                logger.debug("onStopObserving After: callLocationMap: "+ callLocationMap.toString());
+            }
         }
         if (callInfo.direction().equalsIgnoreCase("inbound")) {
             if (logger.isDebugEnabled()) {
@@ -262,7 +274,13 @@ public class MonitoringService extends UntypedActor{
         CallInfo callInfo = message.get();
         callDetailsMap.put(senderPath, callInfo);
         if (callInfo != null && callInfo.invite() != null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("onCallResponse Before: callLocationMap: "+ callLocationMap.toString());
+            }
             callLocationMap.put(callInfo.invite().getAddressHeader(ContactHeader.NAME).getURI().toString(), sender);
+            if (logger.isDebugEnabled()) {
+                logger.debug("onCallResponse After: callLocationMap: "+ callLocationMap.toString());
+            }
         }
         if (callInfo.direction().equalsIgnoreCase("inbound")) {
             if (logger.isDebugEnabled()) {
