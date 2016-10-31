@@ -27,13 +27,17 @@ import org.apache.commons.io.IOUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeComparator;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.ExtensionsConfigurationDao;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
+import org.restcomm.connect.extension.api.ExtensionSpecificConfiguration;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.restcomm.connect.dao.DaoUtils.readDateTime;
@@ -112,6 +116,24 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
     }
 
     @Override
+    public List<ExtensionConfiguration> getAllConfiguration() {
+        final SqlSession session = sessions.openSession();
+        ExtensionConfiguration extensionConfiguration = null;
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getAllConfiguration");
+            final List<ExtensionConfiguration> confs = new ArrayList<ExtensionConfiguration>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    confs.add(toExtensionConfiguration(result));
+                }
+            }
+            return confs;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public void deleteConfigurationByName(String extensionName) {
         final SqlSession session = sessions.openSession();
         try {
@@ -131,6 +153,85 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
         } finally {
             session.close();
         }
+    }
+
+    @Override
+    public void addSpecificConfiguration(ExtensionSpecificConfiguration extensionSpecificConfiguration) {
+
+    }
+
+    @Override
+    public void updateSpecificConfiguration(ExtensionSpecificConfiguration extensionSpecificConfiguration) {
+
+    }
+
+    @Override
+    public List<ExtensionSpecificConfiguration> getSpecificConfigurationByName(String extensionName) {
+        return null;
+    }
+
+    @Override
+    public List<ExtensionSpecificConfiguration> getSpecificConfigurationByConfigurationSid(Sid extensionSid) {
+        return null;
+    }
+
+    @Override
+    public List<ExtensionSpecificConfiguration> getAllSpecificConfiguration() {
+        return null;
+    }
+
+    @Override
+    public void deleteSpecificConfigurationByName(String extensionName) {
+
+    }
+
+    @Override
+    public void deleteSpecificConfigurationBySid(Sid specificExtensionSid) {
+
+    }
+
+    @Override
+    public boolean isLatestVersionByName(String extensionName, DateTime dateTime) {
+        final SqlSession session = sessions.openSession();
+        boolean result = false;
+        int comp;
+        try {
+            final DateTime dateUpdated = new DateTime(session.selectOne(namespace + "getDateUpdatedByName", extensionName));
+            if (dateUpdated != null) {
+                comp = DateTimeComparator.getInstance().compare(dateTime, dateUpdated);
+                if (comp < 0) {
+                    //Negative value means that given dateTime is less than dateUpdated, which means that DB
+                    //has a newer cnfiguration
+                    result = true;
+                }
+            }
+
+        } finally {
+            session.close();
+        }
+        return result;
+    }
+
+    @Override
+    public boolean isLatestVersionBySid(Sid extensionSid, DateTime dateTime) {
+        final SqlSession session = sessions.openSession();
+        boolean result = false;
+        int comp;
+        try {
+            final DateTime dateUpdated = new DateTime(session.selectOne(namespace + "getDateUpdatedBySid", extensionSid.toString()));
+            if (dateUpdated != null) {
+                comp = DateTimeComparator.getInstance().compare(dateTime, dateUpdated);
+                if (comp < 0) {
+                    //Negative value means that given dateTime is less than dateUpdated, which means that DB
+                    //has a newer cnfiguration
+                    result = true;
+                }
+            }
+
+        } finally {
+            session.close();
+        }
+        return result;
     }
 
     @Override
