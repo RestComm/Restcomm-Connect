@@ -20,13 +20,10 @@
 package org.restcomm.connect.telephony;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.net.InetAddress;
-import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Currency;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -69,9 +66,7 @@ import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.commons.util.SdpUtils;
-import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.mscontrol.api.messages.CloseMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.Collect;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
@@ -901,16 +896,7 @@ public final class Call extends UntypedActor {
                 observer.tell(event, source);
             }
 
-            // Record call data
-            /*if (outgoingCallRecord != null && isOutbound()) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-                outgoingCallRecord = outgoingCallRecord.setDuration(0);
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-                final int seconds = (int) ((DateTime.now().getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
-                outgoingCallRecord = outgoingCallRecord.setRingDuration(seconds);
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-            }*/
+            // Record call data: no need bcz when CDRI will receive CallStateChanged as BUSY and it will update duration/ring duration for this call :)
         }
     }
 
@@ -938,11 +924,7 @@ public final class Call extends UntypedActor {
                 observer.tell(event, source);
             }
 
-            // Record call data
-            /*if (outgoingCallRecord != null && isOutbound()) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-            }*/
+            // Record call data: no need bcz when CDRI will receive CallStateChanged will update status in DB for this call :)
         }
     }
 
@@ -966,11 +948,7 @@ public final class Call extends UntypedActor {
                 observer.tell(event, source);
             }
 
-            // Record call data
-            /*if (outgoingCallRecord != null && isOutbound()) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-            }*/
+            // Record call data: no need bcz when CDRI will receive CallStateChanged will update status in DB for this call :)
         }
     }
 
@@ -1003,11 +981,7 @@ public final class Call extends UntypedActor {
                 observer.tell(event, source);
             }
 
-            // Record call data
-            /*if (outgoingCallRecord != null && isOutbound()) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-            }*/
+            // Record call data: no need bcz when CDRI will receive CallStateChanged will update status in DB for this call :)
         }
     }
 
