@@ -216,7 +216,20 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
         if(logger.isDebugEnabled()){
             logger.debug("onUpdateCallInfo: "+message.toString());
         }
+        cdr = message.getStatus() == null ? cdr : cdr.setStatus(message.getStatus());
+        cdr = message.getStartTime() == null ? cdr : cdr.setStartTime(message.getStartTime());
+        cdr = message.getEndTime() == null ? cdr : cdr.setEndTime(message.getEndTime());
+        cdr = message.getDuration() == null ? cdr : cdr.setDuration(message.getDuration());
+        cdr = message.getPrice() == null ? cdr : cdr.setPrice(message.getPrice());
+        cdr = message.getAnsweredBy() == null ? cdr : cdr.setAnsweredBy(message.getAnsweredBy());
+        cdr = message.getConferenceSid() == null ? cdr : cdr.setConferenceSid(message.getConferenceSid());
+        cdr = message.getMuted() == null ? cdr : cdr.setMuted(message.getMuted());
+        cdr = message.getStartConferenceOnEnter() == null ? cdr : cdr.setStartConferenceOnEnter(message.getStartConferenceOnEnter());
+        cdr = message.getEndConferenceOnExit() == null ? cdr : cdr.setEndConferenceOnExit(message.getEndConferenceOnExit());
+        cdr = message.getOnHold() == null ? cdr : cdr.setOnHold(message.getOnHold());
+        cdr = message.getMsId() == null ? cdr : cdr.setMsId(message.getMsId());
         
+        daoManager.getCallDetailRecordsDao().updateCallDetailRecord(cdr);
     }
  
     @Override
