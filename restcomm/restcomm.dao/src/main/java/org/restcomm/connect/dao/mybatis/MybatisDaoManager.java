@@ -52,6 +52,7 @@ import org.restcomm.connect.dao.ShortCodesDao;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.TranscriptionsDao;
 import org.restcomm.connect.dao.UsageDao;
+import org.restcomm.connect.dao.GeolocationDao;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -84,6 +85,7 @@ public final class MybatisDaoManager implements DaoManager {
     private MediaServersDao mediaServersDao;
     private MediaResourceBrokerDao mediaResourceBrokerDao;
     private ExtensionsConfigurationDao extensionsConfigurationDao;
+    private GeolocationDao geolocationDao;
 
     public MybatisDaoManager() {
         super();
@@ -207,6 +209,11 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
+    public GeolocationDao getGeolocationDao() {
+        return geolocationDao;
+    }
+
+    @Override
     public void shutdown() {
         // Nothing to do.
     }
@@ -276,5 +283,6 @@ public final class MybatisDaoManager implements DaoManager {
         mediaServersDao = new MybatisMediaServerDao(sessions);
         mediaResourceBrokerDao = new MybatisMediaResourceBrokerDao(sessions);
         extensionsConfigurationDao = new MybatisExtensionsConfigurationDao(sessions);
+        geolocationDao = new MybatisGeolocationDao(sessions);
     }
 }

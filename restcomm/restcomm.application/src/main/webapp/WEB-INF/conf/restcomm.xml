@@ -166,6 +166,7 @@
 				<permission>RestComm:*:OutboundProxies</permission>
 				<permission>RestComm:*:EmailMessages</permission>
 				<permission>RestComm:*:Usage</permission>
+				<permission>RestComm:*:Geolocation</permission>
 			</role>
 		</security-roles>
 	</runtime-settings>
