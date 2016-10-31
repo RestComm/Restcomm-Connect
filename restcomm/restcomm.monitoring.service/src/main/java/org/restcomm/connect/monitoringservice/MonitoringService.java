@@ -24,6 +24,7 @@ import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.dao.DaoManager;
@@ -40,6 +41,7 @@ import org.restcomm.connect.telephony.api.UserRegistration;
 
 import javax.servlet.sip.ServletParseException;
 import javax.sip.header.ContactHeader;
+
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -166,6 +168,20 @@ public class MonitoringService extends UntypedActor{
             ActorRef call = callLocationMap.get(location);
             if (logger.isDebugEnabled()) {
                 logger.debug("onGetCall After: callLocationMap: "+ callLocationMap.toString());
+            }
+            if(call == null && location.indexOf("@") != -1 && location.indexOf(":") != -1) {
+                // required in case the Contact Header of the INVITE doesn't contain any user part
+                // as it is the case for Restcomm SDKs
+                if (logger.isDebugEnabled()) {
+                    logger.debug("onGetCall Another try on removing the user part from " + location);
+                }
+                int indexOfAt = location.indexOf("@");
+                int indexOfColumn = location.indexOf(":");
+                String newLocation = location.substring(0, indexOfColumn+1).concat(location.substring(indexOfAt+1));
+                call = callLocationMap.get(newLocation);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("onGetCall call " + call + " found for new Location " + newLocation);
+                }
             }
             if (call != null) {
                 sender.tell(call, sender());

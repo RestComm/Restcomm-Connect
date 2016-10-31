@@ -274,8 +274,9 @@ public final class UserAgentManager extends UntypedActor {
 
     private void removeRegistration(final SipServletMessage sipServletMessage) {
         String user = ((SipURI)sipServletMessage.getTo().getURI()).getUser();
+        String location = ((SipURI)sipServletMessage.getTo().getURI()).toString();
         if(logger.isDebugEnabled()) {
-            logger.debug("Error response for the OPTIONS to: "+sipServletMessage.getTo().toString()+" will remove registration");
+            logger.debug("Error response for the OPTIONS to: "+location+" will remove registration");
         }
         final RegistrationsDao regDao = storage.getRegistrationsDao();
         List<Registration> registrations = regDao.getRegistrations(user);
@@ -288,19 +289,29 @@ public final class UserAgentManager extends UntypedActor {
                     regLocation = (SipURI) factory.createURI(reg.getLocation());
                 } catch (ServletParseException e) {}
 
+                Long pingIntervalMillis = new Long(pingInterval * 1000 * 3);
+                boolean optionsTimeout = ((DateTime.now().getMillis() - reg.getDateUpdated().getMillis()) > pingIntervalMillis);
+
                 if(logger.isDebugEnabled()) {
                     logger.debug("regLocation: " + regLocation + " reg.getAddressOfRecord(): "+reg.getAddressOfRecord() +
                             " reg.getLocation(): "+reg.getLocation() + ", reg.getDateExpires(): " + reg.getDateExpires()
-                            + ", reg.getDateUpdated(): " + reg.getDateUpdated());
+                            + ", reg.getDateUpdated(): " + reg.getDateUpdated()
+                            + ", location: " + location
+                            + ", reg.getLocation().contains(location): " + reg.getLocation().contains(location)
+                            + ", optionsTimedOut " + optionsTimeout);
                     if (reg.getDateExpires().isBeforeNow() || reg.getDateExpires().isEqualNow()) {
                         logger.debug("Registration: "+ reg.getAddressOfRecord()+" expired");
                     }
-                    Long pingIntervalMillis = new Long(pingInterval * 1000 * 3);
                     if ((DateTime.now().getMillis() - reg.getDateUpdated().getMillis()) > pingIntervalMillis) {
                         logger.debug("Registration: " + reg.getAddressOfRecord() + " didn't respond to OPTIONS in " + pingIntervalMillis + "ms");
                     }
                 }
-                if (regLocation != null && (reg.getAddressOfRecord().equalsIgnoreCase(regLocation.toString()) || reg.getLocation().equalsIgnoreCase(regLocation.toString()))) {
+
+                // We clean up only if the location is similar to the registration location to avoid cleaning up all registration lcoation for the AOR
+                // and only if the OPTIONS was not replied to in the pingInterval * 3 since the last REGISTER received to avoid cleaning up if
+                // We keep getting REGISTER and allow for some leeway in case of connectivity issues from restcomm clients.
+                if (regLocation != null && optionsTimeout && reg.getLocation().contains(location) &&
+                        (reg.getAddressOfRecord().equalsIgnoreCase(regLocation.toString()) || reg.getLocation().equalsIgnoreCase(regLocation.toString()))) {
 
                     if(logger.isDebugEnabled()) {
                         logger.debug("Registration: " + reg.getLocation() + " failed to response to OPTIONS and will be removed");
