@@ -19,8 +19,12 @@
 
 package org.restcomm.connect.dao;
 
+import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
+import org.restcomm.connect.extension.api.ExtensionSpecificConfiguration;
+
+import java.util.List;
 
 /**
  * Created by gvagenas on 11/10/2016.
@@ -28,9 +32,9 @@ import org.restcomm.connect.extension.api.ExtensionConfiguration;
 public interface ExtensionsConfigurationDao {
     /**
      * Add a new ExtensionConfiguration
-     * @param extensionsConfiguration
+     * @param extensionConfiguration
      */
-    void addConfiguration(ExtensionConfiguration extensionsConfiguration);
+    void addConfiguration(ExtensionConfiguration extensionConfiguration);
 
     /**
      * Update an existing ExtensionConfiguration
@@ -53,6 +57,12 @@ public interface ExtensionsConfigurationDao {
     ExtensionConfiguration getConfigurationBySid(Sid extensionSid);
 
     /**
+     * Get all extension configuration
+     * @return List<ExtensionConfiguration>
+     */
+    List<ExtensionConfiguration> getAllConfiguration();
+
+    /**
      * Delete extension configuration by extension name
      * @param extensionName
      */
@@ -64,6 +74,66 @@ public interface ExtensionsConfigurationDao {
      */
     void deleteConfigurationBySid(Sid extensionSid);
 
+    /**
+     * Add a new ExtensionSpecificConfiguration
+     * @param extensionSpecificConfiguration
+     */
+    void addSpecificConfiguration(ExtensionSpecificConfiguration extensionSpecificConfiguration);
+
+    /**
+     * Update an existing ExtensionConfiguration
+     * @param extensionSpecificConfiguration
+     */
+    void updateSpecificConfiguration(ExtensionSpecificConfiguration extensionSpecificConfiguration);
+
+    /**
+     * Get extension configuration by extension name
+     * @param extensionName
+     * @return ExtensionSpecificConfiguration
+     */
+    List<ExtensionSpecificConfiguration> getSpecificConfigurationByName(String extensionName);
+
+    /**
+     * Get extension configuration by Sid
+     * @param extensionSid
+     * @return ExtensionConfiguration
+     */
+    List<ExtensionSpecificConfiguration> getSpecificConfigurationByConfigurationSid(Sid extensionSid);
+
+    /**
+     * Get all extension configuration
+     * @return List<ExtensionConfiguration>
+     */
+    List<ExtensionSpecificConfiguration> getAllSpecificConfiguration();
+
+    /**
+     * Delete extension configuration by extension name
+     * @param extensionName
+     */
+    void deleteSpecificConfigurationByName(String extensionName);
+
+    /**
+     * Delete extension configuration by Sid
+     * @param specificExtensionSid
+     */
+    void deleteSpecificConfigurationBySid(Sid specificExtensionSid);
+
+    /**
+     * Check if there is a newer version of the configuration in the DB using extension name
+     * @param extensionName
+     * @param dateTime
+     * @return
+     */
+    boolean isLatestVersionByName(String extensionName, DateTime dateTime);
+
+    /**
+     * Check if there is a newer version of the configuration in the DB using extension sid
+     * @param extensionSid
+     * @param dateTime
+     * @return
+     */
+    boolean isLatestVersionBySid(Sid extensionSid, DateTime dateTime);
+
 
     /**
      * Validate extension configuration based on the type of the configuration data
@@ -71,21 +141,4 @@ public interface ExtensionsConfigurationDao {
      * @return
      */
     boolean validate(ExtensionConfiguration extensionConfiguration);
-
-//    /**
-//     * Get extension configuration by extension name, property name and extra parameter.
-//     * Extra parameter could be for example client name or account sid
-//     * @param extension
-//     * @param property
-//     * @param extraParameter
-//     * @return ExtensionConfigurationProperty
-//     */
-//    ExtensionConfiguration getConfigurationPropertyByExtraParameter(String extension, String property, String extraParameter);
-//
-//    /**
-//     * Get whole extension configuration by extension name
-//     * @param extension
-//     * @return
-//     */
-//    List<ExtensionConfigurationProperty> getConfigurationByExtension(String extension);
 }
