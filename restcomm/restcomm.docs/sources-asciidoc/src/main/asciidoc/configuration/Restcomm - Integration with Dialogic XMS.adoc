@@ -1,0 +1,205 @@
+RestComm and PowerMedia XMS integration
+=======================================
+
+RestComm is a next generation Cloud Communications Platform.
+It allows web developers to rapidly build voice, video, WebRTC, USSD, SMS, fax and rich messaging applications.
+
+
+Quick User Guide
+----------------
+
+
+
+RestComm installation and start
+-------------------------------
+
+• Download the latest Restcomm Connect binary.
+https://github.com/RestComm/Restcomm-Connect/releases/tag/7.9.0.1006
+
+• Extract the content of Restcomm-JBoss-AS7-XX.XX.zip to a local directory on your computer.
+The directory into which the file is extracted will be referred to as $RESTCOMM_HOME.
+
+• Open the terminal and run "ifconfig -a" to get the local ip address, broadcast and mask.
+
+• Go to $RESTCOMM_HOME/bin/restcomm and change the network configuration in restcomm.conf.
+
+.Example:
+[source]
+--------
+NET_INTERFACE='wlan0'
+PRIVATE_IP=192.168.1.10
+SUBNET_MASK=255.255.255.0
+NETWORK=192.168.1.0
+BROADCAST_ADDRESS=192.168.1.255
+--------
+
+• Set MS_COMPATIBILITY_MODE and XMS IP address.
+
+.Example:
+[source]
+--------
+MS_EXTERNAL=FALSE
+MS_COMPATIBILITY_MODE='xms'
+
+MS_ADDRESS=192.168.1.100
+MS_NETWORK=192.168.1.0
+MS_SUBNET_MASK=255.255.255.0
+--------
+
+[source]
+--------
+VOICERSS_KEY='xxxxxxxxxxxxxxxxxxxxx'
+--------
+NOTE: To generate your own voicerss API key, go to voicerss.org and register.
+
+• Go to $RESTCOMM_HOME/bin/restcomm and run:
+[source]
+--------
+sudo ./start-restcomm.sh
+--------
+
+Running in standalone mode
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+• Go to $RESTCOMM_HOME/standalone/configuration and edit standalone-sip.xml
+
+• Set the enable-welcome-root to false.
+[source, xml]
+<virtual-server name="default-host" enable-welcome-root="false">
+    <alias name="localhost"/>
+    <alias name="example.com"/>
+</virtual-server>
+
+• Go to $RESTCOMM_HOME/standalone/deployments/ restcomm.war/WEB-INF/conf and edit restcomm.xml
+[source, xml]
+<mscontrol>
+	<compatibility>xms</compatibility>
+	<media-server name="Dialogic XMS" class="com.dialogic.dlg309">
+		<address>192.168.1.100</address>
+		<port>5060</port>
+		<transport>udp</transport>
+		<timeout>5</timeout>
+	</media-server>
+</mscontrol>
+
+
+• Start the Restcomm in standalone mode and bind to an address
+[source]
+sudo bash standalone.sh -b 192.168.1.10
+
+
+PowerMedia XMS Installation
+---------------------------
+
+This section provides the steps required to successfully install PowerMedia XMS.
+
+There are two installation methods available:
+
+• ISO Method
+• RPM Method (used for a CentOS or RHEL installation).
+
+The following instructions pertain to the PowerMedia XMS download package, labeled as
+PowerMedia-3.0.xxxx-x86_64.iso and dialogic_xms_3.0.xxxx.tgz where "xxxx" indicates the
+version number.
+
+
+NOTE: 32-bit operating systems are not supported.
+
+
+Installation methods
+~~~~~~~~~~~~~~~~~~~~
+• ISO Method Installation:
+Community ENTerprise Operating System (CentOS) 7.x
+
+• RPM Method Installation:
+CentOS 7.x and 6.4 (or later)
+Red Hat Enterprise Linux (RHEL) 7.x and 6.4 (or later)
+Oracle Enterprise Linux (OEL) 6.4
+
+Download the .ISO file, which contains CentOS and PowerMedia XMS packages.
+Go to http://www.dialogic.com/products/media-server-software/xms for information about downloading the .ISO file.
+
+NOTE: For detailed documentation refer to http://www.dialogic.com/webhelp/XMS/3.0/XMS_InstallConfig.pdf
+
+Supported Virtual Machines
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The supported virtual machines (VM) are:
+
+• VMWare ESXi 5.x
+• Kernel Virtual Machine (KVM)
+• XenServer VM
+• Oracle VM VirtualBox
+
+
+XMS installation in Oracle VM
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Create new virtual machine (VM)
+
+•	Name: Any suitable name (XMS)
+•	Type: Linux
+•	Version: Other Linux operating system 64 bit
+• Recommended memory size 1024 MB
+• Create a virtual hard disk
+
+
+Select the following options while setting the virtual machine:
+
+• VDI (VirtualBox disk image)
+• Dynamically allocated hard disk
+• Recommended size 8GB
+
+Go ahead and press the Create button to finish up this part of the process.
+
+
+Find and select the newly created virtual machine.
+
+• Open the Settings for the created VM.
+Under "Storage", press "Add optical drive" and select the PowerMedia .iso file image.
+
+• In case there is Empty storage attachment in the storage tree, delete first.
+
+
+Start the VM and choose between DHCP and Static IP installation.
+The Static IP option is preferable when setting up a server.
+Select the second option and press "Tab".
+
+Refer to the following example when setting static ip address
+[source]
+--------
+ip=192.168.1.100::192.168.1.1:255.255.255.0:server.xms30.com::none nameserver=8.8.8.8
+--------
+
+NOTE: The IP address should match the MS_ADDRESS in the restcomm.conf
+
+The install process will begin and the next prompt will be to select the installation destination.
+
+
+Select "Automatically configure partitioning" and press "Done".
+For manual configuration select "I will configure partitionig".
+
+When the partitioning is done, click "Begin installation".
+
+Once installed, open the Settings and change the boot order.
+
+• Under System, change the boot order. Select only “Hard Disk”.
+• Change the network configuration under Network. Attach “Adapter 1” to “Bridged Adapter” and select wlan0.
+• Reboot the VM
+
+Now we should have running XMS instance on CentOS.
+
+Troubleshooting
+^^^^^^^^^^^^^^^
+
+In case XMS doesn't have connection, check the ifcfg-enp0s3 config file.
+
+• Login as root.  The "root" user’s default password is "powermedia".
+• Go to /etc/sysconfig/network-scripts/
+• Open and modify ifcfg-enp0s3 config file. "sudo vi ifcfg-enp0s3"
+
+[source]
+--------
+BOOTPROTO='static'
+IPADDR=192.168.1.100
+NET_MASK=255.255.255.0
+ONBOOT='yes'
