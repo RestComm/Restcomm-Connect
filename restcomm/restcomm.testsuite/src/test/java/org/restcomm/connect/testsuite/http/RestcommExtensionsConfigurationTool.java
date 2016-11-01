@@ -104,31 +104,4 @@ public class RestcommExtensionsConfigurationTool {
         jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
         return jsonResponse;
     }
-//
-//    /*
-//        Returns an account response so that the invoker can make decisions on the status code etc.
-//     */
-//    public ClientResponse getAccountResponse(String deploymentUrl, String username, String authtoken, String accountSid) {
-//        Client jerseyClient = Client.create();
-//        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authtoken));
-//        WebResource webResource = jerseyClient.resource(getAccountsUrl(deploymentUrl));
-//        ClientResponse response = webResource.path(accountSid).get(ClientResponse.class);
-//        return response;
-//    }
-//
-//    public ClientResponse getAccountsResponse(String deploymentUrl, String username, String authtoken) {
-//        Client jerseyClient = Client.create();
-//        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authtoken));
-//        WebResource webResource = jerseyClient.resource(getAccountsUrl(deploymentUrl));
-//        ClientResponse response = webResource.get(ClientResponse.class);
-//        return response;
-//    }
-//
-//    public ClientResponse removeAccountResponse(String deploymentUrl, String operatingUsername, String operatingAuthToken, String removedAccountSid) {
-//        Client jerseyClient = Client.create();
-//        jerseyClient.addFilter(new HTTPBasicAuthFilter(operatingUsername, operatingAuthToken));
-//        WebResource webResource = jerseyClient.resource(getAccountsUrl(deploymentUrl));
-//        ClientResponse response = webResource.path(removedAccountSid).delete(ClientResponse.class);
-//        return response;
-//    }
 }

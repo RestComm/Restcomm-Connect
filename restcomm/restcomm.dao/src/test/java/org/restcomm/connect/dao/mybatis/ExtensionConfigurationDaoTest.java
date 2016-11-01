@@ -5,9 +5,9 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
 
 import java.io.InputStream;
@@ -158,7 +158,7 @@ public class ExtensionConfigurationDaoTest {
     }
 
     @Test
-    public void testStoreAndRetrieveConfigurationByNameJson() {
+    public void testStoreAndRetrieveConfigurationByNameJson() throws ConfigurationException {
         String extName = "testExt";
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(Sid.generate(Sid.Type.EXTENSION_CONFIGURATION),
                 extName, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
@@ -170,7 +170,7 @@ public class ExtensionConfigurationDaoTest {
     }
 
     @Test
-    public void testStoreAndRetrieveConfigurationBySidJson() {
+    public void testStoreAndRetrieveConfigurationBySidJson() throws ConfigurationException {
         Sid sid = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(sid,
                 "testExt", validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
@@ -182,7 +182,7 @@ public class ExtensionConfigurationDaoTest {
     }
 
     @Test
-    public void testStoreUpdateAndRetrieveConfigurationByNameJson() {
+    public void testStoreUpdateAndRetrieveConfigurationByNameJson() throws ConfigurationException {
         String extName = "testExt";
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(Sid.generate(Sid.Type.EXTENSION_CONFIGURATION),
                 extName, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
@@ -198,7 +198,7 @@ public class ExtensionConfigurationDaoTest {
     }
 
     @Test
-    public void testStoreUpdateAndRetrieveConfigurationBySidJson() {
+    public void testStoreUpdateAndRetrieveConfigurationBySidJson() throws ConfigurationException {
         Sid sid = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(sid,
                 "testExt", validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
@@ -214,7 +214,7 @@ public class ExtensionConfigurationDaoTest {
     }
 
     @Test
-    public void testStoreAndRetrieveConfigurationByNameXml() {
+    public void testStoreAndRetrieveConfigurationByNameXml() throws ConfigurationException {
         String extName = "testExt";
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(Sid.generate(Sid.Type.EXTENSION_CONFIGURATION),
                 extName, validXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
@@ -226,7 +226,7 @@ public class ExtensionConfigurationDaoTest {
     }
 
     @Test
-    public void testStoreAndRetrieveConfigurationBySidXml() {
+    public void testStoreAndRetrieveConfigurationBySidXml() throws ConfigurationException {
         Sid sid = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(sid,
                 "testExt", validXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
@@ -238,7 +238,7 @@ public class ExtensionConfigurationDaoTest {
     }
 
     @Test
-    public void testStoreUpdateAndRetrieveConfigurationByNameXml() {
+    public void testStoreUpdateAndRetrieveConfigurationByNameXml() throws ConfigurationException {
         String extName = "testExt";
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(Sid.generate(Sid.Type.EXTENSION_CONFIGURATION),
                 extName, validXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
@@ -254,7 +254,7 @@ public class ExtensionConfigurationDaoTest {
     }
 
     @Test
-    public void testStoreUpdateAndRetrieveConfigurationBySidXml() {
+    public void testStoreUpdateAndRetrieveConfigurationBySidXml() throws ConfigurationException {
         Sid sid = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(sid,
                 "testExt", validXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
@@ -270,7 +270,7 @@ public class ExtensionConfigurationDaoTest {
     }
 
     @Test
-    public void testStoreAndGetAllConfiguration() {
+    public void testStoreAndGetAllConfiguration() throws ConfigurationException {
         Sid sid1 = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
         Sid sid2 = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
         ExtensionConfiguration validExtensionConfigurationXml = new ExtensionConfiguration(sid1,
@@ -293,7 +293,7 @@ public class ExtensionConfigurationDaoTest {
     }
 
     @Test
-    public void testStoreUpdateAndRetrieveConfigurationByNameCheckVersionJson() {
+    public void testStoreUpdateAndRetrieveConfigurationByNameCheckVersionJson() throws ConfigurationException {
         String extName = "testExt";
         ExtensionConfiguration originalExtensionConfiguration = new ExtensionConfiguration(Sid.generate(Sid.Type.EXTENSION_CONFIGURATION),
                 extName, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
@@ -318,7 +318,7 @@ public class ExtensionConfigurationDaoTest {
     }
 
     @Test
-    public void testStoreUpdateAndRetrieveConfigurationBySidCheckVersionJson() {
+    public void testStoreUpdateAndRetrieveConfigurationBySidCheckVersionJson() throws ConfigurationException {
         String extName = "testExt";
         Sid sid = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
         ExtensionConfiguration originalExtensionConfiguration = new ExtensionConfiguration(sid,
