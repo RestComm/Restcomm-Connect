@@ -73,4 +73,8 @@ public interface CallDetailRecordsDao {
     List<CallDetailRecord> getCallDetailRecords(CallDetailRecordFilter filter);
 
     Integer getTotalCallDetailRecords(CallDetailRecordFilter filter);
+
+    Integer getInProgressCallsByClientName(String client);
+
+    Integer getInProgressCallsByAccountSid(String accountSid);
 }

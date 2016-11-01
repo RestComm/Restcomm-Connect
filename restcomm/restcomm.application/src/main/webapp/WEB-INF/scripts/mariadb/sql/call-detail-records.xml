@@ -14,9 +14,16 @@
   <select id="getCallDetailRecord" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_call_detail_records WHERE sid=#{sid};
   </select>
-  
-  
-  	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
+
+	<select id="getInProgressCallsByClientName" parameterType="string" resultType="int">
+		SELECT COUNT(*) FROM restcomm_call_detail_records WHERE (UPPER(status) = ('IN_PROGRESS') OR UPPER(status) = ('IN-PROGRESS')) AND parent_call_sid IS NULL AND sender=#{sender};
+	</select>
+
+	<select id="getInProgressCallsByAccountSid" parameterType="string" resultType="int">
+		SELECT COUNT(*) FROM restcomm_call_detail_records WHERE (UPPER(status) = ('IN_PROGRESS') OR UPPER(status) = ('IN-PROGRESS')) AND parent_call_sid IS NULL AND account_sid=#{accountSid};
+	</select>
+
+	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/110 -->
 	<select id="getTotalCallDetailRecordByUsingFilters" parameterType="org.restcomm.connect.dao.entities.CallDetailRecordFilter" resultType="int">
 		SELECT COUNT(*) FROM restcomm_call_detail_records WHERE

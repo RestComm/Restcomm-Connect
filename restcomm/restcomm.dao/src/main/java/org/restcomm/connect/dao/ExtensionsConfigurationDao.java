@@ -21,6 +21,7 @@ package org.restcomm.connect.dao;
 
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
 import org.restcomm.connect.extension.api.ExtensionSpecificConfiguration;
 
@@ -34,13 +35,13 @@ public interface ExtensionsConfigurationDao {
      * Add a new ExtensionConfiguration
      * @param extensionConfiguration
      */
-    void addConfiguration(ExtensionConfiguration extensionConfiguration);
+    void addConfiguration(ExtensionConfiguration extensionConfiguration) throws ConfigurationException;
 
     /**
      * Update an existing ExtensionConfiguration
      * @param extensionConfiguration
      */
-    void updateConfiguration(ExtensionConfiguration extensionConfiguration);
+    void updateConfiguration(ExtensionConfiguration extensionConfiguration) throws ConfigurationException;
 
     /**
      * Get extension configuration by extension name
