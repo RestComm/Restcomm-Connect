@@ -141,6 +141,11 @@ public final class Account {
                 role, uri);
     }
 
+    public Account setPassword(final String password) {
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, password, authToken,
+                role, uri);
+    }
+
     public Account setRole(final String role) {
         return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, password, authToken,
                 role, uri);

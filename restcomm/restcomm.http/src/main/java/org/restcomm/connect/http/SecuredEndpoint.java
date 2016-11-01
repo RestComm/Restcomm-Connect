@@ -36,9 +36,11 @@ import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.exceptions.AuthorizationException;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
+import org.restcomm.connect.http.exceptions.InvalidAuthorizationType;
 import org.restcomm.connect.http.exceptions.NotAuthenticated;
 import org.restcomm.connect.http.exceptions.OperatedAccountMissing;
 import org.restcomm.connect.identity.AuthOutcome;
+import org.restcomm.connect.identity.AuthType;
 import org.restcomm.connect.identity.IdentityContext;
 import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.identity.shiro.RestcommRoles;
@@ -136,9 +138,33 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @param permission - e.g. 'RestComm:Create:Accounts'
      */
     protected void checkPermission(final String permission) {
-        //checkAuthenticatedAccount(); // ok there is a valid authenticated account
         if ( checkPermission(permission, userIdentityContext.getEffectiveAccountRoles()) != AuthOutcome.OK )
             throw new InsufficientPermission();
+    }
+
+    /**
+     * Grants access by permission. It will also make sure the Authentication type is correct
+     *
+     * @param permission
+     * @param authType
+     */
+    protected void checkPermission(final String permission, AuthType authType) {
+        checkAuthType(authType);
+        checkPermission(permission);
+    }
+
+    /**
+     * Assert the request has the appropriate authentication type according to the authTypeFilter used.
+     * @param authTypeFilter
+     */
+    protected void checkAuthType(AuthType authTypeFilter) {
+        checkAuthenticatedAccount();
+        if (authTypeFilter == AuthType.ANY)
+            return; // any authType is allowed
+        if (authTypeFilter == userIdentityContext.getAuthType())
+            return;
+        else
+            throw new InvalidAuthorizationType();
     }
 
     // boolean overloaded form of checkAuthenticatedAccount(permission)
@@ -163,6 +189,11 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         secure(operatedAccount, permission, SecuredType.SECURED_STANDARD);
     }
 
+    protected void secure(final Account operatedAccount, final String permission, AuthType authType) throws AuthorizationException {
+        checkAuthType(authType);
+        secure(operatedAccount,permission);
+    }
+
     protected void secure(final Account operatedAccount, final String permission, SecuredType type) throws AuthorizationException {
         checkAuthenticatedAccount();
         checkPermission(permission); // check an authenticated account allowed to do "permission" is available
@@ -184,6 +215,12 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         }
     }
 
+    protected void secure(final Account operatedAccount, final String permission, SecuredType type, AuthType authType) throws AuthorizationException {
+        checkAuthType(authType);
+        secure(operatedAccount, permission, type, authType);
+    }
+
+
     protected void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type) throws AuthorizationException {
         checkAuthenticatedAccount();
         String resourceAccountSidString = resourceAccountSid == null ? null : resourceAccountSid.toString();
@@ -200,6 +237,11 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         else {
             throw new NotImplementedException();
         }
+    }
+
+    protected void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type, AuthType authType) throws AuthorizationException {
+        checkAuthType(authType);
+        secure(operatedAccount, resourceAccountSid, type, authType);
     }
 
 //    protected void secure(final Account operatedAccount, final Sid resourceAccountSid, final String permission) throws AuthorizationException {

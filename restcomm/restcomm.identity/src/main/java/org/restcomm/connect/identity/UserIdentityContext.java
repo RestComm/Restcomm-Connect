@@ -40,12 +40,6 @@ public class UserIdentityContext {
     String basicAuthUsername;
     String basicAuthPass;
     boolean basicAuthVerified = false;
-
-    public enum AuthType { // available authentication types
-        AuthToken,  // when Account.authToken property is used as Basic Authentication credential
-        Password    // when Account.password property is used as Basic Authentication credentials
-        // Bearer   // when a Bearer token is present (probably part of SSO)
-    }
     AuthType authType = null;
 
     Account effectiveAccount; // if oauthToken is set get the account that maps to it. Otherwise use account from accountKey

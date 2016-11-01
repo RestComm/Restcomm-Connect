@@ -23,30 +23,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.thoughtworks.xstream.XStream;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.MediaType;
-
-import static javax.ws.rs.core.MediaType.*;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
-
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.SecurityUtils;
+import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
@@ -55,22 +38,41 @@ import org.restcomm.connect.dao.entities.AccountList;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
 import org.restcomm.connect.http.converter.AccountConverter;
 import org.restcomm.connect.http.converter.AccountListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
 import org.restcomm.connect.http.exceptions.AuthorizationException;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
-import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
-import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
+import org.restcomm.connect.http.exceptions.RcmlserverNotifyError;
+import org.restcomm.connect.identity.AuthType;
 import org.restcomm.connect.identity.passwords.PasswordValidator;
 import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
-import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
-import org.restcomm.connect.http.exceptions.RcmlserverNotifyError;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.CONFLICT;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -147,7 +149,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
     protected Response getAccount(final String accountSid, final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         Account account = null;
-        checkPermission("RestComm:Read:Accounts");
+        checkPermission("RestComm:Read:Accounts", AuthType.ANY);
         if (Sid.pattern.matcher(accountSid).matches()) {
             try {
                 account = accountsDao.getAccount(new Sid(accountSid));
@@ -306,7 +308,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response getAccounts(final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
-        checkPermission("RestComm:Read:Accounts");
+        checkPermission("RestComm:Read:Accounts",AuthType.AuthToken);
         final Account account = userIdentityContext.getEffectiveAccount();
         if (account == null) {
             return status(NOT_FOUND).build();
@@ -327,7 +329,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
-        checkPermission("RestComm:Create:Accounts");
+        checkPermission("RestComm:Create:Accounts", AuthType.Password);
         // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
         final Sid sid = userIdentityContext.getEffectiveAccount().getSid();
         Account account = null;
@@ -443,8 +445,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 PasswordValidator validator = PasswordValidatorFactory.createDefault();
                 if (!validator.isStrongEnough(password))
                     throw new PasswordTooWeak();
-                final String hash = new Md5Hash(data.getFirst("Password")).toString();
-                result = result.setAuthToken(hash);
+                result = result.setPassword(password);
             }
             if (newStatus != null) {
                 result = result.setStatus(newStatus);
@@ -476,7 +477,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             final MediaType responseType) {
         // First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO
         // operations
-        checkPermission("RestComm:Modify:Accounts");
+        checkPermission("RestComm:Modify:Accounts", AuthType.Password);
         Sid sid = null;
         Account account = null;
         try {
