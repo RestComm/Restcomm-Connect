@@ -57,8 +57,9 @@ import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.commons.util.StringUtils;
 
 import org.apache.commons.configuration.Configuration;
+// import org.apache.http.HttpException;
 //import org.apache.log4j.Logger;
-import org.apache.shiro.authz.AuthorizationException;
+// import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 
 import com.google.gson.Gson;
@@ -129,7 +130,7 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
         Account account;
         try {
             secure(account = accountsDao.getAccount(accountSid), "RestComm:Read:Geolocation");
-        } catch (final AuthorizationException exception) {
+        } catch (final Exception exception) {
             return status(UNAUTHORIZED).build();
         }
         final Geolocation geolocation = dao.getGeolocation(new Sid(sid));
@@ -138,7 +139,7 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
         } else {
             try {
                 secure(account, geolocation.getAccountSid(), SecuredType.SECURED_APP);
-            } catch (final AuthorizationException exception) {
+            } catch (final Exception exception) {
                 return status(UNAUTHORIZED).build();
             }
             if (APPLICATION_XML_TYPE == responseType) {
@@ -157,7 +158,7 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
         try {
             account = accountsDao.getAccount(accountSid);
             secure(account, "RestComm:Read:Geolocation", SecuredType.SECURED_APP);
-        } catch (final AuthorizationException exception) {
+        } catch (final Exception exception) {
             return status(UNAUTHORIZED).build();
         }
         final List<Geolocation> geolocations = dao.getGeolocations(new Sid(accountSid));
@@ -179,7 +180,7 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
             if (geolocation != null) {
                 secure(account, geolocation.getAccountSid(), SecuredType.SECURED_APP);
             }
-        } catch (final AuthorizationException exception) {
+        } catch (final Exception exception) {
             return status(UNAUTHORIZED).build();
         }
         dao.removeGeolocation(new Sid(sid));
@@ -192,7 +193,7 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
         try {
             account = accountsDao.getAccount(accountSid);
             secure(account, "RestComm:Create:Geolocation", SecuredType.SECURED_APP);
-        } catch (final AuthorizationException exception) {
+        } catch (final Exception exception) {
             return status(UNAUTHORIZED).build();
         }
 
@@ -426,7 +427,7 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
         Account account;
         try {
             secure(account = accountsDao.getAccount(accountSid), "RestComm:Modify:Geolocation");
-        } catch (final AuthorizationException exception) {
+        } catch (final Exception exception) {
             return status(UNAUTHORIZED).build();
         }
         Geolocation geolocation = dao.getGeolocation(new Sid(sid));
@@ -435,10 +436,10 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
         } else {
             try {
                 secure(account, geolocation.getAccountSid(), SecuredType.SECURED_APP);
-            } catch (final AuthorizationException exception) {
-                return status(UNAUTHORIZED).build();
             } catch (final NullPointerException exception) {
                 return status(BAD_REQUEST).entity(exception.getMessage()).build();
+            } catch (final Exception exception) {
+                return status(UNAUTHORIZED).build();
             }
             /*********************************************/
             /*** Query GMLC for Location Data, stage 2 ***/
