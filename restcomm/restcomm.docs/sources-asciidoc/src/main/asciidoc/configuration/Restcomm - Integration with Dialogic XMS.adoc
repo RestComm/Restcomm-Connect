@@ -103,13 +103,7 @@ PowerMedia-3.0.xxxx-x86_64.iso and dialogic_xms_3.0.xxxx.tgz where "xxxx" indica
 version number.
 
 
-System Requirements
-Regardless of the installation method used, the minimum and recommended system
-requirements are as follows.
-
-
 NOTE: 32-bit operating systems are not supported.
-
 
 
 Installation methods
@@ -125,6 +119,7 @@ Oracle Enterprise Linux (OEL) 6.4
 Download the .ISO file, which contains CentOS and PowerMedia XMS packages.
 Go to http://www.dialogic.com/products/media-server-software/xms for information about downloading the .ISO file.
 
+NOTE: For detailed documentation refer to http://www.dialogic.com/webhelp/XMS/3.0/XMS_InstallConfig.pdf
 
 Supported Virtual Machines
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
