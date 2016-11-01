@@ -49,7 +49,9 @@ There is two different ways to install Restcomm Connect. Either through Docker o
 
 === Media
 
-* <<Restcomm - Working with RestComm and Dialogic XMS.adoc#google-cloud,Integrate RestComm-Connect with Dialogic XMS Media Server>>
+* <<Restcomm - Working with RestComm and Dialogic XMS.adoc#google-cloud,Working with RestComm-Connect and Dialogic XMS Media Server>>
+* <<Restcomm - Integration with Dialogic XMS.adoc#google-cloud,Integration RestComm-Connect with Dialogic XMS Media Server>>
+
 * <<Restcomm - How to Add G729 Codec to the Media Server.adoc#g729,How to Add G729 Codec to the Media Server>>
 
 === Security 
