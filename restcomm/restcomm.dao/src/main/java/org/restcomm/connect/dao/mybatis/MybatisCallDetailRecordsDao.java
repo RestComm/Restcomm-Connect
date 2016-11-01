@@ -152,7 +152,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     }
 
     @Override
-    public List<CallDetailRecord> getCallDetailRecords(final Sid accountSid) {
+    public List<CallDetailRecord> getCallDetailRecordsByAccountSid(final Sid accountSid) {
         return getCallDetailRecords(namespace + "getCallDetailRecords", accountSid.toString());
     }
 
