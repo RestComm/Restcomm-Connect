@@ -30,7 +30,7 @@ import org.restcomm.connect.commons.dao.Sid;
  */
 @Immutable
 public class UpdateCallInfo {
-	private final Sid sid;
+    private final Sid sid;
     private final String status;
     private final DateTime startTime;
     private final DateTime endTime;
@@ -121,12 +121,12 @@ public class UpdateCallInfo {
         return msId;
     }
 
-	@Override
-	public String toString() {
-		return "UpdateCallInfo [sid=" + sid + ", status=" + status + ", startTime=" + startTime + ", endTime=" + endTime
-				+ ", duration=" + duration + ", ringDuration=" + ringDuration + ", price=" + price + ", answeredBy="
-				+ answeredBy + ", conferenceSid=" + conferenceSid + ", muted=" + muted + ", startConferenceOnEnter="
-				+ startConferenceOnEnter + ", endConferenceOnExit=" + endConferenceOnExit + ", onHold=" + onHold
-				+ ", msId=" + msId + "]";
-	}
+    @Override
+    public String toString() {
+        return "UpdateCallInfo [sid=" + sid + ", status=" + status + ", startTime=" + startTime + ", endTime=" + endTime
+                + ", duration=" + duration + ", ringDuration=" + ringDuration + ", price=" + price + ", answeredBy="
+                + answeredBy + ", conferenceSid=" + conferenceSid + ", muted=" + muted + ", startConferenceOnEnter="
+                + startConferenceOnEnter + ", endConferenceOnExit=" + endConferenceOnExit + ", onHold=" + onHold
+                + ", msId=" + msId + "]";
+    }
 }
