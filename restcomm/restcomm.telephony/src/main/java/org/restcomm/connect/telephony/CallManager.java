@@ -418,7 +418,7 @@ public final class CallManager extends UntypedActor {
                 // proxy DID or number if the outbound proxy fields are not empty in the restcomm.xml
                 if (proxyURI != null && !proxyURI.isEmpty()) {
 //                    String destination = ((SipURI)request.getTo().getURI()).getUser();
-                    CallRequest callRequest = new CallRequest(fromUser,toUser, CallRequest.Type.PSTN, client.getAccountSid());
+                    CallRequest callRequest = new CallRequest(fromUser,toUser, CallRequest.Type.PSTN, client.getAccountSid(), false, false);
                     if (executePreOutboundAction(callRequest)) {
                         proxyOut(request, client, toUser, toHost, toHostIpAddress, toPort, outboundIntf, proxyURI, proxyUsername, proxyPassword, from, to, callToSipUri);
                         return;
@@ -1117,7 +1117,7 @@ public final class CallManager extends UntypedActor {
 
     private void outbound(final Object message, final ActorRef sender) throws ServletParseException {
         final CreateCall request = (CreateCall) message;
-        CallRequest callRequest = new CallRequest(request.from(), request.to(), CallRequest.Type.valueOf(request.type().name()), request.accountId());
+        CallRequest callRequest = new CallRequest(request.from(), request.to(), CallRequest.Type.valueOf(request.type().name()), request.accountId(), request.isFromApi(), request.parentCallSid() != null);
         switch (request.type()) {
             case CLIENT: {
                 if (executePreOutboundAction(callRequest)) {

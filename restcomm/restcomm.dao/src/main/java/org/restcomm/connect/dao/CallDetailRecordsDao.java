@@ -35,7 +35,7 @@ public interface CallDetailRecordsDao {
 
     CallDetailRecord getCallDetailRecord(Sid sid);
 
-    List<CallDetailRecord> getCallDetailRecords(Sid accountSid);
+    List<CallDetailRecord> getCallDetailRecordsByAccountSid(Sid accountSid);
 
     List<CallDetailRecord> getCallDetailRecordsByRecipient(String recipient);
 
