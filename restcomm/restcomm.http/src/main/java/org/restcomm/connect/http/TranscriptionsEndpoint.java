@@ -22,32 +22,34 @@ package org.restcomm.connect.http;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
-
-import java.util.List;
-
-import static javax.ws.rs.core.MediaType.*;
+import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.TranscriptionsDao;
+import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.dao.entities.Transcription;
+import org.restcomm.connect.dao.entities.TranscriptionList;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.converter.TranscriptionConverter;
+import org.restcomm.connect.http.converter.TranscriptionListConverter;
+import org.restcomm.connect.identity.AuthType;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
-
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.converter.TranscriptionConverter;
-import org.restcomm.connect.http.converter.TranscriptionListConverter;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.TranscriptionsDao;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.entities.Transcription;
-import org.restcomm.connect.dao.entities.TranscriptionList;
-import org.restcomm.connect.dao.entities.Account;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -86,7 +88,7 @@ public abstract class TranscriptionsEndpoint extends SecuredEndpoint {
 
     protected Response getTranscription(final String accountSid, final String sid, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Read:Transcriptions");
+        secure(operatedAccount, "RestComm:Read:Transcriptions", AuthType.AuthToken);
         final Transcription transcription = dao.getTranscription(new Sid(sid));
         if (transcription == null) {
             return status(NOT_FOUND).build();
@@ -104,7 +106,7 @@ public abstract class TranscriptionsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getTranscriptions(final String accountSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Transcriptions");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Transcriptions", AuthType.AuthToken);
         final List<Transcription> transcriptions = dao.getTranscriptions(new Sid(accountSid));
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(transcriptions), APPLICATION_JSON).build();

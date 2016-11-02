@@ -169,6 +169,10 @@ public class AccountsEndpoint extends SecuredEndpoint {
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
+            // hide AuthToken account attribute if AuthToken authType is effective
+            if (AuthType.AuthToken.equals(userIdentityContext.getAuthType())) {
+                account = account.setAuthToken(null);
+            }
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(account);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -316,6 +320,12 @@ public class AccountsEndpoint extends SecuredEndpoint {
             final List<Account> accounts = new ArrayList<Account>();
 //            accounts.add(account);
             accounts.addAll(accountsDao.getChildAccounts(account.getSid()));
+            // hide AuthToken account attribute if AuthToken authType is effective (should always be)
+            if (AuthType.AuthToken.equals(userIdentityContext.getAuthType())) {
+                for (int i = 0; i < accounts.size(); i++) {
+                    accounts.set(i, accounts.get(i).setAuthToken(null));
+                }
+            }
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(new AccountList(accounts));
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
