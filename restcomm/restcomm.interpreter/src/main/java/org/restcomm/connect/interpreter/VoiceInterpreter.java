@@ -1522,7 +1522,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         callInfo = response.get();
         callState = callInfo.state();
         if (callInfo.direction().equals("inbound")) {
-            callRecord = records.getCallDetailRecord(callInfo.sid());
+            /* CDR logger will add initial call data when it will receive call info from call actor
+             * callRecord = records.getCallDetailRecord(callInfo.sid());
             if (callRecord == null) {
                 // Create a call detail record for the call.
                 final CallDetailRecord.Builder builder = CallDetailRecord.builder();
@@ -1559,7 +1560,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                 callRecord = builder.build();
                 records.addCallDetailRecord(callRecord);
-            }
+            }*/
 
             // Update the application.
             callback();
@@ -1616,14 +1617,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Update the application.
                 callback();
 
-                // Update the storage.
-                if (callRecord != null) {
+                // Update the storage. will be handled by call logger actor
+                /*if (callRecord != null) {
                     final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                     callRecord = records.getCallDetailRecord(callRecord.getSid());
                     callRecord = callRecord.setStatus(callState.toString());
                     callRecord = callRecord.setStartTime(DateTime.now());
                     records.updateCallDetailRecord(callRecord);
-                }
+                }*/
 
                 // Handle pending verbs.
                 source.tell(verb, source);
@@ -2440,7 +2441,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Join the conference.
                 //Adding conference record in DB
                 addConferenceStuffInCDR(conferenceSid);
-                final AddParticipant request = new AddParticipant(call);
+                final AddParticipant request = new AddParticipant(call,startConferenceOnEnter, endConferenceOnExit, beep);
                 conference.tell(request, source);
             } else {
                 // Ask the parser for the next action to take.

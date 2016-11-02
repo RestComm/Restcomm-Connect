@@ -240,6 +240,8 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
             cdr = message.getMsId() == null ? cdr : cdr.setMsId(message.getMsId());
             cdr = message.upateDuration() ? cdr : cdr.setDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
             cdr = message.updateRingDuration() ? cdr : cdr.setRingDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
+            // TODO: enable it to make beep configurable in MRB.
+            // cdr = message.beep() == null ? cdr : cdr.setBeep(message.beep()); enable it later
 
             daoManager.getCallDetailRecordsDao().updateCallDetailRecord(cdr);
 

@@ -22,11 +22,13 @@
 package org.restcomm.connect.mscontrol.api.messages;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.dao.Sid;
 
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 /**
- * @author Henrique Rosa (henrique.rosa@telesta.com)
+ * @author Henrique Rosa (henrique.rosa@telestax.com)
+ * @author Maria Farooq (maria.farooq@telestax.com)
  *
  */
 @Immutable
@@ -34,10 +36,18 @@ public final class JoinConference {
 
     private final Object endpoint;
     private final ConnectionMode connectionMode;
+    private final Sid conferenceSid;
+    private final boolean startConferenceOnEnter;
+    private final boolean endConferenceOnExit;
+    private final boolean beep;
 
-    public JoinConference(final Object endpoint, final ConnectionMode connectionMode) {
+    public JoinConference(final Object endpoint, final ConnectionMode connectionMode, final Sid conferenceSid, final boolean startConferenceOnEnter, final boolean endConferenceOnExit, final boolean beep) {
         this.endpoint = endpoint;
         this.connectionMode = connectionMode;
+        this.conferenceSid = conferenceSid;
+        this.startConferenceOnEnter = startConferenceOnEnter;
+        this.endConferenceOnExit = endConferenceOnExit;
+        this.beep = beep;
     }
 
     public Object getEndpoint() {
@@ -46,6 +56,22 @@ public final class JoinConference {
 
     public ConnectionMode getConnectionMode() {
         return connectionMode;
+    }
+
+    public Sid conferenceSid() {
+        return conferenceSid;
+    }
+
+    public boolean startConferenceOnEnter() {
+        return startConferenceOnEnter;
+    }
+
+    public boolean endConferenceOnExit() {
+        return endConferenceOnExit;
+    }
+
+    public boolean beep() {
+        return beep;
     }
 
 }

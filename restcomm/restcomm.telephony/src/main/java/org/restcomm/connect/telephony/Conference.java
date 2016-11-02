@@ -409,7 +409,7 @@ public final class Conference extends UntypedActor {
 
     private void onAddParticipant(AddParticipant message, ActorRef self, ActorRef sender) {
         if (isRunning()) {
-            final JoinCall joinCall = new JoinCall(message.call(), ConnectionMode.Confrnce);
+            final JoinCall joinCall = new JoinCall(message.call(), ConnectionMode.Confrnce, sid, message.startConferenceOnEnter(), message.endConferenceOnExit(), message.beep());
             this.mscontroller.tell(joinCall, self);
         }
     }

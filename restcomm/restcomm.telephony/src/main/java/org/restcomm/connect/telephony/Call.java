@@ -1139,7 +1139,7 @@ public final class Call extends UntypedActor {
 
             //Update CDR for Outbound Call.
             if (isOutbound()) {
-                callDataRecorder.tell(new UpdateCallInfo(id, external, DateTime.now(), null, null, true, null, null, null, null, null, null, null, null), self());
+                callDataRecorder.tell(new UpdateCallInfo(id, external, DateTime.now(), null, null, true, null, null, null, null, null, null, null, null, null), self());
             }
 
             String answer = null;
@@ -1878,6 +1878,7 @@ public final class Call extends UntypedActor {
         if (is(inProgress)) {
             this.conferencing = true;
             this.conference = sender;
+            callDataRecorder.tell(new UpdateCallInfo(id, null, null, null, false, false, null, null, message.conferenceSid(), muted, message.startConferenceOnEnter(), message.endConferenceOnExit(), message.beep(), null, null), sender);
             this.fsm.transition(message, joining);
         }
     }

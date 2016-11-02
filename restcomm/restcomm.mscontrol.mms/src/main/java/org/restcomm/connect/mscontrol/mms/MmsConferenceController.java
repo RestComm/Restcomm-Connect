@@ -70,6 +70,7 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
+ * @author Maria Farooq (maria.farooq@telestax.com)
  */
 @Immutable
 public final class MmsConferenceController extends MediaServerController {
@@ -367,7 +368,7 @@ public final class MmsConferenceController extends MediaServerController {
     private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
         connectionMode = message.getConnectionMode();
         // Tell call to join conference by passing reference to the media mixer
-        final JoinConference join = new JoinConference(this.cnfEndpoint, connectionMode);
+        final JoinConference join = new JoinConference(this.cnfEndpoint, connectionMode, message.conferenceSid(), message.startConferenceOnEnter(), message.endConferenceOnExit(), message.beep());
         message.getCall().tell(join, sender);
     }
 

@@ -42,12 +42,13 @@ public class UpdateCallInfo {
     private final Boolean muted;
     private final Boolean startConferenceOnEnter;
     private final Boolean endConferenceOnExit;
+    private final Boolean beep;
     private final Boolean onHold;
     private final String msId;
 
     public UpdateCallInfo(final Sid sid, CallStateChanged.State status, DateTime startTime, DateTime endTime, Boolean upateDuration, Boolean updateRingDuration,
             BigDecimal price, String answeredBy, Sid conferenceSid, Boolean muted, Boolean startConferenceOnEnter,
-            Boolean endConferenceOnExit, Boolean onHold, String msId) {
+            Boolean endConferenceOnExit, final Boolean beep, Boolean onHold, String msId) {
         super();
         this.sid = sid;
         this.status = status;
@@ -63,6 +64,7 @@ public class UpdateCallInfo {
         this.endConferenceOnExit = endConferenceOnExit;
         this.onHold = onHold;
         this.msId = msId;
+        this.beep = beep;
     }
 
     public Sid getSid() {
@@ -117,6 +119,10 @@ public class UpdateCallInfo {
         return onHold;
     }
 
+    public Boolean beep() {
+        return beep;
+    }
+
     public String getMsId() {
         return msId;
     }
@@ -124,9 +130,9 @@ public class UpdateCallInfo {
     @Override
     public String toString() {
         return "UpdateCallInfo [sid=" + sid + ", status=" + status + ", startTime=" + startTime + ", endTime=" + endTime
-                + ", duration=" + upateDuration + ", ringDuration=" + updateRingDuration + ", price=" + price + ", answeredBy="
-                + answeredBy + ", conferenceSid=" + conferenceSid + ", muted=" + muted + ", startConferenceOnEnter="
-                + startConferenceOnEnter + ", endConferenceOnExit=" + endConferenceOnExit + ", onHold=" + onHold
-                + ", msId=" + msId + "]";
+                + ", upateDuration=" + upateDuration + ", updateRingDuration=" + updateRingDuration + ", price=" + price
+                + ", answeredBy=" + answeredBy + ", conferenceSid=" + conferenceSid + ", muted=" + muted
+                + ", startConferenceOnEnter=" + startConferenceOnEnter + ", endConferenceOnExit=" + endConferenceOnExit
+                + ", beep=" + beep + ", onHold=" + onHold + ", msId=" + msId + "]";
     }
 }
