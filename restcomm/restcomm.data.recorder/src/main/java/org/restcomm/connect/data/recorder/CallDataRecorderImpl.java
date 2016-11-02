@@ -59,7 +59,7 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
     private Sid sid;
     private CallDetailRecord cdr;
     private CallInfo callInfo;
-	private boolean startedObserving = false;
+    private boolean startedObserving = false;
 
     public CallDataRecorderImpl(final DaoManager daoManager) {
         super();
@@ -115,8 +115,8 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
 
             //start observing this call for further call state changes
             if(!startedObserving ){
-            	sender.tell(new Observe(self()), self());
-            	startedObserving = true;
+                sender.tell(new Observe(self()), self());
+                startedObserving = true;
             }
 
             if (callInfo == null) {
@@ -167,7 +167,7 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
                         builder.setParentCallSid(callInfo.parentCallSid());
                     }
                     cdr = builder.build();
-                    dao.addCallDetailRecord(cdr);                    
+                    dao.addCallDetailRecord(cdr);
                 }else{
                     //update existing record
                     if(logger.isDebugEnabled()){
@@ -204,7 +204,7 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
                 cdr = cdr.setEndTime(DateTime.now());
                 cdr = cdr.setDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
                 break;
-    
+
             case QUEUED:
             case NO_ANSWER:
             case NOT_FOUND:
@@ -245,11 +245,11 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
             if(logger.isDebugEnabled()){
                 logger.debug("CDR updated values: "+cdr);
             }
-    	}catch(Exception e){
-    		logger.error("");
-    	}
+        }catch(Exception e){
+            logger.error("Exception while trying to update CDR: ", e);
+        }
     }
- 
+
     @Override
     public void postStop() {
         try {

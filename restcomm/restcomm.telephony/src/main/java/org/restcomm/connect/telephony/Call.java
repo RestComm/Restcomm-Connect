@@ -1136,7 +1136,7 @@ public final class Call extends UntypedActor {
             callUpdatedTime = DateTime.now();
 
             //Update CDR for Outbound Call.
-            if (isOutbound()) {                
+            if (isOutbound()) {
                 callDataRecorder.tell(new UpdateCallInfo(id, external, DateTime.now(), null, null, true, null, null, null, null, null, null, null, null), self());
             }
 
@@ -1338,7 +1338,7 @@ public final class Call extends UntypedActor {
     }
 
     private void onGetCallInfo(GetCallInfo message, ActorRef sender) throws Exception {
-    	CallResponse<CallInfo> callInfo = info();
+        CallResponse<CallInfo> callInfo = info();
         sender.tell(callInfo, self());
         callDataRecorder.tell(new Observe(self()), self());
         callDataRecorder.tell(callInfo, sender);
