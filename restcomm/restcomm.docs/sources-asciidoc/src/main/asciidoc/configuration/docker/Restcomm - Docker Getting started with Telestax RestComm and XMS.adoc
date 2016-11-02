@@ -1,0 +1,149 @@
+Getting started with Telestax RestComm and PowerMedia XMS
+=========================================================
+
+Prerequisites:
+~~~~~~~~~~~~~~
+
+- CentOS 7 minimal installed and network configured
+
+* Link to download: http://mirror.stjschools.org/public/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1511.iso)
+
+- PowerMedia XMS server installed and accessible via same network as CentOS (restcomm) server
+
+* Integration testing has been done with XMS 3.1 and later
+
+RestComm Install, NFS mount & XMS config:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:numbered!:
+
+1. SSH into the server designated for the RestComm install and update yum.
+[source]
+sudo yum update -y
+
+2. Install the necessary NFS binaries:
+[source]
+sudo yum install nfs* -y
+
+3. Start the NFS services:
+[source]
+service rpcbind start
+service nfs start
+
+4. Create a directory for recording storage:
+[source]
+mkdir -p /mnt/nfs/home/recordings
+
+5. Open the exports file for editing:
+[source]
+vi /etc/exports
+
+6. Add the following to the exports file:
+[source]
+/mnt/nfs/home/recordings 192.168.1.105(rw,sync,no_root_squash,no_all_squash)
+
+... Notes:
+- *192.168.1.105* is the IP address of your XMS server.
+- Use ":wq" to write and quit the vi.
+
+7. Reload the exports file:
+[source]
+sudo exportfs -r
+
+8. Add the docker repository by copying the entire statement below and pasting the following into the command prompt:
+[source]
+sudo tee /etc/yum.repos.d/docker.repo <<-'EOF'
+[dockerrepo]
+name=Docker Repository
+baseurl=https://yum.dockerproject.org/repo/main/centos/$releasever/
+enabled=1
+gpgcheck=1
+gpgkey=https://yum.dockerproject.org/gpg
+EOF
+
+9. Install docker by running:
+[source]
+sudo yum install docker-engine -y
+
+10. Start the docker service:
+[source]
+sudo service docker start
+
+11. Pull down the latest RestComm docker container:
+[source]
+docker pull restcomm/restcomm:latest
+
+... Notes:
+- Download will take ~5-10 mins
+
+
+
+12. SSH into the XMS server and create a directory for recording storage:
+[source]
+mkdir -p /opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/recordings
+
+13. Mount that new directory so that the RestComm server can access it:
+[source]
+sudo  mount -t nfs 192.168.1.50:/mnt/nfs/home/recordings /opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/recordings
+
+... Notes:
+- Replace *192.168.1.50* with the IP address of your RestComm server
+
+- If the mount times out, you may need to stop/disable/open the firewall on the restcomm server:
+[source]
+sudo systemctl stop firewalld
+
+- You may need to use -vvv for verbose logging OR -o nfsvers=3,vers=3 to see
+the NFS version to get the mount to work
+[source]
+sudo mount -l
+
+14. Log into the webUI of the PowerMedia XMS server and navigate to the ‘Protocol’ tab on the left hand side.
+
+- Change the transport to: *UDP_TCP*
+- Save the changes.
+
+Starting RestComm container:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. Start the docker container:
+[source]
+docker run  -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/restcomm/ -v /mnt/nfs/home/recordings/:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/recordings/ -e STATIC_ADDRESS="192.168.1.50" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh" -e MS_COMPATIBILITY_MODE="xms" -e MS_ADDRESS="192.168.1.105" -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+
+... Notes:
+- Replace *192.168.1.50* with the IP address of your RestComm server.
+
+- Replace *192.168.1.105* with the IP address of your XMS server.
+
+Testing RestComm Installation:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1. Open Chrome/Firefox and navigate to the following to verify the RestComm webUI dashboard is accessible:
+[source]
+https://192.168.1.50/#/login
+
+... Notes:
+- Replace *192.168.1.50* with the IP address of your RestComm server
+- Default *username/password* is: 'administrator@company.com'/'RestComm'
+
+2. Make a test webrtc call by opening the Olympus client:
+[source]
+https://192.168.1.50/olympus/#/
+
+- Replace *192.168.1.50* with the IP address of your RestComm server
+
+3. Log in using the pre-configured Alice account. Note the default password for client is: 1234
+
+4. On the left hand side, click "Contacts" and chose any of the stored scripts to test the installation. Upon script selection, the call should be connected and audio heard.
+
+
+
+Stopping and removing RestComm container:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. Stop the instance:
+[source]
+docker stop restcomm-myInstance
+
+2. Removing the docker instance:
+[source]
+docker rm restcomm-myInstance
