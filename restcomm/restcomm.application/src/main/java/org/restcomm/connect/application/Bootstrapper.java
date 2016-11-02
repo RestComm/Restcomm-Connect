@@ -73,7 +73,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     }
 
     private DataRecorderFactory dataRecorderFactory(DaoManager storage){
-    	return new DataRecorderFactoryImpl(this.system, storage);
+        return new DataRecorderFactoryImpl(this.system, storage);
     }
     private MediaServerControllerFactory mediaServerControllerFactory(final Configuration configuration, ClassLoader loader, DaoManager storage)
             throws ServletException {
