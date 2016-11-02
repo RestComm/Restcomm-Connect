@@ -1733,14 +1733,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 final CallStateChanged event = (CallStateChanged) message;
                 // Update the interpreter state.
                 callState = event.state();
-                // Update the storage.
-                callRecord = callRecord.setStatus(callState.toString());
-                final DateTime end = DateTime.now();
-                callRecord = callRecord.setEndTime(end);
-                final int seconds = (int) (end.getMillis() - callRecord.getStartTime().getMillis()) / 1000;
-                callRecord = callRecord.setDuration(seconds);
-                final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-                records.updateCallDetailRecord(callRecord);
+                // Update the storage. no need, cdr logger will take care of it
                 // Update the application.
 //                callback();
             }

@@ -22,12 +22,10 @@ package org.restcomm.connect.interpreter;
 import static akka.pattern.Patterns.ask;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Currency;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -48,7 +46,6 @@ import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.restcomm.connect.asr.AsrResponse;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -63,7 +60,6 @@ import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.NotificationsDao;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.email.api.EmailResponse;
 import org.restcomm.connect.fax.FaxResponse;
@@ -1475,12 +1471,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     return;
                 }
 
-                // Update the storage.
-                if (callRecord != null) {
-                    callRecord = callRecord.setStatus(callState.toString());
-                    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-                    records.updateCallDetailRecord(callRecord);
-                }
+                // Update the storage. NO NEED : cdr logger will take care of it
 
                 // Update the application.
                 callback();
@@ -1618,13 +1609,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callback();
 
                 // Update the storage. will be handled by call logger actor
-                /*if (callRecord != null) {
-                    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-                    callRecord = records.getCallDetailRecord(callRecord.getSid());
-                    callRecord = callRecord.setStatus(callState.toString());
-                    callRecord = callRecord.setStartTime(DateTime.now());
-                    records.updateCallDetailRecord(callRecord);
-                }*/
 
                 // Handle pending verbs.
                 source.tell(verb, source);
@@ -2439,8 +2423,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     logger.info("About to join call to Conference: "+conferenceInfo.name()+", with state: "+conferenceInfo.state()+", with moderator present: "+conferenceInfo.isModeratorPresent()+", and current participants: "+conferenceInfo.globalParticipants());
                 }
                 // Join the conference.
-                //Adding conference record in DB
-                addConferenceStuffInCDR(conferenceSid);
+                //Adding conference record in DB : NO NEED: cdr logger will take care of it
                 final AddParticipant request = new AddParticipant(call,startConferenceOnEnter, endConferenceOnExit, beep);
                 conference.tell(request, source);
             } else {
@@ -2472,21 +2455,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (value != null && !value.isEmpty()) {
                     endConferenceOnExit = Boolean.parseBoolean(value);
                 }
-            }
-        }
-
-        private void addConferenceStuffInCDR(Sid conferenceSid) {
-            //updating conferenceSid and other conference related info in cdr
-            if (callRecord != null) {
-                if (logger.isInfoEnabled()) {
-                    logger.info("Updating CDR for call: "+callInfo.sid()+", call status: "+callInfo.state()+", to include Conference details, conference: "+conferenceSid);
-                }
-                callRecord = callRecord.setConferenceSid(conferenceSid);
-                callRecord = callRecord.setMuted(muteCall);
-                callRecord = callRecord.setStartConferenceOnEnter(startConferenceOnEnter);
-                callRecord = callRecord.setEndConferenceOnExit(endConferenceOnExit);
-                final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-                records.updateCallDetailRecord(callRecord);
             }
         }
     }
@@ -2642,13 +2610,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 //open this block when mute/hold functionality in conference API is fixed
                 //updateMuteAndHoldStatusOfAllConferenceCalls(conferenceDetailRecord.getAccountSid(), conferenceDetailRecord.getSid(), false, false);
             }
-            // update Call hold and mute status
-            if(callRecord != null){
-                callRecord = callRecord.setOnHold(onHoldInCDR);
-                callRecord = callRecord.setMuted(onMuteInCDR);
-                final CallDetailRecordsDao callRecords = storage.getCallDetailRecordsDao();
-                callRecords.updateCallDetailRecord(callRecord);
-            }
             // Set timer.
             final int timeLimit = timeLimit(verb);
             final UntypedActorContext context = getContext();
@@ -2798,16 +2759,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             final Class<?> klass = message.getClass();
 
-                if (callRecord != null) {
-                    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-                    callRecord = records.getCallDetailRecord(callRecord.getSid());
-                    callRecord = callRecord.setStatus(callState.toString());
-                    final DateTime end = DateTime.now();
-                    callRecord = callRecord.setEndTime(end);
-                    final int seconds = (int) (end.getMillis() - callRecord.getStartTime().getMillis()) / 1000;
-                    callRecord = callRecord.setDuration(seconds);
-                    records.updateCallDetailRecord(callRecord);
-                }
+                // cdr logger will update db automatically for this state.
             if (!dialActionExecuted) {
                 executeDialAction(message, outboundCall);
                 callback(true);
