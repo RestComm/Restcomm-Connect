@@ -34,7 +34,6 @@ import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.ExtensionsConfigurationDao;
 import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
-import org.restcomm.connect.extension.api.ExtensionSpecificConfiguration;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -162,41 +161,6 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
         } finally {
             session.close();
         }
-    }
-
-    @Override
-    public void addSpecificConfiguration(ExtensionSpecificConfiguration extensionSpecificConfiguration) {
-
-    }
-
-    @Override
-    public void updateSpecificConfiguration(ExtensionSpecificConfiguration extensionSpecificConfiguration) {
-
-    }
-
-    @Override
-    public List<ExtensionSpecificConfiguration> getSpecificConfigurationByName(String extensionName) {
-        return null;
-    }
-
-    @Override
-    public List<ExtensionSpecificConfiguration> getSpecificConfigurationByConfigurationSid(Sid extensionSid) {
-        return null;
-    }
-
-    @Override
-    public List<ExtensionSpecificConfiguration> getAllSpecificConfiguration() {
-        return null;
-    }
-
-    @Override
-    public void deleteSpecificConfigurationByName(String extensionName) {
-
-    }
-
-    @Override
-    public void deleteSpecificConfigurationBySid(Sid specificExtensionSid) {
-
     }
 
     @Override
