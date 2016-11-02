@@ -170,7 +170,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             // hide AuthToken account attribute if AuthToken authType is effective
-            if (AuthType.AuthToken.equals(userIdentityContext.getAuthType())) {
+            if (AuthType.AuthToken.equals(userIdentityContext.getAuthType()) || (AuthType.Password.equals(userIdentityContext.getAuthType()) && !account.getSid().equals(userIdentityContext.getEffectiveAccount().getSid()) )) {
                 account = account.setAuthToken(null);
             }
             if (APPLICATION_XML_TYPE == responseType) {
@@ -550,6 +550,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 accountsDao.updateAccount(modifiedAccount);
             }
 
+            // hide AuthToken from response
+            modifiedAccount = modifiedAccount.setAuthToken(null);
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {
