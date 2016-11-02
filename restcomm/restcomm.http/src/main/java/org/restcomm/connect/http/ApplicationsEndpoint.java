@@ -21,30 +21,13 @@
 
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-
-import java.net.URI;
-import java.util.List;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.http.converter.ApplicationConverter;
-import org.restcomm.connect.http.converter.ApplicationListConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -52,12 +35,28 @@ import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.ApplicationList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.util.StringUtils;
+import org.restcomm.connect.http.converter.ApplicationConverter;
+import org.restcomm.connect.http.converter.ApplicationListConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.identity.AuthType;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.thoughtworks.xstream.XStream;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import java.net.URI;
+import java.util.List;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 /**
  * @author guilherme.jansen@telestax.com
@@ -119,7 +118,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
 
     protected Response getApplication(final String accountSid, final String sid, final MediaType responseType) {
         Account account;
-        secure(account = accountsDao.getAccount(accountSid), "RestComm:Read:Applications");
+        secure(account = accountsDao.getAccount(accountSid), "RestComm:Read:Applications", AuthType.AuthToken);
         Application application = null;
         if (Sid.pattern.matcher(sid).matches()) {
             application = dao.getApplication(new Sid(sid));
@@ -152,7 +151,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
     protected Response getApplications(final String accountSid, final MediaType responseType) {
         Account account;
         account = accountsDao.getAccount(accountSid);
-        secure(account, "RestComm:Read:Applications", SecuredType.SECURED_APP);
+        secure(account, "RestComm:Read:Applications", SecuredType.SECURED_APP, AuthType.AuthToken);
         final List<Application> applications = dao.getApplications(account.getSid());
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new ApplicationList(applications));
@@ -168,7 +167,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
             final MediaType responseType) {
         Account account;
         account = accountsDao.getAccount(accountSid);
-        secure(account, "RestComm:Create:Applications", SecuredType.SECURED_APP);
+        secure(account, "RestComm:Create:Applications", SecuredType.SECURED_APP, AuthType.AuthToken);
         try {
             validate(data);
         } catch (final NullPointerException exception) {
@@ -209,7 +208,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
     protected Response updateApplication(final String accountSid, final String sid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
         Account account;
-        secure(account = accountsDao.getAccount(accountSid), "RestComm:Modify:Applications");
+        secure(account = accountsDao.getAccount(accountSid), "RestComm:Modify:Applications", AuthType.AuthToken);
         final Application application = dao.getApplication(new Sid(sid));
         if (application == null) {
             return status(NOT_FOUND).build();

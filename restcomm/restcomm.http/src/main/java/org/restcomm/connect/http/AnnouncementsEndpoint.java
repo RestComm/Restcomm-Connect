@@ -20,6 +20,7 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.http.converter.AnnouncementConverter;
 import org.restcomm.connect.http.converter.AnnouncementListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.identity.AuthType;
 import org.restcomm.connect.tts.api.SpeechSynthesizerRequest;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
 import scala.concurrent.Await;
@@ -86,7 +87,7 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
 
     public Response putAnnouncement(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) throws Exception {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Create:Announcements");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Create:Announcements", AuthType.AuthToken);
         if(cache == null)
             createCacheActor(accountSid);
 

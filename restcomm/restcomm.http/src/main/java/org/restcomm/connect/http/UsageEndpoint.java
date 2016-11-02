@@ -19,15 +19,23 @@
  */
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.*;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-
-import java.util.List;
-import java.util.regex.Pattern;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
+import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.UsageDao;
+import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.dao.entities.Usage;
+import org.restcomm.connect.dao.entities.UsageList;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.converter.UsageConverter;
+import org.restcomm.connect.http.converter.UsageListConverter;
+import org.restcomm.connect.identity.AuthType;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -35,24 +43,16 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.util.List;
+import java.util.regex.Pattern;
 
-import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.converter.UsageListConverter;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.UsageDao;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.entities.Usage;
-import org.restcomm.connect.dao.entities.UsageList;
-import org.restcomm.connect.http.converter.UsageConverter;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.thoughtworks.xstream.XStream;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 /**
  * @author charles.roufay@telestax.com (Charles Roufay)
@@ -93,7 +93,7 @@ public abstract class UsageEndpoint extends SecuredEndpoint {
   }
 
   protected Response getUsage(final String accountSid, final String subresource, UriInfo info, final MediaType responseType) {
-    secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage");
+    secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage", AuthType.AuthToken);
 
     String categoryStr = info.getQueryParameters().getFirst("Category");
     String startDateStr = info.getQueryParameters().getFirst("StartDate");

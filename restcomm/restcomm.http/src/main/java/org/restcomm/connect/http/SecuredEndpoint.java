@@ -217,7 +217,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     protected void secure(final Account operatedAccount, final String permission, SecuredType type, AuthType authType) throws AuthorizationException {
         checkAuthType(authType);
-        secure(operatedAccount, permission, type, authType);
+        secure(operatedAccount, permission, type);
     }
 
 
@@ -241,7 +241,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     protected void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type, AuthType authType) throws AuthorizationException {
         checkAuthType(authType);
-        secure(operatedAccount, resourceAccountSid, type, authType);
+        secure(operatedAccount, resourceAccountSid, type);
     }
 
 //    protected void secure(final Account operatedAccount, final Sid resourceAccountSid, final String permission) throws AuthorizationException {

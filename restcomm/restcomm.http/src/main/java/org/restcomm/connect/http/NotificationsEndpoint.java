@@ -22,32 +22,34 @@ package org.restcomm.connect.http;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
-
-import java.util.List;
-
-import static javax.ws.rs.core.MediaType.*;
+import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.dao.entities.NotificationList;
+import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.http.converter.NotificationConverter;
+import org.restcomm.connect.http.converter.NotificationListConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.identity.AuthType;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
-
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.http.converter.NotificationConverter;
-import org.restcomm.connect.http.converter.NotificationListConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.NotificationsDao;
-import org.restcomm.connect.dao.entities.Notification;
-import org.restcomm.connect.dao.entities.NotificationList;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.entities.Account;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -86,7 +88,7 @@ public abstract class NotificationsEndpoint extends SecuredEndpoint {
 
     protected Response getNotification(final String accountSid, final String sid, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Read:Notifications");
+        secure(operatedAccount, "RestComm:Read:Notifications", AuthType.AuthToken);
         final Notification notification = dao.getNotification(new Sid(sid));
         if (notification == null) {
             return status(NOT_FOUND).build();
@@ -104,7 +106,7 @@ public abstract class NotificationsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getNotifications(final String accountSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Notifications");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Notifications", AuthType.AuthToken);
         final List<Notification> notifications = dao.getNotifications(new Sid(accountSid));
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(notifications), APPLICATION_JSON).build();

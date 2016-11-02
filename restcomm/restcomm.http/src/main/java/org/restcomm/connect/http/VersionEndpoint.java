@@ -28,11 +28,12 @@ import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.VersionEntity;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.converter.VersionConverter;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.UsageDao;
 import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.converter.VersionConverter;
+import org.restcomm.connect.identity.AuthType;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -40,7 +41,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import static javax.ws.rs.core.MediaType.*;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
 
 /**
@@ -78,7 +82,7 @@ public class VersionEndpoint extends SecuredEndpoint {
     }
 
     protected Response getVersion(final String accountSid, final MediaType mediaType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage", AuthType.AuthToken);
 
         VersionEntity versionEntity = Version.getVersionEntity();
 

@@ -20,17 +20,27 @@
  */
 package org.restcomm.connect.http;
 
-import static akka.pattern.Patterns.ask;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-
-import java.text.ParseException;
-import java.util.concurrent.TimeUnit;
+import akka.actor.ActorRef;
+import akka.util.Timeout;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
+import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
+import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.http.converter.CallinfoConverter;
+import org.restcomm.connect.http.converter.MonitoringServiceConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.identity.AuthType;
+import org.restcomm.connect.monitoringservice.MonitoringService;
+import org.restcomm.connect.telephony.api.CallInfo;
+import org.restcomm.connect.telephony.api.GetLiveCalls;
+import org.restcomm.connect.telephony.api.MonitoringServiceResponse;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -38,29 +48,17 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import java.text.ParseException;
+import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.log4j.Logger;
-import org.restcomm.connect.http.converter.CallinfoConverter;
-import org.restcomm.connect.http.converter.MonitoringServiceConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.telephony.api.CallInfo;
-import org.restcomm.connect.telephony.api.GetLiveCalls;
-import org.restcomm.connect.telephony.api.MonitoringServiceResponse;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.restcomm.connect.monitoringservice.MonitoringService;
-import com.thoughtworks.xstream.XStream;
-
-import akka.actor.ActorRef;
-import akka.util.Timeout;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
+import static akka.pattern.Patterns.ask;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -104,7 +102,7 @@ public class SupervisorEndpoint extends SecuredEndpoint{
     }
 
     protected Response pong(final String accountSid, final MediaType responseType) {
-        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
+        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls", AuthType.AuthToken);
         CallDetailRecordFilter filterForTotal;
         try {
             filterForTotal = new CallDetailRecordFilter("", null, null, null, null, null,null,

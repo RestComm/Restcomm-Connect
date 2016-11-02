@@ -26,37 +26,39 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import com.thoughtworks.xstream.XStream;
-
-import java.net.URI;
-import java.util.List;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.MediaType;
-
-import static javax.ws.rs.core.MediaType.*;
-
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
-
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.http.converter.OutgoingCallerIdConverter;
-import org.restcomm.connect.http.converter.OutgoingCallerIdListConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.OutgoingCallerIdsDao;
+import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.OutgoingCallerId;
 import org.restcomm.connect.dao.entities.OutgoingCallerIdList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.commons.util.StringUtils;
+import org.restcomm.connect.http.converter.OutgoingCallerIdConverter;
+import org.restcomm.connect.http.converter.OutgoingCallerIdListConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.identity.AuthType;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import java.net.URI;
+import java.util.List;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -118,7 +120,7 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
 
     protected Response getCallerId(final String accountSid, final String sid, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Read:OutgoingCallerIds");
+        secure(operatedAccount, "RestComm:Read:OutgoingCallerIds", AuthType.AuthToken);
         final OutgoingCallerId outgoingCallerId = dao.getOutgoingCallerId(new Sid(sid));
         if (outgoingCallerId == null) {
             return status(NOT_FOUND).build();
@@ -136,7 +138,7 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getCallerIds(final String accountSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutgoingCallerIds");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutgoingCallerIds", AuthType.AuthToken);
         final List<OutgoingCallerId> outgoingCallerIds = dao.getOutgoingCallerIds(new Sid(accountSid));
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(outgoingCallerIds), APPLICATION_JSON).build();
@@ -150,7 +152,7 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
 
     protected Response putOutgoingCallerId(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Create:OutgoingCallerIds");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Create:OutgoingCallerIds", AuthType.AuthToken);
         try {
             validate(data);
         } catch (final NullPointerException exception) {
@@ -171,7 +173,7 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
     protected Response updateOutgoingCallerId(final String accountSid, final String sid,
             final MultivaluedMap<String, String> data, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Modify:OutgoingCallerIds");
+        secure(operatedAccount, "RestComm:Modify:OutgoingCallerIds", AuthType.AuthToken);
         OutgoingCallerId outgoingCallerId = dao.getOutgoingCallerId(new Sid(sid));
         if (outgoingCallerId == null) {
             return status(NOT_FOUND).build();
