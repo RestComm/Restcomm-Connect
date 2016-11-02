@@ -1135,13 +1135,9 @@ public final class Call extends UntypedActor {
             //Set Call created time, only for "Talk time".
             callUpdatedTime = DateTime.now();
 
-            callDataRecorder.tell(info(), self());
             //Update CDR for Outbound Call.
-            if (recordsDao != null) {
-            	if (isOutbound()) {
-                    final int seconds = (int) ((DateTime.now().getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
-                    new UpdateCallInfo(external, DateTime.now(), null, null, seconds, null, null, null, null, null, null, null, null);
-                }
+            if (isOutbound()) {                
+                callDataRecorder.tell(new UpdateCallInfo(id, external, DateTime.now(), null, null, true, null, null, null, null, null, null, null, null), self());
             }
 
             String answer = null;
@@ -1180,12 +1176,7 @@ public final class Call extends UntypedActor {
                     observer.tell(event, source);
                 }
 
-                // Record call data
-                if (outgoingCallRecord != null && isOutbound() && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
-                    outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                    outgoingCallRecord = outgoingCallRecord.setAnsweredBy(to.getUser());
-                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
-                }
+                // Record call data: no need because when CDRI will receive CallStateChanged as in-progress, it will update state and answerBy for this call :)
             }
         }
     }

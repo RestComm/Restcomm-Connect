@@ -31,11 +31,11 @@ import org.restcomm.connect.commons.dao.Sid;
 @Immutable
 public class UpdateCallInfo {
     private final Sid sid;
-    private final String status;
+    private final CallStateChanged.State status;
     private final DateTime startTime;
     private final DateTime endTime;
-    private final Integer duration;
-    private final Integer ringDuration;
+    private final Boolean upateDuration;
+    private final Boolean updateRingDuration;
     private final BigDecimal price;
     private final String answeredBy;
     private final Sid conferenceSid;
@@ -45,7 +45,7 @@ public class UpdateCallInfo {
     private final Boolean onHold;
     private final String msId;
 
-    public UpdateCallInfo(final Sid sid, String status, DateTime startTime, DateTime endTime, Integer duration, Integer ringDuration,
+    public UpdateCallInfo(final Sid sid, CallStateChanged.State status, DateTime startTime, DateTime endTime, Boolean upateDuration, Boolean updateRingDuration,
             BigDecimal price, String answeredBy, Sid conferenceSid, Boolean muted, Boolean startConferenceOnEnter,
             Boolean endConferenceOnExit, Boolean onHold, String msId) {
         super();
@@ -53,8 +53,8 @@ public class UpdateCallInfo {
         this.status = status;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.duration = duration;
-        this.ringDuration = ringDuration;
+        this.upateDuration = upateDuration;
+        this.updateRingDuration = updateRingDuration;
         this.price = price;
         this.answeredBy = answeredBy;
         this.conferenceSid = conferenceSid;
@@ -69,7 +69,7 @@ public class UpdateCallInfo {
         return sid;
     }
 
-    public String getStatus() {
+    public CallStateChanged.State getStatus() {
         return status;
     }
 
@@ -81,12 +81,12 @@ public class UpdateCallInfo {
         return endTime;
     }
 
-    public Integer getDuration() {
-        return duration;
+    public Boolean upateDuration() {
+        return upateDuration;
     }
 
-    public Integer getRingDuration() {
-        return ringDuration;
+    public Boolean updateRingDuration() {
+        return updateRingDuration;
     }
 
     public BigDecimal getPrice() {
@@ -124,7 +124,7 @@ public class UpdateCallInfo {
     @Override
     public String toString() {
         return "UpdateCallInfo [sid=" + sid + ", status=" + status + ", startTime=" + startTime + ", endTime=" + endTime
-                + ", duration=" + duration + ", ringDuration=" + ringDuration + ", price=" + price + ", answeredBy="
+                + ", duration=" + upateDuration + ", ringDuration=" + updateRingDuration + ", price=" + price + ", answeredBy="
                 + answeredBy + ", conferenceSid=" + conferenceSid + ", muted=" + muted + ", startConferenceOnEnter="
                 + startConferenceOnEnter + ", endConferenceOnExit=" + endConferenceOnExit + ", onHold=" + onHold
                 + ", msId=" + msId + "]";
