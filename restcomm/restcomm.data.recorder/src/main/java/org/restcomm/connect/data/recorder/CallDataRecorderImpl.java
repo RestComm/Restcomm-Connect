@@ -59,7 +59,6 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
     private Sid sid;
     private CallDetailRecord cdr;
     private CallInfo callInfo;
-    private boolean startedObserving = false;
 
     public CallDataRecorderImpl(final DaoManager daoManager) {
         super();
@@ -113,12 +112,6 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
                 }
             }else{
                 callInfo = (CallInfo)message.get();
-
-                //start observing this call for further call state changes
-                if(!startedObserving ){
-                    sender.tell(new Observe(self()), self());
-                    startedObserving = true;
-                }
 
                 if (callInfo == null) {
                         logger.warning("onCallResponse: callInfo is null");

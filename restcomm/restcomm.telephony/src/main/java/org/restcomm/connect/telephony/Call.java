@@ -321,6 +321,8 @@ public final class Call extends UntypedActor {
         this.disableSdpPatchingOnUpdatingMediaSession = this.configuration.subset("runtime-settings").getBoolean("disable-sdp-patching-on-updating-mediasession", false);
         this.apiVersion = apiVersion;
         this.callDataRecorder = callDataRecorder;
+
+        this.callDataRecorder.tell(new Observe(self()), self());
     }
 
     private boolean is(State state) {
@@ -1340,7 +1342,6 @@ public final class Call extends UntypedActor {
     private void onGetCallInfo(GetCallInfo message, ActorRef sender) throws Exception {
         CallResponse<CallInfo> callInfo = info();
         sender.tell(callInfo, self());
-        callDataRecorder.tell(new Observe(self()), self());
         callDataRecorder.tell(callInfo, sender);
     }
 
