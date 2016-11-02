@@ -53,6 +53,7 @@ import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.http.converter.ClientListConverter;
 import org.restcomm.connect.http.converter.GeolocationConverter;
+import org.restcomm.connect.http.converter.GeolocationListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.commons.util.StringUtils;
 
@@ -123,6 +124,7 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
         xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(converter);
         xstream.registerConverter(new ClientListConverter(configuration));
+        xstream.registerConverter(new GeolocationListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
