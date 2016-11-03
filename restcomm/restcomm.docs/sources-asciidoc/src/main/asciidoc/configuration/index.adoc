@@ -17,6 +17,7 @@ There is two different ways to install Restcomm Connect. Either through Docker o
 * <<docker/Restcomm - Docker Adding a Jar File to an Existing Container.adoc#docker-jar,Restcomm Connect Docker Adding a Jar File to an Existing Container>>
 * <<docker/Restcomm - Docker How to Load Environment Variable from a File.adoc#docker-certificate,Restcomm Connect Docker How to Load Environment Variable from a File>>
 * <<docker/Restcomm - Docker How to Persist Your Work on a Filesystem.adoc#docker-persist,Restcomm Connect Docker How to Persist Your Work on a Filesystem>>
+* <<docker/Restcomm - Docker Getting started with Telestax RestComm and XMS.adoc#restcomm-docker,Restcomm Connect Docker Integration with PowerMedia XMS>>
 
 === Binary Installation and Start
 
