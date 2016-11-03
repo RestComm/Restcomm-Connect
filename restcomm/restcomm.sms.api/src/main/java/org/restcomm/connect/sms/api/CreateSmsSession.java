@@ -26,6 +26,10 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class CreateSmsSession {
+    //This will be used to create SmsSession from
+    // 1. REST API SmsMessageEndpoint - Send SMS from REST API
+    // 2. BaseVoiceInterpreter.CreatingSmsSession - Send SMS using "SMS" RCML verb in voice application
+    // 3. SmsInterpreter.CreatingSmsSession - Send SMS using "SMS" RCML verb in sms application
     public CreateSmsSession() {
         super();
     }
