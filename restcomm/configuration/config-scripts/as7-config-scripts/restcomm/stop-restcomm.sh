@@ -1,52 +1,18 @@
 #! /bin/bash
 ##
-## Description: Stops RestComm and Media Server processes running on GNU Screen sessions
-## Authors    : Henrique Rosa   henrique.rosa@telestax.com
+## Description: Stops RestComm and Media Server processes running on terminal sessions
+## Authors    : Henrique Rosa (henrique.rosa@telestax.com)
 ##
 
-echo 'shutting down RestComm...'
+# Stop Media Server
+local basedir=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+$basedir/stop-mediaserver.sh
 
-
-getPIDKill(){
-   RESTCOMM_PID=" "
-   RMS_PID=""
-
-   RESTCOMM_PID=$(jps | grep jboss-modules.jar | cut -d " " -f 1)
-
-   while read -r line
-   do
-    if  ps -ef | grep $line | grep -q  mediaserver
-    then
-          RMS_PID=$line
-   fi
-   done < <(jps | grep Main | cut -d " " -f 1)
-
-   if [ -n "$RESTCOMM_PID" ]; then
-        echo "RESTCOMM_PID: $RESTCOMM_PID"
-        kill -9 $RESTCOMM_PID
-   fi
-
-    if [ -n "$RMS_PID" ]; then
-        echo "RMS_PID: $RMS_PID"
-        kill -9 $RMS_PID
-   fi
-}
-
-#Main
-#Kill RMS and RC
-getPIDKill
-
-# stop Media Server if necessary
-if screen -ls | grep -q 'mms'; then
-	screen -S 'mms' -p 0 -X 'quit'
-	echo '...stopped RestComm Media Server instance running on screen session "rms"...'
-else
-	echo '...media server is not running, skipping...'
-fi
-# stop restcomm if necessary
-if screen -list | grep -q 'restcomm'; then
-	screen -S 'restcomm' -p 0 -X 'quit'
-	echo '...stopped RestComm instance running on screen session "restcomm"!'
+# Stop RestComm
+echo 'Shutting down RestComm...'
+if tmux ls | grep -q 'restcomm'; then
+	tmux kill-session -t 'restcomm'
+	echo '...stopped RestComm instance running on terminal session "restcomm"!'
 else
 	echo '...restComm already stopped!'
 fi
