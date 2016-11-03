@@ -52,7 +52,6 @@ import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
-import org.restcomm.connect.http.exceptions.RestcommRuntimeException;
 import org.restcomm.connect.interpreter.SmsInterpreterBuilder;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.monitoringservice.MonitoringService;
