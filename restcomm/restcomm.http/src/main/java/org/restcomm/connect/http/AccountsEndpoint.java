@@ -34,6 +34,7 @@ import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Account.PasswordAlgorithm;
 import org.restcomm.connect.dao.entities.AccountList;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
@@ -135,6 +136,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
         PasswordValidator validator = PasswordValidatorFactory.createDefault();
         if (!validator.isStrongEnough(password))
             throw new PasswordTooWeak();
+        // by default, use the plain-text password algorithm  for new accounts - TODO make this value configurable ?
+        PasswordAlgorithm algorithm = PasswordAlgorithm.plain;
         // AuthToken gets a random value
         final String authToken = SecurityUtils.generateAccountAuthToken();
         final String role = data.getFirst("Role");
@@ -143,7 +146,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
-        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, password, authToken, role, uri);
+        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, password, algorithm, authToken, role, uri);
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
