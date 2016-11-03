@@ -114,6 +114,7 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.restcomm.connect.notification.GlobalNotification;
 import scala.concurrent.duration.Duration;
 
 /**
@@ -210,6 +211,7 @@ public final class Call extends UntypedActor {
     private Configuration runtimeSettings;
     private Configuration configuration;
     private boolean disableSdpPatchingOnUpdatingMediaSession;
+    private final GlobalNotification globalNotification ;
 
     public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
         super();
@@ -236,6 +238,8 @@ public final class Call extends UntypedActor {
         this.stopping = new State("stopping", new Stopping(source), null);
         this.completed = new State("completed", new Completed(source), null);
         this.failed = new State("failed", new Failed(source), null);
+        
+       this.globalNotification = new GlobalNotification(configuration,CallManagerProxy.getDaoStorage);   
 
         // Transitions for the FSM
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -397,7 +401,9 @@ public final class Call extends UntypedActor {
                 uri = factory.createSipURI(null, realIP);
             }
         } catch (Exception e) {
-            logger.warning("Exception while trying to get the Initial IP Address and Port: "+e);
+            String errMsg = "Exception while trying to get the Initial IP Address and Port: " + e;
+            logger.warning(errMsg);
+            globalNotification.sendNotification(GlobalNotification.getWARNING_NOTIFICATION(), 11001, errMsg);
 
         }
         return uri;
@@ -779,6 +785,8 @@ public final class Call extends UntypedActor {
                 }
                 strBuffer.append(" Exception: "+e.getMessage());
                 logger.warning(strBuffer.toString());
+                globalNotification.sendNotification(GlobalNotification.getWARNING_NOTIFICATION(), 11001, strBuffer.toString());
+                
             }
             msController.tell(new CloseMediaSession(), source);
         }
@@ -1108,7 +1116,9 @@ public final class Call extends UntypedActor {
                             }
                         }
                     } catch (ServletParseException e) {
-                        logger.error("Impossible to parse the route set from the ACK " + ack, e);
+                        String errMsg ="Impossible to parse the route set from the ACK " + ack +  e;
+                        logger.error(errMsg);
+                         globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION() , 11001, errMsg);
                     }
                     if(patchRURI) {
                         if(logger.isDebugEnabled()) {
@@ -1774,7 +1784,9 @@ public final class Call extends UntypedActor {
                             }
                         }
                     } catch (ServletParseException e) {
-                        logger.error("Impossible to parse the route set from the BYE " + bye, e);
+                        String errMsg = "Impossible to parse the route set from the BYE " + bye + e;
+                        logger.error(errMsg);
+                        globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION() , 11001, errMsg);
                     }
                     if(patchRURI) {
                         if(logger.isInfoEnabled()) {

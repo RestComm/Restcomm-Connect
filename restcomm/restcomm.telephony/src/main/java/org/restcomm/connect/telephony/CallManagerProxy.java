@@ -66,6 +66,7 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
     private ServletContext context;
 
     private Configuration configuration;
+    static  DaoManager getDaoStorage;
 
     public CallManagerProxy() {
         super();
@@ -192,6 +193,9 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
             sendTryingForInitalRequests = Boolean.parseBoolean(configuration.subset("runtime-settings").getString("send-trying-for-initial-requests", "false"));
             system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
             final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+            //set Storage to be used in Call.java for Global notification
+            getDaoStorage = storage;
+            
             final MediaServerControllerFactory mscontrolFactory = (MediaServerControllerFactory) context
                     .getAttribute(MediaServerControllerFactory.class.getName());
             // Create the call manager.

@@ -62,11 +62,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class SmsSession extends UntypedActor {
+
     // Logger
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // Runtime stuff.
@@ -94,10 +94,10 @@ public final class SmsSession extends UntypedActor {
     private ActorRef smppMessageHandler;
 
     private final ActorRef monitoringService;
-
+    GlobalNotification globalNotification;
 
     public SmsSession(final Configuration configuration, final SipFactory factory, final SipURI transport,
-                      final DaoManager storage, final ActorRef monitoringService, final ServletContext servletContext) {
+            final DaoManager storage, final ActorRef monitoringService, final ServletContext servletContext) {
         super();
         this.configuration = configuration;
         this.smsConfiguration = configuration.subset("sms-aggregator");
@@ -114,8 +114,11 @@ public final class SmsSession extends UntypedActor {
         }
         String defaultHost = transport.getHost();
         this.externalIP = this.configuration.subset("runtime-settings").getString("external-ip");
-        if (externalIP == null || externalIP.isEmpty() || externalIP.equals(""))
+        if (externalIP == null || externalIP.isEmpty() || externalIP.equals("")) {
             externalIP = defaultHost;
+        }
+        this.globalNotification = new GlobalNotification(configuration, storage);
+
     }
 
     private void inbound(final Object message) throws IOException {
@@ -151,13 +154,13 @@ public final class SmsSession extends UntypedActor {
             final SmppInboundMessageEntity request = (SmppInboundMessageEntity) message;
 
             final SmsSessionRequest.Encoding encoding;
-            if(request.getSmppEncoding().equals(CharsetUtil.CHARSET_UCS_2)) {
+            if (request.getSmppEncoding().equals(CharsetUtil.CHARSET_UCS_2)) {
                 encoding = SmsSessionRequest.Encoding.UCS_2;
             } else {
                 encoding = SmsSessionRequest.Encoding.GSM;
             }
             // Store the last sms event.
-            last = new SmsSessionRequest (request.getSmppFrom(), request.getSmppTo(), request.getSmppContent(), encoding, null);
+            last = new SmsSessionRequest(request.getSmppFrom(), request.getSmppTo(), request.getSmppContent(), encoding, null);
             if (initial == null) {
                 initial = last;
             }
@@ -235,21 +238,21 @@ public final class SmsSession extends UntypedActor {
         }
         final ActorRef self = self();
         final Charset charset;
-        if(logger.isInfoEnabled()) {
-            logger.info("SMS encoding:  " + last.encoding() );
+        if (logger.isInfoEnabled()) {
+            logger.info("SMS encoding:  " + last.encoding());
         }
-        switch(last.encoding()) {
-        case GSM:
-            charset = CharsetUtil.CHARSET_GSM;
-            break;
-        case UCS_2:
-            charset = CharsetUtil.CHARSET_UCS_2;
-            break;
-        case UTF_8:
-            charset = CharsetUtil.CHARSET_UTF_8;
-            break;
-        default:
-            charset = CharsetUtil.CHARSET_GSM;
+        switch (last.encoding()) {
+            case GSM:
+                charset = CharsetUtil.CHARSET_GSM;
+                break;
+            case UCS_2:
+                charset = CharsetUtil.CHARSET_UCS_2;
+                break;
+            case UTF_8:
+                charset = CharsetUtil.CHARSET_UTF_8;
+                break;
+            default:
+                charset = CharsetUtil.CHARSET_GSM;
         }
 
         monitoringService.tell(new TextMessage(last.from(), last.to(), TextMessage.SmsState.OUTBOUND), self());
@@ -264,16 +267,16 @@ public final class SmsSession extends UntypedActor {
 //        // Try to find an application defined for the phone number.
 //        final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
 //        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(to);
-
         //We will send using the SMPP link only if:
         // 1. This SMS is not for a registered client
         // 2, SMPP is activated
         if (toClient == null && smppActivated) {
-            if(logger.isInfoEnabled()) {
-                logger.info("Destination is not a local registered client, therefore, sending through SMPP to:  " + last.to() );
+            if (logger.isInfoEnabled()) {
+                logger.info("Destination is not a local registered client, therefore, sending through SMPP to:  " + last.to());
             }
-            if (sendUsingSmpp(last.from(), last.to(), last.body(), charset))
+            if (sendUsingSmpp(last.from(), last.to(), last.body(), charset)) {
                 return;
+            }
         }
 
         //Turns out that SMS was not send using SMPP so we procedd as usual with SIP MESSAGE
@@ -329,29 +332,28 @@ public final class SmsSession extends UntypedActor {
             }
             // Log the exception.
             logger.error(exception.getMessage(), exception);
-        }}
+        }
+    }
 
     private boolean sendUsingSmpp(String from, String to, String body, Charset encoding) {
         if ((SmppClientOpsThread.getSmppSession() != null && SmppClientOpsThread.getSmppSession().isBound()) && smppMessageHandler != null) {
-            if(logger.isInfoEnabled()) {
-                logger.info("SMPP session is available and connected, outbound message will be forwarded to :  " + to );
-                logger.info("Encoding:  " + encoding );
+            if (logger.isInfoEnabled()) {
+                logger.info("SMPP session is available and connected, outbound message will be forwarded to :  " + to);
+                logger.info("Encoding:  " + encoding);
             }
             try {
                 final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(to, from, body, encoding);
                 smppMessageHandler.tell(sms, null);
-            }catch (final Exception exception) {
+            } catch (final Exception exception) {
                 // Log the exception.
                 String errorMessage = "There was an error sending SMS to SMPP endpoint : " + exception;
                 logger.error(errorMessage);
-                GlobalNotification globalNotification = new GlobalNotification(configuration,storage);
-                globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION() , 13001, errorMessage);
+                globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 13001, errorMessage);
             }
             return true;
         }
         return false;
     }
-
 
     private void stopObserving(final Object message) {
         final StopObserving request = (StopObserving) message;

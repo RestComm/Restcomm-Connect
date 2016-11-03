@@ -51,6 +51,8 @@ public final class ProxyManagerProxy extends SipServlet implements SipServletLis
     private ActorSystem system;
     private ActorRef manager;
     private ServletContext context;
+    
+    static Configuration getConfiguration;
 
     public ProxyManagerProxy() {
         super();
@@ -109,6 +111,8 @@ public final class ProxyManagerProxy extends SipServlet implements SipServletLis
             Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
             configuration = configuration.subset("runtime-settings");
             final String address = configuration.getString("external-ip");
+            //getConfiguration used in ProxyManager 
+            getConfiguration = configuration;
             final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
             system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
             manager = manager(context, factory, storage, address);

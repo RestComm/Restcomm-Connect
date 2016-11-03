@@ -40,8 +40,9 @@ import javax.servlet.sip.SipURI;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import org.restcomm.connect.notification.GlobalNotification;
 
-public class SmppMessageHandler extends UntypedActor  {
+public class SmppMessageHandler extends UntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private final ActorSystem system = getContext().system();
@@ -50,6 +51,7 @@ public class SmppMessageHandler extends UntypedActor  {
     private final Configuration configuration;
     private final SipFactory sipFactory;
     private final ActorRef monitoringService;
+    private final GlobalNotification globalNotification;
 
     public SmppMessageHandler(final ServletContext servletContext) {
         this.servletContext = servletContext;
@@ -57,6 +59,7 @@ public class SmppMessageHandler extends UntypedActor  {
         this.configuration = (Configuration) servletContext.getAttribute(Configuration.class.getName());
         this.sipFactory = (SipFactory) servletContext.getAttribute(SipFactory.class.getName());
         this.monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
+        this.globalNotification = new GlobalNotification(configuration, storage);
     }
 
     @Override
@@ -64,56 +67,57 @@ public class SmppMessageHandler extends UntypedActor  {
         final UntypedActorContext context = getContext();
         final ActorRef sender = sender();
         final ActorRef self = self();
-        if (message instanceof SmppInboundMessageEntity){
-            if(logger.isInfoEnabled()) {
+        if (message instanceof SmppInboundMessageEntity) {
+            if (logger.isInfoEnabled()) {
                 logger.info("SmppMessageHandler processing Inbound Message");
             }
             inbound((SmppInboundMessageEntity) message);
-        }else if(message instanceof SmppOutboundMessageEntity ){
-            if(logger.isInfoEnabled()) {
+        } else if (message instanceof SmppOutboundMessageEntity) {
+            if (logger.isInfoEnabled()) {
                 logger.info("SmppMessageHandler processing Outbound Message");
             }
             outbound((SmppOutboundMessageEntity) message);
         } else if (message instanceof CreateSmsSession) {
             final ActorRef session = session();
-            final SmsServiceResponse<ActorRef> response = new  SmsServiceResponse<ActorRef>(session);
+            final SmsServiceResponse<ActorRef> response = new SmsServiceResponse<ActorRef>(session);
             sender.tell(response, self);
-        }else if (message instanceof DestroySmsSession) {
+        } else if (message instanceof DestroySmsSession) {
             final DestroySmsSession destroySmsSession = (DestroySmsSession) message;
             final ActorRef session = destroySmsSession.session();
             context.stop(session);
         }
     }
 
-    private void inbound(final SmppInboundMessageEntity request ) throws IOException {
+    private void inbound(final SmppInboundMessageEntity request) throws IOException {
         final ActorRef self = self();
 
         String to = request.getSmppTo();
         final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
         IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(to);
 
-        if( redirectToHostedSmsApp(self,request, storage.getAccountsDao(), storage.getApplicationsDao(),to  )){
-            if(logger.isInfoEnabled()) {
-                logger.info("SMPP Message Accepted - A Restcomm Hosted App is Found for Number : " + number.getPhoneNumber() );
+        if (redirectToHostedSmsApp(self, request, storage.getAccountsDao(), storage.getApplicationsDao(), to)) {
+            if (logger.isInfoEnabled()) {
+                logger.info("SMPP Message Accepted - A Restcomm Hosted App is Found for Number : " + to);
             }
             return;
         } else {
-            logger.error("SMPP Message Rejected : No Restcomm Hosted App Found for inbound number : " + number.getPhoneNumber() );
+            String errMsg = "SMPP Message Rejected : No Restcomm Hosted App Found for inbound number : " + to;
+            logger.error(errMsg);
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 13001, errMsg);
         }
     }
 
     private boolean redirectToHostedSmsApp(final ActorRef self, final SmppInboundMessageEntity request, final AccountsDao accounts,
-                                           final ApplicationsDao applications, String id) throws IOException {
+            final ApplicationsDao applications, String id) throws IOException {
         boolean isFoundHostedApp = false;
-
         String to = request.getSmppTo();
         String phone = to;
 
         final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-
         try {
             phone = phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberUtil.PhoneNumberFormat.E164);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // Try to find an application defined for the phone number.
         final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
         IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
@@ -143,7 +147,9 @@ public class SmppMessageHandler extends UntypedActor  {
                 } else if (appUri != null) {
                     builder.setUrl(UriUtils.resolve(appUri));
                 } else {
-                    logger.error("the matched number doesn't have SMS application attached, number: "+number.getPhoneNumber());
+                    String errMsg = "the matched number doesn't have SMS application attached, number: " + number.getPhoneNumber();
+                    logger.error(errMsg);
+                    globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 13001, errMsg);
                     return false;
                 }
                 builder.setMethod(number.getSmsMethod());
@@ -162,11 +168,12 @@ public class SmppMessageHandler extends UntypedActor  {
 
             }
         } catch (Exception e) {
-            logger.error("Error processing inbound SMPP Message. There is no locally hosted Restcomm app for the number :" + e);
+            String errMsg = "Error processing inbound SMPP Message. There is no locally hosted Restcomm app for the number :" + e;
+            logger.error(errMsg);
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 13001, errMsg);
         }
         return isFoundHostedApp;
     }
-
 
     @SuppressWarnings("unchecked")
     private SipURI outboundInterface() {
@@ -193,17 +200,17 @@ public class SmppMessageHandler extends UntypedActor  {
     }
 
     public void outbound(SmppOutboundMessageEntity request) throws SmppInvalidArgumentException, IOException {
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("Message is Received by the SmppSessionOutbound Class");
         }
 
         byte[] textBytes;
-        int smppTonNpiValue =  Integer.parseInt(SmppService.getSmppTonNpiValue()) ;
+        int smppTonNpiValue = Integer.parseInt(SmppService.getSmppTonNpiValue());
         // add delivery receipt
         //submit0.setRegisteredDelivery(SmppConstants.REGISTERED_DELIVERY_SMSC_RECEIPT_REQUESTED);
         SubmitSm submit0 = new SubmitSm();
-        submit0.setSourceAddress(new Address((byte)smppTonNpiValue, (byte) smppTonNpiValue, request.getSmppFrom() ));
-        submit0.setDestAddress(new Address((byte)smppTonNpiValue, (byte)smppTonNpiValue, request.getSmppTo()));
+        submit0.setSourceAddress(new Address((byte) smppTonNpiValue, (byte) smppTonNpiValue, request.getSmppFrom()));
+        submit0.setDestAddress(new Address((byte) smppTonNpiValue, (byte) smppTonNpiValue, request.getSmppTo()));
         if (CharsetUtil.CHARSET_UCS_2 == request.getSmppEncoding()) {
             submit0.setDataCoding(DataCoding.DATA_CODING_UCS2);
             textBytes = request.getSmppContent().getBytes();
@@ -213,15 +220,15 @@ public class SmppMessageHandler extends UntypedActor  {
         }
         submit0.setShortMessage(textBytes);
         try {
-            if(logger.isInfoEnabled()) {
-                logger.info("To : " + request.getSmppTo() + " From : " + request.getSmppFrom() );
+            if (logger.isInfoEnabled()) {
+                logger.info("To : " + request.getSmppTo() + " From : " + request.getSmppFrom());
             }
             SmppClientOpsThread.getSmppSession().submit(submit0, 10000); //send message through SMPP connector
-        } catch (RecoverablePduException | UnrecoverablePduException
-                | SmppTimeoutException | SmppChannelException
-                | InterruptedException e) {
+        } catch (RecoverablePduException | UnrecoverablePduException | SmppTimeoutException | SmppChannelException | InterruptedException e) {
             // TODO Auto-generated catch block
-            logger.error("SMPP message cannot be sent : " + e );
+            String errMsg = "SMPP message cannot be sent : " + e;
+            logger.error(errMsg);
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 13001, errMsg);
         }
     }
 }

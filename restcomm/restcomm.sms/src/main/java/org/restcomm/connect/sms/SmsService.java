@@ -78,12 +78,14 @@ import akka.event.LoggingAdapter;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import org.restcomm.connect.monitoringservice.MonitoringService;
+import org.restcomm.connect.notification.GlobalNotification;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
  */
 public final class SmsService extends UntypedActor {
+
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     private final ActorSystem system;
@@ -105,6 +107,8 @@ public final class SmsService extends UntypedActor {
     //Control whether Restcomm will patch SDP for B2BUA calls
     private boolean patchForNatB2BUASessions;
 
+    GlobalNotification globalNotification;
+
     public SmsService(final ActorSystem system, final Configuration configuration, final SipFactory factory,
             final DaoManager storage, final ServletContext servletContext) {
         super();
@@ -120,6 +124,7 @@ public final class SmsService extends UntypedActor {
         // final Configuration runtime = configuration.subset("runtime-settings");
         // TODO this.useTo = runtime.getBoolean("use-to");
         patchForNatB2BUASessions = runtime.getBoolean("patch-for-nat-b2bua-sessions", true);
+        this.globalNotification = new GlobalNotification(configuration, storage);
     }
 
     private void message(final Object message) throws IOException {
@@ -128,9 +133,9 @@ public final class SmsService extends UntypedActor {
 
         // ignore composing messages and accept content type including text only
         // https://github.com/Mobicents/RestComm/issues/494
-        if (request.getContentLength()==0 || !request.getContentType().contains("text/plain")) {
+        if (request.getContentLength() == 0 || !request.getContentType().contains("text/plain")) {
             SipServletResponse reject = request.createResponse(SipServletResponse.SC_NOT_ACCEPTABLE);
-            reject.addHeader("Reason","Content Type is not text plain");
+            reject.addHeader("Reason", "Content Type is not text plain");
             reject.send();
             return;
         }
@@ -147,7 +152,7 @@ public final class SmsService extends UntypedActor {
             // Make sure we force clients to authenticate.
             if (authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
                     && !CallControlHelper.checkAuthentication(request, storage)) {
-                if(logger.isInfoEnabled()) {
+                if (logger.isInfoEnabled()) {
                     logger.info("Client " + client.getLogin() + " failed to authenticate");
                 }
                 // Since the client failed to authenticate, we will ignore the message and not process further
@@ -160,7 +165,7 @@ public final class SmsService extends UntypedActor {
         // Try to see if the request is destined for an application we are hosting.
         if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
             // Tell the sender we received the message okay.
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("Message to :" + toUser + " matched to one of the hosted applications");
             }
 
@@ -168,7 +173,7 @@ public final class SmsService extends UntypedActor {
             final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
             messageAccepted.send();
 
-            monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_APP), self);
+            monitoringService.tell(new TextMessage(((SipURI) request.getFrom().getURI()).getUser(), ((SipURI) request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_APP), self);
 
             return;
 
@@ -183,16 +188,16 @@ public final class SmsService extends UntypedActor {
                 if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                     // if all goes well with proxying the SIP MESSAGE on to the target client
                     // then we can end further processing of this request and send response to sender
-                    if(logger.isInfoEnabled()) {
+                    if (logger.isInfoEnabled()) {
                         logger.info("P2P, Message from: " + client.getLogin() + " redirected to registered client: "
-                            + toClient.getLogin());
+                                + toClient.getLogin());
                     }
-                    monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_CLIENT), self);
+                    monitoringService.tell(new TextMessage(((SipURI) request.getFrom().getURI()).getUser(), ((SipURI) request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_CLIENT), self);
                     return;
                 }
             } else {
                 // Since toUser is null, try to route the message outside using the SMS Aggregator
-                if(logger.isInfoEnabled()) {
+                if (logger.isInfoEnabled()) {
                     logger.info("Restcomm will route this SMS to an external aggregator: " + client.getLogin() + " to: " + toUser);
                 }
 
@@ -226,24 +231,25 @@ public final class SmsService extends UntypedActor {
                 // Store the sms record in the sms session.
                 session.tell(new SmsSessionAttribute("record", record), self());
                 // Send the SMS.
-                final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()),request, null);
-                monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_PROXY_OUT), self);
+                final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()), request, null);
+                monitoringService.tell(new TextMessage(((SipURI) request.getFrom().getURI()).getUser(), ((SipURI) request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_PROXY_OUT), self);
                 session.tell(sms, self());
             }
         } else {
             final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
             response.send();
             // We didn't find anyway to handle the SMS.
-            String errMsg = "Restcomm cannot process this SMS because the destination number is not hosted locally. To: "+toUser;
+            String errMsg = "Restcomm cannot process this SMS because the destination number is not hosted locally. To: " + toUser;
             sendNotification(errMsg, 11005, "error", true);
-            monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.NOT_FOUND), self);
-        }}
-
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 13001, errMsg);
+            monitoringService.tell(new TextMessage(((SipURI) request.getFrom().getURI()).getUser(), ((SipURI) request.getTo().getURI()).getUser(), TextMessage.SmsState.NOT_FOUND), self);
+        }
+    }
 
     /**
      *
-     * Try to locate a hosted sms app corresponding to the callee/To address. If one is found, begin execution, otherwise return
-     * false;
+     * Try to locate a hosted sms app corresponding to the callee/To address. If
+     * one is found, begin execution, otherwise return false;
      *
      * @param self
      * @param request
@@ -264,7 +270,8 @@ public final class SmsService extends UntypedActor {
         String phone = to;
         try {
             phone = phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // Try to find an application defined for the phone number.
         final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
         IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
@@ -311,6 +318,7 @@ public final class SmsService extends UntypedActor {
         } catch (Exception e) {
             String errMsg = "There is no valid Restcomm SMS Request URL configured for this number : " + phone;
             sendNotification(errMsg, 12003, "error", true);
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 13001, errMsg);
         }
         return isFoundHostedApp;
     }
@@ -357,10 +365,10 @@ public final class SmsService extends UntypedActor {
         final SipApplicationSession application = response.getApplicationSession();
 
         //handle SIP application session and make sure it has not being invalidated
-        if(logger.isInfoEnabled()) {
-            logger.info("Is SipApplicationSession valid: "+application.isValid());
+        if (logger.isInfoEnabled()) {
+            logger.info("Is SipApplicationSession valid: " + application.isValid());
         }
-        if(application != null){
+        if (application != null) {
             final ActorRef session = (ActorRef) application.getAttribute(SmsSession.class.getName());
             session.tell(response, self);
             final SipServletRequest origRequest = (SipServletRequest) application.getAttribute(SipServletRequest.class.getName());
@@ -370,7 +378,6 @@ public final class SmsService extends UntypedActor {
             }
         }
     }
-
 
     @SuppressWarnings("unchecked")
     private SipURI outboundInterface() {
@@ -414,7 +421,7 @@ public final class SmsService extends UntypedActor {
                 notifications.addNotification(notification);
             }
         } else if (errType == "info") {
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info(errMessage); // send message to console
             }
         }
@@ -452,9 +459,11 @@ public final class SmsService extends UntypedActor {
             e.printStackTrace();
         }
         /**
-         * if (response != null) { builder.setRequestUrl(request.getUri()); builder.setRequestMethod(request.getMethod());
+         * if (response != null) { builder.setRequestUrl(request.getUri());
+         * builder.setRequestMethod(request.getMethod());
          * builder.setRequestVariables(request.getParametersAsString()); }
-         **/
+         *
+         */
 
         builder.setRequestMethod("");
         builder.setRequestVariables("");

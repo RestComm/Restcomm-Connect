@@ -50,6 +50,8 @@ import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.restcomm.connect.notification.GlobalNotification;
+import org.restcomm.connect.telephony.CallManagerProxy;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -64,6 +66,7 @@ public final class ProxyManager extends UntypedActor {
     private final SipFactory factory;
     private final DaoManager storage;
     private final String address;
+    GlobalNotification globalNotification ;
 
     public ProxyManager(final ServletContext servletContext, final SipFactory factory, final DaoManager storage,
             final String address) {
@@ -78,6 +81,8 @@ public final class ProxyManager extends UntypedActor {
         if(logger.isInfoEnabled()) {
             logger.info("Proxy Manager started.");
         }
+        
+        this.globalNotification = new GlobalNotification(ProxyManagerProxy.getConfiguration,storage);  
     }
 
     private void authenticate(final Object message) {
@@ -230,7 +235,9 @@ public final class ProxyManager extends UntypedActor {
             register.send();
         } catch (final Exception exception) {
             final String name = gateway.getFriendlyName();
-            logger.error(exception, "Could not send a registration request to the proxy named " + name);
+            String errMsg = exception + "Could not send a registration request to the proxy named " + name;
+            logger.error(errMsg);
+            globalNotification.sendNotification(GlobalNotification.getWARNING_NOTIFICATION(), 11001, errMsg);
         }
     }
 
