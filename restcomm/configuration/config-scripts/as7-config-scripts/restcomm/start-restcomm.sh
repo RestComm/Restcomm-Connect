@@ -7,6 +7,11 @@
 ##
 ## Author     : Henrique Rosa
 ##
+# set environment variables for execution
+BASEDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+RESTCOMM_HOME=$(cd $BASEDIR/../../ && pwd)
+MMS_HOME=$RESTCOMM_HOME/mediaserver
+LB_HOME=$RESTCOMM_HOME/tools/sip-balancer
 
 ##
 ## FUNCTIONS
@@ -17,8 +22,8 @@ startRestcomm() {
 	ExtraOpts="-Djboss.bind.address.management=127.0.0.1"
 
 	# Check if RestComm is already running
-	if screen -list | grep -q 'restcomm'; then
-		echo 'TelScale RestComm is already running on screen session "restcomm"!'
+	if tmux ls | grep -q 'restcomm'; then
+		echo 'TelScale RestComm is already running on terminal session "restcomm"!'
 		exit 1;
 	fi
 
@@ -35,25 +40,25 @@ startRestcomm() {
 		'standalone'*)
 			# start restcomm on standalone mode
 			chmod +x $RESTCOMM_HOME/bin/standalone.sh
-			echo 'TelScale RestComm started running on standalone mode. Screen session: restcomm.'
+			echo 'TelScale RestComm started running on standalone mode. Terminal session: restcomm.'
 			echo "Using IP Address: $BIND_ADDRESS"
 			if [[ "$RUN_DOCKER" == "true" || "$RUN_DOCKER" == "TRUE" ]]; then
 				$RESTCOMM_HOME/bin/standalone.sh -b $bind_address "${ExtraOpts}"
 			else
-				screen -dmS 'restcomm' $RESTCOMM_HOME/bin/standalone.sh -b $bind_address "${ExtraOpts}"
+				tmux new -s 'restcomm' -d $RESTCOMM_HOME/bin/standalone.sh -b $bind_address "${ExtraOpts}"
 			fi
 			;;
 		'domain'*)
 			# start restcomm on standalone mode
 			chmod +x $RESTCOMM_HOME/bin/domain.sh
-			screen -dmS 'restcomm' $RESTCOMM_HOME/bin/domain.sh -b $bind_address "${ExtraOpts}"
+			tmux new -s 'restcomm' -d $RESTCOMM_HOME/bin/domain.sh -b $bind_address "${ExtraOpts}"
 			echo 'TelScale RestComm started running on domain mode. Screen session: restcomm.'
 			echo "Using IP Address: $BIND_ADDRESS"
 			;;
 		*)
 			# start restcomm on standalone mode
 			chmod +x $RESTCOMM_HOME/bin/standalone.sh
-			screen -dmS 'restcomm' $RESTCOMM_HOME/bin/standalone.sh -b $bind_address "${ExtraOpts}"
+			tmux new -s 'restcomm' -d $RESTCOMM_HOME/bin/standalone.sh -b $bind_address "${ExtraOpts}"
 			echo 'TelScale RestComm started running on standalone mode. Screen session: restcomm.'
 			echo "Using IP Address: $BIND_ADDRESS"
 			;;
@@ -61,52 +66,26 @@ startRestcomm() {
 
 }
 
-startMediaServer() {
-	echo "Starting RestComm Media Server..."
-	echo "Media Server will bind to the IP Address: $BIND_ADDRESS"
-	if screen -ls | grep -q 'rms'; then
-		echo '...RestComm Media Server is already running on screen session "rms"!'
-	else
-		chmod +x $MMS_HOME/bin/run.sh
-		screen -dmS 'rms'  $MMS_HOME/bin/run.sh
-		echo '...RestComm Media Server started running on screen "rms"!'
-fi
+verifyDependencies() {
+    source $BASEDIR/verify-dependencies.sh
+}
+
+loadConfigurationParams() {
+    source $BASEDIR/restcomm.conf
+    source $BASEDIR/advanced.conf
 }
 
 ##
 ## MAIN
 ##
-# GNU screen needs to be installed
-if [ -z "$(command -v screen)" ]; then
-	echo "ERROR: GNU Screen is not installed! Install it and try again."
-	echo "Centos/RHEL: yum install screen"
-	echo "Debian/Ubuntu: apt-get install screen"
-	exit 1
-fi
-
-# ipcalc needs to be installed
-if [ -z "$(command -v ipcalc)" ]; then
-	echo "ERROR: ipcalc is not installed! Install it and try again."
-	echo "Centos/RHEL: yum install ipcalc"
-	echo "Debian/Ubuntu: apt-get install ipcalc"
-	exit 1
-fi
-
-# set environment variables for execution
-BASEDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
-RESTCOMM_HOME=$(cd $BASEDIR/../../ && pwd)
-MMS_HOME=$RESTCOMM_HOME/mediaserver
-LB_HOME=$RESTCOMM_HOME/tools/sip-balancer
+verifyDependencies
+loadConfigurationParams
 
 echo BASEDIR: $BASEDIR
 echo RESTCOMM_HOME: $RESTCOMM_HOME
-source $BASEDIR/restcomm.conf
-source $BASEDIR/advanced.conf
 
 # input parameters and default values
 RUN_MODE='standalone'
-#NET_INTERFACE=''
-#STATIC_ADDRESS=''
 BIND_ADDRESS=''
 
 while getopts "s:r:i:" optname
@@ -156,7 +135,6 @@ fi
 BIND_ADDRESS="$PRIVATE_IP"
 
 if [[ -z "$STATIC_ADDRESS" ]]; then
-	MEDIASERVER_EXTERNAL_ADDRESS="\<null\/\>"
 	STATIC_ADDRESS=$BIND_ADDRESS
 fi
 
@@ -179,7 +157,7 @@ if [[ "$CONF_MANUAL" == "false" || "$CONF_MANUAL" == "FALSE" ]]; then
 fi
 
 if [[ "$MS_EXTERNAL" == "false" || "$MS_EXTERNAL" == "FALSE" ]]; then
-	startMediaServer
+	$BASEDIR/start-mediaserver.sh
 fi
 # start restcomm in selected run mode
 startRestcomm "$RUN_MODE" "$BIND_ADDRESS"
