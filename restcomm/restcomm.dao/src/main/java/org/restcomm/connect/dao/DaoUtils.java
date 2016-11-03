@@ -55,6 +55,12 @@ public final class DaoUtils {
         }
     }
 
+    public static Account.PasswordAlgorithm readAccountPasswordAlgorithm(final Object algorithm) {
+        if (algorithm != null)
+            return Account.PasswordAlgorithm.valueOf(algorithm.toString());
+        return null;
+    }
+
     public static BigDecimal readBigDecimal(final Object object) {
         if (object != null) {
             return new BigDecimal((String) object);
@@ -157,6 +163,12 @@ public final class DaoUtils {
         } else {
             return null;
         }
+    }
+
+    public static String writeAccountPasswordAlgorithm(final Account.PasswordAlgorithm algorithm) {
+        if (algorithm != null)
+            return algorithm.toString();
+        return null;
     }
 
     public static Date writeDateTime(final DateTime dateTime) {

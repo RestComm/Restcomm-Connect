@@ -24,7 +24,9 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.AccountsDao;
+import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Account.PasswordAlgorithm;
 import org.restcomm.connect.commons.dao.Sid;
 
 import java.net.URI;
@@ -205,10 +207,11 @@ public final class MybatisAccountsDao implements AccountsDao {
         final Account.Type type = readAccountType(map.get("type"));
         final Account.Status status = readAccountStatus(map.get("status"));
         final String password = readString(map.get("password"));
+        final PasswordAlgorithm passwordAlgorithm = DaoUtils.readAccountPasswordAlgorithm(map.get("password_algorithm"));
         final String authToken = readString(map.get("auth_token"));
         final String role = readString(map.get("role"));
         final URI uri = readUri(map.get("uri"));
-        return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, parentSid, type, status, password, authToken,
+        return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, parentSid, type, status, password, passwordAlgorithm, authToken,
                 role, uri);
     }
 
@@ -222,6 +225,7 @@ public final class MybatisAccountsDao implements AccountsDao {
         map.put("parent_sid", writeSid(account.getParentSid()));
         map.put("type", writeAccountType(account.getType()));
         map.put("password", account.getPassword());
+        map.put("passwordAlgorithm", DaoUtils.writeAccountPasswordAlgorithm(account.getPasswordAlgorithm()));
         map.put("status", writeAccountStatus(account.getStatus()));
         map.put("auth_token", account.getAuthToken());
         map.put("role", account.getRole());
