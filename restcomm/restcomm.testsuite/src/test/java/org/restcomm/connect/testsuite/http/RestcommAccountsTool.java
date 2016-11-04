@@ -129,7 +129,7 @@ public class RestcommAccountsTool {
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
         params.add("EmailAddress", emailAddress);
         params.add("Password", password);
-        params.add("Role", "Administartor");
+        params.add("Role", "Administrator");
 
         ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
         return response;

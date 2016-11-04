@@ -634,6 +634,25 @@ public class AccountsEndpoint extends SecuredEndpoint {
         accountsDao.updateAccount(parentAccount);
     }
 
+    protected Response resetAccountAuthToken(String updatedAccountSid, final MediaType responseType) {
+        checkPermission("RestComm:Modify:Accounts", AuthType.Password);
+        Account updatedAccount = accountsDao.getAccount(updatedAccountSid); // TODO this also returns accounts by FriendlyName
+        if (updatedAccount == null)
+            return Response.status(NOT_FOUND).build();
+        secure(updatedAccount,"RestComm:Modify:Accounts",SecuredType.SECURED_ACCOUNT);
+        String newAuthToken = SecurityUtils.generateAccountAuthToken();
+        updatedAccount = updatedAccount.setAuthToken(newAuthToken);
+        accountsDao.updateAccount(updatedAccount);
+        if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(updatedAccount), APPLICATION_JSON).build();
+        } else if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(updatedAccount);
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else {
+            return null;
+        }
+    }
+
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
         if (!data.containsKey("EmailAddress")) {
             throw new NullPointerException("Email address can not be null.");
