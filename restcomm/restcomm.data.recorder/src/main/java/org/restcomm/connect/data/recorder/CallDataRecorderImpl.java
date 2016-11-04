@@ -183,37 +183,40 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
     private void onCallStateChanged(CallStateChanged message, ActorRef self, ActorRef sender) {
         try{
             CallStateChanged.State callState = message.state();
-            CallDetailRecordsDao dao = daoManager.getCallDetailRecordsDao();
 
             //check if call records is already there or not..
-            if(sid != null)
-            cdr = dao.getCallDetailRecord(sid);
-            cdr = cdr.setStatus(callState.name());
+            if(sid == null){
+                logger.error("CallStateChanged received for an unknown call: sender path is: "+sender.path());
+            }else{
+                CallDetailRecordsDao dao = daoManager.getCallDetailRecordsDao();
+                cdr = dao.getCallDetailRecord(sid);
+                cdr = cdr.setStatus(callState.name());
 
-            switch (callState) {
-                case BUSY:
-                    cdr = cdr.setDuration(0);
-                    cdr = cdr.setRingDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
-                    break;
-                case IN_PROGRESS:
-                    cdr = cdr.setAnsweredBy(callInfo.to());
-                    break;
-                case COMPLETED:
-                    cdr = cdr.setEndTime(DateTime.now());
-                    cdr = cdr.setDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
-                    break;
+                switch (callState) {
+                    case BUSY:
+                        cdr = cdr.setDuration(0);
+                        cdr = cdr.setRingDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
+                        break;
+                    case IN_PROGRESS:
+                        cdr = cdr.setAnsweredBy(callInfo.to());
+                        break;
+                    case COMPLETED:
+                        cdr = cdr.setEndTime(DateTime.now());
+                        cdr = cdr.setDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
+                        break;
 
-                case QUEUED:
-                case NO_ANSWER:
-                case NOT_FOUND:
-                case CANCELED:
-                case FAILED:
-                case RINGING:
-                    break;
-                default:
-                    break;
+                    case QUEUED:
+                    case NO_ANSWER:
+                    case NOT_FOUND:
+                    case CANCELED:
+                    case FAILED:
+                    case RINGING:
+                        break;
+                    default:
+                        break;
+                }
+                dao.updateCallDetailRecord(cdr);
             }
-            dao.updateCallDetailRecord(cdr);
         }catch(Exception e){
             logger.error("onCallStateChanged: Exception while trying to update CDR: ", e);
         }
