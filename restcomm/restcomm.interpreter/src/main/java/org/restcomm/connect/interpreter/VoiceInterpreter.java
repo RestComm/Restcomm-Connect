@@ -2124,7 +2124,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             Duration.create(10, TimeUnit.SECONDS));
                     callInfo = callResponse.get();
                 } catch (Exception e) {
-                    logger.error("Timeout waiting for inbound call info: \n" + e);
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("Timeout waiting for inbound call info: \n" + e.getMessage());
+                    }
                 }
             }
 
