@@ -8,7 +8,7 @@ USE ${RESTCOMM_DBNAME};
 DELIMITER //
 CREATE PROCEDURE updateProcedure()
  BEGIN
- SELECT IFNULL(column_name, '') INTO @colName791
+ SELECT DISTINCTROW IFNULL(column_name, '') INTO @colName791
  FROM information_schema.columns
  WHERE table_schema='${RESTCOMM_DBNAME}'
  AND table_name = 'restcomm_extensions_configuration';
