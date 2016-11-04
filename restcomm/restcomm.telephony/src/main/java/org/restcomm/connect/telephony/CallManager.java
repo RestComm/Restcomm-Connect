@@ -189,20 +189,27 @@ public final class CallManager extends UntypedActor {
         Notification notification;
 
         if (errType == "warning") {
-            logger.warning(errMessage); // send message to console
+            if(logger.isDebugEnabled()) {
+                // https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug to avoid polluting logs
+                logger.debug(errMessage); // send message to console
+            }
             if (createNotification) {
                 notification = notification(ERROR_NOTIFICATION, errCode, errMessage);
                 notifications.addNotification(notification);
             }
         } else if (errType == "error") {
-            logger.error(errMessage); // send message to console
+            // https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug to avoid polluting logs
+            if(logger.isDebugEnabled()) {
+                logger.debug(errMessage); // send message to console
+            }
             if (createNotification) {
                 notification = notification(ERROR_NOTIFICATION, errCode, errMessage);
                 notifications.addNotification(notification);
             }
         } else if (errType == "info") {
-            if(logger.isInfoEnabled()) {
-                logger.info(errMessage); // send message to console
+            // https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug to avoid polluting logs
+            if(logger.isDebugEnabled()) {
+                logger.debug(errMessage); // send message to console
             }
         }
 
@@ -375,21 +382,33 @@ public final class CallManager extends UntypedActor {
                 if(logger.isInfoEnabled()) {
                     logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "+ toClient);
                 }
-                if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp + " toHost: "
-                            + toHost + " fromClient: " + client.getUri() + " toClient: " + toClient.getUri());
+                CallRequest callRequest = new CallRequest(fromUser, toUser, CallRequest.Type.CLIENT,
+                        client.getAccountSid(), false, false);
+                if (executePostOutboundAction(callRequest)) {
+                    if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
+                        if(logger.isInfoEnabled()) {
+                            logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp + " toHost: "
+                                + toHost + " fromClient: " + client.getUri() + " toClient: " + toClient.getUri());
+                        }
+                        // if all goes well with proxying the invitation on to the next client
+                        // then we can end further processing of this INVITE
+                    } else {
+                        String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
+                                + " : Make sure the Client exist or is registered with Restcomm";
+                        sendNotification(errMsg, 11001, "warning", true);
                     }
-                    // if all goes well with proxying the invitation on to the next client
-                    // then we can end further processing of this INVITE
-                    return;
                 } else {
-
+                    //Extensions didn't allowed this call
+                    if (logger.isDebugEnabled()) {
+                        final String errMsg = "Client not Allowed to make this outbound call";
+                        logger.debug(errMsg);
+                    }
                     String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
                             + " : Make sure the Client exist or is registered with Restcomm";
                     sendNotification(errMsg, 11001, "warning", true);
-
                 }
+                executePostOutboundAction(callRequest);
+                return;
             } else {
                 // toClient is null or we couldn't make the b2bua call to another client. check if this call is for a registered
                 // DID (application)
@@ -421,15 +440,18 @@ public final class CallManager extends UntypedActor {
                     CallRequest callRequest = new CallRequest(fromUser,toUser, CallRequest.Type.PSTN, client.getAccountSid(), false, false);
                     if (executePreOutboundAction(callRequest)) {
                         proxyOut(request, client, toUser, toHost, toHostIpAddress, toPort, outboundIntf, proxyURI, proxyUsername, proxyPassword, from, to, callToSipUri);
-                        return;
                     } else {
                         //log here
+                        String reason = "Call request rejected: "+callRequest.toString();
                         final SipServletResponse response = request.createResponse(SC_FORBIDDEN);
+                        response.addHeader("Reason", reason);
                         response.send();
-                        if (logger.isInfoEnabled()) {
-                            logger.info("Call request rejected: "+callRequest.toString());
+                        if (logger.isDebugEnabled()) {
+                            logger.debug(reason);
                         }
                     }
+                    executePostOutboundAction(callRequest);
+                    return;
                 } else {
                     String msg = "Restcomm tried to proxy this call to an outbound party but it seems the outbound proxy is not configured.";
                     sendNotification(errMsg, 11004, "warning", true);

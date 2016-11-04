@@ -282,6 +282,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.leaving, this.inProgress));
         transitions.add(new Transition(this.leaving, this.stopping));
         transitions.add(new Transition(this.leaving, this.failed));
+        transitions.add(new Transition(this.leaving, this.completed));
         transitions.add(new Transition(this.canceling, this.canceled));
         transitions.add(new Transition(this.canceling, this.completed));
         transitions.add(new Transition(this.failingBusy, this.busy));
@@ -1205,9 +1206,9 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(Object message) throws Exception {
              if (!receivedBye) {
-             // Conference was stopped and this call was asked to leave
-             // Send BYE to remote client
-             sendBye(new Hangup("Conference time limit reached"));
+                 // Conference was stopped and this call was asked to leave
+                 // Send BYE to remote client
+                 sendBye(new Hangup("Conference time limit reached"));
              }
             msController.tell(message, super.source);
         }
@@ -1603,25 +1604,32 @@ public final class Call extends UntypedActor {
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
         if(logger.isDebugEnabled()) {
-            logger.debug("Got Hangup for Call, from: "+from+" to: "+to+" state: "+fsm.state());
+            logger.debug("Got Hangup for Call, from: "+from+" to: "+to+" state: "+fsm.state()+" conferencing: "+conferencing +" conference: "+conference);
         }
+
+        // Stop recording if necessary
+        if (recording) {
+            recording = false;
+            if(logger.isInfoEnabled()) {
+                logger.info("Call - Will stop recording now");
+            }
+            msController.tell(new Stop(true), self);
+        }
+
         if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress)) {
-            if (!receivedBye) {
-                // Send BYE to client if RestComm took initiative to hangup the call
-                sendBye(message);
-            }
-
-            // Stop recording if necessary
-            if (recording) {
-                recording = false;
-                if(logger.isInfoEnabled()) {
-                    logger.info("Call - Will stop recording now");
+            if (conferencing) {
+                // Tell conference to remove the call from participants list
+                // before moving to a stopping state
+                conference.tell(new RemoveParticipant(self()), self());
+            }else {
+                if (!receivedBye) {
+                    // Send BYE to client if RestComm took initiative to hangup the call
+                    sendBye(message);
                 }
-                msController.tell(new Stop(true), self);
-            }
 
-            // Move to next state to clean media resources and close session
-            fsm.transition(message, stopping);
+                // Move to next state to clean media resources and close session
+                fsm.transition(message, stopping);
+            }
         }
     }
 
@@ -1875,6 +1883,9 @@ public final class Call extends UntypedActor {
     }
 
     private void onJoinConference(JoinConference message, ActorRef self, ActorRef sender) throws Exception {
+        if (logger.isDebugEnabled()) {
+            logger.debug("********************* onJoinConference *********************");
+        }
         if (is(inProgress)) {
             this.conferencing = true;
             this.conference = sender;
@@ -1918,7 +1929,7 @@ public final class Call extends UntypedActor {
             }
 
             // After leaving let the Interpreter know the Call is ready.
-            fsm.transition(message, inProgress);
+            fsm.transition(message, completed);
         }
     }
 
