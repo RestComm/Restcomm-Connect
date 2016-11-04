@@ -8,13 +8,13 @@ USE ${RESTCOMM_DBNAME};
 DELIMITER //
 CREATE PROCEDURE updateProcedure()
  BEGIN
- SELECT DISTINCTROW IFNULL(column_name, '') INTO @colName797
+ SELECT DISTINCTROW IFNULL(column_name, '') INTO @colName799
  FROM information_schema.columns
  WHERE table_schema='${RESTCOMM_DBNAME}'
  AND table_name = 'restcomm_accounts'
  AND column_name = 'password';
 
-IF @colName797 IS NULL THEN
+IF @colName799 IS NULL THEN
 CREATE TABLE temp_table LIKE restcomm_accounts;
 ALTER TABLE temp_table ADD column password varchar(32) NOT NULL;
 ALTER TABLE temp_table ADD column passwordAlgorithm varchar(16) NOT NULL;
