@@ -28,6 +28,7 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.ExtensionsConfigurationDao;
 import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
 import org.restcomm.connect.http.converter.ExtensionConfigurationConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
@@ -43,6 +44,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
@@ -158,7 +160,11 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
 
-        extensionsConfigurationDao.addConfiguration(extensionConfiguration);
+        try {
+            extensionsConfigurationDao.addConfiguration(extensionConfiguration);
+        } catch (ConfigurationException exception) {
+            return status(NOT_ACCEPTABLE).entity(exception.getMessage()).build();
+        }
 
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(extensionConfiguration), APPLICATION_JSON).build();
@@ -191,7 +197,11 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
 
-        extensionsConfigurationDao.updateConfiguration(updatedExtensionConfiguration);
+        try {
+            extensionsConfigurationDao.updateConfiguration(updatedExtensionConfiguration);
+        } catch (ConfigurationException exception) {
+            return status(NOT_ACCEPTABLE).entity(exception.getMessage()).build();
+        }
 
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(updatedExtensionConfiguration), APPLICATION_JSON).build();
