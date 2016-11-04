@@ -19,27 +19,19 @@
  */
 package org.restcomm.connect.telephony.ua;
 
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.util.DigestAuthentication;
-import org.restcomm.connect.dao.ClientsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.RegistrationsDao;
-import org.restcomm.connect.dao.entities.Client;
-import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.monitoringservice.MonitoringService;
-import org.restcomm.connect.telephony.CallManager;
-import org.restcomm.connect.telephony.api.DestroyCall;
-import org.restcomm.connect.telephony.api.GetCall;
-import org.restcomm.connect.telephony.api.Hangup;
-import org.restcomm.connect.telephony.api.UserRegistration;
+import static java.lang.Integer.parseInt;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
+import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
+
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -52,19 +44,27 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
-import static java.lang.Integer.parseInt;
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
-import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
+import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.DigestAuthentication;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.RegistrationsDao;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.Registration;
+import org.restcomm.connect.monitoringservice.MonitoringService;
+import org.restcomm.connect.telephony.api.GetCall;
+import org.restcomm.connect.telephony.api.Hangup;
+import org.restcomm.connect.telephony.api.UserRegistration;
+
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -79,7 +79,6 @@ public final class UserAgentManager extends UntypedActor {
     private ActorRef monitoringService;
     private final int pingInterval;
     private final String instanceId;
-    private ActorRef callManager;
 
     public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage,
             final ServletContext servletContext) {
@@ -94,7 +93,6 @@ public final class UserAgentManager extends UntypedActor {
         pingInterval = runtime.getInt("ping-interval", 60);
         logger.info("About to run firstTimeCleanup()");
         instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
-        callManager = (ActorRef) servletContext.getAttribute(CallManager.class.getName());
         firstTimeCleanup();
     }
 
@@ -139,7 +137,7 @@ public final class UserAgentManager extends UntypedActor {
             logger.info("Initial registration cleanup finished, starting Restcomm with "+results.size()+" registrations");
     }
 
-    private void clean() {
+    private void clean() throws ServletException {
         final RegistrationsDao registrations = storage.getRegistrationsDao();
         final List<Registration> results = registrations.getRegistrationsByInstanceId(instanceId);
         for (final Registration result : results) {
@@ -148,8 +146,12 @@ public final class UserAgentManager extends UntypedActor {
                 if(logger.isInfoEnabled()) {
                     logger.info("Registration: "+result.getAddressOfRecord()+" expired and will be removed now");
                 }
-                registrations.removeRegistration(result);
-                monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
+                //Instead of removing registrations we ping the client one last time to ensure it was not a temporary loss
+                // of connectivity. We don't need to remove the registration here. It will be handled only if the OPTIONS ping
+                // times out and the related calls from the client cleaned up as well
+                ping(result.getLocation());
+                //registrations.removeRegistration(result);
+                //monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
             } else {
                 final DateTime updated = result.getDateUpdated();
                 Long pingIntervalMillis = new Long(pingInterval * 1000 * 3);
@@ -158,8 +160,12 @@ public final class UserAgentManager extends UntypedActor {
                     if (logger.isInfoEnabled()) {
                         logger.info("Registration: " + result.getAddressOfRecord() + " didn't respond to OPTIONS and will be removed now");
                     }
-                    registrations.removeRegistration(result);
-                    monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
+                    // Instead of removing registrations we ping the client one last time to ensure it was not a temporary loss
+                    // of connectivity. We don't need to remove the registration here. It will be handled only if the OPTIONS ping
+                    // times out and the related calls from the client cleaned up as well
+                    ping(result.getLocation());
+                    // registrations.removeRegistration(result);
+                    // monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
                 }
             }
         }
@@ -168,7 +174,7 @@ public final class UserAgentManager extends UntypedActor {
     private void disconnectActiveCalls(ActorRef call) {
         if (call != null && !call.isTerminated()) {
             call.tell(new Hangup("Registration_Removed"), self());
-            callManager.tell(new DestroyCall(call), self());
+            //callManager.tell(new DestroyCall(call), self());
             if (logger.isDebugEnabled()) {
                 logger.debug("Disconnected call: "+call.path()+" , after removed registration");
             }
@@ -220,6 +226,11 @@ public final class UserAgentManager extends UntypedActor {
 
     @Override
     public void onReceive(final Object message) throws Exception {
+        final Class<?> klass = message.getClass();
+        final ActorRef sender = sender();
+        if (logger.isInfoEnabled()) {
+            logger.info("UserAgentManager Processing Message: \"" + klass.getName() + " sender : "+ sender.getClass()+" self is terminated: "+self().isTerminated());
+        }
         if (message instanceof ReceiveTimeout) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Timeout received, ping interval: "+pingInterval+" , will clean up registrations and send keep alive");
@@ -263,11 +274,9 @@ public final class UserAgentManager extends UntypedActor {
 
     private void removeRegistration(final SipServletMessage sipServletMessage) {
         String user = ((SipURI)sipServletMessage.getTo().getURI()).getUser();
-        String host = ((SipURI)sipServletMessage.getTo().getURI()).getHost();
-        String port = String.valueOf(((SipURI)sipServletMessage.getTo().getURI()).getPort());
-        String transport = ((SipURI) sipServletMessage.getTo().getURI()).getTransportParam();
+        String location = ((SipURI)sipServletMessage.getTo().getURI()).toString();
         if(logger.isDebugEnabled()) {
-            logger.debug("Error response for the OPTIONS to: "+sipServletMessage.getFrom().toString()+" will remove registration");
+            logger.debug("Error response for the OPTIONS to: "+location+" will remove registration");
         }
         final RegistrationsDao regDao = storage.getRegistrationsDao();
         List<Registration> registrations = regDao.getRegistrations(user);
@@ -280,9 +289,32 @@ public final class UserAgentManager extends UntypedActor {
                     regLocation = (SipURI) factory.createURI(reg.getLocation());
                 } catch (ServletParseException e) {}
 
-                if (regLocation != null && (reg.getAddressOfRecord().equalsIgnoreCase(regLocation.toString()) || reg.getLocation().equalsIgnoreCase(regLocation.toString()))) {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("Registration: " + reg.getLocation() + " failed to response to OPTIONS and will be removed");
+                Long pingIntervalMillis = new Long(pingInterval * 1000 * 3);
+                boolean optionsTimeout = ((DateTime.now().getMillis() - reg.getDateUpdated().getMillis()) > pingIntervalMillis);
+
+                if(logger.isDebugEnabled()) {
+                    logger.debug("regLocation: " + regLocation + " reg.getAddressOfRecord(): "+reg.getAddressOfRecord() +
+                            " reg.getLocation(): "+reg.getLocation() + ", reg.getDateExpires(): " + reg.getDateExpires()
+                            + ", reg.getDateUpdated(): " + reg.getDateUpdated()
+                            + ", location: " + location
+                            + ", reg.getLocation().contains(location): " + reg.getLocation().contains(location)
+                            + ", optionsTimedOut " + optionsTimeout);
+                    if (reg.getDateExpires().isBeforeNow() || reg.getDateExpires().isEqualNow()) {
+                        logger.debug("Registration: "+ reg.getAddressOfRecord()+" expired");
+                    }
+                    if ((DateTime.now().getMillis() - reg.getDateUpdated().getMillis()) > pingIntervalMillis) {
+                        logger.debug("Registration: " + reg.getAddressOfRecord() + " didn't respond to OPTIONS in " + pingIntervalMillis + "ms");
+                    }
+                }
+
+                // We clean up only if the location is similar to the registration location to avoid cleaning up all registration lcoation for the AOR
+                // and only if the OPTIONS was not replied to in the pingInterval * 3 since the last REGISTER received to avoid cleaning up if
+                // We keep getting REGISTER and allow for some leeway in case of connectivity issues from restcomm clients.
+                if (regLocation != null && optionsTimeout && reg.getLocation().contains(location) &&
+                        (reg.getAddressOfRecord().equalsIgnoreCase(regLocation.toString()) || reg.getLocation().equalsIgnoreCase(regLocation.toString()))) {
+
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("Registration: " + reg.getLocation() + " failed to response to OPTIONS and will be removed");
                     }
 
                     regDao.removeRegistration(reg);
@@ -350,7 +382,7 @@ public final class UserAgentManager extends UntypedActor {
             ping.send();
         } catch (IOException e) {
             if (logger.isInfoEnabled()) {
-                logger.info("There was an exception trying to ping client: "+to+" , will remove registration. Exception: "+e);
+                logger.info("There was a problem while trying to ping client: "+to+" , will remove registration. " + e.getMessage());
             }
             removeRegistration(ping);
         }
@@ -358,9 +390,15 @@ public final class UserAgentManager extends UntypedActor {
 
     private void pong(final Object message) {
         final SipServletResponse response = (SipServletResponse) message;
-            if (response.getApplicationSession().isValid()) {
+        if (response.getApplicationSession().isValid()) {
+            try {
                 response.getApplicationSession().invalidate();
+            } catch (IllegalStateException ise) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("The session was already invalidated, nothing to do");
+                }
             }
+        }
         final RegistrationsDao registrations = storage.getRegistrationsDao();
         Registration registration = registrations.getRegistration(((SipURI)response.getTo().getURI()).getUser());
         //Registration here shouldn't be null. Update it

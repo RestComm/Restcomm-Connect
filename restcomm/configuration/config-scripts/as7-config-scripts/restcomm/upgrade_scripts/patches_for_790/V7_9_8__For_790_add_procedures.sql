@@ -1,3 +1,10 @@
+-- SQL Script for MySQL/MariaDB to update DB with the schema changes for issue #1104
+-- #Author: Maria Farooq
+
+-- #To run the script use mysql client:
+-- #mysql -u yourusername -p yourpassword yourdatabase < sql_update_script.sql
+
+USE ${RESTCOMM_DBNAME};
 DELIMITER //
 DROP PROCEDURE IF EXISTS addConferenceDetailRecord;
 CREATE PROCEDURE addConferenceDetailRecord(	IN in_sid VARCHAR(34),
