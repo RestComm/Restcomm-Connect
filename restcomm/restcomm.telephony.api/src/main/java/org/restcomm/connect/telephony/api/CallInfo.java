@@ -46,10 +46,11 @@ public final class CallInfo {
     private final SipServletResponse lastResponse;
     private final boolean webrtc;
     private boolean muted;
+    private boolean isFromApi;
 
     public CallInfo(final Sid sid, final CallStateChanged.State state, final CreateCall.Type type, final String direction,
                     final DateTime dateCreated, final String forwardedFrom, final String fromName, final String from, final String to,
-                    final SipServletRequest invite, final SipServletResponse lastResponse, final boolean webrtc, final boolean muted, final DateTime dateConUpdated) {
+                    final SipServletRequest invite, final SipServletResponse lastResponse, final boolean webrtc, final boolean muted, final boolean isFromApi, final DateTime dateConUpdated) {
         super();
         this.sid = sid;
         this.state = state;
@@ -65,6 +66,7 @@ public final class CallInfo {
         this.type = type;
         this.webrtc = webrtc;
         this.muted = muted;
+        this.isFromApi = isFromApi;
     }
 
     public DateTime dateCreated() {
@@ -131,4 +133,7 @@ public final class CallInfo {
         this.muted = muted;
     }
 
+    public boolean isFromApi() {
+        return isFromApi;
+    }
 }
