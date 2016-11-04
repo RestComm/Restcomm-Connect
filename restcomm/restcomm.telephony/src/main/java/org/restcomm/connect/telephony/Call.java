@@ -56,25 +56,7 @@ import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
-import org.restcomm.connect.telephony.api.Answer;
-import org.restcomm.connect.telephony.api.CallFail;
-import org.restcomm.connect.telephony.api.CallInfo;
-import org.restcomm.connect.telephony.api.CallResponse;
-import org.restcomm.connect.telephony.api.CallStateChanged;
-import org.restcomm.connect.telephony.api.Cancel;
-import org.restcomm.connect.telephony.api.ChangeCallDirection;
-import org.restcomm.connect.telephony.api.CreateCall;
-import org.restcomm.connect.telephony.api.Dial;
-import org.restcomm.connect.telephony.api.GetCallInfo;
-import org.restcomm.connect.telephony.api.GetCallObservers;
-import org.restcomm.connect.telephony.api.Hangup;
-import org.restcomm.connect.telephony.api.InitializeOutbound;
-import org.restcomm.connect.telephony.api.Reject;
-import org.restcomm.connect.telephony.api.RemoveParticipant;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -83,6 +65,13 @@ import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.commons.fsm.TransitionFailedException;
 import org.restcomm.connect.commons.fsm.TransitionNotFoundException;
 import org.restcomm.connect.commons.fsm.TransitionRollbackException;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.util.SdpUtils;
+import org.restcomm.connect.dao.CallDetailRecordsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.mscontrol.api.messages.CloseMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.Collect;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
@@ -103,10 +92,21 @@ import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StopRecording;
 import org.restcomm.connect.mscontrol.api.messages.Unmute;
 import org.restcomm.connect.mscontrol.api.messages.UpdateMediaSession;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
-import org.restcomm.connect.commons.util.SdpUtils;
+import org.restcomm.connect.telephony.api.Answer;
+import org.restcomm.connect.telephony.api.CallFail;
+import org.restcomm.connect.telephony.api.CallInfo;
+import org.restcomm.connect.telephony.api.CallResponse;
+import org.restcomm.connect.telephony.api.CallStateChanged;
+import org.restcomm.connect.telephony.api.Cancel;
+import org.restcomm.connect.telephony.api.ChangeCallDirection;
+import org.restcomm.connect.telephony.api.CreateCall;
+import org.restcomm.connect.telephony.api.Dial;
+import org.restcomm.connect.telephony.api.GetCallInfo;
+import org.restcomm.connect.telephony.api.GetCallObservers;
+import org.restcomm.connect.telephony.api.Hangup;
+import org.restcomm.connect.telephony.api.InitializeOutbound;
+import org.restcomm.connect.telephony.api.Reject;
+import org.restcomm.connect.telephony.api.RemoveParticipant;
 
 import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
@@ -282,6 +282,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.leaving, this.inProgress));
         transitions.add(new Transition(this.leaving, this.stopping));
         transitions.add(new Transition(this.leaving, this.failed));
+        transitions.add(new Transition(this.leaving, this.completed));
         transitions.add(new Transition(this.canceling, this.canceled));
         transitions.add(new Transition(this.canceling, this.completed));
         transitions.add(new Transition(this.failingBusy, this.busy));
@@ -1230,9 +1231,9 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(Object message) throws Exception {
              if (!receivedBye) {
-             // Conference was stopped and this call was asked to leave
-             // Send BYE to remote client
-             sendBye(new Hangup("Conference time limit reached"));
+                 // Conference was stopped and this call was asked to leave
+                 // Send BYE to remote client
+                 sendBye(new Hangup("Conference time limit reached"));
              }
             msController.tell(message, super.source);
         }
@@ -1639,25 +1640,32 @@ public final class Call extends UntypedActor {
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
         if(logger.isDebugEnabled()) {
-            logger.debug("Got Hangup for Call, from: "+from+" to: "+to+" state: "+fsm.state());
+            logger.debug("Got Hangup for Call, from: "+from+" to: "+to+" state: "+fsm.state()+" conferencing: "+conferencing +" conference: "+conference);
         }
+
+        // Stop recording if necessary
+        if (recording) {
+            recording = false;
+            if(logger.isInfoEnabled()) {
+                logger.info("Call - Will stop recording now");
+            }
+            msController.tell(new Stop(true), self);
+        }
+
         if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress)) {
-            if (!receivedBye) {
-                // Send BYE to client if RestComm took initiative to hangup the call
-                sendBye(message);
-            }
-
-            // Stop recording if necessary
-            if (recording) {
-                recording = false;
-                if(logger.isInfoEnabled()) {
-                    logger.info("Call - Will stop recording now");
+            if (conferencing) {
+                // Tell conference to remove the call from participants list
+                // before moving to a stopping state
+                conference.tell(new RemoveParticipant(self()), self());
+            }else {
+                if (!receivedBye) {
+                    // Send BYE to client if RestComm took initiative to hangup the call
+                    sendBye(message);
                 }
-                msController.tell(new Stop(true), self);
-            }
 
-            // Move to next state to clean media resources and close session
-            fsm.transition(message, stopping);
+                // Move to next state to clean media resources and close session
+                fsm.transition(message, stopping);
+            }
         }
     }
 
@@ -1911,6 +1919,9 @@ public final class Call extends UntypedActor {
     }
 
     private void onJoinConference(JoinConference message, ActorRef self, ActorRef sender) throws Exception {
+        if (logger.isInfoEnabled()) {
+            logger.info("********************* onJoinConference *********************");
+        }
         if (is(inProgress)) {
             this.conferencing = true;
             this.conference = sender;
@@ -1953,7 +1964,7 @@ public final class Call extends UntypedActor {
             }
 
             // After leaving let the Interpreter know the Call is ready.
-            fsm.transition(message, inProgress);
+            fsm.transition(message, completed);
         }
     }
 
