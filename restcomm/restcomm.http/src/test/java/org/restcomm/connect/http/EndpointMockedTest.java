@@ -73,7 +73,7 @@ public class EndpointMockedTest {
         when(servletContext.getAttribute(Configuration.class.getName())).thenReturn(conf);
         // mock accountsDao
         accounts = new ArrayList<Account>();
-        accounts.add(new Account(new Sid("AC00000000000000000000000000000000"),null,null,"administrator@company.com","Administrator",null,null,null, "RestComm", "plain", "77f8c12cc7b8f8423e5c38b035249166",null,null));
+        accounts.add(new Account(new Sid("AC00000000000000000000000000000000"),null,null,"administrator@company.com","Administrator",null,null,null, "RestComm", Account.PasswordAlgorithm.plain, "77f8c12cc7b8f8423e5c38b035249166",null,null));
         accountsDao = new AccountsDaoMock(accounts);
         // mock DaoManager
         daoManager = new DaoManagerMock(accountsDao);

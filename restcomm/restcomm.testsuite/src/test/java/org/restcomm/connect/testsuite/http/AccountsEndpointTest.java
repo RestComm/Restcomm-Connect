@@ -494,6 +494,31 @@ public class AccountsEndpointTest extends EndpointTest {
         Assert.assertEquals(200, response.getStatus());
     }
 
+    @Test
+    public void testAuthTokenReset() {
+        // create a new account
+        JsonObject newAccountJson = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(), adminUsername, adminPassword, "resetToken@company.com", "RestComm12");
+        Assert.assertNotNull(newAccountJson);
+        String newAccountSid = newAccountJson.get("sid").getAsString();
+        String newAccountAuthToken = newAccountJson.get("auth_token").getAsString();
+        Assert.assertNotNull(newAccountAuthToken);
+        // reset the AuthToken of the new account using a password
+        Client jersey = getClient(newAccountSid, "RestComm12");
+        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+newAccountSid+"/resetAuthToken") );
+        ClientResponse response = resource.post(ClientResponse.class);
+        Assert.assertEquals(200, response.getStatus());
+        JsonParser parser = new JsonParser();
+        JsonObject resetAccountJson = parser.parse(response.getEntity(String.class)).getAsJsonObject();
+        // make sure a new valid AuthToken is generated
+        String resetAccountAuthToken = resetAccountJson.get("auth_token").getAsString();
+        Assert.assertNotNull(resetAccountAuthToken);
+        Assert.assertEquals(32,resetAccountAuthToken.length());
+        // make sure the account status is set to closed
+        Assert.assertFalse(newAccountAuthToken.equals(resetAccountAuthToken));
+        // try to retrieve the account using the AuthToken this time
+        JsonObject retrievedAccountJson = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), newAccountSid, resetAccountAuthToken, "resettoken@company.com");
+    }
+
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");

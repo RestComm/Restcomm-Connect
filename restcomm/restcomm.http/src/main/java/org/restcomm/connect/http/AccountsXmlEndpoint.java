@@ -85,4 +85,10 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
             final MultivaluedMap<String, String> data) {
         return updateAccount(accountSid, data, APPLICATION_XML_TYPE);
     }
+
+    @Path("/{accountSid}/resetAuthToken")
+    @POST
+    public Response resetAuthTokenWithXmlResult(@PathParam("accountSid") final String accountSid) {
+        return resetAccountAuthToken(accountSid, APPLICATION_XML_TYPE);
+    }
 }
