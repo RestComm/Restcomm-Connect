@@ -135,7 +135,11 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
         } catch (final Exception exception) {
             return status(UNAUTHORIZED).build();
         }
-        final Geolocation geolocation = dao.getGeolocation(new Sid(sid));
+        // final Geolocation geolocation = dao.getGeolocation(new Sid(sid));
+        Geolocation geolocation = null;
+        if (Sid.pattern.matcher(sid).matches()) {
+            geolocation = dao.getGeolocation(new Sid(sid));
+        }
         if (geolocation == null) {
             return status(NOT_FOUND).build();
         } else {
