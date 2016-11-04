@@ -20,10 +20,16 @@
  */
 package org.restcomm.connect.monitoringservice;
 
-import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.servlet.sip.ServletParseException;
+import javax.sip.header.ContactHeader;
 
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
@@ -39,16 +45,10 @@ import org.restcomm.connect.telephony.api.MonitoringServiceResponse;
 import org.restcomm.connect.telephony.api.TextMessage;
 import org.restcomm.connect.telephony.api.UserRegistration;
 
-import javax.servlet.sip.ServletParseException;
-import javax.sip.header.ContactHeader;
-
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import akka.actor.ActorRef;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -162,13 +162,7 @@ public class MonitoringService extends UntypedActor{
             logger.debug("MonitoringService onGetCall, location: "+location);
         }
         if (location != null) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("onGetCall Before: callLocationMap: "+ callLocationMap.toString());
-            }
             ActorRef call = callLocationMap.get(location);
-            if (logger.isDebugEnabled()) {
-                logger.debug("onGetCall After: callLocationMap: "+ callLocationMap.toString());
-            }
             if(call == null && location.indexOf("@") != -1 && location.indexOf(":") != -1) {
                 // required in case the Contact Header of the INVITE doesn't contain any user part
                 // as it is the case for Restcomm SDKs
@@ -258,13 +252,7 @@ public class MonitoringService extends UntypedActor{
         callMap.remove(senderPath);
         CallInfo callInfo = callDetailsMap.remove(senderPath);
         if (callInfo != null && callInfo.invite() != null) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("onStopObserving Before: callLocationMap: "+ callLocationMap.toString());
-            }
             callLocationMap.remove(callInfo.invite().getAddressHeader(ContactHeader.NAME).getURI().toString());
-            if (logger.isDebugEnabled()) {
-                logger.debug("onStopObserving After: callLocationMap: "+ callLocationMap.toString());
-            }
         }
         if (callInfo.direction().equalsIgnoreCase("inbound")) {
             if (logger.isDebugEnabled()) {
@@ -290,13 +278,7 @@ public class MonitoringService extends UntypedActor{
         CallInfo callInfo = message.get();
         callDetailsMap.put(senderPath, callInfo);
         if (callInfo != null && callInfo.invite() != null) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("onCallResponse Before: callLocationMap: "+ callLocationMap.toString());
-            }
             callLocationMap.put(callInfo.invite().getAddressHeader(ContactHeader.NAME).getURI().toString(), sender);
-            if (logger.isDebugEnabled()) {
-                logger.debug("onCallResponse After: callLocationMap: "+ callLocationMap.toString());
-            }
         }
         if (callInfo.direction().equalsIgnoreCase("inbound")) {
             if (logger.isDebugEnabled()) {
