@@ -21,8 +21,8 @@ package org.restcomm.connect.dao;
 
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
-import org.restcomm.connect.extension.api.ExtensionSpecificConfiguration;
 
 import java.util.List;
 
@@ -34,13 +34,13 @@ public interface ExtensionsConfigurationDao {
      * Add a new ExtensionConfiguration
      * @param extensionConfiguration
      */
-    void addConfiguration(ExtensionConfiguration extensionConfiguration);
+    void addConfiguration(ExtensionConfiguration extensionConfiguration) throws ConfigurationException;
 
     /**
      * Update an existing ExtensionConfiguration
      * @param extensionConfiguration
      */
-    void updateConfiguration(ExtensionConfiguration extensionConfiguration);
+    void updateConfiguration(ExtensionConfiguration extensionConfiguration) throws ConfigurationException;
 
     /**
      * Get extension configuration by extension name
@@ -73,50 +73,6 @@ public interface ExtensionsConfigurationDao {
      * @param extensionSid
      */
     void deleteConfigurationBySid(Sid extensionSid);
-
-    /**
-     * Add a new ExtensionSpecificConfiguration
-     * @param extensionSpecificConfiguration
-     */
-    void addSpecificConfiguration(ExtensionSpecificConfiguration extensionSpecificConfiguration);
-
-    /**
-     * Update an existing ExtensionConfiguration
-     * @param extensionSpecificConfiguration
-     */
-    void updateSpecificConfiguration(ExtensionSpecificConfiguration extensionSpecificConfiguration);
-
-    /**
-     * Get extension configuration by extension name
-     * @param extensionName
-     * @return ExtensionSpecificConfiguration
-     */
-    List<ExtensionSpecificConfiguration> getSpecificConfigurationByName(String extensionName);
-
-    /**
-     * Get extension configuration by Sid
-     * @param extensionSid
-     * @return ExtensionConfiguration
-     */
-    List<ExtensionSpecificConfiguration> getSpecificConfigurationByConfigurationSid(Sid extensionSid);
-
-    /**
-     * Get all extension configuration
-     * @return List<ExtensionConfiguration>
-     */
-    List<ExtensionSpecificConfiguration> getAllSpecificConfiguration();
-
-    /**
-     * Delete extension configuration by extension name
-     * @param extensionName
-     */
-    void deleteSpecificConfigurationByName(String extensionName);
-
-    /**
-     * Delete extension configuration by Sid
-     * @param specificExtensionSid
-     */
-    void deleteSpecificConfigurationBySid(Sid specificExtensionSid);
 
     /**
      * Check if there is a newer version of the configuration in the DB using extension name
