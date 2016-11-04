@@ -231,6 +231,10 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
                     } else {
                         return null;
                     }
+                } else {
+                    String msg = smsServiceResponse.cause().getMessage();
+                    String error = "SMS_LIMIT_EXCEEDED";
+                    return status(Response.Status.FORBIDDEN).entity(buildErrorResponseBody(msg, error, responseType)).build();
                 }
             }
             return status(INTERNAL_SERVER_ERROR).build();
