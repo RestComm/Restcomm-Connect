@@ -25,24 +25,19 @@ import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
 public final class Answer {
 
     private final Sid callSid;
-    private final Sid phoneNumberSid;
 
-    public Answer(Sid callSid, Sid phoneNumberSid) {
+    public Answer(Sid callSid) {
         super();
         this.callSid = callSid;
-        this.phoneNumberSid = phoneNumberSid;
     }
 
     public Sid callSid() {
         return callSid;
-    }
-
-    public Sid phoneNumberSid() {
-        return phoneNumberSid;
     }
 }

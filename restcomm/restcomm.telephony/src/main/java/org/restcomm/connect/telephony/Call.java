@@ -211,9 +211,8 @@ public final class Call extends UntypedActor {
     private final ActorRef callDataRecorder;
 
     private Sid inboundCallSid;
-    private Sid phoneNumberSid;
 
-    public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration, final ActorRef callDataRecorder, final String apiVersion) {
+    public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration, final ActorRef callDataRecorder, final String apiVersion, final Sid accountSid) {
         super();
         final ActorRef source = self();
 
@@ -321,6 +320,7 @@ public final class Call extends UntypedActor {
         //this.callDataRecorder = callDataRecorder;
         this.disableSdpPatchingOnUpdatingMediaSession = this.configuration.subset("runtime-settings").getBoolean("disable-sdp-patching-on-updating-mediasession", false);
         this.apiVersion = apiVersion;
+        this.accountId = accountSid;
         this.callDataRecorder = callDataRecorder;
 
         this.callDataRecorder.tell(new Observe(self()), self());
@@ -341,7 +341,7 @@ public final class Call extends UntypedActor {
     private CallResponse<CallInfo> info() {
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, accountId, phoneNumberSid, parentCallSid, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, callUpdatedTime, apiVersion);
+        final CallInfo info = new CallInfo(id, accountId, null, parentCallSid, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, callUpdatedTime, apiVersion);
         return new CallResponse<CallInfo>(info);
     }
 
@@ -1363,7 +1363,6 @@ public final class Call extends UntypedActor {
 
     private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
         inboundCallSid = message.callSid();
-        phoneNumberSid = message.phoneNumberSid();
         if (is(ringing) && !invite.getSession().getState().equals(SipSession.State.TERMINATED)) {
                 fsm.transition(message, initializing);
         } else {

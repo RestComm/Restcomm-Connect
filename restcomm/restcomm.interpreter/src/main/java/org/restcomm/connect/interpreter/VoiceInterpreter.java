@@ -1483,7 +1483,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 verb = (Tag) message;
 
                 // Answer the call.
-                call.tell(new Answer(callRecord.getSid(), phoneId), source);
+                call.tell(new Answer(callRecord.getSid()), source);
             }
         }
     }

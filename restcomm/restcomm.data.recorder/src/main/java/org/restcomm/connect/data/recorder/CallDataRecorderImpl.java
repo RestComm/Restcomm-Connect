@@ -72,7 +72,7 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
         final ActorRef self = self();
         final ActorRef sender = sender();
         if(logger.isInfoEnabled()) {
-            logger.info("********** CallDataRecorder" + self().path() + " Processing Message: \"" + klass.getName() + " sender : "
+            logger.info("********** CallDataRecorder " + self().path() + " Processing Message: \"" + klass.getName() + " sender : "
                 + sender.path().toString());
         }
 
