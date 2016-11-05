@@ -701,7 +701,7 @@ public final class SmsInterpreter extends UntypedActor {
             // Save <Sms> verb.
             verb = (Tag) message;
             // Create a new sms session to handle the <Sms> verb.
-            service.tell(new CreateSmsSession(), source);
+            service.tell(new CreateSmsSession(initialSessionRequest.from(), initialSessionRequest.to(), accountId.toString(), false), source);
         }
     }
 
