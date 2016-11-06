@@ -45,20 +45,20 @@ startRestcomm() {
 			if [[ "$RUN_DOCKER" == "true" || "$RUN_DOCKER" == "TRUE" ]]; then
 				$RESTCOMM_HOME/bin/standalone.sh -b $bind_address "${ExtraOpts}"
 			else
-				tmux new -s 'restcomm' -d $RESTCOMM_HOME/bin/standalone.sh -b $bind_address "${ExtraOpts}"
+				tmux new -s restcomm -d "$RESTCOMM_HOME/bin/standalone.sh -b $bind_address ${ExtraOpts}"
 			fi
 			;;
 		'domain'*)
 			# start restcomm on standalone mode
 			chmod +x $RESTCOMM_HOME/bin/domain.sh
-			tmux new -s 'restcomm' -d $RESTCOMM_HOME/bin/domain.sh -b $bind_address "${ExtraOpts}"
+			tmux new -s restcomm -d "$RESTCOMM_HOME/bin/domain.sh -b $bind_address ${ExtraOpts}"
 			echo 'TelScale RestComm started running on domain mode. Screen session: restcomm.'
 			echo "Using IP Address: $BIND_ADDRESS"
 			;;
 		*)
 			# start restcomm on standalone mode
 			chmod +x $RESTCOMM_HOME/bin/standalone.sh
-			tmux new -s 'restcomm' -d $RESTCOMM_HOME/bin/standalone.sh -b $bind_address "${ExtraOpts}"
+			tmux new -s restcomm -d "$RESTCOMM_HOME/bin/standalone.sh -b $bind_address ${ExtraOpts}"
 			echo 'TelScale RestComm started running on standalone mode. Screen session: restcomm.'
 			echo "Using IP Address: $BIND_ADDRESS"
 			;;
