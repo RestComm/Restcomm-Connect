@@ -31,7 +31,7 @@ import javax.ws.rs.core.Response;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
- * @author Fernando Mendioroz (fernando.mendioroz@telestax.com)
+ * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
  *
  */
 @Path("/Accounts/{accountSid}/Geolocation.json")

@@ -39,7 +39,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 
 /**
- * @author Fernando Mendioroz (fernando.mendioroz@telestax.com)
+ * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
  *
  */
 public class GeolocationConverter extends AbstractConverter implements JsonSerializer<Geolocation> {

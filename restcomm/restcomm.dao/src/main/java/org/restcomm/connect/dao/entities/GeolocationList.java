@@ -26,7 +26,7 @@ import java.util.List;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 
 /**
- * @author Fernando Mendioroz (fernando.mendioroz@telestax.com)
+ * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
  *
  */
 @NotThreadSafe

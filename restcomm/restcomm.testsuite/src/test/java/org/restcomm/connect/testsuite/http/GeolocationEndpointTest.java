@@ -55,7 +55,7 @@ import com.google.gson.JsonObject;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 /**
- * @author Fernando Mendioroz (fernando.mendioroz@telestax.com)
+ * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
  *
  */
 @RunWith(Arquillian.class)
