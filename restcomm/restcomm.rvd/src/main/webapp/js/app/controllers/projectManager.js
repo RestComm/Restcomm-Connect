@@ -9,16 +9,27 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $state
 		$scope.projectKind = 'voice';
 	$scope.error = undefined; 
 	//$scope.notifications = [];
+	$scope.appItems = [];
+	$scope.retrievingApps = false;
 
 	
 	$scope.refreshProjectList = function() {
-		var restcommApps;
-		var projectList = [];
+		$scope.appItems = [];
+		$scope.retrievingApps = true;
 		$http({
 			url: '/restcomm/2012-04-24/Accounts/' + account.sid + '/Applications.json',
 			method: 'GET',
 			headers: {Authorization: authentication.getAuthHeader()}
 		}).success(function (data, status, headers, config) {
+			for (var i=0; i<data.length; i++) {
+			    var item = {
+			        viewMode:'view',
+			        app: data[i]
+			    }
+			    $scope.appItems.push(item);
+			}
+			$scope.retrievingApps = false;
+			/*
 			restcommApps = data;
 			$http({url: 'services/projects',
 				method: "GET"
@@ -41,11 +52,14 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $state
 					}
 				}
 				$scope.projectList = projectList;
+
 			}).error(function (data, status, headers, config) {
 				if (status == 500)
 				notifications.put({type:'danger',message:"Internal server error"});
 			});
+			*/
 		}).error(function (data, status, headers, config) {
+			$scope.retrievingApps = false;
 			if (status == 500)
 				notifications.put({type:'danger',message:"Internal server error"});
 			if (status == 401){
@@ -79,45 +93,51 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $state
 	}
 	
 	
-	$scope.editProjectName = function(projectItem) {
-		projectItem.viewMode = 'edit';
-		projectItem.newProjectName = projectItem.name;
-		projectItem.errorMessage = "";
+	$scope.editProjectName = function(item) {
+		item.viewMode = 'edit';
+		item.newName = item.app.friendly_name;
+		item.errorMessage = "";
 	}
 	
-	$scope.applyNewProjectName = function(projectItem, ticket) {
-		if ( projectItem.name == projectItem.newProjectName ) {
-			projectItem.viewMode = 'view';
+	$scope.applyNewProjectName = function(item, ticket) {
+		if ( item.app.friendly_name == item.newName ) {
+			item.viewMode = 'view';
 			return;
 		}
-		$http({ method: "PUT", url: 'services/projects/' + projectItem.applicationSid + '/rename?newName=' + projectItem.newProjectName})
+		$http({ method: "PUT", url: 'services/projects/' + item.app.sid + '/rename?newName=' + item.newName})
 			.success(function (data, status, headers, config) { 
-				console.log( "project " + projectItem.name + " renamed to " + projectItem.newProjectName );
-				projectItem.name = projectItem.newProjectName;
-				projectItem.viewMode = 'view';
-				
+				console.log( "project " + item.app.friendly_name + " renamed to " + item.newName );
+				item.app.friendly_name = item.newName;
+				item.viewMode = 'view';
 			})
 			.error(function (data, status, headers, config) {
 				if (status == 409)
-					projectItem.errorMessage = "Project already exists!";
+					item.errorMessage = "Project already exists!";
 				else
-					projectItem.errorMessage = "Cannot rename project";
+					item.errorMessage = "Cannot rename project";
 			});
 	}
 	
-	$scope.deleteProject = function(projectItem, ticket) {
-		$http({ method: "DELETE", url: 'services/projects/' + projectItem.applicationSid})
+	$scope.deleteProject = function(item, ticket) {
+		$http({ method: "DELETE", url: 'services/projects/' + item.app.sid})
 		.success(function (data, status, headers, config) { 
-			console.log( "project " + projectItem.name + " deleted " );
+			console.log( "project " + item.app.friendly_name + " deleted " );
 			$scope.refreshProjectList();
-			projectItem.showConfirmation = false;
+			item.viewMode = 'view';
 		})
 		.error(function (data, status, headers, config) {
-		    console.log("cannot delete project");
-		    if (status >= 500) {
-		        notifications.put({type:'danger',message:'Internal server error.'});
-		    } else {
-		        notifications.put({type:'danger',message:'Could not delete project.'});
+            $scope.refreshProjectList();
+            item.viewMode = 'view';
+            if (status == 404) {
+                // 404 should be treated with care in case the project does not exist but the application does
+                // no error displayed here
+            } else {
+                console.log("cannot delete project");
+                if (status >= 500) {
+                    notifications.put({type:'danger',message:'Internal server error.'});
+                } else {
+                    notifications.put({type:'danger',message:'Could not delete project.'});
+                }
 		    }
 		});
 	}
@@ -156,4 +176,20 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $state
     $scope.refreshProjectList();	
 	
 });
+
+/**
+ * filters a project list as populated by projectManager controler by project kind
+ */
+App.filter("projectFilter", function () {
+    return function(input, kind) {
+        if (!input)
+            return input;
+        var filtered = [];
+        for (var i=0; i <input.length; i++) {
+            if (input[i].app.kind == kind)
+                filtered.push(input[i]);
+        }
+        return filtered;
+    }
+})
 
