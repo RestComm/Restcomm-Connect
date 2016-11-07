@@ -698,7 +698,12 @@ angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http',
 
 			// maybe override .error() also to display a message?
 		 }).error(function (data, status, headers, config) {
-			 deferred.reject("IncompatibleProjectVersion")
+		    if (status == 404) {
+		      deferred.reject("ProjectNotFound");
+		    } else {
+		      // TODO fix this generic handling
+			  deferred.reject("IncompatibleProjectVersion");
+			}
 			 //if ( data.serverError && (data.serverError.className == 'IncompatibleProjectVersion') )
 			//	 $location.path("/upgrade/" + name)
 			// else
