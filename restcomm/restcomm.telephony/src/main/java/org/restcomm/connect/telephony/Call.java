@@ -170,6 +170,7 @@ public final class Call extends UntypedActor {
     private long timeout;
     private SipServletRequest invite;
     private SipServletResponse lastResponse;
+    private boolean isFromApi;
 
     // Call runtime stuff.
     private final Sid id;
@@ -341,7 +342,7 @@ public final class Call extends UntypedActor {
     private CallResponse<CallInfo> info() {
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, accountId, null, parentCallSid, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, callUpdatedTime, apiVersion);
+        final CallInfo info = new CallInfo(id, accountId, null, parentCallSid, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi,callUpdatedTime, apiVersion);
         return new CallResponse<CallInfo>(info);
     }
 
@@ -555,6 +556,7 @@ public final class Call extends UntypedActor {
             type = request.type();
             parentCallSid = request.getParentCallSid();
             //recordsDao = request.getDaoManager().getCallDetailRecordsDao();
+            isFromApi = request.isFromApi();
             String toHeaderString = to.toString();
             if (toHeaderString.indexOf('?') != -1) {
                 // custom headers parsing for SIP Out

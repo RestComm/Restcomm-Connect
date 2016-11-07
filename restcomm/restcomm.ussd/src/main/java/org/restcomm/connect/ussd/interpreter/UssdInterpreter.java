@@ -497,7 +497,7 @@ public class UssdInterpreter extends UntypedActor {
                 }
                 final String direction = callInfo.direction();
                 if ("inbound".equals(direction)) {
-                    ussdCall.tell(new Answer(callInfo.sid(), phoneId), source);
+                    ussdCall.tell(new Answer(callInfo.sid()), source);
                     // fsm.transition(message, downloadingRcml);
                 } else {
                     fsm.transition(message, downloadingRcml);

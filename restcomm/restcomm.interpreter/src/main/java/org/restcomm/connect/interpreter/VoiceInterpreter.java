@@ -1896,7 +1896,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final Tag child = dialChildren.get(0);
                 if (Nouns.client.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
                                 CreateCall.Type.CLIENT, accountId, callInfo.sid());
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
@@ -1904,7 +1904,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (Nouns.number.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
                                 CreateCall.Type.PSTN, accountId, callInfo.sid());
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
@@ -1912,7 +1912,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (Nouns.uri.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
                                 CreateCall.Type.SIP, accountId, callInfo.sid());
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),

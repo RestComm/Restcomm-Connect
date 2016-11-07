@@ -290,13 +290,14 @@ public final class CallManager extends UntypedActor {
         this.dataRecorderFactory = (DataRecorderFactory) context.getAttribute(DataRecorderFactory.class.getName());
     }
 
-    private ActorRef call() {
+    private ActorRef call(final Sid accountSid) {
         return system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Call(sipFactory, msControllerFactory.provideCallController(), configuration, dataRecorderFactory.getCallDataRecorder(), apiVersion);
+                return new Call(sipFactory, msControllerFactory.provideCallController(), configuration,
+                    dataRecorderFactory.getCallDataRecorder(), apiVersion, accountSid);
             }
         }));
     }
@@ -577,7 +578,7 @@ public final class CallManager extends UntypedActor {
         builder.setRcml(rcml);
         builder.setMonitoring(monitoring);
         final ActorRef interpreter = builder.build();
-        final ActorRef call = call();
+        final ActorRef call = call(account.getSid());
         final SipApplicationSession application = request.getApplicationSession();
         application.setAttribute(Call.class.getName(), call);
         call.tell(request, self());
@@ -719,7 +720,7 @@ public final class CallManager extends UntypedActor {
                 builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
                 builder.setMonitoring(monitoring);
                 final ActorRef interpreter = builder.build();
-                final ActorRef call = call();
+                final ActorRef call = call(number.getAccountSid());
                 final SipApplicationSession application = request.getApplicationSession();
                 application.setAttribute(Call.class.getName(), call);
                 call.tell(request, self);
@@ -786,7 +787,7 @@ public final class CallManager extends UntypedActor {
             builder.setFallbackMethod(client.getVoiceFallbackMethod());
             builder.setMonitoring(monitoring);
             final ActorRef interpreter = builder.build();
-            final ActorRef call = call();
+            final ActorRef call = call(client.getAccountSid());
             final SipApplicationSession application = request.getApplicationSession();
             application.setAttribute(Call.class.getName(), call);
             call.tell(request, self);
@@ -1402,7 +1403,7 @@ public final class CallManager extends UntypedActor {
         final String proxyPassword = (request.password() != null) ? request.password() : activeProxyPassword;
 
         apiVersion = runtime.getString("api-version");
-        final ActorRef call = call();
+        final ActorRef call = call(request.accountId());
         final ActorRef self = self();
         final boolean userAtDisplayedName = runtime.subset("outbound-proxy").getBoolean("user-at-displayed-name");
         InitializeOutbound init;
@@ -1454,7 +1455,8 @@ public final class CallManager extends UntypedActor {
             // originalRequest.createCancel().send();
         } else {
             final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
-            call.tell(request, self);
+            if (call != null)
+                call.tell(request, self);
         }
     }
 

@@ -1231,6 +1231,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             } else if (CallManagerResponse.class.equals(klass)) {
                 String reason = ((CallManagerResponse)message).cause().getMessage().replaceAll("\\s","_");
                 call.tell(new Hangup(reason), source);
+            } else if (message instanceof SmsServiceResponse) {
+                //Blocked SMS Session request
+                call.tell(new Hangup(((SmsServiceResponse)message).cause().getMessage()), self());
             } else {
                 call.tell(new Hangup(), source);
             }
@@ -1928,7 +1931,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 verb = (Tag) message;
             }
             // Create a new sms session to handle the <Sms> verb.
-            smsService.tell(new CreateSmsSession(), source);
+            smsService.tell(new CreateSmsSession(callInfo.from(), callInfo.to(), accountId.toString(), false), source);
         }
     }
 

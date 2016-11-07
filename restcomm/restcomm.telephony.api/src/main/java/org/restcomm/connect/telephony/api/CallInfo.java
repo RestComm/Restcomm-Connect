@@ -51,9 +51,11 @@ public final class CallInfo {
     private final boolean webrtc;
     private boolean muted;
     private final String version;
+    private boolean isFromApi;
     public CallInfo(final Sid sid, final Sid accountId, final Sid phoneNumberSid, final Sid parentCallSid, final CallStateChanged.State state, final CreateCall.Type type, final String direction,
                     final DateTime dateCreated, final String forwardedFrom, final String fromName, final String from, final String to,
-                    final SipServletRequest invite, final SipServletResponse lastResponse, final boolean webrtc, final boolean muted, final DateTime dateConUpdated, final String version) {
+                    final SipServletRequest invite, final SipServletResponse lastResponse, final boolean webrtc, final boolean muted, final boolean isFromApi, final DateTime dateConUpdated, final String version) {
+
         super();
         this.sid = sid;
         this.accountSid = accountId;
@@ -73,6 +75,7 @@ public final class CallInfo {
         this.webrtc = webrtc;
         this.muted = muted;
         this.version = version;
+        this.isFromApi = isFromApi;
     }
 
     public DateTime dateCreated() {
@@ -155,10 +158,17 @@ public final class CallInfo {
         this.muted = muted;
     }
 
+    public boolean isFromApi() {
+        return isFromApi;
+    }
+
     @Override
     public String toString() {
-        return "Call Sid: " + sid + " | AccountSid: " + accountSid +" | phoneNumberSid: " + phoneNumberSid + " | State: " + state + " | Type " + type + " | direction: " + direction
-        + " | dateCreated: " + dateCreated + " | forwardedFrom: " + forwardedFrom + " | fromName: " + fromName
-        + " from: " + from + " | to: " + to + " | webrtc: " + webrtc + " | muted: " + muted + " | dateConUpdated: " + dateConUpdated;
+        return "CallInfo [sid=" + sid + ", accountSid=" + accountSid + ", phoneNumberSid=" + phoneNumberSid
+                + ", parentCallSid=" + parentCallSid + ", state=" + state + ", type=" + type + ", direction="
+                + direction + ", dateCreated=" + dateCreated + ", dateConUpdated=" + dateConUpdated + ", forwardedFrom="
+                + forwardedFrom + ", fromName=" + fromName + ", from=" + from + ", to=" + to + ", invite=" + invite
+                + ", lastResponse=" + lastResponse + ", webrtc=" + webrtc + ", muted=" + muted + ", version=" + version
+                + ", isFromApi=" + isFromApi + "]";
     }
 }
