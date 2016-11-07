@@ -499,9 +499,7 @@ public final class Call extends UntypedActor {
     // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest response
     // received
     private void sendCallInfoToObservers() {
-        for (final ActorRef observer : this.observers) {
-            observer.tell(info(), self());
-        }
+    	broadcast(info(), self());
     }
 
     private void processInfo(final SipServletRequest request) throws IOException {
@@ -517,9 +515,7 @@ public final class Call extends UntypedActor {
         }
         if (digits != null) {
             MediaGroupResponse<String> infoResponse = new MediaGroupResponse<String>(digits);
-            for (final ActorRef observer : observers) {
-                observer.tell(infoResponse, self());
-            }
+            broadcast(infoResponse, self());
             this.msController.tell(new Stop(), self());
         }
     }
@@ -752,9 +748,7 @@ public final class Call extends UntypedActor {
             // Notify the observers.
             external = CallStateChanged.State.RINGING;
             final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
+            broadcast(event, source);
             /*if (outgoingCallRecord != null && isOutbound()) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
@@ -896,9 +890,7 @@ public final class Call extends UntypedActor {
             // Notify the observers.
             external = CallStateChanged.State.BUSY;
             final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
+            broadcast(event, source);
 
             // Record call data: no need bcz when CDRI will receive CallStateChanged as BUSY and it will update duration/ring duration for this call :)
         }
@@ -924,9 +916,7 @@ public final class Call extends UntypedActor {
             // Notify the observers.
             external = CallStateChanged.State.NOT_FOUND;
             final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
+            broadcast(event, source);
 
             // Record call data: no need bcz when CDRI will receive CallStateChanged will update status in DB for this call :)
         }
@@ -948,9 +938,7 @@ public final class Call extends UntypedActor {
             // Notify the observers.
             external = CallStateChanged.State.NO_ANSWER;
             final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
+            broadcast(event, source);
 
             // Record call data: no need bcz when CDRI will receive CallStateChanged will update status in DB for this call :)
         }
@@ -981,9 +969,7 @@ public final class Call extends UntypedActor {
             // Notify the observers.
             external = CallStateChanged.State.FAILED;
             final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
+            broadcast(event, source);
 
             // Record call data: no need bcz when CDRI will receive CallStateChanged will update status in DB for this call :)
         }
@@ -1176,9 +1162,7 @@ public final class Call extends UntypedActor {
             if (external != null && !external.equals(CallStateChanged.State.IN_PROGRESS)) {
                 external = CallStateChanged.State.IN_PROGRESS;
                 final CallStateChanged event = new CallStateChanged(external);
-                for (final ActorRef observer : observers) {
-                    observer.tell(event, source);
-                }
+                broadcast(event, source);
 
                 // Record call data: no need because when CDRI will receive CallStateChanged as in-progress, it will update state and answerBy for this call :)
             }
@@ -1247,9 +1231,7 @@ public final class Call extends UntypedActor {
                 external = CallStateChanged.State.COMPLETED;
             }
             final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
+            broadcast(event, source);
 
             if(logger.isInfoEnabled()) {
                 logger.info("Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" new external state: "+external);
@@ -1959,6 +1941,14 @@ public final class Call extends UntypedActor {
             // Forward message for Media Session Controller to handle
             this.msController.tell(message, sender);
             this.recording = false;
+        }
+    }
+
+    private void broadcast(final Object message, final ActorRef source) {
+        if (!this.observers.isEmpty()) {
+            for (ActorRef observer : observers) {
+                observer.tell(message, source);
+            }
         }
     }
 
