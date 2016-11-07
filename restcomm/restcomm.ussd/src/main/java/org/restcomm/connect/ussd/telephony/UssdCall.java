@@ -117,6 +117,7 @@ public class UssdCall extends UntypedActor  {
     private SipServletRequest outgoingInvite;
     private SipServletResponse lastResponse;
     private Map<String, String> headers;
+    private boolean isFromApi;
 
     // Runtime stuff.
     private final Sid id;
@@ -201,7 +202,7 @@ public class UssdCall extends UntypedActor  {
         final String from = this.from.getUser();
         final String to = this.to.getUser();
         final CallInfo info = new CallInfo(id, external, type, direction, created, null, name, from, to, invite, lastResponse,
-                false, false, null);
+                false, false, isFromApi, null);
         return new CallResponse<CallInfo>(info);
     }
 
@@ -562,6 +563,7 @@ public class UssdCall extends UntypedActor  {
             username = request.username();
             password = request.password();
             type = request.type();
+            isFromApi = request.isFromApi();
             callDetailrecordsDao = request.getDaoManager().getCallDetailRecordsDao();
             String toHeaderString = to.toString();
             if (toHeaderString.indexOf('?') != -1) {
