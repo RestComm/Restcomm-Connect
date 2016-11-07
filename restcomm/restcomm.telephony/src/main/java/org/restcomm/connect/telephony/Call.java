@@ -499,7 +499,7 @@ public final class Call extends UntypedActor {
     // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest response
     // received
     private void sendCallInfoToObservers() {
-    	broadcast(info(), self());
+        broadcast(info(), self());
     }
 
     private void processInfo(final SipServletRequest request) throws IOException {
@@ -578,8 +578,8 @@ public final class Call extends UntypedActor {
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 //tell callDataRecorder about information of this call so it inserts it in DB.
-            	observer.tell(info(), self());
-            	observer.tell(event, source);
+                observer.tell(info(), self());
+                observer.tell(event, source);
             }
 
             /*if (recordsDao != null) {
