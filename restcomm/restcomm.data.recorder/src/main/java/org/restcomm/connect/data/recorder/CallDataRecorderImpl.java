@@ -94,7 +94,7 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
         if (observer != null) {
             this.observers.add(observer);
             observer.tell(new Observing(self), self);
-            //start observing this call
+            //start observing this call back
             observer.tell(new Observe(self), self);
         }
     }

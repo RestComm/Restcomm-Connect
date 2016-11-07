@@ -581,11 +581,10 @@ public final class Call extends UntypedActor {
             external = CallStateChanged.State.QUEUED;
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
-                observer.tell(event, source);
+                //tell callDataRecorder about information of this call so it inserts it in DB.
+            	observer.tell(info(), self());
+            	observer.tell(event, source);
             }
-
-            //tell callDataRecorder about information of this call so it inserts it in DB.
-            callDataRecorder.tell(info(), self());
 
             /*if (recordsDao != null) {
                 CallDetailRecord cdr = recordsDao.getCallDetailRecord(id);
