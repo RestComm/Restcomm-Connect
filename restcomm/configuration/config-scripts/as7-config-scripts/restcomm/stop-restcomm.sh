@@ -4,9 +4,12 @@
 ## Authors    : Henrique Rosa (henrique.rosa@telestax.com)
 ##
 
+BASEDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+RESTCOMM_HOME=$(cd $BASEDIR/../../ && pwd)
+MS_HOME=$RESTCOMM_HOME/mediaserver
+
 stopMediaServer() {
-    local basedir=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
-    $basedir/stop-mediaserver.sh
+    source $BASEDIR/stop-mediaserver.sh
 }
 
 stopRestComm() {
