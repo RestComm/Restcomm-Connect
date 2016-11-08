@@ -4,8 +4,8 @@
 ## Author     : Henrique Rosa (henrique.rosa@telestax.com)
 
 stopMediaServer() {
-    local MS_HOME=$RESTCOMM_HOME/mediaserver
-    $MS_HOME/stop-mediaserver.sh
+    local ms_home=$RESTCOMM_HOME/mediaserver
+    $ms_home/stop-mediaserver.sh
 }
 
 stopMediaServer
