@@ -23,12 +23,13 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.entities.SmsMessage;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.HashMap;
@@ -128,6 +129,20 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
         try {
             session.update(namespace + "updateSmsMessage", toMap(smsMessage));
             session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public int getSmsMessagesPerAccountLastPerMinute(Sid accountSid) throws ParseException {
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("startTime", DateTime.now().minusSeconds(60));
+
+        final SqlSession session = sessions.openSession();
+        try {
+            final int total = session.selectOne(namespace + "getSmsMessagesPerAccountLastPerMinute", params);
+            return total;
         } finally {
             session.close();
         }

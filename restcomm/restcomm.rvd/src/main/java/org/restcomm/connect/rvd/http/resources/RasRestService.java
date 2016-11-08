@@ -2,8 +2,9 @@ package org.restcomm.connect.rvd.http.resources;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,6 +21,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.google.gson.reflect.TypeToken;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -222,6 +224,7 @@ public class RasRestService extends SecuredRestService {
         }
     }
 
+    /*
     @GET
     @Path("apps")
     public Response listRapps(@Context HttpServletRequest request) {
@@ -241,28 +244,30 @@ public class RasRestService extends SecuredRestService {
             return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
         }
 
-    }
+    }*/
 
     @POST
     @Path("apps/metadata")
     public Response listRappsByProjectSid(@Context HttpServletRequest request) throws RvdException {
         secure();
-        String applicationSids = null;
+        List<String> appSids = null;
         try {
-            applicationSids = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
+            Gson gson = new Gson();
+            Type type = new TypeToken<List<String>>(){}.getType();
+            appSids = gson.fromJson(new InputStreamReader(request.getInputStream()),type);
         } catch (IOException e) {
             throw new RvdException("Internal error while retrieving project Sids", e);
         }
         List<ProjectItem> items;
-        List<String> projectNames = new ArrayList<String>();
         try {
-            items = projectService.getAvailableProjectsByOwner(getLoggedUsername());
+            // retrieve project summaries and filter out projects that belong to other users
+            items = projectService.getProjectSummaries(appSids, getLoggedUsername());
+            // re-build the list of project names to return
+            appSids.clear();
             for (ProjectItem project : items) {
-                if (applicationSids.contains(project.getName())) {
-                    projectNames.add(project.getName());
-                }
+                appSids.add(project.getName());
             }
-            List<RappItem> rapps = FsProjectStorage.listRapps(projectNames, workspaceStorage, projectService);
+            List<RappItem> rapps = FsProjectStorage.listRapps(appSids, workspaceStorage, projectService);
             return buildOkResponse(rapps);
         } catch (StorageException e) {
             return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
@@ -472,8 +477,4 @@ public class RasRestService extends SecuredRestService {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
-
-
-
-
 }

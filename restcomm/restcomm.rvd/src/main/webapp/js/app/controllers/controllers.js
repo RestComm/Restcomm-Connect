@@ -13,29 +13,36 @@ App.controller('AppCtrl', function ($rootScope, $location, $scope, Idle, keepAli
     	//console.log("resourceNotFound event caught");
     	$rootScope.rvdError = {message: "The requested resource was not found. Sorry about that."};
     });
-
+/*
     $rootScope.$on('$routeChangeStart', function(){
     	$rootScope.rvdError = undefined;
 	});
+	*/
 
 	$rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams, options){
 	    //console.log("switching states: " + fromState.name + " -> " + toState.name);
+	    $rootScope.rvdError = undefined;
 	});
 
 	$rootScope.$on('$stateChangeError',  function(event, toState, toParams, fromState, fromParams, error){
-	    event.preventDefault();
 	    console.log("Error switching state: " + fromState.name + " -> " + toState.name);
 	    // see AuthService.checkAccess() for error definitions
 	    if (error == "NEED_LOGIN") {
+    	    event.preventDefault();
 	        $state.go('root.public.login');
 	    }
 	    else
 	    if (error == "RVD_ACCESS_OUT_OF_SYNC") {
-	        notifications.put({type:'error', message:'Internal error. RVD authentication is out of sync.'});
+		    event.preventDefault();
+            notifications.put({type:'danger', message:'Internal error. RVD authentication is out of sync.'});
 	        $state.go('root.public.login');
 	    } else
 	    if (error == "UNSUPPORTED_AUTH_TYPE") {
-	        $state.go('root.public.login')
+		    event.preventDefault();
+            $state.go('root.public.login')
+	    } else
+	    if (error == "ProjectNotFound") {
+	        notifications.put({type:'danger', message:'Project not found.'});
 	    }
 	});
 

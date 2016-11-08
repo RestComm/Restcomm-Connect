@@ -207,7 +207,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         }
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
         try {
-            Future<Object> future = (Future<Object>) ask(aggregator, new CreateSmsSession(), expires);
+            Future<Object> future = (Future<Object>) ask(aggregator, new CreateSmsSession(sender, recipient, accountSid, true), expires);
             Object object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
             Class<?> klass = object.getClass();
             if (SmsServiceResponse.class.equals(klass)) {
@@ -232,6 +232,10 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
                     } else {
                         return null;
                     }
+                } else {
+                    String msg = smsServiceResponse.cause().getMessage();
+                    String error = "SMS_LIMIT_EXCEEDED";
+                    return status(Response.Status.FORBIDDEN).entity(buildErrorResponseBody(msg, error, responseType)).build();
                 }
             }
             return status(INTERNAL_SERVER_ERROR).build();
