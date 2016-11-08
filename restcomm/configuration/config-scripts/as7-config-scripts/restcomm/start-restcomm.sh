@@ -157,7 +157,7 @@ if [[ "$CONF_MANUAL" == "false" || "$CONF_MANUAL" == "FALSE" ]]; then
 fi
 
 if [[ "$MS_EXTERNAL" == "false" || "$MS_EXTERNAL" == "FALSE" ]]; then
-	$BASEDIR/start-mediaserver.sh
+    source $BASEDIR/start-mediaserver.sh
 fi
 # start restcomm in selected run mode
 startRestcomm "$RUN_MODE" "$BIND_ADDRESS"
