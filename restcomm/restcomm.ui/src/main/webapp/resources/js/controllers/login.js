@@ -13,7 +13,7 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
   };
 
   $scope.login = function() {
-    AuthService.login($scope.credentials.sid, $scope.credentials.token).then(function (loginStatus) {
+    AuthService.login($scope.credentials.sid, $scope.credentials.token, true).then(function (loginStatus) {
         // SUCCESS
         if (loginStatus == 'UNINITIALIZED' )
             $state.go('public.uninitialized');
@@ -67,7 +67,7 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
 rcMod.controller('UninitializedCtrl', function ($scope,AuthService,$state) {
   // For password reset
   $scope.update = function() {
-    AuthService.updatePassword($scope.newPassword).then(function () {
+    AuthService.updatePassword($scope.oldPassword, $scope.newPassword).then(function () {
         $state.go('restcomm.dashboard');
     }, function (error) {
         alert("Failed to update password. Please try again.");
