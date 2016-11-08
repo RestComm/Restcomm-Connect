@@ -337,7 +337,7 @@ public final class SmsService extends UntypedActor {
     }
 
     private boolean executePostOutboundAction(final Object message) {
-        return false;
+        return true;
     }
 
     @Override
