@@ -2,7 +2,10 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RCommStatistics) {
+rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RCommStatistics, SessionService) {
+  var creds = SessionService.getStoredCredentials();
+  $scope.authToken = creds.token; // need to display this
+
   //$scope.sid = SessionService.get("sid");
 
   // TEMPORARY... FIXME!
