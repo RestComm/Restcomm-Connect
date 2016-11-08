@@ -10,6 +10,18 @@
                 <h4>Hello <em>{{credentials.sid}}</em>, since this is the first time logging in to RestComm, you are required to update your password.</h4>
             </div>
             <div class="form-group">
+                <label class="col-md-4 control-label" for="oldPassword">Old Password</label>
+                <div class="controls">
+                    <div class="input-group col-md-6">
+                        <span class="input-group-addon"><i class="fa fa-lock"></i> </span>
+                        <div style="position:relative">
+                            <input id="oldPassword" type="password" class="col-md-3 form-control" placeholder="Old Password" ng-model="oldPassword" required/>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
                 <label class="col-md-4 control-label" for="newPassword">New Password</label>
                 <div class="controls">
                     <div class="input-group col-md-6">
