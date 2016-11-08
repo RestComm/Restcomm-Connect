@@ -39,7 +39,7 @@ rcServices.factory('SessionService', function() {
   }
 });
 
-rcServices.factory('AuthService',function(RCommAccounts,$http, $location, SessionService, md5, Notifications, $q, IdentityConfig, KeycloakAuth){
+rcServices.factory('AuthService',function(RCommAccounts,$http, $location, SessionService, md5, Notifications, $q, IdentityConfig, KeycloakAuth, $uibModal){
     var account = null;
     var uninitialized = null;
 
@@ -142,7 +142,9 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     // updates all necessary state
     function setActiveAccount(newAccount) {
         account = newAccount;
-        SessionService.setStoredCredentials(newAccount);
+        // replace the stored credentials only if they are indeed in the response
+        if (newAccount.auth_token)
+            SessionService.setStoredCredentials(newAccount);
         if (account && account.status == 'uninitialized')
             uninitialized = true;
         else
@@ -262,6 +264,24 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         return null;
     }
 
+    function askForPassword() {
+        return $uibModal.open({
+            animation: false,
+            size: 'sm',
+            templateUrl: 'modules/modals/modal-ask-password.html',
+            controller: function ($scope,$uibModalInstance) {
+                $scope.returnPassword = function (password) {
+                    $uibModalInstance.close(password);
+                }
+
+                $scope.cancel = function () {
+                    $uibModalInstance.dismiss();
+                }
+            }
+        });
+    };
+
+
     // public interface
     return {
         login: login,
@@ -273,7 +293,8 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         isUninitialized: isUninitialized,
         onAuthError: onAuthError,
         onError403: onError403,
-        updatePassword: updatePassword
+        updatePassword: updatePassword,
+        askForPassword: askForPassword
     }
 });
 

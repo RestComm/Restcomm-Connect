@@ -125,7 +125,7 @@ rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, RC
 
 
 
-rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService,AuthService, RCommAccounts, md5,Notifications, $location, $dialog) {
+rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService,AuthService, RCommAccounts, md5,Notifications, $location, $dialog, $uibModal) {
     var loggedUserAccount = AuthService.getAccount();
     // retrieve the account in the URL
     $scope.urlAccountSid = $stateParams.accountSid;
@@ -167,16 +167,20 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
         if ($scope.newPassword) {
             params['Password'] = $scope.newPassword;
         }
-        RCommAccounts.update({accountSid:$scope.urlAccount.sid}, $.param(params), function() {
-            // update our backup model and keep editing
-            $scope.urlAccountBackup = angular.copy($scope.urlAccount);
-            $scope.newPassword = '';
-            $scope.newPassword2 = '';
-            $scope.profileForm.$setPristine();
-            Notifications.success('Profile updated successfully.');
-        }, function() {
-            // error
-            Notifications.error('Failure updating profile. Please check data and try again.');
+
+        AuthService.askForPassword().result.then(function (password) {
+            RCommAccounts.update({accountSid:$scope.urlAccount.sid}, $.param(params), function() {
+                // update our backup model and keep editing
+                $scope.urlAccountBackup = angular.copy($scope.urlAccount);
+                $scope.newPassword = '';
+                $scope.newPassword2 = '';
+                $scope.profileForm.$setPristine();
+                Notifications.success('Profile updated successfully.');
+            }, function() {
+                // error
+                Notifications.error('Failure updating profile. Please check data and try again.');
+            });
+
         });
     };
     $scope.$on("account-created", function () {

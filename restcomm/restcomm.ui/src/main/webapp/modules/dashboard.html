@@ -10,8 +10,8 @@
     <div class="form-group col-md-6">
         <div class="input-group">
             <span class="input-group-addon"><i class="fa fa-lock"></i> Auth Token</span>
-            <input class="form-control" id="roToken" type="password" value="{{ loggedAccount.auth_token }}" readonly />
-            <input class="form-control truncate hidden" id="roToken" type="text" value="{{ loggedAccount.auth_token }}" readonly />
+            <input class="form-control" id="roToken" type="password" value="{{ authToken }}" readonly />
+            <input class="form-control truncate hidden" id="roToken" type="text" value="{{ authToken }}" readonly />
             <span class="input-group-addon btn" onclick="$(this).parent().children('input').toggleClass('hidden')">&nbsp;<i class="fa fa-eye-slash"></i>&nbsp;</span>
         </div>
     </div>
