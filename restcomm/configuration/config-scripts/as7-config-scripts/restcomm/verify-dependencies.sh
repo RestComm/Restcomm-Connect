@@ -2,6 +2,19 @@
 ## Description: Verifies if all dependencies are installed.
 ## Author: Henrique Rosa (henrique.rosa@telestax.com)
 
+verifyJava() {
+    if [ -z "$(which java)" ]; then
+        echo "Java dependency is missing."
+        echo "CentOS/RHEL: java-1.7.0-openjdk-devel.x86_64"
+        echo "Debian/Ubuntu:"
+        echo "    add-apt-repository ppa:openjdk-r/ppa"
+        echo "    apt-get update"
+        echo "    apt-get install openjdk-7-jdk"
+        echo "macOS: brew cask install java7"
+        exit 1
+    fi
+}
+
 verifyTmux() {
     if [ -z "$(which tmux)" ]; then
         echo "TMux dependency is missing."
@@ -32,6 +45,7 @@ verifyIpcalc() {
     fi
 }
 
+verifyJava
 verifyTmux
 verifyXmlstarlet
 verifyIpcalc
