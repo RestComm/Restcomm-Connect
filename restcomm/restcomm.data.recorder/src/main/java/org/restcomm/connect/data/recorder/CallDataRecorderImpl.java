@@ -54,6 +54,13 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
 
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+
+
+    // Define possible directions.
+    private static final String INBOUND = "inbound";
+    private static final String OUTBOUND_API = "outbound-api";
+    private static final String OUTBOUND_DIAL = "outbound-dial";
+
     private final List<ActorRef> observers;
     private final DaoManager daoManager;
     private Sid sid;
@@ -146,6 +153,7 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
                         final URI uri = URI.create(buffer.toString());
                         builder.setUri(uri);
                         builder.setCallPath(self().path().toString());
+                        builder.setCallerName(callInfo.fromName() == null ? "Unknown" : callInfo.fromName());
 
                         if (callInfo.direction().equals("inbound")) {
                             if (callInfo.from() != null) {
@@ -198,8 +206,10 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
                         cdr = cdr.setRingDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
                         break;
                     case IN_PROGRESS:
-                        cdr = cdr.setStartTime(new DateTime());
-                        cdr = cdr.setAnsweredBy(callInfo.to());
+                    	if( isInbound() || ( isOutbound() && !cdr.getStatus().equalsIgnoreCase("in_progress") ) ){
+                            cdr = cdr.setStartTime(new DateTime());
+                            cdr = cdr.setAnsweredBy(callInfo.to());
+                    	}
                         break;
                     case COMPLETED:
                         cdr = cdr.setEndTime(DateTime.now());
@@ -255,6 +265,14 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
         }catch(Exception e){
             logger.error("Exception while trying to update CDR: ", e);
         }
+    }
+
+    private boolean isInbound() {
+        return INBOUND.equals(cdr.getDirection());
+    }
+
+    private boolean isOutbound() {
+        return !isInbound();
     }
 
     @Override
