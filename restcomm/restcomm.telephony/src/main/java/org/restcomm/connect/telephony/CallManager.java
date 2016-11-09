@@ -398,6 +398,7 @@ public final class CallManager extends UntypedActor {
                     String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
                             + " : Make sure the Client exist or is registered with Restcomm";
                     sendNotification(errMsg, 11001, "warning", true);
+                    request.createResponse(SC_FORBIDDEN, "Call not allowed").send();
                 }
                 executePostOutboundAction(callRequest);
                 return;
@@ -433,13 +434,10 @@ public final class CallManager extends UntypedActor {
                     if (executePreOutboundAction(callRequest)) {
                         proxyOut(request, client, toUser, toHost, toHostIpAddress, toPort, outboundIntf, proxyURI, proxyUsername, proxyPassword, from, to, callToSipUri);
                     } else {
-                        //log here
-                        String reason = "Call request rejected: "+callRequest.toString();
-                        final SipServletResponse response = request.createResponse(SC_FORBIDDEN);
-                        response.addHeader("Reason", reason);
+                        final SipServletResponse response = request.createResponse(SC_FORBIDDEN, "Call request not allowed");
                         response.send();
                         if (logger.isDebugEnabled()) {
-                            logger.debug(reason);
+                            logger.debug("Call request now allowed: "+callRequest.toString());
                         }
                     }
                     executePostOutboundAction(callRequest);
