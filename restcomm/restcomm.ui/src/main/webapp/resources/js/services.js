@@ -244,8 +244,8 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
 
 
     // applies to Restcomm authorization (not keycloak)
-    function onAuthError() {
-        if (IdentityConfig.securedByRestcomm()) {
+    function onAuthError(noLoginRedirect) {
+        if (IdentityConfig.securedByRestcomm() && !noLoginRedirect) {
             SessionService.unset('sid');
             account = null;
             //$state.go("public.login");
@@ -294,7 +294,8 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         onAuthError: onAuthError,
         onError403: onError403,
         updatePassword: updatePassword,
-        askForPassword: askForPassword
+        askForPassword: askForPassword,
+        basicAuthHeader: basicAuthHeader
     }
 });
 
@@ -468,6 +469,23 @@ uiModalDialog.run(["$templateCache", function (e) {
 }]);
 
 
+rcServices.factory('RCommCritical', function ($http) {
+    return {
+        updateAccount: function (accountSid, authHeader, body) {
+            return $http({
+                url: '/restcomm/2012-04-24/Accounts.json/'+accountSid,
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': authHeader
+                },
+                data: body,
+                noLoginRedirect: true
+            });
+        }
+    }
+});
+
 rcServices.factory('RCommAccounts', function($resource) {
   return $resource('/restcomm/2012-04-24/Accounts/:accountSid.:format', {
       accountSid: '@accountSid',
@@ -484,7 +502,7 @@ rcServices.factory('RCommAccounts', function($resource) {
         headers : {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
-      },
+      },   // use RcommCritical.updateAccount()  if need to use password or not trigger loggins on 401,
       update: {
         method:'PUT',
         url: '/restcomm/2012-04-24/Accounts.:format/:accountSid',

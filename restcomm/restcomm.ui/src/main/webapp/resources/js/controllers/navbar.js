@@ -125,7 +125,7 @@ rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, RC
 
 
 
-rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService,AuthService, RCommAccounts, md5,Notifications, $location, $dialog, $uibModal) {
+rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService,AuthService, RCommAccounts, RCommCritical, md5,Notifications, $location, $dialog, $uibModal) {
     var loggedUserAccount = AuthService.getAccount();
     // retrieve the account in the URL
     $scope.urlAccountSid = $stateParams.accountSid;
@@ -169,7 +169,19 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
         }
 
         AuthService.askForPassword().result.then(function (password) {
-            RCommAccounts.update({accountSid:$scope.urlAccount.sid}, $.param(params), function() {
+            var authHeader = AuthService.basicAuthHeader(loggedUserAccount.sid, password, true);
+            RCommCritical.updateAccount($scope.urlAccount.sid, authHeader, $.param(params)).then(function (data) {
+                // update our backup model and keep editing
+                $scope.urlAccountBackup = angular.copy($scope.urlAccount);
+                $scope.newPassword = '';
+                $scope.newPassword2 = '';
+                $scope.profileForm.$setPristine();
+                Notifications.success('Profile updated successfully.');
+            }, function () {
+                Notifications.error('Failure updating profile. Please check data and try again.');
+            });
+            /*
+            RCommAccounts.update({accountSid:$scope.urlAccount.sid, authOverride: authHeader, noLoginRedirect: true}, $.param(params), function() {
                 // update our backup model and keep editing
                 $scope.urlAccountBackup = angular.copy($scope.urlAccount);
                 $scope.newPassword = '';
@@ -179,7 +191,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
             }, function() {
                 // error
                 Notifications.error('Failure updating profile. Please check data and try again.');
-            });
+            });*/
 
         });
     };
