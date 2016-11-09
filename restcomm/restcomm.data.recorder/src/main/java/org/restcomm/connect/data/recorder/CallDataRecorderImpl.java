@@ -132,10 +132,8 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
                         builder.setDateCreated(callInfo.dateCreated());
                         builder.setAccountSid(callInfo.accountSid());
                         builder.setTo(callInfo.to());
-                        builder.setStartTime(new DateTime());
                         builder.setStatus(callInfo.state().toString());
-                        final DateTime now = DateTime.now();
-                        builder.setStartTime(now);
+                        builder.setStartTime(new DateTime());
                         builder.setDirection(callInfo.direction());
                         builder.setApiVersion(callInfo.version());
                         builder.setPrice(new BigDecimal("0.00"));
@@ -200,6 +198,7 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
                         cdr = cdr.setRingDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
                         break;
                     case IN_PROGRESS:
+                    	cdr = cdr.setStartTime(new DateTime());
                         cdr = cdr.setAnsweredBy(callInfo.to());
                         break;
                     case COMPLETED:

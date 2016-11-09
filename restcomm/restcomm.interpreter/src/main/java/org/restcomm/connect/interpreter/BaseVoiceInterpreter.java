@@ -61,7 +61,6 @@ import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.TranscriptionsDao;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.dao.entities.SmsMessage;
@@ -204,7 +203,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     // The call state.
     CallStateChanged.State callState = null;
     // A call detail record.
-    CallDetailRecord callRecord = null;
+    // CallDetailRecord callRecord = null;
 
     // State for outbound calls.
     ActorRef outboundCall = null;
@@ -217,6 +216,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     Sid recordingSid = null;
     URI recordingUri = null;
     URI publicRecordingUri = null;
+    protected DateTime recordingStartTime;
     // Information to reach the application that will be executed
     // by this interpreter.
     Sid accountId;
@@ -1627,6 +1627,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (Tag.class.equals(klass)) {
                 verb = (Tag) message;
             }
+            recordingStartTime = new DateTime();
             final NotificationsDao notifications = storage.getNotificationsDao();
             String finishOnKey = "1234567890*#";
             Attribute attribute = verb.attribute("finishOnKey");
@@ -1746,7 +1747,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             Double duration = WavUtils.getAudioDuration(recordingUri);
             if (duration.equals(0.0)) {
                 final DateTime end = DateTime.now();
-                duration = new Double((end.getMillis() - callRecord.getStartTime().getMillis()) / 1000);
+                duration = new Double((end.getMillis() - recordingStartTime.getMillis()) / 1000);
             } else if(logger.isDebugEnabled()) {
                 logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
             }

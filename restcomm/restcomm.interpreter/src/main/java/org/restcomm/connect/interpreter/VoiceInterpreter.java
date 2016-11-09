@@ -1483,7 +1483,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 verb = (Tag) message;
 
                 // Answer the call.
-                call.tell(new Answer(callRecord.getSid()), source);
+                call.tell(new Answer(callInfo.sid()), source);
             }
         }
     }
@@ -1837,7 +1837,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final String name = child.text();
                     final StringBuilder buffer = new StringBuilder();
                     buffer.append(accountId.toString()).append(":").append(name);
-                    final CreateConference create = new CreateConference(buffer.toString(), callRecord.getSid());
+                    final CreateConference create = new CreateConference(buffer.toString(), callInfo.sid());
                     conferenceManager.tell(create, source);
                 } else {
                     // Handle forking.
