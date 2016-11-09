@@ -190,7 +190,7 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
             }else{
                 CallDetailRecordsDao dao = daoManager.getCallDetailRecordsDao();
                 cdr = dao.getCallDetailRecord(sid);
-                cdr = cdr.setStatus(callState.name());
+                cdr = cdr.setStatus(callState.toString());
 
                 switch (callState) {
                     case BUSY:
