@@ -198,7 +198,7 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
                         cdr = cdr.setRingDuration((int) ((DateTime.now().getMillis() - cdr.getStartTime().getMillis()) / 1000));
                         break;
                     case IN_PROGRESS:
-                    	cdr = cdr.setStartTime(new DateTime());
+                        cdr = cdr.setStartTime(new DateTime());
                         cdr = cdr.setAnsweredBy(callInfo.to());
                         break;
                     case COMPLETED:
