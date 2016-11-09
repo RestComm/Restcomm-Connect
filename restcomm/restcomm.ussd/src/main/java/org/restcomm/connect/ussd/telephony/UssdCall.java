@@ -468,7 +468,7 @@ public class UssdCall extends UntypedActor  {
                 observer.tell(event, source);
             }
             if (outgoingCallRecord != null && direction.contains("outbound")) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(CallStateChanged.State.CANCELED.name());
+                outgoingCallRecord = outgoingCallRecord.setStatus(CallStateChanged.State.CANCELED.toString());
                 final DateTime now = DateTime.now();
                 outgoingCallRecord = outgoingCallRecord.setEndTime(now);
                 final int seconds = 0;
@@ -536,7 +536,7 @@ public class UssdCall extends UntypedActor  {
                 observer.tell(event, source);
             }
             if (outgoingCallRecord != null && direction.contains("outbound")) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(CallStateChanged.State.COMPLETED.name());
+                outgoingCallRecord = outgoingCallRecord.setStatus(CallStateChanged.State.COMPLETED.toString());
                 final DateTime now = DateTime.now();
                 outgoingCallRecord = outgoingCallRecord.setEndTime(now);
                 final int seconds = 0;
@@ -607,7 +607,7 @@ public class UssdCall extends UntypedActor  {
                 builder.setFrom(fromString);
                 // builder.setForwardedFrom(callInfo.forwardedFrom());
                 // builder.setPhoneNumberSid(phoneId);
-                builder.setStatus(external.name());
+                builder.setStatus(external.toString());
                 builder.setDirection("outbound-api");
                 builder.setApiVersion(apiVersion);
                 builder.setPrice(new BigDecimal("0.00"));

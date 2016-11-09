@@ -168,7 +168,7 @@ import org.restcomm.connect.commons.dao.Sid;
                  builder.setFrom(client.getLogin());
                  // builder.setForwardedFrom(callInfo.forwardedFrom());
                  // builder.setPhoneNumberSid(phoneId);
-                 builder.setStatus(CallStateChanged.State.QUEUED.name());
+                 builder.setStatus(CallStateChanged.State.QUEUED.toString());
                  builder.setDirection("Client-To-Client");
                  builder.setApiVersion(client.getApiVersion());
                  builder.setPrice(new BigDecimal("0.00"));
@@ -326,7 +326,7 @@ import org.restcomm.connect.commons.dao.Sid;
              builder.setFrom(fromClient.getFriendlyName());
              // builder.setForwardedFrom(callInfo.forwardedFrom());
              // builder.setPhoneNumberSid(phoneId);
-             builder.setStatus(CallStateChanged.State.QUEUED.name());
+             builder.setStatus(CallStateChanged.State.QUEUED.toString());
              builder.setDirection("Client-To-Client");
              builder.setApiVersion(fromClient.getApiVersion());
              builder.setPrice(new BigDecimal("0.00"));
@@ -466,7 +466,7 @@ import org.restcomm.connect.commons.dao.Sid;
                  if(logger.isInfoEnabled()) {
                      logger.info("CDR found! Updating");
                  }
-                 callRecord = callRecord.setStatus(CallStateChanged.State.CANCELED.name());
+                 callRecord = callRecord.setStatus(CallStateChanged.State.CANCELED.toString());
                  final DateTime now = DateTime.now();
                  callRecord = callRecord.setEndTime(now);
                  int seconds;
@@ -585,7 +585,7 @@ import org.restcomm.connect.commons.dao.Sid;
              if(logger.isInfoEnabled()) {
                  logger.info("CDR found! Updating");
              }
-             callRecord = callRecord.setStatus(state.name());
+             callRecord = callRecord.setStatus(state.toString());
              final DateTime now = DateTime.now();
              callRecord = callRecord.setEndTime(now);
              int seconds;
