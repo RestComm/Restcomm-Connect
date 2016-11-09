@@ -376,7 +376,7 @@ public final class CallManager extends UntypedActor {
                 }
                 CallRequest callRequest = new CallRequest(fromUser, toUser, CallRequest.Type.CLIENT,
                         client.getAccountSid(), false, false);
-                if (executePostOutboundAction(callRequest)) {
+                if (executePreOutboundAction(callRequest)) {
                     if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                         if(logger.isInfoEnabled()) {
                             logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp + " toHost: "
@@ -398,7 +398,8 @@ public final class CallManager extends UntypedActor {
                     String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
                             + " : Make sure the Client exist or is registered with Restcomm";
                     sendNotification(errMsg, 11001, "warning", true);
-                    request.createResponse(SC_FORBIDDEN, "Call not allowed").send();
+                    final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
+                    resp.send();
                 }
                 executePostOutboundAction(callRequest);
                 return;
