@@ -384,7 +384,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 throw new InsufficientPermission();
             }
         } else {
-            return status(CONFLICT).entity("The email address used for the new account is already in use.").build();
+            return status(CONFLICT).entity(buildErrorResponseBody("The email address used for the new account is already in use.",responseType)).build();
         }
 
         if (APPLICATION_JSON_TYPE == responseType) {

@@ -142,7 +142,7 @@ public abstract class AbstractEndpoint {
 
     String buildErrorResponseBody(String message, String error, MediaType type) {
         if (!type.equals(MediaType.APPLICATION_XML_TYPE)) { // fallback to JSON if not XML
-            return "{\"message\":"+message+",\n\"error\":"+error+"}";
+            return "{\"message\":\""+message+"\",\n\"error\":"+error+"}";
         } else {
             return "<RestcommResponse><Message>" + message + "</Message><Error>"+ error +"</Error></RestcommResponse>";
         }
