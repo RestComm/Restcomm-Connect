@@ -30,6 +30,7 @@ import org.restcomm.connect.dao.entities.SmsMessage;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.HashMap;
@@ -135,9 +136,13 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
     }
 
     @Override
-    public int getSmsMessagesPerAccountLastPerMinute(Sid accountSid) throws ParseException {
+    public int getSmsMessagesPerAccountLastPerMinute(String accountSid) throws ParseException {
+        SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String date = formatter.format(DateTime.now().minusSeconds(60).toDate());
+
         Map<String, Object> params = new HashMap<String, Object>();
-        params.put("startTime", DateTime.now().minusSeconds(60));
+        params.put("start_time", date);
+        params.put("account_sid", accountSid);
 
         final SqlSession session = sessions.openSession();
         try {
