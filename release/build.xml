@@ -291,13 +291,11 @@
       </zipfileset>
       <zipfileset dir="${release.as7.dir}/mediaserver/bin" filemode="755" prefix="Restcomm-JBoss-AS7-${restcomm.release.version}/mediaserver/bin">
         <include name="*.sh"/>
-        <include name="**/*.sh"/>
       </zipfileset>
       <zipfileset dir="${release.as7.dir}/mediaserver/bin" prefix="Restcomm-JBoss-AS7-${restcomm.release.version}/mediaserver/bin">
-        <include name="*.sh"/>
         <exclude name="*.sh"/>
       </zipfileset>
-      <zipfileset dir="${release.as7.dir}" excludes="**/bin/** **/server/*/log/** **/server/*/tmp/** **/server/*/work/** **/server/tmp/**" prefix="Restcomm-JBoss-AS7-${restcomm.release.version}"/>
+      <zipfileset dir="${release.as7.dir}" excludes="**/bin/** **/server/*/log/** **/server/*/tmp/** **/server/*/work/** **/server/tmp/** **/mediaserver/*.sh **/mediaserver/.autoconfig/*.sh **/mediaserver/.autoconfig/autoconfig.d/*.sh" prefix="Restcomm-JBoss-AS7-${restcomm.release.version}"/>
     </zip>
   </target>
 
