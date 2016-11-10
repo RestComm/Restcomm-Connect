@@ -17,7 +17,7 @@ CREATE PROCEDURE updateProcedure()
 IF @colName799 IS NULL THEN
 CREATE TABLE temp_table LIKE restcomm_accounts;
 ALTER TABLE temp_table ADD column password varchar(32) NOT NULL;
-ALTER TABLE temp_table ADD column passwordAlgorithm varchar(16) NOT NULL;
+ALTER TABLE temp_table ADD column password_algorithm varchar(16) NOT NULL;
 INSERT INTO temp_table
   (
 sid,
@@ -29,7 +29,7 @@ parent_sid,
 type,
 status,
 password,
-passwordAlgorithm,
+password_algorithm,
 auth_token,
 role,
 uri
@@ -43,7 +43,7 @@ uri
   type as type,
   status as status,
   auth_token as password,
-  'md5' as passwordAlgorithm,
+  'md5' as password_algorithm,
   auth_token as auth_token,
   role as role,
   uri as uri
