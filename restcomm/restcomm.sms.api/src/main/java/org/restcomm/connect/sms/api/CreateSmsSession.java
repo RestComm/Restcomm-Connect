@@ -43,4 +43,25 @@ public final class CreateSmsSession {
         this.accountSid = accountSid;
         this.isFromApi = isFromApi;
     }
+
+    public String getFrom() {
+        return from;
+    }
+
+    public String getTo() {
+        return to;
+    }
+
+    public String getAccountSid() {
+        return accountSid;
+    }
+
+    public boolean isFromApi() {
+        return isFromApi;
+    }
+
+    @Override
+    public String toString() {
+        return "From: "+from+" , To: "+to+" , AccountSid: "+accountSid+" , isFromApi: "+isFromApi;
+    }
 }

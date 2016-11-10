@@ -5,8 +5,8 @@
 -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.RecordingsDao">
   <insert id="addRecording" parameterType="map">
-    INSERT INTO "restcomm_recordings" ("sid", "date_created", "date_updated", "account_sid", "call_sid", "duration", "api_version", "uri")
-    VALUES (#{sid}, #{date_created}, #{date_updated}, #{account_sid}, #{call_sid}, #{duration}, #{api_version}, #{uri});
+    INSERT INTO "restcomm_recordings" ("sid", "date_created", "date_updated", "account_sid", "call_sid", "duration", "api_version", "uri", "file_uri")
+    VALUES (#{sid}, #{date_created}, #{date_updated}, #{account_sid}, #{call_sid}, #{duration}, #{api_version}, #{uri}, #{file_uri});
   </insert>
   
   <select id="getRecording" parameterType="string" resultType="hashmap">
@@ -16,6 +16,10 @@
   <select id="getRecordingByCall" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_recordings" WHERE "call_sid"=#{call_sid};
   </select>
+  
+  <select id="getRecordingsByCall" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_recordings" WHERE "call_sid"=#{call_sid};
+  </select>  
   
   <select id="getRecordings" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_recordings" WHERE "account_sid"=#{account_sid};

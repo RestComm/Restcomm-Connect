@@ -1,0 +1,37 @@
+.Restcomm API Error and Warning Reference
+[cols="1,1,2,3", options="header"]
+|===
+
+|Error Code | Category | Error Summary | Cause/Solution
+
+|10001|Account| Account not initialized | Make sure account is initialized in the Admin UI
+|10002|Account||
+|10003|Account||
+|10004|Account||
+
+|11001|Voice||
+|11002|Voice||
+|11003|Voice||
+|11004|Voice||
+
+|12001|SMS||
+|12002|SMS||
+|12003|SMS||
+|12004|SMS||
+
+|13001|SMPP|There was an error sending SMS to SMPP endpoint|Make sure SMPP is correctly configured in the advanced.conf file
+|13002|SMPP||
+|13003|SMPP||
+|13004|SMPP||
+
+|14001|Client||
+|14002|Client||
+|14003|Client||
+|14004|Client||
+
+|15001|USSD||
+|15002|USSD||
+|15003|USSD||
+|15004|USSD||
+
+|===

@@ -29,11 +29,11 @@
   <update id="updateSmsMessage" parameterType="map">
     UPDATE "restcomm_sms_messages" SET "date_sent"=#{date_sent}, "status"=#{status}, "price"=#{price} WHERE "sid"=#{sid};
   </update>
-  
-  <select id="getSmsMessagesPerAccountLastPerMinute" parameterType="string" resultType="int">
+
+  <select id="getSmsMessagesPerAccountLastPerMinute" parameterType="map" resultType="int">
     SELECT COUNT(*) FROM "restcomm_sms_messages" WHERE "account_sid"=#{account_sid}
-    AND "direction" IN("outbound-api", "outbound-call", "outbound-reply")
-    AND "date_created" IN (DATE_SUB(NOW(), INTERVAL 1 MINUTE);
+    AND "direction" IN ('outbound-api', 'outbound-call', 'outbound-reply')
+    AND "date_created" &gt;= #{start_time};
   </select>
   
 </mapper>

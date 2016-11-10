@@ -20,6 +20,16 @@
 	
 package org.restcomm.connect.testsuite.telephony;
 
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URL;
+import java.text.ParseException;
+import java.util.List;
+
+import javax.sip.address.SipURI;
+
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -39,15 +49,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.http.CreateClientsTool;
-
-import javax.sip.address.SipURI;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.List;
-
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Client SIP MESSAGE Test. 
@@ -109,9 +110,9 @@ public class ClientMessageTest {
         mariaSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
         mariaPhone = mariaSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, mariaContact);
 
-        mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria", "RestComm1234", null);
-        georgeRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "george", "RestComm1234", null);
-
+        mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria", "1234qwerT", null);
+        georgeRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "george", "1234qwerT", null);
+        Thread.sleep(500);
     }
 
     @After
@@ -139,8 +140,8 @@ public class ClientMessageTest {
 
         SipURI uri = georgeSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
-        assertTrue(georgePhone.register(uri, "george", "RestComm1234", georgeContact, 3600, 3600));
-        assertTrue(mariaPhone.register(uri, "maria", "RestComm1234", mariaContact, 3600, 3600));
+        assertTrue(georgePhone.register(uri, "george", "1234qwerT", georgeContact, 3600, 3600));
+        assertTrue(mariaPhone.register(uri, "maria", "1234qwerT", mariaContact, 3600, 3600));
 
         Thread.sleep(1000);
 
@@ -156,16 +157,16 @@ public class ClientMessageTest {
         
         SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
-        assertTrue(georgePhone.register(uri, "george", "RestComm1234", georgeContact, 3600, 3600));
+        assertTrue(georgePhone.register(uri, "george", "1234qwerT", georgeContact, 3600, 3600));
         Thread.sleep(3000);
-        assertTrue(mariaPhone.register(uri, "maria", "RestComm1234", mariaContact, 3600, 3600));
+        assertTrue(mariaPhone.register(uri, "maria", "1234qwerT", mariaContact, 3600, 3600));
         Thread.sleep(3000);
 
 
-        Credential c = new Credential("127.0.0.1", "george", "RestComm1234");
+        Credential c = new Credential("127.0.0.1", "george", "1234qwerT");
         georgePhone.addUpdateCredential(c);
         
-        Credential c2 = new Credential("127.0.0.1", "maria", "RestComm1234");
+        Credential c2 = new Credential("127.0.0.1", "maria", "1234qwerT");
         mariaPhone.addUpdateCredential(c2);
 
         
