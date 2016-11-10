@@ -54,6 +54,7 @@ import akka.actor.UntypedActorFactory;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 public final class CallManagerProxy extends SipServlet implements SipServletListener {
+
     private static final long serialVersionUID = 1L;
 
     private static final Logger logger = Logger.getLogger(CallManagerProxy.class);
@@ -66,6 +67,7 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
     private ServletContext context;
 
     private Configuration configuration;
+    static DaoManager getDaoStorage;
 
     public CallManagerProxy() {
         super();
@@ -173,10 +175,8 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
         }
         if (contentType != null) {
             isUssd = contentType.equalsIgnoreCase("application/vnd.3gpp.ussd+xml");
-        } else {
-            if (message.getApplicationSession().getAttribute("UssdCall") != null) {
-                isUssd = true;
-            }
+        } else if (message.getApplicationSession().getAttribute("UssdCall") != null) {
+            isUssd = true;
         }
         return isUssd;
     }
@@ -184,7 +184,7 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
     @Override
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(CallManagerProxy.class)) {
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("CallManagerProxy sip servlet initialized. Will proceed to create CallManager and UssdManager");
             }
             context = event.getServletContext();
@@ -194,6 +194,8 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
             final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
             final MediaServerControllerFactory mscontrolFactory = (MediaServerControllerFactory) context
                     .getAttribute(MediaServerControllerFactory.class.getName());
+            //set Storage to be used in Call.java for Global notification
+            getDaoStorage = storage;
             // Create the call manager.
             final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
             final ActorRef conferences = conferences(mscontrolFactory, storage);
