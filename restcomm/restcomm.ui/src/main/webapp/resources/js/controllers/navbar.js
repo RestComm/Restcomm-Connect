@@ -219,19 +219,6 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
                 } else
                     Notifications.error('Failure updating profile. Please check data and try again.');
             });
-            /*
-            RCommAccounts.update({accountSid:$scope.urlAccount.sid, authOverride: authHeader, noLoginRedirect: true}, $.param(params), function() {
-                // update our backup model and keep editing
-                $scope.urlAccountBackup = angular.copy($scope.urlAccount);
-                $scope.newPassword = '';
-                $scope.newPassword2 = '';
-                $scope.profileForm.$setPristine();
-                Notifications.success('Profile updated successfully.');
-            }, function() {
-                // error
-                Notifications.error('Failure updating profile. Please check data and try again.');
-            });*/
-
         });
     };
     $scope.$on("account-created", function () {
@@ -246,6 +233,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
         // show configurmation
         $dialog.messageBox(title, msg, btns).open().then(function (result) {
             if (result == "confirm") {
+            /*
                 RCommAccounts.update({accountSid:account.sid}, $.param({Status:"closed"}), function() {
                     $scope.urlAccount = RCommAccounts.view({accountSid:$scope.urlAccountSid},function (data) {
                         $scope.urlAccountBackup = angular.copy($scope.urlAccount);
@@ -254,6 +242,20 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
                 }, function() { // error
                     Notifications.error("Can't close Account '" + account.friendly_name + "'");
                 });
+                */
+                AuthService.askForPassword().result.then(function (password) {
+                    var authHeader = AuthService.basicAuthHeader(loggedUserAccount.sid, password, true);
+                    RCommCritical.updateAccount($scope.urlAccount.sid, authHeader, $.param({Status:"closed"})).then(function (response) {
+                        $scope.urlAccount = response.data;
+                        $scope.urlAccountBackup = angular.copy($scope.urlAccount);
+                    }, function (error) {
+                        if (error.status == 401) {
+                                        Notifications.error('Authentication error.');
+                        } else
+                            Notifications.error("Can't close Account '" + account.friendly_name + "'");
+                    });
+                });
+
             }
         });
     }
