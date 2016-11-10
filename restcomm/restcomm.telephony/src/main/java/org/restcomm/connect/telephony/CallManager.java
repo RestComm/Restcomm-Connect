@@ -120,6 +120,7 @@ import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
 import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 import static javax.servlet.sip.SipServletResponse.SC_OK;
+import org.restcomm.connect.notification.GlobalNotification;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -145,6 +146,7 @@ public final class CallManager extends UntypedActor {
     private final SipFactory sipFactory;
     private final DaoManager storage;
     private final ActorRef monitoring;
+    private final GlobalNotification globalNotification;
 
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
@@ -177,41 +179,33 @@ public final class CallManager extends UntypedActor {
     //List of extensions for CallManager
     List<RestcommExtensionGeneric> extensions;
 
-    // used for sending warning and error logs to notification engine and to the console
-    private void sendNotification(String errMessage, int errCode, String errType, boolean createNotification) {
-        NotificationsDao notifications = storage.getNotificationsDao();
-        Notification notification;
-
-        if (errType == "warning") {
-            if(logger.isDebugEnabled()) {
-                // https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug to avoid polluting logs
-                logger.debug(errMessage); // send message to console
-            }
-            if (createNotification) {
-                notification = notification(ERROR_NOTIFICATION, errCode, errMessage);
-                notifications.addNotification(notification);
-            }
-        } else if (errType == "error") {
-            // https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug to avoid polluting logs
-            if(logger.isDebugEnabled()) {
-                logger.debug(errMessage); // send message to console
-            }
-            if (createNotification) {
-                notification = notification(ERROR_NOTIFICATION, errCode, errMessage);
-                notifications.addNotification(notification);
-            }
-        } else if (errType == "info") {
-            // https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug to avoid polluting logs
-            if(logger.isDebugEnabled()) {
-                logger.debug(errMessage); // send message to console
-            }
-        }
-
-    }
-
+    /**
+     * // used for sending warning and error logs to notification engine and to
+     * the console private void sendNotification(String errMessage, int errCode,
+     * String errType, boolean createNotification) { NotificationsDao
+     * notifications = storage.getNotificationsDao(); Notification notification;
+     *
+     * if (errType == "warning") { if (logger.isDebugEnabled()) { //
+     * https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug
+     * to avoid polluting logs logger.debug(errMessage); // send message to
+     * console } if (createNotification) { notification =
+     * notification(ERROR_NOTIFICATION, errCode, errMessage);
+     * notifications.addNotification(notification); } } else if (errType ==
+     * "error") { // https://github.com/RestComm/Restcomm-Connect/issues/1419
+     * moved to debug to avoid polluting logs if (logger.isDebugEnabled()) {
+     * logger.debug(errMessage); // send message to console } if
+     * (createNotification) { notification = notification(ERROR_NOTIFICATION,
+     * errCode, errMessage); notifications.addNotification(notification); } }
+     * else if (errType == "info") { //
+     * https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug
+     * to avoid polluting logs if (logger.isDebugEnabled()) {
+     * logger.debug(errMessage); // send message to console } }
+     *
+     * }*
+     */
     public CallManager(final Configuration configuration, final ServletContext context, final ActorSystem system,
-                       final MediaServerControllerFactory msControllerFactory, final ActorRef conferences, final ActorRef bridges,
-                       final ActorRef sms, final SipFactory factory, final DaoManager storage) {
+            final MediaServerControllerFactory msControllerFactory, final ActorRef conferences, final ActorRef bridges,
+            final ActorRef sms, final SipFactory factory, final DaoManager storage) {
         super();
         this.system = system;
         this.configuration = configuration;
@@ -224,26 +218,34 @@ public final class CallManager extends UntypedActor {
         this.storage = storage;
         final Configuration runtime = configuration.subset("runtime-settings");
         final Configuration outboundProxyConfig = runtime.subset("outbound-proxy");
+        this.globalNotification = new GlobalNotification(configuration, storage);
         SipURI outboundIntf = outboundInterface("udp");
         if (outboundIntf != null) {
             myHostIp = ((SipURI) outboundIntf).getHost().toString();
         } else {
             String errMsg = "SipURI outboundIntf is null";
-            sendNotification(errMsg, 14001, "error", false);
+            //sendNotification(errMsg, 14001, "error", false);
+            logger.error(errMsg);
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
 
-            if (context == null)
+            if (context == null) {
                 errMsg = "SipServlet context is null";
-            sendNotification(errMsg, 14002, "error", false);
+            }
+            //sendNotification(errMsg, 14002, "error", false);
+            logger.error(errMsg);
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
         }
         Configuration mediaConf = configuration.subset("media-server-manager");
         mediaExternalIp = mediaConf.getString("mgcp-server.external-address");
         proxyIp = runtime.subset("telestax-proxy").getString("uri").replaceAll("http://", "").replaceAll(":2080", "");
 
-        if (mediaExternalIp == null || mediaExternalIp.isEmpty())
+        if (mediaExternalIp == null || mediaExternalIp.isEmpty()) {
             mediaExternalIp = myHostIp;
+        }
 
-        if (proxyIp == null || proxyIp.isEmpty())
+        if (proxyIp == null || proxyIp.isEmpty()) {
             proxyIp = myHostIp;
+        }
 
         this.useTo = runtime.getBoolean("use-to");
         this.authenticateUsers = runtime.getBoolean("authenticate");
@@ -278,7 +280,7 @@ public final class CallManager extends UntypedActor {
 
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.CallManager);
         if (logger.isInfoEnabled()) {
-            logger.info("CallManager extensions: "+(extensions != null ? extensions.size() : "0"));
+            logger.info("CallManager extensions: " + (extensions != null ? extensions.size() : "0"));
         }
     }
 
@@ -308,8 +310,8 @@ public final class CallManager extends UntypedActor {
         final DestroyCall request = (DestroyCall) message;
         ActorRef call = request.call();
         if (call != null) {
-            if(logger.isInfoEnabled()) {
-                logger.info("About to destroy call: "+request.call().path()+", call isTerminated(): "+sender().isTerminated()+", sender: "+sender());
+            if (logger.isInfoEnabled()) {
+                logger.info("About to destroy call: " + request.call().path() + ", call isTerminated(): " + sender().isTerminated() + ", sender: " + sender());
             }
             context.stop(call);
         }
@@ -360,7 +362,7 @@ public final class CallManager extends UntypedActor {
                 .getTo().getURI()).getTransportParam();
         SipURI outboundIntf = outboundInterface(transport);
 
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("ToHost: " + toHost);
             logger.info("ruri: " + ruri);
             logger.info("myHostIp: " + myHostIp);
@@ -371,23 +373,26 @@ public final class CallManager extends UntypedActor {
         if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have little control over
             Client toClient = clients.getClient(toUser);
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to the b2bua
-                if(logger.isInfoEnabled()) {
-                    logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "+ toClient);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: " + toClient);
                 }
                 CallRequest callRequest = new CallRequest(fromUser, toUser, CallRequest.Type.CLIENT,
                         client.getAccountSid(), false, false);
                 if (executePreOutboundAction(callRequest)) {
                     if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
-                        if(logger.isInfoEnabled()) {
+                        if (logger.isInfoEnabled()) {
                             logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp + " toHost: "
-                                + toHost + " fromClient: " + client.getUri() + " toClient: " + toClient.getUri());
+                                    + toHost + " fromClient: " + client.getUri() + " toClient: " + toClient.getUri());
                         }
                         // if all goes well with proxying the invitation on to the next client
                         // then we can end further processing of this INVITE
                     } else {
                         String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
                                 + " : Make sure the Client exist or is registered with Restcomm";
-                        sendNotification(errMsg, 11001, "warning", true);
+                        //sendNotification(errMsg, 11001, "warning", true);
+                        logger.error(errMsg);
+                        globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
+
                     }
                 } else {
                     //Extensions didn't allowed this call
@@ -397,7 +402,9 @@ public final class CallManager extends UntypedActor {
                     }
                     String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
                             + " : Make sure the Client exist or is registered with Restcomm";
-                    sendNotification(errMsg, 11001, "warning", true);
+                    //sendNotification(errMsg, 11001, "warning", true);
+                    logger.error(errMsg);
+                    globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
                     final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
                     resp.send();
                 }
@@ -413,7 +420,9 @@ public final class CallManager extends UntypedActor {
                 // This call is not a registered DID (application). Try to proxy out this call.
                 // log to console and to notification engine
                 String errMsg = "A Restcomm Client is trying to call a Number/DID that is not registered with Restcomm";
-                sendNotification(errMsg, 11002, "info", true);
+                //sendNotification(errMsg, 11002, "info", true);
+                logger.error(errMsg);
+                globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
 
                 if (isWebRTC(request)) {
                     //This is a WebRTC client that dials out
@@ -431,25 +440,27 @@ public final class CallManager extends UntypedActor {
                 // proxy DID or number if the outbound proxy fields are not empty in the restcomm.xml
                 if (proxyURI != null && !proxyURI.isEmpty()) {
 //                    String destination = ((SipURI)request.getTo().getURI()).getUser();
-                    CallRequest callRequest = new CallRequest(fromUser,toUser, CallRequest.Type.PSTN, client.getAccountSid(), false, false);
+                    CallRequest callRequest = new CallRequest(fromUser, toUser, CallRequest.Type.PSTN, client.getAccountSid(), false, false);
                     if (executePreOutboundAction(callRequest)) {
                         proxyOut(request, client, toUser, toHost, toHostIpAddress, toPort, outboundIntf, proxyURI, proxyUsername, proxyPassword, from, to, callToSipUri);
                     } else {
                         final SipServletResponse response = request.createResponse(SC_FORBIDDEN, "Call request not allowed");
                         response.send();
                         if (logger.isDebugEnabled()) {
-                            logger.debug("Call request now allowed: "+callRequest.toString());
+                            logger.debug("Call request now allowed: " + callRequest.toString());
                         }
                     }
                     executePostOutboundAction(callRequest);
                     return;
                 } else {
                     String msg = "Restcomm tried to proxy this call to an outbound party but it seems the outbound proxy is not configured.";
-                    sendNotification(errMsg, 11004, "warning", true);
+                    //sendNotification(errMsg, 11004, "warning", true);
+                    logger.error(msg);
+                    globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, msg);
                 }
             }
-        } else {
-            // Client is null, check if this call is for a registered DID (application)
+        } else // Client is null, check if this call is for a registered DID (application)
+        {
             if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
                 // This is a call to a registered DID (application)
                 return;
@@ -459,8 +470,10 @@ public final class CallManager extends UntypedActor {
         response.send();
         // We didn't find anyway to handle the call.
         String errMsg = "Restcomm cannot process this call because the destination number " + toUser
-                + "cannot be found or there is application attached to that";
-        sendNotification(errMsg, 11005, "error", true);
+                + " cannot be found or there is no application attached to that number";
+        //sendNotification(errMsg, 11005, "error", true);
+        logger.error(errMsg);
+        globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
 
     }
 
@@ -475,18 +488,18 @@ public final class CallManager extends UntypedActor {
 //                    final String fromPort = String.valueOf(((SipURI) request.getFrom().getURI()).getPort()).equalsIgnoreCase("-1") ? "5060"
 //                            : String.valueOf(((SipURI) request.getFrom().getURI()).getHost());
 
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("fromHost: " + fromHost + "fromHostIP: " + fromHostIpAddress + "myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
-            + " toHost: " + toHost + " toHostIP: " + toHostIpAddress + " proxyUri: " + proxyURI);
+                    + " toHost: " + toHost + " toHostIP: " + toHostIpAddress + " proxyUri: " + proxyURI);
         }
-        if ((myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost)) ||
-                (myHostIp.equalsIgnoreCase(toHostIpAddress) || mediaExternalIp.equalsIgnoreCase(toHostIpAddress))
+        if ((myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost))
+                || (myHostIp.equalsIgnoreCase(toHostIpAddress) || mediaExternalIp.equalsIgnoreCase(toHostIpAddress))
                 // https://github.com/RestComm/Restcomm-Connect/issues/1357
                 || (fromHost.equalsIgnoreCase(toHost) || fromHost.equalsIgnoreCase(toHostIpAddress))
                 || (fromHostIpAddress.equalsIgnoreCase(toHost) || fromHostIpAddress.equalsIgnoreCase(toHostIpAddress))) {
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("Call to NUMBER.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
-                + " toHost: " + toHost + " proxyUri: " + proxyURI);
+                        + " toHost: " + toHost + " proxyUri: " + proxyURI);
             }
             try {
                 if (useLocalAddressAtFromHeader) {
@@ -497,25 +510,23 @@ public final class CallManager extends UntypedActor {
                         from = sipFactory.createSipURI(((SipURI) request.getFrom().getURI()).getUser(),
                                 mediaExternalIp + ":" + outboundIntf.getPort());
                     }
+                } else if (outboudproxyUserAtFromHeader) {
+                    // https://telestax.atlassian.net/browse/RESTCOMM-633. Use the outbound proxy username as
+                    // the userpart of the sip uri for the From header
+                    from = (SipURI) sipFactory.createSipURI(proxyUsername, proxyURI);
                 } else {
-                    if (outboudproxyUserAtFromHeader) {
-                        // https://telestax.atlassian.net/browse/RESTCOMM-633. Use the outbound proxy username as
-                        // the userpart of the sip uri for the From header
-                        from = (SipURI) sipFactory.createSipURI(proxyUsername, proxyURI);
-                    } else {
-                        from = sipFactory.createSipURI(((SipURI) request.getFrom().getURI()).getUser(), proxyURI);
-                    }
+                    from = sipFactory.createSipURI(((SipURI) request.getFrom().getURI()).getUser(), proxyURI);
                 }
                 to = sipFactory.createSipURI(((SipURI) request.getTo().getURI()).getUser(), proxyURI);
             } catch (Exception exception) {
-                if(logger.isInfoEnabled()) {
-                logger.info("Exception: " + exception);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Exception: " + exception);
                 }
             }
         } else {
-            if(logger.isInfoEnabled()) {
-            logger.info("Call to SIP URI. myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
-                + " toHost: " + toHost + " proxyUri: " + proxyURI);
+            if (logger.isInfoEnabled()) {
+                logger.info("Call to SIP URI. myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
+                        + " toHost: " + toHost + " proxyUri: " + proxyURI);
             }
             from = sipFactory.createSipURI(((SipURI) request.getFrom().getURI()).getUser(), outboundIntf.getHost()
                     + ":" + outboundIntf.getPort());
@@ -538,21 +549,23 @@ public final class CallManager extends UntypedActor {
         }
         if (!request.getInitialTransport().equalsIgnoreCase(transport)) {
             transport = request.getInitialTransport();
-            if ("ws".equalsIgnoreCase(transport) || "wss".equalsIgnoreCase(transport))
+            if ("ws".equalsIgnoreCase(transport) || "wss".equalsIgnoreCase(transport)) {
                 return true;
+            }
         }
         try {
             if (SdpUtils.isWebRTCSDP(request.getContentType(), request.getRawContent())) {
                 return true;
             }
-        } catch (SdpParseException e) {}
-          catch (IOException e) {}
+        } catch (SdpParseException e) {
+        } catch (IOException e) {
+        }
 
         return false;
     }
 
     private void proxyThroughMediaServer(final SipServletRequest request, final Client client, final String destNumber) {
-        String rcml = "<Response><Dial>"+destNumber+"</Dial></Response>";
+        String rcml = "<Response><Dial>" + destNumber + "</Dial></Response>";
         final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
@@ -600,25 +613,25 @@ public final class CallManager extends UntypedActor {
             if (patchForNatB2BUASessions) {
                 if (toInetUri != null && infoRURI == null) {
 
-                    if(logger.isInfoEnabled()){
+                    if (logger.isInfoEnabled()) {
                         logger.info("Using the real ip address of the sip client " + toInetUri.toString()
-                            + " as a request uri of the CloneBye request");
+                                + " as a request uri of the CloneBye request");
                     }
                     clonedInfo.setRequestURI(toInetUri);
                 } else if (toInetUri != null
                         && (infoRURI.isSiteLocalAddress() || infoRURI.isAnyLocalAddress() || infoRURI.isLoopbackAddress())) {
 
-                    if(logger.isInfoEnabled()){
+                    if (logger.isInfoEnabled()) {
                         logger.info("Using the real ip address of the sip client " + toInetUri.toString()
-                            + " as a request uri of the CloneInfo request");
+                                + " as a request uri of the CloneInfo request");
                     }
                     clonedInfo.setRequestURI(toInetUri);
                 } else if (fromInetUri != null
                         && (infoRURI.isSiteLocalAddress() || infoRURI.isAnyLocalAddress() || infoRURI.isLoopbackAddress())) {
-                     if(logger.isInfoEnabled()){
+                    if (logger.isInfoEnabled()) {
                         logger.info("Using the real ip address of the sip client " + fromInetUri.toString()
-                           + " as a request uri of the CloneInfo request");
-                     }
+                                + " as a request uri of the CloneInfo request");
+                    }
 
                     clonedInfo.setRequestURI(fromInetUri);
                 }
@@ -631,8 +644,8 @@ public final class CallManager extends UntypedActor {
     }
 
     /**
-     * Try to locate a hosted voice app corresponding to the callee/To address. If one is found, begin execution, otherwise
-     * return false;
+     * Try to locate a hosted voice app corresponding to the callee/To address.
+     * If one is found, begin execution, otherwise return false;
      *
      * @param self
      * @param request
@@ -641,7 +654,7 @@ public final class CallManager extends UntypedActor {
      * @param phone
      */
     private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-                                             final ApplicationsDao applications, String phone) {
+            final ApplicationsDao applications, String phone) {
         boolean isFoundHostedApp = false;
         // Format the destination to an E.164 phone number.
         final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
@@ -658,10 +671,10 @@ public final class CallManager extends UntypedActor {
             if (number == null) {
                 number = numbers.getIncomingPhoneNumber(phone);
             }
-            if(number == null){
+            if (number == null) {
                 if (phone.startsWith("+")) {
                     //remove the (+) and check if exists
-                    phone= phone.replaceFirst("\\+","");
+                    phone = phone.replaceFirst("\\+", "");
                     number = numbers.getIncomingPhoneNumber(phone);
                 } else {
                     //Add "+" add check if number exists
@@ -699,10 +712,11 @@ public final class CallManager extends UntypedActor {
                     builder.setMethod(voiceMethod);
                 }
                 URI uri = number.getVoiceFallbackUrl();
-                if (uri != null)
+                if (uri != null) {
                     builder.setFallbackUrl(UriUtils.resolve(uri));
-                else
+                } else {
                     builder.setFallbackUrl(null);
+                }
                 builder.setFallbackMethod(number.getVoiceFallbackMethod());
                 builder.setStatusCallback(number.getStatusCallback());
                 builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
@@ -722,7 +736,8 @@ public final class CallManager extends UntypedActor {
             } else {
                 errMsg = "The number does not have a Restcomm hosted application attached";
             }
-            sendNotification(errMsg, 11007, "error", false);
+            //sendNotification(errMsg, 11007, "error", false);
+            globalNotification.sendNotification(GlobalNotification.getWARNING_NOTIFICATION(), 11001, errMsg);
             logger.error(errMsg, notANumber);
             isFoundHostedApp = false;
         }
@@ -730,7 +745,8 @@ public final class CallManager extends UntypedActor {
     }
 
     /**
-     * If there is VoiceUrl provided for a Client configuration, try to begin execution of the RCML app, otherwise return false.
+     * If there is VoiceUrl provided for a Client configuration, try to begin
+     * execution of the RCML app, otherwise return false.
      *
      * @param self
      * @param request
@@ -739,7 +755,7 @@ public final class CallManager extends UntypedActor {
      * @param client
      */
     private boolean redirectToClientVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-                                             final ApplicationsDao applications, final Client client) {
+            final ApplicationsDao applications, final Client client) {
         Sid applicationSid = client.getVoiceApplicationSid();
         URI clientAppVoiceUrl = null;
         if (applicationSid != null) {
@@ -749,8 +765,8 @@ public final class CallManager extends UntypedActor {
         if (clientAppVoiceUrl == null) {
             clientAppVoiceUrl = client.getVoiceUrl();
         }
-        boolean isClientManaged =( (applicationSid != null && !applicationSid.toString().isEmpty() && !applicationSid.toString().equals("")) ||
-                (clientAppVoiceUrl != null && !clientAppVoiceUrl.toString().isEmpty() &&  !clientAppVoiceUrl.toString().equals("")));
+        boolean isClientManaged = ((applicationSid != null && !applicationSid.toString().isEmpty() && !applicationSid.toString().equals(""))
+                || (clientAppVoiceUrl != null && !clientAppVoiceUrl.toString().isEmpty() && !clientAppVoiceUrl.toString().equals("")));
         if (isClientManaged) {
             final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
             builder.setConfiguration(configuration);
@@ -767,10 +783,11 @@ public final class CallManager extends UntypedActor {
             builder.setUrl(clientAppVoiceUrl);
             builder.setMethod(client.getVoiceMethod());
             URI uri = client.getVoiceFallbackUrl();
-            if (uri != null)
+            if (uri != null) {
                 builder.setFallbackUrl(UriUtils.resolve(uri));
-            else
+            } else {
                 builder.setFallbackUrl(null);
+            }
             builder.setFallbackMethod(client.getVoiceFallbackMethod());
             builder.setMonitoring(monitoring);
             final ActorRef interpreter = builder.build();
@@ -794,9 +811,9 @@ public final class CallManager extends UntypedActor {
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
-        if(logger.isDebugEnabled()) {
+        if (logger.isDebugEnabled()) {
             logger.debug("######### CallManager new message received, message instanceof : " + klass + " from sender : "
-                + sender.getClass());
+                    + sender.getClass());
         }
         if (message instanceof SipServletRequest) {
             final SipServletRequest request = (SipServletRequest) message;
@@ -861,8 +878,9 @@ public final class CallManager extends UntypedActor {
                 final String initialIpBeforeLB = response.getHeader("X-Sip-Balancer-InitialRemoteAddr");
                 String initialPortBeforeLB = response.getHeader("X-Sip-Balancer-InitialRemotePort");
                 if (initialIpBeforeLB != null) {
-                    if (initialPortBeforeLB == null)
+                    if (initialPortBeforeLB == null) {
                         initialPortBeforeLB = "5060";
+                    }
                     if (logger.isDebugEnabled()) {
                         logger.debug("We are behind load balancer, checking if the request URI needs to be patched");
                     }
@@ -871,13 +889,13 @@ public final class CallManager extends UntypedActor {
                 // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
                 SipURI toInetUri = (SipURI) request.getSession().getAttribute(B2BUAHelper.TO_INET_URI);
                 if (toInetUri != null && ackRURI == null) {
-                    if(isBehindLB) {
+                    if (isBehindLB) {
                         // https://github.com/RestComm/Restcomm-Connect/issues/1357
                         boolean patchRURI = isLBPatchRURI(ack, initialIpBeforeLB, initialPortBeforeLB);
-                        if(patchRURI) {
+                        if (patchRURI) {
                             if (logger.isDebugEnabled()) {
                                 logger.debug("We are behind load balancer, but Using the real ip address of the sip client " + toInetUri.toString()
-                                    + " as a request uri of the ACK request");
+                                        + " as a request uri of the ACK request");
                             }
                             ack.setRequestURI(toInetUri);
                         } else {
@@ -888,21 +906,21 @@ public final class CallManager extends UntypedActor {
                             request.getSession().removeAttribute(B2BUAHelper.TO_INET_URI);
                         }
                     } else {
-                        if(logger.isInfoEnabled()) {
+                        if (logger.isInfoEnabled()) {
                             logger.info("Using the real ip address of the sip client " + toInetUri.toString()
-                                + " as a request uri of the ACK request");
+                                    + " as a request uri of the ACK request");
                         }
                         ack.setRequestURI(toInetUri);
                     }
                 } else if (toInetUri != null
                         && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
-                    if(isBehindLB) {
+                    if (isBehindLB) {
                         // https://github.com/RestComm/Restcomm-Connect/issues/1357
                         boolean patchRURI = isLBPatchRURI(ack, initialIpBeforeLB, initialPortBeforeLB);
-                        if(patchRURI) {
+                        if (patchRURI) {
                             if (logger.isDebugEnabled()) {
                                 logger.debug("We are behind load balancer, but Using the real ip address of the sip client " + toInetUri.toString()
-                                    + " as a request uri of the ACK request");
+                                        + " as a request uri of the ACK request");
                             }
                             ack.setRequestURI(toInetUri);
                         } else {
@@ -913,9 +931,9 @@ public final class CallManager extends UntypedActor {
                             request.getSession().removeAttribute(B2BUAHelper.TO_INET_URI);
                         }
                     } else {
-                        if(logger.isInfoEnabled()) {
+                        if (logger.isInfoEnabled()) {
                             logger.info("Using the real ip address of the sip client " + toInetUri.toString()
-                                + " as a request uri of the ACK request");
+                                    + " as a request uri of the ACK request");
                         }
                         ack.setRequestURI(toInetUri);
                     }
@@ -924,21 +942,19 @@ public final class CallManager extends UntypedActor {
                     if (logger.isInfoEnabled()) {
                         logger.info("Public IP toInetUri from SipSession is null, will check LB headers from last Response");
                     }
-                    if(isBehindLB) {
+                    if (isBehindLB) {
                         String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
                         SipURI uri = sipFactory.createSipURI(null, realIP);
                         boolean patchRURI = isLBPatchRURI(ack, initialIpBeforeLB, initialPortBeforeLB);
-                        if(patchRURI) {
+                        if (patchRURI) {
                             if (logger.isDebugEnabled()) {
                                 logger.debug("We are behind load balancer, will use Initial Remote Address " + initialIpBeforeLB + ":"
                                         + initialPortBeforeLB + " for the ACK request");
                             }
                             ack.setRequestURI(uri);
                         }
-                    } else {
-                        if (logger.isInfoEnabled()) {
-                            logger.info("LB Headers are also null");
-                        }
+                    } else if (logger.isInfoEnabled()) {
+                        logger.info("LB Headers are also null");
                     }
                 }
             }
@@ -947,13 +963,13 @@ public final class CallManager extends UntypedActor {
             // Defaulting the sip application session to 1h
             sipApplicationSession.setExpires(60);
         } else {
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("Linked Response couldn't be found for ACK request");
             }
             final ActorRef call = (ActorRef) request.getApplicationSession().getAttribute(Call.class.getName());
             if (call != null) {
-                if(logger.isInfoEnabled()) {
-                    logger.info("Will send ACK to call actor: "+call.path());
+                if (logger.isInfoEnabled()) {
+                    logger.info("Will send ACK to call actor: " + call.path());
                 }
                 call.tell(request, self());
             }
@@ -977,27 +993,29 @@ public final class CallManager extends UntypedActor {
         try {
             // https://github.com/RestComm/Restcomm-Connect/issues/1336 checking if the initial IP and Port behind LB is part of the route set or not
             ListIterator<? extends Address> routes = request.getAddressHeaders(RouteHeader.NAME);
-            while(routes.hasNext()) {
+            while (routes.hasNext()) {
                 SipURI route = (SipURI) routes.next().getURI();
                 String routeHost = route.getHost();
                 int routePort = route.getPort();
-                if(routePort < 0) {
+                if (routePort < 0) {
                     routePort = 5060;
                 }
                 if (logger.isDebugEnabled()) {
                     logger.debug("Checking if route " + routeHost + ":" + routePort + " is matching ip and port before LB " + initialIpBeforeLB + ":"
-                        + initialPortBeforeLB + " for the " + request.getMethod() + " request");
+                            + initialPortBeforeLB + " for the " + request.getMethod() + " request");
                 }
-                if(routeHost.equalsIgnoreCase(initialIpBeforeLB) && routePort == Integer.parseInt(initialPortBeforeLB)) {
+                if (routeHost.equalsIgnoreCase(initialIpBeforeLB) && routePort == Integer.parseInt(initialPortBeforeLB)) {
                     if (logger.isDebugEnabled()) {
                         logger.debug("route " + route + " is matching ip and port before LB " + initialIpBeforeLB + ":"
-                            + initialPortBeforeLB + " for the " + request.getMethod() + " request, so not patching the Request-URI");
+                                + initialPortBeforeLB + " for the " + request.getMethod() + " request, so not patching the Request-URI");
                     }
                     return false;
                 }
             }
         } catch (ServletParseException e) {
-            logger.error("Impossible to parse the route set from the request " + request, e);
+            String errMsg = "Impossible to parse the route set from the request " + request + " : " + e;
+            logger.error(errMsg);
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
         }
         return true;
     }
@@ -1051,7 +1069,7 @@ public final class CallManager extends UntypedActor {
             relatedCall = (ActorRef) answer;
         }
 
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("About to start Live Call Modification");
             logger.info("Initial Call path: " + call.path());
 
@@ -1066,7 +1084,7 @@ public final class CallManager extends UntypedActor {
         if (relatedCall != null) {
             relatedCall.tell(new StopObserving(), self());
         }
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("Existing observers removed from Calls actors");
 
             // Cleanup existing Interpreter
@@ -1097,7 +1115,7 @@ public final class CallManager extends UntypedActor {
         system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), interpreter,
                 new StartInterpreter(request.call()), system.dispatcher());
         // interpreter.tell(new StartInterpreter(request.call()), self);
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("New Intepreter for first call leg: " + interpreter.path() + " started");
         }
 
@@ -1105,19 +1123,19 @@ public final class CallManager extends UntypedActor {
         if (relatedCall != null) {
             if (moveConnectedCallLeg) {
                 final ActorRef relatedInterpreter = builder.build();
-                if(logger.isInfoEnabled()) {
+                if (logger.isInfoEnabled()) {
                     logger.info("About to redirect related Call :" + relatedCall.path()
-                        + " with 200ms delay to related interpreter: " + relatedInterpreter.path());
+                            + " with 200ms delay to related interpreter: " + relatedInterpreter.path());
                 }
                 system.scheduler().scheduleOnce(Duration.create(1000, TimeUnit.MILLISECONDS), relatedInterpreter,
                         new StartInterpreter(relatedCall), system.dispatcher());
 
-                if(logger.isInfoEnabled()) {
+                if (logger.isInfoEnabled()) {
                     logger.info("New Intepreter for Second call leg: " + relatedInterpreter.path() + " started");
                 }
             } else {
-                if(logger.isInfoEnabled()) {
-                    logger.info("moveConnectedCallLeg is: " + moveConnectedCallLeg + " so will hangup relatedCall: "+relatedCall.path());
+                if (logger.isInfoEnabled()) {
+                    logger.info("moveConnectedCallLeg is: " + moveConnectedCallLeg + " so will hangup relatedCall: " + relatedCall.path());
                 }
                 relatedCall.tell(new Hangup(), null);
 //                getContext().stop(relatedCall);
@@ -1136,6 +1154,7 @@ public final class CallManager extends UntypedActor {
                     //Extensions didn't allowed this call
                     final String errMsg = "Not Allowed to make this outbound call";
                     logger.error(errMsg);
+                    globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
                 }
                 executePostOutboundAction(callRequest);
@@ -1148,6 +1167,7 @@ public final class CallManager extends UntypedActor {
                     //Extensions didn't allowed this call
                     final String errMsg = "Not Allowed to make this outbound call";
                     logger.error(errMsg);
+                    globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
                 }
                 executePostOutboundAction(callRequest);
@@ -1156,10 +1176,11 @@ public final class CallManager extends UntypedActor {
             case SIP: {
                 if (executePreOutboundAction(callRequest)) {
                     outboundToSip(request, sender);
-                }  else {
+                } else {
                     //Extensions didn't allowed this call
                     final String errMsg = "Not Allowed to make this outbound call";
                     logger.error(errMsg);
+                    globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
                 }
                 executePostOutboundAction(callRequest);
@@ -1172,8 +1193,9 @@ public final class CallManager extends UntypedActor {
         if (extensions != null && extensions.size() > 0) {
             for (RestcommExtensionGeneric extension : extensions) {
                 ExtensionResponse response = extension.preOutboundAction(message);
-                if (!response.isAllowed())
+                if (!response.isAllowed()) {
                     return false;
+                }
             }
         }
         return true;
@@ -1195,54 +1217,60 @@ public final class CallManager extends UntypedActor {
 
         //1, If this is a WebRTC client check if the instance is the current instance
         //2. Check if the client has more than one registrations
-
         List<Registration> registrationToDial = new CopyOnWriteArrayList<Registration>();
 
         List<Registration> registrations = registrationsDao.getRegistrations(client);
         if (registrations != null && registrations.size() > 0) {
             if (logger.isInfoEnabled()) {
-                logger.info("Preparing call for client: "+client+". There are "+registrations.size()+" registrations at the database for this client");
+                logger.info("Preparing call for client: " + client + ". There are " + registrations.size() + " registrations at the database for this client");
             }
             for (Registration registration : registrations) {
                 if (registration.isWebRTC()) {
                     if (registration.isLBPresent()) {
-                        if (logger.isInfoEnabled())
+                        if (logger.isInfoEnabled()) {
                             logger.info("WebRTC registration behind LB. Will add WebRTC registration: " + registration.getLocation() + " to the list to be dialed for client: " + client);
+                        }
                         registrationToDial.add(registration);
-                    } else {
-                        //If this is a WebRTC client registration, check that the InstanceId of the registration is for the current Restcomm instance
+                    } else //If this is a WebRTC client registration, check that the InstanceId of the registration is for the current Restcomm instance
+                    {
                         if ((registration.getInstanceId() != null && !registration.getInstanceId().equals(RestcommConfiguration.getInstance().getMain().getInstanceId()))) {
-                            logger.warning("Cannot create call for user agent: " + registration.getLocation() + " since this is a webrtc client registered in another Restcomm instance.");
+                            String errMsg = "Cannot create call for user agent: " + registration.getLocation() + " since this is a webrtc client registered in another Restcomm instance.";
+                            logger.warning(errMsg);
+                            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
                         } else {
-                            if (logger.isInfoEnabled())
+                            if (logger.isInfoEnabled()) {
                                 logger.info("Will add WebRTC registration: " + registration.getLocation() + " to the list to be dialed for client: " + client);
+                            }
                             registrationToDial.add(registration);
                         }
                     }
                 } else {
-                    if (logger.isInfoEnabled())
-                        logger.info("Will add registration: "+registration.getLocation()+" to the list to be dialed for client: "+client);
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Will add registration: " + registration.getLocation() + " to the list to be dialed for client: " + client);
+                    }
                     registrationToDial.add(registration);
                 }
             }
         } else {
-            String errMsg = "The SIP Client "+request.to()+" is not registered or does not exist";
+            String errMsg = "The SIP Client " + request.to() + " is not registered or does not exist";
             logger.error(errMsg);
-            sendNotification(errMsg, 11008, "error", true);
+            //sendNotification(errMsg, 11008, "error", true);
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
             sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
             return;
         }
 
         if (registrationToDial.size() > 0) {
             if (logger.isInfoEnabled()) {
-                if (registrationToDial.size()>1) {
-                    logger.info("Preparing call for client: "+client+", after WebRTC check, Restcomm have to dial :"+registrationToDial.size()+" registrations");
+                if (registrationToDial.size() > 1) {
+                    logger.info("Preparing call for client: " + client + ", after WebRTC check, Restcomm have to dial :" + registrationToDial.size() + " registrations");
                 }
             }
             List<ActorRef> calls = new CopyOnWriteArrayList<>();
             for (Registration registration : registrationToDial) {
-                if (logger.isInfoEnabled())
+                if (logger.isInfoEnabled()) {
                     logger.info("Will proceed to create call for client: " + registration.getLocation() + " registration instanceId: " + registration.getInstanceId() + " own InstanceId: " + RestcommConfiguration.getInstance().getMain().getInstanceId());
+                }
                 String transport;
                 if (registration.getLocation().contains("transport")) {
                     transport = registration.getLocation().split(";")[1].replace("transport=", "");
@@ -1252,9 +1280,10 @@ public final class CallManager extends UntypedActor {
                     outboundIntf = outboundInterface(transport);
                 }
                 if (outboundIntf == null) {
-                    String errMsg = "The outbound interface for transport: "+transport+" is NULL, something is wrong with container, cannot proceed to call client "+request.to();
+                    String errMsg = "The outbound interface for transport: " + transport + " is NULL, something is wrong with container, cannot proceed to call client " + request.to();
                     logger.error(errMsg);
-                    sendNotification(errMsg, 11008, "error", true);
+                    // sendNotification(errMsg, 11008, "error", true);
+                    globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
                     return;
                 }
@@ -1266,7 +1295,9 @@ public final class CallManager extends UntypedActor {
                     if (outboundIntf != null) {
                         from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
                     } else {
-                        logger.error("Outbound interface is null, cannot create From header to be used to Dial client: "+client);
+                        String errMsg = "Outbound interface is null, cannot create From header to be used to Dial client: " + client;
+                        logger.error(errMsg);
+                        globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
                     }
                 } else {
                     from = outboundIntf;
@@ -1276,20 +1307,22 @@ public final class CallManager extends UntypedActor {
                 webRTC = registration.isWebRTC();
                 if (from == null || to == null) {
                     //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
-                    final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: "+request.to();
+                    final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: " + request.to();
                     logger.error(errMsg);
+                    globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
                 } else {
-                    calls.add(createOutbound(request,from,to,webRTC));
+                    calls.add(createOutbound(request, from, to, webRTC));
                 }
             }
             if (calls.size() > 0) {
                 sender.tell(new CallManagerResponse<List<ActorRef>>(calls), self());
             }
         } else {
-            String errMsg = "The SIP Client "+request.to()+" is not registered or does not exist";
+            String errMsg = "The SIP Client " + request.to() + " is not registered or does not exist";
             logger.error(errMsg);
-            sendNotification(errMsg, 11008, "error", true);
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
+            //sendNotification(errMsg, 11008, "error", true);
             sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
         }
     }
@@ -1318,14 +1351,12 @@ public final class CallManager extends UntypedActor {
                     from = (SipURI) sipFactory.createURI(request.from());
                 } else if (useLocalAddressAtFromHeader) {
                     from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
+                } else if (outboudproxyUserAtFromHeader) {
+                    // https://telestax.atlassian.net/browse/RESTCOMM-633. Use the outbound proxy username as the userpart
+                    // of the sip uri for the From header
+                    from = (SipURI) sipFactory.createSipURI(proxyUsername, uri);
                 } else {
-                    if (outboudproxyUserAtFromHeader) {
-                        // https://telestax.atlassian.net/browse/RESTCOMM-633. Use the outbound proxy username as the userpart
-                        // of the sip uri for the From header
-                        from = (SipURI) sipFactory.createSipURI(proxyUsername, uri);
-                    } else {
-                        from = sipFactory.createSipURI(request.from(), uri);
-                    }
+                    from = sipFactory.createSipURI(request.from(), uri);
                 }
                 if (((SipURI) from).getUser() == null || ((SipURI) from).getUser() == "") {
                     if (uri != null) {
@@ -1339,20 +1370,21 @@ public final class CallManager extends UntypedActor {
             }
             if (from == null || to == null) {
                 //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
-                final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: "+request.to();
+                final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: " + request.to();
                 logger.error(errMsg);
+                globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
                 sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
             } else {
-                sender.tell(new CallManagerResponse<ActorRef>(createOutbound(request,from,to,false)), self());
+                sender.tell(new CallManagerResponse<ActorRef>(createOutbound(request, from, to, false)), self());
             }
         } else {
-            String errMsg = "Cannot create call to: "+request.to()+". The Active Outbound Proxy is null. Please check configuration";
+            String errMsg = "Cannot create call to: " + request.to() + ". The Active Outbound Proxy is null. Please check configuration";
             logger.error(errMsg);
-            sendNotification(errMsg, 11008, "error", true);
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
+            //sendNotification(errMsg, 11008, "error", true);
             sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
         }
     }
-
 
     private void outboundToSip(final CreateCall request, final ActorRef sender) throws ServletParseException {
         SipURI outboundIntf = null;
@@ -1364,25 +1396,23 @@ public final class CallManager extends UntypedActor {
         outboundIntf = outboundInterface(transport);
         if (request.from() == null) {
             from = outboundInterface(transport);
+        } else if (request.from() != null && request.from().contains("@")) {
+            // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we
+            // allow to use it directly
+            from = (SipURI) sipFactory.createURI(request.from());
         } else {
-            if (request.from() != null && request.from().contains("@")) {
-                // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we
-                // allow to use it directly
-                from = (SipURI) sipFactory.createURI(request.from());
-            } else {
-                from = sipFactory.createSipURI(request.from(), outboundIntf.getHost() + ":" + outboundIntf.getPort());
-            }
+            from = sipFactory.createSipURI(request.from(), outboundIntf.getHost() + ":" + outboundIntf.getPort());
         }
         if (from == null || to == null) {
             //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
-            final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: "+request.to();
+            final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: " + request.to();
             logger.error(errMsg);
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
             sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
         } else {
-            sender.tell(new CallManagerResponse<ActorRef>(createOutbound(request,from,to,false)), self());
+            sender.tell(new CallManagerResponse<ActorRef>(createOutbound(request, from, to, false)), self());
         }
     }
-
 
     private ActorRef createOutbound(final CreateCall request, final SipURI from, final SipURI to, final boolean webRTC) {
         final Configuration runtime = configuration.subset("runtime-settings");
@@ -1441,8 +1471,9 @@ public final class CallManager extends UntypedActor {
             // originalRequest.createCancel().send();
         } else {
             final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
-            if (call != null)
+            if (call != null) {
                 call.tell(request, self);
+            }
         }
     }
 
@@ -1477,46 +1508,47 @@ public final class CallManager extends UntypedActor {
                 final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
                 String initialPortBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemotePort");
                 if (initialIpBeforeLB != null) {
-                    if (initialPortBeforeLB == null)
+                    if (initialPortBeforeLB == null) {
                         initialPortBeforeLB = "5060";
+                    }
                     if (logger.isDebugEnabled()) {
                         logger.debug("We are behind load balancer, checking if the request URI needs to be patched");
                     }
                     isBehindLB = true;
                 }
-                if(logger.isDebugEnabled()) {
+                if (logger.isDebugEnabled()) {
                     logger.debug("toInetUri: " + toInetUri + " fromInetUri: " + fromInetUri + " byeRURI: " + byeRURI + " initialIpBeforeLB: " + initialIpBeforeLB
-                    + " initialPortBeforeLB: " + initialPortBeforeLB);
+                            + " initialPortBeforeLB: " + initialPortBeforeLB);
                 }
                 if (toInetUri != null && byeRURI == null) {
-                    if(logger.isInfoEnabled()) {
+                    if (logger.isInfoEnabled()) {
                         logger.info("Using the real To inet ip address of the sip client " + toInetUri.toString()
-                        + " as a request uri of the CloneBye request");
+                                + " as a request uri of the CloneBye request");
                     }
                     clonedBye.setRequestURI(toInetUri);
                 } else if (toInetUri != null
                         && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
-                    if(logger.isInfoEnabled()) {
+                    if (logger.isInfoEnabled()) {
                         logger.info("Using the real To inet ip address of the sip client " + toInetUri.toString()
-                        + " as a request uri of the CloneBye request");
+                                + " as a request uri of the CloneBye request");
                     }
                     clonedBye.setRequestURI(toInetUri);
                 } else if (fromInetUri != null
                         && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
-                    if(isBehindLB) {
+                    if (isBehindLB) {
                         // https://github.com/RestComm/Restcomm-Connect/issues/1357
                         boolean patchRURI = isLBPatchRURI(clonedBye, initialIpBeforeLB, initialPortBeforeLB);
-                        if(patchRURI) {
+                        if (patchRURI) {
                             if (logger.isDebugEnabled()) {
                                 logger.debug("We are behind load balancer, but Using the real ip address of the sip client " + fromInetUri.toString()
-                                    + " as a request uri of the CloneBye request");
+                                        + " as a request uri of the CloneBye request");
                             }
                             clonedBye.setRequestURI(fromInetUri);
                         }
                     } else {
-                        if(logger.isInfoEnabled()) {
+                        if (logger.isInfoEnabled()) {
                             logger.info("Using the real From inet ip  address of the sip client " + fromInetUri.toString()
-                            + " as a request uri of the CloneBye request");
+                                    + " as a request uri of the CloneBye request");
                         }
                         clonedBye.setRequestURI(fromInetUri);
                     }
@@ -1525,12 +1557,12 @@ public final class CallManager extends UntypedActor {
                     if (logger.isInfoEnabled()) {
                         logger.info("Public IP toInetUri from SipSession is null, will check LB headers from last Response");
                     }
-                    if(isBehindLB) {
+                    if (isBehindLB) {
                         String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
                         SipURI uri = sipFactory.createSipURI(null, realIP);
                         boolean patchRURI = isLBPatchRURI(clonedBye, initialIpBeforeLB, initialPortBeforeLB);
-                        if(patchRURI) {
-                            if(logger.isDebugEnabled()) {
+                        if (patchRURI) {
+                            if (logger.isDebugEnabled()) {
                                 logger.debug("We are behind load balancer, will use: " + initialIpBeforeLB + ":"
                                         + initialPortBeforeLB + " for the cloned BYE message");
                             }
@@ -1540,10 +1572,8 @@ public final class CallManager extends UntypedActor {
                             logger.info("We are behind load balancer, will use Initial Remote Address " + initialIpBeforeLB + ":"
                                     + initialPortBeforeLB + " for the cloned BYE request");
                         }
-                    } else {
-                        if (logger.isInfoEnabled()) {
-                            logger.info("LB Headers are also null");
-                        }
+                    } else if (logger.isInfoEnabled()) {
+                        logger.info("LB Headers are also null");
                     }
                 }
             }
@@ -1552,14 +1582,15 @@ public final class CallManager extends UntypedActor {
             SipServletResponse okay = request.createResponse(Response.OK);
             okay.send();
             //Send the Cloned BYE
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info(String.format("B2BUA: Will send out Cloned BYE request: \n %s", clonedBye));
             }
             clonedBye.send();
         } else {
             final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
-            if (call != null)
+            if (call != null) {
                 call.tell(request, self);
+            }
         }
     }
 
@@ -1568,8 +1599,9 @@ public final class CallManager extends UntypedActor {
         final SipServletResponse response = (SipServletResponse) message;
 
         // If Allow-Falback is true, check for error reponses and switch proxy if needed
-        if (allowFallback)
+        if (allowFallback) {
             checkErrorResponse(response);
+        }
 
         final SipApplicationSession application = response.getApplicationSession();
 
@@ -1596,12 +1628,10 @@ public final class CallManager extends UntypedActor {
             } else {
                 B2BUAHelper.forwardResponse(response, patchForNatB2BUASessions);
             }
-        } else {
-            if (application.isValid()) {
-                // otherwise the response is coming back to a Voice app hosted by Restcomm
-                final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
-                call.tell(response, self);
-            }
+        } else if (application.isValid()) {
+            // otherwise the response is coming back to a Voice app hosted by Restcomm
+            final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
+            call.tell(response, self);
         }
     }
 
@@ -1635,17 +1665,17 @@ public final class CallManager extends UntypedActor {
                     && status != SipServletResponse.SC_NOT_FOUND && status > 400) {
 
                 int failures = numberOfFailedCalls.incrementAndGet();
-                if(logger.isInfoEnabled()) {
+                if (logger.isInfoEnabled()) {
                     logger.info("A total number of " + failures + " failures have now been counted.");
                 }
 
                 if (failures >= maxNumberOfFailedCalls) {
-                    if(logger.isInfoEnabled()) {
+                    if (logger.isInfoEnabled()) {
                         logger.info("Max number of failed calls has been reached trying to switch over proxy.");
                         logger.info("Current proxy: " + getActiveProxy().get("ActiveProxy"));
                     }
                     switchProxy();
-                    if(logger.isInfoEnabled()) {
+                    if (logger.isInfoEnabled()) {
                         logger.info("Switched to proxy: " + getActiveProxy().get("ActiveProxy"));
                     }
                     numberOfFailedCalls.set(0);
@@ -1672,10 +1702,8 @@ public final class CallManager extends UntypedActor {
             activeProxyPassword = primaryProxyPassword;
             useFallbackProxy.set(false);
         }
-        final Notification notification = notification(WARNING_NOTIFICATION, 14110,
-                "Max number of failed calls has been reached! Outbound proxy switched");
-        final NotificationsDao notifications = storage.getNotificationsDao();
-        notifications.addNotification(notification);
+        String errMsg = "Max number of failed calls has been reached! Outbound proxy switched";
+        globalNotification.sendNotification(GlobalNotification.getWARNING_NOTIFICATION(), 11001, errMsg);
         return getActiveProxy();
     }
 
@@ -1691,55 +1719,38 @@ public final class CallManager extends UntypedActor {
         return proxies;
     }
 
-    private Notification notification(final int log, final int error, final String message) {
-        String version = configuration.subset("runtime-settings").getString("api-version");
-        Sid accountId = null;
-        // Sid callSid = new Sid("CA00000000000000000000000000000000");
-        if (createCallRequest != null) {
-            accountId = createCallRequest.accountId();
-        } else if (switchProxyRequest != null) {
-            accountId = switchProxyRequest.getSid();
-        } else {
-            accountId = new Sid("ACae6e420f425248d6a26948c17a9e2acf");
-        }
-
-        final Notification.Builder builder = Notification.builder();
-        final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
-        builder.setSid(sid);
-        builder.setAccountSid(accountId);
-        // builder.setCallSid(callSid);
-        builder.setApiVersion(version);
-        builder.setLog(log);
-        builder.setErrorCode(error);
-        final String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
-        StringBuilder buffer = new StringBuilder();
-        buffer.append(base);
-        if (!base.endsWith("/")) {
-            buffer.append("/");
-        }
-        buffer.append(error).append(".html");
-        final URI info = URI.create(buffer.toString());
-        builder.setMoreInfo(info);
-        builder.setMessageText(message);
-        final DateTime now = DateTime.now();
-        builder.setMessageDate(now);
-        try {
-            builder.setRequestUrl(new URI(""));
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-
-        builder.setRequestMethod("");
-        builder.setRequestVariables("");
-        buffer = new StringBuilder();
-        buffer.append("/").append(version).append("/Accounts/");
-        buffer.append(accountId.toString()).append("/Notifications/");
-        buffer.append(sid.toString());
-        final URI uri = URI.create(buffer.toString());
-        builder.setUri(uri);
-        return builder.build();
-    }
-
+    /**
+     * private Notification notification(final int log, final int error, final
+     * String message) { String version =
+     * configuration.subset("runtime-settings").getString("api-version"); Sid
+     * accountId = null; // Sid callSid = new
+     * Sid("CA00000000000000000000000000000000"); if (createCallRequest != null)
+     * { accountId = createCallRequest.accountId(); } else if
+     * (switchProxyRequest != null) { accountId = switchProxyRequest.getSid(); }
+     * else { accountId = new Sid("ACae6e420f425248d6a26948c17a9e2acf"); }
+     *
+     * final Notification.Builder builder = Notification.builder(); final Sid
+     * sid = Sid.generate(Sid.Type.NOTIFICATION); builder.setSid(sid);
+     * builder.setAccountSid(accountId); // builder.setCallSid(callSid);
+     * builder.setApiVersion(version); builder.setLog(log);
+     * builder.setErrorCode(error); final String base =
+     * configuration.subset("runtime-settings").getString("error-dictionary-uri");
+     * StringBuilder buffer = new StringBuilder(); buffer.append(base); if
+     * (!base.endsWith("/")) { buffer.append("/"); }
+     * buffer.append(error).append(".html"); final URI info =
+     * URI.create(buffer.toString()); builder.setMoreInfo(info);
+     * builder.setMessageText(message); final DateTime now = DateTime.now();
+     * builder.setMessageDate(now); try { builder.setRequestUrl(new URI("")); }
+     * catch (URISyntaxException e) { e.printStackTrace(); }
+     *
+     * builder.setRequestMethod(""); builder.setRequestVariables(""); buffer =
+     * new StringBuilder();
+     * buffer.append("/").append(version).append("/Accounts/");
+     * buffer.append(accountId.toString()).append("/Notifications/");
+     * buffer.append(sid.toString()); final URI uri =
+     * URI.create(buffer.toString()); builder.setUri(uri); return
+     * builder.build(); } *
+     */
     private SipURI outboundInterface(String transport) {
         SipURI result = null;
         @SuppressWarnings("unchecked")
