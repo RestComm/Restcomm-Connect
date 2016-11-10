@@ -117,10 +117,16 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     controller:'ProfileCtrl'
   });
   $stateProvider.state('restcomm.subaccounts',{
-	    url:'/subaccounts',
-	    templateUrl:'modules/subaccounts.html',
-	    controller:'SubAccountsCtrl'
-	  });
+	url:'/subaccounts',
+	templateUrl:'modules/subaccounts.html',
+    controller:'SubAccountsCtrl'
+  });
+  $stateProvider.state('restcomm.subaccounts-new', {
+    url:'/subaccounts/new',
+    templateUrl:'modules/subaccounts-new.html',
+    controller: 'NewSubAccountCtrl'
+  });
+
   $stateProvider.state('restcomm.register-incoming',{
     url:'/numbers/register-incoming',
     templateUrl:'modules/numbers-incoming-register.html',

@@ -76,6 +76,42 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
 
 });
 
+rcMod.controller('NewSubAccountCtrl', function ($scope, $log, AuthService, RCommCritical,$state, Notifications) {
+    $scope.statuses = ['ACTIVE','UNINITIALIZED','SUSPENDED','INACTIVE','CLOSED'];
+    var loggedAccount = AuthService.getAccount();
+    // not really a smart way to set available roles but will do for now
+    if (loggedAccount.role == 'Administrator')
+        $scope.availableRoles = ['Administrator','Developer'];
+    else
+        $scope.availableRoles = [loggedAccount.role];
+
+    $scope.newAccount = {};
+    $scope.createAccount = function (newAccount) {
+        AuthService.askForPassword().result.then(function (password) {
+            var authHeader = AuthService.basicAuthHeader(loggedAccount.sid, password, true);
+            var convertedAccount = { // the REST API returns expects cammel case while it returns underscored properties (in case we need to use the same form for editing too)
+                EmailAddress : newAccount.email_address,
+                Password: newAccount.password,
+                Role: newAccount.role,
+                Status: newAccount.status,
+                FriendlyName: newAccount.friendly_name ? newAccount.friendly_name : newAccount.email_address
+            }
+            RCommCritical.createAccount(authHeader, $.param(convertedAccount)).then(function (data) {
+                Notifications.success('Account created');
+                $state.go("restcomm.subaccounts");
+            }, function (error) {
+                if (error.status == 401) {
+                    Notifications.error('Authentication error');
+                } else
+                if (error.status == 409) {
+                    Notifications.error('Account already taken. Try another email address.');
+                } else
+                    Notifications.error('Could not create account. Please check data and try again.');
+            });
+        });
+    }
+});
+
 rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, RCommAccounts,Notifications) {
 	$scope.predicate = 'name';  
     $scope.reverse = false;
@@ -177,8 +213,11 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
                 $scope.newPassword2 = '';
                 $scope.profileForm.$setPristine();
                 Notifications.success('Profile updated successfully.');
-            }, function () {
-                Notifications.error('Failure updating profile. Please check data and try again.');
+            }, function (error) {
+                if (error.status == 401) {
+                    Notifications.error('Authentication error.');
+                } else
+                    Notifications.error('Failure updating profile. Please check data and try again.');
             });
             /*
             RCommAccounts.update({accountSid:$scope.urlAccount.sid, authOverride: authHeader, noLoginRedirect: true}, $.param(params), function() {
@@ -196,7 +235,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
         });
     };
     $scope.$on("account-created", function () {
-        console.log("Received account-created notification");
+        //console.log("Received account-created notification");
         $scope.loggedSubAccounts = RCommAccounts.query();
     });
 
