@@ -278,18 +278,23 @@
         <exclude name="**/*.sh"/>
       </zipfileset>
       <zipfileset dir="${release.as7.dir}/mediaserver" filemode="755" prefix="Restcomm-JBoss-AS7-${restcomm.release.version}/mediaserver">
+        <include name="*.sh"/>
         <include name="**/*.sh"/>
       </zipfileset>
       <zipfileset dir="${release.as7.dir}/mediaserver/.autoconfig" filemode="755" prefix="Restcomm-JBoss-AS7-${restcomm.release.version}/mediaserver/.autoconfig">
+        <include name="*.sh"/>
         <include name="**/*.sh"/>
       </zipfileset>
       <zipfileset dir="${release.as7.dir}/mediaserver/.autoconfig/autoconfig.d" filemode="755" prefix="Restcomm-JBoss-AS7-${restcomm.release.version}/mediaserver/.autoconfig/autoconfig.d">
+        <include name="*.sh"/>
         <include name="**/*.sh"/>
       </zipfileset>
       <zipfileset dir="${release.as7.dir}/mediaserver/bin" filemode="755" prefix="Restcomm-JBoss-AS7-${restcomm.release.version}/mediaserver/bin">
+        <include name="*.sh"/>
         <include name="**/*.sh"/>
       </zipfileset>
       <zipfileset dir="${release.as7.dir}/mediaserver/bin" prefix="Restcomm-JBoss-AS7-${restcomm.release.version}/mediaserver/bin">
+        <include name="*.sh"/>
         <exclude name="*.sh"/>
       </zipfileset>
       <zipfileset dir="${release.as7.dir}" excludes="**/bin/** **/server/*/log/** **/server/*/tmp/** **/server/*/work/** **/server/tmp/**" prefix="Restcomm-JBoss-AS7-${restcomm.release.version}"/>
