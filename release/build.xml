@@ -130,6 +130,10 @@
       <fileset dir="${release.as7.dir}/mediaserver/restcomm-media-server"/>
     </move>
     <!-- copy failonerror="true" file="${configuration.directory}/mms-server-beans.xml" tofile="${release.as7.dir}/mediaserver/deploy/server-beans.xml"/ -->
+    <chmod dir="${release.as7.dir}/mediaserver" includes="*.sh" perm="ugo+rx"/>
+    <chmod dir="${release.as7.dir}/mediaserver/bin" includes="*.sh" perm="ugo+rx"/>
+    <chmod dir="${release.as7.dir}/mediaserver/.autoconfig" includes="*.sh" perm="ugo+rx"/>
+    <chmod dir="${release.as7.dir}/mediaserver/.autoconfig/autoconfig.d" includes="*.sh" perm="ugo+rx"/>
   </target>
 
   <target name="build-restcomm">
@@ -202,10 +206,6 @@
     </copy>
 
     <chmod dir="${release.as7.dir}/bin" includes="**/*.sh" perm="ugo+rx"/>
-    <chmod dir="${release.as7.dir}/mediaserver" includes="*.sh" perm="ugo+rx"/>
-    <chmod dir="${release.as7.dir}/mediaserver/bin" includes="*.sh" perm="ugo+rx"/>
-    <chmod dir="${release.as7.dir}/mediaserver/.autoconfig" includes="*.sh" perm="ugo+rx"/>
-    <chmod dir="${release.as7.dir}/mediaserver/.autoconfig/autoconfig.d" includes="*.sh" perm="ugo+rx"/>
 
     <!-- Replace webrtc.war with Olympus.war -->
     <delete failonerror="false" file="${release.as7.dir}/standalone/deployments/webrtc.war"/>
