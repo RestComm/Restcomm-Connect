@@ -17,7 +17,7 @@
   <property name="restcomm-sipservlets-as7.version" value="3.1.${sipservlets-build}"/>
   <!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
   <property name="restcomm-media.version" value="5.1.0"/>
-  <property name="restcomm-media.build" value="26"/>
+  <property name="restcomm-media.build" value="27"/>
   <!--property name="mobicents-diameter.version" value="6.1.2.GA" /-->
 
   <!-- mobicents SIP Servlets 7.x on JBoss AS7-->
@@ -202,6 +202,10 @@
     </copy>
 
     <chmod dir="${release.as7.dir}/bin" includes="**/*.sh" perm="ugo+rx"/>
+    <chmod dir="${release.as7.dir}/mediaserver" includes="*.sh" perm="ugo+rx"/>
+    <chmod dir="${release.as7.dir}/mediaserver/bin" includes="*.sh" perm="ugo+rx"/>
+    <chmod dir="${release.as7.dir}/mediaserver/.autoconfig" includes="*.sh" perm="ugo+rx"/>
+    <chmod dir="${release.as7.dir}/mediaserver/.autoconfig/autoconfig.d" includes="*.sh" perm="ugo+rx"/>
 
     <!-- Replace webrtc.war with Olympus.war -->
     <delete failonerror="false" file="${release.as7.dir}/standalone/deployments/webrtc.war"/>
@@ -272,6 +276,15 @@
       <zipfileset dir="${release.as7.dir}/bin" prefix="Restcomm-JBoss-AS7-${restcomm.release.version}/bin">
         <exclude name="*.sh"/>
         <exclude name="**/*.sh"/>
+      </zipfileset>
+      <zipfileset dir="${release.as7.dir}/mediaserver" filemode="755" prefix="Restcomm-JBoss-AS7-${restcomm.release.version}/mediaserver">
+        <include name="*.sh"/>
+      </zipfileset>
+      <zipfileset dir="${release.as7.dir}/mediaserver/.autoconfig" filemode="755" prefix="Restcomm-JBoss-AS7-${restcomm.release.version}/mediaserver/.autoconfig">
+        <include name="*.sh"/>
+      </zipfileset>
+      <zipfileset dir="${release.as7.dir}/mediaserver/.autoconfig/autoconfig.d" filemode="755" prefix="Restcomm-JBoss-AS7-${restcomm.release.version}/mediaserver/.autoconfig/autoconfig.d">
+        <include name="*.sh"/>
       </zipfileset>
       <zipfileset dir="${release.as7.dir}/mediaserver/bin" filemode="755" prefix="Restcomm-JBoss-AS7-${restcomm.release.version}/mediaserver/bin">
         <include name="*.sh"/>
