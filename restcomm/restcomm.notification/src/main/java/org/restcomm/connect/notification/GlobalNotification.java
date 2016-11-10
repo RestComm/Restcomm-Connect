@@ -13,14 +13,11 @@ import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.commons.dao.Sid;
 
-
-
 /**
  *
  * @author charles.roufay
  */
 public class GlobalNotification {
-
 
     public static int getERROR_NOTIFICATION() {
         return ERROR_NOTIFICATION;
@@ -43,22 +40,24 @@ public class GlobalNotification {
     private final DaoManager storage;
     private Notification notification = null;
     private NotificationsDao notifications = null;
-        // application data.
+    // application data.
     //private HttpRequestDescriptor request;
     //private HttpResponseDescriptor response;
     //notifications.addNotification(notification);
     private URI uri = URI.create("http://documentation.telestax.com/connect/api/");
+
     public void sendNotification(final int errorWarningCode, final int apiErrorCode, final String errorMessage) {
-        notification = notification(errorWarningCode, apiErrorCode, errorMessage, uri,"","","");
+        notification = notification(errorWarningCode, apiErrorCode, errorMessage, uri, "", "", "");
         notifications = storage.getNotificationsDao();
         notifications.addNotification(notification);
     }
-       protected Notification notification(final int errorWarningCode, final int apiErrorCode,
-               final String errorMessage,
-               final URI requestUrl,
-               final String requestMethod,
-               final String requestVariables,
-               final String responseHeaders) {
+
+    protected Notification notification(final int errorWarningCode, final int apiErrorCode,
+            final String errorMessage,
+            final URI requestUrl,
+            final String requestMethod,
+            final String requestVariables,
+            final String responseHeaders) {
 
         final Notification.Builder builder = Notification.builder();
         final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
@@ -74,7 +73,9 @@ public class GlobalNotification {
             buffer.append("/");
         }
         buffer.append(apiErrorCode).append(".html");
-        final URI info = URI.create(buffer.toString());
+        // final URI info = URI.create(buffer.toString());
+        String uriCreate = "http://documentation.telestax.com/connect/api/error-reference.html";
+        final URI info = URI.create(uriCreate);
         builder.setMoreInfo(info);
         builder.setMessageText(errorMessage);
         final DateTime now = DateTime.now();
@@ -90,6 +91,6 @@ public class GlobalNotification {
         final URI uri = URI.create(buffer.toString());
         builder.setUri(uri);
         return builder.build();
-         }
+    }
 
 }
