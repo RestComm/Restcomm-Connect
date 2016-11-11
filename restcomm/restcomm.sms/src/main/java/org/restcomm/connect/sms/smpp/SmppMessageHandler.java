@@ -66,12 +66,12 @@ public class SmppMessageHandler extends UntypedActor  {
         final ActorRef self = self();
         if (message instanceof SmppInboundMessageEntity){
             if(logger.isInfoEnabled()) {
-                logger.info("SmppMessageHandler processing Inbound Message");
+                logger.info("SmppMessageHandler processing Inbound Message " + message);
             }
             inbound((SmppInboundMessageEntity) message);
         }else if(message instanceof SmppOutboundMessageEntity ){
             if(logger.isInfoEnabled()) {
-                logger.info("SmppMessageHandler processing Outbound Message");
+                logger.info("SmppMessageHandler processing Outbound Message " + message);
             }
             outbound((SmppOutboundMessageEntity) message);
         } else if (message instanceof CreateSmsSession) {
@@ -193,9 +193,9 @@ public class SmppMessageHandler extends UntypedActor  {
     }
 
     public void outbound(SmppOutboundMessageEntity request) throws SmppInvalidArgumentException, IOException {
-        if(logger.isInfoEnabled()) {
-            logger.info("Message is Received by the SmppSessionOutbound Class");
-        }
+//        if(logger.isInfoEnabled()) {
+//            logger.info("Message is Received by the SmppSessionOutbound Class");
+//        }
 
         byte[] textBytes;
         int smppTonNpiValue =  Integer.parseInt(SmppService.getSmppTonNpiValue()) ;
@@ -214,13 +214,12 @@ public class SmppMessageHandler extends UntypedActor  {
         submit0.setShortMessage(textBytes);
         try {
             if(logger.isInfoEnabled()) {
-                logger.info("To : " + request.getSmppTo() + " From : " + request.getSmppFrom() );
+                logger.info("Sending SubmitSM for " + request);
             }
             SmppClientOpsThread.getSmppSession().submit(submit0, 10000); //send message through SMPP connector
         } catch (RecoverablePduException | UnrecoverablePduException
                 | SmppTimeoutException | SmppChannelException
                 | InterruptedException e) {
-            // TODO Auto-generated catch block
             logger.error("SMPP message cannot be sent : " + e );
         }
     }
