@@ -18,7 +18,6 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-
 package org.restcomm.connect.sms.smpp;
 
 import akka.actor.ActorRef;
@@ -45,6 +44,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.restcomm.connect.notification.GlobalNotification;
 
 /**
  * @author amit bhayani
@@ -61,6 +61,7 @@ public class SmppClientOpsThread implements Runnable {
     private static SmppSession getSmppSession;
     protected volatile boolean started = true;
     private static int sipPort;
+    private final GlobalNotification globalNotification;
 
     private final ActorRef smppMessageHandler;
 
@@ -68,8 +69,8 @@ public class SmppClientOpsThread implements Runnable {
         this.clientBootstrap = clientBootstrap;
         this.sipPort = sipPort;
         this.smppMessageHandler = smppMessageHandler;
+        this.globalNotification = new GlobalNotification(SmppService.getConfiguration, SmppService.getDaoStorage);
     }
-
 
     protected void setStarted(boolean started) {
         this.started = started;
@@ -122,26 +123,22 @@ public class SmppClientOpsThread implements Runnable {
                                 if (!change.getSmpp().isStarted()) {
                                     pendingChanges.remove(change);
                                     // changes.remove();
-                                } else {
-                                    if (change.getExecutionTime() <= System
-                                            .currentTimeMillis()) {
-                                        pendingChanges.remove(change);
-                                        // changes.remove();
-                                        initiateConnection(change.getSmpp());
-                                    }
+                                } else if (change.getExecutionTime() <= System
+                                        .currentTimeMillis()) {
+                                    pendingChanges.remove(change);
+                                    // changes.remove();
+                                    initiateConnection(change.getSmpp());
                                 }
                                 break;
                             case ChangeRequest.ENQUIRE_LINK:
                                 if (!change.getSmpp().isStarted()) {
                                     pendingChanges.remove(change);
                                     // changes.remove();
-                                } else {
-                                    if (change.getExecutionTime() <= System
-                                            .currentTimeMillis()) {
-                                        pendingChanges.remove(change);
-                                        // changes.remove();
-                                        enquireLink(change.getSmpp());
-                                    }
+                                } else if (change.getExecutionTime() <= System
+                                        .currentTimeMillis()) {
+                                    pendingChanges.remove(change);
+                                    // changes.remove();
+                                    enquireLink(change.getSmpp());
                                 }
                                 break;
                         }
@@ -153,8 +150,9 @@ public class SmppClientOpsThread implements Runnable {
                 }
 
             } catch (InterruptedException e) {
-                logger.error("Error while looping SmppClientOpsThread thread",
-                        e);
+                String errMsg = "Error while looping SmppClientOpsThread thread" + e;
+                logger.error(errMsg);
+                globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 13001, errMsg);
             }
         }
 
@@ -192,10 +190,9 @@ public class SmppClientOpsThread implements Runnable {
 
             } catch (Exception e) {
 
-                logger.error(
-                        String.format(
-                                "Exception while trying to send ENQUIRE_LINK for ESME SystemId=%s",
-                                esme.getSystemId()), e);
+                String errMsg = String.format("Exception while trying to send ENQUIRE_LINK for ESME SystemId=%s", esme.getSystemId()) + e;
+                logger.error(errMsg);
+                globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 13001, errMsg);
                 // For all other exceptions lets close session and re-try
                 // connect
                 smppSession.close();
@@ -260,7 +257,6 @@ public class SmppClientOpsThread implements Runnable {
 
             session0 = clientBootstrap.bind(config0, sessionHandler);
 
-
             //getting session to be used to process SMS received from Restcomm
             getSmppSession = session0;
 
@@ -270,10 +266,9 @@ public class SmppClientOpsThread implements Runnable {
             // Finally set Enquire Link schedule
             this.scheduleEnquireLink(esme);
         } catch (Exception e) {
-            logger.error(
-                    String.format(
-                            "Exception when trying to bind client SMPP connection for ESME systemId=%s",
-                            esme.getSystemId()), e);
+            String errMsg = String.format("Exception when trying to bind client SMPP connection for ESME systemId=%s", esme.getSystemId()) + e;
+            logger.error(errMsg);
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 13001, errMsg);
             if (session0 != null) {
                 session0.close();
             }
@@ -282,7 +277,6 @@ public class SmppClientOpsThread implements Runnable {
     }
 
     //*************Inner Class******************
-
     protected class ClientSmppSessionHandler implements SmppSessionHandler {
 
         //private final Smpp esme ;
@@ -310,10 +304,9 @@ public class SmppClientOpsThread implements Runnable {
 
         @Override
         public void fireChannelUnexpectedlyClosed() {
-            logger.error("ChannelUnexpectedlyClosed for Smpp "
-                    + this.esme.getName()
-                    + " Closing Smpp session and restrting BIND process again");
-            this.esme.getSmppSession().close();
+            String errMsg = "ChannelUnexpectedlyClosed for Smpp " + this.esme.getName() + " Closing Smpp session and restrting BIND process again";
+            logger.error(errMsg);
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 13001, errMsg);
 
             // Schedule the connection again
             scheduleConnect(this.esme);
@@ -370,24 +363,26 @@ public class SmppClientOpsThread implements Runnable {
             return response;
         }
 
-
         @Override
         public void fireRecoverablePduException(RecoverablePduException e) {
-            logger.warn("RecoverablePduException received for Smpp "
-                    + this.esme.getName(), e);
+            String errMsg = "Exception while trying to dispatch incoming SMPP message to Restcomm: " + e;
+            logger.error(errMsg);
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 13001, errMsg);
         }
 
         @Override
-        public void fireUnexpectedPduResponseReceived(PduResponse pduResponse) {
+        public void fireUnexpectedPduResponseReceived(PduResponse pduResponse
+        ) {
             logger.warn("UnexpectedPduResponseReceived received for Smpp "
                     + this.esme.getName() + " PduResponse=" + pduResponse);
         }
 
         @Override
-        public void fireUnknownThrowable(Throwable e) {
-            logger.error("UnknownThrowable for Smpp " + this.esme.getName()
-                            + " Closing Smpp session and restarting BIND process again",
-                    e);
+        public void fireUnknownThrowable(Throwable e
+        ) {
+            String errMsg = "UnknownThrowable for Smpp " + this.esme.getName() + " Closing Smpp session and restarting BIND process again" + e;
+            logger.error(errMsg);
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 13001, errMsg);
             // TODO is this ok?
 
             this.esme.getSmppSession().close();
@@ -398,12 +393,11 @@ public class SmppClientOpsThread implements Runnable {
         }
 
         @Override
-        public void fireUnrecoverablePduException(UnrecoverablePduException e) {
-            logger.error(
-                    "UnrecoverablePduException for Smpp "
-                            + this.esme.getName()
-                            + " Closing Smpp session and restrting BIND process again",
-                    e);
+        public void fireUnrecoverablePduException(UnrecoverablePduException e
+        ) {
+            String errMsg = "UnrecoverablePduException for Smpp " + this.esme.getName() + " Closing Smpp session and restrting BIND process again" + e;
+            logger.error(errMsg);
+            globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 13001, errMsg);
 
             this.esme.getSmppSession().close();
 

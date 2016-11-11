@@ -114,6 +114,7 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.restcomm.connect.notification.GlobalNotification;
 import scala.concurrent.duration.Duration;
 
 /**
@@ -211,7 +212,7 @@ public final class Call extends UntypedActor {
     private Configuration runtimeSettings;
     private Configuration configuration;
     private boolean disableSdpPatchingOnUpdatingMediaSession;
-
+    private final GlobalNotification globalNotification;
     private Sid inboundCallSid;
 
     public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
@@ -239,6 +240,7 @@ public final class Call extends UntypedActor {
         this.stopping = new State("stopping", new Stopping(source), null);
         this.completed = new State("completed", new Completed(source), null);
         this.failed = new State("failed", new Failed(source), null);
+        this.globalNotification = new GlobalNotification(configuration, CallManagerProxy.getDaoStorage);
 
         // Transitions for the FSM
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -382,26 +384,29 @@ public final class Call extends UntypedActor {
             String contactAddress = ((SipURI) contactAddr.getURI()).getHost();
 
             if (initialIpBeforeLB != null) {
-                if (initialPortBeforeLB == null)
+                if (initialPortBeforeLB == null) {
                     initialPortBeforeLB = "5060";
-                if(logger.isInfoEnabled()) {
+                }
+                if (logger.isInfoEnabled()) {
                     logger.info("We are behind load balancer, storing Initial Remote Address " + initialIpBeforeLB + ":"
-                        + initialPortBeforeLB + " to the session for later use");
+                            + initialPortBeforeLB + " to the session for later use");
                 }
                 realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
                 uri = factory.createSipURI(null, realIP);
             } else if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
                     && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
-                if(logger.isInfoEnabled()) {
+                if (logger.isInfoEnabled()) {
                     logger.info("Contact header address " + contactAddr.toString()
-                        + " is a private network ip address, storing Initial Remote Address " + realIP + ":" + realPort
-                        + " to the session for later use");
+                            + " is a private network ip address, storing Initial Remote Address " + realIP + ":" + realPort
+                            + " to the session for later use");
                 }
                 realIP = realIP + ":" + realPort;
                 uri = factory.createSipURI(null, realIP);
             }
         } catch (Exception e) {
-            logger.warning("Exception while trying to get the Initial IP Address and Port: "+e);
+            String errMsg = "Exception while trying to get the Initial IP Address and Port: " + e;
+            logger.warning(errMsg);
+            globalNotification.sendNotification(GlobalNotification.getWARNING_NOTIFICATION(), 11001, errMsg);
 
         }
         return uri;
@@ -413,10 +418,10 @@ public final class Call extends UntypedActor {
         final ActorRef self = self();
         final ActorRef sender = sender();
         final State state = fsm.state();
-        if(logger.isInfoEnabled()) {
-            logger.info("********** Call's " + self().path() + " Current State: \"" + state.toString()+" direction: "+direction);
+        if (logger.isInfoEnabled()) {
+            logger.info("********** Call's " + self().path() + " Current State: \"" + state.toString() + " direction: " + direction);
             logger.info("********** Call " + self().path() + " Processing Message: \"" + klass.getName() + " sender : "
-                + sender.path().toString());
+                    + sender.path().toString());
         }
 
         if (Observe.class.equals(klass)) {
@@ -483,11 +488,13 @@ public final class Call extends UntypedActor {
     }
 
     private void addCustomHeaders(SipServletMessage message) {
-        if (apiVersion != null)
+        if (apiVersion != null) {
             message.addHeader("X-RestComm-ApiVersion", apiVersion);
-        if (accountId != null)
+        }
+        if (accountId != null) {
             message.addHeader("X-RestComm-AccountSid", accountId.toString());
-        message.addHeader("X-RestComm-CallSid", instanceId+"-"+id.toString());
+        }
+        message.addHeader("X-RestComm-CallSid", instanceId + "-" + id.toString());
     }
 
     // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
@@ -670,8 +677,9 @@ public final class Call extends UntypedActor {
             session.setHandler("CallManager");
             // Issue: https://telestax.atlassian.net/browse/RESTCOMM-608
             // If this is a call to Restcomm client or SIP URI bypass LB
-            if (logger.isInfoEnabled())
-                logger.info("bypassLoadBalancer is set to: "+RestcommConfiguration.getInstance().getMain().getBypassLbForClients());
+            if (logger.isInfoEnabled()) {
+                logger.info("bypassLoadBalancer is set to: " + RestcommConfiguration.getInstance().getMain().getBypassLbForClients());
+            }
             if (RestcommConfiguration.getInstance().getMain().getBypassLbForClients()) {
                 if (type.equals(CreateCall.Type.CLIENT) || type.equals(CreateCall.Type.SIP)) {
                     ((SipSessionExt) session).setBypassLoadBalancer(true);
@@ -717,7 +725,7 @@ public final class Call extends UntypedActor {
 //                    ringing.addHeader("X-RestComm-CallSid", id.toString());
                     ringing.send();
                 } catch (IllegalStateException exception) {
-                    if(logger.isDebugEnabled()) {
+                    if (logger.isDebugEnabled()) {
                         logger.debug("Exception while creating 180 response to inbound invite request");
                     }
                     fsm.transition(message, canceled);
@@ -735,10 +743,10 @@ public final class Call extends UntypedActor {
 
                 // final UntypedActorContext context = getContext();
                 // context.setReceiveTimeout(Duration.Undefined());
-                SipURI initialInetUri = getInitialIpAddressPort((SipServletResponse)message);
+                SipURI initialInetUri = getInitialIpAddressPort((SipServletResponse) message);
 
                 if (initialInetUri != null) {
-                    ((SipServletResponse)message).getSession().setAttribute("realInetUri", initialInetUri);
+                    ((SipServletResponse) message).getSession().setAttribute("realInetUri", initialInetUri);
                 }
             }
 
@@ -771,19 +779,20 @@ public final class Call extends UntypedActor {
                     addCustomHeaders(cancel);
                     cancel.send();
                     if (logger.isInfoEnabled()) {
-                        logger.info("Sent CANCEL for Call: "+self().path()+", state: "+fsm.state()+", direction: "+direction);
+                        logger.info("Sent CANCEL for Call: " + self().path() + ", state: " + fsm.state() + ", direction: " + direction);
                     }
                 }
             } catch (Exception e) {
                 StringBuffer strBuffer = new StringBuffer();
-                strBuffer.append("Exception while trying to create Cancel for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" call state: "+fsm.state());
+                strBuffer.append("Exception while trying to create Cancel for Call with the following details, from: " + from + " to: " + to + " direction: " + direction + " call state: " + fsm.state());
                 if (invite != null) {
-                    strBuffer.append(" , invite RURI: "+invite.getRequestURI());
+                    strBuffer.append(" , invite RURI: " + invite.getRequestURI());
                 } else {
                     strBuffer.append(" , invite is NULL! ");
                 }
-                strBuffer.append(" Exception: "+e.getMessage());
+                strBuffer.append(" Exception: " + e.getMessage());
                 logger.warning(strBuffer.toString());
+                globalNotification.sendNotification(GlobalNotification.getWARNING_NOTIFICATION(), 11001, strBuffer.toString());
             }
             msController.tell(new CloseMediaSession(), source);
         }
@@ -800,7 +809,7 @@ public final class Call extends UntypedActor {
             //A no-answer call will be cancelled and will arrive here. In that case don't change the external case
             //since no-answer is a final state and we need to keep it so observer knows how the call ended
 //            if (!external.equals(CallStateChanged.State.NO_ANSWER)) {
-                external = CallStateChanged.State.CANCELED;
+            external = CallStateChanged.State.CANCELED;
 //                final CallStateChanged event = new CallStateChanged(external);
 //                for (final ActorRef observer : observers) {
 //                    observer.tell(event, source);
@@ -809,8 +818,8 @@ public final class Call extends UntypedActor {
 
             // Record call data
             if (outgoingCallRecord != null && isOutbound()) {
-                if(logger.isInfoEnabled()) {
-                    logger.info("Going to update CDR to CANCEL, call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Going to update CDR to CANCEL, call sid: " + id + " from: " + from + " to: " + to + " direction: " + direction);
                 }
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
@@ -820,6 +829,7 @@ public final class Call extends UntypedActor {
     }
 
     private abstract class Failing extends AbstractAction {
+
         public Failing(final ActorRef source) {
             super(source);
         }
@@ -850,7 +860,7 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("Call moves to failing state because no answer");
             }
             fsm.transition(message, noAnswer);
@@ -978,13 +988,13 @@ public final class Call extends UntypedActor {
                 addCustomHeaders(resp);
                 if (message instanceof CallFail) {
                     String reason = ((CallFail) message).getReason();
-                    if (reason != null)
+                    if (reason != null) {
                         resp.addHeader("Reason", reason);
+                    }
                 }
                 resp.send();
-            } else {
-                if (message instanceof CallFail)
-                    sendBye(new Hangup(((CallFail) message).getReason()));
+            } else if (message instanceof CallFail) {
+                sendBye(new Hangup(((CallFail) message).getReason()));
             }
 
             // Notify the observers.
@@ -1018,16 +1028,11 @@ public final class Call extends UntypedActor {
             CreateMediaSession command = null;
             if (isOutbound()) {
                 command = new CreateMediaSession("sendrecv", "", true, webrtc, id);
-            } else {
-                if (!liveCallModification) {
-                    command = generateRequest(invite);
-                } else {
-                    if (lastResponse != null && lastResponse.getStatus() == 200) {
-                        command = generateRequest(lastResponse);
-                    }
-                    // TODO no else may lead to NullPointerException
-                }
-            }
+            } else if (!liveCallModification) {
+                command = generateRequest(invite);
+            } else if (lastResponse != null && lastResponse.getStatus() == 200) {
+                command = generateRequest(lastResponse);
+            } // TODO no else may lead to NullPointerException
             msController.tell(command, source);
         }
 
@@ -1035,14 +1040,14 @@ public final class Call extends UntypedActor {
             String externalIp = null;
             final SipURI externalSipUri = (SipURI) sipMessage.getSession().getAttribute("realInetUri");
             if (externalSipUri != null) {
-                if(logger.isInfoEnabled()) {
-                    logger.info("ExternalSipUri stored in the sip session : "+externalSipUri.toString()+" will use host: "+externalSipUri.getHost().toString());
+                if (logger.isInfoEnabled()) {
+                    logger.info("ExternalSipUri stored in the sip session : " + externalSipUri.toString() + " will use host: " + externalSipUri.getHost().toString());
                 }
                 externalIp = externalSipUri.getHost().toString();
             } else {
                 externalIp = sipMessage.getInitialRemoteAddr();
-                if(logger.isInfoEnabled()) {
-                    logger.info("ExternalSipUri stored in the session was null, will use the message InitialRemoteAddr: "+externalIp);
+                if (logger.isInfoEnabled()) {
+                    logger.info("ExternalSipUri stored in the session was null, will use the message InitialRemoteAddr: " + externalIp);
                 }
             }
             final byte[] sdp = sipMessage.getRawContent();
@@ -1081,9 +1086,10 @@ public final class Call extends UntypedActor {
                 addCustomHeaders(ack);
                 SipSession session = response.getSession();
 
-                if (initialIpBeforeLB != null ) {
-                    if (initialPortBeforeLB == null)
+                if (initialIpBeforeLB != null) {
+                    if (initialPortBeforeLB == null) {
                         initialPortBeforeLB = "5060";
+                    }
                     if (logger.isDebugEnabled()) {
                         logger.debug("We are behind load balancer, checking if the request URI needs to be patched");
                     }
@@ -1093,30 +1099,33 @@ public final class Call extends UntypedActor {
                     try {
                         // https://github.com/RestComm/Restcomm-Connect/issues/1336 checking if the initial IP and Port behind LB is part of the route set or not
                         ListIterator<? extends Address> routes = ack.getAddressHeaders(RouteHeader.NAME);
-                        while(routes.hasNext() && patchRURI) {
+                        while (routes.hasNext() && patchRURI) {
                             SipURI route = (SipURI) routes.next().getURI();
                             String routeHost = route.getHost();
                             int routePort = route.getPort();
-                            if(routePort < 0) {
+                            if (routePort < 0) {
                                 routePort = 5060;
                             }
                             if (logger.isDebugEnabled()) {
                                 logger.debug("Checking if route " + routeHost + ":" + routePort + " is matching ip and port before LB " + initialIpBeforeLB + ":"
-                                    + initialPortBeforeLB + " for the ACK request");
+                                        + initialPortBeforeLB + " for the ACK request");
                             }
-                            if(routeHost.equalsIgnoreCase(initialIpBeforeLB) && routePort == Integer.parseInt(initialPortBeforeLB)) {
+                            if (routeHost.equalsIgnoreCase(initialIpBeforeLB) && routePort == Integer.parseInt(initialPortBeforeLB)) {
                                 if (logger.isDebugEnabled()) {
                                     logger.debug("route " + route + " is matching ip and port before LB " + initialIpBeforeLB + ":"
-                                        + initialPortBeforeLB + " for the ACK request, so not patching the Request-URI");
+                                            + initialPortBeforeLB + " for the ACK request, so not patching the Request-URI");
                                 }
                                 patchRURI = false;
                             }
                         }
                     } catch (ServletParseException e) {
-                        logger.error("Impossible to parse the route set from the ACK " + ack, e);
+
+                        String errMsg = "Impossible to parse the route set from the ACK " + ack + e;
+                        logger.error(errMsg);
+                        globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
                     }
-                    if(patchRURI) {
-                        if(logger.isDebugEnabled()) {
+                    if (patchRURI) {
+                        if (logger.isDebugEnabled()) {
                             logger.debug("We are behind load balancer, will use: " + initialIpBeforeLB + ":"
                                     + initialPortBeforeLB + " for ACK message, ");
                         }
@@ -1135,16 +1144,16 @@ public final class Call extends UntypedActor {
                     if (realInetUri != null
                             && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())
                             && (ackRURIPort != realInetUri.getPort())) {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("Using the real ip address and port of the sip client " + realInetUri.toString()
-                                + " as a request uri of the ACK");
-                    }
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Using the real ip address and port of the sip client " + realInetUri.toString()
+                                    + " as a request uri of the ACK");
+                        }
 
                         ack.setRequestURI(realInetUri);
                     }
                 }
                 ack.send();
-                if(logger.isInfoEnabled()) {
+                if (logger.isInfoEnabled()) {
                     logger.info("Just sent out ACK : " + ack.toString());
                 }
             }
@@ -1232,11 +1241,11 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-             if (!receivedBye) {
-                 // Conference was stopped and this call was asked to leave
-                 // Send BYE to remote client
-                 sendBye(new Hangup("Conference time limit reached"));
-             }
+            if (!receivedBye) {
+                // Conference was stopped and this call was asked to leave
+                // Send BYE to remote client
+                sendBye(new Hangup("Conference time limit reached"));
+            }
             msController.tell(message, super.source);
         }
 
@@ -1263,8 +1272,8 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            if(logger.isInfoEnabled()) {
-                logger.info("Completing Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" current external state: "+external);
+            if (logger.isInfoEnabled()) {
+                logger.info("Completing Call sid: " + id + " from: " + from + " to: " + to + " direction: " + direction + " current external state: " + external);
             }
 
             //In the case of canceled that reach the completed method, don't change the external state
@@ -1277,8 +1286,8 @@ public final class Call extends UntypedActor {
                 observer.tell(event, source);
             }
 
-            if(logger.isInfoEnabled()) {
-                logger.info("Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" new external state: "+external);
+            if (logger.isInfoEnabled()) {
+                logger.info("Call sid: " + id + " from: " + from + " to: " + to + " direction: " + direction + " new external state: " + external);
             }
 
             // Record call data
@@ -1289,7 +1298,7 @@ public final class Call extends UntypedActor {
                 final int seconds = (int) ((now.getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
                 outgoingCallRecord = outgoingCallRecord.setDuration(seconds);
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
-                if(logger.isDebugEnabled()) {
+                if (logger.isDebugEnabled()) {
                     logger.debug("Start: " + outgoingCallRecord.getStartTime());
                     logger.debug("End: " + outgoingCallRecord.getEndTime());
                     logger.debug("Duration: " + seconds);
@@ -1367,8 +1376,8 @@ public final class Call extends UntypedActor {
             while (observerIter.hasNext()) {
                 ActorRef observerNext = observerIter.next();
                 observerNext.tell(stopObservingMessage, self);
-                if(logger.isInfoEnabled()) {
-                    logger.info("Sent stop observing for call, from: "+from+" to: "+to+" direction: "+direction+" to observer: "+observerNext.path()+" observer is terminated: "+observerNext.isTerminated());
+                if (logger.isInfoEnabled()) {
+                    logger.info("Sent stop observing for call, from: " + from + " to: " + to + " direction: " + direction + " to observer: " + observerNext.path() + " observer is terminated: " + observerNext.isTerminated());
                 }
 
 //                this.observers.remove(observerNext);
@@ -1403,7 +1412,7 @@ public final class Call extends UntypedActor {
     private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
         inboundCallSid = message.callSid();
         if (is(ringing) && !invite.getSession().getState().equals(SipSession.State.TERMINATED)) {
-                fsm.transition(message, initializing);
+            fsm.transition(message, initializing);
         } else {
             fsm.transition(message, canceled);
         }
@@ -1423,19 +1432,17 @@ public final class Call extends UntypedActor {
 
     private void onCancel(Cancel message, ActorRef self, ActorRef sender) throws Exception {
         if (is(initializing) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
-            if(logger.isInfoEnabled()) {
-                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state()+", will Cancel the call");
+            if (logger.isInfoEnabled()) {
+                logger.info("Got CANCEL for Call with the following details, from: " + from + " to: " + to + " direction: " + direction + " state: " + fsm.state() + ", will Cancel the call");
             }
             fsm.transition(message, canceling);
         } else if (is(inProgress)) {
-            if(logger.isInfoEnabled()) {
-                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state()+", will Hangup the call");
+            if (logger.isInfoEnabled()) {
+                logger.info("Got CANCEL for Call with the following details, from: " + from + " to: " + to + " direction: " + direction + " state: " + fsm.state() + ", will Hangup the call");
             }
             onHangup(new Hangup(), self(), sender());
-        } else {
-            if(logger.isInfoEnabled()) {
-                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state());
-            }
+        } else if (logger.isInfoEnabled()) {
+            logger.info("Got CANCEL for Call with the following details, from: " + from + " to: " + to + " direction: " + direction + " state: " + fsm.state());
         }
     }
 
@@ -1443,9 +1450,9 @@ public final class Call extends UntypedActor {
         getContext().setReceiveTimeout(Duration.Undefined());
         if (is(ringing) || is(dialing)) {
             fsm.transition(message, failingNoAnswer);
-        } else if(logger.isInfoEnabled()) {
-            logger.info("Timeout received for Call : "+self().path()+" isTerminated(): "+self().isTerminated()+". Sender: " + sender.path().toString() + " State: " + this.fsm.state()
-                + " Direction: " + direction + " From: " + from + " To: " + to);
+        } else if (logger.isInfoEnabled()) {
+            logger.info("Timeout received for Call : " + self().path() + " isTerminated(): " + self().isTerminated() + ". Sender: " + sender.path().toString() + " State: " + this.fsm.state()
+                    + " Direction: " + direction + " From: " + from + " To: " + to);
         }
     }
 
@@ -1474,7 +1481,7 @@ public final class Call extends UntypedActor {
                 if (!direction.contains("outbound")) {
                     // Initial Call sent BYE
                     recording = false;
-                    if(logger.isInfoEnabled()) {
+                    if (logger.isInfoEnabled()) {
                         logger.info("Call Direction: " + direction);
                         logger.info("Initial Call - Will stop recording now");
                     }
@@ -1490,16 +1497,15 @@ public final class Call extends UntypedActor {
                 // Tell conference to remove the call from participants list
                 // before moving to a stopping state
                 conference.tell(new RemoveParticipant(self), self);
-            } else {
-                // Clean media resources as necessary
-                if (!is(completed))
-                    fsm.transition(message, stopping);
+            } else // Clean media resources as necessary
+            if (!is(completed)) {
+                fsm.transition(message, stopping);
             }
         } else if ("INFO".equalsIgnoreCase(method)) {
             processInfo(message);
         } else if ("ACK".equalsIgnoreCase(method)) {
             if (isInbound() && is(initializing)) {
-                if(logger.isInfoEnabled()) {
+                if (logger.isInfoEnabled()) {
                     logger.info("ACK received moving state to inProgress");
                 }
                 fsm.transition(message, inProgress);
@@ -1519,8 +1525,8 @@ public final class Call extends UntypedActor {
             case SipServletResponse.SC_RINGING:
             case SipServletResponse.SC_SESSION_PROGRESS: {
                 if (!is(ringing)) {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("Got 180 Ringing for Call: "+self().path()+" To: "+to+" sender: "+sender.path()+" observers size: "+observers.size());
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Got 180 Ringing for Call: " + self().path() + " To: " + to + " sender: " + sender.path() + " observers size: " + observers.size());
                     }
                     fsm.transition(message, ringing);
                 }
@@ -1538,7 +1544,6 @@ public final class Call extends UntypedActor {
 //                for (final ActorRef observer : observers) {
 //                    observer.tell(event, self);
 //                }
-
                 // XXX shouldnt it move to failingBusy IF dialing ????
 //                if (is(dialing)) {
 //                    break;
@@ -1551,7 +1556,7 @@ public final class Call extends UntypedActor {
             case SipServletResponse.SC_UNAUTHORIZED:
             case SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED: {
                 // Handles Auth for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
-                if ((this.username!= null || this.username.isEmpty()) && (this.password != null && this.password.isEmpty())) {
+                if ((this.username != null || this.username.isEmpty()) && (this.password != null && this.password.isEmpty())) {
                     sendCallInfoToObservers();
                     fsm.transition(message, failed);
                 } else {
@@ -1585,24 +1590,25 @@ public final class Call extends UntypedActor {
             default: {
                 if (code >= 400 && code != 487) {
                     if (code == 487 && isOutbound()) {
-                            String initialIpBeforeLB = null;
-                            String initialPortBeforeLB = null;
-                            try {
-                                initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
-                                initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
-                            } catch (Exception e) {
-                                if (logger.isDebugEnabled()) {
-                                    logger.debug("Exception during check of LB custom headers for IP address and port");
-                                }
+                        String initialIpBeforeLB = null;
+                        String initialPortBeforeLB = null;
+                        try {
+                            initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+                            initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
+                        } catch (Exception e) {
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Exception during check of LB custom headers for IP address and port");
                             }
+                        }
                         final SipServletRequest ack = message.createAck();
                         addCustomHeaders(ack);
                         SipSession session = message.getSession();
 
-                        if (initialIpBeforeLB != null ) {
-                            if (initialPortBeforeLB == null)
+                        if (initialIpBeforeLB != null) {
+                            if (initialPortBeforeLB == null) {
                                 initialPortBeforeLB = "5060";
-                            if(logger.isInfoEnabled()) {
+                            }
+                            if (logger.isInfoEnabled()) {
                                 logger.info("We are behind load balancer, will use: " + initialIpBeforeLB + ":"
                                         + initialPortBeforeLB + " for ACK message, ");
                             }
@@ -1621,7 +1627,7 @@ public final class Call extends UntypedActor {
                             if (realInetUri != null
                                     && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())
                                     && (ackRURIPort != realInetUri.getPort())) {
-                                if(logger.isInfoEnabled()) {
+                                if (logger.isInfoEnabled()) {
                                     logger.info("Using the real ip address and port of the sip client " + realInetUri.toString()
                                             + " as a request uri of the ACK");
                                 }
@@ -1629,7 +1635,7 @@ public final class Call extends UntypedActor {
                             }
                         }
                         ack.send();
-                        if(logger.isInfoEnabled()) {
+                        if (logger.isInfoEnabled()) {
                             logger.info("Just sent out ACK : " + ack.toString());
                         }
                     }
@@ -1641,14 +1647,14 @@ public final class Call extends UntypedActor {
     }
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
-        if(logger.isDebugEnabled()) {
-            logger.debug("Got Hangup for Call, from: "+from+" to: "+to+" state: "+fsm.state()+" conferencing: "+conferencing +" conference: "+conference);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Got Hangup for Call, from: " + from + " to: " + to + " state: " + fsm.state() + " conferencing: " + conferencing + " conference: " + conference);
         }
 
         // Stop recording if necessary
         if (recording) {
             recording = false;
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("Call - Will stop recording now");
             }
             msController.tell(new Stop(true), self);
@@ -1659,7 +1665,7 @@ public final class Call extends UntypedActor {
                 // Tell conference to remove the call from participants list
                 // before moving to a stopping state
                 conference.tell(new RemoveParticipant(self()), self());
-            }else {
+            } else {
                 if (!receivedBye) {
                     // Send BYE to client if RestComm took initiative to hangup the call
                     sendBye(message);
@@ -1675,21 +1681,22 @@ public final class Call extends UntypedActor {
         final SipSession session = invite.getSession();
         String sessionState = session.getState().name();
         if (logger.isInfoEnabled()) {
-            logger.info("About to send BYE, session state: "+sessionState);
+            logger.info("About to send BYE, session state: " + sessionState);
         }
         if (sessionState == SipSession.State.INITIAL.name() || (sessionState == SipSession.State.EARLY.name() && isInbound())) {
             final SipServletResponse resp = invite.createResponse(Response.SERVER_INTERNAL_ERROR);
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
-                resp.addHeader("Reason",hangup.getMessage());
+                resp.addHeader("Reason", hangup.getMessage());
             }
             addCustomHeaders(resp);
             resp.send();
             fsm.transition(hangup, completed);
             return;
-        } if (sessionState == SipSession.State.EARLY.name()) {
+        }
+        if (sessionState == SipSession.State.EARLY.name()) {
             final SipServletRequest cancel = invite.createCancel();
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
-                cancel.addHeader("Reason",hangup.getMessage());
+                cancel.addHeader("Reason", hangup.getMessage());
             }
             addCustomHeaders(cancel);
             cancel.send();
@@ -1699,7 +1706,7 @@ public final class Call extends UntypedActor {
             final SipServletRequest bye = session.createRequest("BYE");
             addCustomHeaders(bye);
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
-                bye.addHeader("Reason",hangup.getMessage());
+                bye.addHeader("Reason", hangup.getMessage());
             }
             SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
             InetAddress byeRURI = InetAddress.getByName(((SipURI) bye.getRequestURI()).getHost());
@@ -1732,12 +1739,10 @@ public final class Call extends UntypedActor {
             // X-Sip-Balancer-InitialRemotePort: 5060
             // Route: <sip:10.13.169.214:5080;transport=udp;lr>
             // Content-Length: 340
-
             ListIterator<String> recordRouteList = invite.getHeaders(RecordRouteHeader.NAME);
 
-
             if (invite.getHeader("X-Sip-Balancer-InitialRemoteAddr") != null) {
-                if(logger.isInfoEnabled()){
+                if (logger.isInfoEnabled()) {
                     logger.info("We are behind LoadBalancer and will remove the first two RecordRoutes since they are the LB node");
                 }
                 recordRouteList.next();
@@ -1746,66 +1751,68 @@ public final class Call extends UntypedActor {
                 recordRouteList.remove();
             }
             if (recordRouteList.hasNext()) {
-                if(logger.isInfoEnabled()) {
+                if (logger.isInfoEnabled()) {
                     logger.info("Record Route is set, wont change the Request URI");
                 }
             } else {
-                if(logger.isInfoEnabled()) {
+                if (logger.isInfoEnabled()) {
                     logger.info("Checking RURI, realInetUri: " + realInetUri + " byeRURI: " + byeRURI);
                 }
-                if(logger.isDebugEnabled()) {
+                if (logger.isDebugEnabled()) {
                     logger.debug("byeRURI.isSiteLocalAddress(): " + byeRURI.isSiteLocalAddress());
                     logger.debug("byeRURI.isAnyLocalAddress(): " + byeRURI.isAnyLocalAddress());
                     logger.debug("byeRURI.isLoopbackAddress(): " + byeRURI.isLoopbackAddress());
                 }
                 if (realInetUri != null && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
-                    if(logger.isInfoEnabled()) {
+                    if (logger.isInfoEnabled()) {
                         logger.info("real ip address of the sip client " + realInetUri.toString()
-                            + " is not null, checking if the request URI needs to be patched");
+                                + " is not null, checking if the request URI needs to be patched");
                     }
                     boolean patchRURI = true;
                     try {
                         // https://github.com/RestComm/Restcomm-Connect/issues/1336 checking if the initial IP and Port behind LB is part of the route set or not
                         ListIterator<? extends Address> routes = bye.getAddressHeaders(RouteHeader.NAME);
-                        while(routes.hasNext() && patchRURI) {
+                        while (routes.hasNext() && patchRURI) {
                             SipURI route = (SipURI) routes.next().getURI();
                             String routeHost = route.getHost();
                             int routePort = route.getPort();
-                            if(routePort < 0) {
+                            if (routePort < 0) {
                                 routePort = 5060;
                             }
                             if (logger.isDebugEnabled()) {
                                 logger.debug("Checking if route " + routeHost + ":" + routePort + " is matching ip and port of realNetURI " + realInetUri.getHost() + ":"
-                                    + realInetUri.getPort() + " for the BYE request");
+                                        + realInetUri.getPort() + " for the BYE request");
                             }
-                            if(routeHost.equalsIgnoreCase(realInetUri.getHost()) && routePort == realInetUri.getPort()) {
+                            if (routeHost.equalsIgnoreCase(realInetUri.getHost()) && routePort == realInetUri.getPort()) {
                                 if (logger.isDebugEnabled()) {
-                                    logger.debug("route " + route + " is matching ip and port of realNetURI "+ realInetUri.getHost() + ":"
-                                     + realInetUri.getPort() + " for the BYE request, so not patching the Request-URI");
+                                    logger.debug("route " + route + " is matching ip and port of realNetURI " + realInetUri.getHost() + ":"
+                                            + realInetUri.getPort() + " for the BYE request, so not patching the Request-URI");
                                 }
                                 patchRURI = false;
                             }
                         }
                     } catch (ServletParseException e) {
-                        logger.error("Impossible to parse the route set from the BYE " + bye, e);
+                        String errMsg = "Impossible to parse the route set from the BYE " + bye + e;
+                        logger.error(errMsg);
+                        globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
                     }
-                    if(patchRURI) {
-                        if(logger.isInfoEnabled()) {
-                             logger.info("Using the real ip address of the sip client " + realInetUri.toString()
-                                  + " as a request uri of the BYE request");
+                    if (patchRURI) {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                                    + " as a request uri of the BYE request");
                         }
                         bye.setRequestURI(realInetUri);
                     }
                 }
             }
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("Will sent out BYE to: " + bye.getRequestURI());
             }
             try {
                 bye.send();
             } catch (Exception e) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Exception during Send Bye: "+e.toString());
+                    logger.debug("Exception during Send Bye: " + e.toString());
                 }
             }
         }
@@ -1879,8 +1886,8 @@ public final class Call extends UntypedActor {
                     // Activate call
                     if (!waitForAck) {
                         fsm.transition(message, inProgress);
-                    } else  if(logger.isInfoEnabled()) {
-                        logger.info("current state: "+fsm.state()+" , will wait for ACK to move to inProgress");
+                    } else if (logger.isInfoEnabled()) {
+                        logger.info("current state: " + fsm.state() + " , will wait for ACK to move to inProgress");
                     }
 
                 }
@@ -1949,10 +1956,8 @@ public final class Call extends UntypedActor {
     private void onLeave(Leave message, ActorRef self, ActorRef sender) throws Exception {
         if (is(inProgress)) {
             fsm.transition(message, leaving);
-        } else {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Received Leave for Call: "+self.path()+", but state is :"+fsm.state().toString());
-            }
+        } else if (logger.isDebugEnabled()) {
+            logger.debug("Received Leave for Call: " + self.path() + ", but state is :" + fsm.state().toString());
         }
     }
 
@@ -2003,13 +2008,13 @@ public final class Call extends UntypedActor {
     public void postStop() {
         try {
             if (logger.isInfoEnabled()) {
-                logger.info("Call actor at postStop, path: "+self().path()+", direction: "+direction+", state: "+fsm.state()+", isTerminated: "+self().isTerminated()+", sender: "+sender());
+                logger.info("Call actor at postStop, path: " + self().path() + ", direction: " + direction + ", state: " + fsm.state() + ", isTerminated: " + self().isTerminated() + ", sender: " + sender());
             }
             onStopObserving(new StopObserving(), self(), null);
             getContext().stop(msController);
         } catch (Exception exception) {
-            if(logger.isInfoEnabled()) {
-                logger.info("Exception during Call postStop while trying to remove observers: "+exception);
+            if (logger.isInfoEnabled()) {
+                logger.info("Exception during Call postStop while trying to remove observers: " + exception);
             }
         }
         super.postStop();

@@ -46,11 +46,13 @@ import akka.actor.UntypedActorFactory;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 public final class ProxyManagerProxy extends SipServlet implements SipServletListener {
+
     private static final long serialVersionUID = 1L;
     private static final Logger logger = Logger.getLogger(ProxyManagerProxy.class);
     private ActorSystem system;
     private ActorRef manager;
     private ServletContext context;
+    static Configuration getConfiguration;
 
     public ProxyManagerProxy() {
         super();
@@ -58,8 +60,9 @@ public final class ProxyManagerProxy extends SipServlet implements SipServletLis
 
     @Override
     public void destroy() {
-        if (system != null)
+        if (system != null) {
             system.stop(manager);
+        }
     }
 
     @Override
@@ -101,7 +104,7 @@ public final class ProxyManagerProxy extends SipServlet implements SipServletLis
     @Override
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(ProxyManagerProxy.class)) {
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("ProxyManagerProxy sip servlet initialized. Will proceed to create ProxyManager");
             }
             context = event.getServletContext();
@@ -112,6 +115,7 @@ public final class ProxyManagerProxy extends SipServlet implements SipServletLis
             final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
             system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
             manager = manager(context, factory, storage, address);
+            getConfiguration = configuration;
             context.setAttribute(ProxyManager.class.getName(), manager);
         }
     }

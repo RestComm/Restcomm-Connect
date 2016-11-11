@@ -50,12 +50,14 @@ import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.restcomm.connect.notification.GlobalNotification;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author gvagenas@gmail.com
  */
 public final class ProxyManager extends UntypedActor {
+
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     private static final int ttl = 1800;
@@ -64,6 +66,7 @@ public final class ProxyManager extends UntypedActor {
     private final SipFactory factory;
     private final DaoManager storage;
     private final String address;
+    final GlobalNotification globalNotification;
 
     public ProxyManager(final ServletContext servletContext, final SipFactory factory, final DaoManager storage,
             final String address) {
@@ -72,10 +75,11 @@ public final class ProxyManager extends UntypedActor {
         this.factory = factory;
         this.storage = storage;
         this.address = address;
+        this.globalNotification = new GlobalNotification(ProxyManagerProxy.getConfiguration, storage);
         final ActorContext context = context();
         context.setReceiveTimeout(Duration.create(60, TimeUnit.SECONDS));
         registerFirstTime();
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("Proxy Manager started.");
         }
     }
@@ -96,7 +100,7 @@ public final class ProxyManager extends UntypedActor {
     private Address contact(final Gateway gateway, final int expires) throws ServletParseException {
         SipURI outboundInterface = null;
         if (address != null && !address.isEmpty()) {
-            if(address.contains(":")) {
+            if (address.contains(":")) {
                 outboundInterface = (SipURI) factory.createSipURI(null, address);
             } else {
                 outboundInterface = outboundInterface(address, "udp");
@@ -104,8 +108,9 @@ public final class ProxyManager extends UntypedActor {
         } else {
             outboundInterface = outboundInterface();
         }
-        if (outboundInterface == null)
+        if (outboundInterface == null) {
             outboundInterface = (SipURI) factory.createSipURI(null, address);
+        }
         final String user = gateway.getUserName();
         final String host = outboundInterface.getHost();
         int port = outboundInterface.getPort();
@@ -136,7 +141,7 @@ public final class ProxyManager extends UntypedActor {
                 }
             }
         } else if (message instanceof RegisterGateway) {
-            register(((RegisterGateway)message).getGateway());
+            register(((RegisterGateway) message).getGateway());
         }
     }
 
@@ -170,7 +175,7 @@ public final class ProxyManager extends UntypedActor {
     }
 
     private void registerFirstTime() {
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("First time registration for the gateways");
         }
         final GatewaysDao gateways = storage.getGatewaysDao();
@@ -193,8 +198,8 @@ public final class ProxyManager extends UntypedActor {
     }
 
     private void register(final Gateway gateway) {
-        if(logger.isInfoEnabled()) {
-            logger.info("About to register gateway: "+gateway.getFriendlyName());
+        if (logger.isInfoEnabled()) {
+            logger.info("About to register gateway: " + gateway.getFriendlyName());
         }
         register(gateway, null, null);
     }
@@ -230,7 +235,9 @@ public final class ProxyManager extends UntypedActor {
             register.send();
         } catch (final Exception exception) {
             final String name = gateway.getFriendlyName();
-            logger.error(exception, "Could not send a registration request to the proxy named " + name);
+            String errMsg = exception + "Could not send a registration request to the proxy named " + name;
+            logger.error(errMsg);
+            globalNotification.sendNotification(GlobalNotification.getWARNING_NOTIFICATION(), 11001, errMsg);
         }
     }
 

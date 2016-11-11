@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-
 package org.restcomm.connect.sms.smpp;
 
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
@@ -55,6 +54,7 @@ import com.cloudhopper.smpp.type.Address;
  *
  */
 public final class SmppService extends UntypedActor {
+
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     private final ActorSystem system;
@@ -72,6 +72,8 @@ public final class SmppService extends UntypedActor {
     private static String smppSourceAddressMap;
     private static String smppDestinationAddressMap;
     private static String smppTonNpiValue;
+    static Configuration getConfiguration;
+    static DaoManager getDaoStorage;
 
     private ThreadPoolExecutor executor;
     private ScheduledThreadPoolExecutor monitorExecutor;
@@ -83,7 +85,7 @@ public final class SmppService extends UntypedActor {
     private ArrayList<Smpp> smppList = new ArrayList<Smpp>();
 
     public SmppService(final ActorSystem system, final Configuration configuration, final SipFactory factory,
-                       final DaoManager storage, final ServletContext servletContext, final ActorRef smppMessageHandler) {
+            final DaoManager storage, final ServletContext servletContext, final ActorRef smppMessageHandler) {
 
         super();
         this.system = system;
@@ -95,6 +97,8 @@ public final class SmppService extends UntypedActor {
         this.sipFactory = factory;
         this.storage = storage;
         this.servletContext = servletContext;
+        this.getConfiguration = configuration;
+        this.getDaoStorage = storage;
 
         Configuration config = this.configuration.subset("smpp");
         smppActivated = config.getString("[@activateSmppConnection]");
@@ -107,14 +111,13 @@ public final class SmppService extends UntypedActor {
         this.initializeSmppConnections();
     }
 
-
-    public static String getSmppTonNpiValue(){
+    public static String getSmppTonNpiValue() {
         return smppTonNpiValue;
     }
 
     @Override
-    public void onReceive(Object message) throws Exception {}
-
+    public void onReceive(Object message) throws Exception {
+    }
 
     private void initializeSmppConnections() {
         Configuration smppConfiguration = this.configuration.subset("smpp");
@@ -172,7 +175,7 @@ public final class SmppService extends UntypedActor {
 
             this.smppList.add(smpp);
 
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("creating new SMPP connection " + smpp);
             }
 
@@ -211,7 +214,6 @@ public final class SmppService extends UntypedActor {
         // used for NIO sockets essentially uses this value as the max number of
         // threads it will ever use, despite the "max pool size", etc. set on
         // the executor passed in here
-
         // Setting expected session to be 25. May be this should be
         // configurable?
         this.clientBootstrap = new DefaultSmppClient(this.executor, 25, monitorExecutor);
@@ -220,11 +222,11 @@ public final class SmppService extends UntypedActor {
 
         (new Thread(this.smppClientOpsThread)).start();
 
-        for(Smpp smpp : this.smppList){
+        for (Smpp smpp : this.smppList) {
             this.smppClientOpsThread.scheduleConnect(smpp);
         }
 
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("SMPP Service started");
         }
     }
