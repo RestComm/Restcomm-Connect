@@ -184,7 +184,7 @@ public class AccountsEndpointTest extends EndpointTest {
                 updatedAccountSid, "Restcomm2", updatedUsername);
 
         Assert.assertEquals("FriendlyName field is not updated",  "updated2", updateAccountResponse.get("friendly_name").getAsString());
-        Assert.assertNull("AuthToken should be missing", updateAccountResponse.get("auth_token"));
+        Assert.assertNotNull("AuthToken should be present", updateAccountResponse.get("auth_token"));
         Assert.assertEquals("Status field is not updated", "active", updateAccountResponse.get("status").getAsString());
         Assert.assertEquals("Role field is not updated", "Developer", updateAccountResponse.get("role").getAsString());
        

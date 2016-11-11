@@ -21,6 +21,8 @@
 package org.restcomm.connect.identity;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
@@ -78,8 +80,8 @@ public class UserIdentityContext {
                 Account account = accountsDao.getAccountToAuthenticate(basicAuthUsername);
                 if (account != null) { // ok, the account is there.
                     if (basicAuthPass != null) {
-                        // Compare both the plaintext version of the token and md5'ed version of it
-                        if ( basicAuthPass.equals(account.getPassword()) ) {
+                        // Try to match against both password and AuthToken
+                        if ( verifyPassword(basicAuthPass, account.getPassword(), account.getPasswordAlgorithm() ) ) {
                             authType = AuthType.Password;
                             basicAuthVerified = true;
                             return account;
@@ -94,6 +96,16 @@ public class UserIdentityContext {
             }
         }
         return null;
+    }
+
+    boolean verifyPassword(String inputPass, String storedPass, Account.PasswordAlgorithm storedAlgorithm) {
+        if (storedAlgorithm == Account.PasswordAlgorithm.plain) {
+            return storedPass.equals(inputPass);
+        } else
+        if (storedAlgorithm == Account.PasswordAlgorithm.md5) {
+            return storedPass.equals(DigestUtils.md5Hex(inputPass));
+        } else
+            throw new NotImplementedException("Password algorithm not supported: " + storedAlgorithm);
     }
 
     /**
