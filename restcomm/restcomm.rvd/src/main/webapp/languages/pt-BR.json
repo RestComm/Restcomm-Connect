@@ -67,7 +67,7 @@
 	"designerSettingsModalCredencialsLabel2": "Gatilho Web",
 	"designerSettingsModalCredencialsLabel3": "esteja ativo.",
 	"designerSettingsModalUsernameInput": "Usuário",
-	"designerSettingsModalPasswordInput": "Senha",
+	"designerSettingsModalPasswordInput": "TRANSLATE: Auth Token",
 	"designerSettingsModalOkButton": "Confirmar",
 	"designerSettingsModalCancelButton": "Cancelar",
 

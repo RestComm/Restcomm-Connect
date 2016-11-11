@@ -73,7 +73,7 @@
 	"designerSettingsModalCredencialsLabel2": "Web Trigger",
 	"designerSettingsModalCredencialsLabel3": "is enabled.",
 	"designerSettingsModalUsernameInput": "Username",
-	"designerSettingsModalPasswordInput": "Password",
+	"designerSettingsModalPasswordInput": "Auth Token",
 	"designerSettingsModalOkButton": "OK",
 	"designerSettingsModalCancelButton": "Cancel",
 
