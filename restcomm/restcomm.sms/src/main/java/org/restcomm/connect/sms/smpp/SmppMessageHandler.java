@@ -66,12 +66,12 @@ public class SmppMessageHandler extends UntypedActor  {
         final ActorRef self = self();
         if (message instanceof SmppInboundMessageEntity){
             if(logger.isInfoEnabled()) {
-                logger.info("SmppMessageHandler processing Inbound Message " + message);
+                logger.info("SmppMessageHandler processing Inbound Message " + message.toString());
             }
             inbound((SmppInboundMessageEntity) message);
         }else if(message instanceof SmppOutboundMessageEntity ){
             if(logger.isInfoEnabled()) {
-                logger.info("SmppMessageHandler processing Outbound Message " + message);
+                logger.info("SmppMessageHandler processing Outbound Message " + message.toString());
             }
             outbound((SmppOutboundMessageEntity) message);
         } else if (message instanceof CreateSmsSession) {
