@@ -74,7 +74,7 @@
 	"designerSettingsModalCredencialsLabel2": "Activación web",
 	"designerSettingsModalCredencialsLabel3": "está habilitado.",
 	"designerSettingsModalUsernameInput": "Usuario",
-	"designerSettingsModalPasswordInput": "Contraseña",
+	"designerSettingsModalPasswordInput": "TRANSLATE: Auth Token",
 	"designerSettingsModalOkButton": "OK",
 	"designerSettingsModalCancelButton": "Cancelar",
 
