@@ -39,7 +39,7 @@ rcServices.factory('SessionService', function() {
   }
 });
 
-rcServices.factory('AuthService',function(RCommAccounts,$http, $location, SessionService, md5, Notifications, $q, IdentityConfig, KeycloakAuth, $uibModal){
+rcServices.factory('AuthService',function(RCommAccounts, RCommCritical, $http, $location, SessionService, md5, Notifications, $q, IdentityConfig, KeycloakAuth, $uibModal){
     var account = null;
     var uninitialized = null;
 
@@ -219,27 +219,18 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     // rejected: PASSWORD_UPDATE_FAILED
     // Call it when authenticated and in Restcomm auth mode
     function updatePassword(oldPassword, newPassword) {
-        var deferred = $q.defer();
-        var apiPath = "/restcomm/2012-04-24/Accounts.json/" + account.sid;
-        var auth_header = basicAuthHeader(account.sid, oldPassword, true)
+        var auth_header = basicAuthHeader(account.sid, oldPassword, true);
         var params = {Password: newPassword};
-        var update = $http({
-        method: 'PUT',
-        url: apiPath,
-        data: $.param(params),
-        headers: {
-            Authorization: auth_header,
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }}).
-        success(function(account) {
-          setActiveAccount(account);
-          deferred.resolve();
-        }).
-        error(function(data) {
-          clearActiveAccount();
-          deferred.reject('PASSWORD_UPDATE_FAILED');
+        return RCommCritical.updateAccount(account.sid, auth_header, $.param(params)).then(function (response) {
+            // success
+            setActiveAccount(response.data);
+        }, function (response) {
+            // error
+            if (response.status == 401)
+                throw 'AUTHENTICATION_ERROR';
+            else
+                throw 'PASSWORD_UPDATE_FAILED';
         });
-        return deferred.promise;
     }
 
 
@@ -295,7 +286,8 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         onError403: onError403,
         updatePassword: updatePassword,
         askForPassword: askForPassword,
-        basicAuthHeader: basicAuthHeader
+        basicAuthHeader: basicAuthHeader,
+        clearActiveAccount: clearActiveAccount
     }
 });
 

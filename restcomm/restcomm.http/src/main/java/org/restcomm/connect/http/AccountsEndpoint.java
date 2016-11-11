@@ -554,7 +554,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             }
 
             // hide AuthToken from response
-            modifiedAccount = modifiedAccount.setAuthToken(null);
+            //modifiedAccount = modifiedAccount.setAuthToken(null);
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {
