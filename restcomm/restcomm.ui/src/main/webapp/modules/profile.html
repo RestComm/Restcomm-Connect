@@ -18,99 +18,113 @@
         </div>
     </div>
     <div class="col-md-9" style="padding: 0;">
-        <form name="profileForm" class="form-horizontal">
         <div class="well">
-            <h3 class="text-muted details-header"><i ng-hide="urlAccount.status=='closed'" class="fa fa-cog"></i><i ng-show="urlAccount.status=='closed'" class="fa fa-ban" title="Account is closed"></i> Account Settings</h3>
-            <div class="form-group">
-                <label class="col-md-4 control-label" for="account-sid">Account SID</label>
-                <div class="col-md-8">
-                    <input id="account-sid" type="text" class="form-control" placeholder="Account SID" ng-value="urlAccount.sid" readonly />
+            <form name="profileForm" class="form-horizontal">
+                <h3 class="text-muted details-header"><i ng-hide="urlAccount.status=='closed'" class="fa fa-cog"></i><i ng-show="urlAccount.status=='closed'" class="fa fa-ban" title="Account is closed"></i> Account Settings</h3>
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="account-sid">Account SID</label>
+                    <div class="col-md-8">
+                        <input id="account-sid" type="text" class="form-control" placeholder="Account SID" ng-value="urlAccount.sid" readonly />
+                    </div>
                 </div>
-            </div>
-            <div class="form-group">
-                <label class="col-md-4 control-label" for="email-address">Email Address</label>
-                <div class="col-md-8">
-                    <input id="email-address" type="email" class="form-control" placeholder="Email Address" ng-value="urlAccount.email_address" readonly />
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="email-address">Email Address</label>
+                    <div class="col-md-8">
+                        <input id="email-address" type="email" class="form-control" placeholder="Email Address" ng-value="urlAccount.email_address" readonly />
+                    </div>
                 </div>
-            </div>
-             <div class="form-group" >
-                <label class="col-md-4 control-label" for="role">Role</label>
-                <div class="col-md-8" ng-show="urlAccount.sid == sid || currentAccountRole != 'Administrator'">
-                    <input id="role" type="text" class="form-control" placeholder="Role" ng-value="urlAccount.role" readonly/>
+                <div class="form-group" >
+                    <label class="col-md-4 control-label" for="role">Role</label>
+                    <div class="col-md-8" ng-show="urlAccount.sid == sid || currentAccountRole != 'Administrator'">
+                        <input id="role" type="text" class="form-control" placeholder="Role" ng-value="urlAccount.role" readonly/>
 
-                </div>
-                <div class="col-md-8" ng-hide="urlAccount.sid == sid || currentAccountRole != 'Administrator'">
-                     <select id="role" ng-model='urlAccount.role' class="form-control">
-                    <option value="Administrator">Administrator</option>
-                    <option value="Developer">Developer</option>
-                </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="col-md-4 control-label" for="date-created">
-                    <h5 class="no-margins">Date Created/Updated</h5>
-                </label>
-                <div class="col-md-4">
-                    <input id="date-created" type="text" class="form-control" placeholder="Date Created" ng-value="urlAccount.date_created|date:'EEE, d MMMM y, HH:mm:ss'" readonly />
-                </div>
-                <div class="col-md-4">
-                    <input id="date-updated" type="text" class="form-control" placeholder="Date Updated" ng-value="urlAccount.date_updated|date:'EEE, d MMMM y, HH:mm:ss'" readonly />
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="col-md-4 control-label" for="friendly-name">
-                    <h5 class="no-margins">Friendly Name</h5>
-                </label>
-                <div class="col-md-8">
-                    <input id="friendly-name" type="text" class="form-control" placeholder="Friendly Name" maxlength="64" ng-model="urlAccount.friendly_name" />
-                </div>
-            </div>
-            <div class="form-group" ng-class="{'has-error':!profileForm.newPassword.$valid}">
-                <label class="col-md-4 control-label" for="date-created">
-                    <h5 class="no-margins">Password</h5>
-                </label>
-                <div class="col-md-4">
-                    <div ng-show="newPassword" class="col-md-12 password-strength" ng-password-strength="newPassword" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-" style="padding: inherit;">
-                        <uib-progressbar value="pwdStrength"></uib-progressbar>
                     </div>
-                    <input id="newPassword" name="newPassword" type="password" class="form-control" ng-class="{'password-transparent' : newPassword}" placeholder="New Password" ng-model="newPassword" />
-                </div>
-                <div class="col-md-4">
-                    <input id="passwordConfirmation" name="newPassword2" type="password" class="form-control" placeholder="Confirm New Password" ng-model="newPassword2" />
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="col-md-4 control-label" for="account-type">
-                    <h5 class="no-margins">Type</h5>
-                </label>
-                <div class="col-md-2">
-                    <select ng-model="urlAccount.type" id="account-type" class="form-control">
-                        <option value="Trial">Trial</option>
-                        <option value="Basic">Basic</option>
-                        <option value="Full">Full</option>
-                    </select>
-                </div>
-                <label class="col-md-2 control-label">
-                    <h5 class="no-margins">Status</h5>
-                </label>
-                <div class="col-md-4">
-                    <div class="btn-group" data-toggle="buttons-radio">
-                        <button type="button" class="btn btn-success" ng-class="urlAccount.status == 'active' ? 'active' : 'opacity70'" ng-click="setAccountStatus('active')"><i class="fa fa-check-circle"></i> Active</button>
-                        <button type="button" class="btn btn-danger" ng-class="urlAccount.status == 'suspended' ? 'active' : 'opacity70'" ng-click="setAccountStatus('suspended')"><i class="fa fa-exclamation-circle"></i> Suspended</button>
+                    <div class="col-md-8" ng-hide="urlAccount.sid == sid || currentAccountRole != 'Administrator'">
+                        <select id="role" ng-model='urlAccount.role' class="form-control">
+                            <option value="Administrator">Administrator</option>
+                            <option value="Developer">Developer</option>
+                        </select>
                     </div>
                 </div>
-            </div>
-            <div class="row form-horizontal">
-                <div class="col-md-12">
-                    <uib-alert type="alert.type" close="closeAlert()" ng-show="$parent.alert.show">{{alert.msg}}</uib-alert>
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="date-created">
+                        <h5 class="no-margins">Date Created/Updated</h5>
+                    </label>
+                    <div class="col-md-4">
+                        <input id="date-created" type="text" class="form-control" placeholder="Date Created" ng-value="urlAccount.date_created|date:'EEE, d MMMM y, HH:mm:ss'" readonly />
+                    </div>
+                    <div class="col-md-4">
+                        <input id="date-updated" type="text" class="form-control" placeholder="Date Updated" ng-value="urlAccount.date_updated|date:'EEE, d MMMM y, HH:mm:ss'" readonly />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="friendly-name">
+                        <h5 class="no-margins">Friendly Name</h5>
+                    </label>
+                    <div class="col-md-8">
+                        <input id="friendly-name" type="text" class="form-control" placeholder="Friendly Name" maxlength="64" ng-model="urlAccount.friendly_name" />
+                    </div>
+                </div>
+                <div class="form-group" ng-class="{'has-error':!profileForm.newPassword.$valid}">
+                    <label class="col-md-4 control-label" for="date-created">
+                        <h5 class="no-margins">Password</h5>
+                    </label>
+                    <div class="col-md-4">
+                        <div ng-show="newPassword" class="col-md-12 password-strength" ng-password-strength="newPassword" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-" style="padding: inherit;">
+                            <uib-progressbar value="pwdStrength"></uib-progressbar>
+                        </div>
+                        <input id="newPassword" name="newPassword" type="password" class="form-control" ng-class="{'password-transparent' : newPassword}" placeholder="New Password" ng-model="newPassword" />
+                    </div>
+                    <div class="col-md-4">
+                        <input id="passwordConfirmation" name="newPassword2" type="password" class="form-control" placeholder="Confirm New Password" ng-model="newPassword2" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="account-type">
+                        <h5 class="no-margins">Type</h5>
+                    </label>
+                    <div class="col-md-2">
+                        <select ng-model="urlAccount.type" id="account-type" class="form-control">
+                            <option value="Trial">Trial</option>
+                            <option value="Basic">Basic</option>
+                            <option value="Full">Full</option>
+                        </select>
+                    </div>
+                    <label class="col-md-2 control-label">
+                        <h5 class="no-margins">Status</h5>
+                    </label>
+                    <div class="col-md-4">
+                        <div class="btn-group" data-toggle="buttons-radio">
+                            <button type="button" class="btn btn-success" ng-class="urlAccount.status == 'active' ? 'active' : 'opacity70'" ng-click="setAccountStatus('active')"><i class="fa fa-check-circle"></i> Active</button>
+                            <button type="button" class="btn btn-danger" ng-class="urlAccount.status == 'suspended' ? 'active' : 'opacity70'" ng-click="setAccountStatus('suspended')"><i class="fa fa-exclamation-circle"></i> Suspended</button>
+                        </div>
+                    </div>
+                </div>
+                <div ng-show="profileForm.$dirty" class="form-group" style="margin-top:35px;">
+                    <div class="col-md-12">
+                        <button class="btn btn-primary pull-right margin-left-10" ng-click="updateProfile()" ng-show="profileForm.$dirty" ng-disabled="(newPassword && pwdStrength < 50) || passwordsDiffer">Save</button>
+                        <button class="btn btn-default pull-right margin-left-10" ng-click="resetChanges()" ng-show="profileForm.$dirty">Reset Changes</button>
+                    </div>
+                </div>
+            </form>
+
+            <div ng-show="urlAccount.sid==loggedAccount.sid">
+                <hr>
+                <h4 class="text-muted details-header"><i class="fa fa-key"></i> Authorization Token</h4>
+                <div class="row">
+                    <div class="form-group">
+                        <div class="col-md-4">
+                            <button ng-click="resetAuthToken(urlAccount.sid)" class="btn btn-primary pull-right" type="button" title="Generates a new Authorization Token for this account">Reset</button>
+                        </div>
+                        <div class="col-md-8">
+                            <input ng-model="newToken" ng-disabled="true" type="text" class="form-control" placeholder="New token">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        </form>
 
-        <div class="">
-            <button class="btn btn-primary pull-right margin-left-10" ng-click="updateProfile()" ng-show="profileForm.$dirty" ng-disabled="(newPassword && pwdStrength < 50) || passwordsDiffer">Save</button>
-            <button class="btn btn-default pull-right margin-left-10" ng-click="resetChanges()" ng-show="profileForm.$dirty">Reset Changes</button>
+        <div>
             <button class="btn btn-danger pull-left" ng-show="urlAccount.status != 'closed'" ng-disabled="loggedAccount.sid == urlAccount.sid" ng-click="closeAccount(urlAccount)">Close Account</button>
         </div>
     </div>

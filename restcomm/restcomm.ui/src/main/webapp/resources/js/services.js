@@ -255,12 +255,14 @@ rcServices.factory('AuthService',function(RCommAccounts, RCommCritical, $http, $
         return null;
     }
 
-    function askForPassword() {
+    function askForPassword(title, body) {
         return $uibModal.open({
             animation: false,
             size: 'sm',
             templateUrl: 'modules/modals/modal-ask-password.html',
             controller: function ($scope,$uibModalInstance) {
+                $scope.modalTitle = title || "Password required";
+                $scope.modalBody = body || "This operation requires elevated privileges. Please provide your password:";
                 $scope.returnPassword = function (password) {
                     $uibModalInstance.close(password);
                 }
@@ -287,7 +289,8 @@ rcServices.factory('AuthService',function(RCommAccounts, RCommCritical, $http, $
         updatePassword: updatePassword,
         askForPassword: askForPassword,
         basicAuthHeader: basicAuthHeader,
-        clearActiveAccount: clearActiveAccount
+        clearActiveAccount: clearActiveAccount,
+        setActiveAccount: setActiveAccount
     }
 });
 
@@ -486,6 +489,16 @@ rcServices.factory('RCommCritical', function ($http) {
                     'Authorization': authHeader
                 },
                 data: body,
+                noLoginRedirect: true
+            });
+        },
+        resetAccountAuthToken: function (accountSid, authHeader) {
+            return $http({
+                url: '/restcomm/2012-04-24/Accounts.json/'+accountSid+"/resetAuthToken",
+                method: 'POST',
+                headers: {
+                    'Authorization': authHeader
+                },
                 noLoginRedirect: true
             });
         }

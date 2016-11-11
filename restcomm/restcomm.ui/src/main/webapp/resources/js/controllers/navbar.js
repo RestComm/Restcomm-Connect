@@ -259,6 +259,30 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
             }
         });
     }
+
+    $scope.resetAuthToken = function (operatedAccountSid) {
+        var title = 'Account token reset!';
+        var msg = "You're about to reset the account's authorization token. REST API Clients that access this account using the old token will need to get updated.";
+        var btns = [{result:'cancel', label: 'Cancel', cssClass: 'btn-default'}, {result:'confirm', label: 'Go ahead', cssClass: 'btn-danger'}];
+        $dialog.messageBox(title, msg, btns).open().then(function (result) {
+            if (result == "confirm") {
+                AuthService.askForPassword().result.then(function (password) {
+                    var authHeader = AuthService.basicAuthHeader(loggedUserAccount.sid, password, true);
+                    RCommCritical.resetAccountAuthToken(operatedAccountSid, authHeader).then(function (response) {
+                        Notifications.success('Auhorization token reset');
+                        if (loggedUserAccount.sid == operatedAccountSid)
+                            AuthService.setActiveAccount(response.data);
+                        $scope.newToken = response.data.auth_token;
+                    }, function (error) {
+                        if (error.status == 401) {
+                            Notifications.error('Authentication error.');
+                        } else
+                            Notifications.error('Authorization Token reset failed.');
+                    });
+                });
+            }
+        });
+    }
 });
 
 // Register Account Modal
