@@ -85,7 +85,6 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     // Issue 110
     @Override
     public Integer getTotalCallDetailRecords(CallDetailRecordFilter filter) {
-
         final SqlSession session = sessions.openSession();
         try {
             final Integer total = session.selectOne(namespace + "getTotalCallDetailRecordByUsingFilters", filter);
@@ -93,7 +92,28 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         } finally {
             session.close();
         }
+    }
 
+    @Override
+    public Integer getInProgressCallsByClientName(String client) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Integer total = session.selectOne(namespace + "getInProgressCallsByClientName", client);
+            return total;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public Integer getInProgressCallsByAccountSid(String accountSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Integer total = session.selectOne(namespace + "getInProgressCallsByAccountSid", accountSid);
+            return total;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
@@ -132,7 +152,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     }
 
     @Override
-    public List<CallDetailRecord> getCallDetailRecords(final Sid accountSid) {
+    public List<CallDetailRecord> getCallDetailRecordsByAccountSid(final Sid accountSid) {
         return getCallDetailRecords(namespace + "getCallDetailRecords", accountSid.toString());
     }
 

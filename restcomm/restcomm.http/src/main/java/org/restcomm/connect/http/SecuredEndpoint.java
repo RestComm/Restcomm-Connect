@@ -122,7 +122,11 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @return
      */
     protected boolean isSuperAdmin() {
-        return userIdentityContext.getEffectiveAccount().getParentSid() == null;
+        //SuperAdmin Account is the one the is
+        //1. Has no parent, this is the top account
+        //2. Is ACTIVE
+        return (userIdentityContext.getEffectiveAccount().getParentSid() == null)
+                && (userIdentityContext.getEffectiveAccount().getStatus().equals(Account.Status.ACTIVE));
     }
 
     /**

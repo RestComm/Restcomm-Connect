@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- @author thomas.quintana@telestax.com (Thomas Quintana) -->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.InstanceIdDao">
+	<insert id="addInstanceId" parameterType="map">
+		INSERT INTO "restcomm_instance_id" ("instance_id", "host", "date_created", "date_updated")
+		VALUES(#{instance_id}, #{host}, #{date_created}, #{date_updated});
+	</insert>
+
+	<select id="getInstanceId" parameterType="string" resultType="hashmap">
+		SELECT * FROM "restcomm_instance_id";
+	</select>
+
+	<select id="getInstanceIdByHost" parameterType="string" resultType="hashmap">
+		SELECT * FROM "restcomm_instance_id" where "host"=#{host};
+	</select>
+
+	<update id="updateInstanceId" parameterType="map">
+		UPDATE "restcomm_instance_id" SET "date_updated"=#{date_updated}, "instance_id"=#{instance_id} WHERE "instance_id"=#{instance_id};
+	</update>
+
+	<delete id="removeInstanceId" parameterType="string">
+		DELETE FROM "restcomm_instance_id" WHERE "instance_id"=#{instance_id};
+	</delete>
+</mapper>

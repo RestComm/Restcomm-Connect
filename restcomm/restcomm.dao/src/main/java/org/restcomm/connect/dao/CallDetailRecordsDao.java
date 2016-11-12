@@ -35,7 +35,7 @@ public interface CallDetailRecordsDao {
 
     CallDetailRecord getCallDetailRecord(Sid sid);
 
-    List<CallDetailRecord> getCallDetailRecords(Sid accountSid);
+    List<CallDetailRecord> getCallDetailRecordsByAccountSid(Sid accountSid);
 
     List<CallDetailRecord> getCallDetailRecordsByRecipient(String recipient);
 
@@ -73,4 +73,8 @@ public interface CallDetailRecordsDao {
     List<CallDetailRecord> getCallDetailRecords(CallDetailRecordFilter filter);
 
     Integer getTotalCallDetailRecords(CallDetailRecordFilter filter);
+
+    Integer getInProgressCallsByClientName(String client);
+
+    Integer getInProgressCallsByAccountSid(String accountSid);
 }

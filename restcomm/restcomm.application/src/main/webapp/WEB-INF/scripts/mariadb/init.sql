@@ -337,11 +337,12 @@ PRIMARY KEY (conference_sid , slave_ms_id)
 CREATE TABLE restcomm_extensions_configuration (
 sid VARCHAR(34) NOT NULL PRIMARY KEY,
 extension VARCHAR(255) NOT NULL,
+enabled  BOOLEAN NOT NULL DEFAULT TRUE,
 configuration_data LONGTEXT NOT NULL,
 configuration_type VARCHAR(255) NOT NULL,
 date_created DATETIME NOT NULL,
 date_updated DATETIME
-)
+);
 
 INSERT INTO restcomm_accounts VALUES (
 "ACae6e420f425248d6a26948c17a9e2acf",
@@ -379,6 +380,9 @@ INSERT INTO restcomm_clients VALUES('CL3003328d0de04ba68f38de85b732ed56','2013-1
 
 /* Create index on restcomm_call_detail_records on conference_sid column */
 CREATE INDEX idx_cdr_conference_sid ON restcomm_call_detail_records (conference_sid);
+
+/* Create index on restcomm_call_detail_records on conference_sid column */
+CREATE INDEX idx_cdr_conference_status ON restcomm_conference_detail_records (status);
 
 /* Create stored procedure addConferenceDetailRecord  */
 source addConferenceDetailRecord.sql
