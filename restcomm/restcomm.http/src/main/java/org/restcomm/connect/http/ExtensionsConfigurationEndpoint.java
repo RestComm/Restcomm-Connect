@@ -135,6 +135,7 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         validate(data);
         Sid sid = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
         String extension = data.getFirst("ExtensionName");
+        boolean enabled = Boolean.parseBoolean(data.getFirst("Enabled"));
         Object configurationData = data.getFirst("ConfigurationData");
         ExtensionConfiguration.configurationType configurationType = null;
         if (responseType.equals(APPLICATION_JSON_TYPE)) {
@@ -144,7 +145,7 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         }
         DateTime dateCreated = DateTime.now();
         DateTime dateUpdated = DateTime.now();
-        ExtensionConfiguration extensionConfiguration = new ExtensionConfiguration(sid, extension, configurationData, configurationType, dateCreated, dateUpdated);
+        ExtensionConfiguration extensionConfiguration = new ExtensionConfiguration(sid, extension, enabled, configurationData, configurationType, dateCreated, dateUpdated);
         return extensionConfiguration;
     }
 
@@ -217,6 +218,7 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         validate(data);
         Sid existingExtensionSid = existingExtensionConfiguration.getSid();
         String existingExtensionName = existingExtensionConfiguration.getExtensionName();
+        boolean isExistingExtensionEnabled = existingExtensionConfiguration.isEnabled();
         Object configurationData = data.getFirst("ConfigurationData");
         DateTime dateCreated = existingExtensionConfiguration.getDateCreated();
         ExtensionConfiguration.configurationType configurationType = null;
@@ -226,6 +228,6 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
             configurationType = ExtensionConfiguration.configurationType.XML;
         }
 
-        return new ExtensionConfiguration(existingExtensionSid, existingExtensionName, configurationData, configurationType, dateCreated ,DateTime.now());
+        return new ExtensionConfiguration(existingExtensionSid, existingExtensionName, isExistingExtensionEnabled, configurationData, configurationType, dateCreated ,DateTime.now());
     }
 }
