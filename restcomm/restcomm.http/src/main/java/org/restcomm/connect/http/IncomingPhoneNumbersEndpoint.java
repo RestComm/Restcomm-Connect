@@ -66,6 +66,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.noContent;
 import static javax.ws.rs.core.Response.ok;
@@ -311,6 +312,12 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                     }
                 }
                 executePostApiAction(apiRequest);
+                //If Extension blocked the request, return the proper error response
+                if (!hasSuceeded) {
+                    String msg = "DID purchase is now allowed for this account";
+                    String error = "DID_QUOTA_EXCEEDED";
+                    return status(FORBIDDEN).entity(buildErrorResponseBody(msg, error, responseType)).build();
+                }
             } else if (isSIP != null) {
                 hasSuceeded = true;
             }

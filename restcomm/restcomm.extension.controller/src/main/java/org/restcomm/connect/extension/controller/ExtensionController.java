@@ -38,7 +38,7 @@ public class ExtensionController {
         //Check the sender's class and return the extensions that are supported for this class
         if (type.equals(ExtensionType.CallManager) && (callManagerExtensions != null && callManagerExtensions.size() > 0)) {
             return callManagerExtensions;
-        } else if (type.equals(ExtensionType.SmsSession) && (smsSessionExtensions != null && smsSessionExtensions.size() > 0)) {
+        } else if (type.equals(ExtensionType.SmsService) && (smsSessionExtensions != null && smsSessionExtensions.size() > 0)) {
             return smsSessionExtensions;
         } else if (type.equals(ExtensionType.UssdCallManager) && (ussdCallManagerExtensions != null && ussdCallManagerExtensions.size() > 0)) {
             return ussdCallManagerExtensions;
@@ -60,10 +60,10 @@ public class ExtensionController {
                     logger.debug("CallManager extension added: "+extensionName);
                 }
             }
-            if (type.equals(ExtensionType.SmsSession)) {
+            if (type.equals(ExtensionType.SmsService)) {
                 smsSessionExtensions.add(extension);
                 if (logger.isDebugEnabled()) {
-                    logger.debug("SmsSession extension added: "+extensionName);
+                    logger.debug("SmsService extension added: "+extensionName);
                 }
             }
             if (type.equals(ExtensionType.UssdCallManager)) {

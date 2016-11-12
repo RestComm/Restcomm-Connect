@@ -22,5 +22,34 @@ package org.restcomm.connect.http;
 /**
  * Created by gvagenas on 12/10/2016.
  */
-public class ExtensionsConfigurationXmlEndpoint {
+
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+
+@Path("/ExtensionsConfiguration")
+public class ExtensionsConfigurationXmlEndpoint extends ExtensionsConfigurationEndpoint {
+
+    @Path("/{extensionId}")
+    @GET
+    public Response getConfigurationAsXml(@PathParam("extensionId") final String extension) {
+        return getConfiguration(extension, APPLICATION_XML_TYPE);
+    }
+
+    @POST
+    public Response postConfigurationAsXml(final MultivaluedMap<String, String> data) {
+        return postConfiguration(data, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/{extensionSid}")
+    @POST
+    public Response updateConfigurationAsXml(@PathParam("extensionSid") final String extensionSid,
+                                                  final MultivaluedMap<String, String> data) {
+        return updateConfiguration(extensionSid, data, APPLICATION_XML_TYPE);
+    }
 }

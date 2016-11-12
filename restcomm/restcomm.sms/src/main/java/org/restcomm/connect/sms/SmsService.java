@@ -19,31 +19,20 @@
  */
 package org.restcomm.connect.sms;
 
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Currency;
-import java.util.List;
-
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServlet;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipURI;
-
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
-import org.restcomm.connect.sms.api.CreateSmsSession;
-import org.restcomm.connect.sms.api.DestroySmsSession;
-import org.restcomm.connect.sms.api.SmsServiceResponse;
-import org.restcomm.connect.sms.api.SmsSessionAttribute;
-import org.restcomm.connect.sms.api.SmsSessionRequest;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.ClientsDao;
@@ -55,29 +44,42 @@ import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Notification;
-import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Direction;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;
+import org.restcomm.connect.extension.api.ExtensionResponse;
+import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.RestcommExtensionException;
+import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
+import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.interpreter.SmsInterpreterBuilder;
 import org.restcomm.connect.interpreter.StartInterpreter;
+import org.restcomm.connect.monitoringservice.MonitoringService;
+import org.restcomm.connect.sms.api.CreateSmsSession;
+import org.restcomm.connect.sms.api.DestroySmsSession;
+import org.restcomm.connect.sms.api.SmsServiceResponse;
+import org.restcomm.connect.sms.api.SmsSessionAttribute;
+import org.restcomm.connect.sms.api.SmsSessionRequest;
 import org.restcomm.connect.telephony.api.TextMessage;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
-import org.restcomm.connect.commons.util.UriUtils;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipURI;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Currency;
+import java.util.List;
 
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import org.restcomm.connect.monitoringservice.MonitoringService;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -105,6 +107,9 @@ public final class SmsService extends UntypedActor {
     //Control whether Restcomm will patch SDP for B2BUA calls
     private boolean patchForNatB2BUASessions;
 
+    //List of extensions for SmsService
+    List<RestcommExtensionGeneric> extensions;
+
     public SmsService(final ActorSystem system, final Configuration configuration, final SipFactory factory,
             final DaoManager storage, final ServletContext servletContext) {
         super();
@@ -120,6 +125,11 @@ public final class SmsService extends UntypedActor {
         // final Configuration runtime = configuration.subset("runtime-settings");
         // TODO this.useTo = runtime.getBoolean("use-to");
         patchForNatB2BUASessions = runtime.getBoolean("patch-for-nat-b2bua-sessions", true);
+
+        extensions = ExtensionController.getInstance().getExtensions(ExtensionType.SmsService);
+        if (logger.isInfoEnabled()) {
+            logger.info("SmsService extensions: "+(extensions != null ? extensions.size() : "0"));
+        }
     }
 
     private void message(final Object message) throws IOException {
@@ -315,6 +325,21 @@ public final class SmsService extends UntypedActor {
         return isFoundHostedApp;
     }
 
+    private boolean executePreOutboundAction(final Object message) {
+        if (extensions != null && extensions.size() > 0) {
+            for (RestcommExtensionGeneric extension : extensions) {
+                ExtensionResponse response = extension.preOutboundAction(message);
+                if (!response.isAllowed())
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean executePostOutboundAction(final Object message) {
+        return true;
+    }
+
     @Override
     public void onReceive(final Object message) throws Exception {
         final UntypedActorContext context = getContext();
@@ -322,9 +347,15 @@ public final class SmsService extends UntypedActor {
         final ActorRef self = self();
         final ActorRef sender = sender();
         if (CreateSmsSession.class.equals(klass)) {
-            final ActorRef session = session();
-            final SmsServiceResponse<ActorRef> response = new SmsServiceResponse<ActorRef>(session);
-            sender.tell(response, self);
+            if (executePreOutboundAction(message)) {
+                final ActorRef session = session();
+                final SmsServiceResponse<ActorRef> response = new SmsServiceResponse<ActorRef>(session);
+                sender.tell(response, self);
+            } else {
+                final SmsServiceResponse<ActorRef> response = new SmsServiceResponse(new RestcommExtensionException("Now allowed to create SmsSession"));
+                sender.tell(response, self());
+            }
+            executePostOutboundAction(message);
         } else if (DestroySmsSession.class.equals(klass)) {
             final DestroySmsSession request = (DestroySmsSession) message;
             final ActorRef session = request.session();
