@@ -218,7 +218,10 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         validate(data);
         Sid existingExtensionSid = existingExtensionConfiguration.getSid();
         String existingExtensionName = existingExtensionConfiguration.getExtensionName();
-        boolean isExistingExtensionEnabled = existingExtensionConfiguration.isEnabled();
+        boolean enabled = existingExtensionConfiguration.isEnabled();
+        if (data.getFirst("Enabled") != null) {
+            enabled = Boolean.parseBoolean(data.getFirst("Enabled"));
+        }
         Object configurationData = data.getFirst("ConfigurationData");
         DateTime dateCreated = existingExtensionConfiguration.getDateCreated();
         ExtensionConfiguration.configurationType configurationType = null;
@@ -228,6 +231,6 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
             configurationType = ExtensionConfiguration.configurationType.XML;
         }
 
-        return new ExtensionConfiguration(existingExtensionSid, existingExtensionName, isExistingExtensionEnabled, configurationData, configurationType, dateCreated ,DateTime.now());
+        return new ExtensionConfiguration(existingExtensionSid, existingExtensionName, enabled, configurationData, configurationType, dateCreated ,DateTime.now());
     }
 }

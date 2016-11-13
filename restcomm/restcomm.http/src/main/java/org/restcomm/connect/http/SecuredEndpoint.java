@@ -387,9 +387,11 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     protected boolean executePreApiAction(final ApiRequest apiRequest) {
         if (extensions != null && extensions.size() > 0) {
             for (RestcommExtensionGeneric extension : extensions) {
-                ExtensionResponse response = extension.preApiAction(apiRequest);
-                if (!response.isAllowed())
-                    return false;
+                if (extension.isEnabled()) {
+                    ExtensionResponse response = extension.preApiAction(apiRequest);
+                    if (!response.isAllowed())
+                        return false;
+                }
             }
         }
         return true;

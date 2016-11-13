@@ -33,6 +33,11 @@ public interface RestcommExtensionGeneric {
      */
     void init(ServletContext context);
     /**
+     * Check if extensions is enabled
+     * @return
+     */
+    boolean isEnabled();
+    /**
      * Method that will be executed BEFORE the process of an Incoming session
      * Implement this method so you will be able to check the Incoming session
      * and either block/allow or modify the session before Restcomm process it
