@@ -1171,9 +1171,11 @@ public final class CallManager extends UntypedActor {
     private boolean executePreOutboundAction(final Object message) {
         if (extensions != null && extensions.size() > 0) {
             for (RestcommExtensionGeneric extension : extensions) {
-                ExtensionResponse response = extension.preOutboundAction(message);
-                if (!response.isAllowed())
-                    return false;
+                if (extension.isEnabled()) {
+                    ExtensionResponse response = extension.preOutboundAction(message);
+                    if (!response.isAllowed())
+                        return false;
+                }
             }
         }
         return true;
