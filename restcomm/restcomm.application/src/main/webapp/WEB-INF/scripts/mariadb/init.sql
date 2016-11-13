@@ -337,11 +337,11 @@ PRIMARY KEY (conference_sid , slave_ms_id)
 CREATE TABLE restcomm_extensions_configuration (
 sid VARCHAR(34) NOT NULL PRIMARY KEY,
 extension VARCHAR(255) NOT NULL,
-enabled  BOOLEAN NOT NULL DEFAULT TRUE,
 configuration_data LONGTEXT NOT NULL,
 configuration_type VARCHAR(255) NOT NULL,
 date_created DATETIME NOT NULL,
-date_updated DATETIME
+date_updated DATETIME,
+enabled  BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 INSERT INTO restcomm_accounts VALUES (

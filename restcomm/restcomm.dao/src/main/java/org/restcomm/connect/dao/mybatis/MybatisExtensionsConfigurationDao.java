@@ -248,7 +248,9 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
     private ExtensionConfiguration toExtensionConfiguration(final Map<String, Object> map) {
         final Sid sid = new Sid((String)map.get("sid"));
         final String extension = (String) map.get("extension");
-        final boolean enabled = readBoolean(map.get("enabled"));
+        boolean enabled = true;
+        if (readBoolean(map.get("enabled")) != null)
+            enabled = readBoolean(map.get("enabled"));
         final Object confData = map.get("configuration_data");
         final ExtensionConfiguration.configurationType confType =
                 ExtensionConfiguration.configurationType.valueOf((String)map.get("configuration_type"));
@@ -261,7 +263,6 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("sid", DaoUtils.writeSid(extensionConfiguration.getSid()));
         map.put("extension", extensionConfiguration.getExtensionName());
-        map.put("enabled", extensionConfiguration.isEnabled());
 
         if (extensionConfiguration.getConfigurationData() != null)
             map.put("configuration_data", extensionConfiguration.getConfigurationData());
@@ -271,6 +272,8 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
             map.put("date_created", DaoUtils.writeDateTime(extensionConfiguration.getDateCreated()));
         if (extensionConfiguration.getDateUpdated() != null)
             map.put("date_updated", DaoUtils.writeDateTime(extensionConfiguration.getDateUpdated()));
+
+        map.put("enabled", extensionConfiguration.isEnabled());
         return map;
     }
 }
