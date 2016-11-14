@@ -30,7 +30,7 @@
   </insert>
 
   <update id="updateConfiguration" parameterType="map">
-    UPDATE restcomm_extensions_configuration SET configuration_data=#{configuration_data}, configuration_type=#{configuration_type}, date_updated=#{date_updated}
+    UPDATE restcomm_extensions_configuration SET configuration_data=#{configuration_data}, configuration_type=#{configuration_type}, date_updated=#{date_updated}, enabled=#{enabled}
     WHERE sid=#{sid}
   </update>
 
