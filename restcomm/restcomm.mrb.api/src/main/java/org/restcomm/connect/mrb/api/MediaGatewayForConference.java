@@ -59,4 +59,11 @@ public final class MediaGatewayForConference {
     public boolean isThisMaster() {
         return isThisMaster;
     }
+
+    @Override
+    public String toString() {
+        return "MediaGatewayForConference [conferenceSid=" + conferenceSid + ", mediaGateway=" + mediaGateway
+                + ", masterConfernceEndpointIdName=" + masterConfernceEndpointIdName + ", isThisMaster=" + isThisMaster
+                + "]";
+    }
 }
