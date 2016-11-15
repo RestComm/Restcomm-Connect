@@ -128,6 +128,16 @@ public class AccountsEndpointTest extends EndpointTest {
         JsonObject adminAccount = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
                 adminAuthToken, adminUsername);
         assertTrue(adminAccount.get("sid").getAsString().equals(adminAccountSid));
+        // this account has its password hashed in md5. We send plaintext. Authentication should pass
+        JsonObject account = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), "md5pass@company.com",
+                "arnaki", "md5pass@company.com");
+        assertTrue(account.get("sid").getAsString().equals("AC55555555555555555555555555555555"));
+        Assert.assertNotNull(account.get("auth_token"));
+        // this account has its password in pplaintext form. We send plaintext. Authentication should pass
+        account = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), "plainpass@company.com",
+                "arnaki", "plainpass@company.com");
+        assertTrue(account.get("sid").getAsString().equals("AC66666666666666666666666666666666"));
+        Assert.assertNotNull(account.get("auth_token"));
     }
 
     @Test
@@ -174,6 +184,9 @@ public class AccountsEndpointTest extends EndpointTest {
         Assert.assertFalse(createdAuthTokenMD5.equals(authToken)); // random AuthToken should differ from md5ed form
         // AuthToken in a GET request to retrieve a child of admin using admin's authToken as creds should be missing
         Assert.assertNull(getAccountResponse.get("auth_token"));
+        // creating an account with AuthToken credentials should fail with 403
+        ClientResponse response = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, "fj9dkd@company.com", "RestComm12!@");
+        Assert.assertEquals(403,response.getStatus());
     }
 
     @Test
@@ -199,6 +212,11 @@ public class AccountsEndpointTest extends EndpointTest {
                 adminUsername, adminAuthToken, updatedUsername);
         Assert.assertEquals("Role field is not updated", "Administrator", updateAccountResponse.get("role").getAsString());
         Assert.assertEquals("Role field is not updated", "Administrator", getAccountResponse.get("role").getAsString());
+
+        // updaring an account using an AuthToken as credentials should fail with 403
+        ClientResponse response = RestcommAccountsTool.getInstance().updateAccountResponse(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, updatedAccountSid, "updated2", "Restcomm2", null, "Developer", "active" );
+        Assert.assertEquals(403, response.getStatus());
     }
 
     @Test
@@ -513,10 +531,15 @@ public class AccountsEndpointTest extends EndpointTest {
         String resetAccountAuthToken = resetAccountJson.get("auth_token").getAsString();
         Assert.assertNotNull(resetAccountAuthToken);
         Assert.assertEquals(32,resetAccountAuthToken.length());
-        // make sure the account status is set to closed
         Assert.assertFalse(newAccountAuthToken.equals(resetAccountAuthToken));
         // try to retrieve the account using the AuthToken this time
         JsonObject retrievedAccountJson = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), newAccountSid, resetAccountAuthToken, "resettoken@company.com");
+        // make sure one can't reset the AuthToken using an AuthToken
+        jersey = getClient(newAccountSid, resetAccountAuthToken);
+        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+newAccountSid+"/resetAuthToken") );
+        response = resource.post(ClientResponse.class);
+        Assert.assertEquals(403, response.getStatus());
+
     }
 
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
