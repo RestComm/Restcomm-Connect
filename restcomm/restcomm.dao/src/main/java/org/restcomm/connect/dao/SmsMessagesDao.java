@@ -41,5 +41,5 @@ public interface SmsMessagesDao {
 
     void updateSmsMessage(SmsMessage smsMessage);
 
-    int getSmsMessagesPerAccountLastPerMinute(Sid accountSid) throws ParseException;
+    int getSmsMessagesPerAccountLastPerMinute(String accountSid) throws ParseException;
 }
