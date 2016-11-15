@@ -25,12 +25,12 @@
 <mapper namespace="org.restcomm.connect.dao.ExtensionsConfigurationDao">
   <insert id="addConfiguration" parameterType="map">
     INSERT INTO restcomm_extensions_configuration (sid, extension, configuration_data, configuration_type,
-    date_created, date_updated) VALUES (#{sid}, #{extension}, #{configuration_data}, #{configuration_type},
-    #{date_created}, #{date_updated});
+    date_created, date_updated, enabled) VALUES (#{sid}, #{extension}, #{configuration_data}, #{configuration_type},
+    #{date_created}, #{date_updated}, #{enabled});
   </insert>
 
   <update id="updateConfiguration" parameterType="map">
-    UPDATE restcomm_extensions_configuration SET configuration_data=#{configuration_data}, configuration_type=#{configuration_type}, date_updated=#{date_updated}
+    UPDATE restcomm_extensions_configuration SET configuration_data=#{configuration_data}, configuration_type=#{configuration_type}, date_updated=#{date_updated}, enabled=#{enabled}
     WHERE sid=#{sid}
   </update>
 
