@@ -503,13 +503,13 @@ public final class Conference extends UntypedActor {
         if (isRunning()) {
             moderatorPresent = message.isConfModeratorPresent();
             if (logger.isInfoEnabled()) {
-                logger.info("Received Play message for conference: "+this.name+" , number of local participants: "+this.calls.size()+" , isRunning: "+isRunning()+" ,isModeratorPresent: "+this.moderatorPresent + " iterations: "+message.iterations());
+                logger.info("Received Play message for conference: "+this.name+" , number of local participants: "+this.calls.size()+ " globalNoOfParticipants: "+globalNoOfParticipants+", isRunning: true, isModeratorPresent: "+this.moderatorPresent + " iterations: "+message.iterations());
             }
             // Forward message to media server controller
             this.mscontroller.tell(message, sender);
         } else {
             if (logger.isInfoEnabled()) {
-                logger.info("Play will not be processed for conference: "+this.name+" , number of local participants: "+this.calls.size()+" , isRunning: "+isRunning()+" ,isModeratorPresent: "+this.moderatorPresent+ " iterations: "+message.iterations());
+                logger.info("Play will not be processed for conference: "+this.name+" , number of local participants: "+this.calls.size()+ " globalNoOfParticipants: "+globalNoOfParticipants+" , isRunning: false, isModeratorPresent: "+this.moderatorPresent+ " iterations: "+message.iterations());
             }
         }
     }
