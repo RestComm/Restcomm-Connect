@@ -76,10 +76,12 @@ This will bring up the IDE Settings form for the logged user:
 
 image:./images/ide_settings_profile_form_complete.png[ide_settings_profile_form_complete,width=300,height=179]
 
-Supply the credentials of the Restcomm account that will be used to create the call. Typing the _username_ and _password_ you use to log into RVD will do.
+Supply the credentials of the Restcomm account that will be used to create the call. You can find them in the Administration Console dashboard.
 
 * Set *Username* to _administrator@company.com_
-* Set *Password* to whatever password you have set
+* Set *Auth Token* to the account AuthToken copid from Restcomm Console dashboard
+
+_* As of Restcomm 8.0.0 *Password* is no more accepted and *Auth Token* is required for security reasons_.
 
 _* As of Restcomm 7.5.0 these credentials need to be configured separately for each different user that operates RVD. For older versions, an RVD-wide approach was used that posed various security issues and was abandoned._
 
@@ -174,7 +176,7 @@ As of Restcomm version 7.7.0 support for HTTP Basic authentication has been adde
 
 credentials 
 
-  _administrator@company.com:RestComm
+  administrator@company.com:77f8c12cc7b8f8423e5c38b035249166
   
 URL
 
@@ -182,7 +184,8 @@ URL
   
 Headers
 
-  Authorization: Basic YWRtaW5pc3RyYXRvckBjb21wYW55LmNvbTpSZXN0Q29tbQ==
+  Authorization: Basic YWRtaW5pc3RyYXRvckBjb21wYW55LmNvbTo3N2Y4YzEyY2M3YjhmODQyM2U1YzM4YjAzNTI0OTE2
+                       Ng==
   
 * Note that there is no *token* URL parameter
 * You don't need to supply the _Access Token_ field in the WebTrigger form discribed in _Step 4_. In fact, you can have this field empty to disable token authentication.
