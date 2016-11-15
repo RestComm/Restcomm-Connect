@@ -11,7 +11,7 @@ Accounts and sub-accounts are useful for things like segmenting phone numbers an
 
 */2012-04-24/Accounts/\{EmailAddress}*
 
-Both the Account `sid` and the `email_address` field can be used to access an account.
+Both the Account `sid` and the `email_address` fields can be used as identifiers to access an account.
 
 === Resource Properties
 
@@ -34,7 +34,7 @@ Both the Account `sid` and the `email_address` field can be used to access an ac
 
 Returns the representation of an Account resource, including the properties above.
 
-==== Credentials
+===== *Credentials*
 
 Both _Password_ and _AuthToken_ credentials can be used to retrieve an account.
 
@@ -52,7 +52,7 @@ Modifies an Account resource and returns the representation, including the prope
 |Password |A password that will be used to generate the AuthToken for the new Account resource.
 |==============================================================================================
 
-==== Credentials
+===== *Credentials*
 
 Only _Password_ credentials are allowed for PUT/POST operations.
 
@@ -62,7 +62,7 @@ Only _Password_ credentials are allowed for PUT/POST operations.
 
 Resets the Authorization token for an account and returns the updated Account.
 
-==== Credentials
+===== *Credentials*
 
 Requires _Password_ credentials.
 
@@ -70,16 +70,16 @@ Requires _Password_ credentials.
 
 Not all Account operations will work with the same type of credentials. Retrieving a single account will work both when _Auth Token_  or a _Password_ are used as credentials. More critical operations such as account _update_ or AuthToken _reset_ will require a _Password_.
 
-==== AuthToken presense
+==== AuthToken presense in responses
 Typically, most operations that return an Account won't include the AuthToken property in the response. There are two cases however when the AuthToken is present.
 
 1. Retrieving one's own account using _Password_ credentials. 'Own' here means that the account SID in the credentials is the same as the SID of the account that is requested.
 
-2. Account's AuthToken reset.
+2. Account's AuthToken reset operation returns an Account that includes the newlly created AuthToken.
 
 === Use cases
 
-==== **Get information about the default account**
+==== *Get information about the default account*
 
 ....
 curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf
@@ -178,8 +178,11 @@ The above commands will print an output similar to the one below:
   </Account>
 ----
 
-[[Accounts_List]]
-== Account List Resource
+[[sub-accounts]]
+== Sub-Accounts
+
+An account may have children accounts called _Sub-Accounts_. Parent accounts have access to their sub-accounts. You can read more about Sub-Accounts and Multi-tenancy http://docs.telestax.com/restcomm-multi-tenancy-and-managing-sub-accounts/[HERE].
+{nbsp}
 
 === Account List Resource URI
 
@@ -187,15 +190,15 @@ The above commands will print an output similar to the one below:
 
 === Supported Operations
 
-**HTTP GET**
+==== *HTTP GET*
 
 Returns the list representation of all the *Sub-Account* resources for this **Account**, including the properties above.
 
-**HTTP POST**
+==== *HTTP POST*
 
 Creates a new Sub-Account and returns the representation of the Sub-Account resource, including the properties above. Below you will find a list of required and optional parameters.  
 
-=== Request Parameters
+==== Request Parameters
 
 [cols=",",options="header",]
 |==============================================================================================================================================================================================================================
@@ -207,13 +210,6 @@ Creates a new Sub-Account and returns the representation of the Sub-Account reso
 |Role(Required) |The security role that this Account resource will use. If no role is provided then the role of the account resource creating this will be inherited to the new Account resource and may compromise the system.
 |==============================================================================================================================================================================================================================
 
-
-[[sub-accounts]]
-== Sub-Accounts
-
-An account may have children accounts called _Sub-Accounts_. Parent accounts have access to their sub-accounts. You can read more about Sub-Accounts and Multi-tenancy http://docs.telestax.com/restcomm-multi-tenancy-and-managing-sub-accounts/[HERE].
-
-{nbsp}
 
 ==== Create a new Sub-Account
 
@@ -289,16 +285,11 @@ curl -X PUT https://ACae6e420f425248d6a26948c17a9e2acf:{password}@127.0.0.1:8080
 When an account is closed access to the system through it is revoked and most of its resources are deleted. The actual account entity will remain present though.
 
 [[delete-sub-accounts]]
-=== Delete Sub-Accounts (deprecated)
+==== Delete Sub-Accounts (deprecated)
 
-.XML Account Deletion
 ----
 curl -X DELETE https://ACae6e420f425248d6a26948c17a9e2acf:PWD@192.168.1.3:8080/restcomm/2012-04-24/Accounts/<Sub-Account-SID>
 ----
 
-.JSON Account Deletion
-----
-curl -X DELETE https://ACae6e420f425248d6a26948c17a9e2acf:PWD@192.168.1.3:8080/restcomm/2012-04-24/Accounts.json/<Sub-Account-SID>.json
-----
 
 NOTE: Account deletion has been deprecated from the REST API. Both of these methods will return HTTP 405. You will need to **close** the account instead.
