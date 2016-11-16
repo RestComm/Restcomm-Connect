@@ -220,7 +220,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         var deferred = $q.defer();
         var apiPath = "/restcomm/2012-04-24/Accounts.json/" + account.sid;
         var auth_header = basicAuthHeader(account.sid, account.auth_token, true)
-        var params = {Auth_Token: md5.createHash(newPassword)};
+        var params = {Password: newPassword};
         var update = $http({
         method: 'PUT',
         url: apiPath,
