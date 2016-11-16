@@ -104,24 +104,6 @@ public abstract class AbstractEndpoint {
         return hasVoiceCallerIdLookup;
     }
 
-/*
-    protected void secure(final Account account, final String permission) throws AuthorizationException {
-        final Subject subject = SecurityUtils.getSubject();
-        if (account != null && account.getSid() != null) {
-            final Sid accountSid = account.getSid();
-            if (account.getStatus().equals(Account.Status.ACTIVE)
-                    && (subject.hasRole("Administrator") || (subject.getPrincipal().toString().equals(accountSid.toString()) && subject
-                            .isPermitted(permission)))) {
-                return;
-            } else {
-                throw new AuthorizationException();
-            }
-        } else {
-            throw new AuthorizationException();
-        }
-    }
-    */
-
     // A general purpose method to test incoming parameters for meaningful data
     protected boolean isEmpty(Object value) {
         if (value == null)
@@ -134,9 +116,17 @@ public abstract class AbstractEndpoint {
     // Quick'n'dirty error response building
     String buildErrorResponseBody(String message, MediaType type) {
         if (!type.equals(MediaType.APPLICATION_XML_TYPE)) { // fallback to JSON if not XML
-            return "{\"message\":"+message+"}";
+            return "{\"message\":\""+message+"\"}";
         } else {
             return "<RestcommResponse><Message>" + message + "</Message></RestcommResponse>";
+        }
+    }
+
+    String buildErrorResponseBody(String message, String error, MediaType type) {
+        if (!type.equals(MediaType.APPLICATION_XML_TYPE)) { // fallback to JSON if not XML
+            return "{\"message\":"+message+",\n\"error\":"+error+"}";
+        } else {
+            return "<RestcommResponse><Message>" + message + "</Message><Error>"+ error +"</Error></RestcommResponse>";
         }
     }
 }

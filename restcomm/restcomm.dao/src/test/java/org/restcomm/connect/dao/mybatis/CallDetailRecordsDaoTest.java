@@ -173,11 +173,11 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         // Create a new CDR in the data store.
         cdrs.addCallDetailRecord(cdr);
         // Validate the results.
-        assertTrue(cdrs.getCallDetailRecords(account).size() == 1);
+        assertTrue(cdrs.getCallDetailRecordsByAccountSid(account).size() == 1);
         // Delete the CDR.
         cdrs.removeCallDetailRecords(account);
         // Validate that the CDRs were removed.
-        assertTrue(cdrs.getCallDetailRecords(account).size() == 0);
+        assertTrue(cdrs.getCallDetailRecordsByAccountSid(account).size() == 0);
     }
 
     public void testReadByRecipient() {

@@ -31,13 +31,13 @@
 <mapper namespace="org.restcomm.connect.dao.ExtensionsConfigurationDao">
     <insert id="addConfiguration" parameterType="map">
         INSERT INTO "restcomm_extensions_configuration" ("sid", "extension", "configuration_data", "configuration_type",
-        "date_created", "date_updated") VALUES (#{sid}, #{extension}, #{configuration_data}, #{configuration_type},
-        #{date_created}, #{date_updated});
+        "date_created", "date_updated", "enabled") VALUES (#{sid}, #{extension}, #{configuration_data}, #{configuration_type},
+        #{date_created}, #{date_updated}, #{enabled});
     </insert>
 
     <update id="updateConfiguration" parameterType="map">
-        UPDATE "restcomm_extensions_configuration" SET "configuration_data"=#{configuration_data}, "configuration_type"=#{configuration_type}, "date_updated"=#{date_updated}
-        WHERE "extension"=#{extension}
+        UPDATE "restcomm_extensions_configuration" SET "configuration_data"=#{configuration_data}, "configuration_type"=#{configuration_type}, "date_updated"=#{date_updated}, "enabled"=#{enabled}
+        WHERE "sid"=#{sid}
     </update>
 
     <select id="getConfigurationByName" parameterType="map" resultType="hashmap">
@@ -48,6 +48,10 @@
         SELECT * FROM "restcomm_extensions_configuration" WHERE "sid"=#{sid};
     </select>
 
+    <select id="getAllConfiguration" parameterType="map" resultType="hashmap">
+        SELECT * FROM "restcomm_extensions_configuration";
+    </select>
+
     <delete id="deleteConfigurationBySid" parameterType="string">
         DELETE FROM "restcomm_extensions_configuration" WHERE "sid"=#{sid};
     </delete>
@@ -55,4 +59,12 @@
     <delete id="deleteConfigurationByName" parameterType="string">
         DELETE FROM "restcomm_extensions_configuration" WHERE "extension"=#{extension};
     </delete>
+
+    <select id="getDateUpdatedByName" parameterType="String" resultType="date">
+        SELECT "date_updated" FROM "restcomm_extensions_configuration" WHERE "extension"=#{extension};
+    </select>
+
+    <select id="getDateUpdatedBySid" parameterType="String" resultType="date">
+        SELECT "date_updated" FROM "restcomm_extensions_configuration" WHERE "sid"=#{sid};
+    </select>
 </mapper>
