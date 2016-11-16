@@ -8,6 +8,7 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.apache.log4j.Logger;
+import org.apache.shiro.crypto.hash.Md5Hash;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
@@ -363,11 +364,18 @@ public class AccountsEndpointTest extends EndpointTest {
                     adminPassword,subAccountResponse.get("sid").getAsString(), null, subAccountNewPassword, null, null, null);
             assertTrue(thinhPhone.register(reqUri, "lyhungthinh2", subAccountNewPassword, thinhContact, 1800, 1800));
             assertTrue(thinhPhone.unregister(thinhContact, 0));
+
+            clientOfAccount = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
+                    subAccountResponse, adminUsername, adminPassword);
+            assertTrue(clientOfAccount.get("password").getAsString().equals(subAccountNewPassword));
+
+            //RestcommAccountsTool.getInstance().removeAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
+            //        subAccountResponse.get("sid").getAsString());
         } finally {
             stopSipStack();
         }
     }
-
+    
     @Test
     public void testCloseAccountCheckClient() throws Exception {
         try {
@@ -425,9 +433,13 @@ public class AccountsEndpointTest extends EndpointTest {
         JsonObject jsonObject = parser.parse(response.getEntity(String.class)).getAsJsonObject();
         // make sure the account status is set to closed
         Assert.assertEquals("closed", jsonObject.get("status").getAsString());
-        // assert removed accounts children are closed too - TODO enable this once three-level accounts hierarchies are supported - https://github.com/RestComm/Restcomm-Connect/issues/1397
-            // resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+removed11Sid) );
-            // ...
+        // assert removed accounts children are closed too
+        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+removed11Sid) );
+        response = resource.get(ClientResponse.class);
+        Assert.assertEquals(200, response.getStatus());
+        parser = new JsonParser();
+        jsonObject = parser.parse(response.getEntity(String.class)).getAsJsonObject();
+        Assert.assertEquals("closed", jsonObject.get("status").getAsString());
 
         jersey = getClient("removed-top@company.com", commonAuthToken);
         // assert the applications of the account are removed

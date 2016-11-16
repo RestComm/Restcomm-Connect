@@ -25,6 +25,7 @@ import org.apache.log4j.Logger;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
+import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
@@ -202,15 +203,15 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
             throw new OperatedAccountMissing();
         }
         if (type == SecuredType.SECURED_STANDARD) {
-            if (secureLevelControl(userIdentityContext.getEffectiveAccount(), operatedAccount, null) != AuthOutcome.OK )
+            if (secureLevelControl(operatedAccount, null) != AuthOutcome.OK )
                 throw new InsufficientPermission();
         } else
         if (type == SecuredType.SECURED_APP) {
-            if (secureLevelControlApplications(userIdentityContext.getEffectiveAccount(),operatedAccount,null) != AuthOutcome.OK)
+            if (secureLevelControlApplications(operatedAccount,null) != AuthOutcome.OK)
                 throw new InsufficientPermission();
         } else
         if (type == SecuredType.SECURED_ACCOUNT) {
-            if (secureLevelControlAccounts(userIdentityContext.getEffectiveAccount(), operatedAccount) != AuthOutcome.OK)
+            if (secureLevelControlAccounts(operatedAccount) != AuthOutcome.OK)
                 throw new InsufficientPermission();
         }
     }
@@ -223,13 +224,17 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     protected void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type) throws AuthorizationException {
         checkAuthenticatedAccount();
+        if (operatedAccount == null) {
+            // if operatedAccount is NULL, we'll probably return a 404. But let's handle that in a central place.
+            throw new OperatedAccountMissing();
+        }
         String resourceAccountSidString = resourceAccountSid == null ? null : resourceAccountSid.toString();
         if (type == SecuredType.SECURED_APP) {
-            if (secureLevelControlApplications(userIdentityContext.getEffectiveAccount(), operatedAccount, resourceAccountSidString) != AuthOutcome.OK)
+            if (secureLevelControlApplications(operatedAccount, resourceAccountSidString) != AuthOutcome.OK)
                 throw new InsufficientPermission();
         } else
         if (type == SecuredType.SECURED_STANDARD){
-            if (secureLevelControl(userIdentityContext.getEffectiveAccount(), operatedAccount, resourceAccountSidString) != AuthOutcome.OK)
+            if (secureLevelControl(operatedAccount, resourceAccountSidString) != AuthOutcome.OK)
                 throw new InsufficientPermission();
         } else
         if (type == SecuredType.SECURED_ACCOUNT)
@@ -318,36 +323,36 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * Applies the following access control rule:
 
      * If no sub-resources are involved (resourceAccountSid is null):
-     *  - If operatingAccount is the same or a parent of operatedAccount access is granted
+     *  - If operatingAccount is the same or an ancestor of operatedAccount, access is granted
      * If there are sub-resources involved:
-     *  - If operatingAccount is the same or a parent of operatedAccount AND resoulrce belongs to operatedAccount access is granted
+     *  - If operatingAccount is the same or an ancestor of operatedAccount AND resource belongs to operatedAccount access is granted
 
-     * @param operatingAccount  the account that is authenticated
      * @param operatedAccount the account specified in the URL
      * @param resourceAccountSid the account SID property of the operated resource e.g. the accountSid of a DID.
      *
      */
-    private AuthOutcome secureLevelControl( Account operatingAccount, Account operatedAccount, String resourceAccountSid) {
+    private AuthOutcome secureLevelControl(Account operatedAccount, String resourceAccountSid) {
+        Account operatingAccount = userIdentityContext.getEffectiveAccount();
         String operatingAccountSid = null;
         if (operatingAccount != null)
             operatingAccountSid = operatingAccount.getSid().toString();
         String operatedAccountSid = null;
         if (operatedAccount != null)
             operatedAccountSid = operatedAccount.getSid().toString();
-
-        if (!operatingAccountSid.equals(operatedAccountSid)) {
-            Account account = accountsDao.getAccount(new Sid(operatedAccountSid));
-            if (!operatingAccountSid.equals(String.valueOf(account.getParentSid()))) {
+        // in case we're dealing with resources, we first make sure that they are accessed under their owner account.
+        if (resourceAccountSid != null)
+            if (! resourceAccountSid.equals(operatedAccountSid))
                 return AuthOutcome.FAILED;
-            } else if (resourceAccountSid != null && !operatedAccountSid.equals(resourceAccountSid)) {
-                return AuthOutcome.FAILED;
-            }
-        } else if (resourceAccountSid != null && !operatingAccountSid.equals(resourceAccountSid)) {
-            // operating account equals operated account but they are both different that resource account
-            // resources can only be accessed under their owner account. Otherwise we have a bad request
-            return AuthOutcome.FAILED;
+        // check parent/ancestor relationship between operatingAccount and operatedAccount
+        if ( operatingAccountSid.equals(operatedAccountSid) )
+            return AuthOutcome.OK;
+        if ( operatedAccount.getParentSid() != null ) {
+            if (operatedAccount.getParentSid().toString().equals(operatingAccountSid))
+                return AuthOutcome.OK;
+            else if (accountsDao.getAccountLineage(operatedAccount).contains(operatingAccountSid))
+                return AuthOutcome.OK;
         }
-        return AuthOutcome.OK;
+        return AuthOutcome.FAILED;
     }
 
     /** Applies the following access control rules
@@ -355,24 +360,20 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * If an application Account Sid is given:
      *  - If operatingAccount is the same as the operated account and application resource belongs to operated account too
      *    acces is granted.
-     * If no application Accouns Sid is given:
+     * If no application Account Sid is given:
      *  - If operatingAccount is the same as the operated account access is granted.
      *
-     * NOTE: Parent relationships on accounts do not grant access here.
+     * NOTE: Parent/ancestor relationships on accounts do not grant access here.
      *
-     * @param operatingAccount
      * @param operatedAccount
      * @param applicationAccountSid
      * @return
      */
-    private AuthOutcome secureLevelControlApplications(Account operatingAccount, Account operatedAccount, String applicationAccountSid) {
-        String operatingAccountSid = null;
-        if (operatingAccount != null)
-            operatingAccountSid = operatingAccount.getSid().toString();
-        String operatedAccountSid = null;
-        if (operatedAccount != null)
-            operatedAccountSid = operatedAccount.getSid().toString();
-
+    private AuthOutcome secureLevelControlApplications(Account operatedAccount, String applicationAccountSid) {
+        // operatingAccount and operatedAccount are not null at this point
+        Account operatingAccount = userIdentityContext.getEffectiveAccount();
+        String operatingAccountSid = operatingAccount.getSid().toString();
+        String operatedAccountSid = operatedAccount.getSid().toString();
         if (!operatingAccountSid.equals(String.valueOf(operatedAccountSid))) {
             return AuthOutcome.FAILED;
         } else if (applicationAccountSid != null && !operatingAccountSid.equals(applicationAccountSid)) {
@@ -384,32 +385,35 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     /** Applies the following access control rules:
      *
      * If the operating account is an administrator:
-     *  - If it is the same or parent of the operated account access is granted.
+     *  - If it is the same or parent/ancestor of the operated account access is granted.
      * If the operating accoutn is NOT an administrator:
      *  - If it is the same as the operated account access is granted.
      *
-     * @param operatingAccount
      * @param operatedAccount
      * @return
      */
-    private AuthOutcome secureLevelControlAccounts(Account operatingAccount, Account operatedAccount) {
-        if (operatingAccount == null || operatedAccount == null)
-            return AuthOutcome.FAILED;
+    private AuthOutcome secureLevelControlAccounts(Account operatedAccount) throws AccountHierarchyDepthCrossed {
+        // operatingAccount and operatedAccount are not null
+        Account operatingAccount = userIdentityContext.getEffectiveAccount();
+        String operatingAccountSid = operatingAccount.getSid().toString();
+        String operatedAccountSid = operatedAccount.getSid().toString();
         if (getAdministratorRole().equals(operatingAccount.getRole())) {
-            // administrator can also operate on child accounts
-            if (!String.valueOf(operatingAccount.getSid()).equals(String.valueOf(operatedAccount.getSid()))) {
-                if (!String.valueOf(operatingAccount.getSid()).equals(String.valueOf(operatedAccount.getParentSid()))) {
-                    return AuthOutcome.FAILED;
-                }
+            // administrator can also operate on themselves, direct children, grand-children
+            if (operatingAccountSid.equals(operatedAccountSid))
+                return AuthOutcome.OK;
+            if (operatedAccount.getParentSid() != null ) {
+                if (operatedAccount.getParentSid().toString().equals(operatingAccountSid ))
+                    return AuthOutcome.OK;
+                else if (accountsDao.getAccountLineage(operatedAccount).contains(operatingAccountSid))
+                    return AuthOutcome.OK;
             }
-        } else { // non-administrators
-
-            if ( operatingAccount.getSid().equals(operatedAccount.getSid()) )
+            return AuthOutcome.FAILED;
+        } else { // non-administrators can only operate directly on themselves
+            if ( operatingAccountSid.equals(operatedAccountSid) )
                 return AuthOutcome.OK;
             else
                 return AuthOutcome.FAILED;
         }
-        return AuthOutcome.OK;
     }
 
     /**

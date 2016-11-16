@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
 
@@ -87,6 +88,16 @@ public class AccountsDaoMock implements AccountsDao {
 
     @Override
     public List<String> getSubAccountSidsRecursive(Sid parentAccountSid) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public List<String> getAccountLineage(Sid accountSid) throws AccountHierarchyDepthCrossed {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public List<String> getAccountLineage(Account account) throws AccountHierarchyDepthCrossed {
         throw new NotImplementedException();
     }
 }

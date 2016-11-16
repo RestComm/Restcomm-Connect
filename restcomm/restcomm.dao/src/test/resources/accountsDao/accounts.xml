@@ -55,7 +55,7 @@
     </update>
 
     <select id="getSubAccountSids" parameterType="java.util.List" resultType="string">
-        SELECT "sid" FROM "restcomm_accounts" WHERE "account_sid" IN
+        SELECT "sid" FROM "restcomm_accounts" WHERE "parent_sid" IN
         <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
             #{item}
         </foreach>

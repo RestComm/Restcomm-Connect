@@ -23,57 +23,54 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.thoughtworks.xstream.XStream;
-import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.util.SecurityUtils;
-import org.restcomm.connect.commons.util.StringUtils;
-import org.restcomm.connect.dao.ClientsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
-import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Account.PasswordAlgorithm;
-import org.restcomm.connect.dao.entities.AccountList;
-import org.restcomm.connect.dao.entities.Client;
-import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
-import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
-import org.restcomm.connect.http.converter.AccountConverter;
-import org.restcomm.connect.http.converter.AccountListConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
-import org.restcomm.connect.http.exceptions.AuthorizationException;
-import org.restcomm.connect.http.exceptions.InsufficientPermission;
-import org.restcomm.connect.http.exceptions.PasswordTooWeak;
-import org.restcomm.connect.http.exceptions.RcmlserverNotifyError;
-import org.restcomm.connect.identity.AuthType;
-import org.restcomm.connect.identity.passwords.PasswordValidator;
-import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
-import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
-import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
+
+import static javax.ws.rs.core.MediaType.*;
+
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.CONFLICT;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.*;
+import static javax.ws.rs.core.Response.Status.*;
+
+import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
+import org.restcomm.connect.commons.util.SecurityUtils;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
+import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.AccountList;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
+import org.restcomm.connect.http.converter.AccountConverter;
+import org.restcomm.connect.http.converter.AccountListConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.exceptions.AuthorizationException;
+import org.restcomm.connect.http.exceptions.InsufficientPermission;
+import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
+import org.restcomm.connect.commons.util.StringUtils;
+import org.restcomm.connect.http.exceptions.PasswordTooWeak;
+import org.restcomm.connect.identity.AuthType;
+import org.restcomm.connect.identity.passwords.PasswordValidator;
+import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
+import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
+import org.restcomm.connect.http.exceptions.RcmlserverNotifyError;
+import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
+import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -137,7 +134,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         if (!validator.isStrongEnough(password))
             throw new PasswordTooWeak();
         // by default, use the plain-text password algorithm  for new accounts - TODO make this value configurable ?
-        PasswordAlgorithm algorithm = PasswordAlgorithm.plain;
+        Account.PasswordAlgorithm algorithm = Account.PasswordAlgorithm.plain;
         // AuthToken gets a random value
         final String authToken = SecurityUtils.generateAccountAuthToken();
         final String role = data.getFirst("Role");
@@ -343,6 +340,13 @@ public class AccountsEndpoint extends SecuredEndpoint {
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Create:Accounts", AuthType.Password);
+        // check account level depth. If we're already at third level no sub-accounts are allowed to be created
+        List<String> accountLineage = userIdentityContext.getEffectiveAccountLineage();
+        if (accountLineage.size() >= 2) {
+            // there are already 2+1=3 account levels. Sub-accounts at 4th level are not allowed
+            return status(BAD_REQUEST).entity(buildErrorResponseBody("This account is not allowed to have sub-accounts",responseType)).type(responseType).build();
+        }
+
         // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
         final Sid sid = userIdentityContext.getEffectiveAccount().getSid();
         Account account = null;
@@ -511,6 +515,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
+            // since the operated account exists, first thing to do is make sure we have access
+            secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
             // If the account is CLOSED, no updates are allowed. Return a BAD_REQUEST status code.
             Account modifiedAccount;
             try {
@@ -521,7 +527,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
             }
 
-            secure(modifiedAccount, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
             // are we closing the account ?
             if (account.getStatus() != Account.Status.CLOSED && modifiedAccount.getStatus() == Account.Status.CLOSED) {
                 closeAccountTree(modifiedAccount);

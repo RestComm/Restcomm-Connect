@@ -18,12 +18,15 @@
  *
  */
 
-package org.restcomm.connect.http.exceptions;
+package org.mobicents.servlet.restcomm.dao.exceptions;
 
 import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
 
 /**
- * @author otsakir@gmail.com - Orestis Tsakiridis
+ * Thrown when an operation needs to process account hierarchies with greater depth
+ * then the one allowed.
+ *
+ * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
  */
-public class OperatedAccountMissing extends RestcommRuntimeException {
+public class AccountHierarchyDepthCrossed extends RestcommRuntimeException {
 }
