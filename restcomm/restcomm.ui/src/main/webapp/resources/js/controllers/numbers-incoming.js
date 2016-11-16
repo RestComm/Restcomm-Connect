@@ -57,29 +57,19 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $uibModal, $dialog,
 
 // Numbers : Incoming : Details (also used for Modal) --------------------------
 
-rcMod.controller('NumberDetailsCtrl', function ($scope, $stateParams, $location, $dialog, $uibModalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope, AuthService) {
+rcMod.controller('NumberDetailsCtrl', function ($scope, $stateParams, $location, $dialog, $uibModalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope, AuthService, Applications) {
 
-  // are we editing details...
-  //if($scope.phoneSid === $stateParams.phoneSid) {
+    // are we editing details...
+    //if($scope.phoneSid === $stateParams.phoneSid) {
 
     $scope.sid = SessionService.get("sid");
     $scope.phoneSid = $stateParams.phoneSid
 
     $scope.numberDetails = RCommNumbers.get({accountSid:$scope.sid, phoneSid: $scope.phoneSid});
 
-  //} // or registering a new one ?
-  //else {
-  //  // start optional items collapsed
-  //  $scope.isCollapsed = true;
-  //
-  //  $scope.closeRegisterIncomingNumber = function () {
-  //    $uibModalInstance.dismiss('cancel');
-  //  };
-  //}
-
-  // query for available apps
-  //$scope.availableApps = RCommApps.query({account:AuthService.getEmailAddress()});
-  $scope.localApps = localApps;
+    $scope.localVoiceApps = Applications.filterByKind(localApps, 'voice');
+    $scope.localSmsApps = Applications.filterByKind(localApps, 'sms');
+    $scope.localUssdApps = Applications.filterByKind(localApps, 'ussd');
 
   //$scope.countries = countries;
   $scope.countries = allCountries;
