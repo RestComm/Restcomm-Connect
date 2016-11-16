@@ -1,21 +1,12 @@
 package org.restcomm.connect.testsuite.http;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.net.URL;
-import java.text.ParseException;
-
-import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.cafesip.sipunit.SipPhone;
@@ -30,18 +21,20 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import com.google.gson.JsonObject;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.restcomm.connect.commons.Version;
 
 import javax.sip.address.SipURI;
 import javax.ws.rs.core.MultivaluedMap;
+import java.net.URL;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -300,7 +293,7 @@ public class AccountsEndpointTest extends EndpointTest {
     @Test
     public void testCreateAdministratorAccountFails() {
         JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, "administrator@company.com", "1234");
+                adminUsername, adminAuthToken, "administrator@company.com", "RestComm12");
         assertNull(createAccountResponse);
     }
 
@@ -355,6 +348,13 @@ public class AccountsEndpointTest extends EndpointTest {
         } finally {
             stopSipStack();
         }
+    }
+
+    @Test
+    public void testCreateAccountFourthLevelFails() {
+        ClientResponse response = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(), "grandchild@company.com", commonAuthToken, "fourthlevelAccount@company.com", "RestComm12");
+        Assert.assertEquals(400, response.getStatus());
+        //Assert.assertTrue(response.getEntity(String.class).contains(""))
     }
 
     @Test
@@ -455,10 +455,13 @@ public class AccountsEndpointTest extends EndpointTest {
         JsonObject jsonObject = parser.parse(response.getEntity(String.class)).getAsJsonObject();
         // make sure the account status is set to closed
         Assert.assertEquals("closed", jsonObject.get("status").getAsString());
-        // assert removed accounts children are closed too - TODO enable this once three-level accounts hierarchies are supported - https://github.com/RestComm/Restcomm-Connect/issues/1397
-            // resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+removed11Sid) );
-            // ...
-
+        // assert removed accounts children are closed too
+        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+removed11Sid) );
+        response = resource.get(ClientResponse.class);
+        Assert.assertEquals(200, response.getStatus());
+        parser = new JsonParser();
+        jsonObject = parser.parse(response.getEntity(String.class)).getAsJsonObject();
+        Assert.assertEquals("closed", jsonObject.get("status").getAsString());
         // assert the applications of the account are removed
         resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Applications/AP00000000000000000000000000000001.json" ) );
         Assert.assertEquals(404, resource.get(ClientResponse.class).getStatus());

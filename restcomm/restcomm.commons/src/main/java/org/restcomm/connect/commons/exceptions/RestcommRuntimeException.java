@@ -18,7 +18,7 @@
  *
  */
 
-package org.restcomm.connect.http.exceptions;
+package org.restcomm.connect.commons.exceptions;
 
 /**
  * Generic type of runtime exception that is handled centrally using exceptions mappers.
