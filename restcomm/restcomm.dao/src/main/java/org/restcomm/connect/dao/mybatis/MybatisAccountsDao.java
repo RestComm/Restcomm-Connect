@@ -22,6 +22,7 @@ package org.restcomm.connect.dao.mybatis;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
@@ -51,7 +52,7 @@ import static org.restcomm.connect.dao.DaoUtils.writeUri;
 @ThreadSafe
 public final class MybatisAccountsDao implements AccountsDao {
     private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.AccountsDao.";
-    private Integer accountRecursionDepth = 4; // maximum value for recursive account queries
+    private Integer accountRecursionDepth = 3; // maximum value for recursive account queries
     private final SqlSessionFactory sessions;
 
     public MybatisAccountsDao(final SqlSessionFactory sessions) {
@@ -165,7 +166,7 @@ public final class MybatisAccountsDao implements AccountsDao {
 
         int depth = 1;
         List<String> childrenList = getSubAccountsSids(parentList);
-        while (childrenList != null && !childrenList.isEmpty() && depth < accountRecursionDepth) {
+        while (childrenList != null && !childrenList.isEmpty() && depth <= accountRecursionDepth) {
             allChildren.addAll(childrenList);
             childrenList = getSubAccountsSids(childrenList); // retrieve children's children
 
@@ -173,6 +174,46 @@ public final class MybatisAccountsDao implements AccountsDao {
         }
 
         return allChildren;
+    }
+
+    @Override
+    public List<String> getAccountLineage(Sid accountSid) throws AccountHierarchyDepthCrossed {
+        if (accountSid == null)
+            return null;
+        List<String> ancestorList = new ArrayList<String>();
+        Sid sid = accountSid;
+        Account account = getAccount(sid);
+        if (account == null)
+            throw new IllegalArgumentException("Wrong accountSid is given to search for ancestor on it. This account does not even exist");
+        int depth = 1; // already having one-level of accounts
+        while ( true ) {
+            Sid parentSid = account.getParentSid();
+            if (parentSid != null) {
+                depth ++;
+                if (depth > accountRecursionDepth)
+                    throw new AccountHierarchyDepthCrossed();
+                ancestorList.add(parentSid.toString());
+                Account parentAccount = getAccount(parentSid);
+                if (parentAccount == null)
+                    throw new IllegalStateException("Parent account " + parentSid.toString() + " does not exist although its child does " + account.getSid().toString());
+                account = parentAccount;
+            } else
+                break;
+        }
+        return ancestorList;
+    }
+
+    @Override
+    public List<String> getAccountLineage(Account account) throws AccountHierarchyDepthCrossed {
+        if (account == null)
+            return null;
+        List<String> lineage = new ArrayList<String>();
+        Sid parentSid = account.getParentSid();
+        if (parentSid != null) {
+            lineage.add(parentSid.toString());
+            lineage.addAll(getAccountLineage(parentSid));
+        }
+        return lineage;
     }
 
     private List<String> getSubAccountsSids(List<String> parentAccountSidList) {

@@ -326,6 +326,13 @@ public class AccountsEndpoint extends SecuredEndpoint {
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Create:Accounts");
+        // check account level depth. If we're already at third level no sub-accounts are allowed to be created
+        List<String> accountLineage = userIdentityContext.getEffectiveAccountLineage();
+        if (accountLineage.size() >= 2) {
+            // there are already 2+1=3 account levels. Sub-accounts at 4th level are not allowed
+            return status(BAD_REQUEST).entity(buildErrorResponseBody("This account is not allowed to have sub-accounts",responseType)).type(responseType).build();
+        }
+
         // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
         final Sid sid = userIdentityContext.getEffectiveAccount().getSid();
         Account account = null;
@@ -495,6 +502,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
+            // since the operated account exists, first thing to do is make sure we have access
+            secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
             // If the account is CLOSED, no updates are allowed. Return a BAD_REQUEST status code.
             Account modifiedAccount;
             try {
@@ -505,7 +514,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
             }
 
-            secure(modifiedAccount, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
             // are we closing the account ?
             if (account.getStatus() != Account.Status.CLOSED && modifiedAccount.getStatus() == Account.Status.CLOSED) {
                 closeAccountTree(modifiedAccount);

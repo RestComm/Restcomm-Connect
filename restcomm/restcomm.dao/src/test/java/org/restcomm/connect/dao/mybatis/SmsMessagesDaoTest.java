@@ -22,10 +22,12 @@ package org.restcomm.connect.dao.mybatis;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.text.ParseException;
 import java.util.Currency;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.junit.After;
 import static org.junit.Assert.*;
@@ -39,6 +41,7 @@ import org.restcomm.connect.dao.entities.SmsMessage;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class SmsMessagesDaoTest {
+    private static Logger logger = Logger.getLogger(SmsMessagesDaoTest.class);
     private static MybatisDaoManager manager;
 
     public SmsMessagesDaoTest() {
@@ -109,6 +112,63 @@ public final class SmsMessagesDaoTest {
         messages.removeSmsMessage(sid);
         // Validate that the CDR was removed.
         assertTrue(messages.getSmsMessage(sid) == null);
+    }
+
+    private SmsMessage createSms(Sid account, SmsMessage.Direction direction, int i) {
+        final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
+        final URI url = URI.create("2012-04-24/Accounts/Acoount/SMS/Messages/unique-id.json");
+        final SmsMessage.Builder builder = SmsMessage.builder();
+        builder.setSid(sid);
+        builder.setAccountSid(account);
+        builder.setApiVersion("2012-04-24");
+        builder.setRecipient("+12223334444");
+        builder.setSender("+17778889999");
+        builder.setBody("Hello World - "+i);
+        builder.setStatus(SmsMessage.Status.SENDING);
+        builder.setDirection(direction);
+        builder.setPrice(new BigDecimal("0.00"));
+        builder.setPriceUnit(Currency.getInstance("USD"));
+        builder.setUri(url);
+        SmsMessage message = builder.build();
+        return message;
+    }
+
+    @Test
+    public void testGetSmsMessagesLastMinute() throws InterruptedException, ParseException {
+        final SmsMessagesDao messages = manager.getSmsMessagesDao();
+        final Sid account = Sid.generate(Sid.Type.ACCOUNT);
+        for (int i = 0; i < 2; i++) {
+            SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_API, i);
+            // Create a new sms message in the data store.
+            messages.addSmsMessage(message);
+            logger.info("Created message: "+message);
+        }
+        for (int i = 0; i < 2; i++) {
+            SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_CALL, i);
+            // Create a new sms message in the data store.
+            messages.addSmsMessage(message);
+            logger.info("Created message: "+message);
+        }
+        for (int i = 0; i < 2; i++) {
+            SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_REPLY, i);
+            // Create a new sms message in the data store.
+            messages.addSmsMessage(message);
+            logger.info("Created message: "+message);
+        }
+        int lastMessages = messages.getSmsMessagesPerAccountLastPerMinute(account.toString());
+        logger.info("SMS Messages last minutes: "+lastMessages);
+        assertEquals(6, lastMessages);
+        Thread.sleep(70000);
+        for (int i = 0; i < 3; i++) {
+            SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_CALL, i);
+            // Create a new sms message in the data store.
+            messages.addSmsMessage(message);
+            logger.info("Created message: "+message);
+        }
+        lastMessages = messages.getSmsMessagesPerAccountLastPerMinute(account.toString());
+        logger.info("SMS Messages last minutes: "+lastMessages);
+        assertEquals(3, lastMessages);
+        messages.removeSmsMessages(account);
     }
 
     @Test

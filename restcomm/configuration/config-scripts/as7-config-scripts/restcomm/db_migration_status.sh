@@ -24,4 +24,4 @@ chmod +x $db_upgrade_folder/flyway
 
 echo "Mysql ipaddress:port -> $MYSQL_IP_ADDRESS:$MYSQL_PORT"
 
-migrate
+status

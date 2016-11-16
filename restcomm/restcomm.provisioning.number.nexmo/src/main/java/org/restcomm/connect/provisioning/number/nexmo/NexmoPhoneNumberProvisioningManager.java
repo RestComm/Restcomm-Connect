@@ -259,7 +259,7 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
                 numberProto = phoneUtil.parse("+" + phoneNumber, "US");
             }
             int countryCode = numberProto.getCountryCode();
-            country = phoneUtil.getRegionCodeForCountryCode(countryCode);
+            country = phoneUtil.getRegionCodeForNumber(numberProto);
         } catch (NumberParseException e) {
             if(logger.isDebugEnabled())
                 logger.debug("problem parsing phone number " + phoneNumber, e);

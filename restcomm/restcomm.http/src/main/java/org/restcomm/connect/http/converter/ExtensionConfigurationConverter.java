@@ -32,7 +32,7 @@ import org.restcomm.connect.extension.api.ExtensionConfiguration;
 import java.lang.reflect.Type;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author gvagenas@gmail.com
  */
 @ThreadSafe
 public final class ExtensionConfigurationConverter extends AbstractConverter implements JsonSerializer<ExtensionConfiguration> {
@@ -62,6 +62,9 @@ public final class ExtensionConfigurationConverter extends AbstractConverter imp
         writer.startNode("Configuration");
         writer.setValue(extensionConfiguration.getConfigurationData().toString());
         writer.endNode();
+        writer.startNode("Configuration Type");
+        writer.setValue(extensionConfiguration.getConfigurationType().name());
+        writer.endNode();
         writeDateCreated(extensionConfiguration.getDateCreated(),writer);
         writeDateCreated(extensionConfiguration.getDateUpdated(), writer);
         writer.endNode();
@@ -72,7 +75,8 @@ public final class ExtensionConfigurationConverter extends AbstractConverter imp
         final JsonObject object = new JsonObject();
         writeSid(extensionConfiguration.getSid(), object);
         object.addProperty("extension", extensionConfiguration.getExtensionName());
-        object.addProperty("configuration", ((JsonObject)extensionConfiguration.getConfigurationData()).toString());
+        object.addProperty("configuration", extensionConfiguration.getConfigurationData().toString());
+        object.addProperty("configuration type", extensionConfiguration.getConfigurationType().name());
         writeDateCreated(extensionConfiguration.getDateCreated(), object);
         writeDateUpdated(extensionConfiguration.getDateUpdated(), object);
         return object;

@@ -351,20 +351,24 @@ public class SmppClientOpsThread implements Runnable {
             } else {
 
                 DeliverSm deliverSm = (DeliverSm) pduRequest;
-                String decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
-                String destSmppAddress = deliverSm.getDestAddress().getAddress();
-                String sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
-                Charset charset;
-                if (DataCoding.DATA_CODING_UCS2 == deliverSm.getDataCoding()) {
-                    charset = CharsetUtil.CHARSET_UCS_2;
-                } else {
-                    charset = CharsetUtil.CHARSET_GSM;
-                }
-                //send received SMPP PDU message to restcomm
                 try {
-                    sendSmppMessageToRestcomm(decodedPduMessage, destSmppAddress, sourceSmppAddress, charset);
-                } catch (IOException | ServletException e) {
-                    logger.error("Exception while trying to dispatch incoming SMPP message to Restcomm: " + e);
+                    String decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
+                    String destSmppAddress = deliverSm.getDestAddress().getAddress();
+                    String sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
+                    Charset charset;
+                    if (DataCoding.DATA_CODING_UCS2 == deliverSm.getDataCoding()) {
+                        charset = CharsetUtil.CHARSET_UCS_2;
+                    } else {
+                        charset = CharsetUtil.CHARSET_GSM;
+                    }
+                    //send received SMPP PDU message to restcomm
+                    try {
+                        sendSmppMessageToRestcomm(decodedPduMessage, destSmppAddress, sourceSmppAddress, charset);
+                    } catch (IOException | ServletException e) {
+                        logger.error("Exception while trying to dispatch incoming SMPP message to Restcomm: " + e);
+                    }
+                } catch (Exception e) {
+                    logger.error("Exception while trying to process incoming SMPP message to Restcomm: " + e);
                 }
             }
             return response;

@@ -19,8 +19,12 @@
 
 package org.restcomm.connect.dao;
 
+import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
+
+import java.util.List;
 
 /**
  * Created by gvagenas on 11/10/2016.
@@ -28,15 +32,15 @@ import org.restcomm.connect.extension.api.ExtensionConfiguration;
 public interface ExtensionsConfigurationDao {
     /**
      * Add a new ExtensionConfiguration
-     * @param extensionsConfiguration
+     * @param extensionConfiguration
      */
-    void addConfiguration(ExtensionConfiguration extensionsConfiguration);
+    void addConfiguration(ExtensionConfiguration extensionConfiguration) throws ConfigurationException;
 
     /**
      * Update an existing ExtensionConfiguration
      * @param extensionConfiguration
      */
-    void updateConfiguration(ExtensionConfiguration extensionConfiguration);
+    void updateConfiguration(ExtensionConfiguration extensionConfiguration) throws ConfigurationException;
 
     /**
      * Get extension configuration by extension name
@@ -53,6 +57,12 @@ public interface ExtensionsConfigurationDao {
     ExtensionConfiguration getConfigurationBySid(Sid extensionSid);
 
     /**
+     * Get all extension configuration
+     * @return List<ExtensionConfiguration>
+     */
+    List<ExtensionConfiguration> getAllConfiguration();
+
+    /**
      * Delete extension configuration by extension name
      * @param extensionName
      */
@@ -64,6 +74,22 @@ public interface ExtensionsConfigurationDao {
      */
     void deleteConfigurationBySid(Sid extensionSid);
 
+    /**
+     * Check if there is a newer version of the configuration in the DB using extension name
+     * @param extensionName
+     * @param dateTime
+     * @return
+     */
+    boolean isLatestVersionByName(String extensionName, DateTime dateTime);
+
+    /**
+     * Check if there is a newer version of the configuration in the DB using extension sid
+     * @param extensionSid
+     * @param dateTime
+     * @return
+     */
+    boolean isLatestVersionBySid(Sid extensionSid, DateTime dateTime);
+
 
     /**
      * Validate extension configuration based on the type of the configuration data
@@ -71,21 +97,4 @@ public interface ExtensionsConfigurationDao {
      * @return
      */
     boolean validate(ExtensionConfiguration extensionConfiguration);
-
-//    /**
-//     * Get extension configuration by extension name, property name and extra parameter.
-//     * Extra parameter could be for example client name or account sid
-//     * @param extension
-//     * @param property
-//     * @param extraParameter
-//     * @return ExtensionConfigurationProperty
-//     */
-//    ExtensionConfiguration getConfigurationPropertyByExtraParameter(String extension, String property, String extraParameter);
-//
-//    /**
-//     * Get whole extension configuration by extension name
-//     * @param extension
-//     * @return
-//     */
-//    List<ExtensionConfigurationProperty> getConfigurationByExtension(String extension);
 }

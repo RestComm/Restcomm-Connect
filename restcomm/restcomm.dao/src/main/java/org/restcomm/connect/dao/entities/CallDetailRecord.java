@@ -300,10 +300,10 @@ public final class CallDetailRecord {
 
     @Override
     public String toString() {
-        return getSid()+" | "+getInstanceId()+" | "+getParentCallSid()+" | "+getConferenceSid()+"|"+getDateCreated()+"|"+getDateUpdated()+"|"+getAccountSid()+"|"+getTo()+"|"+getFrom()+"|"+
-                getPhoneNumberSid()+"|"+getStatus()+"|"+getStartTime()+"|"+getEndTime()+"|"+getDuration()+"|"+getPrice()+"|"+getPriceUnit()+"|"+getDirection()+"|"+getAnsweredBy()+"|"+
-                getApiVersion()+"|"+getForwardedFrom()+"|"+getCallerName()+"|"+getUri()+"|"+getCallPath()+"|"+getRingDuration()+"|"+isMuted()+"|"+isStartConferenceOnEnter()+"|"+
-                isEndConferenceOnExit()+"|"+isOnHold();
+        return "CDR SID: "+getSid()+" | InstanceId: "+getInstanceId()+" | ParentCallSid: "+getParentCallSid()+" | ConferenceSid: "+getConferenceSid()+" | DateCreated: "+getDateCreated()+" | DateUpdated: "+getDateUpdated()+" | AccountSid: "+getAccountSid()+" | To: "+getTo()+" | From: "+getFrom()
+                +" | PhoneNumberSid: "+getPhoneNumberSid()+" | Status: "+getStatus()+" | StartTime: "+getStartTime()+" | EndTime: "+getEndTime()+" | Duration: "+getDuration()+" | Price: "+getPrice()+" | PriceUnit: "+getPriceUnit()+" | Direction: "+getDirection()+" | AnsweredBy: "+getAnsweredBy()
+                +" | ApiVersion: "+getApiVersion()+" | ForwaredFrom: "+getForwardedFrom()+" | CallerName: "+getCallerName()+" | Uri: "+getUri()+" | CallPath: "+getCallPath()+" | RingDuration: "+getRingDuration()+" | Muted: "+isMuted()+" | StartConferenceOnEnter: "+isStartConferenceOnEnter()
+                +" | isEndConferenceOnExit: "+ isEndConferenceOnExit()+" | isOnHold: "+isOnHold();
     }
 
     @NotThreadSafe
