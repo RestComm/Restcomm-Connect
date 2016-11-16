@@ -33,7 +33,7 @@ This resource and its subresources always return a list of UsageRecords. Each Us
 |CountUnit |The units in which `Count` is measured. For example `calls` for calls, `messages` for SMS.
 |Price |The total price of the usage, in the currency associated with the account.
 |PriceUnit |The currency in which `Price` is measured, in ISO 4127 format (e.g. `usd`, `eur`, `jpy`).
-|Uri |The URI that returns only this UsageRecord, relative to `http://Restcomm_IP_ADDRESS`
+|Uri |The URI that returns only this UsageRecord, relative to `https://Restcomm_IP_ADDRESS`
 |SubresourceUris |Subresource Uris for this UsageRecord. See List Subresources.
 |==============================================================================================================================================================================================================================================================
 
@@ -167,7 +167,7 @@ You cannot make requests directly to a UsageRecord resource. Instead, make a req
 == Example of Getting Daily Calls Stats
 
 ----
-curl -X GET http://ACae6e420f425248d6a26948c17a9e2acf:PWD@192.168.1.3:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Usage/Records/Daily
+curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:PWD@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Usage/Records/Daily
 ----
 
 

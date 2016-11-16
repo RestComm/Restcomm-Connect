@@ -69,6 +69,12 @@ The RestComm directory should now display the following content:
 
 image::images/4.png[]
 
+* Before running the script, give enough system resources for MAVEN as follows:
+[source,bash]
+----
+export MAVEN_OPTS='-Xmx2048m -XX:MaxPermSize=1024m'
+----
+
 * Now, run the build script as follows:
 [source,bash]
 ----

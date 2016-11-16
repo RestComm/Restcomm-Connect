@@ -26,7 +26,9 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Map;
 
+import junit.framework.Assert;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -243,17 +245,21 @@ public class MultitenancyDenyAccessApiTest {
         String baseUrl = deploymentUrl.toString() + apiPath.substring(0, apiPath.length()-1);
         int statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension + "/" + adminAccountSid, primaryUsername, accountsPassword);
         assertTrue(statusCode == httpUnauthorized);
-        statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + "/" + adminAccountSid + jsonExtension, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("EmailAddress","test@test.com"); put("Password","RestComm");}});
+        statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + jsonExtension + "/" + adminAccountSid, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("EmailAddress","test@test.com"); put("Password","RestComm");}});
         assertTrue(statusCode == httpUnauthorized);
-        statusCode = RestcommMultitenancyTool.getInstance().delete(baseUrl + jsonExtension + "/" + adminAccountSid + jsonExtension, primaryUsername, accountsPassword);
-        assertTrue(statusCode == httpUnauthorized);
+        Map<String,String> updateParams = new HashMap<String,String>();
+        updateParams.put("Status", "closed");
+        statusCode = RestcommMultitenancyTool.getInstance().update(baseUrl + jsonExtension + "/" + adminAccountSid, primaryUsername, accountsPassword, updateParams);
+        Assert.assertEquals(httpUnauthorized, statusCode);
         
         // Same level account
         statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension + "/" + secondaryAccountSid, primaryUsername, accountsPassword);
         assertTrue(statusCode == httpUnauthorized);
-        statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + "/" + secondaryAccountSid + jsonExtension, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("EmailAddress","test@test.com"); put("Password","RestComm");}});
+        statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + jsonExtension+ "/" + secondaryAccountSid, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("EmailAddress","test@test.com"); put("Password","RestComm");}});
         assertTrue(statusCode == httpUnauthorized);
-        statusCode = RestcommMultitenancyTool.getInstance().delete(baseUrl + jsonExtension + "/" + secondaryAccountSid + jsonExtension, primaryUsername, accountsPassword);
+        updateParams = new HashMap<String,String>();
+        updateParams.put("Status", "closed");
+        statusCode = RestcommMultitenancyTool.getInstance().update(baseUrl + jsonExtension + "/" + secondaryAccountSid, primaryUsername, accountsPassword,updateParams);
         assertTrue(statusCode == httpUnauthorized);
     }
 
@@ -267,7 +273,9 @@ public class MultitenancyDenyAccessApiTest {
         assertTrue(statusCode == httpUnauthorized);
         statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + "/" + adminApplicationSid + jsonExtension, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("FriendlyName","TESTABC"); }});
         assertTrue(statusCode == httpUnauthorized);
-        statusCode = RestcommMultitenancyTool.getInstance().delete(baseUrl + "/" + adminApplicationSid + jsonExtension, primaryUsername, accountsPassword);
+        Map<String,String> updateParams = new HashMap<String,String>();
+        updateParams.put("Status", "closed");
+        statusCode = RestcommMultitenancyTool.getInstance().update(baseUrl + "/" + adminApplicationSid + jsonExtension, primaryUsername, accountsPassword, updateParams );
         assertTrue(statusCode == httpUnauthorized);
         
         // Same level account
@@ -278,7 +286,9 @@ public class MultitenancyDenyAccessApiTest {
         assertTrue(statusCode == httpUnauthorized);
         statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + "/" + secondaryApplicationSid + jsonExtension, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("FriendlyName","TESTABC"); }});
         assertTrue(statusCode == httpUnauthorized);
-        statusCode = RestcommMultitenancyTool.getInstance().delete(baseUrl + "/" + secondaryApplicationSid + jsonExtension, primaryUsername, accountsPassword);
+        updateParams = new HashMap<String,String>();
+        updateParams.put("Status", "closed");
+        statusCode = RestcommMultitenancyTool.getInstance().update(baseUrl + "/" + secondaryApplicationSid + jsonExtension, primaryUsername, accountsPassword, updateParams);
         assertTrue(statusCode == httpUnauthorized);
     }
 

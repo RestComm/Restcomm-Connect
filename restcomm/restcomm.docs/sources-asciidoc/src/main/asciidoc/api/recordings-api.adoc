@@ -23,7 +23,7 @@ To download the audio file just append *.wav* after the *RecordingSid.*
 |CallSid |The unique id of the call during which the recording was made.
 |Duration |The length of the recording, in seconds.
 |ApiVersion |The API version in use during the recording.
-|Uri |The URI for this account, relative to http://localhost:port/restcomm.
+|Uri |The URI for this account, relative to https://localhost:restcomm.
 |==========================================================================
 
 === Supported Operations
@@ -73,7 +73,7 @@ The list of recorded *wav* files can be found in the directory *$RESTCOMM_HOME/s
 From the bash terminal, you can run the command below:
 
 ....
-curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings
+curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings
 ....
 
 The response will be similar to the one below.
@@ -98,4 +98,4 @@ NOTE: *<Sid>* holds the file name of the recorded message. The recording Sid.**w
 If you want to return the recording url you will need to parse the *<Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/REb4c03af76cdc4a27aad0d9d759e119bc</Uri>* response from Restcomm and add the extension .**wav**
 
 The *<Uri>* holds the http URI that can be used for playback or to download the recorded message. 
-Here is how to access the file using http *http://IP_ADDRESS:8080/restcomm/recordings/REb4c03af76cdc4a27aad0d9d759e119bc.wav*
+Here is how to access the file using http *https://IP_ADDRESS/restcomm/recordings/REb4c03af76cdc4a27aad0d9d759e119bc.wav*

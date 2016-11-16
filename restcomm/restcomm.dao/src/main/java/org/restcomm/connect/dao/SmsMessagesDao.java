@@ -19,6 +19,7 @@
  */
 package org.restcomm.connect.dao;
 
+import java.text.ParseException;
 import java.util.List;
 
 import org.restcomm.connect.commons.dao.Sid;
@@ -39,4 +40,6 @@ public interface SmsMessagesDao {
     void removeSmsMessages(Sid accountSid);
 
     void updateSmsMessage(SmsMessage smsMessage);
+
+    int getSmsMessagesPerAccountLastPerMinute(String accountSid) throws ParseException;
 }

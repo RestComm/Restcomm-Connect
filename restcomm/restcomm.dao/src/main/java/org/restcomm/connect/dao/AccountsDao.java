@@ -21,6 +21,7 @@ package org.restcomm.connect.dao;
 
 import java.util.List;
 
+import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
 
@@ -46,7 +47,7 @@ public interface AccountsDao {
      */
     Account getAccountToAuthenticate(String name);
 
-    List<Account> getAccounts(Sid sid);
+    List<Account> getChildAccounts(Sid parentSid);
 
     void removeAccount(Sid sid);
 
@@ -54,7 +55,10 @@ public interface AccountsDao {
 
     /**
      * Returns a list of all sub-accounts under a parent account. All nested sub-accounts in
-     * any level will be returned.
+     * any level will be returned. Note:
+     * a) The parent account is not included in the results.
+     * b) The sub-account order in the returned list follows a top-down logic. So, higher hierarchy account list elements
+     *    always go before lower hierarchy accounts.
      *
      * It will return an empty array in case the parent has no children or the parent does
      * not exist.
@@ -63,4 +67,43 @@ public interface AccountsDao {
      * @return list of account sid or null
      */
     List<String> getSubAccountSidsRecursive(Sid parentAccountSid);
+
+    /**
+     * Returns a list of all the ancestor account SIDs of an Account all the way up to the
+     * top-level account. It currently works in an iterative way digging through the parentSid property
+     * until it reaches the top.
+     *
+     * The order of the returned list is significant starting with child accounts first and
+     * ending with the top-level account.
+     *
+     * Note, the list does NOT contain the account passed as a parameter.
+     *
+     * Examples:
+     *
+     *   getAccountLineage(toplevelAccount) -> []
+     *
+     *   parentAccoun is the direct child of toplevelAccount:
+     *   getAccontLineage(parentAccount) -> [toplevelAccount]
+     *
+     *   child@company.com is the child of parent@company.com:
+     *   getAccountLineage(childAccount) -> [parent@company.comSID, admininstrator@compahy.comSID]
+     *
+     *   grantchild@company.com is the child of child@company.com:
+     *   getAccountLineage(grandchildAccount) -> AccountHierarchyDepthCrossed exctption thrown
+     *
+     * @param accountSid
+     * @return
+     */
+    List<String> getAccountLineage(Sid accountSid) throws AccountHierarchyDepthCrossed;
+
+    /**
+     * Overloaded version of getAccontLineage(Sid) that won't retrieve current account since
+     * it's already there. Helps having cleaner concepts in the case when the starting child
+     * account is already loaded.
+     *
+     * @param account
+     * @return
+     * @throws AccountHierarchyDepthCrossed
+     */
+    List<String> getAccountLineage(Account account) throws AccountHierarchyDepthCrossed;
 }

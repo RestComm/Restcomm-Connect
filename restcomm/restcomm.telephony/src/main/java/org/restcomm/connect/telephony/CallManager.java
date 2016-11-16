@@ -183,20 +183,27 @@ public final class CallManager extends UntypedActor {
         Notification notification;
 
         if (errType == "warning") {
-            logger.warning(errMessage); // send message to console
+            if(logger.isDebugEnabled()) {
+                // https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug to avoid polluting logs
+                logger.debug(errMessage); // send message to console
+            }
             if (createNotification) {
                 notification = notification(ERROR_NOTIFICATION, errCode, errMessage);
                 notifications.addNotification(notification);
             }
         } else if (errType == "error") {
-            logger.error(errMessage); // send message to console
+            // https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug to avoid polluting logs
+            if(logger.isDebugEnabled()) {
+                logger.debug(errMessage); // send message to console
+            }
             if (createNotification) {
                 notification = notification(ERROR_NOTIFICATION, errCode, errMessage);
                 notifications.addNotification(notification);
             }
         } else if (errType == "info") {
-            if(logger.isInfoEnabled()) {
-                logger.info(errMessage); // send message to console
+            // https://github.com/RestComm/Restcomm-Connect/issues/1419 moved to debug to avoid polluting logs
+            if(logger.isDebugEnabled()) {
+                logger.debug(errMessage); // send message to console
             }
         }
 
@@ -367,21 +374,35 @@ public final class CallManager extends UntypedActor {
                 if(logger.isInfoEnabled()) {
                     logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "+ toClient);
                 }
-                if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp + " toHost: "
-                            + toHost + " fromClient: " + client.getUri() + " toClient: " + toClient.getUri());
+                CallRequest callRequest = new CallRequest(fromUser, toUser, CallRequest.Type.CLIENT,
+                        client.getAccountSid(), false, false);
+                if (executePreOutboundAction(callRequest)) {
+                    if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
+                        if(logger.isInfoEnabled()) {
+                            logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp + " toHost: "
+                                + toHost + " fromClient: " + client.getUri() + " toClient: " + toClient.getUri());
+                        }
+                        // if all goes well with proxying the invitation on to the next client
+                        // then we can end further processing of this INVITE
+                    } else {
+                        String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
+                                + " : Make sure the Client exist or is registered with Restcomm";
+                        sendNotification(errMsg, 11001, "warning", true);
                     }
-                    // if all goes well with proxying the invitation on to the next client
-                    // then we can end further processing of this INVITE
-                    return;
                 } else {
-
+                    //Extensions didn't allowed this call
+                    if (logger.isDebugEnabled()) {
+                        final String errMsg = "Client not Allowed to make this outbound call";
+                        logger.debug(errMsg);
+                    }
                     String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
                             + " : Make sure the Client exist or is registered with Restcomm";
                     sendNotification(errMsg, 11001, "warning", true);
-
+                    final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
+                    resp.send();
                 }
+                executePostOutboundAction(callRequest);
+                return;
             } else {
                 // toClient is null or we couldn't make the b2bua call to another client. check if this call is for a registered
                 // DID (application)
@@ -410,18 +431,18 @@ public final class CallManager extends UntypedActor {
                 // proxy DID or number if the outbound proxy fields are not empty in the restcomm.xml
                 if (proxyURI != null && !proxyURI.isEmpty()) {
 //                    String destination = ((SipURI)request.getTo().getURI()).getUser();
-                    CallRequest callRequest = new CallRequest(fromUser,toUser, CallRequest.Type.PSTN, client.getAccountSid());
+                    CallRequest callRequest = new CallRequest(fromUser,toUser, CallRequest.Type.PSTN, client.getAccountSid(), false, false);
                     if (executePreOutboundAction(callRequest)) {
                         proxyOut(request, client, toUser, toHost, toHostIpAddress, toPort, outboundIntf, proxyURI, proxyUsername, proxyPassword, from, to, callToSipUri);
-                        return;
                     } else {
-                        //log here
-                        final SipServletResponse response = request.createResponse(SC_FORBIDDEN);
+                        final SipServletResponse response = request.createResponse(SC_FORBIDDEN, "Call request not allowed");
                         response.send();
-                        if (logger.isInfoEnabled()) {
-                            logger.info("Call request rejected: "+callRequest.toString());
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Call request now allowed: "+callRequest.toString());
                         }
                     }
+                    executePostOutboundAction(callRequest);
+                    return;
                 } else {
                     String msg = "Restcomm tried to proxy this call to an outbound party but it seems the outbound proxy is not configured.";
                     sendNotification(errMsg, 11004, "warning", true);
@@ -1106,13 +1127,21 @@ public final class CallManager extends UntypedActor {
 
     private void outbound(final Object message, final ActorRef sender) throws ServletParseException {
         final CreateCall request = (CreateCall) message;
+        CallRequest callRequest = new CallRequest(request.from(), request.to(), CallRequest.Type.valueOf(request.type().name()), request.accountId(), request.isFromApi(), request.parentCallSid() != null);
         switch (request.type()) {
             case CLIENT: {
-                outboundToClient(request, sender);
+                if (executePreOutboundAction(callRequest)) {
+                    outboundToClient(request, sender);
+                } else {
+                    //Extensions didn't allowed this call
+                    final String errMsg = "Not Allowed to make this outbound call";
+                    logger.error(errMsg);
+                    sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+                }
+                executePostOutboundAction(callRequest);
                 break;
             }
             case PSTN: {
-                CallRequest callRequest = new CallRequest(request.from(), request.to(), CallRequest.Type.valueOf(request.type().name()), request.accountId());
                 if (executePreOutboundAction(callRequest)) {
                     outboundToPstn(request, sender);
                 } else {
@@ -1125,7 +1154,15 @@ public final class CallManager extends UntypedActor {
                 break;
             }
             case SIP: {
-                outboundToSip(request, sender);
+                if (executePreOutboundAction(callRequest)) {
+                    outboundToSip(request, sender);
+                }  else {
+                    //Extensions didn't allowed this call
+                    final String errMsg = "Not Allowed to make this outbound call";
+                    logger.error(errMsg);
+                    sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+                }
+                executePostOutboundAction(callRequest);
                 break;
             }
         }
@@ -1134,9 +1171,11 @@ public final class CallManager extends UntypedActor {
     private boolean executePreOutboundAction(final Object message) {
         if (extensions != null && extensions.size() > 0) {
             for (RestcommExtensionGeneric extension : extensions) {
-                ExtensionResponse response = extension.preOutboundAction(message);
-                if (!response.isAllowed())
-                    return false;
+                if (extension.isEnabled()) {
+                    ExtensionResponse response = extension.preOutboundAction(message);
+                    if (!response.isAllowed())
+                        return false;
+                }
             }
         }
         return true;
@@ -1404,7 +1443,8 @@ public final class CallManager extends UntypedActor {
             // originalRequest.createCancel().send();
         } else {
             final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
-            call.tell(request, self);
+            if (call != null)
+                call.tell(request, self);
         }
     }
 
@@ -1569,7 +1609,7 @@ public final class CallManager extends UntypedActor {
 
     public ActorRef lookup(final Object message) {
         final GetCall getCall = (GetCall) message;
-        final String callPath = getCall.callPath();
+        final String callPath = getCall.getIdentifier();
 
         final ActorContext context = getContext();
 

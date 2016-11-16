@@ -26,7 +26,42 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class CreateSmsSession {
-    public CreateSmsSession() {
-        super();
+    private final String from;
+    private final String to;
+    private final String accountSid;
+    private final boolean isFromApi;
+
+
+    //This will be used to create SmsSession from
+    // 1. REST API SmsMessageEndpoint - Send SMS from REST API
+    // 2. BaseVoiceInterpreter.CreatingSmsSession - Send SMS using "SMS" RCML verb in voice application
+    // 3. SmsInterpreter.CreatingSmsSession - Send SMS using "SMS" RCML verb in sms application
+    // 4. SmppInterpreter.CreatingSmsSession - Send SMS using "SMS" RCML verb when SMPP link is activated
+    public CreateSmsSession(final String from, final String to, final String accountSid, final boolean isFromApi) {
+        this.from = from;
+        this.to = to;
+        this.accountSid = accountSid;
+        this.isFromApi = isFromApi;
+    }
+
+    public String getFrom() {
+        return from;
+    }
+
+    public String getTo() {
+        return to;
+    }
+
+    public String getAccountSid() {
+        return accountSid;
+    }
+
+    public boolean isFromApi() {
+        return isFromApi;
+    }
+
+    @Override
+    public String toString() {
+        return "From: "+from+" , To: "+to+" , AccountSid: "+accountSid+" , isFromApi: "+isFromApi;
     }
 }

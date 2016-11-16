@@ -31,6 +31,7 @@ import java.net.URL;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import junit.framework.Assert;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -91,7 +92,7 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
         WebResource webResource = jerseyClient.resource(provisioningURL);
 
         ClientResponse clientResponse = webResource.accept("application/json").get(ClientResponse.class);
-        assertTrue(clientResponse.getStatus() == 200);
+        Assert.assertEquals(200, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
@@ -134,7 +135,7 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        assertTrue(clientResponse.getStatus() == 200);
+        Assert.assertEquals(200, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
@@ -181,7 +182,7 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        assertTrue(clientResponse.getStatus() == 200);
+        Assert.assertEquals(200, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
@@ -224,7 +225,7 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        assertTrue(clientResponse.getStatus() == 400);
+        Assert.assertEquals(400, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
@@ -271,7 +272,7 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        assertTrue(clientResponse.getStatus() == 200);
+        Assert.assertEquals(200, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));

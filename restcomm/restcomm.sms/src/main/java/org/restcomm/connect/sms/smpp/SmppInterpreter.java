@@ -681,7 +681,7 @@ public class SmppInterpreter extends UntypedActor  {
             // Save <Sms> verb.
             verb = (Tag) message;
             // Create a new sms session to handle the <Sms> verb.
-            smppMessageHandler.tell(new CreateSmsSession(), source);
+            smppMessageHandler.tell(new CreateSmsSession(initialSessionRequest.from(), initialSessionRequest.to(), accountId.toString(), false), source);
         }
     }
 

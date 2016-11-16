@@ -22,6 +22,7 @@
 package org.restcomm.connect.mscontrol.api.messages;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -33,21 +34,37 @@ public final class CreateMediaSession {
     private final String connectionMode;
     private final String sessionDescription;
     private final boolean webrtc;
+    private final Sid callSid;
+    private final String conferenceName;
 
-    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound, boolean webrtc) {
+    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound, boolean webrtc, Sid callSid, final String conferenceName) {
         super();
         this.connectionMode = connectionMode;
         this.sessionDescription = sessionDescription;
         this.outbound = outbound;
         this.webrtc = webrtc;
+        this.callSid = callSid;
+        this.conferenceName = conferenceName;
+    }
+
+    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound, boolean webrtc, Sid callSid) {
+        this(connectionMode, sessionDescription, outbound, webrtc, callSid, null);
     }
 
     public CreateMediaSession(String connectionMode) {
-        this("sendrecv", "", false, false);
+        this("sendrecv", "", false, false, null, null);
+    }
+
+    public CreateMediaSession(Sid callSid, final String conferenceName) {
+        this("", "", false, false, callSid, conferenceName);
+    }
+
+    public CreateMediaSession(Sid callSid) {
+        this("", "", false, false, callSid, null);
     }
 
     public CreateMediaSession() {
-        this("", "", false, false);
+        this("", "", false, false, null, null);
     }
 
     public String getConnectionMode() {
@@ -64,6 +81,14 @@ public final class CreateMediaSession {
 
     public boolean isWebrtc() {
         return webrtc;
+    }
+
+    public Sid callSid() {
+        return callSid;
+    }
+
+    public String conferenceName() {
+        return conferenceName;
     }
 
 }

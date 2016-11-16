@@ -110,9 +110,9 @@ public class ClientMessageTest {
         mariaSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
         mariaPhone = mariaSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, mariaContact);
 
-        mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria", "1234", null);
-        georgeRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "george", "1234", null);
-
+        mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria", "1234qwerT", null);
+        georgeRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "george", "1234qwerT", null);
+        Thread.sleep(500);
     }
 
     @After
@@ -140,8 +140,8 @@ public class ClientMessageTest {
 
         SipURI uri = georgeSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
-        assertTrue(georgePhone.register(uri, "george", "1234", georgeContact, 3600, 3600));
-        assertTrue(mariaPhone.register(uri, "maria", "1234", mariaContact, 3600, 3600));
+        assertTrue(georgePhone.register(uri, "george", "1234qwerT", georgeContact, 3600, 3600));
+        assertTrue(mariaPhone.register(uri, "maria", "1234qwerT", mariaContact, 3600, 3600));
 
         Thread.sleep(1000);
 
@@ -157,16 +157,16 @@ public class ClientMessageTest {
         
         SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
-        assertTrue(georgePhone.register(uri, "george", "1234", georgeContact, 3600, 3600));
+        assertTrue(georgePhone.register(uri, "george", "1234qwerT", georgeContact, 3600, 3600));
         Thread.sleep(3000);
-        assertTrue(mariaPhone.register(uri, "maria", "1234", mariaContact, 3600, 3600));
+        assertTrue(mariaPhone.register(uri, "maria", "1234qwerT", mariaContact, 3600, 3600));
         Thread.sleep(3000);
 
 
-        Credential c = new Credential("127.0.0.1", "george", "1234");
+        Credential c = new Credential("127.0.0.1", "george", "1234qwerT");
         georgePhone.addUpdateCredential(c);
         
-        Credential c2 = new Credential("127.0.0.1", "maria", "1234");
+        Credential c2 = new Credential("127.0.0.1", "maria", "1234qwerT");
         mariaPhone.addUpdateCredential(c2);
 
         

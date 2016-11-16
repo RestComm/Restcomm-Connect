@@ -328,10 +328,12 @@ public class CallLifecycleTest {
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
         assertTrue(response == Response.TRYING || response == Response.RINGING);
+        logger.info("Last response: "+response);
 
         if (response == Response.TRYING) {
             assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
         }
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -346,10 +348,15 @@ public class CallLifecycleTest {
                 null, null));
         assertTrue(aliceCall.waitForAck(5000));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        Thread.sleep(1000);
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==2);
+        assertTrue(liveIncomingCalls==1);
+        assertTrue(liveOutgoingCalls==1);
+        assertTrue(liveCallsArraySize==2);
 
 
         Thread.sleep(3000);
@@ -380,9 +387,9 @@ public class CallLifecycleTest {
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         assertNotNull(metrics);
-        int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+        liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
         logger.info("LiveCalls: "+liveCalls);
-        int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+        liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
         logger.info("LiveCallsArraySize: "+liveCallsArraySize);
         assertTrue(liveCalls==0);
         assertTrue(liveCallsArraySize==0);
@@ -611,7 +618,7 @@ public class CallLifecycleTest {
         aliceCall.disposeNoBye();
         georgeCall.listenForDisconnect();
 
-        Thread.sleep(18000);
+        Thread.sleep(50000);
         assertTrue(georgeCall.waitForDisconnect(5000));
 
         Thread.sleep(10000);
@@ -1157,9 +1164,11 @@ public class CallLifecycleTest {
         archive.delete("/WEB-INF/sip.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
+        archive.delete("/WEB-INF/classes/application.conf");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm_calllifecycle.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_callLifecycleTest", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
         archive.addAsWebResource("dial-client-entry_wActionUrl.xml");
         logger.info("Packaged Test App");
         return archive;
