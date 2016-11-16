@@ -19,6 +19,8 @@
  */
 package org.restcomm.connect.http.exceptions;
 
+import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
+
 /**
  * General type of authorization exceptions. All security-related exceptions
  * in REST endpoints should extend this.
@@ -26,5 +28,5 @@ package org.restcomm.connect.http.exceptions;
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  */
 
-public class AuthorizationException extends RuntimeException {
+public class AuthorizationException extends RestcommRuntimeException {
 }

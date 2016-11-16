@@ -20,9 +20,13 @@
 
 package org.restcomm.connect.http.exceptionmappers;
 
-import org.restcomm.connect.http.exceptions.AuthorizationException;
+import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.NotAuthenticated;
+import org.restcomm.connect.http.exceptions.OperatedAccountMissing;
+import org.restcomm.connect.http.exceptions.ResourceAccountMissmatch;
+import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -36,15 +40,31 @@ import javax.ws.rs.ext.Provider;
  * @author Orestis Tsakiridis
  */
 @Provider
-public class AuthorizationExceptionMapper implements ExceptionMapper<AuthorizationException> {
+public class RestcommRuntimeExceptionMapper implements ExceptionMapper<RestcommRuntimeException> {
+    static final Logger logger = Logger.getLogger(RestcommRuntimeExceptionMapper.class.getName());
+
     @Override
-    public Response toResponse(AuthorizationException e) {
+    public Response toResponse(RestcommRuntimeException e) {
+        logger.error(e);
+
         if (e instanceof NotAuthenticated) {
             return Response.status(Response.Status.UNAUTHORIZED).header("WWW-Authenticate","Basic realm=\"Restcomm realm\"").build();
         }
         else
         if (e instanceof InsufficientPermission)
             return Response.status(Response.Status.FORBIDDEN).build();
+        else
+        if (e instanceof OperatedAccountMissing){
+            // Return 404 if the account specified in the url (operated account) was missing - NULL.
+            return Response.status(Response.Status.NOT_FOUND).build();
+        } else
+        if (e instanceof ResourceAccountMissmatch) {
+            // in case the resource does belong to the user that it is accessed under, the url is wrong. Throw 400.
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        } else
+        if (e instanceof AccountHierarchyDepthCrossed) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
         else {
             // map all other types of auth errors to 403
             return Response.status(Response.Status.FORBIDDEN).build();

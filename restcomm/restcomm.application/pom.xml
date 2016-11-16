@@ -197,12 +197,6 @@
 
 		<dependency>
 			<groupId>org.restcomm</groupId>
-			<artifactId>restcomm-connect.mgcp</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.restcomm</groupId>
 			<artifactId>restcomm-connect.ussd</artifactId>
 			<version>${project.version}</version>
 		</dependency>
@@ -246,6 +240,18 @@
 		<dependency>
 			<groupId>org.restcomm</groupId>
 			<artifactId>restcomm-connect.extension.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.mrb</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.mrb.api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

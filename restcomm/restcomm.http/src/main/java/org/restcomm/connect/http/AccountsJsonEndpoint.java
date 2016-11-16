@@ -19,11 +19,9 @@
  */
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -32,7 +30,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -55,11 +54,13 @@ public final class AccountsJsonEndpoint extends AccountsEndpoint {
         return getAccounts(APPLICATION_JSON_TYPE);
     }
 
+    /* disabled as #1270
     @Path("/{sid}.json")
     @DELETE
     public Response deleteAccountAsJson(@PathParam("sid") final String sid) {
         return deleteAccount(sid);
     }
+    */
 
     @Consumes(APPLICATION_FORM_URLENCODED)
     @POST

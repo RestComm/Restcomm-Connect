@@ -16,31 +16,33 @@
 
 			<h3 class="text-center">{{'projectManagerExistingProjectsLabel1' | translate}} {{projectKind | translate}} {{'projectManagerExistingProjectsLabel2' | translate}}</h3>
 			<br />
-			<div class="text-center" ng-show="(projectList | filter:{kind:projectKind}).length==0"><em class="text-muted"><small>{{'projectManagerNoProjectFoundLabel' | translate}}</small></em></div>
+			<div class="text-center" ng-show="!retrievingApps && (appItems | projectFilter:projectKind).length==0"><em class="text-muted"><small>{{'projectManagerNoProjectFoundLabel' | translate}}</small></em></div>
 
-			<div ng-repeat="projectItem in filteredProjectList = (projectList | filter:{kind:projectKind})" class='row rvd-project-item' >
+			<div ng-repeat="appItem in appItems | projectFilter:projectKind" class='row rvd-project-item' >
 				<div class="row">
-					<div class="col-md-12 text-center" ng-show="projectItem.viewMode=='view'" >
+					<div class="col-md-12 text-center" ng-show="appItem.viewMode=='view'" >
+						<!--
 						<i ng-show="projectItem.status == 'BAD'" class="fa fa-warning" title="Project seems broken"></i>
 						<i ng-show="projectItem.status == 'SHOULD_UPGRADE'" class="fa fa-warning" title="Project is outdated"></i>
 						<i ng-show="projectItem.status == 'UNKNOWN_VERSION'" class="fa fa-warning" title="Unknown project version."></i>
-						<a href="#/designer/{{projectItem.applicationSid}}={{projectItem.name}}" ng-click="openProject(projectItem.applicationSid)" style="margin-right:10px" title="{{projectItem.applicationSid}}">{{projectItem.name}}</a>
-						<i ng-click="editProjectName(projectItem)" class="fa fa-pencil rvd-clickable" ></i>
-						<a href ng-click='download(projectItem.applicationSid, projectItem.name)'><i class="fa fa-download rvd-clickable" ></i></a>
-						<i ng-click="projectItem.viewMode='confirm-delete'" class="fa fa-trash-o rvd-clickable" ></i>
+						-->
+						<a href="#/designer/{{appItem.app.sid}}={{appItem.app.friendly_name}}" ng-click="openProject(appItem.app.sid)" style="margin-right:10px" title="{{appItem.app.sid}}">{{appItem.app.friendly_name}}</a>
+						<i ng-click="editProjectName(appItem)" class="fa fa-pencil rvd-clickable" ></i>
+						<a href ng-click='download(appItem.app.sid, appItem.app.friendly_name)'><i class="fa fa-download rvd-clickable" ></i></a>
+						<i ng-click="appItem.viewMode='confirm-delete'" class="fa fa-trash-o rvd-clickable" ></i>
 					</div>
 
-					<div class="col-md-12 text-center confirm-delete " ng-show="projectItem.viewMode=='confirm-delete'">
-						{{'projectManagerDeleteLabel1' | translate}} <em>{{projectItem.name}}</em> {{'projectManagerDeleteLabel2' | translate}} &nbsp;&nbsp;&nbsp;<i class="fa fa-trash-o rvd-clickable" ng-click="deleteProject(projectItem, authInfo.rvdticket)"></i> &nbsp; <a class="rvd-clickable" ng-click="projectItem.viewMode='view'">{{'projectManagerCalcelButoon' | translate}}</a>
+					<div class="col-md-12 text-center confirm-delete " ng-show="appItem.viewMode=='confirm-delete'">
+						{{'projectManagerDeleteLabel1' | translate}} <em>{{appItem.app.friendly_name}}</em> {{'projectManagerDeleteLabel2' | translate}} &nbsp;&nbsp;&nbsp;<i class="fa fa-trash-o rvd-clickable" ng-click="deleteProject(appItem, authInfo.rvdticket)"></i> &nbsp; <a class="rvd-clickable" ng-click="appItem.viewMode='view'">{{'projectManagerCalcelButoon' | translate}}</a>
 					</div>
 
-					<div class="col-md-12" ng-show="projectItem.viewMode=='edit'" >
+					<div class="col-md-12" ng-show="appItem.viewMode=='edit'" >
 						<form name="form{{$index}}">
-							<input name="newProjectName" type="text" class="form-control" ng-model="projectItem.newProjectName" ng-pattern="projectNameValidator" required />
+							<input name="newProjectName" type="text" class="form-control" ng-model="appItem.newName" ng-pattern="projectNameValidator" required />
 							<div class="buttonarea text-right">
-								<span class="validation-error pull-left" ng-show="projectItem.errorMessage!=''">{{projectItem.errorMessage}}</span>
-								<i ng-click="projectItem.viewMode='view'" class="fa fa-times rvd-clickable" ></i>
-								<i ng-hide="form{{$index}}.newProjectName.$error.required || form{{$index}}.newProjectName.$invalid" ng-click="applyNewProjectName(projectItem, authInfo.rvdticket)" class="fa fa-check rvd-clickable" ></i>
+								<span class="validation-error pull-left" ng-show="appItem.errorMessage!=''">{{appItem.errorMessage}}</span>
+								<i ng-click="appItem.viewMode='view'" class="fa fa-times rvd-clickable" ></i>
+								<i ng-hide="form{{$index}}.newProjectName.$error.required || form{{$index}}.newProjectName.$invalid" ng-click="applyNewProjectName(appItem, authInfo.rvdticket)" class="fa fa-check rvd-clickable" ></i>
 							</div>
 						</form>
 					</div>

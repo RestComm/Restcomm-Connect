@@ -22,6 +22,7 @@ package org.restcomm.connect.dao.mybatis;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
@@ -51,7 +52,7 @@ import static org.restcomm.connect.dao.DaoUtils.writeUri;
 @ThreadSafe
 public final class MybatisAccountsDao implements AccountsDao {
     private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.AccountsDao.";
-    private Integer accountRecursionDepth = 4; // maximum value for recursive account queries
+    private Integer accountRecursionDepth = 3; // maximum value for recursive account queries
     private final SqlSessionFactory sessions;
 
     public MybatisAccountsDao(final SqlSessionFactory sessions) {
@@ -121,10 +122,10 @@ public final class MybatisAccountsDao implements AccountsDao {
     }
 
     @Override
-    public List<Account> getAccounts(final Sid accountSid) {
+    public List<Account> getChildAccounts(final Sid parentSid) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getAccounts", accountSid.toString());
+            final List<Map<String, Object>> results = session.selectList(namespace + "getChildAccounts", parentSid.toString());
             final List<Account> accounts = new ArrayList<Account>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -165,7 +166,7 @@ public final class MybatisAccountsDao implements AccountsDao {
 
         int depth = 1;
         List<String> childrenList = getSubAccountsSids(parentList);
-        while (childrenList != null && !childrenList.isEmpty() && depth < accountRecursionDepth) {
+        while (childrenList != null && !childrenList.isEmpty() && depth <= accountRecursionDepth) {
             allChildren.addAll(childrenList);
             childrenList = getSubAccountsSids(childrenList); // retrieve children's children
 
@@ -173,6 +174,46 @@ public final class MybatisAccountsDao implements AccountsDao {
         }
 
         return allChildren;
+    }
+
+    @Override
+    public List<String> getAccountLineage(Sid accountSid) throws AccountHierarchyDepthCrossed {
+        if (accountSid == null)
+            return null;
+        List<String> ancestorList = new ArrayList<String>();
+        Sid sid = accountSid;
+        Account account = getAccount(sid);
+        if (account == null)
+            throw new IllegalArgumentException("Wrong accountSid is given to search for ancestor on it. This account does not even exist");
+        int depth = 1; // already having one-level of accounts
+        while ( true ) {
+            Sid parentSid = account.getParentSid();
+            if (parentSid != null) {
+                depth ++;
+                if (depth > accountRecursionDepth)
+                    throw new AccountHierarchyDepthCrossed();
+                ancestorList.add(parentSid.toString());
+                Account parentAccount = getAccount(parentSid);
+                if (parentAccount == null)
+                    throw new IllegalStateException("Parent account " + parentSid.toString() + " does not exist although its child does " + account.getSid().toString());
+                account = parentAccount;
+            } else
+                break;
+        }
+        return ancestorList;
+    }
+
+    @Override
+    public List<String> getAccountLineage(Account account) throws AccountHierarchyDepthCrossed {
+        if (account == null)
+            return null;
+        List<String> lineage = new ArrayList<String>();
+        Sid parentSid = account.getParentSid();
+        if (parentSid != null) {
+            lineage.add(parentSid.toString());
+            lineage.addAll(getAccountLineage(parentSid));
+        }
+        return lineage;
     }
 
     private List<String> getSubAccountsSids(List<String> parentAccountSidList) {
@@ -201,13 +242,13 @@ public final class MybatisAccountsDao implements AccountsDao {
         final DateTime dateUpdated = readDateTime(map.get("date_updated"));
         final String emailAddress = readString(map.get("email_address"));
         final String friendlyName = readString(map.get("friendly_name"));
-        final Sid accountSid = readSid(map.get("account_sid"));
+        final Sid parentSid = readSid(map.get("parent_sid"));
         final Account.Type type = readAccountType(map.get("type"));
         final Account.Status status = readAccountStatus(map.get("status"));
         final String authToken = readString(map.get("auth_token"));
         final String role = readString(map.get("role"));
         final URI uri = readUri(map.get("uri"));
-        return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, accountSid, type, status, authToken,
+        return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, parentSid, type, status, authToken,
                 role, uri);
     }
 
@@ -218,7 +259,7 @@ public final class MybatisAccountsDao implements AccountsDao {
         map.put("date_updated", writeDateTime(account.getDateUpdated()));
         map.put("email_address", account.getEmailAddress());
         map.put("friendly_name", account.getFriendlyName());
-        map.put("account_sid", writeSid(account.getAccountSid()));
+        map.put("parent_sid", writeSid(account.getParentSid()));
         map.put("type", writeAccountType(account.getType()));
         map.put("status", writeAccountStatus(account.getStatus()));
         map.put("auth_token", account.getAuthToken());

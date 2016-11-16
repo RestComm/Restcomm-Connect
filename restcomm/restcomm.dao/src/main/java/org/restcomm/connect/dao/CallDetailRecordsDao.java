@@ -35,7 +35,7 @@ public interface CallDetailRecordsDao {
 
     CallDetailRecord getCallDetailRecord(Sid sid);
 
-    List<CallDetailRecord> getCallDetailRecords(Sid accountSid);
+    List<CallDetailRecord> getCallDetailRecordsByAccountSid(Sid accountSid);
 
     List<CallDetailRecord> getCallDetailRecordsByRecipient(String recipient);
 
@@ -53,7 +53,11 @@ public interface CallDetailRecordsDao {
 
     List<CallDetailRecord> getCallDetailRecordsByConferenceSid(Sid conferenceSid);
 
+    Integer getTotalRunningCallDetailRecordsByConferenceSid(Sid conferenceSid);
+
     List<CallDetailRecord> getCallDetailRecordsByInstanceId(Sid instanceId);
+
+    List<CallDetailRecord> getCallDetailRecordsByMsId(String msId);
 
     Double getAverageCallDurationLast24Hours(Sid instanceId) throws ParseException;
 
@@ -69,4 +73,8 @@ public interface CallDetailRecordsDao {
     List<CallDetailRecord> getCallDetailRecords(CallDetailRecordFilter filter);
 
     Integer getTotalCallDetailRecords(CallDetailRecordFilter filter);
+
+    Integer getInProgressCallsByClientName(String client);
+
+    Integer getInProgressCallsByAccountSid(String accountSid);
 }

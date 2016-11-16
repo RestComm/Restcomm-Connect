@@ -20,6 +20,8 @@
 
 package org.restcomm.connect.rvd;
 
+import org.restcomm.connect.rvd.configuration.RestcommConfig;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -28,12 +30,14 @@ import java.net.URISyntaxException;
  */
 public class RvdConfigurationBuilder {
     private URI restcommBaseUri;
+    private RestcommConfig restcommConfig;
 
     public RvdConfigurationBuilder() {
     }
 
-    public void setRestcommBaseUri(URI restcommBaseUri) {
-        this.restcommBaseUri = restcommBaseUri;
+    public RvdConfigurationBuilder setRestcommConfig(RestcommConfig restcommConfig) {
+        this.restcommConfig = restcommConfig;
+        return this;
     }
 
     public RvdConfigurationBuilder setRestcommBaseUri(String uriString) {
@@ -46,8 +50,7 @@ public class RvdConfigurationBuilder {
     }
 
     public RvdConfiguration build() {
-        RvdConfiguration instance = new RvdConfiguration();
-        instance.setRestcommBaseUri(restcommBaseUri);
+        RvdConfiguration instance = new RvdConfiguration(null, null,restcommConfig,null,restcommBaseUri);
         return instance;
     }
 }

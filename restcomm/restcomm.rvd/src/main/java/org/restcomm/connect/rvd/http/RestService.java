@@ -28,6 +28,13 @@ public class RestService {
     protected ServletContext servletContext;
     protected ApplicationContext applicationContext;
 
+    public RestService() {
+    }
+
+    public RestService(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+
     protected void init() {
         this.applicationContext = (ApplicationContext) servletContext.getAttribute(ApplicationContext.class.getName());
     }

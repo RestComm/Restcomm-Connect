@@ -20,12 +20,13 @@
 
 package org.restcomm.connect.dao;
 
-import org.apache.commons.lang.NotImplementedException;
-import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.commons.dao.Sid;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.lang.NotImplementedException;
+import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.Account;
 
 /**
  * Elementary mocking for AccountsDao to be used for endpoint unit testing mostly.
@@ -71,7 +72,7 @@ public class AccountsDaoMock implements AccountsDao {
     }
 
     @Override
-    public List<Account> getAccounts(Sid sid) {
+    public List<Account> getChildAccounts(Sid sid) {
         throw new NotImplementedException();
     }
 
@@ -87,6 +88,16 @@ public class AccountsDaoMock implements AccountsDao {
 
     @Override
     public List<String> getSubAccountSidsRecursive(Sid parentAccountSid) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public List<String> getAccountLineage(Sid accountSid) throws AccountHierarchyDepthCrossed {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public List<String> getAccountLineage(Account account) throws AccountHierarchyDepthCrossed {
         throw new NotImplementedException();
     }
 }

@@ -20,23 +20,6 @@
  */
 package org.restcomm.connect.monitoringservice;
 
-import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.entities.InstanceId;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
-import org.restcomm.connect.telephony.api.CallInfo;
-import org.restcomm.connect.telephony.api.CallResponse;
-import org.restcomm.connect.telephony.api.CallStateChanged;
-import org.restcomm.connect.telephony.api.GetCallInfo;
-import org.restcomm.connect.telephony.api.GetLiveCalls;
-import org.restcomm.connect.telephony.api.MonitoringServiceResponse;
-import org.restcomm.connect.telephony.api.TextMessage;
-import org.restcomm.connect.telephony.api.UserRegistration;
-
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,6 +27,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.servlet.sip.ServletParseException;
+import javax.sip.header.ContactHeader;
+
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.InstanceId;
+import org.restcomm.connect.telephony.api.CallInfo;
+import org.restcomm.connect.telephony.api.CallResponse;
+import org.restcomm.connect.telephony.api.CallStateChanged;
+import org.restcomm.connect.telephony.api.GetCall;
+import org.restcomm.connect.telephony.api.GetCallInfo;
+import org.restcomm.connect.telephony.api.GetLiveCalls;
+import org.restcomm.connect.telephony.api.MonitoringServiceResponse;
+import org.restcomm.connect.telephony.api.TextMessage;
+import org.restcomm.connect.telephony.api.UserRegistration;
+
+import akka.actor.ActorRef;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -54,6 +59,7 @@ public class MonitoringService extends UntypedActor{
     private DaoManager daoManager;
 
     private final Map<String, ActorRef> callMap;
+    private final Map<String, ActorRef> callLocationMap;
     private final Map<String,CallInfo> callDetailsMap;
     private final Map<String,CallInfo> incomingCallDetailsMap;
     private final Map<String,CallInfo> outgoingCallDetailsMap;
@@ -82,6 +88,7 @@ public class MonitoringService extends UntypedActor{
     public MonitoringService(final DaoManager daoManager) {
         this.daoManager = daoManager;
         callMap = new ConcurrentHashMap<String, ActorRef>();
+        callLocationMap = new ConcurrentHashMap<String, ActorRef>();
         callDetailsMap = new ConcurrentHashMap<String, CallInfo>();
         incomingCallDetailsMap = new ConcurrentHashMap<String, CallInfo>();
         outgoingCallDetailsMap = new ConcurrentHashMap<String, CallInfo>();
@@ -137,6 +144,50 @@ public class MonitoringService extends UntypedActor{
             onUserRegistration((UserRegistration)message, self, sender);
         } else if (TextMessage.class.equals(klass)) {
             onTextMessage((TextMessage) message, self, sender);
+        } else if (GetCall.class.equals(klass)) {
+            if (message != null) {
+                onGetCall(message, self, sender);
+            } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("MonitoringService onGetCall, message is null, sender: "+sender.path());
+                }
+            }
+        }
+    }
+
+    private void onGetCall(Object message, ActorRef self, ActorRef sender) throws ServletParseException {
+        GetCall getCall = (GetCall)message;
+        String location = getCall.getIdentifier();
+        if (logger.isDebugEnabled()) {
+            logger.debug("MonitoringService onGetCall, location: "+location);
+        }
+        if (location != null) {
+            ActorRef call = callLocationMap.get(location);
+            if(call == null && location.indexOf("@") != -1 && location.indexOf(":") != -1) {
+                // required in case the Contact Header of the INVITE doesn't contain any user part
+                // as it is the case for Restcomm SDKs
+                if (logger.isDebugEnabled()) {
+                    logger.debug("onGetCall Another try on removing the user part from " + location);
+                }
+                int indexOfAt = location.indexOf("@");
+                int indexOfColumn = location.indexOf(":");
+                String newLocation = location.substring(0, indexOfColumn+1).concat(location.substring(indexOfAt+1));
+                call = callLocationMap.get(newLocation);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("onGetCall call " + call + " found for new Location " + newLocation);
+                }
+            }
+            if (call != null) {
+                sender.tell(call, sender());
+            } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("MonitoringService onGetCall, Call is null");
+                }
+            }
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("MonitoringService onGetCall, GetCall identifier location is null");
+            }
         }
     }
 
@@ -196,10 +247,13 @@ public class MonitoringService extends UntypedActor{
      * @param self
      * @param sender
      */
-    private void onStopObserving(StopObserving message, ActorRef self, ActorRef sender) {
+    private void onStopObserving(StopObserving message, ActorRef self, ActorRef sender) throws ServletParseException {
         String senderPath = sender.path().name();
         callMap.remove(senderPath);
         CallInfo callInfo = callDetailsMap.remove(senderPath);
+        if (callInfo != null && callInfo.invite() != null) {
+            callLocationMap.remove(callInfo.invite().getAddressHeader(ContactHeader.NAME).getURI().toString());
+        }
         if (callInfo.direction().equalsIgnoreCase("inbound")) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Removed inbound call from: "+callInfo.from()+"  to: "+callInfo.to());
@@ -219,10 +273,13 @@ public class MonitoringService extends UntypedActor{
      * @param self
      * @param sender
      */
-    private void onCallResponse(CallResponse<CallInfo> message, ActorRef self, ActorRef sender) {
+    private void onCallResponse(CallResponse<CallInfo> message, ActorRef self, ActorRef sender) throws ServletParseException {
         String senderPath = sender.path().name();
         CallInfo callInfo = message.get();
         callDetailsMap.put(senderPath, callInfo);
+        if (callInfo != null && callInfo.invite() != null) {
+            callLocationMap.put(callInfo.invite().getAddressHeader(ContactHeader.NAME).getURI().toString(), sender);
+        }
         if (callInfo.direction().equalsIgnoreCase("inbound")) {
             if (logger.isDebugEnabled()) {
                 logger.debug("New inbound call from: "+callInfo.from()+"  to: "+callInfo.to());

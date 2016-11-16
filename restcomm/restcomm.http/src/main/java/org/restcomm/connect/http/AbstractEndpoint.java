@@ -19,17 +19,17 @@
  */
 package org.restcomm.connect.http;
 
-import java.net.URI;
-
-import javax.ws.rs.core.MultivaluedMap;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.StringUtils;
 
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import java.net.URI;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -104,24 +104,6 @@ public abstract class AbstractEndpoint {
         return hasVoiceCallerIdLookup;
     }
 
-/*
-    protected void secure(final Account account, final String permission) throws AuthorizationException {
-        final Subject subject = SecurityUtils.getSubject();
-        if (account != null && account.getSid() != null) {
-            final Sid accountSid = account.getSid();
-            if (account.getStatus().equals(Account.Status.ACTIVE)
-                    && (subject.hasRole("Administrator") || (subject.getPrincipal().toString().equals(accountSid.toString()) && subject
-                            .isPermitted(permission)))) {
-                return;
-            } else {
-                throw new AuthorizationException();
-            }
-        } else {
-            throw new AuthorizationException();
-        }
-    }
-    */
-
     // A general purpose method to test incoming parameters for meaningful data
     protected boolean isEmpty(Object value) {
         if (value == null)
@@ -129,5 +111,22 @@ public abstract class AbstractEndpoint {
         if ( value.equals("") )
             return true;
         return false;
+    }
+
+    // Quick'n'dirty error response building
+    String buildErrorResponseBody(String message, MediaType type) {
+        if (!type.equals(MediaType.APPLICATION_XML_TYPE)) { // fallback to JSON if not XML
+            return "{\"message\":\""+message+"\"}";
+        } else {
+            return "<RestcommResponse><Message>" + message + "</Message></RestcommResponse>";
+        }
+    }
+
+    String buildErrorResponseBody(String message, String error, MediaType type) {
+        if (!type.equals(MediaType.APPLICATION_XML_TYPE)) { // fallback to JSON if not XML
+            return "{\"message\":"+message+",\n\"error\":"+error+"}";
+        } else {
+            return "<RestcommResponse><Message>" + message + "</Message><Error>"+ error +"</Error></RestcommResponse>";
+        }
     }
 }

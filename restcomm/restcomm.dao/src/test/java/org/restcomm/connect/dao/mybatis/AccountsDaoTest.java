@@ -10,6 +10,7 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.commons.dao.Sid;
@@ -71,7 +72,37 @@ public class AccountsDaoTest extends DaoTest {
         parentSid = new Sid("AC59494830204948392023934839392092"); // this does not exist
         sidList = dao.getSubAccountSidsRecursive(parentSid);
         Assert.assertEquals("Invalid number of sub-account for 3rd level perent", 0, sidList.size());
+    }
 
+    @Test
+    public void accountAncestorsRetrieval() throws AccountHierarchyDepthCrossed {
+        AccountsDao dao = manager.getAccountsDao();
+
+        List<String> ancestorSids = dao.getAccountLineage(new Sid("AC11000000000000000000000000000000"));
+        Assert.assertEquals(2, ancestorSids.size());
+        // check last account returned is the top-level
+        Assert.assertEquals("AC00000000000000000000000000000000", ancestorSids.get(ancestorSids.size()-1));
+        // also check the overloaded version
+        Account account = dao.getAccount("AC11000000000000000000000000000000");
+        ancestorSids = dao.getAccountLineage(account);
+        Assert.assertEquals(2, ancestorSids.size());
+        Assert.assertEquals("AC00000000000000000000000000000000", ancestorSids.get(ancestorSids.size()-1));
+
+        // for top level accounts an empty list should be returned
+        ancestorSids = dao.getAccountLineage(new Sid("AC00000000000000000000000000000000"));
+        Assert.assertEquals(0, ancestorSids.size());
+        Account topLevelAccount = dao.getAccount("AC00000000000000000000000000000000");
+        ancestorSids = dao.getAccountLineage(topLevelAccount);
+        Assert.assertEquals(0, ancestorSids.size());
+
+        Assert.assertNull(dao.getAccountLineage((Sid)null));
+    }
+
+    @Test(expected=AccountHierarchyDepthCrossed.class)
+    public void checkAccountRecursionLimit() throws AccountHierarchyDepthCrossed {
+        AccountsDao dao = manager.getAccountsDao();
+        // try to retrieve the lineage for an account that is in the forth level
+        List<String> ancestorSids = dao.getAccountLineage(new Sid("AC11100000000000000000000000000000"));
     }
 
 }

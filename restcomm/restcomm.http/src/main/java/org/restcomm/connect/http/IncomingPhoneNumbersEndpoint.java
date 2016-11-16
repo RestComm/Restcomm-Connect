@@ -30,7 +30,7 @@ import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.commons.loader.ObjectFactory;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.loader.ObjectInstantiationException;
 import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.dao.DaoManager;
@@ -40,22 +40,19 @@ import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.extension.api.ApiRequest;
 import org.restcomm.connect.http.converter.AvailableCountriesConverter;
 import org.restcomm.connect.http.converter.AvailableCountriesList;
 import org.restcomm.connect.http.converter.IncomingPhoneNumberConverter;
 import org.restcomm.connect.http.converter.IncomingPhoneNumberListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.provisioning.number.api.ContainerConfiguration;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberParameters;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
+import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
-import javax.servlet.sip.SipServlet;
-import javax.servlet.sip.SipURI;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -69,6 +66,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.noContent;
 import static javax.ws.rs.core.Response.ok;
@@ -101,6 +99,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         dao = storage.getIncomingPhoneNumbersDao();
         accountsDao = storage.getAccountsDao();
 
+        /*
         phoneNumberProvisioningManager = (PhoneNumberProvisioningManager) context.getAttribute("PhoneNumberProvisioningManager");
         if(phoneNumberProvisioningManager == null) {
             final String phoneNumberProvisioningManagerClass = configuration.getString("phone-number-provisioning[@class]");
@@ -113,6 +112,10 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             phoneNumberProvisioningManager.init(phoneNumberProvisioningConfiguration, telestaxProxyConfiguration, containerConfiguration);
             context.setAttribute("phoneNumberProvisioningManager", phoneNumberProvisioningManager);
         }
+        */
+        // get manager from context or create it if it does not exist
+        phoneNumberProvisioningManager = new PhoneNumberProvisioningManagerProvider(configuration, context).get();
+
         Configuration callbackUrlsConfiguration = configuration.subset("phone-number-provisioning").subset("callback-urls");
         phoneNumberParameters = new PhoneNumberParameters(
                 callbackUrlsConfiguration.getString("voice[@url]"),
@@ -224,6 +227,10 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         if (incomingPhoneNumber == null) {
             return status(NOT_FOUND).build();
         } else {
+            // if the account that the resource belongs to does not existb while the resource does, we're having BAD parameters
+            if (operatedAccount == null) {
+                return status(BAD_REQUEST).build();
+            }
             secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD);
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
@@ -305,6 +312,12 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                     }
                 }
                 executePostApiAction(apiRequest);
+                //If Extension blocked the request, return the proper error response
+                if (!hasSuceeded) {
+                    String msg = "DID purchase is now allowed for this account";
+                    String error = "DID_QUOTA_EXCEEDED";
+                    return status(FORBIDDEN).entity(buildErrorResponseBody(msg, error, responseType)).build();
+                }
             } else if (isSIP != null) {
                 hasSuceeded = true;
             }
@@ -474,13 +487,15 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         return noContent().build();
     }
 
+    /*
     @SuppressWarnings("unchecked")
     private List<SipURI> getOutboundInterfaces() {
         final List<SipURI> uris = (List<SipURI>) context.getAttribute(SipServlet.OUTBOUND_INTERFACES);
         return uris;
     }
+    */
 
-    protected org.restcomm.connect.provisioning.number.api.PhoneNumber convertIncomingPhoneNumbertoPhoneNumber(IncomingPhoneNumber incomingPhoneNumber) {
+    public static org.restcomm.connect.provisioning.number.api.PhoneNumber convertIncomingPhoneNumbertoPhoneNumber(IncomingPhoneNumber incomingPhoneNumber) {
         return new org.restcomm.connect.provisioning.number.api.PhoneNumber(
                 incomingPhoneNumber.getFriendlyName(),
                 incomingPhoneNumber.getPhoneNumber(),
