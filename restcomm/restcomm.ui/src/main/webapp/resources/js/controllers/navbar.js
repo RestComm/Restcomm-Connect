@@ -309,7 +309,7 @@ var RegisterAccountModalCtrl = function ($scope, $uibModalInstance, RCommAccount
           $uibModalInstance.close();
         },
         function(response, status) { // error
-            Notifications.error("Can't create account")
+            Notifications.error("Can't create account." + ((response.data && response.data.message) ? response.data.message : ""))
         }
       );
     }

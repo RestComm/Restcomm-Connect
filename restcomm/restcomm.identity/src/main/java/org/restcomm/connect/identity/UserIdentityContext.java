@@ -20,17 +20,20 @@
 
 package org.restcomm.connect.identity;
 
+import java.nio.charset.Charset;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
+import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
-
-import javax.servlet.http.HttpServletRequest;
-import java.nio.charset.Charset;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * A per-request security context providing access to Oauth tokens or Account API Keys.
@@ -46,6 +49,9 @@ public class UserIdentityContext {
 
     Account effectiveAccount; // if oauthToken is set get the account that maps to it. Otherwise use account from accountKey
     Set<String> effectiveAccountRoles;
+    List<String> accountLineage = null; // list of all parent account Sids up to the lop level account. It's initialized in a lazy way.
+
+    AccountsDao accountsDao;
 
     /**
      * After successfull creation of a UserIdentityContext object the following stands:
@@ -150,5 +156,24 @@ public class UserIdentityContext {
 
     public AuthType getAuthType() {
         return authType;
+    }
+
+    /**
+     * Returns the list of ancestors for the effective (the one specified in the credentials) account
+     * in a lazy way.
+     *
+     * @return
+     */
+    public List<String> getEffectiveAccountLineage() {
+        if (accountLineage == null) {
+            if (effectiveAccount != null) {
+                try {
+                    accountLineage = accountsDao.getAccountLineage(effectiveAccount);
+                } catch (AccountHierarchyDepthCrossed e) {
+                    throw new RuntimeException("Logged account has a very big line of ancestors. Something seems wrong. Account sid: " + effectiveAccount.getSid().toString(), e);
+                }
+            }
+        }
+        return accountLineage;
     }
 }
