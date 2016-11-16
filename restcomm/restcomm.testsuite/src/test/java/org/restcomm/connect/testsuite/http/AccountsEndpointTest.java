@@ -199,6 +199,15 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    public void testUpdateAuthTokenIgnored() {
+        // try to update directly the AuthToken
+        JsonObject updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, childSid, null, null, "RestComm12", null, null );
+        // make sure the AuthToken has not changed
+        Assert.assertEquals("77f8c12cc7b8f8423e5c38b035249166", updateAccountResponse.get("auth_token").getAsString());
+    }
+
+    @Test
     public void testUpdateAccountStatusAllCapital() {
         JsonObject updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, updatedAccountSid, "updated2", "Restcomm2", null, "Developer", "ACTIVE" );
