@@ -20,6 +20,8 @@
 
 package org.restcomm.connect.http.exceptions;
 
+import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
+
 /**
  * Thrown when a resource (like Clients, Numbers etc.) is accessed under an account
  * that does not own them.
