@@ -140,7 +140,6 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         xstream.registerConverter(new IncomingPhoneNumberListConverter(configuration));
         xstream.registerConverter(new AvailableCountriesConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
-        checkAuthType(AuthType.AuthToken);
     }
 
     private IncomingPhoneNumber createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
