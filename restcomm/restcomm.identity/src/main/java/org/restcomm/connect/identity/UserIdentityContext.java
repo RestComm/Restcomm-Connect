@@ -64,6 +64,7 @@ public class UserIdentityContext {
      * @param accountsDao
      */
     public UserIdentityContext(HttpServletRequest request, AccountsDao accountsDao) {
+        this.accountsDao = accountsDao;
         Account authorizedAccount = authorizeRequest(request.getHeader("Authorization"), accountsDao);
         if (authorizedAccount != null) {
             effectiveAccount = authorizedAccount;

@@ -132,7 +132,7 @@ public class AccountsEndpointTest extends EndpointTest {
         // this account has its password hashed in md5. We send plaintext. Authentication should pass
         JsonObject account = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), "md5pass@company.com",
                 "arnaki", "md5pass@company.com");
-        assertTrue(account.get("sid").getAsString().equals("AC55555555555555555555555555555555"));
+        assertTrue(account.get("sid").getAsString().equals("AC77777777777777777777777777777777"));
         Assert.assertNotNull(account.get("auth_token"));
         // this account has its password in pplaintext form. We send plaintext. Authentication should pass
         account = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), "plainpass@company.com",
@@ -278,9 +278,9 @@ public class AccountsEndpointTest extends EndpointTest {
 
     @Test
     public void testCreateAdministratorAccountFails() {
-        JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+        ClientResponse createAccountResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
                 adminUsername, adminPassword, "administrator@company.com", "RestComm12");
-        assertNull(createAccountResponse);
+        Assert.assertEquals(409, createAccountResponse.getStatus());
     }
 
     @Test
@@ -366,7 +366,7 @@ public class AccountsEndpointTest extends EndpointTest {
             assertTrue(thinhPhone.unregister(thinhContact, 0));
 
             clientOfAccount = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
-                    subAccountResponse, adminUsername, adminPassword);
+                    subAccountResponse, adminUsername, adminAuthToken);
             assertTrue(clientOfAccount.get("password").getAsString().equals(subAccountNewPassword));
 
             //RestcommAccountsTool.getInstance().removeAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
