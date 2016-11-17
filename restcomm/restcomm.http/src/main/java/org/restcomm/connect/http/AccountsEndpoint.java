@@ -149,6 +149,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
     protected Response getAccount(final String accountSid, final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         Account account = null;
+        //This method can be executed using both AuthToken and Password
         checkPermission("RestComm:Read:Accounts", AuthType.ANY);
         if (Sid.pattern.matcher(accountSid).matches()) {
             try {
@@ -170,7 +171,12 @@ public class AccountsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             // hide AuthToken account attribute if AuthToken authType is effective
-            if (AuthType.AuthToken.equals(userIdentityContext.getAuthType()) || (AuthType.Password.equals(userIdentityContext.getAuthType()) && !account.getSid().equals(userIdentityContext.getEffectiveAccount().getSid()) )) {
+            // and also if Password authType is effective but operating account is different to the account requested, for example:
+            // 1. getAccount() request from AccountSid A for AccountSid A with Username/AuthToken will hide authToken
+            // 2. getAccount() request from AccountSid A for AccountSid B (B is a child of A) with Username/Password will hide authToken
+            // 3. getAccount() request from AccountSid A for AccountSid A with Username/Password will NOT hide authToken
+            if (AuthType.AuthToken.equals(userIdentityContext.getAuthType()) ||
+                    (AuthType.Password.equals(userIdentityContext.getAuthType()) && !account.getSid().equals(userIdentityContext.getEffectiveAccount().getSid()) )) {
                 account = account.setAuthToken(null);
             }
             if (APPLICATION_XML_TYPE == responseType) {
@@ -312,6 +318,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response getAccounts(final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
+        //This method can be executed only using AuthToken
         checkPermission("RestComm:Read:Accounts",AuthType.AuthToken);
         final Account account = userIdentityContext.getEffectiveAccount();
         if (account == null) {

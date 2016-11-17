@@ -69,8 +69,12 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     // types of secured resources used to apply different policies to applications, numbers etc.
     public enum SecuredType {
+        //Security Level Control type for Applications, used in ApplicationsEndpoint
         SECURED_APP,
-        SECURED_ACCOUNT, SECURED_STANDARD
+        //Security Level Control type for Accounts, used in AccountsEndpoint
+        SECURED_ACCOUNT,
+        //Security Level Control type for general use, all the REST API Endpoints
+        SECURED_STANDARD
     }
 
     protected Logger logger = Logger.getLogger(SecuredEndpoint.class);
@@ -138,13 +142,15 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      *
      * @param permission - e.g. 'RestComm:Create:Accounts'
      */
-    protected void checkPermission(final String permission) {
+    private void checkPermission(final String permission) {
         if ( checkPermission(permission, userIdentityContext.getEffectiveAccountRoles()) != AuthOutcome.OK )
             throw new InsufficientPermission();
     }
 
     /**
      * Grants access by permission. It will also make sure the Authentication type is correct
+     * Permission check will take into account AuthType also.
+     * Several endpoint methods should be allowed for AuthToken or Password or Any AuthType
      *
      * @param permission
      * @param authType
@@ -195,6 +201,11 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         secure(operatedAccount,permission);
     }
 
+    protected void secure(final Account operatedAccount, final String permission, SecuredType type, AuthType authType) throws AuthorizationException {
+        checkAuthType(authType);
+        secure(operatedAccount, permission, type);
+    }
+
     protected void secure(final Account operatedAccount, final String permission, SecuredType type) throws AuthorizationException {
         checkAuthenticatedAccount();
         checkPermission(permission); // check an authenticated account allowed to do "permission" is available
@@ -216,11 +227,10 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected void secure(final Account operatedAccount, final String permission, SecuredType type, AuthType authType) throws AuthorizationException {
+    protected void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type, AuthType authType) throws AuthorizationException {
         checkAuthType(authType);
-        secure(operatedAccount, permission, type);
+        secure(operatedAccount, resourceAccountSid, type);
     }
-
 
     protected void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type) throws AuthorizationException {
         checkAuthenticatedAccount();
@@ -242,11 +252,6 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         else {
             throw new NotImplementedException();
         }
-    }
-
-    protected void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type, AuthType authType) throws AuthorizationException {
-        checkAuthType(authType);
-        secure(operatedAccount, resourceAccountSid, type);
     }
 
 //    protected void secure(final Account operatedAccount, final Sid resourceAccountSid, final String permission) throws AuthorizationException {
