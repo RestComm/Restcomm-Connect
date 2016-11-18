@@ -1054,15 +1054,16 @@ public final class CallManager extends UntypedActor {
         }
 
         if(logger.isInfoEnabled()) {
-            logger.info("About to start Live Call Modification");
+            logger.info("About to start Live Call Modification, moveConnectedCallLeg: "+moveConnectedCallLeg);
             logger.info("Initial Call path: " + call.path());
-
             if (relatedCall != null) {
                 logger.info("Related Call path: " + relatedCall.path());
             }
-
             // Cleanup all observers from both call legs
             logger.info("Will tell Call actors to stop observing existing Interpreters");
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("LCM account: "+ request.account() +", moveConnectedCallLeg: "+moveConnectedCallLeg+", new RCML url: "+request.url());
         }
         call.tell(new StopObserving(), self());
         if (relatedCall != null) {
