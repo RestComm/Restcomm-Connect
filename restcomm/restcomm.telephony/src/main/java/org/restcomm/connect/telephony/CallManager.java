@@ -40,7 +40,6 @@ import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import gov.nist.javax.sip.header.UserAgent;
 import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CallResponse;
@@ -63,13 +62,11 @@ import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
-import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.Registration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.interpreter.StartInterpreter;
@@ -102,7 +99,6 @@ import javax.sip.message.Response;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.ListIterator;
@@ -323,7 +319,9 @@ public final class CallManager extends UntypedActor {
         // Make sure we handle re-invites properly.
         if (!request.isInitial()) {
             final SipServletResponse okay = request.createResponse(SC_OK);
-            okay.send();
+            final ActorRef call = call();
+            call.tell(request, self());
+            //okay.send();
             return;
         }
         //Run proInboundAction Extensions here
@@ -460,12 +458,10 @@ public final class CallManager extends UntypedActor {
                 }
             }
         } else // Client is null, check if this call is for a registered DID (application)
-        {
-            if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
+         if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
                 // This is a call to a registered DID (application)
                 return;
             }
-        }
         final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
         response.send();
         // We didn't find anyway to handle the call.
@@ -1232,8 +1228,7 @@ public final class CallManager extends UntypedActor {
                         }
                         registrationToDial.add(registration);
                     } else //If this is a WebRTC client registration, check that the InstanceId of the registration is for the current Restcomm instance
-                    {
-                        if ((registration.getInstanceId() != null && !registration.getInstanceId().equals(RestcommConfiguration.getInstance().getMain().getInstanceId()))) {
+                     if ((registration.getInstanceId() != null && !registration.getInstanceId().equals(RestcommConfiguration.getInstance().getMain().getInstanceId()))) {
                             String errMsg = "Cannot create call for user agent: " + registration.getLocation() + " since this is a webrtc client registered in another Restcomm instance.";
                             logger.warning(errMsg);
                             globalNotification.sendNotification(GlobalNotification.getERROR_NOTIFICATION(), 11001, errMsg);
@@ -1243,7 +1238,6 @@ public final class CallManager extends UntypedActor {
                             }
                             registrationToDial.add(registration);
                         }
-                    }
                 } else {
                     if (logger.isInfoEnabled()) {
                         logger.info("Will add registration: " + registration.getLocation() + " to the list to be dialed for client: " + client);

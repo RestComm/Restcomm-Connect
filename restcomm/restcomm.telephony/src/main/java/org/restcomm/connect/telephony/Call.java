@@ -114,6 +114,7 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
 import org.restcomm.connect.notification.GlobalNotification;
 import scala.concurrent.duration.Duration;
 
@@ -1458,6 +1459,28 @@ public final class Call extends UntypedActor {
 
     private void onSipServletRequest(SipServletRequest message, ActorRef self, ActorRef sender) throws Exception {
         final String method = message.getMethod();
+        final SipServletRequest request = (SipServletRequest) message;
+        //handle reinvite and send 200 ok with SDP information
+        if (!request.isInitial()) {
+            final MediaServerControllerStateChanged response = (MediaServerControllerStateChanged) message;
+            mediaSessionInfo = response.getMediaSession();
+            //mediaSessionInfo
+            String offer = null;
+            if (mediaSessionInfo.usesNat()) {
+                final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
+                final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
+                offer = SdpUtils.patch("application/sdp", sdp, externalIp);
+            } else {
+                offer = mediaSessionInfo.getLocalSdp();
+            }
+            offer = SdpUtils.endWithNewLine(offer);
+            final SipServletResponse okay = request.createResponse(SC_OK);
+            okay.setContent(offer, "application/sdp");
+            // Send the invite.
+            okay.send();
+            return;
+
+        }
         if ("INVITE".equalsIgnoreCase(method)) {
             if (is(uninitialized)) {
                 fsm.transition(message, ringing);
@@ -1497,10 +1520,10 @@ public final class Call extends UntypedActor {
                 // Tell conference to remove the call from participants list
                 // before moving to a stopping state
                 conference.tell(new RemoveParticipant(self), self);
-            } else // Clean media resources as necessary
-            if (!is(completed)) {
-                fsm.transition(message, stopping);
-            }
+            } else// Clean media resources as necessary
+             if (!is(completed)) {
+                    fsm.transition(message, stopping);
+                }
         } else if ("INFO".equalsIgnoreCase(method)) {
             processInfo(message);
         } else if ("ACK".equalsIgnoreCase(method)) {
