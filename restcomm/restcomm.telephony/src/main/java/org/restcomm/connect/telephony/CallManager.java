@@ -111,6 +111,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import static akka.pattern.Patterns.ask;
+import javax.sdp.SdpException;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
 import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
@@ -316,13 +317,20 @@ public final class CallManager extends UntypedActor {
     private void invite(final Object message) throws IOException, NumberParseException, ServletParseException {
         final ActorRef self = self();
         final SipServletRequest request = (SipServletRequest) message;
-        // Make sure we handle re-invites properly.
+        // Make sure we handle re-invites properly.send 200 ok with SDP information
         if (!request.isInitial()) {
-            final SipServletResponse okay = request.createResponse(SC_OK);
-            final ActorRef call = call();
-            call.tell(request, self());
-            //okay.send();
-            return;
+            try {
+                String offer = null;
+                final SipServletResponse okay = request.createResponse(SC_OK);
+                final byte[] sdp = request.getRawContent();
+                final String externalIp = request.getInitialRemoteAddr();
+                offer = SdpUtils.patch(request.getContentType(), sdp, externalIp);
+                okay.setContent(offer, "application/sdp");
+                okay.send();
+                return;
+            } catch (UnknownHostException | SdpException ex) {
+                logger.error("Error replying to reINVITE", ex);
+            }
         }
         //Run proInboundAction Extensions here
         // If it's a new invite lets try to handle it.
