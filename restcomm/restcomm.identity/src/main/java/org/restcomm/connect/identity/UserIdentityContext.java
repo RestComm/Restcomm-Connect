@@ -31,6 +31,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
+import org.mindrot.jbcrypt.BCrypt;
 import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.commons.security.PasswordAlgorithm;
 import org.restcomm.connect.dao.AccountsDao;
@@ -106,7 +107,7 @@ public class UserIdentityContext {
         return null;
     }
 
-    boolean verifyPassword(String inputPass, String storedPass, PasswordAlgorithm storedAlgorithm, String salt) {
+    boolean verifyPassword(String inputPass, String storedPass, PasswordAlgorithm storedAlgorithm) {
         if (storedAlgorithm == PasswordAlgorithm.plain) {
             return storedPass.equals(inputPass);
         } else
@@ -114,7 +115,7 @@ public class UserIdentityContext {
             return storedPass.equals(DigestUtils.md5Hex(inputPass));
         }
         if (storedAlgorithm == PasswordAlgorithm.bcrypt_salted) {
-
+            return BCrypt.checkpw(inputPass,storedPass); // this does not need salt. It seems its already stored with the hashed password
         }
         else
             throw new NotImplementedException("Password algorithm not supported: " + storedAlgorithm);

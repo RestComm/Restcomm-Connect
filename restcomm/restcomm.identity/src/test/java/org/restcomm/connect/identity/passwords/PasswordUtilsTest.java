@@ -20,25 +20,20 @@
 
 package org.restcomm.connect.identity.passwords;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.NotImplementedException;
+import junit.framework.Assert;
+import org.junit.Test;
 import org.mindrot.jbcrypt.BCrypt;
 import org.restcomm.connect.commons.security.PasswordAlgorithm;
 
 /**
- * Various password utility methods.
+ * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public class PasswordUtils {
-
-    public static String hashPassword(String password, PasswordAlgorithm algorithm) {
-        switch (algorithm) {
-            case plain:
-                return password;
-            case md5:
-                return DigestUtils.md5Hex(password);
-            case bcrypt_salted:
-                return BCrypt.hashpw(password, BCrypt.gensalt());
-        }
-        throw new NotImplementedException("Uknown password hasing algorithm: " + algorithm);
+public class PasswordUtilsTest {
+    @Test
+    public void foo() {
+        Assert.assertEquals("RestComm",PasswordUtils.hashPassword("RestComm", PasswordAlgorithm.plain));
+        Assert.assertEquals("77f8c12cc7b8f8423e5c38b035249166",PasswordUtils.hashPassword("RestComm", PasswordAlgorithm.md5));
+        Assert.assertTrue("BCrypt hashed password verification failed",BCrypt.checkpw("RestComm",PasswordUtils.hashPassword("RestComm", PasswordAlgorithm.bcrypt_salted))); // "ACae6e420f425248d6a26948c17a9e2acf"
     }
+
 }

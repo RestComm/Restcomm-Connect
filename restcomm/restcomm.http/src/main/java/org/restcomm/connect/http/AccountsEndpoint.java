@@ -137,7 +137,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             throw new PasswordTooWeak();
         // hash password
         PasswordAlgorithm algorithm = RestcommConfiguration.getInstance().getMain().getPasswordAlgorithmStrategy();
-        String hashedPassword = PasswordUtils.hashPassword(password, algorithm, sid.toString());
+        String hashedPassword = PasswordUtils.hashPassword(password, algorithm);
         // AuthToken gets a random value
         final String authToken = SecurityUtils.generateAccountAuthToken();
         final String role = data.getFirst("Role");
@@ -475,7 +475,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
                 // hash password
                 PasswordAlgorithm algorithm = RestcommConfiguration.getInstance().getMain().getPasswordAlgorithmStrategy();
-                String hashedPassword = PasswordUtils.hashPassword(password, algorithm, account.getSid().toString());
+                String hashedPassword = PasswordUtils.hashPassword(password, algorithm);
                 result = result.setPassword(hashedPassword);
                 result = result.setPasswordAlgorithm(algorithm);
             }
