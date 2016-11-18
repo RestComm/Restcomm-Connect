@@ -32,6 +32,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
+import org.restcomm.connect.commons.security.PasswordAlgorithm;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
 
@@ -105,11 +106,11 @@ public class UserIdentityContext {
         return null;
     }
 
-    boolean verifyPassword(String inputPass, String storedPass, Account.PasswordAlgorithm storedAlgorithm) {
-        if (storedAlgorithm == Account.PasswordAlgorithm.plain) {
+    boolean verifyPassword(String inputPass, String storedPass, PasswordAlgorithm storedAlgorithm) {
+        if (storedAlgorithm == PasswordAlgorithm.plain) {
             return storedPass.equals(inputPass);
         } else
-        if (storedAlgorithm == Account.PasswordAlgorithm.md5) {
+        if (storedAlgorithm == PasswordAlgorithm.md5) {
             return storedPass.equals(DigestUtils.md5Hex(inputPass));
         } else
             throw new NotImplementedException("Password algorithm not supported: " + storedAlgorithm);

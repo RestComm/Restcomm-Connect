@@ -45,6 +45,7 @@ import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
+import org.restcomm.connect.commons.security.PasswordAlgorithm;
 import org.restcomm.connect.commons.util.SecurityUtils;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -134,7 +135,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         if (!validator.isStrongEnough(password))
             throw new PasswordTooWeak();
         // by default, use the plain-text password algorithm  for new accounts - TODO make this value configurable ?
-        Account.PasswordAlgorithm algorithm = Account.PasswordAlgorithm.plain;
+        PasswordAlgorithm algorithm = PasswordAlgorithm.plain;
         // AuthToken gets a random value
         final String authToken = SecurityUtils.generateAccountAuthToken();
         final String role = data.getFirst("Role");

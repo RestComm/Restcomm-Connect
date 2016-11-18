@@ -18,33 +18,15 @@
  *
  */
 
-package org.restcomm.connect.commons.configuration.sets;
-
-import org.restcomm.connect.commons.common.http.SslMode;
-import org.restcomm.connect.commons.security.PasswordAlgorithm;
+package org.restcomm.connect.commons.security;
 
 /**
- * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
+ * Supported algorithms for password hashing. Currently used only in Account passwords.
+ *
+ * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public interface MainConfigurationSet {
-    SslMode getSslMode();
-
-    int getResponseTimeout();
-
-    boolean isUseHostnameToResolveRelativeUrls();
-
-    String getHostname();
-
-    boolean getBypassLbForClients();
-
-    void setInstanceId(String instanceId);
-
-    String getInstanceId();
-
-    /**
-     * Policy for password hashing when creating or updating account passwords.
-     *
-     * @return
-     */
-    PasswordAlgorithm getPasswordAlgorithmStrategy();
+public enum PasswordAlgorithm {
+    plain,
+    md5,
+    bcrypt_salted
 }

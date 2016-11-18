@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.security.PasswordAlgorithm;
 
 /**
  * Represent a user Account
@@ -211,11 +212,7 @@ public final class Account {
             return text;
         }
     };
-
-    public enum PasswordAlgorithm {
-        plain,
-        md5
-    };
+    ;
 
     public static final class Builder {
         private Sid sid;

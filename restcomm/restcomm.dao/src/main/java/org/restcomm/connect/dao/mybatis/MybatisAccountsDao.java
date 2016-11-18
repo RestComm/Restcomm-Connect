@@ -24,10 +24,10 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.security.PasswordAlgorithm;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Account.PasswordAlgorithm;
 import org.restcomm.connect.commons.dao.Sid;
 
 import java.net.URI;

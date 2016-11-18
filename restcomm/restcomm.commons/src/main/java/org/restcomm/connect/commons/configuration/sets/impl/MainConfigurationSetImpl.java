@@ -25,6 +25,7 @@ import org.restcomm.connect.commons.configuration.sets.MainConfigurationSet;
 import org.restcomm.connect.commons.configuration.sources.ConfigurationSource;
 import org.restcomm.connect.commons.common.http.SslMode;
 import org.apache.commons.lang.StringUtils;
+import org.restcomm.connect.commons.security.PasswordAlgorithm;
 
 /**
  * Provides a typed interface to a set of configuration options retrieved from a
@@ -50,6 +51,7 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
     private boolean useHostnameToResolveRelativeUrls;
     private String hostname;
     private String instanceId;
+    private PasswordAlgorithm passwordAlgorithnStrategy;
 
     public static final String BYPASS_LB_FOR_CLIENTS = "bypass-lb-for-clients";
     private boolean bypassLbForClients = false;
@@ -92,6 +94,9 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
         this.useHostnameToResolveRelativeUrls = resolveRelativeUrlWithHostname;
         this.hostname = resolveRelativeUrlHostname;
         bypassLbForClients = bypassLb;
+
+        // TODO This value is hardcoded. Load it from configuraiton
+        passwordAlgorithnStrategy = PasswordAlgorithm.bcrypt_salted;
     }
 
     public MainConfigurationSetImpl(SslMode sslMode, int responseTimeout, boolean useHostnameToResolveRelativeUrls, String hostname, String instanceId, boolean bypassLbForClients) {
@@ -135,6 +140,11 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
     @Override
     public String getInstanceId() { return this.instanceId; }
 
+    @Override
+    public PasswordAlgorithm getPasswordAlgorithmStrategy() {
+        return passwordAlgorithnStrategy;
+    }
+
     public void setSslMode(SslMode sslMode) {
         this.sslMode = sslMode;
     }
@@ -153,5 +163,9 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
 
     public void setBypassLbForClients(boolean bypassLbForClients) {
         this.bypassLbForClients = bypassLbForClients;
+    }
+
+    public void setPasswordAlgorithnStrategy(PasswordAlgorithm passwordAlgorithnStrategy) {
+        this.passwordAlgorithnStrategy = passwordAlgorithnStrategy;
     }
 }

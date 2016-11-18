@@ -26,6 +26,7 @@ import java.util.Date;
 
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.security.PasswordAlgorithm;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
@@ -55,9 +56,9 @@ public final class DaoUtils {
         }
     }
 
-    public static Account.PasswordAlgorithm readAccountPasswordAlgorithm(final Object algorithm) {
+    public static PasswordAlgorithm readAccountPasswordAlgorithm(final Object algorithm) {
         if (algorithm != null)
-            return Account.PasswordAlgorithm.valueOf(algorithm.toString());
+            return PasswordAlgorithm.valueOf(algorithm.toString());
         return null;
     }
 
@@ -165,7 +166,7 @@ public final class DaoUtils {
         }
     }
 
-    public static String writeAccountPasswordAlgorithm(final Account.PasswordAlgorithm algorithm) {
+    public static String writeAccountPasswordAlgorithm(final PasswordAlgorithm algorithm) {
         if (algorithm != null)
             return algorithm.toString();
         return null;
