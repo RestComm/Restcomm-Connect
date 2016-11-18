@@ -106,13 +106,17 @@ public class UserIdentityContext {
         return null;
     }
 
-    boolean verifyPassword(String inputPass, String storedPass, PasswordAlgorithm storedAlgorithm) {
+    boolean verifyPassword(String inputPass, String storedPass, PasswordAlgorithm storedAlgorithm, String salt) {
         if (storedAlgorithm == PasswordAlgorithm.plain) {
             return storedPass.equals(inputPass);
         } else
         if (storedAlgorithm == PasswordAlgorithm.md5) {
             return storedPass.equals(DigestUtils.md5Hex(inputPass));
-        } else
+        }
+        if (storedAlgorithm == PasswordAlgorithm.bcrypt_salted) {
+
+        }
+        else
             throw new NotImplementedException("Password algorithm not supported: " + storedAlgorithm);
     }
 

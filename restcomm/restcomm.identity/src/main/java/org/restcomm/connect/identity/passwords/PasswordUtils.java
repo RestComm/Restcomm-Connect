@@ -18,22 +18,20 @@
  *
  */
 
-package org.restcomm.connect.commons.util;
+package org.restcomm.connect.identity.passwords;
 
-import org.apache.commons.codec.binary.Base64;
-
-import java.util.UUID;
+import org.apache.commons.lang.NotImplementedException;
+import org.restcomm.connect.commons.security.PasswordAlgorithm;
 
 /**
- * @author otsakir@gmail.com - Orestis Tsakiridis
+ * Various password utility methods.
  */
-public class SecurityUtils {
-    public static String buildBasicAuthHeader(String username, String password) {
-        return "Basic " + Base64.encodeBase64String((username + ":" + password).getBytes());
-    }
+public class PasswordUtils {
 
-    // TODO is this is random enough ? probably yes.
-    public static String generateAccountAuthToken() {
-        return UUID.randomUUID().toString().replace("-","");
+    public static String hashPassword(String password, PasswordAlgorithm algorithm, String salt) {
+        switch (algorithm) {
+//            case md5:
+        }
+        throw new NotImplementedException("Uknown password hasing algorithm: " + algorithm);
     }
 }

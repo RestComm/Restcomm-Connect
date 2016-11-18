@@ -46,7 +46,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.security.PasswordAlgorithm;
-import org.restcomm.connect.commons.util.SecurityUtils;
+import org.restcomm.connect.commons.security.SecurityUtils;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
@@ -66,6 +66,7 @@ import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
 import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
 import org.restcomm.connect.identity.AuthType;
+import org.restcomm.connect.identity.passwords.PasswordUtils;
 import org.restcomm.connect.identity.passwords.PasswordValidator;
 import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
@@ -134,8 +135,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
         PasswordValidator validator = PasswordValidatorFactory.createDefault();
         if (!validator.isStrongEnough(password))
             throw new PasswordTooWeak();
-        // by default, use the plain-text password algorithm  for new accounts - TODO make this value configurable ?
-        PasswordAlgorithm algorithm = PasswordAlgorithm.plain;
+        // hash password
+        PasswordAlgorithm algorithm = RestcommConfiguration.getInstance().getMain().getPasswordAlgorithmStrategy();
+        String hashedPassword = PasswordUtils.hashPassword(password, algorithm, sid.toString());
         // AuthToken gets a random value
         final String authToken = SecurityUtils.generateAccountAuthToken();
         final String role = data.getFirst("Role");
@@ -144,7 +146,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
-        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, password, algorithm, authToken, role, uri);
+        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, hashedPassword, algorithm, authToken, role, uri);
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
@@ -470,7 +472,12 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 PasswordValidator validator = PasswordValidatorFactory.createDefault();
                 if (!validator.isStrongEnough(password))
                     throw new PasswordTooWeak();
-                result = result.setPassword(password);
+
+                // hash password
+                PasswordAlgorithm algorithm = RestcommConfiguration.getInstance().getMain().getPasswordAlgorithmStrategy();
+                String hashedPassword = PasswordUtils.hashPassword(password, algorithm, account.getSid().toString());
+                result = result.setPassword(hashedPassword);
+                result = result.setPasswordAlgorithm(algorithm);
             }
             if (newStatus != null) {
                 result = result.setStatus(newStatus);
