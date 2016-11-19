@@ -27,8 +27,18 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 @Immutable
 public final class Leave {
 
+    private boolean liveCallModification;
+
     public Leave() {
         super();
     }
 
+    public Leave(final boolean liveCallModification) {
+        super();
+        this.liveCallModification = true;
+    }
+
+    public boolean isLiveCallModification() {
+        return liveCallModification;
+    }
 }
