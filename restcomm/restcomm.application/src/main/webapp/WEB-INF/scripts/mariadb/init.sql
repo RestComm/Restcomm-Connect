@@ -340,7 +340,8 @@ extension VARCHAR(255) NOT NULL,
 configuration_data LONGTEXT NOT NULL,
 configuration_type VARCHAR(255) NOT NULL,
 date_created DATETIME NOT NULL,
-date_updated DATETIME
+date_updated DATETIME,
+enabled  BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 INSERT INTO restcomm_accounts VALUES (

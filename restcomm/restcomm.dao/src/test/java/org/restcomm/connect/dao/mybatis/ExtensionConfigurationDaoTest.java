@@ -132,28 +132,28 @@ public class ExtensionConfigurationDaoTest {
     @Test
     public void testValidJsonDoc() {
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(Sid.generate(Sid.Type.EXTENSION_CONFIGURATION),
-                "testExt", validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
+                "testExt", true, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
         assertEquals(true, extensionsConfigurationDao.validate(validExtensionConfiguration));
     }
 
     @Test
     public void testInvalidJsonDoc() {
         ExtensionConfiguration invalidExtensionConfiguration = new ExtensionConfiguration(Sid.generate(Sid.Type.EXTENSION_CONFIGURATION),
-                "testExt", invalidJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
+                "testExt", true, invalidJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
         assertEquals(false, extensionsConfigurationDao.validate(invalidExtensionConfiguration));
     }
 
     @Test
     public void testValidXmlDoc() {
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(Sid.generate(Sid.Type.EXTENSION_CONFIGURATION),
-                "testExt", validXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
+                "testExt", true, validXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
         assertEquals(true, extensionsConfigurationDao.validate(validExtensionConfiguration));
     }
 
     @Test
     public void testInvalidXmlDoc() {
         ExtensionConfiguration invalidExtensionConfiguration = new ExtensionConfiguration(Sid.generate(Sid.Type.EXTENSION_CONFIGURATION),
-                "testExt", invalidXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
+                "testExt", true, invalidXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
         assertEquals(false, extensionsConfigurationDao.validate(invalidExtensionConfiguration));
     }
 
@@ -161,7 +161,7 @@ public class ExtensionConfigurationDaoTest {
     public void testStoreAndRetrieveConfigurationByNameJson() throws ConfigurationException {
         String extName = "testExt";
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(Sid.generate(Sid.Type.EXTENSION_CONFIGURATION),
-                extName, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
+                extName, true, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
         extensionsConfigurationDao.addConfiguration(validExtensionConfiguration);
         ExtensionConfiguration retrievedConf = extensionsConfigurationDao.getConfigurationByName(extName);
         assertNotNull(retrievedConf);
@@ -173,7 +173,7 @@ public class ExtensionConfigurationDaoTest {
     public void testStoreAndRetrieveConfigurationBySidJson() throws ConfigurationException {
         Sid sid = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(sid,
-                "testExt", validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
+                "testExt", true, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
         extensionsConfigurationDao.addConfiguration(validExtensionConfiguration);
         ExtensionConfiguration retrievedConf = extensionsConfigurationDao.getConfigurationBySid(sid);
         assertNotNull(retrievedConf);
@@ -185,7 +185,7 @@ public class ExtensionConfigurationDaoTest {
     public void testStoreUpdateAndRetrieveConfigurationByNameJson() throws ConfigurationException {
         String extName = "testExt";
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(Sid.generate(Sid.Type.EXTENSION_CONFIGURATION),
-                extName, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
+                extName, true, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
         extensionsConfigurationDao.addConfiguration(validExtensionConfiguration);
         ExtensionConfiguration retrievedConf = extensionsConfigurationDao.getConfigurationByName(extName);
         assertNotNull(retrievedConf);
@@ -201,7 +201,7 @@ public class ExtensionConfigurationDaoTest {
     public void testStoreUpdateAndRetrieveConfigurationBySidJson() throws ConfigurationException {
         Sid sid = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(sid,
-                "testExt", validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
+                "testExt", true, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
         extensionsConfigurationDao.addConfiguration(validExtensionConfiguration);
         ExtensionConfiguration retrievedConf = extensionsConfigurationDao.getConfigurationBySid(sid);
         assertNotNull(retrievedConf);
@@ -217,7 +217,7 @@ public class ExtensionConfigurationDaoTest {
     public void testStoreAndRetrieveConfigurationByNameXml() throws ConfigurationException {
         String extName = "testExt";
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(Sid.generate(Sid.Type.EXTENSION_CONFIGURATION),
-                extName, validXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
+                extName, true, validXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
         extensionsConfigurationDao.addConfiguration(validExtensionConfiguration);
         ExtensionConfiguration retrievedConf = extensionsConfigurationDao.getConfigurationByName(extName);
         assertNotNull(retrievedConf);
@@ -229,7 +229,7 @@ public class ExtensionConfigurationDaoTest {
     public void testStoreAndRetrieveConfigurationBySidXml() throws ConfigurationException {
         Sid sid = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(sid,
-                "testExt", validXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
+                "testExt", true, validXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
         extensionsConfigurationDao.addConfiguration(validExtensionConfiguration);
         ExtensionConfiguration retrievedConf = extensionsConfigurationDao.getConfigurationBySid(sid);
         assertNotNull(retrievedConf);
@@ -241,7 +241,7 @@ public class ExtensionConfigurationDaoTest {
     public void testStoreUpdateAndRetrieveConfigurationByNameXml() throws ConfigurationException {
         String extName = "testExt";
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(Sid.generate(Sid.Type.EXTENSION_CONFIGURATION),
-                extName, validXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
+                extName, true, validXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
         extensionsConfigurationDao.addConfiguration(validExtensionConfiguration);
         ExtensionConfiguration retrievedConf = extensionsConfigurationDao.getConfigurationByName(extName);
         assertNotNull(retrievedConf);
@@ -257,7 +257,7 @@ public class ExtensionConfigurationDaoTest {
     public void testStoreUpdateAndRetrieveConfigurationBySidXml() throws ConfigurationException {
         Sid sid = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
         ExtensionConfiguration validExtensionConfiguration = new ExtensionConfiguration(sid,
-                "testExt", validXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
+                "testExt", true, validXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
         extensionsConfigurationDao.addConfiguration(validExtensionConfiguration);
         ExtensionConfiguration retrievedConf = extensionsConfigurationDao.getConfigurationBySid(sid);
         assertNotNull(retrievedConf);
@@ -274,9 +274,9 @@ public class ExtensionConfigurationDaoTest {
         Sid sid1 = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
         Sid sid2 = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
         ExtensionConfiguration validExtensionConfigurationXml = new ExtensionConfiguration(sid1,
-                "testExtXml", validXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
+                "testExtXml", true, validXmlDoc, ExtensionConfiguration.configurationType.XML, DateTime.now());
         ExtensionConfiguration validExtensionConfigurationJson = new ExtensionConfiguration(sid2,
-                "testExtJson", validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
+                "testExtJson", true, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
 
         extensionsConfigurationDao.addConfiguration(validExtensionConfigurationXml);
         extensionsConfigurationDao.addConfiguration(validExtensionConfigurationJson);
@@ -296,7 +296,7 @@ public class ExtensionConfigurationDaoTest {
     public void testStoreUpdateAndRetrieveConfigurationByNameCheckVersionJson() throws ConfigurationException {
         String extName = "testExt";
         ExtensionConfiguration originalExtensionConfiguration = new ExtensionConfiguration(Sid.generate(Sid.Type.EXTENSION_CONFIGURATION),
-                extName, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
+                extName, true, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
         extensionsConfigurationDao.addConfiguration(originalExtensionConfiguration);
 
         ExtensionConfiguration retrievedConf = extensionsConfigurationDao.getConfigurationByName(extName);
@@ -322,7 +322,7 @@ public class ExtensionConfigurationDaoTest {
         String extName = "testExt";
         Sid sid = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
         ExtensionConfiguration originalExtensionConfiguration = new ExtensionConfiguration(sid,
-                extName, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
+                extName, true, validJsonObject, ExtensionConfiguration.configurationType.JSON, DateTime.now());
         extensionsConfigurationDao.addConfiguration(originalExtensionConfiguration);
 
         ExtensionConfiguration retrievedConf = extensionsConfigurationDao.getConfigurationBySid(sid);

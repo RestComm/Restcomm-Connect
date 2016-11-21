@@ -35,4 +35,20 @@ public class SmppOutboundMessageEntity {
     public final Charset getSmppEncoding(){
         return smppEncoding;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("SMPPOutboundMessage[From=")
+            .append(smppFrom)
+            .append(",To")
+            .append(smppTo)
+            .append(",Content=")
+            .append(smppContent)
+            .append(",Encoding=")
+            .append(smppEncoding);
+
+        return super.toString();
+    }
 }

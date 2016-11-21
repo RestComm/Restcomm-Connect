@@ -397,6 +397,8 @@ public final class CallManager extends UntypedActor {
                         String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
                                 + " : Make sure the Client exist or is registered with Restcomm";
                         sendNotification(errMsg, 11001, "warning", true);
+                        final SipServletResponse resp = request.createResponse(SC_NOT_FOUND, "Cannot complete P2P call");
+                        resp.send();
                     }
                 } else {
                     //Extensions didn't allowed this call
@@ -1183,9 +1185,11 @@ public final class CallManager extends UntypedActor {
     private boolean executePreOutboundAction(final Object message) {
         if (extensions != null && extensions.size() > 0) {
             for (RestcommExtensionGeneric extension : extensions) {
-                ExtensionResponse response = extension.preOutboundAction(message);
-                if (!response.isAllowed())
-                    return false;
+                if (extension.isEnabled()) {
+                    ExtensionResponse response = extension.preOutboundAction(message);
+                    if (!response.isAllowed())
+                        return false;
+                }
             }
         }
         return true;

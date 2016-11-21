@@ -989,7 +989,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private void onDownloaderResponse(Object message, State state) throws IOException, TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         final DownloaderResponse response = (DownloaderResponse) message;
         if (logger.isDebugEnabled()) {
-            logger.debug("Rcml URI : " + response.get().getURI() + "response succeeded " + response.succeeded()
+
+            logger.debug("Download Rcml response succeeded " + response.succeeded()
                 + ", statusCode " + response.get().getStatusCode());
         }
         if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {

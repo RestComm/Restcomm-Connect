@@ -84,7 +84,7 @@ import org.restcomm.connect.commons.dao.Sid;
       */
      // This is used for redirect calls to Restcomm clients from Restcomm Clients
      public static boolean redirectToB2BUA(final SipServletRequest request, final Client client, Client toClient,
-             DaoManager storage, SipFactory sipFactory, final boolean patchForNat) throws IOException {
+                                           DaoManager storage, SipFactory sipFactory, final boolean patchForNat) throws IOException {
          request.getSession().setAttribute("lastRequest", request);
 
          if (logger.isInfoEnabled()) {
@@ -99,13 +99,13 @@ import org.restcomm.connect.commons.dao.Sid;
          String user = ((SipURI) request.getTo().getURI()).getUser();
 
          final RegistrationsDao registrations = daoManager.getRegistrationsDao();
-         final Registration registration = registrations.getRegistration(user);
-         if (registration != null) {
-             final String location = registration.getLocation();
-             final String aor = registration.getAddressOfRecord();
-             SipURI to;
-             SipURI from;
-             try {
+         try {
+             final Registration registration = registrations.getRegistration(user);
+             if (registration != null) {
+                 final String location = registration.getLocation();
+                 final String aor = registration.getAddressOfRecord();
+                 SipURI to;
+                 SipURI from;
                  to = (SipURI) sipFactory.createURI(location);
                  from = (SipURI) sipFactory.createURI((registrations.getRegistration(client.getLogin())).getLocation());
                  final SipSession incomingSession = request.getSession();
@@ -150,7 +150,7 @@ import org.restcomm.connect.commons.dao.Sid;
                  // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
                  request.getSession().setAttribute(TO_INET_URI, to);
                  if (logger.isInfoEnabled())
-                    logger.info("bypassLoadBalancer is set to: "+RestcommConfiguration.getInstance().getMain().getBypassLbForClients());
+                     logger.info("bypassLoadBalancer is set to: " + RestcommConfiguration.getInstance().getMain().getBypassLbForClients());
                  if (RestcommConfiguration.getInstance().getMain().getBypassLbForClients()) {
                      ((SipSessionExt) outRequest.getSession()).setBypassLoadBalancer(true);
                      ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
@@ -189,10 +189,11 @@ import org.restcomm.connect.commons.dao.Sid;
                  outgoingSession.setAttribute(CDR_SID, callRecord.getSid());
 
                  return true; // successfully proxied the SIP request between two registered clients
-             } catch (ServletParseException badUriEx) {
-                 if (logger.isInfoEnabled()) {
-                     logger.info(String.format("B2BUA: Error parsing Client Contact URI: %s", location), badUriEx);
-                 }
+             }
+         } catch (Exception e) {
+             if (logger.isInfoEnabled()) {
+//                 logger.info(String.format("B2BUA: Error parsing Client Contact URI: %s", location), badUriEx);
+                 logger.info("Cannot proxy client to client call");
              }
          }
          return false;
