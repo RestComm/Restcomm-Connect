@@ -168,6 +168,18 @@
 				<permission>RestComm:*:Usage</permission>
 			</role>
 		</security-roles>
+
+		<security>
+			<!--
+				Default password hashing algorithm to use when creating/updating account passwords. Can be one of the
+				following:
+				* bcrypt_salted
+				* md5
+				* plain - NOT RECOMMENDED
+				Use 'bcrypt_salted' for stronger password hashing. Note that existing password are not touched.
+			-->
+			<password-algorithm-strategy>bcrypt_salted</password-algorithm-strategy>
+		</security>
 	</runtime-settings>
 
 	<!--Bandwidth Provisioning API Configuration class: BandwidthNumberProvisioningManager

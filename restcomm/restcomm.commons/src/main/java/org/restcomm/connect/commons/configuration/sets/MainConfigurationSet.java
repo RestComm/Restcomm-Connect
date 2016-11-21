@@ -44,7 +44,7 @@ public interface MainConfigurationSet {
     /**
      * Policy for password hashing when creating or updating account passwords.
      *
-     * @return
+     * @return default password algorithm
      */
     PasswordAlgorithm getPasswordAlgorithmStrategy();
 }

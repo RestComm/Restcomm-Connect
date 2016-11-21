@@ -51,10 +51,13 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
     private boolean useHostnameToResolveRelativeUrls;
     private String hostname;
     private String instanceId;
-    private PasswordAlgorithm passwordAlgorithnStrategy;
 
     public static final String BYPASS_LB_FOR_CLIENTS = "bypass-lb-for-clients";
     private boolean bypassLbForClients = false;
+
+    private static final String PASSWORD_ALGORITHM_STRATEGY_KEY = "runtime-settings.security.password-algorithm-strategy";
+    private PasswordAlgorithm passwordAlgorithnStrategy;
+
 
     public MainConfigurationSetImpl(ConfigurationSource source) {
         super(source);
@@ -95,8 +98,12 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
         this.hostname = resolveRelativeUrlHostname;
         bypassLbForClients = bypassLb;
 
-        // TODO This value is hardcoded. Load it from configuraiton
-        passwordAlgorithnStrategy = PasswordAlgorithm.bcrypt_salted;
+        try {
+            passwordAlgorithnStrategy = PasswordAlgorithm.valueOf(source.getProperty(PASSWORD_ALGORITHM_STRATEGY_KEY));
+        } catch (Exception e) {
+            // default
+            passwordAlgorithnStrategy = PasswordAlgorithm.bcrypt_salted;
+        }
     }
 
     public MainConfigurationSetImpl(SslMode sslMode, int responseTimeout, boolean useHostnameToResolveRelativeUrls, String hostname, String instanceId, boolean bypassLbForClients) {
