@@ -36,6 +36,7 @@ import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrosse
 import org.restcomm.connect.commons.security.PasswordAlgorithm;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.identity.passwords.PasswordUtils;
 
 /**
  * A per-request security context providing access to Oauth tokens or Account API Keys.
@@ -90,7 +91,7 @@ public class UserIdentityContext {
                 if (account != null) { // ok, the account is there.
                     if (basicAuthPass != null) {
                         // Try to match against both password and AuthToken
-                        if ( verifyPassword(basicAuthPass, account.getPassword(), account.getPasswordAlgorithm() ) ) {
+                        if ( PasswordUtils.verifyPassword(basicAuthPass, account.getPassword(), account.getPasswordAlgorithm() ) ) {
                             authType = AuthType.Password;
                             basicAuthVerified = true;
                             return account;
@@ -105,20 +106,6 @@ public class UserIdentityContext {
             }
         }
         return null;
-    }
-
-    boolean verifyPassword(String inputPass, String storedPass, PasswordAlgorithm storedAlgorithm) {
-        if (storedAlgorithm == PasswordAlgorithm.plain) {
-            return storedPass.equals(inputPass);
-        } else
-        if (storedAlgorithm == PasswordAlgorithm.md5) {
-            return storedPass.equals(DigestUtils.md5Hex(inputPass));
-        }
-        if (storedAlgorithm == PasswordAlgorithm.bcrypt_salted) {
-            return BCrypt.checkpw(inputPass,storedPass); // this does not need salt. It seems its already stored with the hashed password
-        }
-        else
-            throw new NotImplementedException("Password algorithm not supported: " + storedAlgorithm);
     }
 
     /**

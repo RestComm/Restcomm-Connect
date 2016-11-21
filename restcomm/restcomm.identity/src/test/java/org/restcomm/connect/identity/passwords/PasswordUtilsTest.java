@@ -30,10 +30,25 @@ import org.restcomm.connect.commons.security.PasswordAlgorithm;
  */
 public class PasswordUtilsTest {
     @Test
-    public void foo() {
-        Assert.assertEquals("RestComm",PasswordUtils.hashPassword("RestComm", PasswordAlgorithm.plain));
+    public void plaintextPasswordVerification() {
+        // check plaintext password lifecycle
+        Assert.assertTrue(PasswordUtils.verifyPassword("RestComm", PasswordUtils.hashPassword("RestComm", PasswordAlgorithm.plain), PasswordAlgorithm.plain));
+        Assert.assertFalse(PasswordUtils.verifyPassword("wrongPassword", PasswordUtils.hashPassword("RestComm", PasswordAlgorithm.plain), PasswordAlgorithm.plain));
+    }
+
+    @Test
+    public void md5PasswordVerification() {
+        // check md5 password lifecycle
         Assert.assertEquals("77f8c12cc7b8f8423e5c38b035249166",PasswordUtils.hashPassword("RestComm", PasswordAlgorithm.md5));
-        Assert.assertTrue("BCrypt hashed password verification failed",BCrypt.checkpw("RestComm",PasswordUtils.hashPassword("RestComm", PasswordAlgorithm.bcrypt_salted))); // "ACae6e420f425248d6a26948c17a9e2acf"
+        Assert.assertTrue(PasswordUtils.verifyPassword("RestComm", PasswordUtils.hashPassword("RestComm", PasswordAlgorithm.md5), PasswordAlgorithm.md5));
+        Assert.assertFalse(PasswordUtils.verifyPassword("wrongPassword", PasswordUtils.hashPassword("RestComm", PasswordAlgorithm.md5), PasswordAlgorithm.md5));
+    }
+
+    @Test
+    public void bcryptPasswordVerification() {
+        // check bcrypt_salted password lifecycle
+        Assert.assertTrue(PasswordUtils.verifyPassword("RestComm",PasswordUtils.hashPassword("RestComm", PasswordAlgorithm.bcrypt_salted), PasswordAlgorithm.bcrypt_salted));
+        Assert.assertFalse(PasswordUtils.verifyPassword("wrongPassword",PasswordUtils.hashPassword("RestComm", PasswordAlgorithm.bcrypt_salted), PasswordAlgorithm.bcrypt_salted));
     }
 
 }

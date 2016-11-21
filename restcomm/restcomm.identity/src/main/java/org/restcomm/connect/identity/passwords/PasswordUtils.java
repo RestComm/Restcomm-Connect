@@ -41,4 +41,18 @@ public class PasswordUtils {
         }
         throw new NotImplementedException("Uknown password hasing algorithm: " + algorithm);
     }
+
+    public static boolean verifyPassword(String inputPass, String storedPass, PasswordAlgorithm storedAlgorithm) {
+        if (storedAlgorithm == PasswordAlgorithm.plain) {
+            return storedPass.equals(inputPass);
+        } else
+        if (storedAlgorithm == PasswordAlgorithm.md5) {
+            return storedPass.equals(DigestUtils.md5Hex(inputPass));
+        }
+        if (storedAlgorithm == PasswordAlgorithm.bcrypt_salted) {
+            return BCrypt.checkpw(inputPass,storedPass); // this does not need salt. It seems its already stored with the hashed password
+        }
+        else
+            throw new NotImplementedException("Password algorithm not supported: " + storedAlgorithm);
+    }
 }
