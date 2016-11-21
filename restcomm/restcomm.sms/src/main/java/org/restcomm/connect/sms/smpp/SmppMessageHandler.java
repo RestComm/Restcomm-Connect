@@ -98,7 +98,7 @@ public class SmppMessageHandler extends UntypedActor  {
             }
             return;
         } else {
-            logger.error("SMPP Message Rejected : No Restcomm Hosted App Found for inbound number : " + number.getPhoneNumber() );
+            logger.error("SMPP Message Rejected : No Restcomm Hosted App Found for inbound number : " + to );
         }
     }
 
