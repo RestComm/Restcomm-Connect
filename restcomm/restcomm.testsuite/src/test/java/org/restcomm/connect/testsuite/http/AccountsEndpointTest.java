@@ -129,16 +129,21 @@ public class AccountsEndpointTest extends EndpointTest {
         JsonObject adminAccount = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
                 adminAuthToken, adminUsername);
         assertTrue(adminAccount.get("sid").getAsString().equals(adminAccountSid));
-        // this account has its password hashed in md5. We send plaintext. Authentication should pass
+        // authentication of account with md5 password
         JsonObject account = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), "md5pass@company.com",
                 "arnaki", "md5pass@company.com");
         assertTrue(account.get("sid").getAsString().equals("AC77777777777777777777777777777777"));
         Assert.assertNotNull(account.get("auth_token"));
-        // this account has its password in pplaintext form. We send plaintext. Authentication should pass
+        // authentication of account with plaintext password
         account = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), "plainpass@company.com",
                 "arnaki", "plainpass@company.com");
         assertTrue(account.get("sid").getAsString().equals("AC66666666666666666666666666666666"));
         Assert.assertNotNull(account.get("auth_token"));
+        // authentication of account with bcrypt_salted password
+        account = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), "bcryptpass@company.com",
+                "arnaki", "bcryptpass@company.com");
+        assertTrue(account.get("sid").getAsString().equals("AC88888888888888888888888888888888"));
+
     }
 
     @Test

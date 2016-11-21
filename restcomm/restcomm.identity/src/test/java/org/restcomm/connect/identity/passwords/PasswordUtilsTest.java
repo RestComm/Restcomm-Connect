@@ -51,4 +51,11 @@ public class PasswordUtilsTest {
         Assert.assertFalse(PasswordUtils.verifyPassword("wrongPassword",PasswordUtils.hashPassword("RestComm", PasswordAlgorithm.bcrypt_salted), PasswordAlgorithm.bcrypt_salted));
     }
 
+    // this is not really a test but a utility method to log a bcrypt has to use elsewhere (in other tests etc.)
+    @Test
+    public void logBcryptHashedPassword() {
+        String password = "arnaki";
+        System.out.println(PasswordUtils.hashPassword(password,PasswordAlgorithm.bcrypt_salted));
+    }
+
 }
