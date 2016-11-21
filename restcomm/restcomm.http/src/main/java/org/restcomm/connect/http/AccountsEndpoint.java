@@ -470,6 +470,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 if (!validator.isStrongEnough(password))
                     throw new PasswordTooWeak();
                 result = result.setPassword(password);
+                result = result.setPasswordAlgorithm(Account.PasswordAlgorithm.plain); // hardcoded default
             }
             if (newStatus != null) {
                 result = result.setStatus(newStatus);
