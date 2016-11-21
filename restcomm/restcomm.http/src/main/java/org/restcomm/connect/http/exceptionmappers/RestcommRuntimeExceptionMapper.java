@@ -20,11 +20,13 @@
 
 package org.restcomm.connect.http.exceptionmappers;
 
+import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.NotAuthenticated;
 import org.restcomm.connect.http.exceptions.OperatedAccountMissing;
 import org.restcomm.connect.http.exceptions.ResourceAccountMissmatch;
-import org.restcomm.connect.http.exceptions.RestcommRuntimeException;
+import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -39,8 +41,12 @@ import javax.ws.rs.ext.Provider;
  */
 @Provider
 public class RestcommRuntimeExceptionMapper implements ExceptionMapper<RestcommRuntimeException> {
+    static final Logger logger = Logger.getLogger(RestcommRuntimeExceptionMapper.class.getName());
+
     @Override
     public Response toResponse(RestcommRuntimeException e) {
+        logger.error(e);
+
         if (e instanceof NotAuthenticated) {
             return Response.status(Response.Status.UNAUTHORIZED).header("WWW-Authenticate","Basic realm=\"Restcomm realm\"").build();
         }
@@ -55,7 +61,11 @@ public class RestcommRuntimeExceptionMapper implements ExceptionMapper<RestcommR
         if (e instanceof ResourceAccountMissmatch) {
             // in case the resource does belong to the user that it is accessed under, the url is wrong. Throw 400.
             return Response.status(Response.Status.BAD_REQUEST).build();
-        } else {
+        } else
+        if (e instanceof AccountHierarchyDepthCrossed) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
+        else {
             // map all other types of auth errors to 403
             return Response.status(Response.Status.FORBIDDEN).build();
         }

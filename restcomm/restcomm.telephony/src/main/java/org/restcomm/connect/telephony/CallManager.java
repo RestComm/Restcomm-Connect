@@ -388,6 +388,8 @@ public final class CallManager extends UntypedActor {
                         String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
                                 + " : Make sure the Client exist or is registered with Restcomm";
                         sendNotification(errMsg, 11001, "warning", true);
+                        final SipServletResponse resp = request.createResponse(SC_NOT_FOUND, "Cannot complete P2P call");
+                        resp.send();
                     }
                 } else {
                     //Extensions didn't allowed this call
