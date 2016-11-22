@@ -3020,9 +3020,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final ActorRef interpreter = buildSubVoiceInterpreter(child);
                 StartInterpreter start = new StartInterpreter(outboundCall);
                 try {
-                    Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
+                    Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
                     Future<Object> future = (Future<Object>) ask(interpreter, start, expires);
-                    Object object = Await.result(future, Duration.create(6000 * 10, TimeUnit.SECONDS));
+                    Object object = Await.result(future, Duration.create(60, TimeUnit.SECONDS));
 
                     if (!End.class.equals(object.getClass())) {
                         fsm.transition(message, hangingUp);
