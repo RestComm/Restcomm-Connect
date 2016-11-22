@@ -15,7 +15,7 @@ CREATE PROCEDURE updateProcedure()
  AND column_name = 'password';
 
 IF @colSize7911 = 32 THEN
-ALTER TABLE restcomm_accounts CHANGE column password password varchar(60) NOT NULL;
+ALTER TABLE restcomm_accounts CHANGE column password password varchar(60);
 END IF;
 END //
 
