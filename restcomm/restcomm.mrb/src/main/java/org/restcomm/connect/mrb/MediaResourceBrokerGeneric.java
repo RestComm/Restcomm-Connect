@@ -253,7 +253,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
                     if(logger.isInfoEnabled())
                         logger.info("addConferenceDetailRecord: SID: "+sid+" NAME: "+conferenceName);
                 }
-            	callDao.updateCallDetailRecord(callRecord.setConferenceSid(sid));
+                callDao.updateCallDetailRecord(callRecord.setConferenceSid(sid));
             }else{
                 logger.error("call record is null");
             }
