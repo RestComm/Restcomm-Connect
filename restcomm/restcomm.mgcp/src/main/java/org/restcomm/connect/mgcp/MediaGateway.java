@@ -211,7 +211,13 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
     }
 
     private MediaSession getSession() {
-        return new MediaSession((int) sessionIdPool.get());
+        MediaSession s=null;
+        try{
+            s = new MediaSession((int) sessionIdPool.get());
+        }catch(Exception e){
+            logger.error("Exception in getSession: "+e.getMessage() +" is MediaGateway actor terminated? "+self().isTerminated(), e);
+        }
+        return s;
     }
 
     private void powerOff(final Object message) {
@@ -301,6 +307,10 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
+
+        if (logger.isDebugEnabled()){
+            logger.debug("MediaGateway onReceive. self.isTerminated: "+self.isTerminated()+" | Processing "+klass.getName()+" | object snapshot: \n"+this.toString());
+        }
         if (PowerOnMediaGateway.class.equals(klass)) {
             powerOn(message);
         } else if (PowerOffMediaGateway.class.equals(klass)) {
@@ -364,5 +374,22 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
     private void send(final Object message) {
         final JainMgcpResponseEvent response = (JainMgcpResponseEvent) message;
         provider.sendMgcpEvents(new JainMgcpEvent[] { response });
+    }
+
+    @Override
+    public String toString() {
+        return "MediaGateway [logger=" + logger + ", name=" + name + ", localIp=" + localIp + ", localPort=" + localPort
+                + ", remoteIp=" + remoteIp + ", remotePort=" + remotePort + ", useNat=" + useNat + ", externalIp="
+                + externalIp + ", timeout=" + timeout + ", provider=" + provider + ", stack=" + stack + ", agent="
+                + agent + ", domain=" + domain + ", notificationListeners=" + notificationListeners
+                + ", responseListeners=" + responseListeners + ", requestIdPool=" + requestIdPool + ", sessionIdPool="
+                + sessionIdPool + ", transactionIdPool=" + transactionIdPool + "]";
+    }
+
+    @Override
+    public void postStop() {
+        if (logger.isDebugEnabled()){
+            logger.debug("MediaGateway at postStop, here is object snapshot: \n"+this.toString());
+        }
     }
 }
