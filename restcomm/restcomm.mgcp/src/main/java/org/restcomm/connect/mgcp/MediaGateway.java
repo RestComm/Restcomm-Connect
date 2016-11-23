@@ -215,7 +215,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         try{
             s = new MediaSession((int) sessionIdPool.get());
         }catch(Exception e){
-            logger.error("Exception in getSession: "+e.getMessage() +" is MediaGateway actor terminated? "+self().isTerminated(), e);
+            logger.error("Exception in getSession: "+e.getMessage() +" is MediaGateway actor terminated? "+self().isTerminated() +" current object snapshot: \n"+this.toString(), e);
         }
         return s;
     }
