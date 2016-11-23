@@ -540,7 +540,7 @@ public final class Conference extends UntypedActor {
             globalNoOfParticipants = dao.getTotalRunningCallDetailRecordsByConferenceSid(sid);
         }
         if(logger.isInfoEnabled())
-            logger.info("sid: "+sid+"globalNoOfParticipants: "+globalNoOfParticipants);
+            logger.info("sid: "+sid+" globalNoOfParticipants: "+globalNoOfParticipants);
         return globalNoOfParticipants;
     }
 
