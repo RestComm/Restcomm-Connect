@@ -65,11 +65,11 @@ public class RestcommAccountsTool {
         webResource.accept(MediaType.APPLICATION_JSON).delete();
     }
 
-    public JsonObject updateAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String accountSid, String friendlyName, String password, String authToken, String role, String status) {
+    public JsonObject updateAccount(String deploymentUrl, String adminUsername, String adminPassword, String accountSid, String friendlyName, String password, String authToken, String role, String status) {
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = null;
         try {
-            ClientResponse clientResponse = updateAccountResponse(deploymentUrl,adminUsername,adminAuthToken,accountSid, friendlyName, password, authToken, role, status);
+            ClientResponse clientResponse = updateAccountResponse(deploymentUrl,adminUsername,adminPassword,accountSid, friendlyName, password, authToken, role, status);
             jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
         } catch (Exception e) {
             logger.info("Exception: "+e);
@@ -77,9 +77,9 @@ public class RestcommAccountsTool {
         return jsonResponse;
     }
 
-    public ClientResponse updateAccountResponse(String deploymentUrl, String adminUsername, String adminAuthToken, String accountSid, String friendlyName, String password, String authToken, String role, String status) {
+    public ClientResponse updateAccountResponse(String deploymentUrl, String adminUsername, String adminPassword, String accountSid, String friendlyName, String password, String authToken, String role, String status) {
         Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminPassword));
 
         String url = getAccountsUrl(deploymentUrl,false) + "/"+accountSid;
 
@@ -102,13 +102,13 @@ public class RestcommAccountsTool {
         return response;
     }
 
-    public JsonObject createAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress,
+    public JsonObject createAccount(String deploymentUrl, String adminUsername, String adminPassword, String emailAddress,
             String password) {
 
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = null;
         try {
-            ClientResponse clientResponse = createAccountResponse(deploymentUrl,adminUsername,adminAuthToken,emailAddress,password);
+            ClientResponse clientResponse = createAccountResponse(deploymentUrl,adminUsername,adminPassword,emailAddress,password);
             jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
         } catch (Exception e) {
             logger.info("Exception: "+e);
@@ -116,11 +116,11 @@ public class RestcommAccountsTool {
         return jsonResponse;
     }
 
-    public ClientResponse createAccountResponse(String deploymentUrl, String operatorUsername, String operatorAuthtoken, String emailAddress,
+    public ClientResponse createAccountResponse(String deploymentUrl, String operatorUsername, String operatorPassword, String emailAddress,
                                     String password) {
 
         Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorAuthtoken));
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorPassword));
 
         String url = getAccountsUrl(deploymentUrl);
 
@@ -129,7 +129,7 @@ public class RestcommAccountsTool {
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
         params.add("EmailAddress", emailAddress);
         params.add("Password", password);
-        params.add("Role", "Administartor");
+        params.add("Role", "Administrator");
 
         ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
         return response;

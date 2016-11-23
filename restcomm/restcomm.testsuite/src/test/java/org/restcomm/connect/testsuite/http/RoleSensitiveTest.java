@@ -57,6 +57,7 @@ public class RoleSensitiveTest extends EndpointTest {
     static String powerUserSid = "AC33333333333333333333333333333333";
     static String powerUserUsername = "poweruser@company.com";
     static String powerUserAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    static String powerUserPassword = "RestComm";
 
     static String guestSid = "AC44444444444444444444444444444444";
     static String guestUsername = "guest@company.com";
@@ -94,7 +95,8 @@ public class RoleSensitiveTest extends EndpointTest {
         ClientResponse response = resource.get(ClientResponse.class);
         Assert.assertEquals(200, response.getStatus());
         // power user is refused access when missing permission
-        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/" + powerUserSid) );
+        Client jerseyPassword = getClient(powerUserUsername, powerUserPassword);
+        resource = jerseyPassword.resource( getResourceUrl("/2012-04-24/Accounts.json/" + powerUserSid) );
         MultivaluedMap<String, String> applicationParams = new MultivaluedMapImpl();
         applicationParams.add("FriendlyName", "Test User UPDATED");
         response = resource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, applicationParams);

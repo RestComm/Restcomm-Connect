@@ -13,7 +13,7 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
   };
 
   $scope.login = function() {
-    AuthService.login($scope.credentials.sid, $scope.credentials.token).then(function (loginStatus) {
+    AuthService.login($scope.credentials.sid, $scope.credentials.token, true).then(function (loginStatus) {
         // SUCCESS
         if (loginStatus == 'UNINITIALIZED' )
             $state.go('public.uninitialized');
@@ -28,6 +28,7 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
             Notifications.error('Login failed. Please confirm your username and password.');
             // FIXME: Use ng-animate...
             $scope.loginFailed = true;
+            $scope.credentials.token = "";
             $timeout(function() { $scope.loginFailed = false; }, 1000);
         }
         else
@@ -64,14 +65,21 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
 });
 
 // assumes user has been authenticated but his account is not initialized
-rcMod.controller('UninitializedCtrl', function ($scope,AuthService,$state) {
+rcMod.controller('UninitializedCtrl', function ($scope,AuthService,$state, Notifications) {
   // For password reset
   $scope.update = function() {
-    AuthService.updatePassword($scope.newPassword).then(function () {
+    AuthService.updatePassword($scope.oldPassword, $scope.newPassword).then(function () {
         $state.go('restcomm.dashboard');
     }, function (error) {
-        alert("Failed to update password. Please try again.");
-        $state.go('public.login');
+        if (error == 'AUTHENTICATION_ERROR') {
+            Notifications.error('Authentication error');
+            $scope.oldPassword = "";
+        }
+        else {
+            Notifications.error("Failed to update password.");
+            AuthService.clearActiveAccount();
+            $state.go('public.login');
+        }
     });
   }
 });

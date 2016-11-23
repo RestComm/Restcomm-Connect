@@ -83,7 +83,13 @@
 			<artifactId>restcomm-connect.dao</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
-		</dependency>		
+		</dependency>
+
+		<dependency>
+			<groupId>org.mindrot</groupId>
+			<artifactId>jbcrypt</artifactId>
+			<version>0.3m</version>
+		</dependency>
 		
 	</dependencies>
 </project>

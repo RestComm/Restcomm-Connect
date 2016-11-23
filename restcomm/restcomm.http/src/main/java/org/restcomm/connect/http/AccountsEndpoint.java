@@ -42,10 +42,11 @@ import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
+import org.restcomm.connect.commons.security.PasswordAlgorithm;
+import org.restcomm.connect.commons.security.SecurityUtils;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
@@ -64,6 +65,8 @@ import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
 import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
+import org.restcomm.connect.identity.AuthType;
+import org.restcomm.connect.identity.passwords.PasswordUtils;
 import org.restcomm.connect.identity.passwords.PasswordValidator;
 import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
@@ -132,20 +135,25 @@ public class AccountsEndpoint extends SecuredEndpoint {
         PasswordValidator validator = PasswordValidatorFactory.createDefault();
         if (!validator.isStrongEnough(password))
             throw new PasswordTooWeak();
-        final String authToken = new Md5Hash(password).toString();
+        // hash password
+        PasswordAlgorithm algorithm = RestcommConfiguration.getInstance().getMain().getPasswordAlgorithmStrategy();
+        String hashedPassword = PasswordUtils.hashPassword(password, algorithm);
+        // AuthToken gets a random value
+        final String authToken = SecurityUtils.generateAccountAuthToken();
         final String role = data.getFirst("Role");
         String rootUri = runtimeConfiguration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
-        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
+        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, hashedPassword, algorithm, authToken, role, uri);
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         Account account = null;
-        checkPermission("RestComm:Read:Accounts");
+        //This method can be executed using both AuthToken and Password
+        checkPermission("RestComm:Read:Accounts", AuthType.ANY);
         if (Sid.pattern.matcher(accountSid).matches()) {
             try {
                 account = accountsDao.getAccount(new Sid(accountSid));
@@ -165,6 +173,15 @@ public class AccountsEndpoint extends SecuredEndpoint {
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
+            // hide AuthToken account attribute if AuthToken authType is effective
+            // and also if Password authType is effective but operating account is different to the account requested, for example:
+            // 1. getAccount() request from AccountSid A for AccountSid A with Username/AuthToken will hide authToken
+            // 2. getAccount() request from AccountSid A for AccountSid B (B is a child of A) with Username/Password will hide authToken
+            // 3. getAccount() request from AccountSid A for AccountSid A with Username/Password will NOT hide authToken
+            if (AuthType.AuthToken.equals(userIdentityContext.getAuthType()) ||
+                    (AuthType.Password.equals(userIdentityContext.getAuthType()) && !account.getSid().equals(userIdentityContext.getEffectiveAccount().getSid()) )) {
+                account = account.setAuthToken(null);
+            }
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(account);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -304,7 +321,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response getAccounts(final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
-        checkPermission("RestComm:Read:Accounts");
+        //This method can be executed only using AuthToken
+        checkPermission("RestComm:Read:Accounts",AuthType.AuthToken);
         final Account account = userIdentityContext.getEffectiveAccount();
         if (account == null) {
             return status(NOT_FOUND).build();
@@ -312,6 +330,12 @@ public class AccountsEndpoint extends SecuredEndpoint {
             final List<Account> accounts = new ArrayList<Account>();
 //            accounts.add(account);
             accounts.addAll(accountsDao.getChildAccounts(account.getSid()));
+            // hide AuthToken account attribute if AuthToken authType is effective (should always be)
+            if (AuthType.AuthToken.equals(userIdentityContext.getAuthType())) {
+                for (int i = 0; i < accounts.size(); i++) {
+                    accounts.set(i, accounts.get(i).setAuthToken(null));
+                }
+            }
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(new AccountList(accounts));
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -325,7 +349,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
-        checkPermission("RestComm:Create:Accounts");
+        checkPermission("RestComm:Create:Accounts", AuthType.Password);
         // check account level depth. If we're already at third level no sub-accounts are allowed to be created
         List<String> accountLineage = userIdentityContext.getEffectiveAccountLineage();
         if (accountLineage.size() >= 2) {
@@ -374,7 +398,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 throw new InsufficientPermission();
             }
         } else {
-            return status(CONFLICT).entity("The email address used for the new account is already in use.").build();
+            return status(CONFLICT).entity(buildErrorResponseBody("The email address used for the new account is already in use.",responseType)).build();
         }
 
         if (APPLICATION_JSON_TYPE == responseType) {
@@ -448,8 +472,12 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 PasswordValidator validator = PasswordValidatorFactory.createDefault();
                 if (!validator.isStrongEnough(password))
                     throw new PasswordTooWeak();
-                final String hash = new Md5Hash(data.getFirst("Password")).toString();
-                result = result.setAuthToken(hash);
+
+                // hash password
+                PasswordAlgorithm algorithm = RestcommConfiguration.getInstance().getMain().getPasswordAlgorithmStrategy();
+                String hashedPassword = PasswordUtils.hashPassword(password, algorithm);
+                result = result.setPassword(hashedPassword);
+                result = result.setPasswordAlgorithm(algorithm);
             }
             if (newStatus != null) {
                 result = result.setStatus(newStatus);
@@ -481,7 +509,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             final MediaType responseType) {
         // First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO
         // operations
-        checkPermission("RestComm:Modify:Accounts");
+        checkPermission("RestComm:Modify:Accounts", AuthType.Password);
         Sid sid = null;
         Account account = null;
         try {
@@ -545,6 +573,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 accountsDao.updateAccount(modifiedAccount);
             }
 
+            // hide AuthToken from response
+            //modifiedAccount = modifiedAccount.setAuthToken(null);
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {
@@ -622,6 +652,25 @@ public class AccountsEndpoint extends SecuredEndpoint {
         // on whose behalf the notifications are sent.
         parentAccount = parentAccount.setStatus(Account.Status.CLOSED);
         accountsDao.updateAccount(parentAccount);
+    }
+
+    protected Response resetAccountAuthToken(String updatedAccountSid, final MediaType responseType) {
+        checkPermission("RestComm:Modify:Accounts", AuthType.Password);
+        Account updatedAccount = accountsDao.getAccount(updatedAccountSid); // TODO this also returns accounts by FriendlyName
+        if (updatedAccount == null)
+            return Response.status(NOT_FOUND).build();
+        secure(updatedAccount,"RestComm:Modify:Accounts",SecuredType.SECURED_ACCOUNT);
+        String newAuthToken = SecurityUtils.generateAccountAuthToken();
+        updatedAccount = updatedAccount.setAuthToken(newAuthToken);
+        accountsDao.updateAccount(updatedAccount);
+        if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(updatedAccount), APPLICATION_JSON).build();
+        } else if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(updatedAccount);
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else {
+            return null;
+        }
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {

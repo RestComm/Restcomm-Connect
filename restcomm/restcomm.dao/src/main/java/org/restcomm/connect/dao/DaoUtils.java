@@ -26,6 +26,7 @@ import java.util.Date;
 
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.security.PasswordAlgorithm;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
@@ -53,6 +54,12 @@ public final class DaoUtils {
         } else {
             return null;
         }
+    }
+
+    public static PasswordAlgorithm readAccountPasswordAlgorithm(final Object algorithm) {
+        if (algorithm != null)
+            return PasswordAlgorithm.valueOf(algorithm.toString());
+        return null;
     }
 
     public static BigDecimal readBigDecimal(final Object object) {
@@ -157,6 +164,12 @@ public final class DaoUtils {
         } else {
             return null;
         }
+    }
+
+    public static String writeAccountPasswordAlgorithm(final PasswordAlgorithm algorithm) {
+        if (algorithm != null)
+            return algorithm.toString();
+        return null;
     }
 
     public static Date writeDateTime(final DateTime dateTime) {

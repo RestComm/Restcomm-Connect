@@ -19,40 +19,16 @@
  */
 package org.restcomm.connect.http;
 
-import static akka.pattern.Patterns.ask;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
-
-import java.text.ParseException;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
+import akka.actor.ActorRef;
+import akka.util.Timeout;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.http.converter.CallDetailRecordListConverter;
-import org.restcomm.connect.http.converter.RecordingListConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.converter.ConferenceParticipantConverter;
-import org.restcomm.connect.http.converter.RecordingConverter;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -63,24 +39,46 @@ import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
 import org.restcomm.connect.dao.entities.CallDetailRecordList;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.http.converter.CallDetailRecordListConverter;
+import org.restcomm.connect.http.converter.ConferenceParticipantConverter;
+import org.restcomm.connect.http.converter.RecordingConverter;
+import org.restcomm.connect.http.converter.RecordingListConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.identity.AuthType;
+import org.restcomm.connect.mscontrol.api.messages.Mute;
+import org.restcomm.connect.mscontrol.api.messages.Unmute;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
 import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.GetCallInfo;
-import org.restcomm.connect.mscontrol.api.messages.Mute;
-import org.restcomm.connect.mscontrol.api.messages.Unmute;
-
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-import akka.actor.ActorRef;
-import akka.util.Timeout;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.thoughtworks.xstream.XStream;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.text.ParseException;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 /**
  * @author maria-farooq@live.com (Maria Farooq)
@@ -136,7 +134,7 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
     protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
         Account account = daos.getAccountsDao().getAccount(accountSid);
         try {
-            secure(account, "RestComm:Read:Calls");
+            secure(account, "RestComm:Read:Calls", AuthType.AuthToken);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -164,7 +162,7 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
     protected Response getCalls(final String accountSid, final String conferenceSid, UriInfo info, MediaType responseType) {
         Account account = daos.getAccountsDao().getAccount(accountSid);
         try {
-            secure(account, "RestComm:Read:Calls");
+            secure(account, "RestComm:Read:Calls", AuthType.AuthToken);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -259,7 +257,7 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
         final Sid accountSid = new Sid(sid);
         Account account = daos.getAccountsDao().getAccount(accountSid);
         try {
-            secure(account, "RestComm:Modify:Calls");
+            secure(account, "RestComm:Modify:Calls", AuthType.AuthToken);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

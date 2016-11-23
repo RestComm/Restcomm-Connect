@@ -20,18 +20,8 @@
 	
 package org.restcomm.connect.testsuite.telephony;
 
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-
-import java.net.URL;
-import java.text.ParseException;
-
-import javax.sip.address.SipURI;
-import javax.sip.message.Response;
-
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
@@ -52,8 +42,16 @@ import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.http.CreateClientsTool;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import javax.sip.address.SipURI;
+import javax.sip.message.Response;
+import java.net.URL;
+import java.text.ParseException;
+
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Client registration Test. 
@@ -124,8 +122,8 @@ public class NoAuthRegisterClientTest {
         mariaSipStack2 = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.1.1", "5093", "127.0.0.1:5080");
         mariaPhone2 = mariaSipStack2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, mariaContact2);
 
-        mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria", "1234", null);
-        georgeRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "george", "1234", null);
+        mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria", "RestComm1234", null);
+        georgeRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "george", "RestComm1234", null);
 
     }
 

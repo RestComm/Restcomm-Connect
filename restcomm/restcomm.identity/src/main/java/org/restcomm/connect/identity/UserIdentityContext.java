@@ -32,6 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.identity.passwords.PasswordUtils;
 
 /**
  * A per-request security context providing access to Oauth tokens or Account API Keys.
@@ -40,8 +41,12 @@ import org.restcomm.connect.dao.entities.Account;
  */
 public class UserIdentityContext {
 
-    final AccountKey accountKey;
-    final Account effectiveAccount; // if oauthToken is set get the account that maps to it. Otherwise use account from accountKey
+    String basicAuthUsername;
+    String basicAuthPass;
+    boolean basicAuthVerified = false;
+    AuthType authType = null;
+
+    Account effectiveAccount; // if oauthToken is set get the account that maps to it. Otherwise use account from accountKey
     Set<String> effectiveAccountRoles;
     List<String> accountLineage = null; // list of all parent account Sids up to the lop level account. It's initialized in a lazy way.
 
@@ -59,17 +64,66 @@ public class UserIdentityContext {
      */
     public UserIdentityContext(HttpServletRequest request, AccountsDao accountsDao) {
         this.accountsDao = accountsDao;
-        this.accountKey = extractAccountKey(request, accountsDao);
-        if (accountKey != null) {
-            if (accountKey.isVerified()) {
-                effectiveAccount = accountKey.getAccount();
-            } else
-                effectiveAccount = null;
-        } else
-            effectiveAccount = null;
-
-        if (effectiveAccount != null)
+        Account authorizedAccount = authorizeRequest(request.getHeader("Authorization"), accountsDao);
+        if (authorizedAccount != null) {
+            effectiveAccount = authorizedAccount;
             effectiveAccountRoles = extractAccountRoles(effectiveAccount);
+        }
+    }
+
+    /**
+     * Authorizes the request checking various types of credentials and returns the account representing
+     * the authorized entity that made the request.
+     *
+     * @param authHeader
+     * @param accountsDao
+     * @return
+     */
+    Account authorizeRequest(String authHeader, AccountsDao accountsDao) {
+        if (authHeader != null) {
+            processBasicAuthHeader(authHeader);
+            if (basicAuthUsername != null) { // do we have basic authorization header ?
+                Account account = accountsDao.getAccountToAuthenticate(basicAuthUsername);
+                if (account != null) { // ok, the account is there.
+                    if (basicAuthPass != null) {
+                        // Try to match against both password and AuthToken
+                        if ( PasswordUtils.verifyPassword(basicAuthPass, account.getPassword(), account.getPasswordAlgorithm() ) ) {
+                            authType = AuthType.Password;
+                            basicAuthVerified = true;
+                            return account;
+                        } else if ( basicAuthPass.equals(account.getAuthToken())) {
+                            authType = AuthType.AuthToken;
+                            basicAuthVerified = true;
+                            return account;
+                        }
+                        // TODO does it make any difference whether the Account SID or email is used ?
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Extracts credentials from a Basic authorization header and populates basicAuthUsername/Pass properties.
+     *
+     * @param authHeader
+     * @return
+     */
+    void processBasicAuthHeader(String authHeader) {
+        if (authHeader != null) {
+            String[] parts = authHeader.split(" ");
+            if (parts.length >= 2 && parts[0].equals("Basic")) {
+                String base64Credentials = parts[1].trim();
+                String credentials = new String(Base64.decodeBase64(base64Credentials), Charset.forName("UTF-8"));
+                // credentials = username:password
+                final String[] values = credentials.split(":",2);
+                if (values.length >= 2) {
+                    this.basicAuthUsername = values[0];
+                    this.basicAuthPass = values[1];
+                }
+            }
+        }
     }
 
     private Set<String> extractAccountRoles(Account account) {
@@ -82,35 +136,16 @@ public class UserIdentityContext {
         return roles;
     }
 
-    private AccountKey extractAccountKey(HttpServletRequest request, AccountsDao dao) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null) {
-            String[] parts = authHeader.split(" ");
-            if (parts.length >= 2 && parts[0].equals("Basic")) {
-                String base64Credentials = parts[1].trim();
-                String credentials = new String(Base64.decodeBase64(base64Credentials), Charset.forName("UTF-8"));
-                // credentials = username:password
-                final String[] values = credentials.split(":",2);
-                if (values.length >= 2) {
-                    AccountKey accountKey = new AccountKey(values[0], values[1], dao);
-                    return accountKey;
-                }
-
-            }
-        }
-        return null;
-    }
-
-    public AccountKey getAccountKey() {
-        return accountKey;
-    }
-
     public Account getEffectiveAccount() {
         return effectiveAccount;
     }
 
     public Set<String> getEffectiveAccountRoles() {
         return effectiveAccountRoles;
+    }
+
+    public AuthType getAuthType() {
+        return authType;
     }
 
     /**
@@ -131,5 +166,4 @@ public class UserIdentityContext {
         }
         return accountLineage;
     }
-
 }

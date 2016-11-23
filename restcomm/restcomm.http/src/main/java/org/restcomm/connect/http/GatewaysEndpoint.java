@@ -1,16 +1,23 @@
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-
-import java.net.URI;
-import java.util.List;
+import akka.actor.ActorRef;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
+import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.StringUtils;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.GatewaysDao;
+import org.restcomm.connect.dao.entities.Gateway;
+import org.restcomm.connect.dao.entities.GatewayList;
+import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.http.converter.GatewayConverter;
+import org.restcomm.connect.http.converter.GatewayListConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.identity.AuthType;
+import org.restcomm.connect.telephony.api.RegisterGateway;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -18,26 +25,17 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import java.net.URI;
+import java.util.List;
 
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import org.restcomm.connect.http.converter.GatewayConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.GatewaysDao;
-import org.restcomm.connect.dao.entities.Gateway;
-import org.restcomm.connect.dao.entities.GatewayList;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.http.converter.GatewayListConverter;
-import org.restcomm.connect.telephony.api.RegisterGateway;
-import org.restcomm.connect.commons.util.StringUtils;
-
-import akka.actor.ActorRef;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.thoughtworks.xstream.XStream;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 @ThreadSafe
 public class GatewaysEndpoint extends SecuredEndpoint {
@@ -115,7 +113,7 @@ public class GatewaysEndpoint extends SecuredEndpoint {
     }
 
     protected Response getGateways(final String accountSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Gateways");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Gateways", AuthType.AuthToken);
         final List<Gateway> gateways = dao.getGateways();
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new GatewayList(gateways));
@@ -128,7 +126,7 @@ public class GatewaysEndpoint extends SecuredEndpoint {
     }
 
     protected Response putGateway(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Create:Gateways");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Create:Gateways", AuthType.AuthToken);
         try {
             validate(data);
         } catch (final RuntimeException exception) {
@@ -151,7 +149,7 @@ public class GatewaysEndpoint extends SecuredEndpoint {
     }
 
     protected Response updateGateway(final String accountSid, final String sid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Modify:Gateways");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Modify:Gateways", AuthType.AuthToken);
         Gateway gateway = dao.getGateway(new Sid(sid));
         if (gateway == null) {
             return status(NOT_FOUND).build();

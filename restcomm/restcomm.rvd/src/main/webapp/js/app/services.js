@@ -133,7 +133,7 @@ angular.module('Rvd').service('authentication', function ($http, $q, IdentityCon
 	*/
 	function restcommLogin(username,password) {
 	    var deferredLogin = $q.defer();
-	    var authHeader = basicAuthHeader(username, password);
+	    var authHeader = basicAuthHeader(username, password, true);
         $http({method:'GET', url:'/restcomm/2012-04-24/Accounts.json/' + encodeURIComponent(username), headers: {Authorization: authHeader}}).then(function (response) {
             var acc = response.data; // store temporarily the account returned
             $http({method:'GET', url:'services/auth/keepalive', headers: {Authorization: "Basic " + btoa(acc.email_address + ":" +acc.auth_token)}}).then(function (response) {
@@ -186,8 +186,8 @@ angular.module('Rvd').service('authentication', function ($http, $q, IdentityCon
 	}
 
     // creates an auth header using a username (or sid) and a plaintext password (not already md5ed)
-	function basicAuthHeader(username, password) {
-	    var auth_header = "Basic " + btoa(username + ":" + md5.createHash(password));
+	function basicAuthHeader(username, password, skipHashing) {
+	    var auth_header = "Basic " + btoa(username + ":" + (skipHashing ? password : md5.createHash(password)));
         return auth_header;
 	}
 

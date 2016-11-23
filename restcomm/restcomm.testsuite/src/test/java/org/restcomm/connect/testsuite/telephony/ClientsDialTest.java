@@ -187,7 +187,7 @@ public class ClientsDialTest {
     private String pstnNumber = "+151261006100";
 
     private String clientPassword = "qwerty1234RT";
-    
+
     // Maria is a Restcomm Client **without** VoiceURL. This Restcomm Client can dial anything.
     private SipStack mariaSipStack;
     private SipPhone mariaPhone;

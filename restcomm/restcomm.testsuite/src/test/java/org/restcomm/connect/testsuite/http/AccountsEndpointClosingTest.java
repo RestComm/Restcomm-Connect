@@ -68,6 +68,7 @@ public class AccountsEndpointClosingTest extends EndpointTest {
 
     String toplevelSid = "ACA0000000000000000000000000000000";
     String toplevelKey = "77f8c12cc7b8f8423e5c38b035249166";
+    String toplevelPassword = "RestComm";
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8089);
@@ -81,7 +82,7 @@ public class AccountsEndpointClosingTest extends EndpointTest {
     @Test
     public void removeAccountAndSendNotifications() throws InterruptedException {
         String closedParentSid = "ACA1000000000000000000000000000000";
-        Client jersey = getClient(toplevelSid, toplevelKey);
+        Client jersey = getClient(toplevelSid, toplevelPassword);
         WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/" + closedParentSid) );
         MultivaluedMap<String,String> params = new MultivaluedMapImpl();
         params.add("Status","closed");
@@ -109,8 +110,8 @@ public class AccountsEndpointClosingTest extends EndpointTest {
                         .withBody("")));
 
         String closedParentSid = "ACA2000000000000000000000000000000";
-        Client jersey = getClient(toplevelSid, toplevelKey);
-        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/" + closedParentSid) );
+        Client passwordClient = getClient(toplevelSid, toplevelPassword);
+        WebResource resource = passwordClient.resource( getResourceUrl("/2012-04-24/Accounts.json/" + closedParentSid) );
         MultivaluedMap<String,String> params = new MultivaluedMapImpl();
         params.add("Status","closed");
         ClientResponse response = resource.put(ClientResponse.class,params);
@@ -119,7 +120,8 @@ public class AccountsEndpointClosingTest extends EndpointTest {
         verify(postRequestedFor(urlMatching("/nexmo/number/cancel/.*/.*/US/12223334444")));
         verify(postRequestedFor(urlMatching("/nexmo/number/cancel/.*/.*/US/12223334445")));
         // confirm that numbers that were not successfully released, are still in the database
-        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + closedParentSid + "/IncomingPhoneNumbers/PH00000000000000000000000000000002.json") );
+        Client authTokenClient = getClient(toplevelSid, toplevelKey);
+        resource = authTokenClient.resource( getResourceUrl("/2012-04-24/Accounts/" + closedParentSid + "/IncomingPhoneNumbers/PH00000000000000000000000000000002.json") );
         response = resource.get(ClientResponse.class);
         Assert.assertEquals(200, response.getStatus());
     }

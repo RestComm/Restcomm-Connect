@@ -18,15 +18,23 @@
  *
  */
 
-package org.restcomm.connect.commons.util;
-
-import org.apache.commons.codec.binary.Base64;
+package org.restcomm.connect.identity;
 
 /**
+ * Holds symbolic values for different authentication types. It also contains symbolic
+ * for filters of such types.
+ *
+ * AuthToken - implies an account's AuthToken was used for authentication
+ * Password - implies an account's Password was used for authentication
+ * ANY - filter value that usually means that ANY authentication type is accepted
+ * Bearer - will be added in the future TODO
+ *
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public class SecurityUtils {
-    public static String buildBasicAuthHeader(String username, String password) {
-        return "Basic " + Base64.encodeBase64String((username + ":" + password).getBytes());
-    }
+
+public enum AuthType {
+    AuthToken,
+    Password,
+    ANY
+    // Bearer   // TODO when a Bearer token is present (probably part of SSO)
 }
