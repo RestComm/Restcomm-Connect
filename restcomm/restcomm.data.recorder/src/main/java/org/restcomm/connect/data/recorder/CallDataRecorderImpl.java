@@ -236,11 +236,13 @@ public final class CallDataRecorderImpl extends CallDataRecorder{
     private void onUpdateCallInfo(UpdateCallInfo message, ActorRef self, ActorRef sender) {
         if(logger.isDebugEnabled()){
             logger.debug("onUpdateCallInfo: "+message.toString());
-            logger.debug("CDR current values: "+cdr);
         }
         try{
             cdr = daoManager.getCallDetailRecordsDao().getCallDetailRecord(message.getSid());
 
+            if(logger.isDebugEnabled()){
+                logger.debug("CDR current values: "+cdr);
+            }
             cdr = message.getStatus() == null ? cdr : cdr.setStatus(message.getStatus().toString());
             cdr = message.getStartTime() == null ? cdr : cdr.setStartTime(message.getStartTime());
             cdr = message.getEndTime() == null ? cdr : cdr.setEndTime(message.getEndTime());
