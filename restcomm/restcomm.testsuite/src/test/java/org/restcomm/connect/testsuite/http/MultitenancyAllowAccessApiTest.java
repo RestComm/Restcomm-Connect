@@ -60,6 +60,7 @@ public class MultitenancyAllowAccessApiTest {
     @ArquillianResource
     URL deploymentUrl;
 
+    private final static String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private final static String primaryUsername = "primary@company.com";
     private final static String primaryAccountSid = "AC1ec5d14c34a421c7697e1ce5d4eac782";
     private final static String subaccountaAccountSid = "AC5fa870789e95b7867a0fc0b85c5805e9";
@@ -266,6 +267,7 @@ public class MultitenancyAllowAccessApiTest {
 
     @Test
     public void applicationsApi() throws ClientProtocolException, IOException {
+        // access to account's own applications
         String baseUrl = deploymentUrl.toString() + apiPath + primaryAccountSid + "/Applications";
         int statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension, primaryUsername, accountsPassword);
         assertTrue(statusCode == httpOk);
@@ -275,10 +277,20 @@ public class MultitenancyAllowAccessApiTest {
         assertTrue(statusCode == httpOk);
         statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + "/" + primaryApplicationSid + jsonExtension, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("FriendlyName","TEST123"); }});
         assertTrue(statusCode == httpOk);
-        Map<String,String> updateParams = new HashMap<String,String>();
-        updateParams.put("Status", "closed");
-        statusCode = RestcommMultitenancyTool.getInstance().update(baseUrl + "/" + primaryApplicationSid + jsonExtension, primaryUsername, accountsPassword,updateParams);
+        // access to sub-account applications
+        // list
+        statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension, adminAccountSid, accountsPassword);
+        Assert.assertEquals(httpOk, statusCode);
+        // get single
+        statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + "/" + primaryApplicationSid + jsonExtension, adminAccountSid, accountsPassword);
         assertTrue(statusCode == httpOk);
+        // create
+        statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + jsonExtension, adminAccountSid, accountsPassword, new HashMap<String,String>(){{ put("FriendlyName","TEST"); }});
+        assertTrue(statusCode == httpOk);
+        // update
+        statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + "/" + primaryApplicationSid + jsonExtension, adminAccountSid, accountsPassword, new HashMap<String,String>(){{ put("FriendlyName","TEST123"); }});
+        assertTrue(statusCode == httpOk);
+
     }
 
     private Endpoint[] modifyPostParameters(String suffix) {
