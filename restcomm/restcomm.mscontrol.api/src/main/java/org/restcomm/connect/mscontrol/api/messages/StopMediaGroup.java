@@ -26,7 +26,17 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class StopMediaGroup {
+    private boolean liveCallModification;
+
     public StopMediaGroup() {
         super();
+    }
+
+    public StopMediaGroup(final boolean liveCallModification) {
+        this.liveCallModification = liveCallModification;
+    }
+
+    public boolean isLiveCallModification() {
+        return liveCallModification;
     }
 }

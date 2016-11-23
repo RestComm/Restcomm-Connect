@@ -1190,11 +1190,16 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-             if (!receivedBye) {
-                 // Conference was stopped and this call was asked to leave
-                 // Send BYE to remote client
-                 sendBye(new Hangup("Conference time limit reached"));
-             }
+            Leave leaveMsg = (Leave) message;
+            if (!leaveMsg.isLiveCallModification()) {
+                if (!receivedBye) {
+                    // Conference was stopped and this call was asked to leave
+                    // Send BYE to remote client
+                    sendBye(new Hangup("Conference time limit reached"));
+                }
+            } else {
+                liveCallModification = true;
+            }
             msController.tell(message, super.source);
         }
 
@@ -1270,6 +1275,10 @@ public final class Call extends UntypedActor {
         if (is(inProgress)) {
             // Forward to media server controller
             this.msController.tell(message, sender);
+            if (conferencing && message.isLiveCallModification()) {
+                liveCallModification = true;
+                self().tell(new Leave(true), self());
+            }
         }
     }
 
@@ -1910,8 +1919,17 @@ public final class Call extends UntypedActor {
                 this.conference = null;
             }
 
-            // After leaving let the Interpreter know the Call is ready.
-            fsm.transition(message, completed);
+            if (!liveCallModification) {
+                // After leaving let the Interpreter know the Call is ready.
+                fsm.transition(message, completed);
+            } else {
+                if (muted) {
+                    // Forward to media server controller
+                    this.msController.tell(new Unmute(), sender);
+                    muted = false;
+                }
+                fsm.transition(message, inProgress);
+            }
         }
     }
 

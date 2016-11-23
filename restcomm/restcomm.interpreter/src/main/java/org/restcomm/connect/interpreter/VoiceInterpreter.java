@@ -381,6 +381,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(hangingUp, finishConferencing));
         transitions.add(new Transition(hangingUp, finishDialing));
         transitions.add(new Transition(uninitialized, finished));
+        transitions.add(new Transition(notFound, finished));
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
         // Initialize the runtime stuff.
@@ -2838,7 +2839,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             } else {
                 // Make sure the media operations of the call are stopped
                 // so we can start processing a new RestComm application
-                call.tell(new StopMediaGroup(), super.source);
+                call.tell(new StopMediaGroup(true), super.source);
+//                if (is(conferencing))
+//                    call.tell(new Leave(true), self());
             }
 
             // Stop the dependencies.
@@ -2967,9 +2970,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final ActorRef interpreter = buildSubVoiceInterpreter(child);
                 StartInterpreter start = new StartInterpreter(outboundCall);
                 try {
-                    Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
+                    Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
                     Future<Object> future = (Future<Object>) ask(interpreter, start, expires);
-                    Object object = Await.result(future, Duration.create(6000 * 10, TimeUnit.SECONDS));
+                    Object object = Await.result(future, Duration.create(60, TimeUnit.SECONDS));
 
                     if (!End.class.equals(object.getClass())) {
                         fsm.transition(message, hangingUp);
