@@ -110,7 +110,7 @@ else
 fi
 export RESTCOMM_HOME=$RELEASE/TelScale-Restcomm-JBoss-AS7
 #gvagenas@telestax.com VOICERSS key
-export RESTCOMM_NEW_PASSWORD='NewPassword'
+export RESTCOMM_NEW_PASSWORD='NewPassword1234!@#$'
 
 #prepare PerfCorder tool
 export TOOLS_DIR=$WORKSPACE/report-tools
