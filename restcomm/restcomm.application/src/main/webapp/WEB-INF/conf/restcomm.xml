@@ -143,7 +143,14 @@
 			<ussd-gateway-password></ussd-gateway-password>
 		</ussd-gateway>
 
-		<!-- Each permission is represented as three columns Domain:Action:Target 
+		<!-- TelScale GMLC -->
+		<gmlc>
+			<gmlc-uri></gmlc-uri>
+			<gmlc-user></gmlc-user>
+			<gmlc-password></gmlc-password>
+		</gmlc>
+
+		<!-- Each permission is represented as three columns Domain:Action:Target
 			Possible actions are Create, Read, Modify, Delete. -->
 		<security-roles>
 			<role name="Developer">

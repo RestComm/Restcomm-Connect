@@ -25,5 +25,5 @@ package org.restcomm.connect.extension.api;
  *
  */
 public enum ExtensionType {
-CallManager, SmsService, UssdCallManager,RestApi
+CallManager, SmsService, UssdCallManager, RestApi, GeolocationApi
 }

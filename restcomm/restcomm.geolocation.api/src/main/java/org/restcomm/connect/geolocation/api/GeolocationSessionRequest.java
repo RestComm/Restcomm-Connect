@@ -59,7 +59,8 @@ public final class GeolocationSessionRequest {
     }
 
     //TODO need to check which is using the GeolocationSessionRequest and modify accordingly to include or not the custom headers
-    public GeolocationSessionRequest(final String from, final String to, final String body, final Encoding encoding, final HttpServletRequest originHttpRequest, final SipServletRequest originSipRequest, final ConcurrentHashMap<String, String> customHeaders) {
+    public GeolocationSessionRequest(final String from, final String to, final String body, final Encoding encoding, final HttpServletRequest originHttpRequest,
+                                     final SipServletRequest originSipRequest, final ConcurrentHashMap<String, String> customHeaders) {
         super();
         this.from = from;
         this.to = to;
@@ -75,13 +76,13 @@ public final class GeolocationSessionRequest {
     }
 
     // FIXME
-    /*public GeolocationSessionRequest(final String from, final String to, final String body, final Encoding encoding, final ConcurrentHashMap<String, String> customHeaders) {
-        this(from, to, body, encoding, null, customHeaders);
-    }
-
-    public GeolocationSessionRequest(final String from, final String to, final String body, final ConcurrentHashMap<String, String> customHeaders) {
-        this(from, to, body, Encoding.GSM, null, customHeaders);
-    }*/
+//    public GeolocationSessionRequest(final String from, final String to, final String body, final Encoding encoding, final ConcurrentHashMap<String, String> customHeaders) {
+//        this(from, to, body, encoding, null, customHeaders);
+//    }
+//
+//    public GeolocationSessionRequest(final String from, final String to, final String body, final ConcurrentHashMap<String, String> customHeaders) {
+//        this(from, to, body, Encoding.GSM, null, customHeaders);
+//    }
 
     public String from() {
         return from;
