@@ -96,7 +96,7 @@ if [ $REMOVE_EXISTING_WORKSPACE == "true" ] || [ $REMOVE_EXISTING_WORKSPACE == "
     git clone -b $RESTCOMM_BRANCH https://github.com/RestComm/RestComm-Core.git $GITHUB_RESTCOMM_HOME
     # cp -ar $GITHUB_RESTCOMM_MASTER/load_tests $GITHUB_RESTCOMM_HOME/load_tests
 
-    cp -ar $CURRENT_DIR/* $GITHUB_RESTCOMM_HOME/load_tests
+    cp -ar $GITHUB_RESTCOMM_MASTER/load_tests $GITHUB_RESTCOMM_HOME/load_tests
 
     cd $GITHUB_RESTCOMM_HOME/load-tests/
     ./build-restcomm-local.sh $RESTCOMM_BRANCH $WORKSPACE $MAJOR_VERSION_NUMBER
