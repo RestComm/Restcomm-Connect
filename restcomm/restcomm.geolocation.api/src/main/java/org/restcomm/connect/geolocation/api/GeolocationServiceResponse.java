@@ -19,25 +19,27 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.restcomm.connect.geolocation;
+package org.restcomm.connect.geolocation.api;
+
+import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.patterns.StandardResponse;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
  *
  */
-public final class GeolocationSessionException extends Exception {
-    private static final long serialVersionUID = 1L;
-
-    public GeolocationSessionException(final String message) {
-        super(message);
+@Immutable
+public final class GeolocationServiceResponse<T> extends StandardResponse<T> {
+    public GeolocationServiceResponse(final T object) {
+        super(object);
     }
 
-    public GeolocationSessionException(final Throwable cause) {
+    public GeolocationServiceResponse(final Throwable cause, final String message) {
+        super(cause, message);
+    }
+
+    public GeolocationServiceResponse(final Throwable cause) {
         super(cause);
-    }
-
-    public GeolocationSessionException(final String message, final Throwable cause) {
-        super(message, cause);
     }
 }

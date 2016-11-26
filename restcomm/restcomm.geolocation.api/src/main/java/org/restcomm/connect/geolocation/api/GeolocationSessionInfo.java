@@ -28,6 +28,7 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
+ *
  */
 @Immutable
 public final class GeolocationSessionInfo {
