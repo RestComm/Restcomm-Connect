@@ -21,6 +21,9 @@ echo "RESTCOMM BRANCH: $RESTCOMM_BRANCH"
 echo "RUN TESTSUITE: $RUN_TESTSUITE"
 #export ANT_HOME=/opt/ant/apache-ant-1.8.3
 
+rm -rf $BUILD_WORKSPACE
+mkdir -p $BUILD_WORKSPACE
+
 cp -ar ../* $BUILD_WORKSPACE
 cd $BUILD_WORKSPACE
 
