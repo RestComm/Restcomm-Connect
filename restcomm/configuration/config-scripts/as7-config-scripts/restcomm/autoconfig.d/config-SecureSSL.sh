@@ -95,22 +95,6 @@ SslRestCommConf(){
 	echo "Properly configured HTTPS Connector to use trustStore file $CERTIFICATION_FILE"
 }
 
-#SSL configuration for RMS. Use certificate at JAVA_OPTS.
-SslRmsConf(){
-	echo "TRUSTSTORE_PASSWORD is set to '$TRUSTSTORE_PASSWORD' will properly configure MMS";
-	FILE=$MMS_HOME/bin/run.sh
-	if [[ "$TRUSTSTORE_FILE" = /* ]]; then
-		CERTIFICATION_FILE=$TRUSTSTORE_FILE
-	else
-		CERTIFICATION_FILE=$RESTCOMM_HOME/standalone/configuration/$TRUSTSTORE_FILE
-	fi
-	JAVA_OPTS_TRUSTORE="-Djavax.net.ssl.trustStore=$CERTIFICATION_FILE -Djavax.net.ssl.trustStorePassword=$TRUSTSTORE_PASSWORD"
-	sed -e "/# Setup MMS specific properties/ {
-	  N; s|JAVA_OPTS=.*|JAVA_OPTS=\"-Dprogram\.name=\\\$PROGNAME $RMS_JAVA_OPTS $JAVA_OPTS_TRUSTORE\"|
-	}" $FILE > $FILE.bak
-	mv $FILE.bak $FILE
-	echo "Properly configured MMS to use trustStore file $RESTCOMM_HOME/standalone/configuration/$TRUSTSTORE_FILE"
-}
 #If self-sighned create certificate.
 #else use authorized.
 CertConfigure(){
