@@ -19,5 +19,5 @@ echo "Restcomm IP Address: $RESTCOMM_ADDRESS - Local IP Address: $LOCAL_ADDRESS"
 
 echo "About to launch rocket..."
 sleep 3
-$SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/dialclient/dialclient-sipp-server.xml -s 1999 -i $LOCAL_ADDRESS -p 5060 -mi $LOCAL_ADDRESS -recv_timeout 10000 -t un -nr -fd 1 -trace_stat -stf $RESULTS_FOLDER/dialclient-server-$DATE.csv -trace_screen -screen_file $RESULTS_FOLDER/dialclient-server-$DATE-screens.log
+$SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/dialclient/dialclient-sipp-server.xml -s 1999 -i $LOCAL_ADDRESS -p 5060 -mi $LOCAL_ADDRESS -recv_timeout 10000 -t un -nr -fd 1 -trace_stat -stf $RESULTS_DIR/dialclient-server-$DATE.csv -trace_screen -screen_file $RESULTS_DIR/dialclient-server-$DATE-screens.log
 echo $?
