@@ -741,7 +741,7 @@ public final class CallManager extends UntypedActor {
                 errMsg = "The number does not have a Restcomm hosted application attached";
             }
             sendNotification(errMsg, 11007, "error", false);
-            logger.error(errMsg, notANumber);
+            logger.warning(errMsg, notANumber);
             isFoundHostedApp = false;
         }
         return isFoundHostedApp;
@@ -1154,7 +1154,7 @@ public final class CallManager extends UntypedActor {
                 } else {
                     //Extensions didn't allowed this call
                     final String errMsg = "Not Allowed to make this outbound call";
-                    logger.error(errMsg);
+                    logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
                 }
                 executePostOutboundAction(callRequest);
@@ -1166,7 +1166,7 @@ public final class CallManager extends UntypedActor {
                 } else {
                     //Extensions didn't allowed this call
                     final String errMsg = "Not Allowed to make this outbound call";
-                    logger.error(errMsg);
+                    logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
                 }
                 executePostOutboundAction(callRequest);
@@ -1178,7 +1178,7 @@ public final class CallManager extends UntypedActor {
                 }  else {
                     //Extensions didn't allowed this call
                     final String errMsg = "Not Allowed to make this outbound call";
-                    logger.error(errMsg);
+                    logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
                 }
                 executePostOutboundAction(callRequest);
@@ -1248,7 +1248,7 @@ public final class CallManager extends UntypedActor {
             }
         } else {
             String errMsg = "The SIP Client "+request.to()+" is not registered or does not exist";
-            logger.error(errMsg);
+            logger.warning(errMsg);
             sendNotification(errMsg, 11008, "error", true);
             sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
             return;
@@ -1298,7 +1298,7 @@ public final class CallManager extends UntypedActor {
                 if (from == null || to == null) {
                     //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
                     final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: "+request.to();
-                    logger.error(errMsg);
+                    logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
                 } else {
                     calls.add(createOutbound(request,from,to,webRTC));
@@ -1309,7 +1309,7 @@ public final class CallManager extends UntypedActor {
             }
         } else {
             String errMsg = "The SIP Client "+request.to()+" is not registered or does not exist";
-            logger.error(errMsg);
+            logger.warning(errMsg);
             sendNotification(errMsg, 11008, "error", true);
             sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
         }
@@ -1361,14 +1361,14 @@ public final class CallManager extends UntypedActor {
             if (from == null || to == null) {
                 //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
                 final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: "+request.to();
-                logger.error(errMsg);
+                logger.warning(errMsg);
                 sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
             } else {
                 sender.tell(new CallManagerResponse<ActorRef>(createOutbound(request,from,to,false)), self());
             }
         } else {
             String errMsg = "Cannot create call to: "+request.to()+". The Active Outbound Proxy is null. Please check configuration";
-            logger.error(errMsg);
+            logger.warning(errMsg);
             sendNotification(errMsg, 11008, "error", true);
             sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
         }
@@ -1397,7 +1397,7 @@ public final class CallManager extends UntypedActor {
         if (from == null || to == null) {
             //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
             final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: "+request.to();
-            logger.error(errMsg);
+            logger.warning(errMsg);
             sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
         } else {
             sender.tell(new CallManagerResponse<ActorRef>(createOutbound(request,from,to,false)), self());
