@@ -1,4 +1,4 @@
-[plantuml, sequence, svg]     
+[plantuml, sequence, png]     
 ....
 title Sequence For Call CDR Logging Only
 
@@ -33,16 +33,20 @@ end
 Call -> CallDataRecorder: CallStateChanged (Status)
 CallDataRecorder -> CallDataRecorder: SetCDRStatus (Status)
 
-alt Status == BUSY
+alt Status ??
+else BUSY
     CallDataRecorder -> CallDataRecorder: setDuration
     CallDataRecorder -> CallDataRecorder: setRingDuration
-else Status == IN_PROGRESS
+else IN_PROGRESS
     CallDataRecorder -> CallDataRecorder: setStartTime
     CallDataRecorder -> CallDataRecorder: setAnsweredBy
-else Status == COMPLETED
+else COMPLETED
     CallDataRecorder -> CallDataRecorder: setEndTime
     CallDataRecorder -> CallDataRecorder: setDuration
 end
 
+CallDataRecorder -> CallDetailRecordsDao: Update CDR
+
+Call -> CallDataRecorder: UpdateCallInfo\n for any special update\n(any column other than status)
 CallDataRecorder -> CallDetailRecordsDao: Update CDR
 ....
