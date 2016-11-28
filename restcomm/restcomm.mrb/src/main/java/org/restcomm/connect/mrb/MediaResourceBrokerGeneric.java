@@ -183,7 +183,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
             sender.tell(new MediaResourceBrokerResponse<ActorRef>(localMediaGateway), self);
         }else{
             final Sid conferenceSid = addConferenceDetailRecord(conferenceName, callSid);
-            sender.tell(new MediaResourceBrokerResponse<MediaGatewayForConference>(new MediaGatewayForConference(conferenceSid, localMediaGateway, null)), self);
+            sender.tell(new MediaResourceBrokerResponse<MediaGatewayForConference>(new MediaGatewayForConference(conferenceSid, localMediaGateway, null, false)), self);
         }
     }
 

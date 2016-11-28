@@ -105,6 +105,8 @@ public class NoAuthRegisterClientTest {
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
+    private String strongPassword = "Qwert12345";
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("RegisterClientTest1");
@@ -124,8 +126,8 @@ public class NoAuthRegisterClientTest {
         mariaSipStack2 = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.1.1", "5093", "127.0.0.1:5080");
         mariaPhone2 = mariaSipStack2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, mariaContact2);
 
-        mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria", "1234", null);
-        georgeRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "george", "1234", null);
+        mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria", strongPassword, null);
+        georgeRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "george", strongPassword, null);
 
     }
 
@@ -168,13 +170,13 @@ public class NoAuthRegisterClientTest {
         assertTrue(mariaPhone2.register(uri, "", "", mariaContact2, 3600, 3600));
         Thread.sleep(3000);
 
-//        Credential c = new Credential("127.0.0.1", "george", "1234");
+//        Credential c = new Credential("127.0.0.1", "george", strongPassword);
 //        georgePhone.addUpdateCredential(c);
 //        
-//        Credential c2 = new Credential("127.0.0.1", "maria", "1234");
+//        Credential c2 = new Credential("127.0.0.1", "maria", strongPassword);
 //        mariaPhone.addUpdateCredential(c2);
 //
-//        Credential c3 = new Credential("127.0.0.1", "maria", "1234");
+//        Credential c3 = new Credential("127.0.0.1", "maria", strongPassword);
 //        mariaPhone2.addUpdateCredential(c3);
         
         Thread.sleep(1000);
