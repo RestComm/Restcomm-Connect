@@ -256,6 +256,18 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.data.recorder</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.data.recorder.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
 			<groupId>javax.sip</groupId>
 			<artifactId>jain-sip-ri</artifactId>
 			<version>${sip-ri.version}</version>

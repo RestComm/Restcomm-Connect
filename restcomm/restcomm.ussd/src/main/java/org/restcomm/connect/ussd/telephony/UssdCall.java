@@ -47,8 +47,6 @@ import javax.servlet.sip.SipURI;
 
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -57,6 +55,8 @@ import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.dao.CallDetailRecordsDao;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.telephony.api.Answer;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
@@ -201,8 +201,9 @@ public class UssdCall extends UntypedActor  {
             to = (SipURI) invite.getTo().getURI();
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, direction, created, null, name, from, to, invite, lastResponse,
-                false, false, isFromApi, null);
+        final CallInfo info = new CallInfo(id, accountId, null, null, external, type, direction, created, null, name, from, to, invite, lastResponse,
+                false, false, isFromApi, null, apiVersion);
+
         return new CallResponse<CallInfo>(info);
     }
 
@@ -467,7 +468,7 @@ public class UssdCall extends UntypedActor  {
                 observer.tell(event, source);
             }
             if (outgoingCallRecord != null && direction.contains("outbound")) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(CallStateChanged.State.CANCELED.name());
+                outgoingCallRecord = outgoingCallRecord.setStatus(CallStateChanged.State.CANCELED.toString());
                 final DateTime now = DateTime.now();
                 outgoingCallRecord = outgoingCallRecord.setEndTime(now);
                 final int seconds = 0;
@@ -535,7 +536,7 @@ public class UssdCall extends UntypedActor  {
                 observer.tell(event, source);
             }
             if (outgoingCallRecord != null && direction.contains("outbound")) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(CallStateChanged.State.COMPLETED.name());
+                outgoingCallRecord = outgoingCallRecord.setStatus(CallStateChanged.State.COMPLETED.toString());
                 final DateTime now = DateTime.now();
                 outgoingCallRecord = outgoingCallRecord.setEndTime(now);
                 final int seconds = 0;
@@ -606,7 +607,7 @@ public class UssdCall extends UntypedActor  {
                 builder.setFrom(fromString);
                 // builder.setForwardedFrom(callInfo.forwardedFrom());
                 // builder.setPhoneNumberSid(phoneId);
-                builder.setStatus(external.name());
+                builder.setStatus(external.toString());
                 builder.setDirection("outbound-api");
                 builder.setApiVersion(apiVersion);
                 builder.setPrice(new BigDecimal("0.00"));

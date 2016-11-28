@@ -19,93 +19,7 @@
  */
 package org.restcomm.connect.interpreter;
 
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.util.Timeout;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-import org.apache.commons.configuration.Configuration;
-import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
-import org.joda.time.DateTime;
-import org.restcomm.connect.email.api.EmailRequest;
-import org.restcomm.connect.email.api.EmailResponse;
-import org.restcomm.connect.email.api.Mail;
-import org.restcomm.connect.asr.AsrInfo;
-import org.restcomm.connect.asr.AsrRequest;
-import org.restcomm.connect.asr.AsrResponse;
-import org.restcomm.connect.asr.GetAsrInfo;
-import org.restcomm.connect.asr.ISpeechAsr;
-import org.restcomm.connect.commons.cache.DiskCacheFactory;
-import org.restcomm.connect.commons.cache.DiskCacheRequest;
-import org.restcomm.connect.commons.cache.DiskCacheResponse;
-import org.restcomm.connect.commons.cache.HashGenerator;
-import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.NotificationsDao;
-import org.restcomm.connect.dao.RecordingsDao;
-import org.restcomm.connect.dao.SmsMessagesDao;
-import org.restcomm.connect.dao.TranscriptionsDao;
-import org.restcomm.connect.email.EmailService;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
-import org.restcomm.connect.dao.entities.Notification;
-import org.restcomm.connect.dao.entities.Recording;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.entities.SmsMessage;
-import org.restcomm.connect.dao.entities.SmsMessage.Direction;
-import org.restcomm.connect.dao.entities.SmsMessage.Status;
-import org.restcomm.connect.dao.entities.Transcription;
-import org.restcomm.connect.fax.FaxRequest;
-import org.restcomm.connect.fax.InterfaxService;
-import org.restcomm.connect.commons.fsm.Action;
-import org.restcomm.connect.commons.fsm.FiniteStateMachine;
-import org.restcomm.connect.commons.fsm.State;
-import org.restcomm.connect.commons.fsm.Transition;
-import org.restcomm.connect.http.client.Downloader;
-import org.restcomm.connect.http.client.DownloaderResponse;
-import org.restcomm.connect.http.client.HttpRequestDescriptor;
-import org.restcomm.connect.http.client.HttpResponseDescriptor;
-import org.restcomm.connect.interpreter.rcml.Attribute;
-import org.restcomm.connect.interpreter.rcml.GetNextVerb;
-import org.restcomm.connect.interpreter.rcml.Parser;
-import org.restcomm.connect.interpreter.rcml.ParserFailed;
-import org.restcomm.connect.interpreter.rcml.Tag;
-import org.restcomm.connect.mscontrol.api.messages.Collect;
-import org.restcomm.connect.mscontrol.api.messages.MediaGroupResponse;
-import org.restcomm.connect.mscontrol.api.messages.Play;
-import org.restcomm.connect.mscontrol.api.messages.Record;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.sms.api.CreateSmsSession;
-import org.restcomm.connect.sms.api.DestroySmsSession;
-import org.restcomm.connect.sms.api.SmsServiceResponse;
-import org.restcomm.connect.sms.api.SmsSessionAttribute;
-import org.restcomm.connect.sms.api.SmsSessionInfo;
-import org.restcomm.connect.sms.api.SmsSessionRequest;
-import org.restcomm.connect.sms.api.SmsSessionResponse;
-import org.restcomm.connect.interpreter.rcml.Verbs;
-import org.restcomm.connect.telephony.api.CallInfo;
-import org.restcomm.connect.telephony.api.CallManagerResponse;
-import org.restcomm.connect.telephony.api.CallStateChanged;
-import org.restcomm.connect.telephony.api.GetCallInfo;
-import org.restcomm.connect.telephony.api.Hangup;
-import org.restcomm.connect.telephony.api.Reject;
-import org.restcomm.connect.tts.api.GetSpeechSynthesizerInfo;
-import org.restcomm.connect.tts.api.SpeechSynthesizerInfo;
-import org.restcomm.connect.tts.api.SpeechSynthesizerRequest;
-import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
-import org.restcomm.connect.commons.util.UriUtils;
-import org.restcomm.connect.commons.util.WavUtils;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
+import static akka.pattern.Patterns.ask;
 
 import java.io.File;
 import java.io.IOException;
@@ -121,7 +35,93 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import static akka.pattern.Patterns.ask;
+import org.apache.commons.configuration.Configuration;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.joda.time.DateTime;
+import org.restcomm.connect.asr.AsrInfo;
+import org.restcomm.connect.asr.AsrRequest;
+import org.restcomm.connect.asr.AsrResponse;
+import org.restcomm.connect.asr.GetAsrInfo;
+import org.restcomm.connect.asr.ISpeechAsr;
+import org.restcomm.connect.commons.cache.DiskCacheFactory;
+import org.restcomm.connect.commons.cache.DiskCacheRequest;
+import org.restcomm.connect.commons.cache.DiskCacheResponse;
+import org.restcomm.connect.commons.cache.HashGenerator;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.fsm.Action;
+import org.restcomm.connect.commons.fsm.FiniteStateMachine;
+import org.restcomm.connect.commons.fsm.State;
+import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.commons.util.WavUtils;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.SmsMessagesDao;
+import org.restcomm.connect.dao.TranscriptionsDao;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.dao.entities.Recording;
+import org.restcomm.connect.dao.entities.SmsMessage;
+import org.restcomm.connect.dao.entities.SmsMessage.Direction;
+import org.restcomm.connect.dao.entities.SmsMessage.Status;
+import org.restcomm.connect.dao.entities.Transcription;
+import org.restcomm.connect.email.EmailService;
+import org.restcomm.connect.email.api.EmailRequest;
+import org.restcomm.connect.email.api.EmailResponse;
+import org.restcomm.connect.email.api.Mail;
+import org.restcomm.connect.fax.FaxRequest;
+import org.restcomm.connect.fax.InterfaxService;
+import org.restcomm.connect.http.client.Downloader;
+import org.restcomm.connect.http.client.DownloaderResponse;
+import org.restcomm.connect.http.client.HttpRequestDescriptor;
+import org.restcomm.connect.http.client.HttpResponseDescriptor;
+import org.restcomm.connect.interpreter.rcml.Attribute;
+import org.restcomm.connect.interpreter.rcml.GetNextVerb;
+import org.restcomm.connect.interpreter.rcml.Parser;
+import org.restcomm.connect.interpreter.rcml.ParserFailed;
+import org.restcomm.connect.interpreter.rcml.Tag;
+import org.restcomm.connect.interpreter.rcml.Verbs;
+import org.restcomm.connect.mscontrol.api.messages.Collect;
+import org.restcomm.connect.mscontrol.api.messages.MediaGroupResponse;
+import org.restcomm.connect.mscontrol.api.messages.Play;
+import org.restcomm.connect.mscontrol.api.messages.Record;
+import org.restcomm.connect.sms.api.CreateSmsSession;
+import org.restcomm.connect.sms.api.DestroySmsSession;
+import org.restcomm.connect.sms.api.SmsServiceResponse;
+import org.restcomm.connect.sms.api.SmsSessionAttribute;
+import org.restcomm.connect.sms.api.SmsSessionInfo;
+import org.restcomm.connect.sms.api.SmsSessionRequest;
+import org.restcomm.connect.sms.api.SmsSessionResponse;
+import org.restcomm.connect.telephony.api.CallInfo;
+import org.restcomm.connect.telephony.api.CallManagerResponse;
+import org.restcomm.connect.telephony.api.CallStateChanged;
+import org.restcomm.connect.telephony.api.GetCallInfo;
+import org.restcomm.connect.telephony.api.Hangup;
+import org.restcomm.connect.telephony.api.Reject;
+import org.restcomm.connect.tts.api.GetSpeechSynthesizerInfo;
+import org.restcomm.connect.tts.api.SpeechSynthesizerInfo;
+import org.restcomm.connect.tts.api.SpeechSynthesizerRequest;
+import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
+
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+
+import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -203,7 +203,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     // The call state.
     CallStateChanged.State callState = null;
     // A call detail record.
-    CallDetailRecord callRecord = null;
+    // CallDetailRecord callRecord = null;
 
     // State for outbound calls.
     ActorRef outboundCall = null;
@@ -216,6 +216,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     Sid recordingSid = null;
     URI recordingUri = null;
     URI publicRecordingUri = null;
+    protected DateTime recordingStartTime;
     // Information to reach the application that will be executed
     // by this interpreter.
     Sid accountId;
@@ -1626,6 +1627,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (Tag.class.equals(klass)) {
                 verb = (Tag) message;
             }
+            recordingStartTime = new DateTime();
             final NotificationsDao notifications = storage.getNotificationsDao();
             String finishOnKey = "1234567890*#";
             Attribute attribute = verb.attribute("finishOnKey");
@@ -1736,14 +1738,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 final CallStateChanged event = (CallStateChanged) message;
                 // Update the interpreter state.
                 callState = event.state();
-                // Update the storage.
-                callRecord = callRecord.setStatus(callState.toString());
-                final DateTime end = DateTime.now();
-                callRecord = callRecord.setEndTime(end);
-                final int seconds = (int) (end.getMillis() - callRecord.getStartTime().getMillis()) / 1000;
-                callRecord = callRecord.setDuration(seconds);
-                final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-                records.updateCallDetailRecord(callRecord);
+                // Update the storage. no need, cdr logger will take care of it
                 // Update the application.
 //                callback();
             }
@@ -1752,7 +1747,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             Double duration = WavUtils.getAudioDuration(recordingUri);
             if (duration.equals(0.0)) {
                 final DateTime end = DateTime.now();
-                duration = new Double((end.getMillis() - callRecord.getStartTime().getMillis()) / 1000);
+                duration = new Double((end.getMillis() - recordingStartTime.getMillis()) / 1000);
             } else if(logger.isDebugEnabled()) {
                 logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
             }

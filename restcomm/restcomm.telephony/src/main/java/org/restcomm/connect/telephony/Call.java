@@ -20,13 +20,10 @@
 package org.restcomm.connect.telephony;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.net.InetAddress;
-import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Currency;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -69,9 +66,7 @@ import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.commons.util.SdpUtils;
-import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.mscontrol.api.messages.CloseMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.Collect;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
@@ -107,6 +102,7 @@ import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.telephony.api.RemoveParticipant;
+import org.restcomm.connect.telephony.api.UpdateCallInfo;
 
 import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
@@ -122,6 +118,7 @@ import scala.concurrent.duration.Duration;
  * @author amit.bhayani@telestax.com (Amit Bhayani)
  * @author gvagenas@telestax.com (George Vagenas)
  * @author henrique.rosa@telestax.com (Henrique Rosa)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  *
  */
 @Immutable
@@ -200,8 +197,8 @@ public final class Call extends UntypedActor {
     private MediaSessionInfo mediaSessionInfo;
 
     // Media Group runtime stuff
-    private CallDetailRecord outgoingCallRecord;
-    private CallDetailRecordsDao recordsDao;
+    //private CallDetailRecord outgoingCallRecord;
+    //private CallDetailRecordsDao recordsDao;
     private DaoManager daoManager;
     private boolean liveCallModification;
     private boolean recording;
@@ -210,11 +207,13 @@ public final class Call extends UntypedActor {
     // Runtime Setting
     private Configuration runtimeSettings;
     private Configuration configuration;
+    //private final ActorRef callDataRecorder;
     private boolean disableSdpPatchingOnUpdatingMediaSession;
+    private final ActorRef callDataRecorder;
 
     private Sid inboundCallSid;
 
-    public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
+    public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration, final ActorRef callDataRecorder, final String apiVersion, final Sid accountSid) {
         super();
         final ActorRef source = self();
 
@@ -319,7 +318,13 @@ public final class Call extends UntypedActor {
         this.liveCallModification = false;
         this.recording = false;
         this.configuration = configuration;
+        //this.callDataRecorder = callDataRecorder;
         this.disableSdpPatchingOnUpdatingMediaSession = this.configuration.subset("runtime-settings").getBoolean("disable-sdp-patching-on-updating-mediasession", false);
+        this.apiVersion = apiVersion;
+        this.accountId = accountSid;
+        this.callDataRecorder = callDataRecorder;
+
+        this.callDataRecorder.tell(new Observe(self()), self());
     }
 
     private boolean is(State state) {
@@ -337,7 +342,7 @@ public final class Call extends UntypedActor {
     private CallResponse<CallInfo> info() {
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime);
+        final CallInfo info = new CallInfo(id, accountId, null, parentCallSid, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi,callUpdatedTime, apiVersion);
         return new CallResponse<CallInfo>(info);
     }
 
@@ -494,9 +499,7 @@ public final class Call extends UntypedActor {
     // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest response
     // received
     private void sendCallInfoToObservers() {
-        for (final ActorRef observer : this.observers) {
-            observer.tell(info(), self());
-        }
+        broadcast(info(), self());
     }
 
     private void processInfo(final SipServletRequest request) throws IOException {
@@ -512,9 +515,7 @@ public final class Call extends UntypedActor {
         }
         if (digits != null) {
             MediaGroupResponse<String> infoResponse = new MediaGroupResponse<String>(digits);
-            for (final ActorRef observer : observers) {
-                observer.tell(infoResponse, self());
-            }
+            broadcast(infoResponse, self());
             this.msController.tell(new Stop(), self());
         }
     }
@@ -550,7 +551,7 @@ public final class Call extends UntypedActor {
             password = request.password();
             type = request.type();
             parentCallSid = request.getParentCallSid();
-            recordsDao = request.getDaoManager().getCallDetailRecordsDao();
+            //recordsDao = request.getDaoManager().getCallDetailRecordsDao();
             isFromApi = request.isFromApi();
             String toHeaderString = to.toString();
             if (toHeaderString.indexOf('?') != -1) {
@@ -576,10 +577,12 @@ public final class Call extends UntypedActor {
             external = CallStateChanged.State.QUEUED;
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
+                //tell callDataRecorder about information of this call so it inserts it in DB.
+                observer.tell(info(), self());
                 observer.tell(event, source);
             }
 
-            if (recordsDao != null) {
+            /*if (recordsDao != null) {
                 CallDetailRecord cdr = recordsDao.getCallDetailRecord(id);
                 if (cdr == null) {
                     final CallDetailRecord.Builder builder = CallDetailRecord.builder();
@@ -613,7 +616,7 @@ public final class Call extends UntypedActor {
                 } else {
                     cdr.setStatus(external.name());
                 }
-            }
+            }*/
         }
     }
 
@@ -745,13 +748,11 @@ public final class Call extends UntypedActor {
             // Notify the observers.
             external = CallStateChanged.State.RINGING;
             final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
-            if (outgoingCallRecord != null && isOutbound()) {
+            broadcast(event, source);
+            /*if (outgoingCallRecord != null && isOutbound()) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
-            }
+            }*/
         }
     }
 
@@ -808,13 +809,14 @@ public final class Call extends UntypedActor {
 //            }
 
             // Record call data
-            if (outgoingCallRecord != null && isOutbound()) {
+            callDataRecorder.tell(new CallStateChanged(external), self());
+            /*if (outgoingCallRecord != null && isOutbound()) {
                 if(logger.isInfoEnabled()) {
                     logger.info("Going to update CDR to CANCEL, call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction);
                 }
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
-            }
+            }*/
             fsm.transition(message, completed);
         }
     }
@@ -888,20 +890,9 @@ public final class Call extends UntypedActor {
             // Notify the observers.
             external = CallStateChanged.State.BUSY;
             final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
+            broadcast(event, source);
 
-            // Record call data
-            if (outgoingCallRecord != null && isOutbound()) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-                outgoingCallRecord = outgoingCallRecord.setDuration(0);
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-                final int seconds = (int) ((DateTime.now().getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
-                outgoingCallRecord = outgoingCallRecord.setRingDuration(seconds);
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-            }
+            // Record call data: no need bcz when CDRI will receive CallStateChanged as BUSY and it will update duration/ring duration for this call :)
         }
     }
 
@@ -925,15 +916,9 @@ public final class Call extends UntypedActor {
             // Notify the observers.
             external = CallStateChanged.State.NOT_FOUND;
             final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
+            broadcast(event, source);
 
-            // Record call data
-            if (outgoingCallRecord != null && isOutbound()) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-            }
+            // Record call data: no need bcz when CDRI will receive CallStateChanged will update status in DB for this call :)
         }
     }
 
@@ -953,15 +938,9 @@ public final class Call extends UntypedActor {
             // Notify the observers.
             external = CallStateChanged.State.NO_ANSWER;
             final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
+            broadcast(event, source);
 
-            // Record call data
-            if (outgoingCallRecord != null && isOutbound()) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-            }
+            // Record call data: no need bcz when CDRI will receive CallStateChanged will update status in DB for this call :)
         }
     }
 
@@ -990,15 +969,9 @@ public final class Call extends UntypedActor {
             // Notify the observers.
             external = CallStateChanged.State.FAILED;
             final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
+            broadcast(event, source);
 
-            // Record call data
-            if (outgoingCallRecord != null && isOutbound()) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-            }
+            // Record call data: no need bcz when CDRI will receive CallStateChanged will update status in DB for this call :)
         }
     }
 
@@ -1153,16 +1126,8 @@ public final class Call extends UntypedActor {
             callUpdatedTime = DateTime.now();
 
             //Update CDR for Outbound Call.
-            if (recordsDao != null) {
-                if (outgoingCallRecord != null && isOutbound()) {
-                    final int seconds = (int) ((DateTime.now().getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
-                    outgoingCallRecord = outgoingCallRecord.setRingDuration(seconds);
-                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
-                    outgoingCallRecord = outgoingCallRecord.setStartTime(DateTime.now());
-                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
-                    outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
-                }
+            if (isOutbound()) {
+                callDataRecorder.tell(new UpdateCallInfo(id, external, DateTime.now(), null, null, true, null, null, null, null, null, null, null, null, null), self());
             }
 
             String answer = null;
@@ -1197,16 +1162,9 @@ public final class Call extends UntypedActor {
             if (external != null && !external.equals(CallStateChanged.State.IN_PROGRESS)) {
                 external = CallStateChanged.State.IN_PROGRESS;
                 final CallStateChanged event = new CallStateChanged(external);
-                for (final ActorRef observer : observers) {
-                    observer.tell(event, source);
-                }
+                broadcast(event, source);
 
-                // Record call data
-                if (outgoingCallRecord != null && isOutbound() && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
-                    outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                    outgoingCallRecord = outgoingCallRecord.setAnsweredBy(to.getUser());
-                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
-                }
+                // Record call data: no need because when CDRI will receive CallStateChanged as in-progress, it will update state and answerBy for this call :)
             }
         }
     }
@@ -1278,29 +1236,13 @@ public final class Call extends UntypedActor {
                 external = CallStateChanged.State.COMPLETED;
             }
             final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
+            broadcast(event, source);
 
             if(logger.isInfoEnabled()) {
                 logger.info("Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" new external state: "+external);
             }
 
-            // Record call data
-            if (outgoingCallRecord != null && isOutbound()) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(external.toString());
-                final DateTime now = DateTime.now();
-                outgoingCallRecord = outgoingCallRecord.setEndTime(now);
-                final int seconds = (int) ((now.getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
-                outgoingCallRecord = outgoingCallRecord.setDuration(seconds);
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-                if(logger.isDebugEnabled()) {
-                    logger.debug("Start: " + outgoingCallRecord.getStartTime());
-                    logger.debug("End: " + outgoingCallRecord.getEndTime());
-                    logger.debug("Duration: " + seconds);
-                    logger.debug("Just updated CDR for completed call");
-                }
-            }
+            // Record call data: no need bcz when CDRI will receive CallStateChanged as completed it will update endTime and duration for this call :)
         }
     }
 
@@ -1391,7 +1333,9 @@ public final class Call extends UntypedActor {
     }
 
     private void onGetCallInfo(GetCallInfo message, ActorRef sender) throws Exception {
-        sender.tell(info(), self());
+        CallResponse<CallInfo> callInfo = info();
+        sender.tell(callInfo, self());
+        callDataRecorder.tell(callInfo, sender);
     }
 
     private void onInitializeOutbound(InitializeOutbound message, ActorRef self, ActorRef sender) throws Exception {
@@ -1930,12 +1874,13 @@ public final class Call extends UntypedActor {
     }
 
     private void onJoinConference(JoinConference message, ActorRef self, ActorRef sender) throws Exception {
-        if (logger.isInfoEnabled()) {
-            logger.info("********************* onJoinConference *********************");
+        if (logger.isDebugEnabled()) {
+            logger.debug("********************* onJoinConference *********************");
         }
         if (is(inProgress)) {
             this.conferencing = true;
             this.conference = sender;
+            callDataRecorder.tell(new UpdateCallInfo(id, null, null, null, false, false, null, null, message.conferenceSid(), muted, message.startConferenceOnEnter(), message.endConferenceOnExit(), message.beep(), null, null), sender);
             this.fsm.transition(message, joining);
         }
     }
@@ -2014,6 +1959,14 @@ public final class Call extends UntypedActor {
             // Forward message for Media Session Controller to handle
             this.msController.tell(message, sender);
             this.recording = false;
+        }
+    }
+
+    private void broadcast(final Object message, final ActorRef source) {
+        if (!this.observers.isEmpty()) {
+            for (ActorRef observer : observers) {
+                observer.tell(message, source);
+            }
         }
     }
 

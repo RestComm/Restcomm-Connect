@@ -1,0 +1,37 @@
+[plantuml, pkg-dependency, png] 
+....
+package restcomm.data.recorder {
+
+class DataRecorderFactoryImpl{
+}
+class USSDDataRecorderImpl{
+}
+class CallDataRecorderImpl{
+}
+class SMSDataRecorderImpl{
+}
+class ConferenceDataRecorderImpl{
+}
+}
+
+package restcomm.data.recorder.api {
+interface DataRecorderFactory{
+}
+interface CallDataRecorder{
+}
+interface ConferenceDataRecorder{
+}
+interface SMSDataRecorder{
+}
+interface USSDDataRecorder{
+}
+class UpdateCallInfo{
+}
+}
+
+DataRecorderFactory <|-- DataRecorderFactoryImpl
+USSDDataRecorder <|-- USSDDataRecorderImpl
+SMSDataRecorder <|-- SMSDataRecorderImpl
+ConferenceDataRecorder <|-- ConferenceDataRecorderImpl
+CallDataRecorder <|-- CallDataRecorderImpl
+....

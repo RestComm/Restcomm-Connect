@@ -26,14 +26,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.restcomm.connect.telephony.api.BridgeStateChanged;
-import org.restcomm.connect.telephony.api.JoinCalls;
-import org.restcomm.connect.telephony.api.StartBridge;
-import org.restcomm.connect.telephony.api.StopBridge;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.JoinCall;
 import org.restcomm.connect.mscontrol.api.messages.JoinComplete;
@@ -42,10 +41,11 @@ import org.restcomm.connect.mscontrol.api.messages.MediaServerControllerStateCha
 import org.restcomm.connect.mscontrol.api.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.restcomm.connect.mscontrol.api.messages.StartRecording;
 import org.restcomm.connect.mscontrol.api.messages.Stop;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.telephony.api.BridgeStateChanged;
 import org.restcomm.connect.telephony.api.BridgeStateChanged.BridgeState;
+import org.restcomm.connect.telephony.api.JoinCalls;
+import org.restcomm.connect.telephony.api.StartBridge;
+import org.restcomm.connect.telephony.api.StopBridge;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
@@ -300,7 +300,7 @@ public class Bridge extends UntypedActor {
         @Override
         public void execute(Object message) throws Exception {
             // Ask mscontroller to join inbound call
-            final JoinCall join = new JoinCall(inboundCall, ConnectionMode.SendRecv);
+            final JoinCall join = new JoinCall(inboundCall, ConnectionMode.SendRecv, null, false, false, true);
             mscontroller.tell(join, super.source);
         }
 
@@ -319,7 +319,7 @@ public class Bridge extends UntypedActor {
             broadcast(notification);
 
             // Ask mscontroller to join outbound call
-            final JoinCall join = new JoinCall(outboundCall, ConnectionMode.SendRecv);
+            final JoinCall join = new JoinCall(outboundCall, ConnectionMode.SendRecv, null, false, false, false);
             mscontroller.tell(join, super.source);
         }
 

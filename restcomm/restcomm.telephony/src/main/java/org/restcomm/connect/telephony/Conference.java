@@ -409,15 +409,15 @@ public final class Conference extends UntypedActor {
 
     private void onAddParticipant(AddParticipant message, ActorRef self, ActorRef sender) {
         if (isRunning()) {
-            final JoinCall joinCall = new JoinCall(message.call(), ConnectionMode.Confrnce);
+            final JoinCall joinCall = new JoinCall(message.call(), ConnectionMode.Confrnce, sid, message.startConferenceOnEnter(), message.endConferenceOnExit(), message.beep());
             this.mscontroller.tell(joinCall, self);
         }
     }
 
     private void onRemoveParticipant(RemoveParticipant message, ActorRef self, ActorRef sender) throws Exception {
         if (isRunning()) {
-            if (logger.isInfoEnabled()) {
-                logger.info("Received RemoveParticipants for Call: "+message.call().path());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Received RemoveParticipants for Call: "+message.call().path());
             }
             // Kindly ask participant to leave
             final ActorRef call = message.call();
@@ -540,7 +540,7 @@ public final class Conference extends UntypedActor {
             globalNoOfParticipants = dao.getTotalRunningCallDetailRecordsByConferenceSid(sid);
         }
         if(logger.isInfoEnabled())
-            logger.info("sid: "+sid+"globalNoOfParticipants: "+globalNoOfParticipants);
+            logger.info("sid: "+sid+" globalNoOfParticipants: "+globalNoOfParticipants);
         return globalNoOfParticipants;
     }
 

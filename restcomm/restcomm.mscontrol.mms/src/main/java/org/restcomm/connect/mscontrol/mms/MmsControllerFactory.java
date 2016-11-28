@@ -30,7 +30,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActorFactory;
 
 /**
- * Provides controllers for Mobicents Media Server.
+ * Provides controllers for Restcomm Media Server.
  *
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *

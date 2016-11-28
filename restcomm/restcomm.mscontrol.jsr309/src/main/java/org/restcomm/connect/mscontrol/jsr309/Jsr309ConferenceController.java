@@ -50,6 +50,9 @@ import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.commons.fsm.TransitionFailedException;
 import org.restcomm.connect.commons.fsm.TransitionNotFoundException;
 import org.restcomm.connect.commons.fsm.TransitionRollbackException;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.mscontrol.api.MediaServerController;
 import org.restcomm.connect.mscontrol.api.MediaServerInfo;
 import org.restcomm.connect.mscontrol.api.exceptions.MediaServerControllerException;
@@ -63,9 +66,6 @@ import org.restcomm.connect.mscontrol.api.messages.MediaServerControllerStateCha
 import org.restcomm.connect.mscontrol.api.messages.Play;
 import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
 
 import akka.actor.ActorRef;
 import akka.event.Logging;
@@ -340,7 +340,7 @@ public class Jsr309ConferenceController extends MediaServerController {
     private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
         if (is(active)) {
             // Tell call to join conference by passing reference of the media mixer
-            final JoinConference join = new JoinConference(this.mediaMixer, message.getConnectionMode());
+            final JoinConference join = new JoinConference(this.mediaMixer, message.getConnectionMode(), message.conferenceSid(), message.startConferenceOnEnter(), message.endConferenceOnExit(), message.beep());
             message.getCall().tell(join, sender);
         }
     }

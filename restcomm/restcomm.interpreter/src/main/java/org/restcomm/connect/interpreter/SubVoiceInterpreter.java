@@ -19,11 +19,15 @@
  */
 package org.restcomm.connect.interpreter;
 
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActorContext;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.servlet.sip.SipServletResponse;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -31,16 +35,15 @@ import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
 import org.restcomm.connect.asr.AsrResponse;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
-import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.NotificationsDao;
-import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.fax.FaxResponse;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.fax.FaxResponse;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
 import org.restcomm.connect.interpreter.rcml.Attribute;
@@ -61,13 +64,11 @@ import org.restcomm.connect.telephony.api.DestroyCall;
 import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
 
-import javax.servlet.sip.SipServletResponse;
-import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActorContext;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * @author gvagenas@telestax.com
@@ -582,15 +583,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
             if (CallStateChanged.class.equals(klass)) {
                 final CallStateChanged event = (CallStateChanged) message;
                 callState = event.state();
-                if (callRecord != null) {
-                    callRecord = callRecord.setStatus(callState.toString());
-                    final DateTime end = DateTime.now();
-                    callRecord = callRecord.setEndTime(end);
-                    final int seconds = (int) (end.getMillis() - callRecord.getStartTime().getMillis()) / 1000;
-                    callRecord = callRecord.setDuration(seconds);
-                    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-                    records.updateCallDetailRecord(callRecord);
-                }
+                // Update the storage. no need, cdr logger will take care of it
                 callback();
             }
 

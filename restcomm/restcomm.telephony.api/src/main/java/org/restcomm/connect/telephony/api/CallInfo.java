@@ -29,10 +29,14 @@ import org.restcomm.connect.commons.dao.Sid;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
+ * @author maria.farooq@telestax.com
  */
 @Immutable
 public final class CallInfo {
     private final Sid sid;
+    private final Sid accountSid;
+    private final Sid phoneNumberSid;
+    private final Sid parentCallSid;
     private CallStateChanged.State state;
     private final CreateCall.Type type;
     private final String direction;
@@ -46,13 +50,17 @@ public final class CallInfo {
     private final SipServletResponse lastResponse;
     private final boolean webrtc;
     private boolean muted;
+    private final String version;
     private boolean isFromApi;
-
-    public CallInfo(final Sid sid, final CallStateChanged.State state, final CreateCall.Type type, final String direction,
+    public CallInfo(final Sid sid, final Sid accountId, final Sid phoneNumberSid, final Sid parentCallSid, final CallStateChanged.State state, final CreateCall.Type type, final String direction,
                     final DateTime dateCreated, final String forwardedFrom, final String fromName, final String from, final String to,
-                    final SipServletRequest invite, final SipServletResponse lastResponse, final boolean webrtc, final boolean muted, final boolean isFromApi, final DateTime dateConUpdated) {
+                    final SipServletRequest invite, final SipServletResponse lastResponse, final boolean webrtc, final boolean muted, final boolean isFromApi, final DateTime dateConUpdated, final String version) {
+
         super();
         this.sid = sid;
+        this.accountSid = accountId;
+        this.phoneNumberSid = phoneNumberSid;
+        this.parentCallSid = parentCallSid;
         this.state = state;
         this.direction = direction;
         this.dateCreated = dateCreated;
@@ -66,6 +74,7 @@ public final class CallInfo {
         this.type = type;
         this.webrtc = webrtc;
         this.muted = muted;
+        this.version = version;
         this.isFromApi = isFromApi;
     }
 
@@ -79,6 +88,10 @@ public final class CallInfo {
 
     public String direction() {
         return direction;
+    }
+
+    public Sid parentCallSid() {
+        return parentCallSid;
     }
 
     public CreateCall.Type type() {
@@ -101,6 +114,14 @@ public final class CallInfo {
         return sid;
     }
 
+    public Sid accountSid() {
+        return accountSid;
+    }
+
+    public Sid phoneNumberSid() {
+        return phoneNumberSid;
+    }
+
     public CallStateChanged.State state() {
         return state;
     }
@@ -111,6 +132,10 @@ public final class CallInfo {
 
     public String to() {
         return to;
+    }
+
+    public String version() {
+        return version;
     }
 
     public SipServletRequest invite() {
@@ -135,5 +160,15 @@ public final class CallInfo {
 
     public boolean isFromApi() {
         return isFromApi;
+    }
+
+    @Override
+    public String toString() {
+        return "CallInfo [sid=" + sid + ", accountSid=" + accountSid + ", phoneNumberSid=" + phoneNumberSid
+                + ", parentCallSid=" + parentCallSid + ", state=" + state + ", type=" + type + ", direction="
+                + direction + ", dateCreated=" + dateCreated + ", dateConUpdated=" + dateConUpdated + ", forwardedFrom="
+                + forwardedFrom + ", fromName=" + fromName + ", from=" + from + ", to=" + to + ", invite=" + invite
+                + ", lastResponse=" + lastResponse + ", webrtc=" + webrtc + ", muted=" + muted + ", version=" + version
+                + ", isFromApi=" + isFromApi + "]";
     }
 }

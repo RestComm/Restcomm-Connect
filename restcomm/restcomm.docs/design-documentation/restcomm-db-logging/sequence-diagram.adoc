@@ -1,0 +1,52 @@
+[plantuml, sequence, png]     
+....
+title Sequence For Call CDR Logging Only
+
+actor CallManager
+
+box "Request Managers" #LightGreen
+	participant CallManager
+end box
+
+box "Request Handeling Actor" #LightBlue
+    participant Call
+end box
+
+box "DataRecorder" #LightYellow
+	participant CallDataRecorder
+end box
+
+box "DAO" #LightPink
+	participant CallDetailRecordsDao
+end box
+
+CallManager -> Call : Creates a new Call(CallDataRecorder)
+Call -> CallDataRecorder: Observe
+Call <- CallDataRecorder: Observe
+Call -> CallDataRecorder: CallInfo
+
+alt If it is first CallInfo
+    CallDataRecorder -> CallDetailRecordsDao: Insert a new CDR record with given params.
+else Do Nothing
+end
+
+Call -> CallDataRecorder: CallStateChanged (Status)
+CallDataRecorder -> CallDataRecorder: SetCDRStatus (Status)
+
+alt Status ??
+else BUSY
+    CallDataRecorder -> CallDataRecorder: setDuration
+    CallDataRecorder -> CallDataRecorder: setRingDuration
+else IN_PROGRESS
+    CallDataRecorder -> CallDataRecorder: setStartTime
+    CallDataRecorder -> CallDataRecorder: setAnsweredBy
+else COMPLETED
+    CallDataRecorder -> CallDataRecorder: setEndTime
+    CallDataRecorder -> CallDataRecorder: setDuration
+end
+
+CallDataRecorder -> CallDetailRecordsDao: Update CDR
+
+Call -> CallDataRecorder: UpdateCallInfo\n for any special update\n(any column other than status)
+CallDataRecorder -> CallDetailRecordsDao: Update CDR
+....

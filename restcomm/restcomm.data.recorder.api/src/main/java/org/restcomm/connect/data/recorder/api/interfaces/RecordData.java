@@ -17,44 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.telephony.api;
-
-import akka.actor.ActorRef;
+package org.restcomm.connect.data.recorder.api.interfaces;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
-public final class AddParticipant {
-    private final ActorRef call;
-    private final boolean startConferenceOnEnter;
-    private final boolean endConferenceOnExit;
-    private final boolean beep;
-
-    public AddParticipant(final ActorRef call, final boolean startConferenceOnEnter, final boolean endConferenceOnExit, final boolean beep) {
-        super();
-        this.call = call;
-        this.startConferenceOnEnter = startConferenceOnEnter;
-        this.endConferenceOnExit = endConferenceOnExit;
-        this.beep = beep;
-    }
-
-    public ActorRef call() {
-        return call;
-    }
-
-    public boolean startConferenceOnEnter() {
-        return startConferenceOnEnter;
-    }
-
-    public boolean endConferenceOnExit() {
-        return endConferenceOnExit;
-    }
-
-    public boolean beep() {
-        return beep;
-    }
+public interface RecordData {
 }

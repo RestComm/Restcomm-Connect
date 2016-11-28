@@ -168,7 +168,7 @@ import org.restcomm.connect.commons.dao.Sid;
                  builder.setFrom(client.getLogin());
                  // builder.setForwardedFrom(callInfo.forwardedFrom());
                  // builder.setPhoneNumberSid(phoneId);
-                 builder.setStatus(CallStateChanged.State.QUEUED.name());
+                 builder.setStatus(CallStateChanged.State.QUEUED.toString());
                  builder.setDirection("Client-To-Client");
                  builder.setApiVersion(client.getApiVersion());
                  builder.setPrice(new BigDecimal("0.00"));
@@ -327,7 +327,7 @@ import org.restcomm.connect.commons.dao.Sid;
              builder.setFrom(fromClient.getFriendlyName());
              // builder.setForwardedFrom(callInfo.forwardedFrom());
              // builder.setPhoneNumberSid(phoneId);
-             builder.setStatus(CallStateChanged.State.QUEUED.name());
+             builder.setStatus(CallStateChanged.State.QUEUED.toString());
              builder.setDirection("Client-To-Client");
              builder.setApiVersion(fromClient.getApiVersion());
              builder.setPrice(new BigDecimal("0.00"));
@@ -467,7 +467,7 @@ import org.restcomm.connect.commons.dao.Sid;
                  if(logger.isInfoEnabled()) {
                      logger.info("CDR found! Updating");
                  }
-                 callRecord = callRecord.setStatus(CallStateChanged.State.CANCELED.name());
+                 callRecord = callRecord.setStatus(CallStateChanged.State.CANCELED.toString());
                  final DateTime now = DateTime.now();
                  callRecord = callRecord.setEndTime(now);
                  int seconds;
@@ -545,20 +545,20 @@ import org.restcomm.connect.commons.dao.Sid;
              }
              if (!linkedRequest.getMethod().equalsIgnoreCase("BYE")) {
                  if (response.getStatus() == 100 || response.getStatus() == 180 || response.getStatus() == 183) {
-                     callRecord = callRecord.setStatus(CallStateChanged.State.RINGING.name());
+                     callRecord = callRecord.setStatus(CallStateChanged.State.RINGING.toString());
                  } else if (response.getStatus() == 200 || response.getStatus() == 202) {
-                     callRecord = callRecord.setStatus(CallStateChanged.State.IN_PROGRESS.name());
+                     callRecord = callRecord.setStatus(CallStateChanged.State.IN_PROGRESS.toString());
                      callRecord = callRecord.setAnsweredBy(((SipURI) response.getTo().getURI()).getUser());
                      final DateTime now = DateTime.now();
                      callRecord = callRecord.setStartTime(now);
 
                  } else if (response.getStatus() == 486 || response.getStatus() == 600) {
-                     callRecord = callRecord.setStatus(CallStateChanged.State.BUSY.name());
+                     callRecord = callRecord.setStatus(CallStateChanged.State.BUSY.toString());
                  } else if (response.getStatus() > 400) {
-                     callRecord = callRecord.setStatus(CallStateChanged.State.FAILED.name());
+                     callRecord = callRecord.setStatus(CallStateChanged.State.FAILED.toString());
                  }
              } else {
-                 callRecord = callRecord.setStatus(CallStateChanged.State.COMPLETED.name());
+                 callRecord = callRecord.setStatus(CallStateChanged.State.COMPLETED.toString());
                  final DateTime now = DateTime.now();
                  callRecord = callRecord.setEndTime(now);
                  final int seconds = (int) ((DateTime.now().getMillis() - callRecord.getStartTime().getMillis()) / 1000);
@@ -586,7 +586,7 @@ import org.restcomm.connect.commons.dao.Sid;
              if(logger.isInfoEnabled()) {
                  logger.info("CDR found! Updating");
              }
-             callRecord = callRecord.setStatus(state.name());
+             callRecord = callRecord.setStatus(state.toString());
              final DateTime now = DateTime.now();
              callRecord = callRecord.setEndTime(now);
              int seconds;
