@@ -12,6 +12,15 @@ if [ $# -lt 6 ]; then
     exit 1
 fi
 
+# echo "(1: $1) (2: $2) (3: $3) (4: $4) (5: $5) (6: $6)"
+
+export RESTCOMM_ADDRESS=$1
+export LOCAL_ADDRESS=$2
+export SIMULTANEOUS_CALLS=$3
+export MAXIMUM_CALLS=$4
+export CALL_RATE=$5
+export TEST_NAME=$6
+
 if [[ -z $VOICERSS ]] || [ "$VOICERSS" == ''  ]; then
   echo "VoiceRSS TTS Service key is not set! Will exit"
   exit 1
@@ -32,6 +41,7 @@ echo "SIPP Executable $SIPP_EXECUTABLE"
 echo "JVMTOP Executable $JVMTOP_EXECUTABLE"
 echo "Collect JMAP: $COLLECT_JMAP"
 echo "Use RMS pid: $USE_RMS_PID"
+echo "Application to test: $TEST_NAME"
 
 
 prepareRestcomm() {

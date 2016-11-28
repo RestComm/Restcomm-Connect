@@ -20,6 +20,7 @@
 
 package org.restcomm.connect.rvd.http.resources;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -27,15 +28,16 @@ import org.apache.log4j.Logger;
 import org.restcomm.connect.rvd.ApplicationContext;
 import org.restcomm.connect.rvd.ProjectService;
 import org.restcomm.connect.rvd.RvdContext;
-import org.restcomm.connect.rvd.commons.GenericResponse;
+import org.restcomm.connect.rvd.exceptions.AccessApiException;
 import org.restcomm.connect.rvd.exceptions.AuthorizationException;
 import org.restcomm.connect.rvd.exceptions.NotificationProcessingError;
 import org.restcomm.connect.rvd.exceptions.ProjectDoesNotExist;
 import org.restcomm.connect.rvd.exceptions.RvdException;
 import org.restcomm.connect.rvd.identity.UserIdentityContext;
-import org.restcomm.connect.rvd.model.client.ProjectItem;
 import org.restcomm.connect.rvd.model.project.RvdProject;
-import org.restcomm.connect.rvd.restcomm.RestcommAccountInfo;
+import org.restcomm.connect.rvd.restcomm.RestcommApplicationResponse;
+import org.restcomm.connect.rvd.restcomm.RestcommApplicationsResponse;
+import org.restcomm.connect.rvd.restcomm.RestcommClient;
 import org.restcomm.connect.rvd.storage.WorkspaceStorage;
 
 import javax.annotation.PostConstruct;
@@ -48,7 +50,6 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
-import java.util.List;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -157,36 +158,28 @@ public class NotificationsRestService extends SecuredRestService {
     }
 
     void processAccountRemovalNotification(String removedAccountSid) throws RvdException {
-        // check if the operating/logged user has read access to the removed account
-        RestcommAccountInfo loggedAccountInfo = getUserIdentityContext().getAccountInfo();
-        if ( loggedAccountInfo.getSid().equals(removedAccountSid) ) {
-            List<ProjectItem> projects = projectService.getAvailableProjectsByOwner(loggedAccountInfo.getEmail_address());
-            for (ProjectItem project : projects) {
-                projectService.deleteProject(project.getName());
-            }
-        } else {
-            // logged  account is different than the one that is being removed. Let's check if logged user has
-            // read access to removed account. If that's the case, we will remove the apps. Even a closed account will do.
-            GenericResponse<RestcommAccountInfo> response = applicationContext.getAccountProvider().getAccount(removedAccountSid, getUserIdentityContext().getEffectiveAuthorizationHeader());
-            // we don't care whether this account is closed or not here. We will proceed with application removal
-            if (response.succeeded()) {
-                String closedAccountEmail = response.get().getEmail_address();
-                List<ProjectItem> projects = projectService.getAvailableProjectsByOwner(closedAccountEmail);
-                for (ProjectItem project : projects) {
-                    projectService.deleteProject(project.getName());
-                }
-                logger.info("Removed projects for account " + closedAccountEmail + "(" + removedAccountSid + ")");
+        // retrieve the applications belonging to the removed account
+        RestcommClient client = new RestcommClient(applicationContext.getConfiguration().getRestcommBaseUri(), getUserIdentityContext().getEffectiveAuthorizationHeader(), applicationContext.getHttpClientBuilder());
+        RestcommApplicationsResponse applications = null;
+        try {
+            applications = client.get("/restcomm/2012-04-24/Accounts/" + removedAccountSid + "/Applications.json").done(new Gson(), RestcommApplicationsResponse.class);
+        } catch (AccessApiException e) {
+            if (404 == e.getStatusCode()) {
+                throw new NotificationProcessingError("Cannot find removed account '" + removedAccountSid + "'" + ". No projects will be removed", NotificationProcessingError.Type.AccountIsMissing);
+            } else
+            if (403 == e.getStatusCode()) {
+                throw new NotificationProcessingError("User " + getLoggedUsername() + " can't access account " + removedAccountSid + " and remove its projects", NotificationProcessingError.Type.AccountNotAccessible);
             } else {
-                // error retrieving the removed account. Something seems wrong here
-                if ( response.getHttpFailureStatus() != null ) {
-                    if (404 == response.getHttpFailureStatus()) {
-                        throw new NotificationProcessingError("Cannot find removed account '" + removedAccountSid + "'" + ". No projects will be removed", NotificationProcessingError.Type.AccountIsMissing);
-                    } else
-                    if (403 == response.getHttpFailureStatus()) {
-                        throw new NotificationProcessingError("User " + getLoggedUsername() + " can't access account " + removedAccountSid + " and remove its projects", NotificationProcessingError.Type.AccountNotAccessible);
-                    }
+                throw new NotificationProcessingError("User " + getLoggedUsername() + " failed project for account " + removedAccountSid + ". Couldn't fetch application list. " + (e.getStatusCode() != null ? "status: " + e.getStatusCode() : ""  ));
+            }
+        }
+        if (applications != null) {
+            for (RestcommApplicationResponse app: applications) {
+                try {
+                    projectService.deleteProject(app.getSid());
+                } catch (ProjectDoesNotExist e) {
+                    logger.warn("Project " + app.getSid() + " wasn't removed because it wasn't found.");
                 }
-                throw new NotificationProcessingError("User " + getLoggedUsername() + " failed removing account " + removedAccountSid);
             }
         }
     }

@@ -60,14 +60,13 @@ public class MultitenancyAllowAccessApiTest {
     @ArquillianResource
     URL deploymentUrl;
 
+    private final static String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private final static String primaryUsername = "primary@company.com";
     private final static String primaryAccountSid = "AC1ec5d14c34a421c7697e1ce5d4eac782";
     private final static String subaccountaAccountSid = "AC5fa870789e95b7867a0fc0b85c5805e9";
     private final static String subaccountbAccountSid = "AC5fa870789e95b7867a0fc0b85c5805e8";
     private final static String primaryApplicationSid = "APcf92fc10ab384116bfe3df19ef741c7a";
     private final static String accountsPassword = "RestComm";
-    private final static String accountsAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-
 
     private final static int httpOk = 200;
     private final static int httpDeleteOk = 204;
@@ -114,8 +113,8 @@ public class MultitenancyAllowAccessApiTest {
         for (Endpoint endpoint : Endpoint.values()) {
             if (endpoint.get) {
                 String url = baseUrl + endpoint.name + jsonExtension;
-                int statusCode = RestcommMultitenancyTool.getInstance().get(url, primaryUsername, accountsAuthToken);
-                Assert.assertEquals(httpOk, statusCode);
+                int statusCode = RestcommMultitenancyTool.getInstance().get(url, primaryUsername, accountsPassword);
+                assertTrue(statusCode == httpOk);
                 logger.info("Tested endpoint " + endpoint.name + " (getListSameAccount). Status code = " + statusCode);
             }
         }
@@ -127,8 +126,8 @@ public class MultitenancyAllowAccessApiTest {
         for (Endpoint endpoint : Endpoint.values()) {
             if (endpoint.get) {
                 String url = baseUrl + endpoint.name + jsonExtension;
-                int statusCode = RestcommMultitenancyTool.getInstance().get(url, primaryUsername, accountsAuthToken);
-                Assert.assertEquals(httpOk, statusCode);
+                int statusCode = RestcommMultitenancyTool.getInstance().get(url, primaryUsername, accountsPassword);
+                assertTrue(statusCode == httpOk);
                 logger.info("Tested endpoint " + endpoint.name + " (getListSubaccount). Status code = " + statusCode);
             }
         }
@@ -140,9 +139,9 @@ public class MultitenancyAllowAccessApiTest {
         for (Endpoint endpoint : Endpoint.values()) {
             if (endpoint.postList) {
                 String url = baseUrl + endpoint.name + jsonExtension;
-                int statusCode = RestcommMultitenancyTool.getInstance().post(url, primaryUsername, accountsAuthToken,
+                int statusCode = RestcommMultitenancyTool.getInstance().post(url, primaryUsername, accountsPassword,
                         endpoint.postParams);
-                Assert.assertEquals(httpOk,statusCode);
+                Assert.assertEquals(httpOk, statusCode);
                 logger.info("Tested endpoint " + endpoint.name + " (postListSameAccount). Status code = " + statusCode);
             }
         }
@@ -155,9 +154,9 @@ public class MultitenancyAllowAccessApiTest {
         for (Endpoint endpoint : endpoints) {
             if (endpoint.postList) {
                 String url = baseUrl + endpoint.name + jsonExtension;
-                int statusCode = RestcommMultitenancyTool.getInstance().post(url, primaryUsername, accountsAuthToken,
+                int statusCode = RestcommMultitenancyTool.getInstance().post(url, primaryUsername, accountsPassword,
                         endpoint.postParams);
-                Assert.assertEquals(httpOk,statusCode);
+                Assert.assertEquals(httpOk, statusCode);
                 logger.info("Tested endpoint " + endpoint.name + " (postListSubaccount). Status code = " + statusCode);
             }
         }
@@ -169,7 +168,7 @@ public class MultitenancyAllowAccessApiTest {
         for (Endpoint endpoint : Endpoint.values()) {
             if (endpoint.get) {
                 String url = baseUrl + endpoint.name + "/" + endpoint.elementSameAccount + jsonExtension;
-                int statusCode = RestcommMultitenancyTool.getInstance().get(url, primaryUsername, accountsAuthToken);
+                int statusCode = RestcommMultitenancyTool.getInstance().get(url, primaryUsername, accountsPassword);
                 Assert.assertEquals(httpOk, statusCode);
                 logger.info("Tested endpoint " + endpoint.name + " (getElementSameAccount). Status code = " + statusCode);
             }
@@ -182,8 +181,8 @@ public class MultitenancyAllowAccessApiTest {
         for (Endpoint endpoint : Endpoint.values()) {
             if (endpoint.get) {
                 String url = baseUrl + endpoint.name + "/" + endpoint.elementSubaccount + jsonExtension;
-                int statusCode = RestcommMultitenancyTool.getInstance().get(url, primaryUsername, accountsAuthToken);
-                Assert.assertEquals(httpOk, statusCode);
+                int statusCode = RestcommMultitenancyTool.getInstance().get(url, primaryUsername, accountsPassword);
+                assertTrue(statusCode == httpOk);
                 logger.info("Tested endpoint " + endpoint.name + " (getElementSubaccount). Status code = " + statusCode);
             }
         }
@@ -196,9 +195,9 @@ public class MultitenancyAllowAccessApiTest {
         for (Endpoint endpoint : endpoints) {
             if (endpoint.postElement) {
                 String url = baseUrl + endpoint.name + "/" + endpoint.elementSameAccount;
-                int statusCode = RestcommMultitenancyTool.getInstance().post(url, primaryUsername, accountsAuthToken,
+                int statusCode = RestcommMultitenancyTool.getInstance().post(url, primaryUsername, accountsPassword,
                         endpoint.postParams);
-                Assert.assertEquals(httpOk,statusCode);
+                Assert.assertEquals(httpOk, statusCode);
                 logger.info("Tested endpoint " + endpoint.name + " (postElementSameAccount). Status code = " + statusCode);
             }
         }
@@ -211,9 +210,9 @@ public class MultitenancyAllowAccessApiTest {
         for (Endpoint endpoint : endpoints) {
             if (endpoint.postElement) {
                 String url = baseUrl + endpoint.name + "/" + endpoint.elementSubaccount + jsonExtension;
-                int statusCode = RestcommMultitenancyTool.getInstance().post(url, primaryUsername, accountsAuthToken,
+                int statusCode = RestcommMultitenancyTool.getInstance().post(url, primaryUsername, accountsPassword,
                         endpoint.postParams);
-                Assert.assertEquals(httpOk,statusCode);
+                Assert.assertEquals(httpOk, statusCode);
                 logger.info("Tested endpoint " + endpoint.name + " (postElementSubaccount). Status code = " + statusCode);
             }
         }
@@ -225,7 +224,7 @@ public class MultitenancyAllowAccessApiTest {
         for (Endpoint endpoint : Endpoint.values()) {
             if (endpoint.delete) {
                 String url = baseUrl + endpoint.name + "/" + endpoint.elementSameAccount;
-                int statusCode = RestcommMultitenancyTool.getInstance().delete(url, primaryUsername, accountsAuthToken);
+                int statusCode = RestcommMultitenancyTool.getInstance().delete(url, primaryUsername, accountsPassword);
                 assertTrue(statusCode == httpDeleteOk || statusCode == httpOk);
                 logger.info("Tested endpoint " + endpoint.name + " (deleteElementSameAccount). Status code = " + statusCode);
             }
@@ -238,7 +237,7 @@ public class MultitenancyAllowAccessApiTest {
         for (Endpoint endpoint : Endpoint.values()) {
             if (endpoint.delete) {
                 String url = baseUrl + endpoint.name + "/" + endpoint.elementSubaccount;
-                int statusCode = RestcommMultitenancyTool.getInstance().delete(url, primaryUsername, accountsAuthToken);
+                int statusCode = RestcommMultitenancyTool.getInstance().delete(url, primaryUsername, accountsPassword);
                 assertTrue(statusCode == httpDeleteOk || statusCode == httpOk);
                 logger.info("Tested endpoint " + endpoint.name + " (deleteElementSubaccount). Status code = " + statusCode);
             }
@@ -249,19 +248,17 @@ public class MultitenancyAllowAccessApiTest {
     public void accountsApi() throws ClientProtocolException, IOException {
         // Same account
         String baseUrl = deploymentUrl.toString() + apiPath.substring(0, apiPath.length()-1);
-        int statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension, primaryUsername, accountsAuthToken);
-        Assert.assertEquals(httpOk, statusCode);
+        int statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension, primaryUsername, accountsPassword);
+        assertTrue(statusCode == httpOk);
         statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + jsonExtension, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("EmailAddress","test@test.com"); put("Password","RestComm12");}});
         Assert.assertEquals(httpOk, statusCode);
-        // TODO make sure the AuthToken is not included in the reaults
-        // TODO make the same request using Password and assert that the AuthToken is included in the results.
         
         // Sub account
         baseUrl = deploymentUrl.toString() + apiPath.substring(0, apiPath.length()-1);
-        statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension + "/" + subaccountbAccountSid, primaryUsername, accountsAuthToken);
-        Assert.assertEquals(httpOk, statusCode);
+        statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension + "/" + subaccountbAccountSid, primaryUsername, accountsPassword);
+        assertTrue(statusCode == httpOk);
         statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + "/" + subaccountbAccountSid, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("EmailAddress","test2@test.com"); put("Password","RestComm12");}});
-        Assert.assertEquals(httpOk, statusCode);
+        assertTrue(statusCode == httpOk);
         Map<String,String> updateParams = new HashMap<String,String>();
         updateParams.put("Status", "closed");
         statusCode = RestcommMultitenancyTool.getInstance().update(baseUrl + jsonExtension + "/" + subaccountbAccountSid, primaryUsername, accountsPassword,updateParams);
@@ -270,19 +267,30 @@ public class MultitenancyAllowAccessApiTest {
 
     @Test
     public void applicationsApi() throws ClientProtocolException, IOException {
+        // access to account's own applications
         String baseUrl = deploymentUrl.toString() + apiPath + primaryAccountSid + "/Applications";
-        int statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension, primaryUsername, accountsAuthToken);
-        Assert.assertEquals(httpOk,statusCode);
-        statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + "/" + primaryApplicationSid + jsonExtension, primaryUsername, accountsAuthToken);
-        Assert.assertEquals(httpOk,statusCode);
-        statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + jsonExtension, primaryUsername, accountsAuthToken, new HashMap<String,String>(){{ put("FriendlyName","TEST"); }});
-        Assert.assertEquals(httpOk,statusCode);
-        statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + "/" + primaryApplicationSid + jsonExtension, primaryUsername, accountsAuthToken, new HashMap<String,String>(){{ put("FriendlyName","TEST123"); }});
-        Assert.assertEquals(httpOk,statusCode);
-        Map<String,String> updateParams = new HashMap<String,String>();
-        updateParams.put("Status", "closed");
-        statusCode = RestcommMultitenancyTool.getInstance().update(baseUrl + "/" + primaryApplicationSid + jsonExtension, primaryUsername, accountsAuthToken,updateParams);
-        Assert.assertEquals(httpOk,statusCode);
+        int statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension, primaryUsername, accountsPassword);
+        assertTrue(statusCode == httpOk);
+        statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + "/" + primaryApplicationSid + jsonExtension, primaryUsername, accountsPassword);
+        assertTrue(statusCode == httpOk);
+        statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + jsonExtension, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("FriendlyName","TEST"); }});
+        assertTrue(statusCode == httpOk);
+        statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + "/" + primaryApplicationSid + jsonExtension, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("FriendlyName","TEST123"); }});
+        assertTrue(statusCode == httpOk);
+        // access to sub-account applications
+        // list
+        statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension, adminAccountSid, accountsPassword);
+        Assert.assertEquals(httpOk, statusCode);
+        // get single
+        statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + "/" + primaryApplicationSid + jsonExtension, adminAccountSid, accountsPassword);
+        assertTrue(statusCode == httpOk);
+        // create
+        statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + jsonExtension, adminAccountSid, accountsPassword, new HashMap<String,String>(){{ put("FriendlyName","TEST"); }});
+        assertTrue(statusCode == httpOk);
+        // update
+        statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + "/" + primaryApplicationSid + jsonExtension, adminAccountSid, accountsPassword, new HashMap<String,String>(){{ put("FriendlyName","TEST123"); }});
+        assertTrue(statusCode == httpOk);
+
     }
 
     private Endpoint[] modifyPostParameters(String suffix) {

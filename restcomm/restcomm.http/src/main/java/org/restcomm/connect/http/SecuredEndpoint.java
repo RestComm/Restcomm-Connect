@@ -360,7 +360,12 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         return AuthOutcome.FAILED;
     }
 
-    /** Applies the following access control rules
+    /**
+     * Uses the security policy applied by secureLevelControl(). See there for details.
+     *
+     * DEPRECATED security policy:
+     *
+     * Applies the following access control rules
      *
      * If an application Account Sid is given:
      *  - If operatingAccount is the same as the operated account and application resource belongs to operated account too
@@ -375,6 +380,9 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @return
      */
     private AuthOutcome secureLevelControlApplications(Account operatedAccount, String applicationAccountSid) {
+        /*
+        // disabled strict policy that prevented access to sub-account applications
+
         // operatingAccount and operatedAccount are not null at this point
         Account operatingAccount = userIdentityContext.getEffectiveAccount();
         String operatingAccountSid = operatingAccount.getSid().toString();
@@ -385,6 +393,10 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
             return AuthOutcome.FAILED;
         }
         return AuthOutcome.OK;
+        */
+
+        // use the more liberal default policy that applies to other entities for applications too
+        return secureLevelControl(operatedAccount, applicationAccountSid);
     }
 
     /** Applies the following access control rules:
