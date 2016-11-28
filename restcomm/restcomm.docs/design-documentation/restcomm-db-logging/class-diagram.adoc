@@ -1,0 +1,40 @@
+[plantuml, class-diagram, png] 
+....
+interface DataRecorderFactory{
+    /**
+     * @return DataRecorder Actors for Call,\n * Conference, SMS and USSD events
+     */
+    ActorRef getCallDataRecorder();
+
+    ActorRef getConferenceDataRecorder();
+
+    ActorRef getSMSDataRecorder();
+
+    ActorRef getUSSDDataRecorder();
+}
+class DataRecorderFactoryImpl{
+}
+interface CallDataRecorder{
+}
+interface ConferenceDataRecorder{
+}
+interface SMSDataRecorder{
+}
+interface USSDDataRecorder{
+}
+class Call{
+}
+
+BootStrapper --> DataRecorderFactory: creates a DataRecorderFactory
+DataRecorderFactory <|-- DataRecorderFactoryImpl
+
+DataRecorderFactoryImpl --> CallDataRecorder: instantiates
+DataRecorderFactoryImpl --> ConferenceDataRecorder: instantiates
+DataRecorderFactoryImpl --> SMSDataRecorder: instantiates
+DataRecorderFactoryImpl --> USSDDataRecorder: instantiates
+
+CallDataRecorder "1" --*  "1" Call
+ConferenceDataRecorder "1" --*  "1" Conference
+SMSDataRecorder "1" --*  "1" SMS
+USSDDataRecorder "1" --*  "1" USSDCall
+....
