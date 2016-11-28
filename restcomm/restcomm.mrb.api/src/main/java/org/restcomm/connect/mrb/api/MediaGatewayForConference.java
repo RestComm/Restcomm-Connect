@@ -34,12 +34,14 @@ public final class MediaGatewayForConference {
     private final Sid conferenceSid;
     private final ActorRef mediaGateway;
     private final String masterConfernceEndpointIdName;
+    private final boolean isThisMaster;
 
-    public MediaGatewayForConference(final Sid conferenceSid, final ActorRef mediaGateway, final String masterConfernceEndpointIdName) {
+    public MediaGatewayForConference(final Sid conferenceSid, final ActorRef mediaGateway, final String masterConfernceEndpointIdName, final boolean isThisMaster) {
         super();
         this.conferenceSid = conferenceSid;
         this.mediaGateway = mediaGateway;
         this.masterConfernceEndpointIdName = masterConfernceEndpointIdName;
+        this.isThisMaster = isThisMaster;
     }
 
     public Sid conferenceSid() {
@@ -52,5 +54,16 @@ public final class MediaGatewayForConference {
 
     public String masterConfernceEndpointIdName() {
         return masterConfernceEndpointIdName;
+    }
+
+    public boolean isThisMaster() {
+        return isThisMaster;
+    }
+
+    @Override
+    public String toString() {
+        return "MediaGatewayForConference [conferenceSid=" + conferenceSid + ", mediaGateway=" + mediaGateway
+                + ", masterConfernceEndpointIdName=" + masterConfernceEndpointIdName + ", isThisMaster=" + isThisMaster
+                + "]";
     }
 }

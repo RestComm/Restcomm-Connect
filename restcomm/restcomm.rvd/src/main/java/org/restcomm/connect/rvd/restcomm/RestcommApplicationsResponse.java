@@ -17,26 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.mscontrol.api.messages;
 
-import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+package org.restcomm.connect.rvd.restcomm;
+
+import java.util.ArrayList;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-@Immutable
-public final class StopMediaGroup {
-    private boolean liveCallModification;
-
-    public StopMediaGroup() {
-        super();
-    }
-
-    public StopMediaGroup(final boolean liveCallModification) {
-        this.liveCallModification = liveCallModification;
-    }
-
-    public boolean isLiveCallModification() {
-        return liveCallModification;
-    }
+public class RestcommApplicationsResponse extends ArrayList<RestcommApplicationResponse> {
 }
