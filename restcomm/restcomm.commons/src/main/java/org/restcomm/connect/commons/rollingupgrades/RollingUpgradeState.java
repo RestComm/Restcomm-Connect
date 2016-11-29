@@ -18,28 +18,9 @@
  *
  */
 
-package org.restcomm.connect.commons.configuration.sets;
+package org.restcomm.connect.commons.rollingupgrades;
 
-import org.restcomm.connect.commons.common.http.SslMode;
-import org.restcomm.connect.commons.rollingupgrades.RollingUpgradeState;
-
-/**
- * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
- */
-public interface MainConfigurationSet {
-    SslMode getSslMode();
-
-    int getResponseTimeout();
-
-    boolean isUseHostnameToResolveRelativeUrls();
-
-    String getHostname();
-
-    boolean getBypassLbForClients();
-
-    void setInstanceId(String instanceId);
-
-    String getInstanceId();
-
-    RollingUpgradeState getCurrentUpgradeState();
+public enum RollingUpgradeState {
+    UpgradeState_000,
+    UpgradeState_001
 }

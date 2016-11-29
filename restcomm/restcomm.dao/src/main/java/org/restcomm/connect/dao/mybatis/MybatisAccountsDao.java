@@ -25,6 +25,8 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.rollingupgrades.RollingUpgradeState;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.entities.Account;
@@ -57,10 +59,13 @@ public final class MybatisAccountsDao implements AccountsDao {
     private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.AccountsDao.";
     private Integer accountRecursionDepth = 3; // maximum value for recursive account queries
     private final SqlSessionFactory sessions;
+    RollingUpgradeState upgradeState;
 
     public MybatisAccountsDao(final SqlSessionFactory sessions) {
         super();
         this.sessions = sessions;
+        // TODO initialize through constructor parameter instead
+        this.upgradeState = RestcommConfiguration.getInstance().getMain().getCurrentUpgradeState();
     }
 
     public void setAccountRecursionDepth(Integer accountRecursionDepth) {
@@ -251,12 +256,20 @@ public final class MybatisAccountsDao implements AccountsDao {
         final String authToken = readString(map.get("auth_token"));
         String password;
         PasswordAlgorithm passwordAlgorithm;
-        if (map.containsKey("password")) {
-            password = readString(map.get("password"));
-            passwordAlgorithm = DaoUtils.readAccountPasswordAlgorithm(map.get("password_algorithm"));
-        } else {
-            password = authToken;
-            passwordAlgorithm = PasswordAlgorithm.md5;
+        switch (upgradeState) {
+            case UpgradeState_000:
+                if (map.containsKey("password")) {
+                    password = readString(map.get("password"));
+                    passwordAlgorithm = DaoUtils.readAccountPasswordAlgorithm(map.get("password_algorithm"));
+                } else {
+                    password = authToken;
+                    passwordAlgorithm = PasswordAlgorithm.md5;
+                }
+            break;
+            default:
+                password = readString(map.get("password"));
+                passwordAlgorithm = DaoUtils.readAccountPasswordAlgorithm(map.get("password_algorithm"));
+            break;
         }
         final String role = readString(map.get("role"));
         final URI uri = readUri(map.get("uri"));
@@ -276,17 +289,23 @@ public final class MybatisAccountsDao implements AccountsDao {
         map.put("password", account.getPassword());
         map.put("password_algorithm", DaoUtils.writeAccountPasswordAlgorithm(account.getPasswordAlgorithm()));
         map.put("status", writeAccountStatus(account.getStatus()));
-
-        // DBUPGRADE_PATCH: We explicitly set auth_token to md5(password) to simulate older AuthToken semantics (when it wasn't random. That's for ugrading only
-        //map.put("auth_token", account.getAuthToken());
-        String md5password;
-        if (PasswordAlgorithm.plain == account.getPasswordAlgorithm())
-            md5password = DigestUtils.md5Hex(account.getPassword());
-        else if (PasswordAlgorithm.md5 == account.getPasswordAlgorithm())
-            md5password = account.getPassword();
-        else
-            throw new IllegalStateException("Account password algorithm was expected to be either md5 or plain but was found " +  account.getPasswordAlgorithm());
-        map.put("auth_token", md5password);
+        switch (upgradeState) {
+            case UpgradeState_000:
+                // DBUPGRADE_PATCH: We explicitly set auth_token to md5(password) to simulate older AuthToken semantics (when it wasn't random. That's for ugrading only
+                //map.put("auth_token", account.getAuthToken());
+                String md5password;
+                if (PasswordAlgorithm.plain == account.getPasswordAlgorithm())
+                    md5password = DigestUtils.md5Hex(account.getPassword());
+                else if (PasswordAlgorithm.md5 == account.getPasswordAlgorithm())
+                    md5password = account.getPassword();
+                else
+                    throw new IllegalStateException("Account password algorithm was expected to be either md5 or plain but was found " +  account.getPasswordAlgorithm());
+                map.put("auth_token", md5password);
+            break;
+            default:
+                map.put("auth_token", account.getAuthToken());
+            break;
+        }
 
         map.put("role", account.getRole());
         map.put("uri", writeUri(account.getUri()));
