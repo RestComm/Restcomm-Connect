@@ -31,10 +31,10 @@ export SIPP_EXECUTABLE=$CURRENT_FOLDER/sipp
 export JVMTOP_EXECUTABLE=$CURRENT_FOLDER/jvmtop.sh
 export SIPP_REPORT_EXECUTABLE="java -jar $CURRENT_FOLDER/sipp-report-0.2-SNAPSHOT-with-dependencies.jar -a"
 
-export RESULTS_FOLDER=$CURRENT_FOLDER/results
-if [ ! -d "$RESULTS_FOLDER" ]; then
-  mkdir $RESULTS_FOLDER
-fi
+# export RESULTS_FOLDER=$CURRENT_FOLDER/results
+# if [ ! -d "$RESULTS_FOLDER" ]; then
+#   mkdir $RESULTS_FOLDER
+# fi
 
 echo "Current folder $CURRENT_FOLDER"
 echo "SIPP Executable $SIPP_EXECUTABLE"
@@ -70,16 +70,17 @@ getPID(){
 }
 
 collectMonitoringServiceMetrics() {
-  curl http://ACae6e420f425248d6a26948c17a9e2acf:$RESTCOMM_NEW_PASSWORD@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Supervisor.json/metrics -o $RESULTS_FOLDER/MonitoringService_$TEST_NAME_$(date +%F_%H_%M)
+  echo "Will collect monitoring service metrics using: curl http://ACae6e420f425248d6a26948c17a9e2acf:$RESTCOMM_NEW_PASSWORD@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Supervisor.json/metrics -o $RESULTS_DIR/MonitoringService_$TEST_NAME_$(date +%F_%H_%M)"
+  curl http://ACae6e420f425248d6a26948c17a9e2acf:$RESTCOMM_NEW_PASSWORD@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Supervisor.json/metrics -o $RESULTS_DIR/MonitoringService_$TEST_NAME_$(date +%F_%H_%M)
 }
 
 stopRestcomm(){
 if [ "$COLLECT_JMAP" == "true"  ] || [ "$COLLECT_JMAP" == "TRUE"  ]; then
     $CURRENT_FOLDER/collect_jmap.sh
     sleep 1
+fi
     $CURRENT_FOLDER/perfRecorder.sh
     sleep 1
-fi
     $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
 }
 
