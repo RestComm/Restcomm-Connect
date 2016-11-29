@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -104,8 +105,6 @@ public class MgcpMediaGroup extends MediaGroup {
     private ActorRef ivr;
     private boolean ivrInUse;
     private MgcpEvent lastEvent;
-    private static final int PLAY_RECORD = 202;
-    private static final int PLAY_COLLECT = 201;
 
     // Runtime stuff.
     private final List<ActorRef> observers;
@@ -189,7 +188,7 @@ public class MgcpMediaGroup extends MediaGroup {
         builder.setInterDigitTimer(request.timeout());
         builder.setEndInputKey(request.endInputKey());
         builder.setMaxNumberOfDigits(request.numberOfDigits());
-        this.lastEvent = MgcpEvent.factory("pc", PLAY_COLLECT);
+        this.lastEvent = AUMgcpEvent.aupc;
         stop(lastEvent);
         this.originator = sender();
         ivr.tell(builder.build(), self);
@@ -202,7 +201,7 @@ public class MgcpMediaGroup extends MediaGroup {
         final List<URI> uris = request.uris();
         final int iterations = request.iterations();
         final org.restcomm.connect.mgcp.Play play = new org.restcomm.connect.mgcp.Play(uris, iterations);
-        this.lastEvent = MgcpEvent.pa;
+        this.lastEvent = AUMgcpEvent.aupa;
         stop(lastEvent);
         this.originator = sender();
         ivr.tell(play, self);
@@ -357,7 +356,7 @@ public class MgcpMediaGroup extends MediaGroup {
         builder.setRecordingLength(request.length());
         builder.setEndInputKey(request.endInputKey());
         builder.setRecordingId(request.destination());
-        this.lastEvent = MgcpEvent.factory("pr",PLAY_RECORD);
+        this.lastEvent = AUMgcpEvent.aupr;
         stop(lastEvent);
         this.originator = sender();
         ivr.tell(builder.build(), self);
