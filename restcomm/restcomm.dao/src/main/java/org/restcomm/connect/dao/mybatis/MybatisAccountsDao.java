@@ -32,6 +32,10 @@ import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Account.PasswordAlgorithm;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.mybatis.rolling_upgrades.AccountTransformations;
+import org.restcomm.connect.dao.mybatis.rolling_upgrades.AccountTransformations_000;
+import org.restcomm.connect.dao.mybatis.rolling_upgrades.AccountTransformations_001;
+import org.restcomm.connect.dao.mybatis.rolling_upgrades.AccountTransformations_002;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -59,13 +63,28 @@ public final class MybatisAccountsDao implements AccountsDao {
     private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.AccountsDao.";
     private Integer accountRecursionDepth = 3; // maximum value for recursive account queries
     private final SqlSessionFactory sessions;
-    RollingUpgradeState upgradeState;
+    private final RollingUpgradeState upgradeState;
+    private final AccountTransformations accountTransformations;
+    
 
     public MybatisAccountsDao(final SqlSessionFactory sessions) {
         super();
         this.sessions = sessions;
         // TODO initialize through constructor parameter instead
         this.upgradeState = RestcommConfiguration.getInstance().getMain().getCurrentUpgradeState();
+        switch (upgradeState) {
+            case UpgradeState_000:
+                accountTransformations = new AccountTransformations_000();
+                break;
+            case UpgradeState_001:
+                accountTransformations = new AccountTransformations_001();
+                break;
+            case UpgradeState_002:
+                accountTransformations = new AccountTransformations_002();
+                break;
+            default:
+                accountTransformations = new AccountTransformations_002();
+        }
     }
 
     public void setAccountRecursionDepth(Integer accountRecursionDepth) {
@@ -76,7 +95,7 @@ public final class MybatisAccountsDao implements AccountsDao {
     public void addAccount(final Account account) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addAccount", toMap(account));
+            session.insert(namespace + "addAccount", accountTransformations.toMap(account));
             session.commit();
         } finally {
             session.close();
@@ -120,7 +139,7 @@ public final class MybatisAccountsDao implements AccountsDao {
         try {
             final Map<String, Object> result = session.selectOne(selector, parameters);
             if (result != null) {
-                return toAccount(result);
+                return accountTransformations.toAccount(result);
             } else {
                 return null;
             }
@@ -137,7 +156,7 @@ public final class MybatisAccountsDao implements AccountsDao {
             final List<Account> accounts = new ArrayList<Account>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
-                    accounts.add(toAccount(result));
+                    accounts.add(accountTransformations.toAccount(result));
                 }
             }
             return accounts;
@@ -237,7 +256,7 @@ public final class MybatisAccountsDao implements AccountsDao {
     private void updateAccount(final String selector, final Account account) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(selector, toMap(account));
+            session.update(selector, accountTransformations.toMap(account));
             session.commit();
         } finally {
             session.close();

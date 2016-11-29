@@ -22,5 +22,6 @@ package org.restcomm.connect.commons.rollingupgrades;
 
 public enum RollingUpgradeState {
     UpgradeState_000,
-    UpgradeState_001
+    UpgradeState_001,
+    UpgradeState_002
 }
