@@ -85,22 +85,32 @@ echo "...Remove existing workspace \"$REMOVE_EXISTING_WORKSPACE\""
 export GITHUB_RESTCOMM_MASTER=$WORKSPACE/github-master
 export GITHUB_RESTCOMM_HOME=$WORKSPACE/github-restcomm
 export RELEASE=$WORKSPACE/release
+export RESULTS_DIR=$GITHUB_RESTCOMM_HOME/load_tests/results
 
 if [ $REMOVE_EXISTING_WORKSPACE == "true" ] || [ $REMOVE_EXISTING_WORKSPACE == "TRUE" ]; then
     rm -rf $WORKSPACE
+    mkdir -p $WORKSPACE
+
+    if [ ! -d "$GITHUB_RESTCOMM_MASTER" ]; then
+      mkdir -p $GITHUB_RESTCOMM_MASTER
+    fi
+
+    if [ ! -d "$GITHUB_RESTCOMM_HOME" ]; then
+      mkdir -p $GITHUB_RESTCOMM_HOME
+    fi
 
     echo "Will clone Restcomm to $GITHUB_RESTCOMM_MASTER"
-    echo "Will clone Restcomm to $GITHUB_RESTCOMM_HOME"
-
     git clone -b master https://github.com/RestComm/RestComm-Core.git $GITHUB_RESTCOMM_MASTER
+    echo "Will clone Restcomm to $GITHUB_RESTCOMM_HOME"
     git clone -b $RESTCOMM_BRANCH https://github.com/RestComm/RestComm-Core.git $GITHUB_RESTCOMM_HOME
+
+    cp -ar ./* $GITHUB_RESTCOMM_HOME/load_tests
     # cp -ar $GITHUB_RESTCOMM_MASTER/load_tests $GITHUB_RESTCOMM_HOME/load_tests
 
-    cp -ar $GITHUB_RESTCOMM_MASTER/load_tests $GITHUB_RESTCOMM_HOME/load_tests
-
-    cd $GITHUB_RESTCOMM_HOME/load-tests/
-    ./build-restcomm-local.sh $RESTCOMM_BRANCH $WORKSPACE $MAJOR_VERSION_NUMBER
-    unzip $WORKSPACE/Restcomm-JBoss-AS7.zip -d $RELEASE
+    cd $GITHUB_RESTCOMM_HOME/load_tests/
+    echo "About to start building Restcomm locally"
+    ./build-restcomm-local.sh $RESTCOMM_BRANCH $GITHUB_RESTCOMM_HOME $MAJOR_VERSION_NUMBER
+    unzip $GITHUB_RESTCOMM_HOME/Restcomm-JBoss-AS7.zip -d $RELEASE
     mv $RELEASE/Restcomm-JBoss-AS7-*/ $RELEASE/TelScale-Restcomm-JBoss-AS7/
 else
     echo "Remove existing workspace \"$REMOVE_EXISTING_WORKSPACE\". Will remove extracted folder and unzip a fresh folder"
@@ -110,7 +120,7 @@ else
 fi
 export RESTCOMM_HOME=$RELEASE/TelScale-Restcomm-JBoss-AS7
 #gvagenas@telestax.com VOICERSS key
-export RESTCOMM_NEW_PASSWORD='NewPassword1234!@#$'
+export RESTCOMM_NEW_PASSWORD='NewPassword1234'
 
 #prepare PerfCorder tool
 export TOOLS_DIR=$WORKSPACE/report-tools
@@ -123,6 +133,11 @@ wget -q -c --auth-no-challenge https://mobicents.ci.cloudbees.com/job/PerfCorder
 unzip -q sipp-report-0.2.$PERFRECORDER_VERSION-with-dependencies.jar
 chmod 777 $TOOLS_DIR/*.sh
 
+if [ ! -d "$RESULTS_DIR" ]; then
+  mkdir -p $RESULTS_DIR
+fi
+
+
 echo "*******************************************************************"
 echo "About to start Restcomm performance test"
 echo "Application: $TEST_NAME"
@@ -132,6 +147,17 @@ echo "Simultaneous Calls: $SIMULTANEOUS_CALLS"
 echo "Maximum Calls: $MAXIMUM_CALLS"
 echo "Call Rate: $CALL_RATE"
 echo "Collect JMAP: $COLLECT_JMAP"
+echo "Results Dir: $RESULTS_DIR"
 echo "*******************************************************************"
+
 cd $GITHUB_RESTCOMM_HOME/load_tests/
+echo "Current dir: $(pwd)"
 ./run.sh $RESTCOMM_ADDRESS $LOCAL_ADDRESS $SIMULTANEOUS_CALLS $MAXIMUM_CALLS $CALL_RATE $TEST_NAME
+echo "Creating PerfCorder HTML ... "
+cat $RESULTS_DIR/PerfCorderAnalysis.xml | $TOOLS_DIR/pc_html_gen.sh > $RESULTS_DIR/PerfCorderAnalysis.html 2> $RESULTS_DIR/htmlgen.log
+#prepare logs to be archived
+if [ "$COLLECT_LOGS" == "true"  ]; then
+	echo "Collecting logs ..."
+	chmod 777 $RESTCOMM_HOME/bin/restcomm/logs_collect.sh
+	$RESTCOMM_HOME/bin/restcomm/logs_collect.sh -z
+fi
