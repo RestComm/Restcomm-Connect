@@ -65,6 +65,7 @@ import akka.actor.ActorRef;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
+import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -100,6 +101,9 @@ public class MgcpMediaGroup extends MediaGroup {
     private ActorRef link;
     private ActorRef ivr;
     private boolean ivrInUse;
+    private MgcpEvent lastEvent;
+    private static final int PLAY_RECORD = 202;
+    private static final int PLAY_COLLECT = 201;
 
     // Runtime stuff.
     private final List<ActorRef> observers;
@@ -175,7 +179,8 @@ public class MgcpMediaGroup extends MediaGroup {
         builder.setInterDigitTimer(request.timeout());
         builder.setEndInputKey(request.endInputKey());
         builder.setMaxNumberOfDigits(request.numberOfDigits());
-        stop();
+        this.lastEvent = MgcpEvent.factory("pc", PLAY_COLLECT);
+        stop(lastEvent);
         this.originator = sender();
         ivr.tell(builder.build(), self);
         ivrInUse = true;
@@ -187,7 +192,8 @@ public class MgcpMediaGroup extends MediaGroup {
         final List<URI> uris = request.uris();
         final int iterations = request.iterations();
         final org.restcomm.connect.mgcp.Play play = new org.restcomm.connect.mgcp.Play(uris, iterations);
-        stop();
+        this.lastEvent = MgcpEvent.pa;
+        stop(lastEvent);
         this.originator = sender();
         ivr.tell(play, self);
         ivrInUse = true;
@@ -299,7 +305,7 @@ public class MgcpMediaGroup extends MediaGroup {
             } else if (Record.class.equals(klass)) {
                 record(message);
             } else if (Stop.class.equals(klass)) {
-                stop();
+                stop(lastEvent);
                 // Send message to originator telling media group has been stopped
                 // Needed for call bridging scenario, where inbound call must stop
                 // ringing before attempting to perform join operation.
@@ -309,7 +315,7 @@ public class MgcpMediaGroup extends MediaGroup {
             }
         } else if (ivrInUse) {
             if (Stop.class.equals(klass)) {
-                stop();
+                stop(lastEvent);
             }
         }
     }
@@ -340,16 +346,17 @@ public class MgcpMediaGroup extends MediaGroup {
         builder.setRecordingLength(request.length());
         builder.setEndInputKey(request.endInputKey());
         builder.setRecordingId(request.destination());
-        stop();
+        this.lastEvent = MgcpEvent.factory("pr",PLAY_RECORD);
+        stop(lastEvent);
         this.originator = sender();
         ivr.tell(builder.build(), self);
         ivrInUse = true;
     }
 
-    private void stop() {
+    private void stop(MgcpEvent signal) {
         if (ivrInUse) {
             final ActorRef self = self();
-            ivr.tell(new StopEndpoint(), self);
+            ivr.tell(new StopEndpoint(signal), self);
             ivrInUse = false;
             originator = null;
         }
