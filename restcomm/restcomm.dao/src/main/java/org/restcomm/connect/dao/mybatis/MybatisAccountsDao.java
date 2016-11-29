@@ -19,6 +19,7 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
@@ -275,7 +276,18 @@ public final class MybatisAccountsDao implements AccountsDao {
         map.put("password", account.getPassword());
         map.put("password_algorithm", DaoUtils.writeAccountPasswordAlgorithm(account.getPasswordAlgorithm()));
         map.put("status", writeAccountStatus(account.getStatus()));
-        map.put("auth_token", account.getAuthToken());
+
+        // DBUPGRADE_PATCH: We explicitly set auth_token to md5(password) to simulate older AuthToken semantics (when it wasn't random. That's for ugrading only
+        //map.put("auth_token", account.getAuthToken());
+        String md5password;
+        if (PasswordAlgorithm.plain == account.getPasswordAlgorithm())
+            md5password = DigestUtils.md5Hex(account.getPassword());
+        else if (PasswordAlgorithm.md5 == account.getPasswordAlgorithm())
+            md5password = account.getPassword();
+        else
+            throw new IllegalStateException("Account password algorithm was expected to be either md5 or plain but was found " +  account.getPasswordAlgorithm());
+        map.put("auth_token", md5password);
+
         map.put("role", account.getRole());
         map.put("uri", writeUri(account.getUri()));
         return map;
