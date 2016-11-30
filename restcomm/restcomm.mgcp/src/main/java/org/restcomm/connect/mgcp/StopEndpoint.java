@@ -19,6 +19,8 @@
  */
 package org.restcomm.connect.mgcp;
 
+import jain.protocol.ip.mgcp.pkg.MgcpEvent;
+
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 /**
@@ -26,7 +28,15 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class StopEndpoint {
-    public StopEndpoint() {
+
+    private MgcpEvent event;
+
+    public StopEndpoint(MgcpEvent event) {
         super();
+        this.event = event;
+    }
+
+    public MgcpEvent getEvent() {
+        return this.event;
     }
 }
