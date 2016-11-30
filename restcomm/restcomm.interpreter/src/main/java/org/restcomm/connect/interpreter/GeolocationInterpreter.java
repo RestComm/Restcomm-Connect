@@ -528,7 +528,7 @@ public final class GeolocationInterpreter extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             initialSessionRequest = (GeolocationSessionRequest) message;
-            initialSessionSid = Sid.generate(Sid.Type.SMS_MESSAGE);
+            initialSessionSid = Sid.generate(Sid.Type.GEOLOCATION);
             final Geolocation.Builder builder = Geolocation.builder();
             builder.setSid(initialSessionSid);
             builder.setAccountSid(accountId);
