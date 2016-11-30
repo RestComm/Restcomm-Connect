@@ -225,14 +225,14 @@ public class RestcommClient {
     }
 
     /**
-     * @param fallbackRestcommBaseUri
+     * @param restcommBaseUri
      * @throws RestcommClientInitializationException
      */
-    public RestcommClient (URI fallbackRestcommBaseUri, String authHeader, CustomHttpClientBuilder httpClientbuilder) throws RestcommClientInitializationException {
+    public RestcommClient (URI restcommBaseUri, String authHeader, CustomHttpClientBuilder httpClientbuilder) throws RestcommClientInitializationException {
         if (RvdUtils.isEmpty(authHeader))
             throw new RestcommClientInitializationException("Restcomm client could not determine the user for accessing Restcomm");
         this.authHeader = authHeader;
-        this.restcommBaseUrl = fallbackRestcommBaseUri;
+        this.restcommBaseUrl = restcommBaseUri;
         apacheClient = httpClientbuilder.buildHttpClient();
     }
 
