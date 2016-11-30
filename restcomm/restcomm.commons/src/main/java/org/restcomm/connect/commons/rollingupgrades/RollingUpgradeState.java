@@ -21,7 +21,10 @@
 package org.restcomm.connect.commons.rollingupgrades;
 
 public enum RollingUpgradeState {
+    //First step of the upgrade, DB is in the new version and we have both new and old version Restcomm nodes
     UpgradeState_000,
+    //Second step of the upgrade, DB is in the new version and have only new version Restcomm nodes
     UpgradeState_001,
+    //Third step of the upgrade, DB is new version, only new version Restcomm nodes, used for cleanup
     UpgradeState_002
 }

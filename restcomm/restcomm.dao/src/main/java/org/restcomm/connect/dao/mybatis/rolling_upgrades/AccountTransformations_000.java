@@ -23,9 +23,12 @@ import static org.restcomm.connect.dao.DaoUtils.writeSid;
 import static org.restcomm.connect.dao.DaoUtils.writeUri;
 
 /**
- *
+ * Used for the first step of the upgrade
+ * DB: NEW version
+ * Restcomm nodes: both new and old version Restcomm nodes
  * Created by gvagenas on 29/11/2016.
  */
+@Deprecated
 public class AccountTransformations_000 implements AccountTransformations {
 	@Override
 	public Map<String, Object> toMap (Account account) {

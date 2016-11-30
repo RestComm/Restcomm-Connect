@@ -5,6 +5,7 @@ import org.restcomm.connect.dao.entities.Account;
 import java.util.Map;
 
 /**
+ * Used for 3rd step of the upgrade where we can do cleanup
  * Created by gvagenas on 29/11/2016.
  */
 public class AccountTransformations_002 implements AccountTransformations {
