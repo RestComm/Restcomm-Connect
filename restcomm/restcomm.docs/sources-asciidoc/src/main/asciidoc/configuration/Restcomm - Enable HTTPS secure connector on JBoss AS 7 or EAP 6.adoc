@@ -76,7 +76,7 @@ Step 3 - Configure Restcomm Configuration Files
 
 [source,lang:default,decode:true]
 ----
-$RESTCOMM_HOME/bin/restcomm/restcomm.conf
+$RESTCOMM_HOME/bin/restcomm/advanced.conf
 ----
 
 
