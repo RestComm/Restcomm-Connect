@@ -12,6 +12,15 @@ if [ $# -lt 6 ]; then
     exit 1
 fi
 
+# echo "(1: $1) (2: $2) (3: $3) (4: $4) (5: $5) (6: $6)"
+
+export RESTCOMM_ADDRESS=$1
+export LOCAL_ADDRESS=$2
+export SIMULTANEOUS_CALLS=$3
+export MAXIMUM_CALLS=$4
+export CALL_RATE=$5
+export TEST_NAME=$6
+
 if [[ -z $VOICERSS ]] || [ "$VOICERSS" == ''  ]; then
   echo "VoiceRSS TTS Service key is not set! Will exit"
   exit 1
@@ -22,16 +31,17 @@ export SIPP_EXECUTABLE=$CURRENT_FOLDER/sipp
 export JVMTOP_EXECUTABLE=$CURRENT_FOLDER/jvmtop.sh
 export SIPP_REPORT_EXECUTABLE="java -jar $CURRENT_FOLDER/sipp-report-0.2-SNAPSHOT-with-dependencies.jar -a"
 
-export RESULTS_FOLDER=$CURRENT_FOLDER/results
-if [ ! -d "$RESULTS_FOLDER" ]; then
-  mkdir $RESULTS_FOLDER
-fi
+# export RESULTS_FOLDER=$CURRENT_FOLDER/results
+# if [ ! -d "$RESULTS_FOLDER" ]; then
+#   mkdir $RESULTS_FOLDER
+# fi
 
 echo "Current folder $CURRENT_FOLDER"
 echo "SIPP Executable $SIPP_EXECUTABLE"
 echo "JVMTOP Executable $JVMTOP_EXECUTABLE"
 echo "Collect JMAP: $COLLECT_JMAP"
 echo "Use RMS pid: $USE_RMS_PID"
+echo "Application to test: $TEST_NAME"
 
 
 prepareRestcomm() {
@@ -60,16 +70,17 @@ getPID(){
 }
 
 collectMonitoringServiceMetrics() {
-  curl http://ACae6e420f425248d6a26948c17a9e2acf:$RESTCOMM_NEW_PASSWORD@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Supervisor.json/metrics -o $RESULTS_FOLDER/MonitoringService_$TEST_NAME_$(date +%F_%H_%M)
+  echo "Will collect monitoring service metrics using: curl http://ACae6e420f425248d6a26948c17a9e2acf:$RESTCOMM_NEW_PASSWORD@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Supervisor.json/metrics -o $RESULTS_DIR/MonitoringService_$TEST_NAME_$(date +%F_%H_%M)"
+  curl http://ACae6e420f425248d6a26948c17a9e2acf:$RESTCOMM_NEW_PASSWORD@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Supervisor.json/metrics -o $RESULTS_DIR/MonitoringService_$TEST_NAME_$(date +%F_%H_%M)
 }
 
 stopRestcomm(){
 if [ "$COLLECT_JMAP" == "true"  ] || [ "$COLLECT_JMAP" == "TRUE"  ]; then
     $CURRENT_FOLDER/collect_jmap.sh
     sleep 1
+fi
     $CURRENT_FOLDER/perfRecorder.sh
     sleep 1
-fi
     $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
 }
 
