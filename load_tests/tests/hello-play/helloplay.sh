@@ -62,5 +62,5 @@ fi
 
 echo "About to launch rocket... SIMULTANEOUS_CALLS: $SIMULTANEOUS_CALLS, MAXIMUM_CALLS: $MAXIMUM_CALLS, CALL_RATE: $CALL_RATE"
 sleep 3
-$SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/hello-play/helloplay-sipp.xml -s +1234 $RESTCOMM_ADDRESS:5080 -p 5090 -mi $LOCAL_ADDRESS:5090 -l $SIMULTANEOUS_CALLS -m $MAXIMUM_CALLS -r $CALL_RATE -recv_timeout 10000 -t un -nr -fd 1 -trace_rtt -trace_stat -stf $RESULTS_DIR/helloplay-$DATE.csv -trace_screen -screen_file $RESULTS_DIR/helloplay-$DATE-screens.log
+$SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/hello-play/helloplay-sipp.xml -s +1234 $RESTCOMM_ADDRESS:5080 -p 5090 -mi $LOCAL_ADDRESS:5090 -l $SIMULTANEOUS_CALLS -m $MAXIMUM_CALLS -r $CALL_RATE -recv_timeout 10000 -t un -nr -fd 1 -trace_rtt -rtt_freq 200 -trace_stat -stf $RESULTS_DIR/helloplay-$DATE.csv -trace_screen -screen_file $RESULTS_DIR/helloplay-$DATE-screens.log
 echo $?
