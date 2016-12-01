@@ -162,7 +162,8 @@ public final class GeolocationInterpreter extends UntypedActor {
         redirecting = new State("redirecting", new Redirecting(source), null);
         creatingGeolocationSession = new State("creating geolocation session", new CreatingGeolocationSession(source), null);
         sendingGeolocation = new State("sending geolocation request", new SendingGeolocation(source), null);
-        waitingForGeolocationResponses = new State("waiting for geolocation responses", new WaitingForGeolocationResponses(source), null);
+        waitingForGeolocationResponses = new State("waiting for geolocation responses",
+                new WaitingForGeolocationResponses(source), null);
         sendingEmail = new State("sending Email", new SendingEmail(source), null);
         finished = new State("finished", new Finished(source), null);
         // Initialize the transitions for the FSM.
