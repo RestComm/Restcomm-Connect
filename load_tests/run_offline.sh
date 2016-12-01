@@ -63,8 +63,8 @@ fi
 export VOICERSS=$VOICERSS
 echo "...VoiceRSS TTS Engine key \"$VOICERSS\""
 
-read -p 'Collect JMAP [false]: ' COLLECT_JMAP
-COLLECT_JMAP=${COLLECT_JMAP:-false}
+read -p 'Collect JMAP [true]: ' COLLECT_JMAP
+COLLECT_JMAP=${COLLECT_JMAP:-true}
 echo "...Collect JMAP \"$COLLECT_JMAP\""
 export COLLECT_JMAP=$COLLECT_JMAP
 
