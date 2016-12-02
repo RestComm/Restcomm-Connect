@@ -18,25 +18,19 @@
  *
  */
 
-package org.restcomm.connect.commons.configuration.sets;
+package org.restcomm.connect.dao.mybatis.rolling_upgrades;
 
-import org.restcomm.connect.commons.common.http.SslMode;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.restcomm.connect.commons.rollingupgrades.RollingUpgradeTracker;
+import org.restcomm.connect.dao.mybatis.MybatisAccountsDao;
 
 /**
- * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
+ * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public interface MainConfigurationSet {
-    SslMode getSslMode();
-
-    int getResponseTimeout();
-
-    boolean isUseHostnameToResolveRelativeUrls();
-
-    String getHostname();
-
-    boolean getBypassLbForClients();
-
-    void setInstanceId(String instanceId);
-
-    String getInstanceId();
+public class RollingMybatisAccountsDao extends MybatisAccountsDao {
+    public RollingMybatisAccountsDao(SqlSessionFactory sessions, RollingUpgradeTracker stateTracker) {
+        super(sessions);
+        AccountAccessorFactory factory = new AccountAccessorFactory("org.restcomm.connect.dao.mybatis.rolling_upgrades", AccountAccessor.class, stateTracker);
+        this.accountAccessor = factory.create();
+    }
 }

@@ -9,23 +9,6 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.thoughtworks.xstream.XStream;
-import org.apache.commons.configuration.Configuration;
-import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
-import org.restcomm.connect.dao.AccountsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.email.EmailService;
-import org.restcomm.connect.email.api.EmailRequest;
-import org.restcomm.connect.email.api.EmailResponse;
-import org.restcomm.connect.email.api.Mail;
-import org.restcomm.connect.http.converter.EmailMessageConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.identity.AuthType;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -34,14 +17,27 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.MediaType.*;
+import static javax.ws.rs.core.Response.*;
+import static javax.ws.rs.core.Response.Status.*;
+
+import com.thoughtworks.xstream.XStream;
+import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.restcomm.connect.http.converter.EmailMessageConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.dao.AccountsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.email.api.EmailRequest;
+import org.restcomm.connect.email.api.EmailResponse;
+import org.restcomm.connect.email.api.Mail;
+import org.restcomm.connect.email.EmailService;
+import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.identity.AuthType;
 
 
 /**

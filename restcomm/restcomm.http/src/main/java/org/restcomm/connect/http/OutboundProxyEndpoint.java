@@ -20,39 +20,42 @@
 
 package org.restcomm.connect.http;
 
-import akka.actor.ActorRef;
-import akka.util.Timeout;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.thoughtworks.xstream.XStream;
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.identity.AuthType;
-import org.restcomm.connect.telephony.api.GetActiveProxy;
-import org.restcomm.connect.telephony.api.GetProxies;
-import org.restcomm.connect.telephony.api.SwitchProxy;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
+import static akka.pattern.Patterns.ask;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-import static akka.pattern.Patterns.ask;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
+import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.identity.AuthType;
+import org.restcomm.connect.telephony.api.GetActiveProxy;
+import org.restcomm.connect.telephony.api.GetProxies;
+import org.restcomm.connect.telephony.api.SwitchProxy;
+
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
+import akka.actor.ActorRef;
+import akka.util.Timeout;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>

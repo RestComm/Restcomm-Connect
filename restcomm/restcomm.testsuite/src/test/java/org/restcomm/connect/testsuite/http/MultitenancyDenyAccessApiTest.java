@@ -21,6 +21,13 @@
 	
 package org.restcomm.connect.testsuite.http;
 
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
 import junit.framework.Assert;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
@@ -32,15 +39,9 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.restcomm.connect.commons.Version;
 import wiremock.org.apache.http.client.ClientProtocolException;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.assertTrue;
 
 /**
  * The aim of this scenario is to ensure that an account can not manage information from parent accounts or from accounts in the

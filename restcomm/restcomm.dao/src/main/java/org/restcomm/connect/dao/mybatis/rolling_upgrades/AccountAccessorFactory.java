@@ -18,25 +18,22 @@
  *
  */
 
-package org.restcomm.connect.commons.configuration.sets;
+package org.restcomm.connect.dao.mybatis.rolling_upgrades;
 
-import org.restcomm.connect.commons.common.http.SslMode;
+import org.restcomm.connect.commons.rollingupgrades.RollingUpgradeStageFactory;
+import org.restcomm.connect.commons.rollingupgrades.RollingUpgradeTracker;
 
 /**
- * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
+ * This factory handles automatic creation of AccountAccessors depending on the current upgrade
+ * stage.
+ *
+ * AccountAccessor is a rolling feature that translates accounts from/to maps in a different way
+ * depending on the upgrage stage we're in.
+ *
+ * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public interface MainConfigurationSet {
-    SslMode getSslMode();
-
-    int getResponseTimeout();
-
-    boolean isUseHostnameToResolveRelativeUrls();
-
-    String getHostname();
-
-    boolean getBypassLbForClients();
-
-    void setInstanceId(String instanceId);
-
-    String getInstanceId();
+public class AccountAccessorFactory extends RollingUpgradeStageFactory<AccountAccessor> {
+    public AccountAccessorFactory(String rootPackage, Class<AccountAccessor> genericType, RollingUpgradeTracker stateTracker) {
+        super(rootPackage, genericType, stateTracker);
+    }
 }

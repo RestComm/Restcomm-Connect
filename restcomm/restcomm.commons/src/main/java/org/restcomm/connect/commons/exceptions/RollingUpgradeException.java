@@ -18,25 +18,13 @@
  *
  */
 
-package org.restcomm.connect.commons.configuration.sets;
-
-import org.restcomm.connect.commons.common.http.SslMode;
+package org.restcomm.connect.commons.exceptions;
 
 /**
- * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
+ * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public interface MainConfigurationSet {
-    SslMode getSslMode();
-
-    int getResponseTimeout();
-
-    boolean isUseHostnameToResolveRelativeUrls();
-
-    String getHostname();
-
-    boolean getBypassLbForClients();
-
-    void setInstanceId(String instanceId);
-
-    String getInstanceId();
+public class RollingUpgradeException extends RuntimeException {
+    public RollingUpgradeException(String message) {
+        super(message);
+    }
 }

@@ -18,25 +18,13 @@
  *
  */
 
-package org.restcomm.connect.commons.configuration.sets;
-
-import org.restcomm.connect.commons.common.http.SslMode;
+package org.restcomm.connect.commons.rollingupgrades;
 
 /**
- * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
+ * All implementations of the different stages of an upgraded feature should
+ * implement this interface and have the @RollingUpgrade annotation.
+ *
+ * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public interface MainConfigurationSet {
-    SslMode getSslMode();
-
-    int getResponseTimeout();
-
-    boolean isUseHostnameToResolveRelativeUrls();
-
-    String getHostname();
-
-    boolean getBypassLbForClients();
-
-    void setInstanceId(String instanceId);
-
-    String getInstanceId();
+public interface RollingUpgradeStage {
 }

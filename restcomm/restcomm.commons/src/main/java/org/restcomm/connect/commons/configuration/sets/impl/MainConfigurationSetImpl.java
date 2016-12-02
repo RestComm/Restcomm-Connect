@@ -25,7 +25,6 @@ import org.restcomm.connect.commons.configuration.sets.MainConfigurationSet;
 import org.restcomm.connect.commons.configuration.sources.ConfigurationSource;
 import org.restcomm.connect.commons.common.http.SslMode;
 import org.apache.commons.lang.StringUtils;
-import org.restcomm.connect.commons.rollingupgrades.RollingUpgradeState;
 
 /**
  * Provides a typed interface to a set of configuration options retrieved from a
@@ -135,11 +134,6 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
 
     @Override
     public String getInstanceId() { return this.instanceId; }
-
-    @Override
-    public RollingUpgradeState getCurrentUpgradeState() {
-        return RollingUpgradeState.UpgradeState_000;
-    }
 
     public void setSslMode(SslMode sslMode) {
         this.sslMode = sslMode;

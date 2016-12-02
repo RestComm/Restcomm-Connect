@@ -1,23 +1,16 @@
 package org.restcomm.connect.http;
 
-import akka.actor.ActorRef;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.thoughtworks.xstream.XStream;
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.util.StringUtils;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.GatewaysDao;
-import org.restcomm.connect.dao.entities.Gateway;
-import org.restcomm.connect.dao.entities.GatewayList;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.http.converter.GatewayConverter;
-import org.restcomm.connect.http.converter.GatewayListConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.identity.AuthType;
-import org.restcomm.connect.telephony.api.RegisterGateway;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+
+import java.net.URI;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -25,17 +18,27 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import java.net.URI;
-import java.util.List;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
+import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.http.converter.GatewayConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.GatewaysDao;
+import org.restcomm.connect.dao.entities.Gateway;
+import org.restcomm.connect.dao.entities.GatewayList;
+import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.http.converter.GatewayListConverter;
+import org.restcomm.connect.identity.AuthType;
+import org.restcomm.connect.telephony.api.RegisterGateway;
+import org.restcomm.connect.commons.util.StringUtils;
+
+import akka.actor.ActorRef;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
 
 @ThreadSafe
 public class GatewaysEndpoint extends SecuredEndpoint {

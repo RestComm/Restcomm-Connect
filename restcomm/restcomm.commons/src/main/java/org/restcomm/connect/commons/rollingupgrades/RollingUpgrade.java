@@ -18,25 +18,21 @@
  *
  */
 
-package org.restcomm.connect.commons.configuration.sets;
+package org.restcomm.connect.commons.rollingupgrades;
 
-import org.restcomm.connect.commons.common.http.SslMode;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
+ * Use this to annotate implementations that vary between various phases of an upgrade lifecycle.
+ *
+ * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public interface MainConfigurationSet {
-    SslMode getSslMode();
-
-    int getResponseTimeout();
-
-    boolean isUseHostnameToResolveRelativeUrls();
-
-    String getHostname();
-
-    boolean getBypassLbForClients();
-
-    void setInstanceId(String instanceId);
-
-    String getInstanceId();
+@Target(value = ElementType.TYPE)
+@Retention(value = RetentionPolicy.RUNTIME)
+public @interface RollingUpgrade {
+    RollingUpgradeState state();
+    boolean isDefault() default false;
 }
