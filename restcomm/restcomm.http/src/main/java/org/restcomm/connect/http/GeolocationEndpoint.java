@@ -223,12 +223,15 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
         }
 
         /*********************************************/
-        /*** Query GMLC for Location Data, stage 2 ***/
+        /*** Query GMLC for Location Data, stage 1 ***/
         /*********************************************/
         try {
             String target = data.getFirst("DeviceIdentifier");
-            logger.info("DeviceIdentifier: "+target);
-            URL url = new URL("http://192.168.1.45:8180/restcomm/gmlc/rest?msisdn="+target);
+            // logger.info("DeviceIdentifier: "+target);
+            Configuration gmlcConf = configuration.subset("gmlc");
+            String gmlcURI = gmlcConf.getString("gmlc-uri");
+            logger.info("GMLC URI: "+gmlcURI);
+            URL url = new URL("http://"+gmlcURI+"/restcomm/gmlc/rest?msisdn="+target);
             BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
             String strTemp;
             while (null != (strTemp = br.readLine())) {
@@ -239,32 +242,47 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
                         if (item.contains("mcc")) {
                             String token = item.substring(item.lastIndexOf("=") + 1);
                             data.putSingle("MobileCountryCode", token);
-                            logger.info("mcc="+token+", MobileCountryCode="+getInteger("MobileCountryCode", data));
+                            // logger.info("mcc="+token+", MobileCountryCode="+getInteger("MobileCountryCode", data));
                         }
                         if (item.contains("mnc")) {
                             String token = item.substring(item.lastIndexOf("=") + 1);
                             data.putSingle("MobileNetworkCode", token);
-                            logger.info("mnc="+token+", MobileNetworkCode="+data.getFirst("MobileNetworkCode"));
+                            // logger.info("mnc="+token+", MobileNetworkCode="+data.getFirst("MobileNetworkCode"));
                         }
                         if (item.contains("lac")) {
                             String token = item.substring(item.lastIndexOf("=") + 1);
                             data.putSingle("LocationAreaCode", token);
-                            logger.info("lac="+token+", LocationAreaCode="+data.getFirst("LocationAreaCode"));
+                            // logger.info("lac="+token+", LocationAreaCode="+data.getFirst("LocationAreaCode"));
                         }
                         if (item.contains("cellid")) {
                             String token = item.substring(item.lastIndexOf("=") + 1);
                             data.putSingle("CellId", token);
-                            logger.info("cellid="+token+", CellId="+data.getFirst("CellId"));
+                            // logger.info("cellid="+token+", CellId="+data.getFirst("CellId"));
                         }
                         if (item.contains("aol")) {
                             String token = item.substring(item.lastIndexOf("=") + 1);
                             data.putSingle("LocationAge", token);
-                            logger.info("aol="+token+", LocationAge="+getInteger("LocationAge", data));
+                            // logger.info("aol="+token+", LocationAge="+getInteger("LocationAge", data));
                         }
                         if (item.contains("vlrNumber")) {
                             String token = item.substring(item.lastIndexOf("=") + 1);
                             data.putSingle("NetworkEntityAddress", token);
-                            logger.info("vlrNumber="+token+", NetworkEntityAddress="+getLong("NetworkEntityAddress", data));
+                            // logger.info("vlrNumber="+token+", NetworkEntityAddress="+getLong("NetworkEntityAddress", data));
+                        }
+                        if (item.contains("latitude")) {
+                            String token = item.substring(item.lastIndexOf("=") + 1);
+                            data.putSingle("DeviceLatitude", token);
+                            // logger.info("latitude="+token+", DeviceLatitude="+data.getFirst("DeviceLatitude"));
+                        }
+                        if (item.contains("longitude")) {
+                            String token = item.substring(item.lastIndexOf("=") + 1);
+                            data.putSingle("DeviceLongitude", token);
+                            // logger.info("longitude="+token+", DeviceLongitude="+data.getFirst("DeviceLongitude"));
+                        }
+                        if (item.contains("civicAddress")) {
+                            String token = item.substring(item.lastIndexOf("=") + 1);
+                            data.putSingle("FormattedAddress", token);
+                            // logger.info("civicAddress="+token+", FormattedAddress="+data.getFirst("FormattedAddress"));
                         }
                     }
                 }
