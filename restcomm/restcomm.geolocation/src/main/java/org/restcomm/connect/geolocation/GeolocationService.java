@@ -91,6 +91,9 @@ import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
  */
 public final class GeolocationService extends UntypedActor {
 
+    /*****************************************************/
+    /*** Phase II: internetworking with GMLC through SIP */
+    /*****************************************************/
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     private final ActorSystem system;
@@ -215,7 +218,7 @@ public final class GeolocationService extends UntypedActor {
                 trying.send();
 
                 ActorRef session = session();
-                // Create an Geolocation detail record.
+                // Create a Geolocation detail record.
                 final Sid sid = Sid.generate(Sid.Type.GEOLOCATION);
                 final Geolocation.Builder builder = Geolocation.builder();
                 builder.setSid(sid);

@@ -29,6 +29,10 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class GetLastGeolocationRequest {
+
+    /*****************************************************/
+    /*** Phase II: internetworking with GMLC through SIP */
+    /*****************************************************/
     public GetLastGeolocationRequest() {
         super();
     }

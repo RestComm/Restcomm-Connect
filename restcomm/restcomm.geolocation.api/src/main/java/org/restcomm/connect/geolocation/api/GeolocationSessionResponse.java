@@ -27,6 +27,10 @@ package org.restcomm.connect.geolocation.api;
  *
  */
 public final class GeolocationSessionResponse {
+
+    /*****************************************************/
+    /*** Phase II: internetworking with GMLC through SIP */
+    /*****************************************************/
     private final GeolocationSessionInfo info;
     private final boolean success;
 

@@ -34,6 +34,10 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class GeolocationSessionRequest {
+
+    /*****************************************************/
+    /*** Phase II: internetworking with GMLC through SIP */
+    /*****************************************************/
     private final String from;
     private final String to;
     private final String body;

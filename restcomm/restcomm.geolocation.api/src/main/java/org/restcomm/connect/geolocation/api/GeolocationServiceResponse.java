@@ -31,6 +31,10 @@ import org.restcomm.connect.commons.patterns.StandardResponse;
  */
 @Immutable
 public final class GeolocationServiceResponse<T> extends StandardResponse<T> {
+
+    /*****************************************************/
+    /*** Phase II: internetworking with GMLC through SIP */
+    /*****************************************************/
     public GeolocationServiceResponse(final T object) {
         super(object);
     }

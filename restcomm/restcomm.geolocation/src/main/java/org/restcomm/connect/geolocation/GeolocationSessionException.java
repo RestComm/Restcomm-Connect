@@ -27,6 +27,10 @@ package org.restcomm.connect.geolocation;
  *
  */
 public final class GeolocationSessionException extends Exception {
+
+    /*****************************************************/
+    /*** Phase II: internetworking with GMLC through SIP */
+    /*****************************************************/
     private static final long serialVersionUID = 1L;
 
     public GeolocationSessionException(final String message) {

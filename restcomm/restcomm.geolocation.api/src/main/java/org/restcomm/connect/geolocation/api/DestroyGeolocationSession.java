@@ -31,6 +31,10 @@ import akka.actor.ActorRef;
  */
 @Immutable
 public final class DestroyGeolocationSession {
+
+    /*****************************************************/
+    /*** Phase II: internetworking with GMLC through SIP */
+    /*****************************************************/
     private final ActorRef session;
 
     public DestroyGeolocationSession(final ActorRef session) {

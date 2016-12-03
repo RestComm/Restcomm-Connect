@@ -38,6 +38,7 @@ import akka.actor.UntypedActorFactory;
  *
  */
 public final class GeolocationInterpreterBuilder {
+
     private final ActorSystem system;
     private Configuration configuration;
     private ActorRef service;

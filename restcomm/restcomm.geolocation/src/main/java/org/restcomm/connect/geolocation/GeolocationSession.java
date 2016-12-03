@@ -61,6 +61,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
  */
 public final class GeolocationSession extends UntypedActor {
+
+    /*****************************************************/
+    /*** Phase II: internetworking with GMLC through SIP */
+    /*****************************************************/
     // Logger
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // Runtime stuff.
