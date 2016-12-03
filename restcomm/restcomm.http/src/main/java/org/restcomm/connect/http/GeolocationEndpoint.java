@@ -31,7 +31,12 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.URI;
+import java.net.URL;
+import java.util.Arrays;
+// import java.util.HashMap;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -59,7 +64,7 @@ import org.restcomm.connect.commons.util.StringUtils;
 
 import org.apache.commons.configuration.Configuration;
 // import org.apache.http.HttpException;
-//import org.apache.log4j.Logger;
+import org.apache.log4j.Logger;
 // import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 
@@ -80,7 +85,7 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
     protected Gson gson;
     protected XStream xstream;
     protected AccountsDao accountsDao;
-    // private static final Logger logger = Logger.getLogger(GeolocationEndpoint.class);
+    private static final Logger logger = Logger.getLogger(GeolocationEndpoint.class);
     private static final String ImmediateGT = Geolocation.GeolocationType.Immediate.toString();
     private static final String NotificationGT = Geolocation.GeolocationType.Notification.toString();
     private String cause;
@@ -220,6 +225,53 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
         /*********************************************/
         /*** Query GMLC for Location Data, stage 2 ***/
         /*********************************************/
+        try {
+            String target = data.getFirst("DeviceIdentifier");
+            logger.info("DeviceIdentifier: "+target);
+            URL url = new URL("http://192.168.1.45:8180/restcomm/gmlc/rest?msisdn="+target);
+            BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
+            String strTemp;
+            while (null != (strTemp = br.readLine())) {
+                List<String> items = Arrays.asList(strTemp.split("\\s*,\\s*"));
+                logger.info("Data retrieved from GMLC: "+items.toString());
+                for (String item : items) {
+                    for (int i = 0; i < items.size(); i++) {
+                        if (item.contains("mcc")) {
+                            String token = item.substring(item.lastIndexOf("=") + 1);
+                            data.putSingle("MobileCountryCode", token);
+                            logger.info("mcc="+token+", MobileCountryCode="+getInteger("MobileCountryCode", data));
+                        }
+                        if (item.contains("mnc")) {
+                            String token = item.substring(item.lastIndexOf("=") + 1);
+                            data.putSingle("MobileNetworkCode", token);
+                            logger.info("mnc="+token+", MobileNetworkCode="+data.getFirst("MobileNetworkCode"));
+                        }
+                        if (item.contains("lac")) {
+                            String token = item.substring(item.lastIndexOf("=") + 1);
+                            data.putSingle("LocationAreaCode", token);
+                            logger.info("lac="+token+", LocationAreaCode="+data.getFirst("LocationAreaCode"));
+                        }
+                        if (item.contains("cellid")) {
+                            String token = item.substring(item.lastIndexOf("=") + 1);
+                            data.putSingle("CellId", token);
+                            logger.info("cellid="+token+", CellId="+data.getFirst("CellId"));
+                        }
+                        if (item.contains("aol")) {
+                            String token = item.substring(item.lastIndexOf("=") + 1);
+                            data.putSingle("LocationAge", token);
+                            logger.info("aol="+token+", LocationAge="+getInteger("LocationAge", data));
+                        }
+                        if (item.contains("vlrNumber")) {
+                            String token = item.substring(item.lastIndexOf("=") + 1);
+                            data.putSingle("NetworkEntityAddress", token);
+                            logger.info("vlrNumber="+token+", NetworkEntityAddress="+getLong("NetworkEntityAddress", data));
+                        }
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
 
         Geolocation geolocation = createFrom(new Sid(accountSid), data, geolocationType);
 
