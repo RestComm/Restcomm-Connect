@@ -74,7 +74,7 @@ _‘statusCallback’_ always uses HTTP POST to request the given URL.
 
 
 The *<Geolocation>* verb can have the following nouns nested:**
-<Immediate>** and **<Event>**.
+<Immediate>** and **<Notification>**.
 
 
 
