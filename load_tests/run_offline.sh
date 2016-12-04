@@ -124,7 +124,7 @@ export RESTCOMM_NEW_PASSWORD='NewPassword1234'
 
 #prepare PerfCorder tool
 export TOOLS_DIR=$WORKSPACE/report-tools
-export GOALS_FILE=$CURRENT_DIR/../../telscale-commons/jenkins-aws/Jenkins-Jobs/performance/mss-proxy-goals.xsl
+export GOALS_FILE=$CURRENT_DIR/mss-proxy-goals.xsl
 cp $GOALS_FILE $WORKSPACE
 rm -fr $TOOLS_DIR/*
 mkdir -p $TOOLS_DIR
