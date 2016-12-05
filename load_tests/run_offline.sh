@@ -25,9 +25,13 @@ read -p 'Git repository (github/bitbucket) [github]: ' REPOSITORY
 REPOSITORY=${REPOSITORY:-github}
 echo "...Git repository \"$REPOSITORY\""
 
-if [ "REPOSITORY" = "bitbucket" ]; then
+if [ "$REPOSITORY" = "bitbucket" ]; then
   read -p 'Bitbucket username: ' BITBUCKET_USERNAME
   read -p 'Bitbucket password: ' BITBUCKET_PWD
+  read -p 'ci.telestax.com username: ' CI_USERNAME
+  export CI_USERNAME=$CI_USERNAME
+  read -p 'ci.telestax.com password: ' CI_PWD
+  export CI_PWD=$CI_PWD
 fi
 
 read -p 'Workspace folder [/tmp/workspace]: ' WORKSPACE
@@ -92,11 +96,6 @@ REMOVE_EXISTING_WORKSPACE=${REMOVE_EXISTING_WORKSPACE:-true}
 echo "...Remove existing workspace \"$REMOVE_EXISTING_WORKSPACE\""
 
 export GITHUB_RESTCOMM_MASTER=$WORKSPACE/github-master
-echo "Will clone Restcomm to $GITHUB_RESTCOMM_MASTER"
-if [ ! -d "$GITHUB_RESTCOMM_MASTER" ]; then
-  mkdir -p $GITHUB_RESTCOMM_MASTER
-fi
-git clone -b master https://github.com/RestComm/RestComm-Core.git $GITHUB_RESTCOMM_MASTER
 export RELEASE=$WORKSPACE/release
 
 if [ $REMOVE_EXISTING_WORKSPACE == "true" ] || [ $REMOVE_EXISTING_WORKSPACE == "TRUE" ]; then
@@ -107,6 +106,12 @@ if [ $REMOVE_EXISTING_WORKSPACE == "true" ] || [ $REMOVE_EXISTING_WORKSPACE == "
         echo "Will use Github Restcomm repository"
         export GITHUB_RESTCOMM_HOME=$WORKSPACE/github-restcomm
         export RESULTS_DIR=$GITHUB_RESTCOMM_HOME/load_tests/results
+
+        echo "Will clone Restcomm to $GITHUB_RESTCOMM_MASTER"
+        if [ ! -d "$GITHUB_RESTCOMM_MASTER" ]; then
+          mkdir -p $GITHUB_RESTCOMM_MASTER
+        fi
+        git clone -b master https://github.com/RestComm/RestComm-Core.git $GITHUB_RESTCOMM_MASTER
 
         if [ ! -d "$GITHUB_RESTCOMM_HOME" ]; then
           mkdir -p $GITHUB_RESTCOMM_HOME
@@ -129,6 +134,12 @@ if [ $REMOVE_EXISTING_WORKSPACE == "true" ] || [ $REMOVE_EXISTING_WORKSPACE == "
         export BITBUCKET_RESTCOMM_HOME=$WORKSPACE/bitbucket-restcomm
         export RESULTS_DIR=$BITBUCKET_RESTCOMM_HOME/load_tests/results
 
+        echo "Will clone Restcomm to $GITHUB_RESTCOMM_MASTER"
+        if [ ! -d "$GITHUB_RESTCOMM_MASTER" ]; then
+          mkdir -p $GITHUB_RESTCOMM_MASTER
+        fi
+        git clone -b master https://github.com/RestComm/RestComm-Core.git $GITHUB_RESTCOMM_MASTER
+
         if [ ! -d "$BITBUCKET_RESTCOMM_HOME" ]; then
           mkdir -p $BITBUCKET_RESTCOMM_HOME
         fi
@@ -136,11 +147,11 @@ if [ $REMOVE_EXISTING_WORKSPACE == "true" ] || [ $REMOVE_EXISTING_WORKSPACE == "
         echo "Will clone Restcomm to $BITBUCKET_RESTCOMM_HOME"
         git clone -b $RESTCOMM_BRANCH https://$BITBUCKET_USERNAME:$BITBUCKET_PWD@bitbucket.org/telestax/telscale-restcomm.git $BITBUCKET_RESTCOMM_HOME
 
-        cp -ar ./* $BITBUCKET_RESTCOMM_HOME/load_tests
+        cp -ar ./* $BITBUCKET_RESTCOMM_HOME/load_tests/
 
         cd $BITBUCKET_RESTCOMM_HOME/load_tests/
         echo "About to start building Restcomm locally"
-        ./build-restcomm-local.sh $RESTCOMM_BRANCH $BITBUCKET_RESTCOMM_HOME $MAJOR_VERSION_NUMBER
+        ./build-telscale-restcomm-local.sh $RESTCOMM_BRANCH $BITBUCKET_RESTCOMM_HOME $MAJOR_VERSION_NUMBER
         unzip $BITBUCKET_RESTCOMM_HOME/Restcomm-JBoss-AS7.zip -d $RELEASE
         mv $RELEASE/Restcomm-JBoss-AS7-*/ $RELEASE/TelScale-Restcomm-JBoss-AS7/
     fi
