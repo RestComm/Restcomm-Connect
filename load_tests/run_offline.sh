@@ -21,6 +21,15 @@ read -p 'Restcomm branch name [master]: ' RESTCOMM_BRANCH
 RESTCOMM_BRANCH=${RESTCOMM_BRANCH:-master}
 echo "...Restcomm branch \"$RESTCOMM_BRANCH\""
 
+read -p 'Git repository (github/bitbucket) [github]: ' REPOSITORY
+REPOSITORY=${REPOSITORY:-github}
+echo "...Git repository \"$REPOSITORY\""
+
+if [ "REPOSITORY" = "bitbucket" ]; then
+  read -p 'Bitbucket username: ' BITBUCKET_USERNAME
+  read -p 'Bitbucket password: ' BITBUCKET_PWD
+fi
+
 read -p 'Workspace folder [/tmp/workspace]: ' WORKSPACE
 WORKSPACE=${WORKSPACE:-/tmp/workspace}
 echo "...Workspace \"$WORKSPACE\""
@@ -83,35 +92,59 @@ REMOVE_EXISTING_WORKSPACE=${REMOVE_EXISTING_WORKSPACE:-true}
 echo "...Remove existing workspace \"$REMOVE_EXISTING_WORKSPACE\""
 
 export GITHUB_RESTCOMM_MASTER=$WORKSPACE/github-master
-export GITHUB_RESTCOMM_HOME=$WORKSPACE/github-restcomm
+echo "Will clone Restcomm to $GITHUB_RESTCOMM_MASTER"
+if [ ! -d "$GITHUB_RESTCOMM_MASTER" ]; then
+  mkdir -p $GITHUB_RESTCOMM_MASTER
+fi
+git clone -b master https://github.com/RestComm/RestComm-Core.git $GITHUB_RESTCOMM_MASTER
 export RELEASE=$WORKSPACE/release
-export RESULTS_DIR=$GITHUB_RESTCOMM_HOME/load_tests/results
 
 if [ $REMOVE_EXISTING_WORKSPACE == "true" ] || [ $REMOVE_EXISTING_WORKSPACE == "TRUE" ]; then
     rm -rf $WORKSPACE
     mkdir -p $WORKSPACE
 
-    if [ ! -d "$GITHUB_RESTCOMM_MASTER" ]; then
-      mkdir -p $GITHUB_RESTCOMM_MASTER
+    if [ "$REPOSITORY" = "github" ]; then
+        echo "Will use Github Restcomm repository"
+        export GITHUB_RESTCOMM_HOME=$WORKSPACE/github-restcomm
+        export RESULTS_DIR=$GITHUB_RESTCOMM_HOME/load_tests/results
+
+        if [ ! -d "$GITHUB_RESTCOMM_HOME" ]; then
+          mkdir -p $GITHUB_RESTCOMM_HOME
+        fi
+
+        echo "Will clone Restcomm to $GITHUB_RESTCOMM_HOME"
+        git clone -b $RESTCOMM_BRANCH https://github.com/RestComm/RestComm-Core.git $GITHUB_RESTCOMM_HOME
+
+        cp -ar ./* $GITHUB_RESTCOMM_HOME/load_tests
+        # cp -ar $GITHUB_RESTCOMM_MASTER/load_tests $GITHUB_RESTCOMM_HOME/load_tests
+
+        cd $GITHUB_RESTCOMM_HOME/load_tests/
+        echo "About to start building Restcomm locally"
+        ./build-restcomm-local.sh $RESTCOMM_BRANCH $GITHUB_RESTCOMM_HOME $MAJOR_VERSION_NUMBER
+        unzip $GITHUB_RESTCOMM_HOME/Restcomm-JBoss-AS7.zip -d $RELEASE
+        mv $RELEASE/Restcomm-JBoss-AS7-*/ $RELEASE/TelScale-Restcomm-JBoss-AS7/
+    else
+        echo "Will use Telestax Restcomm repository"
+
+        export BITBUCKET_RESTCOMM_HOME=$WORKSPACE/bitbucket-restcomm
+        export RESULTS_DIR=$BITBUCKET_RESTCOMM_HOME/load_tests/results
+
+        if [ ! -d "$BITBUCKET_RESTCOMM_HOME" ]; then
+          mkdir -p $BITBUCKET_RESTCOMM_HOME
+        fi
+
+        echo "Will clone Restcomm to $BITBUCKET_RESTCOMM_HOME"
+        git clone -b $RESTCOMM_BRANCH https://$BITBUCKET_USERNAME:$BITBUCKET_PWD@bitbucket.org/telestax/telscale-restcomm.git $BITBUCKET_RESTCOMM_HOME
+
+        cp -ar ./* $BITBUCKET_RESTCOMM_HOME/load_tests
+
+        cd $BITBUCKET_RESTCOMM_HOME/load_tests/
+        echo "About to start building Restcomm locally"
+        ./build-restcomm-local.sh $RESTCOMM_BRANCH $BITBUCKET_RESTCOMM_HOME $MAJOR_VERSION_NUMBER
+        unzip $BITBUCKET_RESTCOMM_HOME/Restcomm-JBoss-AS7.zip -d $RELEASE
+        mv $RELEASE/Restcomm-JBoss-AS7-*/ $RELEASE/TelScale-Restcomm-JBoss-AS7/
     fi
 
-    if [ ! -d "$GITHUB_RESTCOMM_HOME" ]; then
-      mkdir -p $GITHUB_RESTCOMM_HOME
-    fi
-
-    echo "Will clone Restcomm to $GITHUB_RESTCOMM_MASTER"
-    git clone -b master https://github.com/RestComm/RestComm-Core.git $GITHUB_RESTCOMM_MASTER
-    echo "Will clone Restcomm to $GITHUB_RESTCOMM_HOME"
-    git clone -b $RESTCOMM_BRANCH https://github.com/RestComm/RestComm-Core.git $GITHUB_RESTCOMM_HOME
-
-    cp -ar ./* $GITHUB_RESTCOMM_HOME/load_tests
-    # cp -ar $GITHUB_RESTCOMM_MASTER/load_tests $GITHUB_RESTCOMM_HOME/load_tests
-
-    cd $GITHUB_RESTCOMM_HOME/load_tests/
-    echo "About to start building Restcomm locally"
-    ./build-restcomm-local.sh $RESTCOMM_BRANCH $GITHUB_RESTCOMM_HOME $MAJOR_VERSION_NUMBER
-    unzip $GITHUB_RESTCOMM_HOME/Restcomm-JBoss-AS7.zip -d $RELEASE
-    mv $RELEASE/Restcomm-JBoss-AS7-*/ $RELEASE/TelScale-Restcomm-JBoss-AS7/
 else
     echo "Remove existing workspace \"$REMOVE_EXISTING_WORKSPACE\". Will remove extracted folder and unzip a fresh folder"
     rm -rf $RELEASE
