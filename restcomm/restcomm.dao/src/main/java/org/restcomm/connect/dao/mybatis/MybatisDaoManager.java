@@ -57,12 +57,12 @@ import org.restcomm.connect.dao.UsageDao;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe
-public final class MybatisDaoManager implements DaoManager {
+public class MybatisDaoManager implements DaoManager {
     private Configuration configuration;
     private Configuration amazonS3Configuration;
     private Configuration runtimeConfiguration;
     private S3AccessTool s3AccessTool;
-    private AccountsDao accountsDao;
+    protected AccountsDao accountsDao;
     private ApplicationsDao applicationsDao;
     private AvailablePhoneNumbersDao availablePhoneNumbersDao;
     private CallDetailRecordsDao callDetailRecordsDao;
