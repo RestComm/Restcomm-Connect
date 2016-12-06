@@ -174,14 +174,6 @@
 		<port></port>
 	</smtp-service>
 
-	<dao-manager
-		class="org.restcomm.connect.dao.mybatis.MybatisDaoManager">
-		<configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml
-		</configuration-file>
-		<data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
-		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
-	</dao-manager>
-
 	<amazon-s3>
 		<enabled>false</enabled>
 		<bucket-name>restcomm-recordings</bucket-name>
