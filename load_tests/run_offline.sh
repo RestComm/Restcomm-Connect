@@ -123,11 +123,12 @@ if [ $REMOVE_EXISTING_WORKSPACE == "true" ] || [ $REMOVE_EXISTING_WORKSPACE == "
     # cp -ar $GITHUB_RESTCOMM_MASTER/load_tests $GITHUB_RESTCOMM_HOME/load_tests
 
     cd $GITHUB_RESTCOMM_HOME/load_tests/
-    echo "About to start building Restcomm locally"
+    echo "About to start building Restcomm locally to $RELEASE"
     ./build-restcomm-local.sh $RESTCOMM_BRANCH $GITHUB_RESTCOMM_HOME $MAJOR_VERSION_NUMBER
     unzip $GITHUB_RESTCOMM_HOME/Restcomm-JBoss-AS7.zip -d $RELEASE
     mv $RELEASE/Restcomm-JBoss-AS7-*/ $RELEASE/TelScale-Restcomm-JBoss-AS7/
-
+    mv $GITHUB_RESTCOMM_HOME/Restcomm-JBoss-AS7.zip $WORKSPACE
+    
     # if [ "$REPOSITORY" = "github" ]; then
     #     echo "Will use Github Restcomm repository"
     #     export GITHUB_RESTCOMM_HOME=$WORKSPACE/github-restcomm
