@@ -170,7 +170,6 @@ if [[ "$SECURESSL" = "SELF" ||  "$SECURESSL" = "AUTH" ]]; then
 	else
   		echo "SECURE $SECURESSL"
 		SslRestCommConf
-		SslRmsConf
 		CertConfigure
 		MssStackConf
 	fi
