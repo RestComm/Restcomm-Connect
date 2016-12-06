@@ -13,7 +13,7 @@ echo "ulimit -n: " `ulimit -n`
 PERFRECORDER_VERSION=34
 export LOCAL_RESTCOMM_ADDRESS='192.168.1.151'
 export LOCAL_VOICERSS='5aa416d17f5d40fa990194cd9b3df41d'
-export LOCAL_INTERFACE='wlan0'
+LOCAL_INTERFACE_TMP='wlan0'
 
 export CURRENT_DIR=`pwd`
 
@@ -50,6 +50,11 @@ if [ -z $RESTCOMM_ADDRESS ] || [ "$RESTCOMM_ADDRESS" == ''  ]; then
 fi
 echo "...Restcomm IP Address \"$RESTCOMM_ADDRESS\""
 LOCAL_ADDRESS=$RESTCOMM_ADDRESS
+
+read -p "Local interface [$LOCAL_INTERFACE_TMP]: " LOCAL_INTERFACE
+LOCAL_INTERFACE=${LOCAL_INTERFACE:-$LOCAL_INTERFACE_TMP}
+export LOCAL_INTERFACE=$LOCAL_INTERFACE
+echo "...Local interface  \"$LOCAL_INTERFACE\""
 
 read -p 'Load test name [helloplay]: ' TEST_NAME
 TEST_NAME=${TEST_NAME:-helloplay}
@@ -128,7 +133,7 @@ if [ $REMOVE_EXISTING_WORKSPACE == "true" ] || [ $REMOVE_EXISTING_WORKSPACE == "
     unzip $GITHUB_RESTCOMM_HOME/Restcomm-JBoss-AS7.zip -d $RELEASE
     mv $RELEASE/Restcomm-JBoss-AS7-*/ $RELEASE/TelScale-Restcomm-JBoss-AS7/
     mv $GITHUB_RESTCOMM_HOME/Restcomm-JBoss-AS7.zip $WORKSPACE
-    
+
     # if [ "$REPOSITORY" = "github" ]; then
     #     echo "Will use Github Restcomm repository"
     #     export GITHUB_RESTCOMM_HOME=$WORKSPACE/github-restcomm
