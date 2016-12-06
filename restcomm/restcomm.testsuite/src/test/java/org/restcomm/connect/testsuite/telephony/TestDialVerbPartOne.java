@@ -238,13 +238,14 @@ public class TestDialVerbPartOne {
         }).start();
     }
     
+    private String dialConfernceRcmlWithTimeLimit = "<Response><Dial timeLimit=\"50\"><Conference>test</Conference></Dial></Response>";
     @Test
-    public synchronized void testDialConferenceOnlyOneClient() throws InterruptedException {
+    public synchronized void testDialConferenceOnlyOneClientWithTimeLimit() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
-                        .withBody(dialConfernceRcml)));
+                        .withBody(dialConfernceRcmlWithTimeLimit)));
         
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
@@ -267,7 +268,39 @@ public class TestDialVerbPartOne {
         bobCall.listenForDisconnect();
         assertTrue(bobCall.waitForDisconnect(60 * 1000));
     }
-
+    
+    private String dialConfernceRcmlWithoutTimeLimit = "<Response><Dial><Conference>test</Conference></Dial></Response>";
+    @Test
+    public synchronized void testDialConferenceOnlyOneClientWithoutTimeLimit() throws InterruptedException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialConfernceRcmlWithoutTimeLimit)));
+        
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+        
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+        
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+        
+        Thread.sleep(1000);
+        bobCall.disconnect();
+        
+        Thread.sleep(10000);
+    }
+    
     @Test
     public synchronized void testDialConferenceConcurrentCalls() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
@@ -956,9 +989,11 @@ public class TestDialVerbPartOne {
         archive.delete("/WEB-INF/sip.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
+        archive.delete("/WEB-INF/classes/application.conf");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialTest_new", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
         logger.info("Packaged Test App");
         return archive;
     }
