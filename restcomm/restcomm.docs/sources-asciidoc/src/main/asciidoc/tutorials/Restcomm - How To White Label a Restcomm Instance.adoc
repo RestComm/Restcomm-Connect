@@ -1,0 +1,113 @@
+= How to White Label Telestax Restcomm-Connect 
+
+Please see the instructions below
+
+=== Step 1 - Edit restcomm-management.war
+Edit the following files inside *restcomm-management.war* directory
+
+==== Replace all Restcomm and Telestax instances in the following files
+
+* ./modules/modals/modal-about.html   
+
+[source,]
+----
+<h3 class="text-muted"><img src="resources/img/telestax-logo-dark.png" class="navbar-telestax"> <img src="resources/img/restcomm-logo.png" class="navbar-restcomm"> Telestax RestComm v<strong>{{ version.Version }} </strong> <small>released {{ releaseDate | date:"MM/dd/yyyy h:mma"}}</small> </h3>
+----
+
+* ./WEB-INF/web.xml    
+
+[source,]
+----
+<display-name>RestComm</display-name>
+----
+
+* ./index.html
+[source,]
+----
+<title> RestComm</title>
+----
+* ./index.html
+[source,]
+----
+<h4 class="pull-right">POWERED BY RestComm <small>(c) 2013 Telestax </small></h4>
+----
+* ./templates/navbar.html           
+[source,]
+----
+<span class="navbar-brand"><img src="resources/img/telestax-logo-dark.png" class="navbar-telestax" /> <img src="resources/img/restcomm-logo.png" class="navbar-restcomm" /> RestComm</span>
+----
+
+=== Step 2 - Edit restcomm-rvd.war
+
+===== Edit the following files inside restcomm-rvd.war directory
+
+[source,]
+----
+./languages/pt-BR.json	"designerSettingsModalRestcommAPILabel": "API RestComm",
+./languages/pt-BR.json	"designerSettingsModalCredencialsLabel1": "Credenciais para acessar a RestComm API. Deve ser informado caso",
+./languages/pt-BR.json	"dialStepContinueCalledIdTooltip": "O ID de quem está ligando, que aparecerá para a parte chamada quando o RestComm fizer a chamada",
+./languages/pt-BR.json	"formPackageAppLabel2": "Loja de Aplicativos RestComm",
+./languages/pt-BR.json	"indexPageTitle": "RestComm Editor",
+./languages/pt-BR.json	"indexHeadDescriptorLabel": "RestComm serviço de edição visual",
+./languages/pt-BR.json	"webTriggerModalFallbackParamHelp10": "usam a sintaxe de discagem RestComm RCML. Por exemplo:",
+./languages/es.json	"designerSettingsModalRestcommAPILabel": "RestComm API",
+./languages/es.json	"designerSettingsModalCredencialsLabel1": "Credenciales para accesar a la RestComm API. Debe proporcionarlos si",
+./languages/es.json	"formPackageAppLabel2": "App store de RestComm",
+./languages/es.json	"indexPageTitle": "RestComm Designer",
+./languages/es.json	"indexHeadDescriptorLabel": "RestComm visual service designer",
+./languages/es.json	"webTriggerModalFallbackParamHelp10": "valores que utilizaron el sintax marcador RCML de RestComm. Por ejemplo:",
+./languages/en-US.json	"designerSettingsModalRestcommAPILabel": "RestComm API",
+./languages/en-US.json	"designerSettingsModalCredencialsLabel1": "Credentials for accessing RestComm API. You should provide these if",
+./languages/en-US.json	"formPackageAppLabel2": "RestComm Application Store",
+./languages/en-US.json	"indexPageTitle": "RestComm Designer",
+./languages/en-US.json	"indexHeadDescriptorLabel": "RestComm visual service designer",
+./languages/en-US.json	"webTriggerModalFallbackParamHelp10": "values use the RestComm RCML dial syntax. For example:",
+----
+
+
+=== Step 3 - Replace Default RVD Welcome Message
+
+Replace Restcomm in the ProjectState.java file to update default demo welcome message. You might need to do the same for the Telestax brand name.
+
+You will need to build the ProjectState.java class to replace the file in the 
+
+$RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war/WEB-INF/classes/org/restcomm/connect/rvd/model/client directory
+
+[source,]
+----
+
+
+
+./WEB-INF/classes/org/restcomm/connect/rvd/model/client/ProjectState.java
+
+./workspace/APb70c33bf0b6748f09eaec97030af36f3/data/start.step1:1:{"phrase":"Welcome to Telestax RestComm Visual Designer Demo","kind":"say","label":"say","title":"say","name":"step1"}
+./workspace/AP87971d6fa2094658a4955c23bcd66355/data/start.step1:1:{"phrase":"Welcome to Telestax RestComm Visual Designer Demo","kind":"say","label":"say","title":"say","name":"step1"}
+./workspace/AP87971d6fa2094658a4955c23bcd66355/state:1:{"lastStepId":1,"nodes":[{"name":"start","label":"Welcome","kind":"voice","steps":[{"phrase":"Welcome to Telestax RestComm Visual Designer Demo","kind":"say","label":"say","title":"say","name":"step1"}]}],"lastNodeId":0,"header":{"projectKind":"voice","startNodeName":"start","version":"1.6","owner":"administrator@company.com"}}
+
+----
+
+=== Step 4 - Editing the Logos
+
+==== RVD Logos,
+
+Replace all image files in the following directory. : *$RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war/images*
+
+You can right-click on the image files in the link below to check for image size: 
+
+[source,]
+----
+https://github.com/RestComm/Restcomm-Connect/tree/162f637161a655bbcf6f2c5dc0346ddbd2d67cbc/restcomm/restcomm.rvd/src/main/webapp/images
+----
+
+==== Admin UI Logos
+
+Replace all images in the Admin UI resources/img directory
+
+[source,]
+----
+
+$RESTCOMM_HOME/standalone/deployments/restcomm-management.war/resources/img
+
+----
+
+

@@ -19,48 +19,34 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.AccountsDao;
-import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Account.PasswordAlgorithm;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.mybatis.rolling_upgrades.AccountAccessor;
+import org.restcomm.connect.dao.mybatis.rolling_upgrades.DefaultAccountAccessor;
 
-import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.restcomm.connect.dao.DaoUtils.readAccountStatus;
-import static org.restcomm.connect.dao.DaoUtils.readAccountType;
-import static org.restcomm.connect.dao.DaoUtils.readDateTime;
-import static org.restcomm.connect.dao.DaoUtils.readSid;
-import static org.restcomm.connect.dao.DaoUtils.readString;
-import static org.restcomm.connect.dao.DaoUtils.readUri;
-import static org.restcomm.connect.dao.DaoUtils.writeAccountStatus;
-import static org.restcomm.connect.dao.DaoUtils.writeAccountType;
-import static org.restcomm.connect.dao.DaoUtils.writeDateTime;
-import static org.restcomm.connect.dao.DaoUtils.writeSid;
-import static org.restcomm.connect.dao.DaoUtils.writeUri;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe
-public final class MybatisAccountsDao implements AccountsDao {
+public class MybatisAccountsDao implements AccountsDao {
     private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.AccountsDao.";
     private Integer accountRecursionDepth = 3; // maximum value for recursive account queries
     private final SqlSessionFactory sessions;
+    protected AccountAccessor accountAccessor;
 
     public MybatisAccountsDao(final SqlSessionFactory sessions) {
         super();
         this.sessions = sessions;
+        this.accountAccessor = new DefaultAccountAccessor();
     }
 
     public void setAccountRecursionDepth(Integer accountRecursionDepth) {
@@ -240,56 +226,10 @@ public final class MybatisAccountsDao implements AccountsDao {
     }
 
     private Account toAccount(final Map<String, Object> map) {
-        final Sid sid = readSid(map.get("sid"));
-        final DateTime dateCreated = readDateTime(map.get("date_created"));
-        final DateTime dateUpdated = readDateTime(map.get("date_updated"));
-        final String emailAddress = readString(map.get("email_address"));
-        final String friendlyName = readString(map.get("friendly_name"));
-        final Sid parentSid = readSid(map.get("parent_sid"));
-        final Account.Type type = readAccountType(map.get("type"));
-        final Account.Status status = readAccountStatus(map.get("status"));
-        final String authToken = readString(map.get("auth_token"));
-        String password;
-        PasswordAlgorithm passwordAlgorithm;
-        if (map.containsKey("password")) {
-            password = readString(map.get("password"));
-            passwordAlgorithm = DaoUtils.readAccountPasswordAlgorithm(map.get("password_algorithm"));
-        } else {
-            password = authToken;
-            passwordAlgorithm = PasswordAlgorithm.md5;
-        }
-        final String role = readString(map.get("role"));
-        final URI uri = readUri(map.get("uri"));
-        return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, parentSid, type, status, password, passwordAlgorithm, authToken,
-                role, uri);
+        return accountAccessor.toAccount(map);
     }
 
     private Map<String, Object> toMap(final Account account) {
-        final Map<String, Object> map = new HashMap<String, Object>();
-        map.put("sid", writeSid(account.getSid()));
-        map.put("date_created", writeDateTime(account.getDateCreated()));
-        map.put("date_updated", writeDateTime(account.getDateUpdated()));
-        map.put("email_address", account.getEmailAddress());
-        map.put("friendly_name", account.getFriendlyName());
-        map.put("parent_sid", writeSid(account.getParentSid()));
-        map.put("type", writeAccountType(account.getType()));
-        map.put("password", account.getPassword());
-        map.put("password_algorithm", DaoUtils.writeAccountPasswordAlgorithm(account.getPasswordAlgorithm()));
-        map.put("status", writeAccountStatus(account.getStatus()));
-
-        // DBUPGRADE_PATCH: We explicitly set auth_token to md5(password) to simulate older AuthToken semantics (when it wasn't random. That's for ugrading only
-        //map.put("auth_token", account.getAuthToken());
-        String md5password;
-        if (PasswordAlgorithm.plain == account.getPasswordAlgorithm())
-            md5password = DigestUtils.md5Hex(account.getPassword());
-        else if (PasswordAlgorithm.md5 == account.getPasswordAlgorithm())
-            md5password = account.getPassword();
-        else
-            throw new IllegalStateException("Account password algorithm was expected to be either md5 or plain but was found " +  account.getPasswordAlgorithm());
-        map.put("auth_token", md5password);
-
-        map.put("role", account.getRole());
-        map.put("uri", writeUri(account.getUri()));
-        return map;
+        return accountAccessor.toMap(account);
     }
 }

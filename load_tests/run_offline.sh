@@ -63,8 +63,8 @@ fi
 export VOICERSS=$VOICERSS
 echo "...VoiceRSS TTS Engine key \"$VOICERSS\""
 
-read -p 'Collect JMAP [false]: ' COLLECT_JMAP
-COLLECT_JMAP=${COLLECT_JMAP:-false}
+read -p 'Collect JMAP [true]: ' COLLECT_JMAP
+COLLECT_JMAP=${COLLECT_JMAP:-true}
 echo "...Collect JMAP \"$COLLECT_JMAP\""
 export COLLECT_JMAP=$COLLECT_JMAP
 
@@ -124,7 +124,7 @@ export RESTCOMM_NEW_PASSWORD='NewPassword1234'
 
 #prepare PerfCorder tool
 export TOOLS_DIR=$WORKSPACE/report-tools
-export GOALS_FILE=$CURRENT_DIR/../../telscale-commons/jenkins-aws/Jenkins-Jobs/performance/mss-proxy-goals.xsl
+export GOALS_FILE=$CURRENT_DIR/mss-proxy-goals.xsl
 cp $GOALS_FILE $WORKSPACE
 rm -fr $TOOLS_DIR/*
 mkdir -p $TOOLS_DIR

@@ -118,6 +118,7 @@ case "$TEST_NAME" in
     sleep 15
     $CURRENT_FOLDER/tests/hello-play/helloplay.sh
     sleep 60
+    cp $CURRENT_FOLDER/tests/hello-play/*rtt.csv $RESULTS_DIR/
     collectMonitoringServiceMetrics
     sleep 5
     stopRestcomm
@@ -141,6 +142,7 @@ case "$TEST_NAME" in
     sleep 15
     $CURRENT_FOLDER/tests/conference/conference.sh
     sleep 45
+    cp $CURRENT_FOLDER/tests/conference/*rtt.csv $RESULTS_DIR/
     collectMonitoringServiceMetrics
     sleep 5
     stopRestcomm
@@ -164,6 +166,7 @@ case "$TEST_NAME" in
     sleep 15
     $CURRENT_FOLDER/tests/hello-play-one-minute/helloplay-one-minute.sh
     sleep 45
+    cp $CURRENT_FOLDER/tests/hello-play-one-minute/*rtt.csv $RESULTS_DIR/
     collectMonitoringServiceMetrics
     sleep 5
     stopRestcomm
@@ -190,6 +193,7 @@ case "$TEST_NAME" in
   #Next run the client script that will initiate callls to Restcomm
   $CURRENT_FOLDER/tests/dialclient/dialclient-client.sh
   sleep 45
+  cp $CURRENT_FOLDER/tests/dialclient/*rtt.csv $RESULTS_DIR/
   collectMonitoringServiceMetrics
   sleep 5
   stopRestcomm
@@ -213,6 +217,7 @@ case "$TEST_NAME" in
     sleep 15
     $CURRENT_FOLDER/tests/gather/gather.sh
     sleep 45
+    cp $CURRENT_FOLDER/tests/gather/*rtt.csv $RESULTS_DIR/
     collectMonitoringServiceMetrics
     sleep 5
     stopRestcomm
