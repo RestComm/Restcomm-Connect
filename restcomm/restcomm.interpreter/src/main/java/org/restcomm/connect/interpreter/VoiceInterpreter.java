@@ -579,6 +579,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private void onConferenceResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         final ConferenceResponse<ConferenceInfo> response = (ConferenceResponse<ConferenceInfo>) message;
         final Class<?> klass = ((ConferenceResponse)message).get().getClass();
+        if (logger.isDebugEnabled()) {
+            logger.debug("New ConferenceResponse received with message: "+klass.getName());
+        }
         if (Left.class.equals(klass)) {
             Left left = (Left) ((ConferenceResponse)message).get();
             ActorRef leftCall = left.get();
