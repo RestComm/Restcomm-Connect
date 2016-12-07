@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.restcomm.connect.dao.DaoUtils.readBoolean;
 import static org.restcomm.connect.dao.DaoUtils.readDateTime;
 
 /**
@@ -247,12 +248,15 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
     private ExtensionConfiguration toExtensionConfiguration(final Map<String, Object> map) {
         final Sid sid = new Sid((String)map.get("sid"));
         final String extension = (String) map.get("extension");
+        boolean enabled = true;
+        if (readBoolean(map.get("enabled")) != null)
+            enabled = readBoolean(map.get("enabled"));
         final Object confData = map.get("configuration_data");
         final ExtensionConfiguration.configurationType confType =
                 ExtensionConfiguration.configurationType.valueOf((String)map.get("configuration_type"));
         final DateTime dateCreated = readDateTime(map.get("date_created"));
         final DateTime dateUpdated = readDateTime(map.get("date_updated"));
-        return new ExtensionConfiguration(sid, extension, confData, confType, dateCreated, dateUpdated);
+        return new ExtensionConfiguration(sid, extension, enabled, confData, confType, dateCreated, dateUpdated);
     }
 
     private Map<String, Object> toMap(final ExtensionConfiguration extensionConfiguration) {
@@ -268,6 +272,8 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
             map.put("date_created", DaoUtils.writeDateTime(extensionConfiguration.getDateCreated()));
         if (extensionConfiguration.getDateUpdated() != null)
             map.put("date_updated", DaoUtils.writeDateTime(extensionConfiguration.getDateUpdated()));
+
+        map.put("enabled", extensionConfiguration.isEnabled());
         return map;
     }
 }

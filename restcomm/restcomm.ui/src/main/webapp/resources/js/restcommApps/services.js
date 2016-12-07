@@ -29,12 +29,8 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 			$http({
 				method:"POST",
 				url:"/restcomm-rvd/services/ras/apps/metadata",
-				data: {
-					type: "string",
-					payload: {
-						applicationSids: applicationSids
-						}
-					}
+				data: applicationSids,
+				headers: {'Content-Type': 'application/json'}
 			}).success(function(data){
 				//console.log("Received apps from RVD");
 				var rvdProjects = data.payload;
@@ -47,6 +43,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 							rvdProjects[j].sid = restcommApps[i].sid;
 							rvdProjects[j].projectName = restcommApps[i].friendly_name;
 							rvdProjects[j].startUrl = restcommApps[i].rcml_url;
+							rvdProjects[j].kind = restcommApps[i].kind;
 						}
 					}
 					if(!hasProject){

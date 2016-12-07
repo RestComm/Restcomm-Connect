@@ -618,8 +618,8 @@ public class CallLifecycleTest {
         aliceCall.disposeNoBye();
         georgeCall.listenForDisconnect();
 
-        Thread.sleep(18000);
-        assertTrue(georgeCall.waitForDisconnect(5000));
+        Thread.sleep(50000);
+        assertTrue(georgeCall.waitForDisconnect(500000));
 
         Thread.sleep(10000);
 

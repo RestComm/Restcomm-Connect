@@ -70,6 +70,7 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
+ * @author Maria Farooq (maria.farooq@telestax.com)
  */
 @Immutable
 public final class MmsConferenceController extends MediaServerController {
@@ -267,7 +268,12 @@ public final class MmsConferenceController extends MediaServerController {
             MediaGatewayForConference mgc = (MediaGatewayForConference) message.get();
             mediaGateway = mgc.mediaGateway();
             this.conferenceSid = mgc.conferenceSid();
-            this.conferenceEndpointIdName = mgc.masterConfernceEndpointIdName();
+            // if this is master we would like to connect to master conference ep
+            // for master's first join it would be null but if master left and rejoin it should join on same ep as received by mrb.
+            // if this is not master conference ep should be null, so RMS would give us next available from pool.
+            this.conferenceEndpointIdName = mgc.isThisMaster() ? mgc.masterConfernceEndpointIdName() : null;
+            if(logger.isDebugEnabled())
+                logger.debug("onMediaResourceBrokerResponse: "+mgc.toString());
             fsm.transition(message, acquiringMediaSession);
         }else if(is(acquiringCnfMediaResourceController)){
             conferenceMediaResourceController = (ActorRef) message.get();

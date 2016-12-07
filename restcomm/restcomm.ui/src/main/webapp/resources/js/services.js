@@ -220,7 +220,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         var deferred = $q.defer();
         var apiPath = "/restcomm/2012-04-24/Accounts.json/" + account.sid;
         var auth_header = basicAuthHeader(account.sid, account.auth_token, true)
-        var params = {Auth_Token: md5.createHash(newPassword)};
+        var params = {Password: newPassword};
         var update = $http({
         method: 'PUT',
         url: apiPath,
@@ -735,6 +735,29 @@ rcServices.factory('RCommIdentityInstances', function ($resource,$http) {
         });
     }
     return instance;
+});
+
+/**
+* Young service to host all functionality regarding applications and projects. Gradually, functionality
+* currently in restcommApps/services.js will be moved here
+*/
+rcServices.factory('Applications', function () {
+
+    function filterByKind(apps, kind) {
+        if (!apps || !kind)
+            return apps;
+        var filtered = [];
+        for (var i=0; i<apps.length; i++) {
+            if (apps[i].kind == kind) {
+                filtered.push(apps[i]);
+            }
+        }
+        return filtered;
+    }
+
+    return {
+        filterByKind: filterByKind
+    }
 });
 
 /*

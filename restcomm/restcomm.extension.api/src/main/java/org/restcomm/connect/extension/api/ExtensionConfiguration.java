@@ -31,24 +31,26 @@ public class ExtensionConfiguration {
     }
     private Sid sid;
     private String extensionName;
+    private boolean enabled;
     private Object configurationData;
     private configurationType configurationType;
     private DateTime dateCreated;
     private DateTime dateUpdated;
 
-    public ExtensionConfiguration(Sid sid, String extensionName, Object configurationData,
+    public ExtensionConfiguration(Sid sid, String extensionName, boolean enabled, Object configurationData,
                                   configurationType configurationType, DateTime dateCreated, DateTime dateUpdated) {
         this.sid = sid;
         this.extensionName = extensionName;
+        this.enabled = enabled;
         this.configurationData = configurationData;
         this.configurationType = configurationType;
         this.dateCreated = dateCreated;
         this.dateUpdated = dateUpdated;
     }
 
-    public ExtensionConfiguration(Sid sid, String extensionName, Object configurationData,
+    public ExtensionConfiguration(Sid sid, String extensionName, boolean enabled, Object configurationData,
                                   configurationType configurationType, DateTime dateCreated) {
-        this(sid, extensionName, configurationData, configurationType, dateCreated, DateTime.now());
+        this(sid, extensionName, enabled, configurationData, configurationType, dateCreated, DateTime.now());
     }
 
     public Sid getSid() {
@@ -57,6 +59,10 @@ public class ExtensionConfiguration {
 
     public String getExtensionName() {
         return extensionName;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
     }
 
     public Object getConfigurationData() {

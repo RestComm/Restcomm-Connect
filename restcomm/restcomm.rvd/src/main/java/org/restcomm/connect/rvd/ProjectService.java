@@ -180,6 +180,56 @@ public class ProjectService {
         return items;
     }
 
+    /**
+     * Returns summary information for all projects specified as appliationSids. If ownerFilter is specified,
+     * the results are also filtered by owner.
+     *
+     * @param applicationSids
+     * @param ownerFilter
+     * @return
+     * @throws StorageException
+     */
+    public List<ProjectItem> getProjectSummaries(List<String> applicationSids, String ownerFilter) throws StorageException {
+        List<ProjectItem> items = new ArrayList<ProjectItem>();
+        for (String entry : applicationSids ) {
+
+            String kind = "voice";
+            String owner = null;
+            ProjectItem item = new ProjectItem();
+            item.setName(entry);
+            try {
+                StateHeader header = FsProjectStorage.loadStateHeader(entry, workspaceStorage);
+                item.setStatus(ProjectService.projectStatus(header));
+                kind = header.getProjectKind();
+                owner = header.getOwner();
+            } catch ( BadProjectHeader e ) {
+                // for old projects
+                JsonParser parser = new JsonParser();
+                //JsonObject root_element = parser.parse(projectStorage.loadProjectState(entry)).getAsJsonObject();
+                JsonObject root_element = parser.parse(FsProjectStorage.loadProjectString(entry, workspaceStorage)).getAsJsonObject();
+                JsonElement projectKind_element = root_element.get("projectKind");
+                if ( projectKind_element != null ) {
+                    kind = projectKind_element.getAsString();
+                }
+                item.setStatus(Status.BAD);
+            } catch ( StorageEntityNotFound e) {
+                // ignore missing projects to handle the case where Restcomm apps is out of sync with RVD
+                continue;
+            }
+
+            if ( ownerFilter != null ) {
+                if ( owner == null || owner.equals(ownerFilter) ) {
+                    item.setKind(kind);
+                    items.add(item);
+                }
+            } else {
+                item.setKind(kind);
+                items.add(item);
+            }
+        }
+        return items;
+    }
+
     static Status projectStatus(StateHeader header) {
         if (header == null || header.getVersion() == null)
             return Status.BAD;
