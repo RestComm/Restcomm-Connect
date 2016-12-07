@@ -304,7 +304,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         try {
             accountId = new Sid(accountSid);
         } catch (final IllegalArgumentException exception){
-            return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
+            return status(INTERNAL_SERVER_ERROR).entity(buildErrorResponseBody(exception.getMessage(),responseType)).build();
         }
         secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
         try {
