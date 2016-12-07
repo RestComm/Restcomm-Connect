@@ -4,14 +4,20 @@
 ## Author     : George Vagenas
 #
 
-export PR_RESULTS_FOLDER=$RESULTS_FOLDER
+export PR_RESULTS_FOLDER=$RESULTS_DIR
 if [ ! -d "$PR_RESULTS_FOLDER" ]; then
   mkdir $PR_RESULTS_FOLDER
 fi
 
 # Collect results and clean
-cp $RESULTS_FOLDER/$TEST_NAME*.csv $TOOLS_DIR/target/data/periodic/sip/sipp.csv
-cp $RESULTS_FOLDER/$TEST_NAME*_rtt.csv $TOOLS_DIR/target/data/periodic/sip/sipp_rtt.csv
+echo "About to run PerfRecorder script"
+echo "RESULTS_DIR: $RESULTS_DIR"
+echo "TEST_NAME $TEST_NAME"
+echo "TOOLS_DIR $TOOLS_DIR"
+echo "GOALS_FILE $GOALS_FILE"
+
+cp $RESULTS_DIR/$TEST_NAME*.csv $TOOLS_DIR/target/data/periodic/sip/sipp.csv
+cp $RESULTS_DIR/$TEST_NAME*_rtt.csv $TOOLS_DIR/target/data/periodic/sip/sipp_rtt.csv
 cd $TOOLS_DIR
 rm -f *.zip
 ./pc_stop_collect.sh -s 360

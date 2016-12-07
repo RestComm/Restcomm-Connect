@@ -19,26 +19,12 @@
  */
 package org.restcomm.connect.interpreter;
 
-import static akka.pattern.Patterns.ask;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Currency;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import javax.servlet.sip.SipServletMessage;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActorContext;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.util.Timeout;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -118,16 +104,28 @@ import org.restcomm.connect.telephony.api.StartBridge;
 import org.restcomm.connect.telephony.api.StopBridge;
 import org.restcomm.connect.telephony.api.StopConference;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
-
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActorContext;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.util.Timeout;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
+
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -385,6 +383,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(hangingUp, finishConferencing));
         transitions.add(new Transition(hangingUp, finishDialing));
         transitions.add(new Transition(uninitialized, finished));
+        transitions.add(new Transition(notFound, finished));
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
         // Initialize the runtime stuff.
@@ -993,7 +992,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private void onDownloaderResponse(Object message, State state) throws IOException, TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         final DownloaderResponse response = (DownloaderResponse) message;
         if (logger.isDebugEnabled()) {
-            logger.debug("Rcml URI : " + response.get().getURI() + "response succeeded " + response.succeeded()
+
+            logger.debug("Download Rcml response succeeded " + response.succeeded()
                 + ", statusCode " + response.get().getStatusCode());
         }
         if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
@@ -1916,7 +1916,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final Tag child = dialChildren.get(0);
                 if (Nouns.client.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
                                 CreateCall.Type.CLIENT, accountId, callInfo.sid());
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
@@ -1924,7 +1924,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (Nouns.number.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
                                 CreateCall.Type.PSTN, accountId, callInfo.sid());
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
@@ -1932,7 +1932,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (Nouns.uri.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
                                 CreateCall.Type.SIP, accountId, callInfo.sid());
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
@@ -2124,7 +2124,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             Duration.create(10, TimeUnit.SECONDS));
                     callInfo = callResponse.get();
                 } catch (Exception e) {
-                    logger.error("Timeout waiting for inbound call info: \n" + e);
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("Timeout waiting for inbound call info: \n" + e.getMessage());
+                    }
                 }
             }
 
@@ -2802,16 +2804,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             final Class<?> klass = message.getClass();
 
-                if (callRecord != null) {
-                    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-                    callRecord = records.getCallDetailRecord(callRecord.getSid());
-                    callRecord = callRecord.setStatus(callState.toString());
-                    final DateTime end = DateTime.now();
-                    callRecord = callRecord.setEndTime(end);
-                    final int seconds = (int) (end.getMillis() - callRecord.getStartTime().getMillis()) / 1000;
-                    callRecord = callRecord.setDuration(seconds);
-                    records.updateCallDetailRecord(callRecord);
-                }
+            if (callRecord != null) {
+                final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
+                callRecord = records.getCallDetailRecord(callRecord.getSid());
+                callRecord = callRecord.setStatus(callState.toString());
+                final DateTime end = DateTime.now();
+                callRecord = callRecord.setEndTime(end);
+                final int seconds = (int) (end.getMillis() - callRecord.getStartTime().getMillis()) / 1000;
+                callRecord = callRecord.setDuration(seconds);
+                records.updateCallDetailRecord(callRecord);
+            }
             if (!dialActionExecuted) {
                 executeDialAction(message, outboundCall);
                 callback(true);
@@ -2887,7 +2889,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             } else {
                 // Make sure the media operations of the call are stopped
                 // so we can start processing a new RestComm application
-                call.tell(new StopMediaGroup(), super.source);
+                call.tell(new StopMediaGroup(true), super.source);
+//                if (is(conferencing))
+//                    call.tell(new Leave(true), self());
             }
 
             // Stop the dependencies.
@@ -3016,9 +3020,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final ActorRef interpreter = buildSubVoiceInterpreter(child);
                 StartInterpreter start = new StartInterpreter(outboundCall);
                 try {
-                    Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
+                    Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
                     Future<Object> future = (Future<Object>) ask(interpreter, start, expires);
-                    Object object = Await.result(future, Duration.create(6000 * 10, TimeUnit.SECONDS));
+                    Object object = Await.result(future, Duration.create(60, TimeUnit.SECONDS));
 
                     if (!End.class.equals(object.getClass())) {
                         fsm.transition(message, hangingUp);

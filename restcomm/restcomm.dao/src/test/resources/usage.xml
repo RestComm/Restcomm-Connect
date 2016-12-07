@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author brainslog@gmail.com (Alexandre Mendonca)
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.UsageDao">
+
+	<select id="getDailyCalls" parameterType="map" resultType="hashmap">
+		SELECT
+			'calls' AS "category",
+			"account_sid",
+			"api_version",
+			COUNT(1) as "count",
+			${usageExprPre}"${usageExprCol}"${usageExprSuf} as "usage",
+			SUM(CONVERT("price",SQL_FLOAT)) as "price",
+			TO_CHAR(MIN("date_created"), 'YYYY-MM-DD') AS "start_date",
+			TO_CHAR(MAX("date_created"), 'YYYY-MM-DD') as "end_date",
+			'/todo' AS "uri"
+		FROM
+			"${tableName}"
+		WHERE
+			"account_sid"=#{sid} AND
+			"date_created" >= #{startDate} AND
+			"date_created" &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+		GROUP BY
+			CAST(YEAR("date_created") AS VARCHAR(4)) + '-' + CAST(MONTH("date_created") AS VARCHAR(2)) + '-' + CAST(DAY("date_created") AS VARCHAR(2)), "account_sid", "api_version"
+		ORDER BY
+			"start_date"
+	</select>
+
+	<select id="getMonthlyCalls" parameterType="map" resultType="hashmap">
+		SELECT
+			'calls' AS "category",
+			"account_sid",
+			"api_version",
+			COUNT(1) as "count",
+			${usageExprPre}"${usageExprCol}"${usageExprSuf} as "usage",
+			SUM(CONVERT("price",SQL_FLOAT)) as "price",
+			TO_CHAR(MIN("date_created"), 'YYYY-MM-DD') AS "start_date",
+			TO_CHAR(MAX("date_created"), 'YYYY-MM-DD') as "end_date",
+			'/todo' AS "uri"
+		FROM
+			"${tableName}"
+		WHERE
+			"account_sid"=#{sid} AND
+			"date_created" >= #{startDate} AND
+			"date_created" &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+		GROUP BY
+			CAST(YEAR("date_created") AS VARCHAR(4)) + '-' + CAST(MONTH("date_created") AS VARCHAR(2)), "account_sid", "api_version"
+		ORDER BY
+			"start_date"
+	</select>
+
+	<select id="getYearlyCalls" parameterType="map" resultType="hashmap">
+		SELECT
+			'calls' AS "category",
+			"account_sid",
+			"api_version",
+			COUNT(1) as "count",
+			${usageExprPre}"${usageExprCol}"${usageExprSuf} as "usage",
+			SUM(CONVERT("price",SQL_FLOAT)) as "price",
+			TO_CHAR(MIN("date_created"), 'YYYY-MM-DD') AS "start_date",
+			TO_CHAR(MAX("date_created"), 'YYYY-MM-DD') as "end_date",
+			'/todo' AS "uri"
+		FROM
+			"${tableName}"
+		WHERE
+			"account_sid"=#{sid} AND
+			"date_created" >= #{startDate} AND
+			"date_created" &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+		GROUP BY
+			CAST(YEAR("date_created") AS VARCHAR(4)), "account_sid", "api_version"
+		ORDER BY
+			"start_date"
+	</select>
+
+	<select id="getAllTimeCalls" parameterType="map" resultType="hashmap">
+		SELECT
+			'calls' AS "category",
+			"account_sid",
+			"api_version",
+			COUNT(1) as "count",
+			${usageExprPre}"${usageExprCol}"${usageExprSuf} as "usage",
+			SUM(CONVERT("price",SQL_FLOAT)) as "price",
+			TO_CHAR(MIN("date_created"), 'YYYY-MM-DD') AS "start_date",
+			TO_CHAR(MAX("date_created"), 'YYYY-MM-DD') as "end_date",
+			'/todo' AS "uri"
+		FROM
+			"${tableName}"
+		WHERE
+			"account_sid"=#{sid} AND
+			"date_created" >= #{startDate} AND
+			"date_created" &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+		GROUP BY
+			EXTRACT (MONTH FROM "date_created"), "account_sid", "api_version"
+		ORDER BY
+			"start_date"
+	</select>
+
+	<!--
+	<select id="getTodayCalls" parameterType="map" resultType="hashmap">
+		SELECT
+			'calls' AS "category",
+			"account_sid",
+			"api_version",
+			COUNT(1) as "count",
+			COALESCE(SUM("duration"),0) as "usage",
+			SUM(CONVERT("price",SQL_FLOAT)) as "price",
+			TO_CHAR(TODAY(), 'YYYY-MM-DD') AS "start_date",
+			TO_CHAR(TODAY(), 'YYYY-MM-DD') as "end_date",
+			'/todo' AS "uri"
+		FROM
+			"restcomm_call_detail_records"
+		WHERE
+			"account_sid"=#{sid} AND
+			EXTRACT (DAY FROM "date_created") = EXTRACT (DAY FROM TODAY()) AND
+			EXTRACT (MONTH FROM "date_created") = EXTRACT (MONTH FROM TODAY()) AND
+			EXTRACT (YEAR FROM "date_created") = EXTRACT (YEAR FROM TODAY())
+		GROUP BY
+			EXTRACT (MONTH FROM "date_created"), "account_sid", "api_version"
+		ORDER BY
+			"start_date"
+	</select>
+
+	<select id="getYesterdayCalls" parameterType="map" resultType="hashmap">
+		SELECT
+			'calls' AS "category",
+			"account_sid",
+			"api_version",
+			COUNT(1) as "count",
+			COALESCE(SUM("duration"),0) as "usage",
+			SUM(CONVERT("price",SQL_FLOAT)) as "price",
+			TO_CHAR(DATE_SUB(TODAY(), INTERVAL 1 DAY), 'YYYY-MM-DD') AS "start_date",
+			TO_CHAR(DATE_SUB(TODAY(), INTERVAL 1 DAY), 'YYYY-MM-DD') as "end_date",
+			'/todo' AS "uri"
+		FROM
+			"restcomm_call_detail_records"
+		WHERE
+			"account_sid"=#{sid} AND
+			EXTRACT (DAY FROM "date_created") = EXTRACT (DAY FROM DATE_SUB(TODAY(), INTERVAL 1 DAY)) AND
+			EXTRACT (MONTH FROM "date_created") = EXTRACT (MONTH FROM DATE_SUB(TODAY(), INTERVAL 1 DAY)) AND
+			EXTRACT (YEAR FROM "date_created") = EXTRACT (YEAR FROM DATE_SUB(TODAY(), INTERVAL 1 DAY))
+		GROUP BY
+			"account_sid", "api_version"
+		ORDER BY
+			"start_date"
+	</select>
+
+	<select id="getThisMonthCalls" parameterType="string" resultType="hashmap">
+		SELECT
+			'calls' AS "category",
+			"account_sid",
+			"api_version",
+			COUNT(1) as "count",
+			COALESCE(SUM("duration"),0) as "usage",
+			SUM(CONVERT("price",SQL_FLOAT)) as "price",
+			CONCAT(TO_CHAR(TODAY(), 'YYYY-MM-'),'01') AS "start_date",
+			TO_CHAR(LAST_DAY(TODAY()), 'YYYY-MM-DD') as "end_date",
+			'/todo' AS "uri"
+		FROM
+			"restcomm_call_detail_records"
+		WHERE
+			"account_sid"=#{sid} AND
+			EXTRACT (MONTH FROM "date_created") = EXTRACT (MONTH FROM TODAY()) AND
+			EXTRACT (YEAR FROM "date_created") = EXTRACT (YEAR FROM TODAY())
+		GROUP BY
+			EXTRACT (MONTH FROM "date_created"), "account_sid", "api_version"
+		ORDER BY
+			"start_date"
+	</select>
+
+	<select id="getLastMonthCalls" parameterType="map" resultType="hashmap">
+		SELECT
+			'calls' AS "category",
+			"account_sid",
+			"api_version",
+			COUNT(1) as "count",
+			COALESCE(SUM("duration"),0) as "usage",
+			SUM(CONVERT("price",SQL_FLOAT)) as "price",
+			CONCAT(TO_CHAR(LAST_DAY(DATE_SUB(TODAY(), INTERVAL 1 MONTH)), 'YYYY-MM-'),'01') AS "start_date",
+			TO_CHAR(LAST_DAY(DATE_SUB(TODAY(), INTERVAL 1 MONTH)), 'YYYY-MM-DD') as "end_date",
+			'/todo' AS "uri"
+
+		FROM
+			"restcomm_call_detail_records"
+		WHERE
+			"account_sid"=#{sid} AND
+			EXTRACT (MONTH FROM "date_created") = EXTRACT (MONTH FROM DATE_SUB(TODAY(), INTERVAL 1 MONTH)) AND
+			EXTRACT (YEAR FROM "date_created") = EXTRACT (YEAR FROM DATE_SUB(TODAY(), INTERVAL 1 MONTH))
+		GROUP BY
+			EXTRACT (MONTH FROM "date_created"), "account_sid", "api_version"
+		ORDER BY
+			"start_date"
+	</select>
+	-->
+</mapper>

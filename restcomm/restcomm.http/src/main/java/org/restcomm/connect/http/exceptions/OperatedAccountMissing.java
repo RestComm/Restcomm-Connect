@@ -20,6 +20,8 @@
 
 package org.restcomm.connect.http.exceptions;
 
+import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
+
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */

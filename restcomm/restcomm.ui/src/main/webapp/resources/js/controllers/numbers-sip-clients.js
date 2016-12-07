@@ -56,9 +56,9 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $uibModal, $dialog, 
 
 // Numbers : RestComm Clients : Details (also used for Modal) -----------------------
 
-rcMod.controller('ClientDetailsCtrl', function ($scope, $stateParams, $location, $dialog, $uibModalInstance, SessionService, RCommClients, RCommApps, Notifications, localApps) {
+rcMod.controller('ClientDetailsCtrl', function ($scope, $stateParams, $location, $dialog, $uibModalInstance, SessionService, RCommClients, RCommApps, Notifications, localApps, Applications) {
 
-	$scope.localApps = localApps;
+	$scope.localApps = Applications.filterByKind(localApps,'voice');
   // are we editing details...
   if($scope.clientSid = $stateParams.clientSid) {
     $scope.sid = SessionService.get("sid");
