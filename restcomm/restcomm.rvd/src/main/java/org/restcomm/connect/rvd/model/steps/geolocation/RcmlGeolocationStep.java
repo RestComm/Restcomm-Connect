@@ -21,6 +21,9 @@
 
 package org.restcomm.connect.rvd.model.steps.geolocation;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.restcomm.connect.rvd.model.rcml.RcmlStep;
 
 /**
@@ -33,6 +36,7 @@ public class RcmlGeolocationStep extends RcmlStep {
     String action;
     String method;
     String statusCallback;
+    List<RcmlGeolocationNoun> geolocationNouns = new ArrayList<RcmlGeolocationNoun>();
 
     public String getDeviceIdentifier() {
         return deviceIdentifier;
@@ -64,6 +68,14 @@ public class RcmlGeolocationStep extends RcmlStep {
 
     public void setStatusCallback(String statusCallback) {
         this.statusCallback = statusCallback;
+    }
+
+    public List<RcmlGeolocationNoun> getGeolocationNouns() {
+        return geolocationNouns;
+    }
+
+    public void setGeolocationNouns(List<RcmlGeolocationNoun> geolocationNouns) {
+        this.geolocationNouns = geolocationNouns;
     }
 
 }

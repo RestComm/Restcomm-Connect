@@ -22,6 +22,7 @@
 package org.restcomm.connect.rvd.model.steps.geolocation;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -41,6 +42,7 @@ import org.restcomm.connect.rvd.storage.exceptions.StorageException;
 public class GeolocationStep extends Step {
 
     static final Logger logger = Logger.getLogger(BuildService.class.getName());
+    private List<GeolocationNoun> geolocationNouns;
     String deviceIdentifier;
     String action;
     String method;
@@ -97,8 +99,13 @@ public class GeolocationStep extends Step {
         this.next = next;
     }
 
-    public RcmlGeolocationStep render(Interpreter interpreter) {
+    public RcmlGeolocationStep render(Interpreter interpreter) throws InterpreterException {
+
         RcmlGeolocationStep rcmlStep = new RcmlGeolocationStep();
+
+        for (GeolocationNoun geolocationNoun : geolocationNouns) {
+            rcmlStep.geolocationNouns.add(geolocationNoun.render(interpreter));
+        }
 
         if (!RvdUtils.isEmpty(getNext())) {
             String newtarget = interpreter.getTarget().getNodename() + "." + getName() + ".actionhandler";
