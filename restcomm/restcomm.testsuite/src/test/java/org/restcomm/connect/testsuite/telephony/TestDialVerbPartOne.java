@@ -269,6 +269,43 @@ public class TestDialVerbPartOne {
         assertTrue(bobCall.waitForDisconnect(60 * 1000));
     }
     
+    private String dialConfernceRcmlWithTimeLimitSmsAfterConf = "<Response><Dial timeLimit=\"50\"><Conference>test</Conference></Dial><Sms>Conference time limit reached</Sms></Response>";
+    @Test
+    public synchronized void testDialConferenceOnlyOneClientWithTimeLimitSmsAfterConf() throws InterruptedException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialConfernceRcmlWithTimeLimitSmsAfterConf)));
+        
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+        
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+        
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+        
+        bobCall.listenForMessage();
+        assertTrue(bobCall.waitForMessage(60000));
+        assertTrue(bobCall.sendMessageResponse(Response.ACCEPTED,"BobCall Msg Accepted", 3600));
+        String messageReceived = new String(bobCall.getLastReceivedMessageRequest().getRawContent());
+        assertEquals("Conference time limit reached", messageReceived);
+        
+        // Wait for the media to play and the call to hangup.
+        bobCall.listenForDisconnect();
+        assertTrue(bobCall.waitForDisconnect(60 * 1000));
+    }
+    
     private String dialConfernceRcmlWithoutTimeLimit = "<Response><Dial><Conference>test</Conference></Dial></Response>";
     @Test
     public synchronized void testDialConferenceOnlyOneClientWithoutTimeLimit() throws InterruptedException {
