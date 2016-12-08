@@ -35,6 +35,7 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     url:"/uninitialized",
     templateUrl: 'modules/uninitialized.html',
     controller:'UninitializedCtrl',
+    params: {'userName':''},
     resolve: {
         identity: function (IdentityConfig) {
             return IdentityConfig.getIdentity();

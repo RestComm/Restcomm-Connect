@@ -15,8 +15,10 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
   $scope.login = function() {
     AuthService.login($scope.credentials.sid, $scope.credentials.token).then(function (loginStatus) {
         // SUCCESS
-        if (loginStatus == 'UNINITIALIZED' )
-            $state.go('public.uninitialized');
+        if (loginStatus == 'UNINITIALIZED' ){
+        	var params = { userName:$scope.credentials.sid};
+            $state.go('public.uninitialized',params);
+        }
         else
             $location.path('/dashboard');
     }, function (errorStatus) {
@@ -64,7 +66,8 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
 });
 
 // assumes user has been authenticated but his account is not initialized
-rcMod.controller('UninitializedCtrl', function ($scope,AuthService,$state) {
+rcMod.controller('UninitializedCtrl', function ($scope,AuthService,$state,$stateParams) {
+	$scope.userName = $stateParams.userName;
   // For password reset
   $scope.update = function() {
     AuthService.updatePassword($scope.newPassword).then(function () {
