@@ -96,7 +96,14 @@ public final class IvrEndpoint extends GenericEndpoint {
     private void stop(Object message) {
         final EventName[] signal = new EventName[1];
         StopEndpoint se = (StopEndpoint) message;
-        String parameters = "sg=" + se.getEvent().getName();
+        String parameters = "";
+        if (se.getEvent() != null) {
+            parameters = "sg=" + se.getEvent().getName();
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("StopEndpoint event is null");
+            }
+        }
         signal[0] = new EventName(PACKAGE_NAME, AUMgcpEvent.aues.withParm(parameters));
         final RequestIdentifier requestId = new RequestIdentifier(DEFAULT_REQUEST_ID);
         final NotificationRequest request = new NotificationRequest(self(), id, requestId);
