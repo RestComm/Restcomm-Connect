@@ -296,6 +296,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.stopping, this.completed));
         transitions.add(new Transition(this.stopping, this.failed));
         transitions.add(new Transition(this.failed, this.completed));
+        transitions.add(new Transition(this.completed, this.stopping));
 
         // FSM
         this.fsm = new FiniteStateMachine(this.uninitialized, transitions);
@@ -1261,7 +1262,7 @@ public final class Call extends UntypedActor {
             } else {
                 liveCallModification = true;
             }
-            msController.tell(message, super.source);
+            msController.tell(message, self());
         }
 
     }
@@ -1706,7 +1707,7 @@ public final class Call extends UntypedActor {
             msController.tell(new Stop(true), self);
         }
 
-        if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress)) {
+        if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress) || is(completed)) {
             if (conferencing) {
                 // Tell conference to remove the call from participants list
                 // before moving to a stopping state
@@ -2032,6 +2033,9 @@ public final class Call extends UntypedActor {
                 this.conferencing = false;
                 this.conference.tell(new Left(self()), self);
                 this.conference = null;
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Call left conference room and notification sent to conference actor");
+                }
             }
 
             if (!liveCallModification) {
