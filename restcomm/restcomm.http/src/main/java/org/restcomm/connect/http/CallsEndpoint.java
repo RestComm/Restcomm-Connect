@@ -301,8 +301,13 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 
     @SuppressWarnings("unchecked")
     protected Response putCall(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        final Sid accountId = new Sid(accountSid);
-        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls", AuthType.AuthToken);
+        final Sid accountId;
+        try {
+            accountId = new Sid(accountSid);
+        } catch (final IllegalArgumentException exception){
+            return status(INTERNAL_SERVER_ERROR).entity(buildErrorResponseBody(exception.getMessage(),responseType)).build();
+        }
+        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
         try {
             validate(data);
             if (normalizePhoneNumbers)
@@ -406,7 +411,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
     protected Response updateCall(final String sid, final String callSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid accountSid = new Sid(sid);
         Account account = daos.getAccountsDao().getAccount(accountSid);
-        secure(account, "RestComm:Modify:Calls", AuthType.AuthToken);
+        secure(account, "RestComm:Modify:Calls");
 
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
 
@@ -526,7 +531,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getRecordingsByCall(final String accountSid, final String callSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings", AuthType.AuthToken);
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
 
         final List<Recording> recordings = recordingsDao.getRecordingsByCall(new Sid(callSid));
         if (APPLICATION_JSON_TYPE == responseType) {
