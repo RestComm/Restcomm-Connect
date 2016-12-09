@@ -8,6 +8,7 @@ import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipResponse;
 import org.cafesip.sipunit.SipStack;
+import org.cafesip.sipunit.SipTransaction;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -55,6 +56,27 @@ public class TestDialVerbPartOne {
             13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65,
             86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10};
     private static final String body = new String(bytes);
+    private static final String sdpForHold = "v=0\n" +
+            "o=bob-jitsi.org 0 2 IN IP4 192.168.1.190\n" +
+            "s=-\n" +
+            "c=IN IP4 192.168.1.190\n" +
+            "t=0 0\n" +
+            "m=audio 5000 RTP/AVP 0 8 3 101\n" +
+            "a=rtpmap:0 PCMU/8000\n" +
+            "a=rtpmap:8 PCMA/8000\n" +
+            "a=rtpmap:3 GSM/8000\n" +
+            "a=rtpmap:101 telephone-event/8000\n" +
+            "a=extmap:1 urn:ietf:params:rtp-hdrext:csrc-audio-level\n" +
+            "a=extmap:2 urn:ietf:params:rtp-hdrext:ssrc-audio-level\n" +
+            "a=rtcp-xr:voip-metrics\n" +
+            "m=video 5004 RTP/AVP 96 99\n" +
+            "a=recvonly\n" +
+            "a=rtpmap:96 H264/90000\n" +
+            "a=fmtp:96 profile-level-id=4DE01f;packetization-mode=1\n" +
+            "a=imageattr:96 send * recv [x=[0-1440],y=[0-900]]\n" +
+            "a=rtpmap:99 H264/90000\n" +
+            "a=fmtp:99 profile-level-id=4DE01f\n" +
+            "a=imageattr:99 send * recv [x=[0-1440],y=[0-900]]\n";
 
     @ArquillianResource
     URL deploymentUrl;
@@ -215,7 +237,107 @@ public class TestDialVerbPartOne {
             }
         }).start();
     }
-
+    
+    private String dialConfernceRcmlWithTimeLimit = "<Response><Dial timeLimit=\"50\"><Conference>test</Conference></Dial></Response>";
+    @Test
+    public synchronized void testDialConferenceOnlyOneClientWithTimeLimit() throws InterruptedException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialConfernceRcmlWithTimeLimit)));
+        
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+        
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+        
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+        
+        // Wait for the media to play and the call to hangup.
+        bobCall.listenForDisconnect();
+        assertTrue(bobCall.waitForDisconnect(60 * 1000));
+    }
+    
+    private String dialConfernceRcmlWithTimeLimitSmsAfterConf = "<Response><Dial timeLimit=\"50\"><Conference>test</Conference></Dial><Sms>Conference time limit reached</Sms></Response>";
+    @Test
+    public synchronized void testDialConferenceOnlyOneClientWithTimeLimitSmsAfterConf() throws InterruptedException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialConfernceRcmlWithTimeLimitSmsAfterConf)));
+        
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+        
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+        
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+    
+        // Wait for the media to play and the call to hangup.
+        bobCall.listenForDisconnect();
+        assertTrue(bobCall.waitForDisconnect(60 * 1000));
+        
+        bobCall.listenForMessage();
+        assertTrue(bobCall.waitForMessage(60000));
+        assertTrue(bobCall.sendMessageResponse(Response.ACCEPTED,"BobCall Msg Accepted", 3600));
+        String messageReceived = new String(bobCall.getLastReceivedMessageRequest().getRawContent());
+        assertEquals("Conference time limit reached", messageReceived);
+    }
+    
+    private String dialConfernceRcmlWithoutTimeLimit = "<Response><Dial><Conference>test</Conference></Dial></Response>";
+    @Test
+    public synchronized void testDialConferenceOnlyOneClientWithoutTimeLimit() throws InterruptedException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialConfernceRcmlWithoutTimeLimit)));
+        
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+        
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+        
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+        
+        Thread.sleep(1000);
+        bobCall.disconnect();
+        
+        Thread.sleep(10000);
+    }
+    
     @Test
     public synchronized void testDialConferenceConcurrentCalls() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
@@ -326,6 +448,75 @@ public class TestDialVerbPartOne {
         assertEquals(Response.OK, georgeCall.getLastReceivedResponse().getStatusCode());
         georgeCall.sendInviteOkAck();
         assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        // Wait for the media to play and the call to hangup.
+        bobCall.listenForDisconnect();
+        georgeCall.listenForDisconnect();
+
+        // Start a new thread for george to wait disconnect
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                assertTrue(georgeCall.waitForDisconnect(30 * 1000));
+            }
+        }).start();
+
+        // Start a new thread for bob to wait disconnect
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                assertTrue(bobCall.waitForDisconnect(30 * 1000));
+            }
+        }).start();
+    }
+
+    @Test
+    public synchronized void testDialConferenceWithPlayInDialogInviteHold() throws InterruptedException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialConfernceRcml)));
+
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        // George calls to the conference
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.initiateOutgoingCall(georgeContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(georgeCall);
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        int responseGeorge = georgeCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseGeorge == Response.TRYING || responseGeorge == Response.RINGING);
+
+        if (responseGeorge == Response.TRYING) {
+            assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, georgeCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, georgeCall.getLastReceivedResponse().getStatusCode());
+        georgeCall.sendInviteOkAck();
+        assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        //sendReinvite(String newContact, String displayName, String body, String contentType, String contentSubType)
+        SipTransaction reInviteTrans = bobCall.sendReinvite(bobContact, "Hold", sdpForHold, "application", "sdp");
+        assertTrue(bobCall.waitReinviteResponse(reInviteTrans, 5000));
+        bobCall.sendReinviteOkAck(reInviteTrans);
 
         // Wait for the media to play and the call to hangup.
         bobCall.listenForDisconnect();
@@ -835,9 +1026,11 @@ public class TestDialVerbPartOne {
         archive.delete("/WEB-INF/sip.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
+        archive.delete("/WEB-INF/classes/application.conf");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialTest_new", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
         logger.info("Packaged Test App");
         return archive;
     }

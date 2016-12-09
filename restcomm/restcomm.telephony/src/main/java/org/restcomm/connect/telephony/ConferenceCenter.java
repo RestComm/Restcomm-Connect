@@ -77,7 +77,7 @@ public final class ConferenceCenter extends UntypedActor {
     @Override
     public void onReceive(final Object message) throws Exception {
         if (logger.isInfoEnabled()) {
-            logger.info(" ********** ConferenceCenter " + self().path() + ", Processing Message: " + message.getClass().getName());
+            logger.info(" ********** ConferenceCenter " + self().path() + ", Processing Message: " + message.getClass().getName() + " isTerminated? "+self().isTerminated());
         }
         final Class<?> klass = message.getClass();
         final ActorRef sender = sender();
@@ -183,14 +183,24 @@ public final class ConferenceCenter extends UntypedActor {
         // be notified when the conference room is ready.
         List<ActorRef> observers = initializing.get(name);
         if (observers != null) {
+            if(logger.isDebugEnabled()) {
+                logger.debug("ConferenceCenter this conference is already being initialize. sender will be notied when conference is successfuly started."+ " ConferenceCenter isTerminated? "+self().isTerminated());
+            }
             observers.add(sender);
         } else {
+            if(logger.isDebugEnabled()) {
+                logger.debug("ConferenceCenter this conference initialization started. sender will be notied when conference is successfuly started."+ " ConferenceCenter isTerminated? "+self().isTerminated());
+            }
             observers = new ArrayList<ActorRef>();
             observers.add(sender);
             conference = getConference(name);
             conference.tell(new Observe(self), self);
             conference.tell(new StartConference(request.initialitingCallSid()), self);
             initializing.put(name, observers);
+
+            if(logger.isDebugEnabled()) {
+                logger.debug("Conference: "+ conference +" "+ " Conference isTerminated? "+conference.isTerminated()+ " ConferenceCenter isTerminated? "+self().isTerminated());
+            }
         }
     }
 }

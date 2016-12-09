@@ -43,6 +43,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 							rvdProjects[j].sid = restcommApps[i].sid;
 							rvdProjects[j].projectName = restcommApps[i].friendly_name;
 							rvdProjects[j].startUrl = restcommApps[i].rcml_url;
+							rvdProjects[j].kind = restcommApps[i].kind;
 						}
 					}
 					if(!hasProject){

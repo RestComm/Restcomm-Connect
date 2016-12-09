@@ -25,7 +25,52 @@ The *Play* verb is used to play an audio file to the remote party.
 |=============================
 
 === Media Server Audio File Format
+Technical Specification and Capacity
 
+The Restcomm Media Server is capable of
+
+*     Media and Codecs :
+
+        G711 (a-Law, u-Law)
+        
+        GSM
+        
+        Linear PCM(L16)
+        
+        G729
+        
+        DTMF(RFC 2833, INBAND)
+        
+*     Media Files :
+        
+        
+        *Wav (Sample rate of 8000Hz, bit rate of 8, Mono)*
+        
+        GSM
+        
+*     Signaling and control :
+
+        MGCP
+        
+        Java Media Control API(JSR-309)
+        
+*     Capacity : Typical media sessions per server
+
+        G.711 , L16 @20ms – 500+ per cpu core
+        
+        GSM @ 20ms – 95 GSM mixed with 380 G.711 , L16 , 475 overall per cpu core
+        
+        G.729 @20ms – 45 GSM mixed with 180 G.711 , L16 , 225 overall per cpu core
+        
+        All benchmark tests where done on Amazon EC2 cloud instances.
+
+= How to Convert a Wav File to the Correct Bitrate
+
+You can use a software call ffmpeg as follows:
+[source,]
+----
+ffmpeg -i source_file.wav -acodec pcm_s16le -ac 1 -ar 8000 result_file.wav
+----
 
 
 === Nesting

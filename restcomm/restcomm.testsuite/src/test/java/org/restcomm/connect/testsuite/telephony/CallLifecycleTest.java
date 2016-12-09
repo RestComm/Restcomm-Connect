@@ -619,7 +619,7 @@ public class CallLifecycleTest {
         georgeCall.listenForDisconnect();
 
         Thread.sleep(50000);
-        assertTrue(georgeCall.waitForDisconnect(5000));
+        assertTrue(georgeCall.waitForDisconnect(500000));
 
         Thread.sleep(10000);
 

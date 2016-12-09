@@ -165,7 +165,13 @@ public final class Conference extends UntypedActor {
         if (!this.observers.isEmpty()) {
             final ActorRef self = self();
             for (ActorRef observer : observers) {
-                observer.tell(message, self);
+                if (!observer.isTerminated()) {
+                    observer.tell(message, self);
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Conference broadcase, Observer is terminated: "+observer.path());
+                    }
+                }
             }
         }
     }
@@ -439,18 +445,15 @@ public final class Conference extends UntypedActor {
                 logger.info("################################## Conference " + name + " has " + participantsNr + " participants");
             }
             ConferenceResponse conferenceResponse = new ConferenceResponse(message);
-            notifyObservers(conferenceResponse);
+            broadcast(conferenceResponse);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Call left conference room and notification sent to observers.");
+            }
 
             // Stop the conference when ALL participants have been evicted
             if (removed && calls.isEmpty()) {
                 fsm.transition(message, stopping);
             }
-        }
-    }
-
-    private void notifyObservers(final Object message) {
-        for (final ActorRef observer : this.observers) {
-            observer.tell(message, self());
         }
     }
 
@@ -503,13 +506,13 @@ public final class Conference extends UntypedActor {
         if (isRunning()) {
             moderatorPresent = message.isConfModeratorPresent();
             if (logger.isInfoEnabled()) {
-                logger.info("Received Play message for conference: "+this.name+" , number of participants: "+this.calls.size()+" , isRunning: "+isRunning()+" ,isModeratorPresent: "+this.moderatorPresent);
+                logger.info("Received Play message for conference: "+this.name+" , number of local participants: "+this.calls.size()+ " globalNoOfParticipants: "+globalNoOfParticipants+", isRunning: true, isModeratorPresent: "+this.moderatorPresent + " iterations: "+message.iterations());
             }
             // Forward message to media server controller
             this.mscontroller.tell(message, sender);
         } else {
             if (logger.isInfoEnabled()) {
-                logger.info("Play will not be processed for conference: "+this.name+" , number of participants: "+this.calls.size()+" , isRunning: "+isRunning()+" ,isModeratorPresent: "+this.moderatorPresent);
+                logger.info("Play will not be processed for conference: "+this.name+" , number of local participants: "+this.calls.size()+ " globalNoOfParticipants: "+globalNoOfParticipants+" , isRunning: false, isModeratorPresent: "+this.moderatorPresent+ " iterations: "+message.iterations());
             }
         }
     }

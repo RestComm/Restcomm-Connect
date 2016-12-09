@@ -15,26 +15,7 @@ CREATE PROCEDURE updateProcedure()
  AND column_name = 'enabled';
 
 IF @colName799 IS NULL THEN
-CREATE TABLE temp_table LIKE restcomm_extensions_configuration;
-ALTER TABLE temp_table ADD enabled BOOLEAN NOT NULL DEFAULT FALSE;
-INSERT INTO temp_table
-  (
-sid,
-extension,
-configuration_data,
-configuration_type,
-date_created,
-date_updated
-  ) SELECT
-  sid as sid,
-  extension as extension,
-  configuration_data as configuration_data,
-  configuration_type as configuration_type,
-  date_created as date_created,
-  date_updated as date_updated
-  FROM restcomm_extensions_configuration;
-  DROP TABLE restcomm_extensions_configuration;
-  ALTER TABLE temp_table RENAME restcomm_extensions_configuration;
+  ALTER TABLE restcomm_extensions_configuration add enabled BOOLEAN NOT NULL DEFAULT FALSE, ALGORITHM = INPLACE, LOCK = NONE;
 END IF;
 END //
 

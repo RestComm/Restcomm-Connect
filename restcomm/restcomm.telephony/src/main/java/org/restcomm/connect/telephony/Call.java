@@ -19,39 +19,12 @@
  */
 package org.restcomm.connect.telephony;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Currency;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.concurrent.TimeUnit;
-
-import javax.sdp.SdpException;
-import javax.servlet.sip.Address;
-import javax.servlet.sip.AuthInfo;
-import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletMessage;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
-import javax.sip.header.RecordRouteHeader;
-import javax.sip.header.RouteHeader;
-import javax.sip.message.Response;
-
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
@@ -107,14 +80,39 @@ import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.telephony.api.RemoveParticipant;
-
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
 import scala.concurrent.duration.Duration;
+
+import javax.sdp.SdpException;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.AuthInfo;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
+import javax.sip.header.RecordRouteHeader;
+import javax.sip.header.RouteHeader;
+import javax.sip.message.Response;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Currency;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -156,6 +154,7 @@ public final class Call extends UntypedActor {
     private final State stopping;
     private final State completed;
     private final State failed;
+    private final State inDialogRequest;
     private boolean fail;
 
     // SIP runtime stuff
@@ -172,6 +171,7 @@ public final class Call extends UntypedActor {
     private CreateCall.Type type;
     private long timeout;
     private SipServletRequest invite;
+    private SipServletRequest inDialogInvite;
     private SipServletResponse lastResponse;
     private boolean isFromApi;
 
@@ -239,6 +239,7 @@ public final class Call extends UntypedActor {
         this.stopping = new State("stopping", new Stopping(source), null);
         this.completed = new State("completed", new Completed(source), null);
         this.failed = new State("failed", new Failed(source), null);
+        this.inDialogRequest = new State("InDialogRequest", new InDialogRequest(source), null);
 
         // Transitions for the FSM
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -277,6 +278,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.inProgress, this.joining));
         transitions.add(new Transition(this.inProgress, this.leaving));
         transitions.add(new Transition(this.inProgress, this.failed));
+        transitions.add(new Transition(this.inProgress, this.inDialogRequest));
         transitions.add(new Transition(this.joining, this.inProgress));
         transitions.add(new Transition(this.joining, this.stopping));
         transitions.add(new Transition(this.joining, this.failed));
@@ -294,6 +296,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.stopping, this.completed));
         transitions.add(new Transition(this.stopping, this.failed));
         transitions.add(new Transition(this.failed, this.completed));
+        transitions.add(new Transition(this.completed, this.stopping));
 
         // FSM
         this.fsm = new FiniteStateMachine(this.uninitialized, transitions);
@@ -1030,25 +1033,42 @@ public final class Call extends UntypedActor {
             }
             msController.tell(command, source);
         }
+    }
 
-        private CreateMediaSession generateRequest(SipServletMessage sipMessage) throws IOException, SdpException, ServletParseException {
-            String externalIp = null;
-            final SipURI externalSipUri = (SipURI) sipMessage.getSession().getAttribute("realInetUri");
-            if (externalSipUri != null) {
-                if(logger.isInfoEnabled()) {
-                    logger.info("ExternalSipUri stored in the sip session : "+externalSipUri.toString()+" will use host: "+externalSipUri.getHost().toString());
-                }
-                externalIp = externalSipUri.getHost().toString();
-            } else {
-                externalIp = sipMessage.getInitialRemoteAddr();
-                if(logger.isInfoEnabled()) {
-                    logger.info("ExternalSipUri stored in the session was null, will use the message InitialRemoteAddr: "+externalIp);
-                }
-            }
-            final byte[] sdp = sipMessage.getRawContent();
-            final String offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
-            return new CreateMediaSession("sendrecv", offer, false, webrtc, inboundCallSid);
+    private final class InDialogRequest extends AbstractAction {
+
+        public InDialogRequest(final ActorRef source) {
+            super(source);
         }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            SipServletRequest request = (SipServletRequest) message;
+            if (logger.isDebugEnabled()) {
+                logger.debug("IN-Dialog INVITE received: "+request.getRequestURI().toString());
+            }
+            CreateMediaSession command = generateRequest(request);
+            msController.tell(command, self());
+        }
+    }
+
+    private CreateMediaSession generateRequest(SipServletMessage sipMessage) throws IOException, SdpException, ServletParseException {
+        String externalIp = null;
+        final SipURI externalSipUri = (SipURI) sipMessage.getSession().getAttribute("realInetUri");
+        if (externalSipUri != null) {
+            if(logger.isInfoEnabled()) {
+                logger.info("ExternalSipUri stored in the sip session : "+externalSipUri.toString()+" will use host: "+externalSipUri.getHost().toString());
+            }
+            externalIp = externalSipUri.getHost().toString();
+        } else {
+            externalIp = sipMessage.getInitialRemoteAddr();
+            if(logger.isInfoEnabled()) {
+                logger.info("ExternalSipUri stored in the session was null, will use the message InitialRemoteAddr: "+externalIp);
+            }
+        }
+        final byte[] sdp = sipMessage.getRawContent();
+        final String offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
+        return new CreateMediaSession("sendrecv", offer, false, webrtc, inboundCallSid);
     }
 
     private final class UpdatingMediaSession extends AbstractAction {
@@ -1232,12 +1252,17 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-             if (!receivedBye) {
-                 // Conference was stopped and this call was asked to leave
-                 // Send BYE to remote client
-                 sendBye(new Hangup("Conference time limit reached"));
-             }
-            msController.tell(message, super.source);
+            Leave leaveMsg = (Leave) message;
+            if (!leaveMsg.isLiveCallModification()) {
+                if (!receivedBye) {
+                    // Conference was stopped and this call was asked to leave
+                    // Send BYE to remote client
+                    sendBye(new Hangup("Conference time limit reached"));
+                }
+            } else {
+                liveCallModification = true;
+            }
+            msController.tell(message, self());
         }
 
     }
@@ -1328,6 +1353,10 @@ public final class Call extends UntypedActor {
         if (is(inProgress)) {
             // Forward to media server controller
             this.msController.tell(message, sender);
+            if (conferencing && message.isLiveCallModification()) {
+                liveCallModification = true;
+                self().tell(new Leave(true), self());
+            }
         }
     }
 
@@ -1454,6 +1483,30 @@ public final class Call extends UntypedActor {
         if ("INVITE".equalsIgnoreCase(method)) {
             if (is(uninitialized)) {
                 fsm.transition(message, ringing);
+            } if (is(inProgress)) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("IN-Dialog INVITE received: "+message.getRequestURI().toString());
+                }
+
+                inDialogInvite = message;
+
+                String answer = null;
+                if (!disableSdpPatchingOnUpdatingMediaSession) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Will patch SDP answer from 200 OK received with the external IP Address from Response on updating media session");
+                    }
+                    final String externalIp = message.getInitialRemoteAddr();
+                    final byte[] sdp = message.getRawContent();
+                    answer = SdpUtils.patch(message.getContentType(), sdp, externalIp);
+                } else {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("SDP Patching on updating media session is disabled");
+                    }
+                    answer = SdpUtils.getSdp(message.getContentType(), message.getRawContent());
+                }
+
+                final UpdateMediaSession update = new UpdateMediaSession(answer);
+                msController.tell(update, self());
             }
         } else if ("CANCEL".equalsIgnoreCase(method)) {
             if (is(initializing)) {
@@ -1654,7 +1707,7 @@ public final class Call extends UntypedActor {
             msController.tell(new Stop(true), self);
         }
 
-        if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress)) {
+        if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress) || is(completed)) {
             if (conferencing) {
                 // Tell conference to remove the call from participants list
                 // before moving to a stopping state
@@ -1883,6 +1936,23 @@ public final class Call extends UntypedActor {
                         logger.info("current state: "+fsm.state()+" , will wait for ACK to move to inProgress");
                     }
 
+                } else if(is(inProgress) && inDialogRequest != null) {
+                    mediaSessionInfo = message.getMediaSession();
+                    final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
+                    String answer = null;
+                    if (mediaSessionInfo.usesNat()) {
+                        final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
+                        answer = SdpUtils.patch("application/sdp", sdp, externalIp);
+                    } else {
+                        answer = mediaSessionInfo.getLocalSdp().toString();
+                    }
+
+                    // Issue #215:
+                    // https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
+                    answer = SdpUtils.endWithNewLine(answer);
+                    SipServletResponse resp = inDialogInvite.createResponse(Response.OK);
+                    resp.setContent(answer, "application/sdp");
+                    resp.send();
                 }
                 break;
 
@@ -1963,10 +2033,22 @@ public final class Call extends UntypedActor {
                 this.conferencing = false;
                 this.conference.tell(new Left(self()), self);
                 this.conference = null;
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Call left conference room and notification sent to conference actor");
+                }
             }
 
-            // After leaving let the Interpreter know the Call is ready.
-            fsm.transition(message, completed);
+            if (!liveCallModification) {
+                // After leaving let the Interpreter know the Call is ready.
+                fsm.transition(message, completed);
+            } else {
+                if (muted) {
+                    // Forward to media server controller
+                    this.msController.tell(new Unmute(), sender);
+                    muted = false;
+                }
+                fsm.transition(message, inProgress);
+            }
         }
     }
 

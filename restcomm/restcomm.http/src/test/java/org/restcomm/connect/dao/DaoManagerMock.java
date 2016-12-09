@@ -150,8 +150,7 @@ public class DaoManagerMock implements DaoManager {
         return null;
     }
 
-    @Override
-    public void configure(Configuration configuration) {
+    public void configure(Configuration configuration, Configuration daoManagerConfiguration) {
 
     }
 

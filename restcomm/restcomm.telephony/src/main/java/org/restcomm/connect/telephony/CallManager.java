@@ -33,15 +33,37 @@ import akka.util.Timeout;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import org.restcomm.connect.extension.api.CallRequest;
-import org.restcomm.connect.extension.api.ExtensionResponse;
-import org.restcomm.connect.extension.api.ExtensionType;
-import org.restcomm.connect.monitoringservice.MonitoringService;
-import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import gov.nist.javax.sip.header.UserAgent;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.util.SdpUtils;
+import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.dao.AccountsDao;
+import org.restcomm.connect.dao.ApplicationsDao;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
+import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.RegistrationsDao;
+import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Application;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.dao.entities.Registration;
+import org.restcomm.connect.extension.api.CallRequest;
+import org.restcomm.connect.extension.api.ExtensionResponse;
+import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
+import org.restcomm.connect.interpreter.StartInterpreter;
+import org.restcomm.connect.interpreter.StopInterpreter;
+import org.restcomm.connect.interpreter.VoiceInterpreterBuilder;
+import org.restcomm.connect.monitoringservice.MonitoringService;
+import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
@@ -57,30 +79,8 @@ import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.SwitchProxy;
 import org.restcomm.connect.telephony.api.UpdateCallScript;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.dao.AccountsDao;
-import org.restcomm.connect.dao.ApplicationsDao;
-import org.restcomm.connect.dao.ClientsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
-import org.restcomm.connect.dao.NotificationsDao;
-import org.restcomm.connect.dao.RegistrationsDao;
-import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Application;
-import org.restcomm.connect.dao.entities.Client;
-import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.dao.entities.Notification;
-import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.interpreter.StartInterpreter;
-import org.restcomm.connect.interpreter.StopInterpreter;
-import org.restcomm.connect.interpreter.VoiceInterpreterBuilder;
-import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
-import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
-import org.restcomm.connect.commons.util.SdpUtils;
-import org.restcomm.connect.commons.util.UriUtils;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -320,6 +320,22 @@ public final class CallManager extends UntypedActor {
         final SipServletRequest request = (SipServletRequest) message;
         // Make sure we handle re-invites properly.
         if (!request.isInitial()) {
+            SipApplicationSession appSession = request.getApplicationSession();
+            ActorRef call = null;
+            if (appSession.getAttribute(Call.class.getName()) != null) {
+                call = (ActorRef) appSession.getAttribute(Call.class.getName());
+            }
+            if (call != null) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("For In-Dialog INVITE dispatched to Call actor: "+call.path());
+                }
+                call.tell(request, self);
+                return;
+            }
+
+            if (logger.isInfoEnabled()) {
+                logger.info("No call actor found will respond 200OK for In-dialog INVITE: "+request.getRequestURI().toString());
+            }
             final SipServletResponse okay = request.createResponse(SC_OK);
             okay.send();
             return;
@@ -388,6 +404,8 @@ public final class CallManager extends UntypedActor {
                         String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
                                 + " : Make sure the Client exist or is registered with Restcomm";
                         sendNotification(errMsg, 11001, "warning", true);
+                        final SipServletResponse resp = request.createResponse(SC_NOT_FOUND, "Cannot complete P2P call");
+                        resp.send();
                     }
                 } else {
                     //Extensions didn't allowed this call
@@ -723,7 +741,7 @@ public final class CallManager extends UntypedActor {
                 errMsg = "The number does not have a Restcomm hosted application attached";
             }
             sendNotification(errMsg, 11007, "error", false);
-            logger.error(errMsg, notANumber);
+            logger.warning(errMsg, notANumber);
             isFoundHostedApp = false;
         }
         return isFoundHostedApp;
@@ -1052,15 +1070,16 @@ public final class CallManager extends UntypedActor {
         }
 
         if(logger.isInfoEnabled()) {
-            logger.info("About to start Live Call Modification");
+            logger.info("About to start Live Call Modification, moveConnectedCallLeg: "+moveConnectedCallLeg);
             logger.info("Initial Call path: " + call.path());
-
             if (relatedCall != null) {
                 logger.info("Related Call path: " + relatedCall.path());
             }
-
             // Cleanup all observers from both call legs
             logger.info("Will tell Call actors to stop observing existing Interpreters");
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("LCM account: "+ request.account() +", moveConnectedCallLeg: "+moveConnectedCallLeg+", new RCML url: "+request.url());
         }
         call.tell(new StopObserving(), self());
         if (relatedCall != null) {
@@ -1135,7 +1154,7 @@ public final class CallManager extends UntypedActor {
                 } else {
                     //Extensions didn't allowed this call
                     final String errMsg = "Not Allowed to make this outbound call";
-                    logger.error(errMsg);
+                    logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
                 }
                 executePostOutboundAction(callRequest);
@@ -1147,7 +1166,7 @@ public final class CallManager extends UntypedActor {
                 } else {
                     //Extensions didn't allowed this call
                     final String errMsg = "Not Allowed to make this outbound call";
-                    logger.error(errMsg);
+                    logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
                 }
                 executePostOutboundAction(callRequest);
@@ -1159,7 +1178,7 @@ public final class CallManager extends UntypedActor {
                 }  else {
                     //Extensions didn't allowed this call
                     final String errMsg = "Not Allowed to make this outbound call";
-                    logger.error(errMsg);
+                    logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
                 }
                 executePostOutboundAction(callRequest);
@@ -1229,7 +1248,7 @@ public final class CallManager extends UntypedActor {
             }
         } else {
             String errMsg = "The SIP Client "+request.to()+" is not registered or does not exist";
-            logger.error(errMsg);
+            logger.warning(errMsg);
             sendNotification(errMsg, 11008, "error", true);
             sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
             return;
@@ -1279,7 +1298,7 @@ public final class CallManager extends UntypedActor {
                 if (from == null || to == null) {
                     //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
                     final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: "+request.to();
-                    logger.error(errMsg);
+                    logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
                 } else {
                     calls.add(createOutbound(request,from,to,webRTC));
@@ -1290,7 +1309,7 @@ public final class CallManager extends UntypedActor {
             }
         } else {
             String errMsg = "The SIP Client "+request.to()+" is not registered or does not exist";
-            logger.error(errMsg);
+            logger.warning(errMsg);
             sendNotification(errMsg, 11008, "error", true);
             sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
         }
@@ -1342,14 +1361,14 @@ public final class CallManager extends UntypedActor {
             if (from == null || to == null) {
                 //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
                 final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: "+request.to();
-                logger.error(errMsg);
+                logger.warning(errMsg);
                 sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
             } else {
                 sender.tell(new CallManagerResponse<ActorRef>(createOutbound(request,from,to,false)), self());
             }
         } else {
             String errMsg = "Cannot create call to: "+request.to()+". The Active Outbound Proxy is null. Please check configuration";
-            logger.error(errMsg);
+            logger.warning(errMsg);
             sendNotification(errMsg, 11008, "error", true);
             sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
         }
@@ -1378,7 +1397,7 @@ public final class CallManager extends UntypedActor {
         if (from == null || to == null) {
             //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
             final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: "+request.to();
-            logger.error(errMsg);
+            logger.warning(errMsg);
             sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
         } else {
             sender.tell(new CallManagerResponse<ActorRef>(createOutbound(request,from,to,false)), self());

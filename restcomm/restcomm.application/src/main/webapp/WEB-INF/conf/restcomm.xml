@@ -266,17 +266,6 @@
 		<port></port>
 	</smtp-service>
 
-	<dao-manager class="org.restcomm.connect.dao.mybatis.MybatisDaoManager">
-		<configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml</configuration-file>
-		<data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
-		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
-	</dao-manager>
-	<!-- <dao-manager class="org.restcomm.connect.dao.mybatis.MybatisDaoManager">
-        <configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml</configuration-file>
-        <data-files></data-files>
-        <sql-files>${restcomm:home}/WEB-INF/scripts/mariadb/sql</sql-files>
-    </dao-manager> -->
-
 	<amazon-s3>
 		<enabled>false</enabled>
 		<bucket-name>restcomm-recordings</bucket-name>
@@ -438,7 +427,7 @@
 				<canadian-french> <female>louise8k</female> <male></male> </canadian-french>
 				<czech> <female>eliska8k</female> <male></male> </czech>
 				<danish> <female>mette8k</female><male>rasmus8k</male></danish>
-				<english> <female>heather8k</female> <male>ryan8k</male> </english>
+				<english> <female>laura8k</female> <male>ryan8k</male> </english>
 				<finnish> <female>sanna8k</female> <male></male> </finnish>
 				<french> <female>claire8k</female> <male>bruno8k</male> </french>
 				<german> <female>sarah8k</female> <male>klaus8k</male> </german>
