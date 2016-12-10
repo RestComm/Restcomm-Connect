@@ -213,6 +213,9 @@ public final class Call extends UntypedActor {
     private boolean disableSdpPatchingOnUpdatingMediaSession;
 
     private Sid inboundCallSid;
+    private int collectTimeout;
+    private String collectFinishKey;
+    private boolean collectSipInfoDtmf = false;
 
     public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
         super();
@@ -503,6 +506,10 @@ public final class Call extends UntypedActor {
     }
 
     private void processInfo(final SipServletRequest request) throws IOException {
+        //Seems we will receive DTMF over SIP INFO, we should start timeout timer
+        //to simulate the collect timeout when using the RMS
+        collectSipInfoDtmf = true;
+        context().setReceiveTimeout(Duration.create(collectTimeout, TimeUnit.SECONDS));
         final SipServletResponse okay = request.createResponse(SipServletResponse.SC_OK);
         addCustomHeaders(okay);
         okay.send();
@@ -1344,6 +1351,8 @@ public final class Call extends UntypedActor {
 
     private void onCollect(Collect message, ActorRef self, ActorRef sender) {
         if (is(inProgress)) {
+            collectTimeout = message.timeout();
+            collectFinishKey = message.endInputKey();
             // Forward to media server controller
             this.msController.tell(message, sender);
         }
@@ -1472,6 +1481,15 @@ public final class Call extends UntypedActor {
         getContext().setReceiveTimeout(Duration.Undefined());
         if (is(ringing) || is(dialing)) {
             fsm.transition(message, failingNoAnswer);
+        } else if(is(inProgress) && collectSipInfoDtmf) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Collecting DTMF with SIP INFO, inter digit timeout fired. Will send finishKey to observers");
+            }
+            MediaGroupResponse<String> infoResponse = new MediaGroupResponse<String>(collectFinishKey);
+            for (final ActorRef observer : observers) {
+                observer.tell(infoResponse, self());
+            }
+
         } else if(logger.isInfoEnabled()) {
             logger.info("Timeout received for Call : "+self().path()+" isTerminated(): "+self().isTerminated()+". Sender: " + sender.path().toString() + " State: " + this.fsm.state()
                 + " Direction: " + direction + " From: " + from + " To: " + to);
