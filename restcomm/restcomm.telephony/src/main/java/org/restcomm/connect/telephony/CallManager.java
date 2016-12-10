@@ -57,6 +57,7 @@ import org.restcomm.connect.dao.entities.Registration;
 import org.restcomm.connect.extension.api.CallRequest;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.interpreter.StartInterpreter;
@@ -1155,7 +1156,7 @@ public final class CallManager extends UntypedActor {
                     //Extensions didn't allowed this call
                     final String errMsg = "Not Allowed to make this outbound call";
                     logger.warning(errMsg);
-                    sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+                    sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), this.createCallRequest), self());
                 }
                 executePostOutboundAction(callRequest);
                 break;
@@ -1167,7 +1168,7 @@ public final class CallManager extends UntypedActor {
                     //Extensions didn't allowed this call
                     final String errMsg = "Not Allowed to make this outbound call";
                     logger.warning(errMsg);
-                    sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+                    sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), this.createCallRequest), self());
                 }
                 executePostOutboundAction(callRequest);
                 break;
@@ -1179,7 +1180,7 @@ public final class CallManager extends UntypedActor {
                     //Extensions didn't allowed this call
                     final String errMsg = "Not Allowed to make this outbound call";
                     logger.warning(errMsg);
-                    sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+                    sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), this.createCallRequest), self());
                 }
                 executePostOutboundAction(callRequest);
                 break;
