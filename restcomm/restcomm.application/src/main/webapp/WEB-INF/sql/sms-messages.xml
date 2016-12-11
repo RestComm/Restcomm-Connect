@@ -36,4 +36,87 @@
     AND "date_created" &gt;= #{start_time};
   </select>
   
+  <select id="getTotalSmsMessageByUsingFilters" parameterType="org.restcomm.connect.dao.entities.SmsMessageFilter" resultType="int">
+            SELECT COUNT(*) FROM "restcomm_sms_messages" WHERE
+
+            <!-- are we counting cdrs from a single account or from an account set -->
+            <if test="accountSidSet == null">
+                    "account_sid"=#{accountSid}
+            </if>
+            <if test="accountSidSet != null">
+                    <if test="!accountSidSet.isEmpty()">
+                            "account_sid" IN
+                            <foreach item="item" index="index" collection="accountSidSet" open="(" separator="," close=")">
+                                    #{item}
+                            </foreach>
+                    </if>
+                    <if test="accountSidSet.isEmpty()">
+                            "account_sid"=''
+                    </if>
+            </if>
+
+            <if test="instanceid != null">
+                    AND "instanceid" like #{instanceid}
+            </if>
+            <if test="recipient != null">
+                    AND "recipient" like #{recipient}
+            </if>
+            <if test="sender != null">
+                    AND "sender" like #{sender}
+            </if>
+            <if test="body != null">
+                    AND "body" like '%'|| #{body} ||'%'
+            </if>
+            <!-- select * from "restcomm_sms_messages" where "start_time" >= '2013-08-23' order by "start_time" ; -->
+            <if test="startTime != null">
+                AND "date_created" &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                    AND "date_created" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
+            </if>
+
+    </select>
+	
+    <select id="getSmsMessagesByUsingFilters" parameterType="org.restcomm.connect.dao.entities.SmsMessageFilter" resultType="hashmap">
+            SELECT * FROM "restcomm_sms_messages" AS "restcomm_sms_messages" WHERE
+
+            <!-- are we retrieving cdrs from a single account or from an account set -->
+            <if test="accountSidSet == null">
+                    "account_sid"=#{accountSid}
+            </if>
+            <if test="accountSidSet != null">
+                    <if test="!accountSidSet.isEmpty()">
+                            "account_sid" IN
+                            <foreach item="item" index="index" collection="accountSidSet" open="(" separator="," close=")">
+                                    #{item}
+                            </foreach>
+                    </if>
+                    <if test="accountSidSet.isEmpty()">
+                            "account_sid"=''
+                    </if>
+            </if>
+
+            <if test="instanceid != null">
+                    AND "instanceid" like #{instanceid}
+            </if>
+            <if test="recipient != null">
+                    AND "recipient" like #{recipient}
+            </if>
+            <if test="sender != null">
+                    AND "sender" like #{sender}
+            </if>
+            <if test="body != null">
+                    AND "body" like '%'|| #{body} ||'%'
+            </if>
+            <!-- select * from "restcomm_sms_messages" where "start_time" >= '2013-08-23' order by "start_time" ; -->
+            <if test="startTime != null">
+                AND "date_created" &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                    AND "date_created" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
+            </if>
+            order by "date_created"
+            LIMIT #{limit} OFFSET #{offset}
+    </select>
+  
 </mapper>

@@ -4,33 +4,45 @@
 
 <div class="row">
     <div class="col-md-12">
-        <div ng-show="recordingsLogsList.length > 0" class="record-filter-div pull-right">
+        <div ng-show="recordingsLogsList.length > 0 || search" class="record-filter-div pull-right">
             <form class="form-inline" role="form">
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-2">
                     <div class="input-group">
                         <span class="input-group-addon">From</span>
-                        <input type="text" class="input-sm form-control" placeholder="From" ng-model="query.from" ng-change="filter()" disabled />
+                        <input type="text" class="input-sm form-control" placeholder="From" ng-model="search.from" disabled />
                     </div>
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-2">
                     <div class="input-group">
                         <span class="input-group-addon">To</span>
-                        <input type="text" class="input-sm form-control" placeholder="To" ng-model="query.to" ng-change="filter()" disabled />
+                        <input type="text" class="input-sm form-control" placeholder="To" ng-model="search.to" disabled />
                     </div>
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-2 date-group-sm">
                     <div class="input-group">
                         <span class="input-group-addon">Date</span>
-                        <input type="date" class="input-sm form-control" placeholder="Date" ng-model="query.date_created" ng-change="filter()" />
+                        <input id="startpicker" pick-a-date="date" class="input-sm form-control" placeholder="Start Date" ng-model="search.start_time" />
+                        <span class="input-group-btn">
+                            <button  type="button" id="startDate" class="btn btn-default input-sm" ng-click="openDate('startDate')"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
                     </div>
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-2 date-group-sm">
+                    <div class="input-group">
+                        <span class="input-group-addon">To</span>
+                        <input id="endpicker" pick-a-date="date" pick-a-date-options="options"  class="input-sm form-control" placeholder="End Date" ng-model="search.end_time" />
+                        <span class="input-group-btn">
+                            <button  type="button" id="endDate" class="btn btn-default input-sm" ng-click="openDate('endDate')"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
+                    </div>
+                </div>
+                <div class="form-group col-md-2">
                     <div class="input-group">
                         <span class="input-group-addon">Call</span>
-                        <input type="text" class="input-sm form-control" placeholder="Call SID" ng-model="query.call_sid" ng-change="filter()" />
+                        <input type="text" class="input-sm form-control" placeholder="Call SID" ng-model="search.call_sid" />
                     </div>
                 </div>
-                <button class="btn btn-default btn-sm hidden" disabled><i class="fa fa-filter"></i> Filter</button>
+                <button class="btn btn-default btn-sm" ng-click="getRecordingsLogsList()"><i class="fa fa-search"></i></button>
             </form>
         </div>
 
@@ -48,7 +60,7 @@
             <th class="width-5pc"  style="border-bottom: 3px solid #428bca;text-align: center;">&nbsp;</th>
             </thead>
             <tbody>
-            <tr ng-repeat="recording in filtered = (recordingsLogsList | filter:query | orderBy:sort:reverse) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit">
+            <tr ng-repeat="recording in filtered = (recordingsLogsList | filter:query | orderBy:sort:reverse)">
                 <td><a href="" ng-click="showRecordingDetailsModal(recording)">{{ recording.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
                 <td><div>{{ recording.from ? recording.from : '&lt;caller&gt;' }}</div></td>
                 <td><div>{{ recording.to ? recording.to : '&lt;callee&gt;' }}</div></td>
@@ -59,7 +71,7 @@
             </tr>
             </tbody>
             <tfoot>
-            <td><small class="pull-left">{{ filtered.length }} Messages{{ filtered.length == 1 ? "" : "s" }}</small></td>
+            <td><small class="pull-left">{{ totalRecording }} Messages{{ totalRecording == 1 ? "" : "s" }}</small></td>
             <td colspan=3>
                 <form class="form-inline text-center">
                     <h6>Items / Page</h6>
@@ -72,7 +84,7 @@
             </td>
             <td colspan="99">
                 <!--<pagination class="pagination pagination-sm pull-right" on-select-page="pageChanged(page)" total-items="recordingsLogsList.length" items-per-page="entryLimit" page="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>-->
-                <uib-pagination class="pagination pagination-sm pull-right" total-items="filtered.length" items-per-page="entryLimit" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
+                <uib-pagination class="pagination pagination-sm pull-right" total-items="totalRecording" items-per-page="entryLimit" ng-model="currentPage" ng-change="pageChanged()" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
             </td>
             </tfoot>
         </table>
