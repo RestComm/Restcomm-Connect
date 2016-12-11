@@ -4,33 +4,45 @@
 
 <div class="row">
     <div class="col-md-12">
-        <div ng-show="messagesLogsList.length > 0" class="pull-left record-filter-div">
+        <div ng-show="messagesLogsList.length > 0 || search" class="pull-left record-filter-div">
             <form class="form-inline" role="form">
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-2">
                     <div class="input-group">
                         <span class="input-group-addon">From</span>
-                        <input type="text" class="input-sm form-control" placeholder="From" ng-model="query.from" ng-change="filter()" />
+                        <input type="text" class="input-sm form-control" placeholder="From" ng-model="search.from" />
                     </div>
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-2">
                     <div class="input-group">
                         <span class="input-group-addon">To</span>
-                        <input type="text" class="input-sm form-control" placeholder="To" ng-model="query.to" ng-change="filter()" />
+                        <input type="text" class="input-sm form-control" placeholder="To" ng-model="search.to" />
                     </div>
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-2 date-group-sm">
                     <div class="input-group">
                         <span class="input-group-addon">Date</span>
-                        <input type="date" class="input-sm form-control" placeholder="Date" ng-model="query.date_created" ng-change="filter()" />
+                        <input id="startpicker" pick-a-date="date" class="input-sm form-control" placeholder="Start Date" ng-model="search.start_time" />
+                        <span class="input-group-btn">
+                            <button  type="button" id="startDate" class="btn btn-default input-sm" ng-click="openDate('startDate')"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
                     </div>
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-2 date-group-sm">
+                    <div class="input-group">
+                        <span class="input-group-addon">To</span>
+                        <input id="endpicker" pick-a-date="date" pick-a-date-options="options"  class="input-sm form-control" placeholder="End Date" ng-model="search.end_time" />
+                        <span class="input-group-btn">
+                            <button  type="button" id="endDate" class="btn btn-default input-sm" ng-click="openDate('endDate')"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
+                    </div>
+                </div>
+                <div class="form-group col-md-2">
                     <div class="input-group">
                         <span class="input-group-addon">Body</span>
-                        <input type="text" class="input-sm form-control" placeholder="Message Body" ng-model="query.body" ng-change="filter()" />
+                        <input type="text" class="input-sm form-control" placeholder="Message Body" ng-model="search.body" />
                     </div>
                 </div>
-                <button class="btn btn-default btn-sm hidden" disabled><i class="fa fa-filter"></i> Filter</button>
+                <button class="btn btn-default btn-sm" ng-click="getMessagesList()"><i class="fa fa-search"></i></button>
             </form>
         </div>
 
@@ -51,7 +63,7 @@
             <!--<th class="width-15pc">&nbsp;</th>-->
             </thead>
             <tbody>
-            <tr ng-repeat="message in filtered = (messagesLogsList | filter:query | orderBy:sort:reverse) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit">
+            <tr ng-repeat="message in filtered = (messagesLogsList | filter:query | orderBy:sort:reverse)">
                 <td><a href="" ng-click="showMessageDetailsModal(message)">{{ message.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
                 <td><div class="text-center"><i ng-class="message.direction == 'inbound' ? 'fa fa-sign-in' : (message.direction == 'outbound-reply' ? 'fa fa-sign-out' : '')"></i><!-- {{ message.direction ? message.direction : '?' }} --></div></td>
                 <td><div class="text-center">{{ message.from ? message.from : '?' }}</div></td>
@@ -62,7 +74,7 @@
             </tr>
             </tbody>
             <tfoot>
-            <td><small class="pull-left">{{ filtered.length }} Messages{{ filtered.length == 1 ? "" : "s" }}</small></td>
+            <td><small class="pull-left">{{ totalMessage }} Message{{ totalMessage == 1 ? "" : "s" }}</small></td>
             <td colspan=3>
                 <form class="form-inline text-center">
                     <h6>Items / Page</h6>
@@ -74,7 +86,7 @@
                 </form>
             </td>
             <td colspan="99">
-                <uib-pagination class="pagination pagination-sm pull-right" total-items="filtered.length" items-per-page="entryLimit" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
+                <uib-pagination class="pagination pagination-sm pull-right" total-items="totalMessage" items-per-page="entryLimit" ng-change="pageChanged()" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
             </td>
             </tfoot>
         </table>

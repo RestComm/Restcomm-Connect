@@ -4,34 +4,46 @@
 
 <div class="row">
     <div class="col-md-12">
-        <div ng-show="notificationsLogsList.length > 0" class="record-filter-div pull-right">
+        <div ng-show="notificationsLogsList.length > 0 || search" class="record-filter-div pull-right">
             <form class="form-inline" role="form">
             <div class="form-inline">
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-2 date-group-sm">
                     <div class="input-group">
                         <span class="input-group-addon">Date</span>
-                        <input type="date" class="input-sm form-control" placeholder="Date" ng-model="query.date_created" ng-change="filter()" />
+                        <input id="startpicker" pick-a-date="date" class="input-sm form-control" placeholder="Start Date" ng-model="search.start_time" />
+                        <span class="input-group-btn">
+                            <button  type="button" id="startDate" class="btn btn-default input-sm" ng-click="openDate('startDate')"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
+                    </div>
+                </div>
+                <div class="form-group col-md-2 date-group-sm">
+                    <div class="input-group">
+                        <span class="input-group-addon">To</span>
+                        <input id="endpicker" pick-a-date="date" pick-a-date-options="options"  class="input-sm form-control" placeholder="End Date" ng-model="search.end_time" />
+                        <span class="input-group-btn">
+                            <button  type="button" id="endDate" class="btn btn-default input-sm" ng-click="openDate('endDate')"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
                     </div>
                 </div>
                 <div class="form-group col-md-2">
                     <div class="input-group">
                         <span class="input-group-addon">Code</span>
-                        <input type="number" class="input-sm form-control" placeholder="Error Code" ng-model="query.error_code" ng-change="filter()" />
+                        <input type="number" class="input-sm form-control" placeholder="Error Code" ng-model="search.error_code" />
                     </div>
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-2">
                     <div class="input-group">
                         <span class="input-group-addon">URL</span>
-                        <input type="text" class="input-sm form-control" placeholder="Request URL" ng-model="query.request_url" ng-change="filter()" />
+                        <input type="text" class="input-sm form-control" placeholder="Request URL" ng-model="search.request_url" />
                     </div>
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-2">
                     <div class="input-group">
                         <span class="input-group-addon">Text</span>
-                        <input type="text" class="input-sm form-control" placeholder="Message Text" ng-model="query.message_text" ng-change="filter()" />
+                        <input type="text" class="input-sm form-control" placeholder="Message Text" ng-model="search.message_text" />
                     </div>
                 </div>
-                <button class="btn btn-default hidden" disabled><i class="fa fa-filter"></i> Filter</button>
+                <button class="btn btn-default btn-sm" ng-click="getNotificationsLogsList()"><i class="fa fa-search"></i></button>
             </div>
             </form>
         </div>
@@ -49,7 +61,7 @@
             <th class="width-20pc" style="border-bottom: 3px solid #428bca;text-align: center;">TEXT</th>
             </thead>
             <tbody>
-            <tr ng-repeat="notification in filtered = (notificationsLogsList | filter:query | orderBy:sort:reverse) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit">
+            <tr ng-repeat="notification in filtered = (notificationsLogsList | filter:query | orderBy:sort:reverse)">
                 <td><a href="" ng-click="showNotificationDetailsModal(notification)">{{ notification.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
                 <td><div class="text-center" uib-tooltip="{{ notification.log == 0 ? 'ERROR' : 'WARNING' }}"><i ng-class="notification.log == 0 ? 'fa fa-times' : 'fa fa-warning'"></i></div></td>
                 <td><div class="text-center"><a href="{{ notification.more_info }}" target="_blank">{{ notification.error_code }}</a></div></td>
@@ -58,7 +70,7 @@
             </tr>
             </tbody>
             <tfoot>
-            <td><small class="pull-left">{{ filtered.length }} Notification{{ filtered.length == 1 ? "" : "s" }}</small></td>
+            <td><small class="pull-left">{{ totalNotification }} Notification{{ totalNotification == 1 ? "" : "s" }}</small></td>
             <td colspan=3>
                 <form class="form-inline text-center">
                     <h6>Items / Page</h6>
@@ -70,8 +82,8 @@
                 </form>
             </td>
             <td colspan="99">
-            <uib-pagination total-items="filtered.length"
-						ng-model="currentPage" max-size="maxSize" boundary-links="true"
+            <uib-pagination total-items="totalNotification"
+						ng-model="currentPage" max-size="maxSize" boundary-links="true" ng-change="pageChanged()"
 						items-per-page="entryLimit"
 						class="pagination pagination-sm pull-right"></uib-pagination>
                <!--<pagination class="pagination pagination-sm pull-right" total-items="notificationsLogsList.length" items-per-page="entryLimit" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>  --> 

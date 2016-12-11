@@ -592,6 +592,10 @@ rcServices.factory('RCommLogsMessages', function($resource) {
         headers : {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
+      },
+	  search: {
+        method:'GET',
+        url: '/restcomm/2012-04-24/Accounts/:accountSid/SMS/Messages/:smsMessageSid.:format'
       }
     }
   );
@@ -611,7 +615,11 @@ rcServices.factory('RCommLogsRecordings', function($resource) {
       delete: {
         method:'DELETE',
         url: '/restcomm/2012-04-24/Accounts/:accountSid/Recordings/:recordingSid.:format'
-      }
+      },
+	  search: {
+        method:'GET',
+        url: '/restcomm/2012-04-24/Accounts/:accountSid/Recordings/:recordingSid.:format'
+      }  
     }
   );
 });
@@ -630,7 +638,11 @@ rcServices.factory('RCommLogsNotifications', function($resource) {
       delete: {
         method:'DELETE',
         url: '/restcomm/2012-04-24/Accounts/:accountSid/Notifications/:notificationSid.:format'
-      }
+      },
+	  search: {
+        method:'GET',
+        url: '/restcomm/2012-04-24/Accounts/:accountSid/Notifications/:notificationSid.:format'
+      }      
     }
   );
 });
@@ -648,6 +660,10 @@ rcServices.factory('RCommLogsTranscriptions', function($resource) {
       },
       delete: {
         method:'DELETE',
+        url: '/restcomm/2012-04-24/Accounts/:accountSid/Transcriptions/:transcriptionSid.:format'
+      },
+	  search: {
+        method:'GET',
         url: '/restcomm/2012-04-24/Accounts/:accountSid/Transcriptions/:transcriptionSid.:format'
       }
     }

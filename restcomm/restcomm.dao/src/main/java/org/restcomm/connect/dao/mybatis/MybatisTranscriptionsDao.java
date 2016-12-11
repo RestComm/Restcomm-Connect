@@ -37,6 +37,7 @@ import org.restcomm.connect.dao.TranscriptionsDao;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Transcription;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.dao.entities.TranscriptionFilter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -99,6 +100,38 @@ public final class MybatisTranscriptionsDao implements TranscriptionsDao {
                 }
             }
             return transcriptions;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public List<Transcription> getTranscriptions(TranscriptionFilter filter) {
+
+        final SqlSession session = sessions.openSession();
+
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getTranscriptionsByUsingFilters",
+                    filter);
+            final List<Transcription> cdrs = new ArrayList<Transcription>();
+
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toTranscription(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public Integer getTotalTranscription(TranscriptionFilter filter) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Integer total = session.selectOne(namespace + "getTotalTranscriptionByUsingFilters", filter);
+            return total;
         } finally {
             session.close();
         }

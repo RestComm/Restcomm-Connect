@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.SmsMessage;
+import org.restcomm.connect.dao.entities.SmsMessageFilter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -33,7 +34,7 @@ public interface SmsMessagesDao {
 
     SmsMessage getSmsMessage(Sid sid);
 
-    List<SmsMessage> getSmsMessages(Sid accountSid);
+    List<SmsMessage> getSmsMessages(final Sid accountSid);
 
     void removeSmsMessage(Sid sid);
 
@@ -42,4 +43,8 @@ public interface SmsMessagesDao {
     void updateSmsMessage(SmsMessage smsMessage);
 
     int getSmsMessagesPerAccountLastPerMinute(String accountSid) throws ParseException;
+
+    // Support for filtering of message list result, Issue 1395
+    Integer getTotalSmsMessage(SmsMessageFilter filter);
+    List<SmsMessage> getSmsMessages(SmsMessageFilter filter);
 }
