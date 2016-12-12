@@ -235,16 +235,14 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         }
 
         final int total = dao.getTotalCallDetailRecords(filterForTotal);
-        
+
         if (reverse.equalsIgnoreCase("true")){
             if (total > Integer.parseInt(pageSize)){
-                
                 if (total > Integer.parseInt(pageSize)*(Integer.parseInt(page) + 1)){
                     offset = total - Integer.parseInt(pageSize)*(Integer.parseInt(page) + 1);
                     limit = Integer.parseInt(pageSize);
                 }
-                else
-                {
+                else{
                     offset = 0;
                     limit = total - Integer.parseInt(pageSize)*Integer.parseInt(page);
                 }
