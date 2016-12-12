@@ -301,7 +301,12 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 
     @SuppressWarnings("unchecked")
     protected Response putCall(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        final Sid accountId = new Sid(accountSid);
+        final Sid accountId;
+        try {
+            accountId = new Sid(accountSid);
+        } catch (final IllegalArgumentException exception){
+            return status(INTERNAL_SERVER_ERROR).entity(buildErrorResponseBody(exception.getMessage(),responseType)).build();
+        }
         secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls", AuthType.AuthToken);
         try {
             validate(data);
@@ -392,7 +397,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 //                        return null;
 //                    }
                 } else {
-                    return status(INTERNAL_SERVER_ERROR).entity(managerResponse.cause() + " : " + managerResponse.error()).build();
+                    return status(INTERNAL_SERVER_ERROR).entity(managerResponse.cause().getMessage()).build();
                 }
             }
             return status(INTERNAL_SERVER_ERROR).build();

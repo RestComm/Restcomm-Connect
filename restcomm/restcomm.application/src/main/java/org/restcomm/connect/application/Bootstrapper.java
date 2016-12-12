@@ -214,10 +214,10 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         }
     }
 
-    private DaoManager storage(final Configuration configuration, final ClassLoader loader) throws ObjectInstantiationException {
-        final String classpath = configuration.getString("dao-manager[@class]");
+    private DaoManager storage(final Configuration configuration, Configuration daoManagerConfiguration, final ClassLoader loader) throws ObjectInstantiationException {
+        final String classpath = daoManagerConfiguration.getString("dao-manager[@class]");
         final DaoManager daoManager = (DaoManager) new ObjectFactory(loader).getObjectInstance(classpath);
-        daoManager.configure(configuration);
+        daoManager.configure(configuration, daoManagerConfiguration );
         daoManager.start();
         return daoManager;
     }
@@ -245,6 +245,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             final ServletContext context = event.getServletContext();
             final String path = context.getRealPath("WEB-INF/conf/restcomm.xml");
             final String extensionConfigurationPath = context.getRealPath("WEB-INF/conf/extensions.xml");
+            final String daoManagerConfigurationPath = context.getRealPath("WEB-INF/conf/dao-manager.xml");
             // Initialize the configuration interpolator.
             final ConfigurationStringLookup strings = new ConfigurationStringLookup();
             strings.addProperty("home", home(context));
@@ -253,6 +254,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Load the RestComm configuration file.
             Configuration xml = null;
             XMLConfiguration extensionConf = null;
+            XMLConfiguration daoManagerConf = null;
             try {
                 XMLConfiguration xmlConfiguration = new XMLConfiguration();
                 xmlConfiguration.setDelimiterParsingDisabled(true);
@@ -264,11 +266,19 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 extensionConf.setDelimiterParsingDisabled(true);
                 extensionConf.setAttributeSplittingDisabled(true);
                 extensionConf.load(extensionConfigurationPath);
+
+                daoManagerConf = new XMLConfiguration();
+                daoManagerConf.setDelimiterParsingDisabled(true);
+                daoManagerConf.setAttributeSplittingDisabled(true);
+                daoManagerConf.load(daoManagerConfigurationPath);
+
             } catch (final ConfigurationException exception) {
                 logger.error(exception);
             }
             xml.setProperty("runtime-settings.home-directory", home(context));
             xml.setProperty("runtime-settings.root-uri", uri(context));
+            // Create high-level restcomm configuration
+            RestcommConfiguration.createOnce(xml);
             context.setAttribute(Configuration.class.getName(), xml);
             context.setAttribute("ExtensionConfiguration", extensionConf);
             // Initialize global dependencies.
@@ -281,15 +291,13 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Create the storage system.
             DaoManager storage = null;
             try {
-                storage = storage(xml, loader);
+                storage = storage(xml, daoManagerConf, loader);
             } catch (final ObjectInstantiationException exception) {
                 logger.error("ObjectInstantiationException during initialization: ", exception);
             }
             context.setAttribute(DaoManager.class.getName(), storage);
             //ShiroResources.getInstance().set(DaoManager.class, storage);
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
-            // Create high-level restcomm configuration
-            RestcommConfiguration.createOnce(xml);
             // Initialize identityContext
             IdentityContext identityContext = new IdentityContext(xml);
             context.setAttribute(IdentityContext.class.getName(), identityContext);
