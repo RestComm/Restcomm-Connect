@@ -195,6 +195,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         String endTime = info.getQueryParameters().getFirst("EndTime");
         String parentCallSid = info.getQueryParameters().getFirst("ParentCallSid");
         String conferenceSid = info.getQueryParameters().getFirst("ConferenceSid");
+        String reverse = info.getQueryParameters().getFirst("Reverse");
 
         if (pageSize == null) {
             pageSize = "50";
@@ -234,6 +235,21 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         }
 
         final int total = dao.getTotalCallDetailRecords(filterForTotal);
+        
+        if (reverse.equalsIgnoreCase("true")){
+            if (total > Integer.parseInt(pageSize)){
+                
+                if (total > Integer.parseInt(pageSize)*(Integer.parseInt(page) + 1)){
+                    offset = total - Integer.parseInt(pageSize)*(Integer.parseInt(page) + 1);
+                    limit = Integer.parseInt(pageSize);
+                }
+                else
+                {
+                    offset = 0;
+                    limit = total - Integer.parseInt(pageSize)*Integer.parseInt(page);
+                }
+            }
+        }
 
         if (Integer.parseInt(page) > (total / limit)) {
             return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
