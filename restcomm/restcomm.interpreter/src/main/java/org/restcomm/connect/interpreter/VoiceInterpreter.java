@@ -2879,7 +2879,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             if (!liveCallModification) {
                 // Destroy the Call(s).
-                if (call!= null && !call.isTerminated() && End.instance().equals(verb.name())) {
+                if (call!= null && !call.isTerminated()) { // && End.instance().equals(verb.name())) {
                     call.tell(new Hangup(), self());
                 }
                 if (outboundCall != null &&!outboundCall.isTerminated()) {
