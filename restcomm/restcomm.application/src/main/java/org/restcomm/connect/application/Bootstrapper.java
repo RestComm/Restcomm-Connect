@@ -277,6 +277,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             }
             xml.setProperty("runtime-settings.home-directory", home(context));
             xml.setProperty("runtime-settings.root-uri", uri(context));
+            // Create high-level restcomm configuration
+            RestcommConfiguration.createOnce(xml);
             context.setAttribute(Configuration.class.getName(), xml);
             context.setAttribute("ExtensionConfiguration", extensionConf);
             // Initialize global dependencies.
@@ -296,8 +298,6 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             context.setAttribute(DaoManager.class.getName(), storage);
             //ShiroResources.getInstance().set(DaoManager.class, storage);
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
-            // Create high-level restcomm configuration
-            RestcommConfiguration.createOnce(xml);
             // Initialize identityContext
             IdentityContext identityContext = new IdentityContext(xml);
             context.setAttribute(IdentityContext.class.getName(), identityContext);
