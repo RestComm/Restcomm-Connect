@@ -1,25 +1,30 @@
 #!/bin/bash
 ##
-## Descript+ion: Restcomm performance test script
-## Author     : George Vagenas
+## Description: Restcomm performance test script
+## Authors    : George Vagenas, Henrique Rosa
 #
 
-if [ $# -lt 6 ]; then
-    echo "No proper arguments provided: (1: $1) (2: $2) (3: $3) (4: $4) (5: $5) (6: $6) (7: $7)"
+if [ $# -lt 8 ]; then
+    echo "No proper arguments provided: (1: $1) (2: $2) (3: $3) (4: $4) (5: $5) (6: $6) (7: $7) (8: $8)"
     echo "Usage instructions: "
-    echo './run.sh $RESTCOMM_ADDRESS $LOCAL_ADDRESS $SIMULTANEOUS_CALLS $MAXIMUM_CALLS $CALL_RATE $TEST_NAME'
-    echo "Example: ./run.sh 192.168.1.11 192.168.1.12 100 10000 30 helloplay"
+    echo './run.sh $RESTCOMM_ADDRESS $RESTCOMM_NETWORK $RESTCOMM_SUBNET $LOCAL_ADDRESS $SIMULTANEOUS_CALLS $MAXIMUM_CALLS $CALL_RATE $TEST_NAME'
+    echo "Example: ./run.sh 192.168.1.11 192.168.1.0 255.255.255.0 192.168.1.12 100 10000 30 helloplay"
     exit 1
 fi
 
 # echo "(1: $1) (2: $2) (3: $3) (4: $4) (5: $5) (6: $6)"
 
 export RESTCOMM_ADDRESS=$1
-export LOCAL_ADDRESS=$2
-export SIMULTANEOUS_CALLS=$3
-export MAXIMUM_CALLS=$4
-export CALL_RATE=$5
-export TEST_NAME=$6
+export RESTCOMM_NETWORK=$2
+export RESTCOMM_SUBNET=$3
+export LOCAL_ADDRESS=$4
+export SIMULTANEOUS_CALLS=$5
+export MAXIMUM_CALLS=$6
+export CALL_RATE=$7
+export TEST_NAME=$8
+
+export MS_CACHE_ENABLED=false
+export MS_CACHE_SIZE=100
 
 if [[ -z $VOICERSS ]] || [ "$VOICERSS" == ''  ]; then
   echo "VoiceRSS TTS Service key is not set! Will exit"
