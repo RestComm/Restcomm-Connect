@@ -16,8 +16,7 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
     AuthService.login($scope.credentials.sid, $scope.credentials.token).then(function (loginStatus) {
         // SUCCESS
         if (loginStatus == 'UNINITIALIZED' ){
-        	var params = { userName:$scope.credentials.sid};
-            $state.go('public.uninitialized',params);
+            $state.go('public.uninitialized');
         }
         else
             $location.path('/dashboard');
@@ -45,17 +44,6 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
     $scope.alerts.splice(index, 1);
   };
 
-  /*
-   $scope.newPassword = $scope.confPassword = "";
-
-   $scope.$watchCollection('[newPassword, confPassword]', function() {
-   var valid = angular.equals($scope.newPassword, $scope.confPassword);
-   $scope.updatePassForm.newPassword.$valid = $scope.updatePassForm.confPassword.$valid = valid;
-   $scope.accountValid = $scope.updatePassForm.$valid && valid;
-   console.log("XXX");
-   }, true);
-   */
-
   var showAccountSuspended = function($dialog) {
     var title = 'Account Suspended';
     var msg = 'Your account has been suspended. Please contact the support team for further information.';
@@ -66,15 +54,16 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
 });
 
 // assumes user has been authenticated but his account is not initialized
-rcMod.controller('UninitializedCtrl', function ($scope,AuthService,$state,$stateParams) {
-	$scope.userName = $stateParams.userName;
-  // For password reset
-  $scope.update = function() {
-    AuthService.updatePassword($scope.newPassword).then(function () {
+rcMod.controller('UninitializedCtrl', function ($scope,AuthService,$state) {
+    var uninitializedAccount = AuthService.getAccount();
+	$scope.userName = uninitializedAccount.email_address;
+    // For password reset
+    $scope.update = function() {
+        AuthService.updatePassword($scope.newPassword).then(function () {
         $state.go('restcomm.dashboard');
-    }, function (error) {
-        alert("Failed to update password. Please try again.");
-        $state.go('public.login');
-    });
-  }
+        }, function (error) {
+            alert("Failed to update password. Please try again.");
+            $state.go('public.login');
+        });
+    }
 });
