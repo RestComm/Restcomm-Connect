@@ -12,7 +12,7 @@ if [ $# -lt 8 ]; then
     exit 1
 fi
 
-# echo "(1: $1) (2: $2) (3: $3) (4: $4) (5: $5) (6: $6)"
+echo "(1: $1) (2: $2) (3: $3) (4: $4) (5: $5) (6: $6)"
 
 export RESTCOMM_ADDRESS=$1
 export RESTCOMM_NETWORK=$2
