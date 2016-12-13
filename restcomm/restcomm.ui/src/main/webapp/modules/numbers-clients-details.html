@@ -1,123 +1,81 @@
-<rc-numbers-pills></rc-numbers-pills>
+<!--<rc-numbers-pills></rc-numbers-pills>-->
 
-<rc-page-title icon="phone" title="{{ clientDetails.login }}" sub-title="{{ clientDetails.friendly_name }}"></rc-page-title>
+<!--<rc-page-title icon="phone" title="{{ clientDetails.login }}" sub-title="{{ clientDetails.friendly_name }}"></rc-page-title>-->
 
-<style type="text/css">
-    #login-password .form-group {
-    margin-right: 15px;
-    }
+<h3>{{ clientDetails.login }}<small>_{{ clientDetails.friendly_name }}</small></h3>
 
-    #login-password .form-group label {
-    margin-right: 10px;
-    }
-
-    #account-enabled-group {
-    margin-top: 8px;
-    }
-
-    .password-strength {
-    width:167px;
-    }
-</style>
-
-<div class="well well-sm">
-    <h3 class="text-muted details-header">Authentication</h3>
-    <div class="row">
-        <form class="form-inline">
-            <div class="col-md-3 col-sm-12">
-                <div id="account-enabled-group" class="form-group" style="font-size: 18px;">
-                    <label>
-                        <input type=checkbox ng-checked="clientDetails.status == 1">
-                        <strong>Account Enabled</strong>
-                    </label>
-                </div>
+<h4 class="voice-sms-ussd">Authentication</h4>
+<div class="row number-infos-border">
+    <div class="col-md-2">
+        <h4 class="voice-video-ussd-request"><input style="vertical-align: text-top;" type=checkbox ng-checked="clientDetails.status == 1"> Enabled</h4>
+    </div>
+    <div class="col-md-1 in-box-separator">
+        <h4 style="margin-top: 17px; text-align: right;">Login</h4>
+    </div>
+    <div class="col-md-3">
+        <input id="client-login" style="width: 120%; margin-top: 14px; font-size: 17px;" type="text" class="form-control" placeholder="Login" ng-model="clientDetails.login" readonly />
+    </div>
+    <div class="col-md-2">
+        <h4 style="margin-top: 21px; text-align: right;">Password</h4>
+    </div>
+    <div class="col-md-4">
+        <div style="width: 100%; margin-top: 13px;" >
+            <div ng-show="editingPass" class="password-strength" ng-password-strength="clientDetails.newPassword" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-" style="margin-left: -18px; width: 90%; height: 33px;">
+                <uib-progressbar value="pwdStrength"></uib-progressbar>
             </div>
-            <div id="login-password" class="col-md-9 col-sm-12 pull-right">
-                <div class="form-group">
-                    <label for="client-login">
-                        <h4>Login</h4>
-                    </label>
-                        <span>
-                            <input id="client-login" type="text" class="form-control" placeholder="Login" ng-model="clientDetails.login" readonly />
-                        </span>
-                </div>
-                <div class="form-group">
-                    <label for="client-password">
-                        <h4>Password</h4>
-                    </label>
-                </div>
-                <div class="form-group" style="position:relative">
-                    <span>
-                        <div ng-show="editingPass" class="password-strength" ng-password-strength="clientDetails.newPassword" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-" style="padding: inherit;">
-                            <uib-progressbar value="pwdStrength"></uib-progressbar>
-                        </div>
-                        <!-- un-comment this to use input-group for more control for the password field -->
-                        <span class="input-group" style="width:220px;">
-                            <input ng-if="editingPass" id="client-password" type="password" class="form-control" placeholder="Change password" ng-model="clientDetails.newPassword" ng-class="{'password-transparent' : clientDetails.newPassword}" />
-                            <input ng-if="!editingPass" type="password" class="form-control" placeholder="password" ng-model="clientDetails.password" readonly />
-                            <span ng-click="togglePasswordEdit()" class="input-group-addon clickable"><i class="fa fa-pencil"></i></span>
-                        </span>
-                    </span>
-                </div>
-            </div>
-        </form>
+            <!-- un-comment this to use input-group for more control for the password field -->
+            <span class="input-group">
+                <input ng-if="editingPass" style="font-size: 17px;" id="client-password" type="password" class="form-control" placeholder="Change password" ng-model="clientDetails.newPassword" ng-class="{'password-transparent' : clientDetails.newPassword}" />
+                <input ng-if="!editingPass" style="font-size: 17px;" type="password" class="form-control" placeholder="password" ng-model="clientDetails.password" readonly />
+                <span ng-click="togglePasswordEdit()" class="input-group-addon clickable"><i class="fa fa-pencil"></i></span>
+            </span>
+        </div>
     </div>
 </div>
 
-<div class="well well-sm">
-    <h3 class="text-muted details-header">Voice</h3>
-    <fieldset>
-        <label class="pull-left" for="voice-url">
-            <h4 class="account-detail-field-name">Voice Request</h4>
-        </label>
-        <span class="col-md-9 pull-right">
-            <rc-endpoint-url details-loaded="clientDetails.$resolved" method-var="clientDetails.voice_method" url-var="clientDetails.voice_url" sid-var="clientDetails.voice_application_sid" apps="localApps" url-only-var="false"></rc-endpoint-url>
-        </span>
-    </fieldset>
-    <br>
-    <fieldset>
-        <label class="pull-left" for="voice-fallback-url">
-            <h4 class="account-detail-field-name">Voice Fallback URL</h4>
-        </label>
-        <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="clientDetails.voice_fallback_method" url-var="clientDetails.voice_fallback_url" apps="localApps"></rc-endpoint-url>
-        </span>
-    </fieldset>
-    <br>
-    <fieldset>
-        <label class="pull-left" for="status-callback-url">
-            <h4 class="account-detail-field-name">Status Callback URL</h4>
-        </label>
-        <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="clientDetails.status_callback_method" url-var="clientDetails.status_callback"></rc-endpoint-url>
-        </span>
-    </fieldset>
+<h4 class="voice-sms-ussd">Voice</h4>
+<div class="row number-infos-border">
+    <div class="col-md-2">
+        <h4 class="voice-video-ussd-request">Voice Request</h4>
+    </div>
+    <rc-endpoint-url details-loaded="clientDetails.$resolved" method-var="clientDetails.voice_method" url-var="clientDetails.voice_url" sid-var="clientDetails.voice_application_sid" apps="localApps" url-only-var="false"></rc-endpoint-url>
 </div>
-<!--div class="well well-sm"> Commented because Restcomm API, does not support SMS functionality for Users/Clients.
-    <h3 class="text-muted details-header">SMS</h3>
-    <fieldset>
-        <label class="pull-left" for="sms-url">
-            <h4 class="account-detail-field-name">SMS Request URL</h4>
-        </label>
-        <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="clientDetails.sms_method" url-var="clientDetails.sms_url"></rc-endpoint-url>
-        </span>
-    </fieldset>
-    <br>
-    <fieldset>
-        <label class="pull-left" for="sms-fallback-url">
-            <h4 class="account-detail-field-name">SMS Fallback URL</h4>
-        </label>
-        <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="clientDetails.sms_fallback_method" url-var="clientDetails.sms_fallback_url"></rc-endpoint-url>
-        </span>
-    </fieldset>
-</div-->
-<div class="">
-    <span class="pull-right">
-        <a href="#/numbers/clients" class="btn btn-default">Close</a>
-        <button class="btn btn-primary" ng-click="updateSIPClient(clientDetails)" ng-disabled="editingPass && pwdStrength < 50">Save Changes</button>
-    </span>
-    <button class="btn btn-danger" ng-click="confirmClientDelete(clientDetails)">Delete Client</button>
+<div class="row number-infos-border-expand" ng-show="showVoiceAdvanced">
+    <div class="col-md-2" style="padding-right: 0;">
+        <h4 class="number-advanced-label">Voice Fallback URL</h4>
+    </div>
+    <div class="col-md-10">
+        <input class="textbox-url-expand" type="text" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="clientDetails.voice_fallback_url">
+        <select class="selectpicker-post-get" ng-model="clientDetails.voice_fallback_method">
+            <option value="POST">POST</option>
+            <option value="GET">GET</option>
+        </select>
+    </div>
+    <div class="col-md-2" style="padding-right: 0;">
+        <h4 class="number-advanced-label">Voice Callback URL</h4>
+    </div>
+    <div class="col-md-10">
+        <input class="textbox-url-expand" type="text" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="clientDetails.status_callback_url">
+        <select class="selectpicker-post-get" ng-model="clientDetails.status_callback_method">
+            <option value="POST">POST</option>
+            <option value="GET">GET</option>
+        </select>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-2 col-md-offset-10">
+        <a href="" class="number-advanced-toggle" ng-click="showVoiceAdvanced = !showVoiceAdvanced"><span ng-show="showVoiceAdvanced">hide </span>advanced</a>
+    </div>
 </div>
 
+<div class="row" style="margin: 20px 0;">
+    <div class="col-md-4">
+        <button class="number-details-btn release-number-btn" ng-click="confirmClientDelete(clientDetails)">Delete Client</button>
+    </div>
+    <div class="col-md-8">
+        <span class="pull-right">
+            <a href="#/numbers/clients"><button class="number-details-btn close-btn">Close</button></a>
+            <button class="number-details-btn save-changes-btn" ng-disabled="editingPass && pwdStrength < 50" ng-click="updateSIPClient(clientDetails)">Save Changes</button>
+        </span>
+    </div>
+</div>
