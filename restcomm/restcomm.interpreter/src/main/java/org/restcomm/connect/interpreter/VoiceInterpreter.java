@@ -579,6 +579,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private void onConferenceResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         final ConferenceResponse<ConferenceInfo> response = (ConferenceResponse<ConferenceInfo>) message;
         final Class<?> klass = ((ConferenceResponse)message).get().getClass();
+        if (logger.isDebugEnabled()) {
+            logger.debug("New ConferenceResponse received with message: "+klass.getName());
+        }
         if (Left.class.equals(klass)) {
             Left left = (Left) ((ConferenceResponse)message).get();
             ActorRef leftCall = left.get();
@@ -659,9 +662,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 break;
             case COMPLETED:
                 conferenceState = event.state();
-             // At this point i think we should call finishConferencing,
-                // who will tell conference center to destroy the conference.
-                fsm.transition(message, finishConferencing);
+                //Move to finishConferencing only if we are not in Finished state already
+                //There are cases were we have already finished conferencing, for example when there is
+                //conference timeout
+                if (!is(finished))
+                    fsm.transition(message, finishConferencing);
                 break;
             default:
                 break;
@@ -992,9 +997,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private void onDownloaderResponse(Object message, State state) throws IOException, TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         final DownloaderResponse response = (DownloaderResponse) message;
         if (logger.isDebugEnabled()) {
-
-            logger.debug("Download Rcml response succeeded " + response.succeeded()
-                + ", statusCode " + response.get().getStatusCode());
+            logger.debug("Download Rcml response succeeded " + response.succeeded());
+            if (response.get() != null )
+                logger.debug("statusCode " + response.get().getStatusCode());
         }
         if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
             if (conferencing.equals(state)) {
@@ -2874,7 +2879,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             if (!liveCallModification) {
                 // Destroy the Call(s).
-                if (call!= null && !call.isTerminated()) {
+                if (call!= null && !call.isTerminated()) { // && End.instance().equals(verb.name())) {
                     call.tell(new Hangup(), self());
                 }
                 if (outboundCall != null &&!outboundCall.isTerminated()) {

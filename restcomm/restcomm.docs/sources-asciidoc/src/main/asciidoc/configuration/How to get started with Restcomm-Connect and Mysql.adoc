@@ -99,7 +99,7 @@ image::images/14.png[]
 == Edit the restcomm.xml file to point the DAO to MySQL
 
 * Go to the *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/*.
-Open the *restcomm.xml* file.
+Open the *dao-manager.xml* file.
 * Find the dao-manager tag and change the sql-files path to mariadb as shown below:
 
 [source,bash]

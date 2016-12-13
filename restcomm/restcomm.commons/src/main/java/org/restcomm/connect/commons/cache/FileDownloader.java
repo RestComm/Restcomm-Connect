@@ -5,7 +5,6 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.HttpClientUtils;
-import org.apache.http.client.utils.URIBuilder;
 import org.restcomm.connect.commons.common.http.CustomHttpClientBuilder;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 
@@ -32,14 +31,15 @@ public URI download(URI requestUri, File pathToSave) throws IOException, URISynt
             if (requestUri.getScheme().equalsIgnoreCase("https")) {
                 //Handle the HTTPS URIs
                 client = CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
-                URI result = new URIBuilder()
+                /*URI result = new URIBuilder()
                         .setScheme(requestUri.getScheme())
                         .setHost(requestUri.getHost())
                         .setPort(requestUri.getPort())
                         .setPath(requestUri.getPath())
                         .build();
-
                 HttpGet httpRequest = new HttpGet(result);
+                */
+                HttpGet httpRequest = new HttpGet(requestUri);
                 httpResponse = client.execute(httpRequest);
                 int code = httpResponse.getStatusLine().getStatusCode();
 
