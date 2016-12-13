@@ -71,3 +71,5 @@ sed -e "s|BIND_ADDRESS=.*|BIND_ADDRESS=$RESTCOMM_ADDRESS|" \
     -e "/LOG_CATEGORY_RTP=.*/d" \
     -e "/LOG_CATEGORY_RTCP=.*/d" $MS_FILE > $MS_FILE.bak
 mv -f $MS_FILE.bak $MS_FILE
+echo "MEDIA SERVER CONFIGURATION: "
+cat $MS_FILE
