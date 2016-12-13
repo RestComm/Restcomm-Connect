@@ -7,6 +7,8 @@ echo "LOCAL_INTERFACE: $LOCAL_INTERFACE"
 echo "LOGLEVEL: $LOGLEVEL"
 
 FILE=$RESTCOMM_HOME/bin/restcomm/restcomm.conf
+MS_FILE=$RESTCOMM_HOME/bin/restcomm/mediaserver.conf
+
 # VoiceRSS config
 if [ -n "$VOICERSS" ]; then
   #Add the VOICERSS key to restcomm.conf
@@ -53,3 +55,19 @@ mv $FILE.bak $FILE
 FILE=$RESTCOMM_HOME/bin/standalone.conf
 sed -e "s/$JAVA_OPTS -Djboss.server.default.config=standalone-sip.xml/$JAVA_OPTS -Djboss.server.default.config=standalone-sip.xml -Djboss.boot.thread.stack.size=1/" $FILE > $FILE.bak
 mv $FILE.bak $FILE
+
+# MEDIA SERVER
+sed -e "s|BIND_ADDRESS=.*|BIND_ADDRESS=$RESTCOMM_ADDRESS|" \
+    -e "s|NETWORK=.*|NETWORK=$RESTCOMM_NETWORK|" \
+    -e "s|SUBNET=.*|SUBNET=$RESTCOMM_SUBNET|" \
+    -e "s|MGCP_ADDRESS=.*|MGCP_ADDRESS=$RESTCOMM_ADDRESS|" \
+    -e "s|EXPECTED_LOAD=.*|EXPECTED_LOAD=$SIMULTANEOUS_CALLS|" \
+    -e "s|AUDIO_CACHE_SIZE=.*|AUDIO_CACHE_SIZE=$MS_CACHE_SIZE|" \
+    -e "s|AUDIO_CACHE_ENABLED=.*|AUDIO_CACHE_ENABLED=$MS_CACHE_ENABLED|" \
+    -e "s|LOG_APPENDER_CONSOLE=.*|LOG_APPENDER_CONSOLE=$LOGLEVEL|" \
+    -e "s|LOG_APPENDER_FILE=.*|LOG_APPENDER_FILE=$LOGLEVEL|" \
+    -e "/LOG_CATEGORY_MEDIA_SERVER=.*/d" \
+    -e "/LOG_CATEGORY_MGCP=.*/d" \
+    -e "/LOG_CATEGORY_RTP=.*/d" \
+    -e "/LOG_CATEGORY_RTCP=.*/d" $MS_FILE > $MS_FILE.bak
+mv -f $MS_FILE.bak $MS_FILE
