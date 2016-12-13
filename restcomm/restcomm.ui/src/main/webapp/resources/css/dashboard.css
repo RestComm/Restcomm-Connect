@@ -818,23 +818,19 @@ a:link {
 
 .number-infos-border {
     height: 60px;
-    width: 1400px;
+    width: 100%;
     background-color: #f0f0f0;
     border: 1px #d5d5d5;
     border-radius: 5px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .number-infos-border-expand {
     margin-top: 7px;
-    height: 130px;
-    width: 1400px;
+    width: 100%;
     background-color: #faeee6;
     border: 1px #d5d5d5;
     border-radius: 5px;
-    margin-left: auto;
-    margin-right: auto;
+    padding-bottom: 10px;
 }
 
 #fallback-callback {
@@ -843,30 +839,19 @@ a:link {
 
 .voice-sms-ussd {
     color: #44a5ab;
-    margin-left: 275px;
     padding-top: 35px;
-    width: 50px;
-
+    margin-left: 10px;
 }
 
-#advanced-voice-sms-ussd {
+.number-advanced-toggle {
     color: #aaa9aa;
     float: right;
-
+    margin-right: 15px;
 }
 
-#advanced-voice-sms-ussd:hover {
+.number-advanced-toggle:hover, .number-advanced-toggle:focus {
     text-decoration: none;
     color: #ff692e;
-    float: right;
-
-}
-
-#advanced-voice-sms-ussd:focus {
-    text-decoration: none;
-    color: #ff692e;
-    float: right;
-
 }
 
 #advanced-voice-sms-ussd-expand {
@@ -890,32 +875,23 @@ a:link {
     margin-top: 5px;
 }
 
-#voice-video-ussd-request {
-    float: left;
+.voice-video-ussd-request {
     color: #4a4a4b;
-    margin-left: 20px;
     padding-top: 10px;
     font-weight: 300;
-    font-size: 20px;
+    font-size: 19px;
 }
 
-#voice-video-ussd-request-expand {
-    float: left;
+.number-advanced-label {
     color: #4a4a4b;
-    margin-left: 20px;
-    padding-top: 10px;
+    padding-top: 12px;
     font-weight: normal;
-    font-size: 17px;
+    font-size: 16px;
 }
 
 
-
-#in-box-border-1 {
-    float: left;
-    width: 2px;
-    height: 48px;
-    background-color: #d5d5d5;
-    margin-left: 20px;
+.in-box-separator {
+    border-left: 2px solid #d5d5d5;
     margin-top: 5px;
 }
 
@@ -1018,26 +994,25 @@ input, button, select, textarea {
     line-height: inherit;
 }
 
-.selectpicker {
+.app-selection-picker {
     font-family: lato;
-    float: left;
-    margin-left: 18px;
-    margin-top: 10px;
     background-color: #ffffff;
     border: 2px solid #e4e3e3;
     border-radius: 20px;
-    width: 1000px;
     height: 42px;
     font-size: 17px;
     font-weight: 400;
     color: #6d6e70;
-    padding-left: 10px;
+    margin-top: 5px;
+    width: 100%;
+}
+
+.selectpicker {
 }
 
 .selectpicker-custom {
     font-family: lato;
-    float: left;
-    margin-left: -10px;
+    margin-left: 0px;
     margin-top: 5px;
     background-color: #ffffff;
     border: 2px solid #e4e3e3;
@@ -1053,9 +1028,7 @@ input, button, select, textarea {
 
 .selectpicker-post-get {
     font-family: lato;
-    float: left;
     margin-left: 5px;
-    margin-top: 10px;
     background-color: #ffffff;
     border: 2px solid #e4e3e3;
     border-radius: 20px;
@@ -1083,16 +1056,21 @@ input, button, select, textarea {
     padding-left: 10px;
 }
 
+.custom-width-select {
+    width: 20.5%;
+}
+
+.custom-width-url-app {
+    width: 62.5%;
+}
 
 .textbox-url {
     font-family: lato;
-    float: left;
-    margin-left: 18px;
-    margin-top: 10px;
+    margin-top: 5px;
     background-color: #ffffff;
     border: 2px solid #e4e3e3;
     border-radius: 5px;
-    width: 920px;
+    width: 83%;
     height: 42px;
     font-size: 17px;
     font-weight: 400;
@@ -1102,13 +1080,11 @@ input, button, select, textarea {
 
 .textbox-url-expand {
     font-family: lato;
-    float: left;
-    margin-left: 20px;
     margin-top: 10px;
     background-color: #ffffff;
     border: 2px solid #ffdacb;
     border-radius: 5px;
-    width: 1120px;
+    width: 87%;
     height: 42px;
     font-size: 17px;
     font-weight: 400;
@@ -1168,26 +1144,20 @@ input, button, select, textarea {
     font-weight: 300;
 }
 
-
-.save-changes-btn {
-    background-color: #3c5865;
-    margin-right: 0px;
-    margin-top: 80px;
-    margin-bottom: 50px;
-    color: #f3f3f3;
-    font-weight: 300;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: middle;
-    cursor: pointer;
+.number-details-btn {
     -webkit-user-select: none;
     padding: 10px 16px;
     border-radius: 10px;
-    float: right;
-    width: 10%;
     border: none;
     box-shadow: 1px 2px 1px #a0a0a0;
     font-size: 17px;
+}
+
+.save-changes-btn {
+    background-color: #3c5865;
+    color: #f3f3f3;
+    font-weight: 300;
+    margin-left: 15px;
 }
 .save-changes-btn:hover {
     background-color: #44a4ab;
@@ -1197,47 +1167,17 @@ input, button, select, textarea {
 
 .close-btn {
     background-color: #d1d1d1;
-    margin-right: 30px;
-    margin-top: 80px;
-    margin-bottom: 50px;
     color: #7f7e7e;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: middle;
-    cursor: pointer;
-    -webkit-user-select: none;
-    padding: 10px 16px;
-    border-radius: 10px;
-    float: right;
-    width: 7%;
-    border: none;
-    box-shadow: 1px 2px 1px #a0a0a0;
-    font-size: 17px;
-
 }
 .close-btn:hover {
     background-color: #c8c7c7;
     box-shadow: 1px 1px 1px #8d8d8d;
 }
 
-
 .release-number-btn {
     background-color: #d1d1d1;
-    margin-right: 700px;
-    margin-top: 80px;
-    margin-bottom: 50px;
     color: #7f7e7e;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: middle;
-    cursor: pointer;
-    -webkit-user-select: none;
-    padding: 10px 16px;
-    border-radius: 10px;
-    float: right;
-    width: 13%;
-    border: none;
-    box-shadow: 1px 2px 1px #a0a0a0;font-size: 17px;
+    box-shadow: 1px 2px 1px #a0a0a0;
 }
 
 .release-number-btn:hover {
