@@ -90,8 +90,8 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
-    public void configure(final Configuration configuration) {
-        this.configuration = configuration.subset("dao-manager");
+    public void configure(final Configuration configuration, Configuration daoManagerConfiguration) {
+        this.configuration = daoManagerConfiguration.subset("dao-manager");
         this.amazonS3Configuration = configuration.subset("amazon-s3");
         this.runtimeConfiguration = configuration.subset("runtime-settings");
     }

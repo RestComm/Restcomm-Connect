@@ -221,7 +221,8 @@ public class MgcpMediaGroup extends MediaGroup {
         // for (final ActorRef observer : observers) {
         // observer.tell(event, self);
         // }
-        this.originator.tell(event, self);
+        if (originator != null)
+            this.originator.tell(event, self);
         ivrInUse = false;
     }
 

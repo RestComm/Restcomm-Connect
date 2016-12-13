@@ -21,6 +21,8 @@ The Restcomm Connect Application Tutorials will help you in creating sample appl
 * <<Restcomm - Create a Weight Calculator App with RVD.adoc#weight,Create a Weight Calculator App with RVD>>
 * <<Restcomm - Building USSD Apps part 1.adoc#ussd-1,Building USSD Apps part 1>>
 * <<Restcomm - Building USSD Push Apps part 2.adoc#ussd-2,Building USSD Push Apps part 2>>
+* <<Restcomm - How To White Label a Restcomm Instance.adoc#>>
+
 
 [[advanced-tutorials]]
 == Restcomm Connect Advanced Tutorials

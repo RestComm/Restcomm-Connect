@@ -13,7 +13,7 @@
   <property location="${workspace.restcomm.dir}/configuration" name="configuration.directory"/>
 
   <!--mobicents binaries versions-->
-  <property name="sipservlets-build" value="772"/>
+  <property name="sipservlets-build" value="773"/>
   <property name="restcomm-sipservlets-as7.version" value="3.1.${sipservlets-build}"/>
   <!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
   <property name="restcomm-media.version" value="5.1.0"/>

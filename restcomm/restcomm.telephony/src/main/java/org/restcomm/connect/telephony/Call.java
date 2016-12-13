@@ -213,6 +213,9 @@ public final class Call extends UntypedActor {
     private boolean disableSdpPatchingOnUpdatingMediaSession;
 
     private Sid inboundCallSid;
+    private int collectTimeout;
+    private String collectFinishKey;
+    private boolean collectSipInfoDtmf = false;
 
     public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
         super();
@@ -296,6 +299,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.stopping, this.completed));
         transitions.add(new Transition(this.stopping, this.failed));
         transitions.add(new Transition(this.failed, this.completed));
+        transitions.add(new Transition(this.completed, this.stopping));
 
         // FSM
         this.fsm = new FiniteStateMachine(this.uninitialized, transitions);
@@ -502,6 +506,10 @@ public final class Call extends UntypedActor {
     }
 
     private void processInfo(final SipServletRequest request) throws IOException {
+        //Seems we will receive DTMF over SIP INFO, we should start timeout timer
+        //to simulate the collect timeout when using the RMS
+        collectSipInfoDtmf = true;
+        context().setReceiveTimeout(Duration.create(collectTimeout, TimeUnit.SECONDS));
         final SipServletResponse okay = request.createResponse(SipServletResponse.SC_OK);
         addCustomHeaders(okay);
         okay.send();
@@ -1261,7 +1269,7 @@ public final class Call extends UntypedActor {
             } else {
                 liveCallModification = true;
             }
-            msController.tell(message, super.source);
+            msController.tell(message, self());
         }
 
     }
@@ -1343,6 +1351,8 @@ public final class Call extends UntypedActor {
 
     private void onCollect(Collect message, ActorRef self, ActorRef sender) {
         if (is(inProgress)) {
+            collectTimeout = message.timeout();
+            collectFinishKey = message.endInputKey();
             // Forward to media server controller
             this.msController.tell(message, sender);
         }
@@ -1471,6 +1481,15 @@ public final class Call extends UntypedActor {
         getContext().setReceiveTimeout(Duration.Undefined());
         if (is(ringing) || is(dialing)) {
             fsm.transition(message, failingNoAnswer);
+        } else if(is(inProgress) && collectSipInfoDtmf) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Collecting DTMF with SIP INFO, inter digit timeout fired. Will send finishKey to observers");
+            }
+            MediaGroupResponse<String> infoResponse = new MediaGroupResponse<String>(collectFinishKey);
+            for (final ActorRef observer : observers) {
+                observer.tell(infoResponse, self());
+            }
+
         } else if(logger.isInfoEnabled()) {
             logger.info("Timeout received for Call : "+self().path()+" isTerminated(): "+self().isTerminated()+". Sender: " + sender.path().toString() + " State: " + this.fsm.state()
                 + " Direction: " + direction + " From: " + from + " To: " + to);
@@ -1706,7 +1725,7 @@ public final class Call extends UntypedActor {
             msController.tell(new Stop(true), self);
         }
 
-        if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress)) {
+        if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress) || is(completed)) {
             if (conferencing) {
                 // Tell conference to remove the call from participants list
                 // before moving to a stopping state
@@ -1725,9 +1744,16 @@ public final class Call extends UntypedActor {
 
     private void sendBye(Hangup hangup) throws IOException, TransitionNotFoundException, TransitionFailedException, TransitionRollbackException {
         final SipSession session = invite.getSession();
-        String sessionState = session.getState().name();
-        if (logger.isInfoEnabled()) {
-            logger.info("About to send BYE, session state: "+sessionState);
+        final String sessionState = session.getState().name();
+        if (sessionState == SipSession.State.TERMINATED.name()) {
+            if (logger.isInfoEnabled()) {
+                logger.info("SipSession already TERMINATED, will not send BYE");
+            }
+            return;
+        } else {
+            if (logger.isInfoEnabled()) {
+                logger.info("About to send BYE, session state: " + sessionState);
+            }
         }
         if (sessionState == SipSession.State.INITIAL.name() || (sessionState == SipSession.State.EARLY.name() && isInbound())) {
             final SipServletResponse resp = invite.createResponse(Response.SERVER_INTERNAL_ERROR);
@@ -2032,6 +2058,9 @@ public final class Call extends UntypedActor {
                 this.conferencing = false;
                 this.conference.tell(new Left(self()), self);
                 this.conference = null;
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Call left conference room and notification sent to conference actor");
+                }
             }
 
             if (!liveCallModification) {

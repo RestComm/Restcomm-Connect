@@ -396,7 +396,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 //                        return null;
 //                    }
                 } else {
-                    return status(INTERNAL_SERVER_ERROR).entity(managerResponse.cause() + " : " + managerResponse.error()).build();
+                    return status(INTERNAL_SERVER_ERROR).entity(managerResponse.cause().getMessage()).build();
                 }
             }
             return status(INTERNAL_SERVER_ERROR).build();
