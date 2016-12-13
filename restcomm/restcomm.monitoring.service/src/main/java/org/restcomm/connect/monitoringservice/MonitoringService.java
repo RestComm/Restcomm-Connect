@@ -222,7 +222,13 @@ public class MonitoringService extends UntypedActor{
      */
     private void onUserRegistration(UserRegistration userRegistration, ActorRef self, ActorRef sender) {
         if (userRegistration.getRegistered()) {
-            registeredUsers.put(userRegistration.getUser(), userRegistration.getAddress());
+            try {
+                registeredUsers.put(userRegistration.getUser(), userRegistration.getAddress());
+            } catch (Exception e) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("There was an issue during the process of UserRegistration message, "+e);
+                }
+            }
         } else {
             if (registeredUsers.containsKey(userRegistration.getUser())) {
                 registeredUsers.remove(userRegistration.getUser());

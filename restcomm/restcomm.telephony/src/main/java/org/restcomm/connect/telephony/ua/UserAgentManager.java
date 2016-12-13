@@ -332,7 +332,7 @@ public final class UserAgentManager extends UntypedActor {
 
     private boolean permitted(final String authorization, final String method) {
         final Map<String, String> map = toMap(authorization);
-        final String user = map.get("username");
+        final String user = map.get("username").trim();
         final String algorithm = map.get("algorithm");
         final String realm = map.get("realm");
         final String uri = map.get("uri");
@@ -444,7 +444,7 @@ public final class UserAgentManager extends UntypedActor {
         String ua = request.getHeader("User-Agent");
         final SipURI to = (SipURI) request.getTo().getURI();
         final String aor = to.toString();
-        final String user = to.getUser();
+        final String user = to.getUser().trim();
         final SipURI uri = (SipURI) contact.getURI();
         final String ip = request.getInitialRemoteAddr();
         final int port = request.getInitialRemotePort();
