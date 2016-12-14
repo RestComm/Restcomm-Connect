@@ -84,12 +84,12 @@ The RestComm docker image supports a set of environment variables to configure t
 
 ===== HTTPS related configuration
 
-* *SECURESSL* Configure RestComm to be used in secure mode ie only on HTTPS not HTTP and SIP Over Secure WebSockets + TLS (Values: AUTH - need to provide JKS file & DER file. SELF - self sighned certificate generation)
+* *SECURESSL* Configure RestComm to be used in secure mode ie only on HTTPS not HTTP and SIP Over Secure WebSockets + TLS (Values: AUTH - need to provide JKS file. SELF - self sighned certificate generation)
 * *TRUSTSTORE_PASSWORD* Set the password to use for RestComm to configure the certificate for HTTPS and SIP TLS
 * *TRUSTSTORE_ALIAS* Set the Alias to use for RestComm to configure the certificate for HTTPS and SIP TLS
 * *SSL_MODE* Set the SSL Mode for Restcomm and RVD to query External Service over HTTPS. Values : allowall, strict
 
-*SECURESSL=AUTH*
+Configuration options For *SECURESSL=AUTH*
 
 * *CERTCONFURL* JKS file URL location
 * *CERTREPOUSR* Username for authentication if needed.
