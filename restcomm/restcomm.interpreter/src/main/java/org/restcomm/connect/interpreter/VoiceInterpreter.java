@@ -1862,6 +1862,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final String name = child.text();
                     final StringBuilder buffer = new StringBuilder();
                     buffer.append(accountId.toString()).append(":").append(name);
+//                    Sid sid = null;
+//                    if (callInfo != null && callInfo.sid() != null) {
+//                        sid = callInfo.sid();
+//                    }
+//                    if (sid == null && callRecord != null) {
+//                        sid = callRecord.getSid();
+//                    }
+//                    final CreateConference create = new CreateConference(buffer.toString(), sid);
                     final CreateConference create = new CreateConference(buffer.toString(), callRecord.getSid());
                     conferenceManager.tell(create, source);
                 } else {
