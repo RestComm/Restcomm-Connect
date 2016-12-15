@@ -1,6 +1,7 @@
 package org.restcomm.connect.testsuite.http;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.Credential;
@@ -466,6 +467,16 @@ public class LiveCallModificationTest {
 
 
     private String dialAlice = "<Response><Dial><Client>alice</Client></Dial></Response>";
+    private String confUnHold = "<Response>\n" +
+            "        <Dial>\n" +
+            "                <Conference startConferenceOnEnter=\"true\">1111</Conference>\n" +
+            "        </Dial>\n" +
+            "</Response>";
+    private String confHold = "<Response>\n" +
+            "\t<Dial>\n" +
+            "\t\t<Conference startConferenceOnEnter=\"false\" waitUrl=\"/restcomm/music/rock/nickleus_-_original_guitar_song_200907251723.wav\">1111</Conference>\n" +
+            "\t</Dial>\n" +
+            "</Response>";
     @Test
     public void holdCall() throws Exception {
         stubFor(get(urlPathEqualTo("/1111"))
@@ -473,6 +484,18 @@ public class LiveCallModificationTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialAlice)));
+
+        stubFor(post(urlPathEqualTo("/hold"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(confHold)));
+
+        stubFor(post(urlPathEqualTo("/unhold"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(confUnHold)));
 
         Credential c = new Credential("127.0.0.1", "bob", "1234");
         bobPhone.addUpdateCredential(c);
@@ -512,10 +535,54 @@ public class LiveCallModificationTest {
 
         Thread.sleep(10000);
         System.out.println("\n ******************** \nAbout to put call on hold\n ********************\n");
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/demos/dial/conference/dial-conference-moderator.xml";
+        String rcmlUrl = "http://127.0.0.1:8090/hold";
 
         JsonObject callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
                 callSid, null, rcmlUrl, true);
+
+        Thread.sleep(2000);
+
+        JsonObject confObject = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertNotNull(confObject);
+        JsonArray confArray = confObject.getAsJsonArray("conferences");
+        assertNotNull(confArray);
+        String confSid = confArray.get(0).getAsJsonObject().get("sid").getAsString();
+        assertNotNull(confSid);
+        JsonObject partObject = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid, adminAuthToken, confSid);
+        assertNotNull(partObject);
+        JsonArray callsArray = partObject.getAsJsonArray("calls");
+        int size = callsArray.size();
+        assertEquals(2, size);
+
+        Thread.sleep(10000);
+        System.out.println("\n ******************** \nAbout to unhold calls\n ********************\n");
+        rcmlUrl = "http://127.0.0.1:8090/unhold";
+
+        callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
+                callSid, null, rcmlUrl, true);
+
+        Thread.sleep(2000);
+
+        partObject = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid, adminAuthToken, confSid);
+        assertNotNull(partObject);
+        callsArray = partObject.getAsJsonArray("calls");
+        size = callsArray.size();
+        assertEquals(2, size);
+
+        Thread.sleep(2000);
+
+        bobCall.disconnect();
+
+        aliceCall.disconnect();
+
+        Thread.sleep(1000);
+
+        partObject = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid, adminAuthToken, confSid);
+        assertNotNull(partObject);
+        callsArray = partObject.getAsJsonArray("calls");
+        size = callsArray.size();
+        assertEquals(0, size);
+
 
 
     }
