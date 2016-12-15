@@ -637,7 +637,7 @@ a:link {
 
 #search input[type="text"] {
 
-    background: url(search-white.png);
+    background: url("../img/v2/search-white.png");
     font-size: 15px;
     color: #bebebe;
     width: 150px;
@@ -1185,108 +1185,103 @@ input, button, select, textarea {
     box-shadow: 1px 1px 1px #8d8d8d;
 }
 
-.logs-selections {
-    margin-top: 20px;
-    margin-left: auto;
-    margin-right: auto;
-    width: 70%;
+/* -- Logs Section --------------------------------------------------------- */
+
+.secondary-tabs {
+    margin-bottom: 20px;
+    margin-top: -20px;
 }
 
-#logs-c-m-r-t-n {
-    float: left;
-    margin-left: 130px;
-    margin-top: 40px;
+.secondary-tabs a {
     color: #a6a5a6;
     font-size: 22px;
     font-weight: normal;
 }
 
-#logs-c-m-r-t-n:hover {
-    float: left;
-    margin-left: 130px;
-    margin-top: 40px;
+.secondary-tabs a.active, .secondary-tabs a.active:hover, .secondary-tabs a.active:focus {
+    color: #515151;
+}
+
+.secondary-tabs a:hover {
     color: #3c5866;
-    font-size: 22px;
-    font-weight: normal;
     text-decoration: none;
 }
 
-#logs-c-m-r-t-n:focus {
-    float: left;
-    margin-left: 130px;
-    margin-top: 40px;
-    color: #3c5866;
-    font-size: 22px;
-    font-weight: normal;
+.secondary-tabs a:focus {
     text-decoration: none;
 }
 
-.logs-peers-date-status-contaner {
-    height: 110px;
-    width: 1450px;
+.secondary-tabs a+a {
+    margin-left: 8%;
+}
+
+.logs-search-container {
     background-color: #f0f0f0;
     border: 1px #d5d5d5;
     border-radius: 5px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 130px;
+    padding: 20px;
 }
 
+.logs-search-title {
+    font-size: 18px;
+    color: #44a5ab;
+}
 
-
-#logs-input {
-    float: left;
-    margin-left: 10px;
+.logs-search-input {
     padding-left: 10px;
     background-color: #ffffff;
     border: 2px solid #e4e3e3;
     color: #6d6e70;
     border-radius: 5px;
-    width: 220px;
     height: 32px;
-    margin-top: 40px;
-
+    width: 120%;
 }
 
-#logs-input-margin {
-    float: left;
-    margin-left: 50px;
-    padding-left: 10px;
+.logs-search-select {
     background-color: #ffffff;
     border: 2px solid #e4e3e3;
     color: #6d6e70;
     border-radius: 5px;
-    width: 220px;
     height: 32px;
-    margin-top: 40px;
-
+    width: 100%;
 }
 
-#peers {
-    margin-left: 50px;
-    padding-top: 15px;
-    position: fixed;
-    font-size: 18px;
-    color: #44a5ab;
-
+.logs-search-checkbox-span {
+    font-size: 12px;
+    color: #6d6e70;
+    font-weight: 400;
 }
 
-#date {
-    margin-left: 550px;
-    padding-top: 15px;
-    position: fixed;
-    font-size: 18px;
-    color: #44a5ab;
+input[type="checkbox"].logs-search-checkbox {
+    margin-right: 3px;
 }
 
-#status {
-    margin-left: 1050px;
-    padding-top: 15px;
-    position: fixed;
-    font-size: 18px;
-    color: #44a5ab;
+.logs-table-header th {
+    border-bottom: 2px solid #dbdbdd;
+    text-align: center;
 }
 
+.logs-table-row {
+    color: #6d6e70;
+}
+
+.logs-table-row a {
+    color: #6d6e70;
+}
+
+.logs-search-button {
+    background: #ffffff url("../img/v2/search-button.png") no-repeat center;
+    padding: 30px;
+    border-radius: 10px;
+    border: 2px #b7b7b7;;
+    box-shadow: 0px 2px 1px #d3d3d3;
+    margin-top: -15px;
+    margin-left: 20%;
+}
+
+.logs-search-button:hover, .logs-search-button:focus {
+    background: #ffffff url("../img/v2/search-button-hover.png") no-repeat center;
+}
 
 input[type=checkbox].css-checkbox {
     position:absolute;
@@ -1332,57 +1327,6 @@ label.css-label {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-}
-
-
-.search-logs {
-    float: right;
-    margin-right: 55px;
-    margin-top: -30px;
-    background-image: url("search-button.png");
-    background-repeat: no-repeat;
-    background-position: center;
-    padding-left: 30px;
-    padding-right: 30px;
-    padding-top: 18px;
-    padding-bottom: 18px;
-    border-radius: 10px;
-    background-color: #ffffff;
-    border: 2px #b7b7b7;;
-    box-shadow: 0px 2px 1px #d3d3d3;
-
-
-}
-
-.search-logs:hover {
-    float: right;
-    background-image: url("search-button-hover.png");
-    background-repeat: no-repeat;
-    background-position: center;
-    padding-left: 30px;
-    padding-right: 30px;
-    padding-top: 18px;
-    padding-bottom: 18px;
-    border-radius: 10px;
-    background-color: #ffffff;
-    border: 2px #b7b7b7;;
-    box-shadow: 0px 2px 1px #d3d3d3;
-
-}
-
-.search-logs:focus {
-    float: right;
-    background-image: url("search-button-hover.png");
-    background-repeat: no-repeat;
-    background-position: center;
-    padding-left: 30px;
-    padding-right: 30px;
-    padding-top: 18px;
-    padding-bottom: 18px;
-    border-radius: 10px;
-    background-color: #ffffff;
-    border: 2px #b7b7b7;;
-    box-shadow: 0px 1px 1px #d3d3d3;
 }
 
 .logs-list {
@@ -1711,7 +1655,7 @@ label.css-label {
 
 #search-app input[type="text"] {
 
-    background: url(search-white.png);
+    background: url("../img/v2/search-white.png");
     font-size: 15px;
     color: #bebebe;
     width: 300px;
