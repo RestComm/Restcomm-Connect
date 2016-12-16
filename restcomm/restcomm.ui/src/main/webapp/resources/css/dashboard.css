@@ -1234,6 +1234,10 @@ input, button, select, textarea {
     color: #6d6e70;
     border-radius: 5px;
     height: 32px;
+    width: 100%;
+}
+
+.col-md-2 > .logs-search-input {
     width: 120%;
 }
 
