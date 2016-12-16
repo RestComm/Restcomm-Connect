@@ -24,6 +24,7 @@ package org.restcomm.connect.mscontrol.api.messages;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telesta.com)
@@ -34,10 +35,12 @@ public final class JoinConference {
 
     private final Object endpoint;
     private final ConnectionMode connectionMode;
+    private final Sid sid;
 
-    public JoinConference(final Object endpoint, final ConnectionMode connectionMode) {
+    public JoinConference(final Object endpoint, final ConnectionMode connectionMode, final Sid sid) {
         this.endpoint = endpoint;
         this.connectionMode = connectionMode;
+        this.sid = sid;
     }
 
     public Object getEndpoint() {
@@ -48,4 +51,7 @@ public final class JoinConference {
         return connectionMode;
     }
 
+    public Sid getSid () {
+        return sid;
+    }
 }
