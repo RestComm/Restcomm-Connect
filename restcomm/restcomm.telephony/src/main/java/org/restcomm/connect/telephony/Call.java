@@ -72,6 +72,8 @@ import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
 import org.restcomm.connect.telephony.api.Cancel;
 import org.restcomm.connect.telephony.api.ChangeCallDirection;
+import org.restcomm.connect.telephony.api.ConferenceInfo;
+import org.restcomm.connect.telephony.api.ConferenceResponse;
 import org.restcomm.connect.telephony.api.CreateCall;
 import org.restcomm.connect.telephony.api.Dial;
 import org.restcomm.connect.telephony.api.GetCallInfo;
@@ -191,6 +193,7 @@ public final class Call extends UntypedActor {
     // Conferencing
     private ActorRef conference;
     private boolean conferencing;
+    private Sid conferenceSid;
 
     // Call Bridging
     private ActorRef bridge;
@@ -485,6 +488,17 @@ public final class Call extends UntypedActor {
             onMute((Mute) message, self, sender);
         } else if (Unmute.class.equals(klass)) {
             onUnmute((Unmute) message, self, sender);
+        } else if (ConferenceResponse.class.equals(klass)) {
+            onConferenceResponse((ConferenceResponse) message);
+        }
+    }
+
+    private void onConferenceResponse(ConferenceResponse conferenceResponse) {
+        //ConferenceResponse received
+        ConferenceInfo ci = (ConferenceInfo) conferenceResponse.get();
+        if (logger.isInfoEnabled()) {
+            String infoMsg = String.format("Conference response, name %s, state %s, participants %d", ci.name(), ci.state(), ci.globalParticipants());
+            logger.info(infoMsg);
         }
     }
 
@@ -1232,6 +1246,11 @@ public final class Call extends UntypedActor {
                 if (outgoingCallRecord != null && isOutbound() && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
                     outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                     outgoingCallRecord = outgoingCallRecord.setAnsweredBy(to.getUser());
+
+                    if (conferencing) {
+                        outgoingCallRecord = outgoingCallRecord.setConferenceSid(conferenceSid);
+                        outgoingCallRecord = outgoingCallRecord.setMuted(muted);
+                    }
                     recordsDao.updateCallDetailRecord(outgoingCallRecord);
                 }
             }
@@ -2022,6 +2041,13 @@ public final class Call extends UntypedActor {
         if (is(inProgress)) {
             this.conferencing = true;
             this.conference = sender;
+            this.conferenceSid = message.getSid();
+            if (outgoingCallRecord != null && isOutbound()) {
+                outgoingCallRecord = outgoingCallRecord.setConferenceSid(conferenceSid);
+                outgoingCallRecord = outgoingCallRecord.setMuted(muted);
+
+                recordsDao.updateCallDetailRecord(outgoingCallRecord);
+            }
             this.fsm.transition(message, joining);
         }
     }

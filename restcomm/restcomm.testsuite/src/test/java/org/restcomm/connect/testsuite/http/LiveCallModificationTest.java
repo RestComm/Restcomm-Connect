@@ -469,12 +469,12 @@ public class LiveCallModificationTest {
     private String dialAlice = "<Response><Dial><Client>alice</Client></Dial></Response>";
     private String confUnHold = "<Response>\n" +
             "        <Dial>\n" +
-            "                <Conference startConferenceOnEnter=\"true\">1111</Conference>\n" +
+            "                <Conference startConferenceOnEnter=\"true\">HoldConf1234</Conference>\n" +
             "        </Dial>\n" +
             "</Response>";
     private String confHold = "<Response>\n" +
             "\t<Dial>\n" +
-            "\t\t<Conference startConferenceOnEnter=\"false\" waitUrl=\"/restcomm/music/rock/nickleus_-_original_guitar_song_200907251723.wav\">1111</Conference>\n" +
+            "\t\t<Conference startConferenceOnEnter=\"false\" waitUrl=\"/restcomm/music/rock/nickleus_-_original_guitar_song_200907251723.wav\">HoldConf1234</Conference>\n" +
             "\t</Dial>\n" +
             "</Response>";
     @Test

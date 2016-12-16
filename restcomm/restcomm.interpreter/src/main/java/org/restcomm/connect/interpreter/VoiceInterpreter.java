@@ -2458,6 +2458,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 // Join the conference.
                 //Adding conference record in DB
+                //For outbound call the CDR will be updated at Call.InProgress()
                 addConferenceStuffInCDR(conferenceSid);
                 final AddParticipant request = new AddParticipant(call);
                 conference.tell(request, source);
