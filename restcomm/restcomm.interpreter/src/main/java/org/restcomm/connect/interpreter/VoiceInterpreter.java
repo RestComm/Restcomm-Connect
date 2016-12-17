@@ -1203,6 +1203,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         call.tell(hangup, sender);
                     } else {
                         // XXX start processing new RCML and give instructions to call
+                        // Ask the parser for the next action to take.
+                        final GetNextVerb next = GetNextVerb.instance();
+                        parser.tell(next, self());
                     }
                 }
                 break;
@@ -1322,7 +1325,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     private void conferenceStateModeratorPresent(final Object message) {
         if(logger.isInfoEnabled()) {
-            logger.info("VoiceInterpreter#conferenceStateModeratorPresent will unmute the call: " + call.path().toString());
+            logger.info("VoiceInterpreter#conferenceStateModeratorPresent will unmute the call: " + call.path().toString()+", direction: "+callInfo.direction());
         }
         call.tell(new Unmute(), self());
 

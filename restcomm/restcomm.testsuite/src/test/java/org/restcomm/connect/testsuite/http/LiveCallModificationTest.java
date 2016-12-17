@@ -540,7 +540,7 @@ public class LiveCallModificationTest {
         JsonObject callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
                 callSid, null, rcmlUrl, true);
 
-        Thread.sleep(2000);
+        Thread.sleep(6000);
 
         JsonObject confObject = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(confObject);
@@ -582,9 +582,6 @@ public class LiveCallModificationTest {
         callsArray = partObject.getAsJsonArray("calls");
         size = callsArray.size();
         assertEquals(0, size);
-
-
-
     }
 
     @Test
