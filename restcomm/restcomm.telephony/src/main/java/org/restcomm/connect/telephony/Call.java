@@ -1244,7 +1244,7 @@ public final class Call extends UntypedActor {
 
                 // Record call data
                 if (outgoingCallRecord != null && isOutbound() && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
-                    outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                    outgoingCallRecord = outgoingCallRecord.setStatus(external.toString());
                     outgoingCallRecord = outgoingCallRecord.setAnsweredBy(to.getUser());
 
                     if (conferencing) {
@@ -1401,6 +1401,10 @@ public final class Call extends UntypedActor {
             // Forward to media server controller
             this.msController.tell(message, sender);
             muted = false;
+            if (logger.isInfoEnabled()) {
+                final String infoMsg = String.format("Call %s, direction %s, unmuted", self().path(), direction);
+                logger.info(infoMsg);
+            }
         }
     }
 
@@ -2042,12 +2046,6 @@ public final class Call extends UntypedActor {
             this.conferencing = true;
             this.conference = sender;
             this.conferenceSid = message.getSid();
-            if (outgoingCallRecord != null && isOutbound()) {
-                outgoingCallRecord = outgoingCallRecord.setConferenceSid(conferenceSid);
-                outgoingCallRecord = outgoingCallRecord.setMuted(muted);
-
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-            }
             this.fsm.transition(message, joining);
         }
     }
@@ -2057,6 +2055,15 @@ public final class Call extends UntypedActor {
         if (is(joining)) {
             // Forward message to the bridge
             if (conferencing) {
+                if (outgoingCallRecord != null && isOutbound()) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Updating CDR for outgoing call: "+id.toString()+", call status: "+external.name()+", to include Conference details, conference: "+conferenceSid);
+                    }
+                    outgoingCallRecord = outgoingCallRecord.setConferenceSid(conferenceSid);
+                    outgoingCallRecord = outgoingCallRecord.setMuted(muted);
+
+                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                }
                 this.conference.tell(message, self);
             } else {
                 this.bridge.tell(message, self);
@@ -2098,7 +2105,11 @@ public final class Call extends UntypedActor {
                     this.msController.tell(new Unmute(), sender);
                     muted = false;
                 }
-                fsm.transition(message, inProgress);
+                if (!receivedBye) {
+                    fsm.transition(message, inProgress);
+                } else {
+                    fsm.transition(message, completed);
+                }
             }
         }
     }
