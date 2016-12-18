@@ -1074,21 +1074,24 @@ public final class Call extends UntypedActor {
     }
 
     private CreateMediaSession generateRequest(SipServletMessage sipMessage) throws IOException, SdpException, ServletParseException {
-        String externalIp = null;
-        final SipURI externalSipUri = (SipURI) sipMessage.getSession().getAttribute("realInetUri");
-        if (externalSipUri != null) {
-            if(logger.isInfoEnabled()) {
-                logger.info("ExternalSipUri stored in the sip session : "+externalSipUri.toString()+" will use host: "+externalSipUri.getHost().toString());
-            }
-            externalIp = externalSipUri.getHost().toString();
-        } else {
-            externalIp = sipMessage.getInitialRemoteAddr();
-            if(logger.isInfoEnabled()) {
-                logger.info("ExternalSipUri stored in the session was null, will use the message InitialRemoteAddr: "+externalIp);
-            }
-        }
         final byte[] sdp = sipMessage.getRawContent();
-        final String offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
+        String offer = sdp.toString();
+        if (!disableSdpPatchingOnUpdatingMediaSession) {
+            String externalIp = null;
+            final SipURI externalSipUri = (SipURI) sipMessage.getSession().getAttribute("realInetUri");
+            if (externalSipUri != null) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("ExternalSipUri stored in the sip session : " + externalSipUri.toString() + " will use host: " + externalSipUri.getHost().toString());
+                }
+                externalIp = externalSipUri.getHost().toString();
+            } else {
+                externalIp = sipMessage.getInitialRemoteAddr();
+                if (logger.isInfoEnabled()) {
+                    logger.info("ExternalSipUri stored in the session was null, will use the message InitialRemoteAddr: " + externalIp);
+                }
+            }
+            offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
+        }
         return new CreateMediaSession("sendrecv", offer, false, webrtc, inboundCallSid);
     }
 
