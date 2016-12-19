@@ -20,7 +20,10 @@
 
 package org.restcomm.connect.testsuite.http;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.test.api.ArquillianResource;
@@ -67,6 +70,12 @@ public class EndpointTest {
         Client jersey = Client.create();
         jersey.addFilter(new HTTPBasicAuthFilter(username, password));
         return jersey;
+    }
+
+    protected JsonElement parseResponse(ClientResponse response) {
+        JsonParser parser = new JsonParser();
+        String stringResponse = response.getEntity(String.class);
+        return parser.parse(stringResponse);
     }
 
 }
