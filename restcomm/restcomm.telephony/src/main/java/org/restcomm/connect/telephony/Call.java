@@ -998,13 +998,20 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             if (isInbound()) {
-                SipServletResponse resp = invite.createResponse(503, "Problem to setup services");
-                addCustomHeaders(resp);
+                SipServletResponse resp = null;
                 if (message instanceof CallFail) {
+                    resp = invite.createResponse(500, "Problem to setup the call");
                     String reason = ((CallFail) message).getReason();
                     if (reason != null)
                         resp.addHeader("Reason", reason);
+                } else {
+                    // https://github.com/RestComm/Restcomm-Connect/issues/1663
+                    // We use 503 only if there is a problem to reach RMS as LB can be configured to take out
+                    // nodes that send back 503. This is meant to protect the cluster from nodes where the RMS
+                    // is in bad state and not responding anymore
+                    resp = invite.createResponse(503, "Problem to setup services");
                 }
+                addCustomHeaders(resp);
                 resp.send();
             } else {
                 if (message instanceof CallFail)
