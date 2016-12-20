@@ -102,38 +102,49 @@ public class RestcommAccountsTool {
         return response;
     }
 
-    public JsonObject createAccount(String deploymentUrl, String adminUsername, String adminPassword, String emailAddress,
-            String password) {
+	public JsonObject createAccount (String deploymentUrl, String adminUsername, String adminPassword, String emailAddress,
+									 String password) {
+		return createAccount(deploymentUrl,adminUsername, adminPassword, emailAddress, password, null);
+	}
 
-        JsonParser parser = new JsonParser();
-        JsonObject jsonResponse = null;
-        try {
-            ClientResponse clientResponse = createAccountResponse(deploymentUrl,adminUsername,adminPassword,emailAddress,password);
-            jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
-        } catch (Exception e) {
-            logger.info("Exception: "+e);
-        }
-        return jsonResponse;
-    }
+	public JsonObject createAccount (String deploymentUrl, String adminUsername, String adminPassword, String emailAddress,
+									 String password, String friendlyName) {
 
-    public ClientResponse createAccountResponse(String deploymentUrl, String operatorUsername, String operatorPassword, String emailAddress,
-                                    String password) {
+		JsonParser parser = new JsonParser();
+		JsonObject jsonResponse = null;
+		try {
+			ClientResponse clientResponse = createAccountResponse(deploymentUrl, adminUsername, adminPassword, emailAddress, password, friendlyName);
+			jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
+		} catch (Exception e) {
+			logger.info("Exception: " + e);
+		}
+		return jsonResponse;
+	}
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorPassword));
+	public ClientResponse createAccountResponse (String deploymentUrl, String operatorUsername, String operatorPassword, String emailAddress,
+												 String password) {
+		return createAccountResponse(deploymentUrl, operatorUsername, operatorPassword, emailAddress, password, null);
+	}
 
-        String url = getAccountsUrl(deploymentUrl);
+	public ClientResponse createAccountResponse (String deploymentUrl, String operatorUsername, String operatorPassword, String emailAddress,
+												 String password, String friendlyName) {
+		Client jerseyClient = Client.create();
+		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorPassword));
 
-        WebResource webResource = jerseyClient.resource(url);
+		String url = getAccountsUrl(deploymentUrl);
 
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-        params.add("EmailAddress", emailAddress);
-        params.add("Password", password);
-        params.add("Role", "Administrator");
+		WebResource webResource = jerseyClient.resource(url);
 
-        ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
-        return response;
-    }
+		MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+		params.add("EmailAddress", emailAddress);
+		params.add("Password", password);
+		params.add("Role", "Administartor");
+		if (friendlyName != null)
+			params.add("FriendlyName", friendlyName);
+
+		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+		return response;
+	}
 
     public JsonObject getAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String username)
             throws UniformInterfaceException {

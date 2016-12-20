@@ -15,8 +15,9 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
   $scope.login = function() {
     AuthService.login($scope.credentials.sid, $scope.credentials.token, true).then(function (loginStatus) {
         // SUCCESS
-        if (loginStatus == 'UNINITIALIZED' )
+        if (loginStatus == 'UNINITIALIZED' ){
             $state.go('public.uninitialized');
+        }
         else
             $location.path('/dashboard');
     }, function (errorStatus) {
@@ -44,17 +45,6 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
     $scope.alerts.splice(index, 1);
   };
 
-  /*
-   $scope.newPassword = $scope.confPassword = "";
-
-   $scope.$watchCollection('[newPassword, confPassword]', function() {
-   var valid = angular.equals($scope.newPassword, $scope.confPassword);
-   $scope.updatePassForm.newPassword.$valid = $scope.updatePassForm.confPassword.$valid = valid;
-   $scope.accountValid = $scope.updatePassForm.$valid && valid;
-   console.log("XXX");
-   }, true);
-   */
-
   var showAccountSuspended = function($dialog) {
     var title = 'Account Suspended';
     var msg = 'Your account has been suspended. Please contact the support team for further information.';
@@ -66,9 +56,11 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
 
 // assumes user has been authenticated but his account is not initialized
 rcMod.controller('UninitializedCtrl', function ($scope,AuthService,$state, Notifications) {
-  // For password reset
-  $scope.update = function() {
-    AuthService.updatePassword($scope.oldPassword, $scope.newPassword).then(function () {
+    var uninitializedAccount = AuthService.getAccount();
+    $scope.userName = uninitializedAccount.email_address;
+    // For password reset
+    $scope.update = function() {
+        AuthService.updatePassword($scope.oldPassword, $scope.newPassword).then(function () {
         $state.go('restcomm.dashboard');
     }, function (error) {
         if (error == 'AUTHENTICATION_ERROR') {

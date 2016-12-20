@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS restcomm;
 USE restcomm;
 
-CREATE TABLE restcomm_instance_id ( 
+CREATE TABLE restcomm_instance_id (
 instance_id VARCHAR(34) NOT NULL PRIMARY KEY,
 date_created DATETIME NOT NULL,
 date_updated DATETIME NOT NULL,
@@ -126,7 +126,7 @@ parent_call_sid VARCHAR(34),
 date_created DATETIME NOT NULL,
 date_updated DATETIME NOT NULL,
 account_sid VARCHAR(34) NOT NULL,
-sender VARCHAR(30) NOT NULL,
+sender VARCHAR(255) NOT NULL,
 recipient VARCHAR(64) NOT NULL,
 phone_number_sid VARCHAR(34),
 status VARCHAR(20) NOT NULL,
@@ -144,10 +144,10 @@ call_path VARCHAR(255),
 ring_duration INT,
 instanceid VARCHAR(255),
 conference_sid VARCHAR(34),
-muted BOOLEAN, 
+muted BOOLEAN,
 start_conference_on_enter BOOLEAN,
 end_conference_on_exit BOOLEAN,
-on_hold BOOLEAN, 
+on_hold BOOLEAN,
 ms_id VARCHAR(34)
 );
 
@@ -159,10 +159,10 @@ account_sid VARCHAR(34) NOT NULL,
 status VARCHAR(100) NOT NULL,
 friendly_name VARCHAR(60),
 api_version VARCHAR(10) NOT NULL,
-uri MEDIUMTEXT NOT NULL, 
+uri MEDIUMTEXT NOT NULL,
 master_ms_id VARCHAR(34),
 master_conference_endpoint_id VARCHAR(20),
-master_present BOOLEAN NOT NULL DEFAULT TRUE, 
+master_present BOOLEAN NOT NULL DEFAULT TRUE,
 master_ivr_endpoint_id VARCHAR(20),
 master_ivr_endpoint_session_id VARCHAR(200),
 master_bridge_endpoint_id VARCHAR(20),
@@ -226,7 +226,7 @@ date_created DATETIME NOT NULL,
 date_updated DATETIME NOT NULL,
 date_sent DATETIME,
 account_sid VARCHAR(34) NOT NULL,
-sender VARCHAR(15) NOT NULL,
+sender VARCHAR(255) NOT NULL,
 recipient VARCHAR(64) NOT NULL,
 body VARCHAR(999) NOT NULL,
 status VARCHAR(20) NOT NULL,
@@ -317,22 +317,22 @@ date_executed DATETIME NOT NULL
 );
 
 CREATE TABLE restcomm_media_servers (
-ms_id INT PRIMARY KEY AUTO_INCREMENT, 
-local_ip VARCHAR(34) NOT NULL, 
+ms_id INT PRIMARY KEY AUTO_INCREMENT,
+local_ip VARCHAR(34) NOT NULL,
 local_port INT NOT NULL,
 remote_ip VARCHAR(34) NOT NULL UNIQUE,
-remote_port INT NOT NULL, 
-compatibility VARCHAR(34) DEFAULT 'rms', 
+remote_port INT NOT NULL,
+compatibility VARCHAR(34) DEFAULT 'rms',
 response_timeout VARCHAR(34),
 external_address VARCHAR(34)
 );
 
 CREATE TABLE restcomm_media_resource_broker_entity (
-conference_sid VARCHAR(34) NOT NULL, 
-slave_ms_id VARCHAR(34) NOT NULL, 
+conference_sid VARCHAR(34) NOT NULL,
+slave_ms_id VARCHAR(34) NOT NULL,
 slave_ms_bridge_ep_id VARCHAR(34),
 slave_ms_cnf_ep_id VARCHAR(34),
-is_bridged_together BOOLEAN NOT NULL DEFAULT FALSE, 
+is_bridged_together BOOLEAN NOT NULL DEFAULT FALSE,
 PRIMARY KEY (conference_sid , slave_ms_id)
 );
 

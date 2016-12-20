@@ -26,6 +26,7 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 import akka.actor.ActorRef;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -36,10 +37,16 @@ public final class JoinCall {
 
     private final ActorRef call;
     private final ConnectionMode connectionMode;
+    private final Sid sid;
 
     public JoinCall(final ActorRef call, final ConnectionMode connectionMode) {
+        this(call, connectionMode, null);
+    }
+
+    public JoinCall(final ActorRef call, final ConnectionMode connectionMode, final Sid sid) {
         this.call = call;
         this.connectionMode = connectionMode;
+        this.sid = sid;
     }
 
     public ActorRef getCall() {
@@ -50,4 +57,7 @@ public final class JoinCall {
         return connectionMode;
     }
 
+    public Sid getSid () {
+        return sid;
+    }
 }

@@ -191,6 +191,20 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    public void testCreateAccountWithJapaneseChars() {
+        String friendlyName = "NTTアドバンステクノロジ";
+        JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, createdUsernanme, createdPassword, friendlyName);
+        JsonObject getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
+                adminAuthToken, createdUsernanme);
+        assertTrue(getAccountResponse.get("sid").getAsString().equals(createdAccountSid));
+        Assert.assertEquals(createdAuthToken, getAccountResponse.get("auth_token").getAsString());
+        assertTrue(createAccountResponse.get("sid").getAsString().equals(createdAccountSid));
+        Assert.assertEquals(createdAuthToken, createAccountResponse.get("auth_token").getAsString());
+        Assert.assertEquals(friendlyName, createAccountResponse.get("friendly_name").getAsString());
+    }
+
+    @Test
     public void testUpdateAccount() {
         JsonObject updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
                 adminUsername, adminPassword, updatedAccountSid, "updated2", "Restcomm2", null, "Developer", "active" );
@@ -201,15 +215,15 @@ public class AccountsEndpointTest extends EndpointTest {
         Assert.assertNotNull("AuthToken should be present", updateAccountResponse.get("auth_token"));
         Assert.assertEquals("Status field is not updated", "active", updateAccountResponse.get("status").getAsString());
         Assert.assertEquals("Role field is not updated", "Developer", updateAccountResponse.get("role").getAsString());
-       
+
         Assert.assertEquals("FriendlyName field is not updated",  "updated2", getAccountResponse.get("friendly_name").getAsString());
         Assert.assertEquals("Status field is not updated", "active", getAccountResponse.get("status").getAsString());
         Assert.assertEquals("Role field is not updated", "Developer", updateAccountResponse.get("role").getAsString());
-        
+
         // role update test revert it back to Administrator
         updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
                 adminUsername, adminPassword, updatedAccountSid, null, null, null, "Administrator", null );
-         getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+        getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, updatedUsername);
         Assert.assertEquals("Role field is not updated", "Administrator", updateAccountResponse.get("role").getAsString());
         Assert.assertEquals("Role field is not updated", "Administrator", getAccountResponse.get("role").getAsString());

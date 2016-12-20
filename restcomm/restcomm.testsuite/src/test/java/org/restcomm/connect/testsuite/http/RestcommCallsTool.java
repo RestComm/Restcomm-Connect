@@ -28,7 +28,7 @@ public class RestcommCallsTool {
     private static RestcommCallsTool instance;
     private static String accountsUrl;
     private static Logger logger = Logger.getLogger(RestcommCallsTool.class);
-    
+
     private RestcommCallsTool() {}
 
     public static RestcommCallsTool getInstance() {
@@ -160,7 +160,7 @@ public class RestcommCallsTool {
 
         webResource = webResource.path(String.valueOf(sid)+".json");
         logger.info("The URI to sent: "+webResource.getURI());
-        
+
         response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                 .get(String.class);
 
@@ -219,7 +219,12 @@ public class RestcommCallsTool {
     }
 
     public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,
-            String rcmlUrl) throws Exception {
+                                 String rcmlUrl) throws Exception {
+        return modifyCall(deploymentUrl, username, authToken, callSid, status, rcmlUrl, false);
+    }
+
+    public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,
+            String rcmlUrl, boolean moveConnectedLeg) throws Exception {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -237,6 +242,8 @@ public class RestcommCallsTool {
             params.add("Status", status);
         if (rcmlUrl != null)
             params.add("Url", rcmlUrl);
+        if (moveConnectedLeg)
+            params.add("MoveConnectedCallLeg", "true");
 
         JsonObject jsonObject = null;
 

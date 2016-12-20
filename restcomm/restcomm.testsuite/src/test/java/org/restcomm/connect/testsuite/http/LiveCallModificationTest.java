@@ -1,6 +1,7 @@
 package org.restcomm.connect.testsuite.http;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.Credential;
@@ -27,6 +28,7 @@ import org.restcomm.connect.commons.dao.Sid;
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
 import java.net.URL;
+import java.text.ParseException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -312,7 +314,7 @@ public class LiveCallModificationTest {
                 .sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, receivedBody, "application", "sdp", null, null));
 
         assertTrue(bobCall.waitForAck(5000));
-        
+
         // Restcomm now should execute RCML that will create a call to +131313 (george's phone)
 
         assertTrue(georgeCall.waitForIncomingCall(5000));
@@ -322,7 +324,7 @@ public class LiveCallModificationTest {
                 null, null));
 
         assertTrue(georgeCall.waitForAck(5000));
-        
+
         Thread.sleep(10000);
         System.out.println("\n ******************** \nAbout to redirect the call\n ********************\n");
         rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
@@ -333,7 +335,7 @@ public class LiveCallModificationTest {
         georgeCall.listenForDisconnect();
         assertTrue(georgeCall.waitForDisconnect(10000));
         assertTrue(georgeCall.respondToDisconnect());
-        
+
         // Restcomm now should execute the new RCML and create a call to Alice Restcomm client
         // TODO: This test is expected to fail because of issue https://bitbucket.org/telestax/telscale-restcomm/issue/192
         assertTrue(aliceCall.waitForIncomingCall(5000));
@@ -461,6 +463,125 @@ public class LiveCallModificationTest {
         assertTrue(bobCall.waitForDisconnect(5000));
         assertTrue(bobCall.respondToDisconnect());
 
+    }
+
+
+    private String dialAlice = "<Response><Dial><Client>alice</Client></Dial></Response>";
+    private String confUnHold = "<Response>\n" +
+            "        <Dial>\n" +
+            "                <Conference startConferenceOnEnter=\"true\">HoldConf1234</Conference>\n" +
+            "        </Dial>\n" +
+            "</Response>";
+    private String confHold = "<Response>\n" +
+            "\t<Dial>\n" +
+            "\t\t<Conference startConferenceOnEnter=\"false\" waitUrl=\"/restcomm/music/rock/nickleus_-_original_guitar_song_200907251723.wav\">HoldConf1234</Conference>\n" +
+            "\t</Dial>\n" +
+            "</Response>";
+    @Test
+    public void holdCall() throws Exception {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialAlice)));
+
+        stubFor(post(urlPathEqualTo("/hold"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(confHold)));
+
+        stubFor(post(urlPathEqualTo("/unhold"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(confUnHold)));
+
+        Credential c = new Credential("127.0.0.1", "bob", "1234");
+        bobPhone.addUpdateCredential(c);
+
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertTrue(bobCall.waitForAuthorisation(5000));
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        logger.info("Last response: "+response);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+        assertTrue(bobCall.sendInviteOkAck());
+
+        assertTrue(aliceCall.waitForIncomingCall(5000));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody,
+                "application", "sdp", null, null));
+
+
+        Thread.sleep(10000);
+        System.out.println("\n ******************** \nAbout to put call on hold\n ********************\n");
+        String rcmlUrl = "http://127.0.0.1:8090/hold";
+
+        JsonObject callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
+                callSid, null, rcmlUrl, true);
+
+        Thread.sleep(6000);
+
+        JsonObject confObject = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertNotNull(confObject);
+        JsonArray confArray = confObject.getAsJsonArray("conferences");
+        assertNotNull(confArray);
+        String confSid = confArray.get(0).getAsJsonObject().get("sid").getAsString();
+        assertNotNull(confSid);
+        JsonObject partObject = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid, adminAuthToken, confSid);
+        assertNotNull(partObject);
+        JsonArray callsArray = partObject.getAsJsonArray("calls");
+        int size = callsArray.size();
+        assertEquals(2, size);
+
+        Thread.sleep(10000);
+        System.out.println("\n ******************** \nAbout to unhold calls\n ********************\n");
+        rcmlUrl = "http://127.0.0.1:8090/unhold";
+
+        callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
+                callSid, null, rcmlUrl, true);
+
+        Thread.sleep(2000);
+
+        partObject = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid, adminAuthToken, confSid);
+        assertNotNull(partObject);
+        callsArray = partObject.getAsJsonArray("calls");
+        size = callsArray.size();
+        assertEquals(2, size);
+
+        Thread.sleep(2000);
+
+        bobCall.disconnect();
+
+        aliceCall.disconnect();
+
+        Thread.sleep(1000);
+
+        partObject = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid, adminAuthToken, confSid);
+        assertNotNull(partObject);
+        callsArray = partObject.getAsJsonArray("calls");
+        size = callsArray.size();
+        assertEquals(0, size);
     }
 
     @Test
