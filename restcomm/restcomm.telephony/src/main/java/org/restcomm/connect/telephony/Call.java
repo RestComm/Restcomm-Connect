@@ -1075,7 +1075,7 @@ public final class Call extends UntypedActor {
 
     private CreateMediaSession generateRequest(SipServletMessage sipMessage) throws IOException, SdpException, ServletParseException {
         final byte[] sdp = sipMessage.getRawContent();
-        String offer = sdp.toString();
+        String offer = SdpUtils.getSdp(sipMessage.getContentType(), sipMessage.getRawContent());
         if (!disableSdpPatchingOnUpdatingMediaSession) {
             String externalIp = null;
             final SipURI externalSipUri = (SipURI) sipMessage.getSession().getAttribute("realInetUri");
