@@ -4,7 +4,7 @@ echo "About to prepare Restcomm server location $RESTCOMM_HOME"
 
 echo "VOICERSS: $VOICERSS"
 echo "LOCAL_INTERFACE: $LOCAL_INTERFACE"
-echo "LOGLEVEL: $LOG_LEVEL"
+echo "LOG_LEVEL: $LOG_LEVEL"
 
 FILE=$RESTCOMM_HOME/bin/restcomm/restcomm.conf
 MS_FILE=$RESTCOMM_HOME/bin/restcomm/mediaserver.conf
