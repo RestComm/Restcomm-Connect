@@ -100,6 +100,10 @@ read -p 'Remove existing workspace [true]: ' REMOVE_EXISTING_WORKSPACE
 REMOVE_EXISTING_WORKSPACE=${REMOVE_EXISTING_WORKSPACE:-true}
 echo "...Remove existing workspace \"$REMOVE_EXISTING_WORKSPACE\""
 
+read -p 'Use load tests from master branch? [false]: ' USE_SCRIPTS_FROM_MASTER
+USE_SCRIPTS_FROM_MASTER=${USE_SCRIPTS_FROM_MASTER:-false}
+echo "...Use scripts from master \"$USE_SCRIPTS_FROM_MASTER\""
+
 export GITHUB_RESTCOMM_MASTER=$WORKSPACE/github-master
 export RELEASE=$WORKSPACE/release
 
@@ -124,8 +128,10 @@ if [ $REMOVE_EXISTING_WORKSPACE == "true" ] || [ $REMOVE_EXISTING_WORKSPACE == "
     echo "Will clone Restcomm to $GITHUB_RESTCOMM_HOME"
     git clone -b $RESTCOMM_BRANCH https://github.com/RestComm/RestComm-Core.git $GITHUB_RESTCOMM_HOME
 
-    cp -ar ./* $GITHUB_RESTCOMM_HOME/load_tests
-    # cp -ar $GITHUB_RESTCOMM_MASTER/load_tests $GITHUB_RESTCOMM_HOME/load_tests
+    if [ $USE_SCRIPTS_FROM_MASTER == "true" ] || [ $USE_SCRIPTS_FROM_MASTER == "TRUE" ]; then
+      cp -ar ./* $GITHUB_RESTCOMM_HOME/load_tests
+      # cp -ar $GITHUB_RESTCOMM_MASTER/load_tests $GITHUB_RESTCOMM_HOME/load_tests
+    fi
 
     cd $GITHUB_RESTCOMM_HOME/load_tests/
     echo "About to start building Restcomm locally to $RELEASE"
