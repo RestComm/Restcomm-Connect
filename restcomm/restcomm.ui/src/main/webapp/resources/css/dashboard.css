@@ -655,90 +655,24 @@ a:link {
 }
 
 .btn-register {
-    float: right;
     background: #eeeeee;
-    background-image: -webkit-linear-gradient(top, #eeeeee, #eeeeee);
-    background-image: -moz-linear-gradient(top, #eeeeee, #eeeeee);
-    background-image: -ms-linear-gradient(top, #eeeeee, #eeeeee);
-    background-image: -o-linear-gradient(top, #eeeeee, #eeeeee);
-    background-image: linear-gradient(to bottom, #eeeeee, #eeeeee);
-    -webkit-border-radius: 10;
-    -moz-border-radius: 10;
     border-radius: 10px;
-    -webkit-box-shadow: 0px 2px 1px #d3d3d3;
-    -moz-box-shadow: 0px 2px 1px #d3d3d3;
     box-shadow: 0px 2px 1px #d3d3d3;
-    font-family: Lato;
     color: #6d6e70;
     font-size: 18px;
     padding: 15px 25px 15px 25px;
     text-decoration: none;
 }
 
-.btn-register:hover {
-    background: #eeeeee;
+.btn-register:hover, .btn-register:focus {
     color: #ff6834;
     text-decoration: none;
-    box-shadow: none;
-    -webkit-box-shadow: 0px 1px 1px #d3d3d3;
-    -moz-box-shadow: 0px 1px 1px #d3d3d3;
     box-shadow: 0px 1px 1px #d3d3d3;
 }
 
-.btn-register:focus {
-    text-decoration: none;
-    background: #eeeeee;
-    color: #ff6834;
-    text-decoration: none;
-    box-shadow: none;
-    -webkit-box-shadow: 0px 1px 1px #d3d3d3;
-    -moz-box-shadow: 0px 1px 1px #d3d3d3;
-    box-shadow: 0px 1px 1px #d3d3d3;
+.btn-register.btn-white, .btn-register.btn-white:hover, .btn-register.btn-white:focus {
+    background: #ffffff;
 }
-
-
-.btn-register-client {
-    float: right;
-    background: #eeeeee;
-    background-image: -webkit-linear-gradient(top, #eeeeee, #eeeeee);
-    background-image: -moz-linear-gradient(top, #eeeeee, #eeeeee);
-    background-image: -ms-linear-gradient(top, #eeeeee, #eeeeee);
-    background-image: -o-linear-gradient(top, #eeeeee, #eeeeee);
-    background-image: linear-gradient(to bottom, #eeeeee, #eeeeee);
-    -webkit-border-radius: 10;
-    -moz-border-radius: 10;
-    border-radius: 10px;
-    -webkit-box-shadow: 0px 2px 1px #d3d3d3;
-    -moz-box-shadow: 0px 2px 1px #d3d3d3;
-    box-shadow: 0px 2px 1px #d3d3d3;
-    font-family: Lato;
-    color: #6d6e70;
-    font-size: 18px;
-    padding: 15px 25px 15px 25px;
-    text-decoration: none;
-}
-
-.btn-register-client:hover {
-    background: #eeeeee;
-    color: #ff6834;
-    text-decoration: none;
-    box-shadow: none;
-    -webkit-box-shadow: 0px 1px 1px #d3d3d3;
-    -moz-box-shadow: 0px 1px 1px #d3d3d3;
-    box-shadow: 0px 1px 1px #d3d3d3;
-}
-
-.btn-register-client:focus {
-    text-decoration: none;
-    background: #eeeeee;
-    color: #ff6834;
-    text-decoration: none;
-    box-shadow: none;
-    -webkit-box-shadow: 0px 1px 1px #d3d3d3;
-    -moz-box-shadow: 0px 1px 1px #d3d3d3;
-    box-shadow: 0px 1px 1px #d3d3d3;
-}
-
 
 .border-number-name-feature {
     height: 2px;
@@ -1237,6 +1171,17 @@ input, button, select, textarea {
     width: 100%;
 }
 
+.input-group-addon.countries-addon {
+    background: white;
+    border: 2px solid #e4e3e3;
+    border-right: none;
+}
+
+.input-group-addon+.logs-search-input {
+    border-radius: 0 5px 5px 0;
+    border-left: none;
+}
+
 .col-md-2 > .logs-search-input {
     width: 120%;
 }
@@ -1254,6 +1199,12 @@ input, button, select, textarea {
     font-size: 12px;
     color: #6d6e70;
     font-weight: 400;
+}
+
+.search-specific-checkbox {
+    width: 80px;
+    font-size: 11px;
+    color: #999;
 }
 
 input[type="checkbox"].logs-search-checkbox {
@@ -1283,7 +1234,7 @@ input[type="checkbox"].logs-search-checkbox {
     margin-left: 20%;
 }
 
-.logs-search-button:hover, .logs-search-button:focus {
+.logs-search-button:not([disabled]):hover, .logs-search-button:not([disabled]):focus {
     background: #ffffff url("../img/v2/search-button-hover.png") no-repeat center;
 }
 
@@ -1591,48 +1542,6 @@ label.css-label {
     border-radius: 5px;
 }
 
-
-.btn-register-3 {
-    float: right;
-    background: #ffffff;
-    background-image: -webkit-linear-gradient(top, #ffffff, #ffffff);
-    background-image: -moz-linear-gradient(top, #ffffff, #ffffff);
-    background-image: -ms-linear-gradient(top, #ffffff, #ffffff);
-    background-image: -o-linear-gradient(top, #ffffff, #ffffff);
-    background-image: linear-gradient(to bottom, #ffffff, #ffffff);
-    -webkit-border-radius: 10;
-    -moz-border-radius: 10;
-    border-radius: 10px;
-    -webkit-box-shadow: 0px 2px 1px #d3d3d3;
-    -moz-box-shadow: 0px 2px 1px #d3d3d3;
-    box-shadow: 0px 2px 1px #d3d3d3;
-    font-family: Lato;
-    color: #6d6e70;
-    font-size: 18px;
-    padding: 15px 25px 15px 25px;
-    text-decoration: none;
-}
-
-.btn-register-3:hover {
-    background: #ffffff;
-    color: #ff6834;
-    text-decoration: none;
-    box-shadow: none;
-    -webkit-box-shadow: 0px 1px 1px #d3d3d3;
-    -moz-box-shadow: 0px 1px 1px #d3d3d3;
-    box-shadow: 0px 1px 1px #d3d3d3;
-}
-
-.btn-register-3:focus {
-    text-decoration: none;
-    background: #ffffff;
-    color: #ff6834;
-    text-decoration: none;
-    box-shadow: none;
-    -webkit-box-shadow: 0px 1px 1px #d3d3d3;
-    -moz-box-shadow: 0px 1px 1px #d3d3d3;
-    box-shadow: 0px 1px 1px #d3d3d3;
-}
 
 .app-selections-container {
     height: 110px;
