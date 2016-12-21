@@ -236,15 +236,17 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 
         final int total = dao.getTotalCallDetailRecords(filterForTotal);
 
-        if (reverse.equalsIgnoreCase("true")){
-            if (total > Integer.parseInt(pageSize)){
-                if (total > Integer.parseInt(pageSize)*(Integer.parseInt(page) + 1)){
-                    offset = total - Integer.parseInt(pageSize)*(Integer.parseInt(page) + 1);
-                    limit = Integer.parseInt(pageSize);
-                }
-                else{
-                    offset = 0;
-                    limit = total - Integer.parseInt(pageSize)*Integer.parseInt(page);
+        if (reverse != null) {
+            if (reverse.equalsIgnoreCase("true")){
+                if (total > Integer.parseInt(pageSize)){
+                    if (total > Integer.parseInt(pageSize)*(Integer.parseInt(page) + 1)){
+                        offset = total - Integer.parseInt(pageSize)*(Integer.parseInt(page) + 1);
+                        limit = Integer.parseInt(pageSize);
+                    }
+                    else{
+                        offset = 0;
+                        limit = total - Integer.parseInt(pageSize)*Integer.parseInt(page);
+                    }
                 }
             }
         }
@@ -318,7 +320,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         try {
             accountId = new Sid(accountSid);
         } catch (final IllegalArgumentException exception){
-            return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
+            return status(INTERNAL_SERVER_ERROR).entity(buildErrorResponseBody(exception.getMessage(),responseType)).build();
         }
         secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
         try {
