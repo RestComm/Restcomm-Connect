@@ -1203,6 +1203,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         call.tell(hangup, sender);
                     } else {
                         // XXX start processing new RCML and give instructions to call
+                        // Ask the parser for the next action to take.
+                        final GetNextVerb next = GetNextVerb.instance();
+                        parser.tell(next, self());
                     }
                 }
                 break;
@@ -1322,7 +1325,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     private void conferenceStateModeratorPresent(final Object message) {
         if(logger.isInfoEnabled()) {
-            logger.info("VoiceInterpreter#conferenceStateModeratorPresent will unmute the call: " + call.path().toString());
+            logger.info("VoiceInterpreter#conferenceStateModeratorPresent will unmute the call: " + call.path().toString()+", direction: "+callInfo.direction());
         }
         call.tell(new Unmute(), self());
 
@@ -1862,7 +1865,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final String name = child.text();
                     final StringBuilder buffer = new StringBuilder();
                     buffer.append(accountId.toString()).append(":").append(name);
-                    final CreateConference create = new CreateConference(buffer.toString(), callRecord.getSid());
+                    Sid sid = null;
+                    if (callInfo != null && callInfo.sid() != null) {
+                        sid = callInfo.sid();
+                    }
+                    if (sid == null && callRecord != null) {
+                        sid = callRecord.getSid();
+                    }
+                    final CreateConference create = new CreateConference(buffer.toString(), sid);
                     conferenceManager.tell(create, source);
                 } else {
                     // Handle forking.
@@ -2451,6 +2461,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 // Join the conference.
                 //Adding conference record in DB
+                //For outbound call the CDR will be updated at Call.InProgress()
                 addConferenceStuffInCDR(conferenceSid);
                 final AddParticipant request = new AddParticipant(call);
                 conference.tell(request, source);

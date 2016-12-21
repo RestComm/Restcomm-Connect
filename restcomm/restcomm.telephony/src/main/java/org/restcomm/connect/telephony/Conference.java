@@ -415,7 +415,7 @@ public final class Conference extends UntypedActor {
 
     private void onAddParticipant(AddParticipant message, ActorRef self, ActorRef sender) {
         if (isRunning()) {
-            final JoinCall joinCall = new JoinCall(message.call(), ConnectionMode.Confrnce);
+            final JoinCall joinCall = new JoinCall(message.call(), ConnectionMode.Confrnce, this.sid);
             this.mscontroller.tell(joinCall, self);
         }
     }
@@ -491,7 +491,7 @@ public final class Conference extends UntypedActor {
         if (observers != null && observers.size() > 0) {
             Iterator<ActorRef> iter = observers.iterator();
             ConferenceInfo ci = createConferenceInfo();
-            sender.tell(new ConferenceResponse<ConferenceInfo>(createConferenceInfo()), self);
+            sender.tell(new ConferenceResponse<ConferenceInfo>(ci), self());
             while (iter.hasNext()) {
                 ActorRef observer = iter.next();
                 //First send conferenceInfo

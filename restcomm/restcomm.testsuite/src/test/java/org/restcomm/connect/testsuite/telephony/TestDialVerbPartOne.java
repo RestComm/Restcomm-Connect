@@ -627,7 +627,7 @@ public class TestDialVerbPartOne {
         // wait for 404 Not Found
         assertTrue(bobCall.waitOutgoingCallResponse(10000));
         SipResponse lastResponse = bobCall.getLastReceivedResponse();
-        assertTrue(lastResponse.getStatusCode() == 503);
+        assertEquals(500, lastResponse.getStatusCode());
     }
 
     private String dialUriRcml = "<Response><Dial timeLimit=\"100000\" timeout=\"1000000\"><Uri>sip:alice@127.0.0.1:5091</Uri></Dial><Hangup/></Response>";
