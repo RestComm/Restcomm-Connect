@@ -77,14 +77,22 @@ rcDirectives.directive('rcEndpointUrl', function() {
       apps: '=',
     },
     controller: function ($scope) {
+        $scope.appNameVar = "";
         $scope.setApp = function() {
             if ($scope.appNameVar === 'create_new_project') {
                 window.open('/restcomm-rvd');
+            } else
+            // if this is an application SID, populate the sidVar
+            if ($scope.appNameVar && $scope.appNameVar.substr(0,2) == "AP") {
+                $scope.sidVar = $scope.appNameVar;
+            } else
+            if (!$scope.appNameVar) {
+                $scope.sidVar = null;
             }
+
         };
 
 		$scope.setApplication = function (app) {
-            //$scope.urlVar = app.startUrl;
             $scope.appNameVar = app.projectName;
             $scope.sidVar = app.sid;
 		};
@@ -93,45 +101,31 @@ rcDirectives.directive('rcEndpointUrl', function() {
 			$scope.methodVar = method;
 		};
 
-        $scope.setTarget = function(target) {
-            $scope.targetVar = target;
-            $scope.urlVar = '';
-            $scope.appNameVar = '';
-            $scope.sidVar = '';
+        $scope.onTargetChanged = function(target) {
+            if (target == "URL") {
+                $scope.sidVar = null;
+            } else if (target == "Application") {
+                $scope.urlVar = null;
+            }
         }
-
-        function setApplicationTarget(scope) {
-			scope.targetVar = 'Application';
-			if (!!scope.apps) {
-				for (var i=0; i<scope.apps.length; i++) {
-				  var app = scope.apps[i];
-				  if(app.sid == scope.sidVar){
-					scope.appNameVar = app.projectName;
-					scope.urlVal = '';
-					break;
-				  }
-				}
-			}
-		}
 
         $scope.initTarget = function() {
 			if ($scope.urlOnlyVar)
 				$scope.targetVar = 'URL';
 			else {
 				if($scope.sidVar){
-					setApplicationTarget($scope);
+				    $scope.targetVar = "Application";
 				} else
 				if ($scope.urlVar) {
-					$scope.targetVar = 'URL';
+					$scope.targetVar = "URL";
 				} else {
-					setApplicationTarget($scope);
+				    $scope.targetVar = "Application";
 				}
 			}
-        }
-
-        $scope.clearSelectedApp = function() {
-            $scope.appNameVar = '';
-            $scope.sidVar = '';
+			// initialize the application name if needed
+			if ($scope.targetVar == "Application") {
+			    $scope.appNameVar = $scope.sidVar; //name;
+			}
         }
 
         // initialize control when numberDetails actually arrives.
@@ -139,17 +133,13 @@ rcDirectives.directive('rcEndpointUrl', function() {
         var clearWatch = $scope.$watch("detailsLoaded", function (newValue, oldValue) {
             if ($scope.detailsLoaded) {
                 clearWatch();
-                //console.log("numberDetails finally returned:");
                 $scope.initTarget();
             }
         });
 
         $scope.targetVar = 'URL'; // default value until all data is in place (i.e. detailsLoaded == true)
 	},
-    templateUrl: 'templates/rc-endpoint-url.html'/*,
-    link: function(scope, element, attrs) {
-      scope.$watch('var', function() { console.log(scope.$parent['newNumber']['voiceURL'] = 'xxx'); });
-    }*/
+    templateUrl: 'templates/rc-endpoint-url.html'
   };
 });
 
