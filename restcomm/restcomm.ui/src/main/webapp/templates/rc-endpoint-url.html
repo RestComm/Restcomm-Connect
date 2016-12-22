@@ -1,5 +1,5 @@
 <div class="col-md-2 custom-width-select in-box-separator">
-    <select ng-model="targetVar" class="selectpicker-custom">
+    <select ng-change="onTargetChanged(targetVar)" ng-model="targetVar" class="selectpicker-custom">
         <option value="URL">URL</option>
         <option value="Application">RVD Application</option>
     </select>
@@ -15,7 +15,7 @@
     <select ng-change="setApp()" class="app-selection-picker" ng-model="appNameVar">
         <option value="">No application selected</option>
         <option value="create_new_project">Create new project</option>
-        <option ng-repeat="app in apps | orderBy:'projectName'">{{ app.projectName }}</option>
+        <option ng-repeat="app in apps | orderBy:'projectName'" value={{app.sid}}>{{ app.projectName }}</option>
     </select>
 </div>
 
