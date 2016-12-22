@@ -77,6 +77,12 @@ rcDirectives.directive('rcEndpointUrl', function() {
       apps: '=',
     },
     controller: function ($scope) {
+        $scope.setApp = function() {
+            if ($scope.appNameVar === 'create_new_project') {
+                window.open('/restcomm-rvd');
+            }
+        };
+
 		$scope.setApplication = function (app) {
             //$scope.urlVar = app.startUrl;
             $scope.appNameVar = app.projectName;
