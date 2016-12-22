@@ -73,10 +73,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static akka.pattern.Patterns.ask;
+import java.text.ParseException;
+import java.util.ArrayList;
 import static javax.ws.rs.core.MediaType.*;
 import static javax.ws.rs.core.Response.Status.*;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.UriInfo;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.dao.entities.SmsMessageFilter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -91,6 +96,8 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     protected SmsMessagesDao dao;
     protected Gson gson;
     protected XStream xstream;
+    protected SmsMessageListConverter listConverter;
+    protected String instanceId;
 
     private boolean normalizePhoneNumbers;
 
@@ -108,8 +115,10 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
         super.init(configuration);
         final SmsMessageConverter converter = new SmsMessageConverter(configuration);
+        listConverter = new SmsMessageListConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(SmsMessage.class, converter);
+        builder.registerTypeAdapter(SmsMessageList.class, listConverter);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
@@ -117,6 +126,9 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new SmsMessageListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
+        xstream.registerConverter(listConverter);
+
+        instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
 
         normalizePhoneNumbers = configuration.getBoolean("normalize-numbers-for-outbound-calls");
     }
@@ -140,14 +152,100 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response getSmsMessages(final String accountSid, final MediaType responseType) {
+    protected Response getSmsMessages(final String accountSid, UriInfo info, final MediaType responseType) {
         secure(accountsDao.getAccount(accountSid), "RestComm:Read:SmsMessages");
-        final List<SmsMessage> smsMessages = dao.getSmsMessages(new Sid(accountSid));
-        if (APPLICATION_JSON_TYPE == responseType) {
-            return ok(gson.toJson(smsMessages), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
-            final RestCommResponse response = new RestCommResponse(new SmsMessageList(smsMessages));
+
+        boolean localInstanceOnly = true;
+        try {
+            String localOnly = info.getQueryParameters().getFirst("localOnly");
+            if (localOnly != null && localOnly.equalsIgnoreCase("false"))
+                localInstanceOnly = false;
+        } catch (Exception e) {
+        }
+
+        // shall we include sub-accounts cdrs in our query ?
+        boolean querySubAccounts = false; // be default we don't
+        String querySubAccountsParam = info.getQueryParameters().getFirst("SubAccounts");
+        if (querySubAccountsParam != null && querySubAccountsParam.equalsIgnoreCase("true"))
+            querySubAccounts = true;
+
+        String pageSize = info.getQueryParameters().getFirst("PageSize");
+        String page = info.getQueryParameters().getFirst("Page");
+        // String afterSid = info.getQueryParameters().getFirst("AfterSid");
+        String recipient = info.getQueryParameters().getFirst("To");
+        String sender = info.getQueryParameters().getFirst("From");
+        String startTime = info.getQueryParameters().getFirst("StartTime");
+        String endTime = info.getQueryParameters().getFirst("EndTime");
+        String body = info.getQueryParameters().getFirst("Body");
+
+        if (pageSize == null) {
+            pageSize = "50";
+        }
+
+        if (page == null) {
+            page = "0";
+        }
+
+        int limit = Integer.parseInt(pageSize);
+        int offset = (page.equals("0")) ? 0 : (((Integer.parseInt(page) - 1) * Integer.parseInt(pageSize)) + Integer
+                .parseInt(pageSize));
+
+        // Shall we query cdrs of sub-accounts too ?
+        // if we do, we need to find the sub-accounts involved first
+        List<String> ownerAccounts = null;
+        if (querySubAccounts) {
+            ownerAccounts = new ArrayList<String>();
+            ownerAccounts.add(accountSid); // we will also return parent account cdrs
+            ownerAccounts.addAll(accountsDao.getSubAccountSidsRecursive(new Sid(accountSid)));
+        }
+
+        SmsMessageFilter filterForTotal;
+
+        try {
+
+            if (localInstanceOnly) {
+                filterForTotal = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime,
+                        body, null, null);
+            } else {
+                filterForTotal = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime,
+                        body, null, null, instanceId);
+            }
+        } catch (ParseException e) {
+            return status(BAD_REQUEST).build();
+        }
+
+        final int total = dao.getTotalSmsMessage(filterForTotal);
+
+        if (Integer.parseInt(page) > (total / limit)) {
+            return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
+        }
+
+        SmsMessageFilter filter;
+
+        try {
+            if (localInstanceOnly) {
+                filter = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime,
+                        body, limit, offset);
+            } else {
+                filter = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime,
+                        body, limit, offset, instanceId);
+            }
+        } catch (ParseException e) {
+            return status(BAD_REQUEST).build();
+        }
+
+        final List<SmsMessage> cdrs = dao.getSmsMessages(filter);
+
+        listConverter.setCount(total);
+        listConverter.setPage(Integer.parseInt(page));
+        listConverter.setPageSize(Integer.parseInt(pageSize));
+        listConverter.setPathUri(info.getRequestUri().getPath());
+
+        if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(new SmsMessageList(cdrs));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(new SmsMessageList(cdrs)), APPLICATION_JSON).build();
         } else {
             return null;
         }

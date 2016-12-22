@@ -74,7 +74,7 @@ public class SmsEndpointTool {
         params.add("From", from);
         params.add("To", to);
         params.add("Body", body);
-        
+
         if (additionalHeaders != null && !additionalHeaders.isEmpty()){
             Iterator<String> iter = additionalHeaders.keySet().iterator();
             while (iter.hasNext()) {
@@ -105,7 +105,7 @@ public class SmsEndpointTool {
         params.add("To", to);
         params.add("Encoding", encoding);
         params.add("Body", body);
-        
+
         if (additionalHeaders != null && !additionalHeaders.isEmpty()){
             Iterator<String> iter = additionalHeaders.keySet().iterator();
             while (iter.hasNext()) {
@@ -130,7 +130,8 @@ public class SmsEndpointTool {
         String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
         JsonArray jsonArray = null;
-        jsonArray = parser.parse(response).getAsJsonArray();
+        JsonObject jsonObject = parser.parse(response).getAsJsonObject();
+        jsonArray = jsonObject.get("messages").getAsJsonArray();
         return jsonArray;
     }
 
