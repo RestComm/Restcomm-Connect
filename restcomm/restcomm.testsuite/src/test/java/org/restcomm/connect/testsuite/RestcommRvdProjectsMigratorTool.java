@@ -75,7 +75,8 @@ public class RestcommRvdProjectsMigratorTool {
         WebResource webResource = jerseyClient.resource(url);
         String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
-        JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
+        JsonObject jsonObject = parser.parse(response).getAsJsonObject();
+        JsonArray jsonResponse = jsonObject.get("notifications").getAsJsonArray();
         return jsonResponse;
     }
 

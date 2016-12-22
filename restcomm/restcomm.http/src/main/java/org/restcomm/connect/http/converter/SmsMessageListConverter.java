@@ -19,6 +19,12 @@
  */
 package org.restcomm.connect.http.converter;
 
+import com.google.gson.JsonArray;
+import java.lang.reflect.Type;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.SmsMessage;
@@ -31,7 +37,11 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe
-public final class SmsMessageListConverter extends AbstractConverter {
+public final class SmsMessageListConverter extends AbstractConverter implements JsonSerializer<SmsMessageList> {
+
+    Integer page, pageSize, total;
+    String pathUri;
+
     public SmsMessageListConverter(final Configuration configuration) {
         super(configuration);
     }
@@ -50,5 +60,81 @@ public final class SmsMessageListConverter extends AbstractConverter {
             context.convertAnother(sms);
         }
         writer.endNode();
+    }
+
+    @Override
+    public JsonObject serialize(SmsMessageList cdrList, Type type, JsonSerializationContext context) {
+
+        JsonObject result = new JsonObject();
+
+        JsonArray array = new JsonArray();
+        for (SmsMessage cdr : cdrList.getSmsMessages()) {
+            array.add(context.serialize(cdr));
+        }
+
+        if (total != null && pageSize != null && page != null) {
+            result.addProperty("page", page);
+            result.addProperty("num_pages", getTotalPages());
+            result.addProperty("page_size", pageSize);
+            result.addProperty("total", total);
+            result.addProperty("start", getFirstIndex());
+            result.addProperty("end", getLastIndex(cdrList));
+            result.addProperty("uri", pathUri);
+            result.addProperty("first_page_uri", getFirstPageUri());
+            result.addProperty("previous_page_uri", getPreviousPageUri());
+            result.addProperty("next_page_uri", getNextPageUri(cdrList));
+            result.addProperty("last_page_uri", getLastPageUri());
+        }
+
+        result.add("messages", array);
+
+        return result;
+    }
+
+    private int getTotalPages() {
+        return total / pageSize;
+    }
+
+    private String getFirstIndex() {
+        return String.valueOf(page * pageSize);
+    }
+
+    private String getLastIndex(SmsMessageList list) {
+        return String.valueOf((page == getTotalPages()) ? (page * pageSize) + list.getSmsMessages().size()
+                : (pageSize - 1) + (page * pageSize));
+    }
+
+    private String getFirstPageUri() {
+        return pathUri + "?Page=0&PageSize=" + pageSize;
+    }
+
+    private String getPreviousPageUri() {
+        return ((page == 0) ? "null" : pathUri + "?Page=" + (page - 1) + "&PageSize=" + pageSize);
+    }
+
+    private String getNextPageUri(SmsMessageList list) {
+        String lastSid = (page == getTotalPages()) ? "null" : list.getSmsMessages().get(pageSize - 1).getSid().toString();
+        return (page == getTotalPages()) ? "null" : pathUri + "?Page=" + (page + 1) + "&PageSize=" + pageSize + "&AfterSid="
+                + lastSid;
+    }
+
+    private String getLastPageUri() {
+        return pathUri + "?Page=" + getTotalPages() + "&PageSize=" + pageSize;
+    }
+
+    public void setPage(Integer page) {
+        this.page = page;
+    }
+
+    public void setPageSize(Integer pageSize) {
+        this.pageSize = pageSize;
+    }
+
+    public void setCount(Integer count) {
+        this.total = count;
+    }
+
+    public void setPathUri(String pathUri) {
+        this.pathUri = pathUri;
     }
 }

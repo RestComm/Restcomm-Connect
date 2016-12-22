@@ -23,7 +23,9 @@ import javax.ws.rs.GET;
 import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
@@ -38,7 +40,7 @@ public final class NotificationsJsonEndpoint extends NotificationsEndpoint {
     }
 
     @GET
-    public Response getNotifications(@PathParam("accountSid") final String accountSid) {
-        return getNotifications(accountSid, APPLICATION_JSON_TYPE);
+    public Response getNotifications(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
+        return getNotifications(accountSid, info, APPLICATION_JSON_TYPE);
     }
 }
