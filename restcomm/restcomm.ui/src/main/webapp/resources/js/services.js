@@ -683,12 +683,12 @@ rcServices.factory('RCommAvailableNumbers', function($resource) {
       getCountries: {
         method: 'GET',
         isArray: true,
-        url: '/resources/json/countries.:format'
+        url: 'resources/json/countries.:format'
       },
       getAreaCodes: {
         method: 'GET',
         isArray: true,
-        url: '/resources/json/area-codes-:countryCode.:format'
+        url: 'resources/json/area-codes-:countryCode.:format'
       },
       getAvailableCountries: {
         method: 'GET',

@@ -33,7 +33,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 				headers: {'Content-Type': 'application/json'}
 			}).success(function(data){
 				//console.log("Received apps from RVD");
-				var rvdProjects = data.payload;
+				var rvdProjects = data.payload || [];
 				var localApps = [];
 				for (var i=0; i<restcommApps.length; i++) {
 					var hasProject = false;

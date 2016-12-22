@@ -163,6 +163,19 @@ rcMod.controller('NumberRegisterCtrl', function ($scope, $stateParams, $location
   $scope.searching = false;
   $scope.pageSize = 10;
 
+  $scope.$watchGroup(['numberCaps', 'numberCapsVoice', 'numberCapsSms'], function() {
+    var newNumberCaps = [];
+    if ($scope.numberCaps === 'specific') {
+      if ($scope.numberCapsVoice) {
+        newNumberCaps.push('Voice');
+      }
+      if ($scope.numberCapsSms) {
+        newNumberCaps.push('Sms');
+      }
+    }
+    $scope.newNumber.capabilities = newNumberCaps;
+  });
+
   $scope.findNumbers = function(pageNr) {
     $scope.searching = true;
     $scope.availableNumbers = null;
