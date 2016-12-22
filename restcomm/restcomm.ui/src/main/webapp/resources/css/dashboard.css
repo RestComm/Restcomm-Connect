@@ -1587,11 +1587,6 @@ label.css-label {
     background: none scroll 0% 0% #eeeeee;
     border: 3px dashed #c8c6c8;
     text-align: center;
-    float: right;
-    margin-right: 50px;
-    margin-top: 20px;
-    width: 600px;
-    height: 70px;
 }
 
 .drop-area .drop-prompt {
