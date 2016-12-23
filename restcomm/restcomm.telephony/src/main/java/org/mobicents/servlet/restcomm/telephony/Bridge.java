@@ -21,8 +21,6 @@
 
 package org.mobicents.servlet.restcomm.telephony;
 
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -49,6 +47,7 @@ import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)

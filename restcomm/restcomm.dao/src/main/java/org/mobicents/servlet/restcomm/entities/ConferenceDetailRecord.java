@@ -38,9 +38,21 @@ public final class ConferenceDetailRecord {
     private final String friendlyName;
     private final String apiVersion;
     private final URI uri;
+    private final String masterMsId;
+    private final boolean masterPresent;
+    private final String masterConfernceEndpointId;
+    private final String masterIVREndpointId;
+    private final String masterIVREndpointSessionId;
+    private final String masterBridgeEndpointId;
+    private final String masterBridgeEndpointSessionId;
+    private final String masterBridgeConnectionIdentifier;
+    private final String masterIVRConnectionIdentifier;
 
-    public ConferenceDetailRecord(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
-            final Sid accountSid, final String status, final String friendlyName, final String apiVersion, final URI uri) {
+    public ConferenceDetailRecord(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
+            final String status, final String friendlyName, final String apiVersion, final URI uri, final String msId,
+            final String masterConfernceEndpointId, final boolean isMasterPresent, final String masterIVREndpointId, final String masterIVREndpointSessionId,
+            final String masterBridgeEndpointId, final String masterBridgeEndpointSessionId, final String masterBridgeConnectionIdentifier,
+            final String masterIVRConnectionIdentifier) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -50,6 +62,15 @@ public final class ConferenceDetailRecord {
         this.friendlyName = friendlyName;
         this.apiVersion = apiVersion;
         this.uri = uri;
+        this.masterMsId = msId;
+        this.masterConfernceEndpointId = masterConfernceEndpointId;
+        this.masterPresent = isMasterPresent;
+        this.masterIVREndpointId = masterIVREndpointId;
+        this.masterIVREndpointSessionId = masterIVREndpointSessionId;
+        this.masterBridgeEndpointId = masterBridgeEndpointId;
+        this.masterBridgeEndpointSessionId = masterBridgeEndpointSessionId;
+        this.masterBridgeConnectionIdentifier = masterBridgeConnectionIdentifier;
+        this.masterIVRConnectionIdentifier = masterIVRConnectionIdentifier;
     }
 
     public static Builder builder() {
@@ -88,16 +109,76 @@ public final class ConferenceDetailRecord {
         return uri;
     }
 
+    public String getMasterMsId() {
+        return masterMsId;
+    }
+
+    public String getMasterConferenceEndpointId() {
+        return masterConfernceEndpointId;
+    }
+
+    public String getMasterBridgeEndpointId() {
+        return masterBridgeEndpointId;
+    }
+
+    public String getMasterIVREndpointId() {
+        return masterIVREndpointId;
+    }
+
+    public String getMasterIVREndpointSessionId() {
+        return masterIVREndpointSessionId;
+    }
+
+    public String getMasterBridgeEndpointSessionId() {
+        return masterBridgeEndpointSessionId;
+    }
+
+    public boolean isMasterPresent() {
+        return masterPresent;
+    }
+
+    public String getMasterBridgeConnectionIdentifier() {
+        return masterBridgeConnectionIdentifier;
+    }
+
+    public String getMasterIVRConnectionIdentifier() {
+        return masterIVRConnectionIdentifier;
+    }
+
     public ConferenceDetailRecord setStatus(final String status) {
-        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri);
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, masterMsId, masterConfernceEndpointId, masterPresent, masterIVREndpointId, masterIVREndpointSessionId, masterBridgeEndpointId, masterBridgeEndpointSessionId, masterBridgeConnectionIdentifier, masterIVRConnectionIdentifier);
     }
 
-    public ConferenceDetailRecord setStartTime(final DateTime startTime) {
-        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri);
+    public ConferenceDetailRecord setMasterConfernceEndpointId(final String masterConfernceEndpointId) {
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, masterMsId, masterConfernceEndpointId, masterPresent, masterIVREndpointId, masterIVREndpointSessionId, masterBridgeEndpointId, masterBridgeEndpointSessionId, masterBridgeConnectionIdentifier, masterIVRConnectionIdentifier);
     }
 
-    public ConferenceDetailRecord setEndTime(final DateTime endTime) {
-        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri);
+    public ConferenceDetailRecord setMasterIVREndpointId(final String masterIVREndpointId) {
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, masterMsId, masterConfernceEndpointId, masterPresent, masterIVREndpointId, masterIVREndpointSessionId, masterBridgeEndpointId, masterBridgeEndpointSessionId, masterBridgeConnectionIdentifier, masterIVRConnectionIdentifier);
+    }
+
+    public ConferenceDetailRecord setMasterIVREndpointSessionId(final String masterIVREndpointSessionId) {
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, masterMsId, masterConfernceEndpointId, masterPresent, masterIVREndpointId, masterIVREndpointSessionId, masterBridgeEndpointId, masterBridgeEndpointSessionId, masterBridgeConnectionIdentifier, masterIVRConnectionIdentifier);
+    }
+
+    public ConferenceDetailRecord setMasterBridgeEndpointSessionId(final String masterBridgeEndpointSessionId) {
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, masterMsId, masterConfernceEndpointId, masterPresent, masterIVREndpointId, masterIVREndpointSessionId, masterBridgeEndpointId, masterBridgeEndpointSessionId, masterBridgeConnectionIdentifier, masterIVRConnectionIdentifier);
+    }
+
+    public ConferenceDetailRecord setMasterBridgeEndpointId(final String masterBridgeEndpointId) {
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, masterMsId, masterConfernceEndpointId, masterPresent, masterIVREndpointId, masterIVREndpointSessionId, masterBridgeEndpointId, masterBridgeEndpointSessionId, masterBridgeConnectionIdentifier, masterIVRConnectionIdentifier);
+    }
+
+    public ConferenceDetailRecord setMasterBridgeConnectionIdentifier(final String masterBridgeConnectionIdentifier) {
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, masterMsId, masterConfernceEndpointId, masterPresent, masterIVREndpointId, masterIVREndpointSessionId, masterBridgeEndpointId, masterBridgeEndpointSessionId, masterBridgeConnectionIdentifier, masterIVRConnectionIdentifier);
+    }
+
+    public ConferenceDetailRecord setMasterIVRConnectionIdentifier(final String masterIVRConnectionIdentifier) {
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, masterMsId, masterConfernceEndpointId, masterPresent, masterIVREndpointId, masterIVREndpointSessionId, masterBridgeEndpointId, masterBridgeEndpointSessionId, masterBridgeConnectionIdentifier, masterIVRConnectionIdentifier);
+    }
+
+    public ConferenceDetailRecord setMasterPresent(final boolean masterPresent) {
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, masterMsId, masterConfernceEndpointId, masterPresent, masterIVREndpointId, masterIVREndpointSessionId, masterBridgeEndpointId, masterBridgeEndpointSessionId, masterBridgeConnectionIdentifier, masterIVRConnectionIdentifier);
     }
 
     @NotThreadSafe
@@ -110,6 +191,10 @@ public final class ConferenceDetailRecord {
         private String friendlyName;
         private String apiVersion;
         private URI uri;
+        private String masterMsId;
+        private String masterConfernceEndpointId;
+        private String masterIVREndpointId;
+        private boolean isMasterPresent;
 
         private Builder() {
             super();
@@ -121,15 +206,23 @@ public final class ConferenceDetailRecord {
             friendlyName = null;
             apiVersion = null;
             uri = null;
+            masterMsId = null;
+            masterConfernceEndpointId = null;
+            masterIVREndpointId = null;
+            isMasterPresent = true;
         }
 
         public ConferenceDetailRecord build() {
             return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid,
-                    status, friendlyName, apiVersion, uri);
+                    status, friendlyName, apiVersion, uri, masterMsId, masterConfernceEndpointId, isMasterPresent, masterIVREndpointId, null, null, null, null, null);
         }
 
         public void setSid(final Sid sid) {
             this.sid = sid;
+        }
+
+        public void setMasterMsId(final String msId) {
+            this.masterMsId = msId;
         }
 
         public void setDateCreated(final DateTime dateCreated) {
@@ -154,6 +247,14 @@ public final class ConferenceDetailRecord {
 
         public void setUri(final URI uri) {
             this.uri = uri;
+        }
+
+        public void setMasterConfernceEndpointId(final String masterConfernceEndpointId) {
+            this.masterConfernceEndpointId = masterConfernceEndpointId;
+        }
+
+        public void setMasterIVREndpointId(final String masterIVREndpointId) {
+            this.masterIVREndpointId = masterIVREndpointId;
         }
     }
 }

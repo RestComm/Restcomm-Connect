@@ -26,7 +26,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class CreateIvrEndpoint extends AbstractCreateMessage {
+    private String endpointName;
     public CreateIvrEndpoint(final MediaSession session) {
         super(session);
+    }
+
+    public CreateIvrEndpoint(final MediaSession session, final String endpointName) {
+        this(session);
+        this.endpointName = endpointName;
+    }
+    public String endpointName(){
+        return endpointName;
     }
 }

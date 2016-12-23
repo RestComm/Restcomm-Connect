@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerControllerFactory;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 
@@ -46,12 +47,14 @@ public final class ConferenceCenter extends UntypedActor {
     private final MediaServerControllerFactory factory;
     private final Map<String, ActorRef> conferences;
     private final Map<String, List<ActorRef>> initializing;
+    private final DaoManager storage;
 
-    public ConferenceCenter(final MediaServerControllerFactory factory) {
+    public ConferenceCenter(final MediaServerControllerFactory factory, final DaoManager storage) {
         super();
         this.factory = factory;
         this.conferences = new HashMap<String, ActorRef>();
         this.initializing = new HashMap<String, List<ActorRef>>();
+        this.storage = storage;
     }
 
     private ActorRef getConference(final String name) {
@@ -60,7 +63,8 @@ public final class ConferenceCenter extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Conference(name, factory.provideConferenceController());
+                //Here Here we can pass Gateway where call is connected
+                return new Conference(name, factory.provideConferenceController(), storage);
             }
         }));
     }
@@ -174,7 +178,7 @@ public final class ConferenceCenter extends UntypedActor {
             observers.add(sender);
             conference = getConference(name);
             conference.tell(new Observe(self), self);
-            conference.tell(new StartConference(), self);
+            conference.tell(new StartConference(request.initialitingCallSid()), self);
             initializing.put(name, observers);
         }
     }

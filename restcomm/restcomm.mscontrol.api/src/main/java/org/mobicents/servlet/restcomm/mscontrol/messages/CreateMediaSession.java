@@ -22,6 +22,8 @@
 package org.mobicents.servlet.restcomm.mscontrol.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.telephony.ConferenceInfo;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -33,21 +35,37 @@ public final class CreateMediaSession {
     private final String connectionMode;
     private final String sessionDescription;
     private final boolean webrtc;
+    private final Sid callSid;
+    private final ConferenceInfo conferenceInfo;
 
-    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound, boolean webrtc) {
+    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound, boolean webrtc, Sid callSid, final ConferenceInfo conferenceInfo) {
         super();
         this.connectionMode = connectionMode;
         this.sessionDescription = sessionDescription;
         this.outbound = outbound;
         this.webrtc = webrtc;
+        this.callSid = callSid;
+        this.conferenceInfo = conferenceInfo;
+    }
+
+    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound, boolean webrtc, Sid callSid) {
+        this(connectionMode, sessionDescription, outbound, webrtc, callSid, null);
     }
 
     public CreateMediaSession(String connectionMode) {
-        this("sendrecv", "", false, false);
+        this("sendrecv", "", false, false, null, null);
+    }
+
+    public CreateMediaSession(Sid callSid, final ConferenceInfo conferenceInfo) {
+        this("", "", false, false, callSid, conferenceInfo);
+    }
+
+    public CreateMediaSession(Sid callSid) {
+        this("", "", false, false, callSid, null);
     }
 
     public CreateMediaSession() {
-        this("", "", false, false);
+        this("", "", false, false, null, null);
     }
 
     public String getConnectionMode() {
@@ -64,6 +82,14 @@ public final class CreateMediaSession {
 
     public boolean isWebrtc() {
         return webrtc;
+    }
+
+    public Sid callSid() {
+        return callSid;
+    }
+
+    public ConferenceInfo conferenceInfo() {
+        return conferenceInfo;
     }
 
 }

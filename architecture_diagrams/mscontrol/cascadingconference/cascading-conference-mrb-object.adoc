@@ -1,0 +1,34 @@
+[plantuml, cascading-conference-mrb-object, svg]     
+....
+title Cascading Conference MRB Class Details
+
+UntypedActor<|-- MediaResourceBroker
+MediaResourceBroker *-- MMSConferenceController:observes
+
+MediaResourceBroker <-- MMSConferenceController:GetMediaGateway(confSid, true, RMS1)
+
+MediaResourceBroker <-- MMSCallController:GetMediaGateway(callSid, false, null)
+
+class MediaResourceBroker{
+    -- Messages Receives --
+    +Observe
+    +StopObserving
+    +GetMediaGateway
+    +
+    --
+    - DaoManager daoManager;
+    - 
+    -- States -- 
+    - unitialized
+    - active
+    - stopping
+    - stopped
+}
+
+class GetMediaGateway{
+    - Sid sid;
+    - boolean isConference;
+    - MediaServerInfo preferenceMS;
+}
+
+....

@@ -210,15 +210,17 @@
 		the maximum amount of time to wait for a response from the media server before 
 		abandoning the request. This does NOT apply to RQNT/NOTIFY request/response. -->
 	<media-server-manager>
-		<mgcp-server class="org.mobicents.servlet.restcomm.mgcp.MockMediaGateway"
+		<mgcp-servers class="org.mobicents.servlet.restcomm.mgcp.MockMediaGateway"
 			name="Mobicents Media Server">
-			<local-address>127.0.0.1</local-address>
-			<local-port>2727</local-port>
-			<remote-address>127.0.0.1</remote-address>
-			<remote-port>2427</remote-port>
-			<response-timeout>1500</response-timeout>
-			<!-- <external-address></external-address> -->
-		</mgcp-server>
+			<mgcp-server>
+				<local-address>127.0.0.1</local-address>
+				<local-port>2727</local-port>
+				<remote-address>127.0.0.1</remote-address>
+				<remote-port>2427</remote-port>
+				<response-timeout>1500</response-timeout>
+				<!-- <external-address></external-address> -->
+			</mgcp-server>
+		</mgcp-servers>
 	</media-server-manager>
 	
 		<!-- Adjust http client behaviour for outgoing requests -->

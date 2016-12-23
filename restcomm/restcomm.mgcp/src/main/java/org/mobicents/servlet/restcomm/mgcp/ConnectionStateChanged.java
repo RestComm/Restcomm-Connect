@@ -19,9 +19,10 @@
  */
 package org.mobicents.servlet.restcomm.mgcp;
 
-import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+
+import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -34,15 +35,25 @@ public final class ConnectionStateChanged {
 
     private final ConnectionDescriptor descriptor;
     private final State state;
+    private ConnectionIdentifier connectionIdentifier;
 
     public ConnectionStateChanged(final ConnectionDescriptor descriptor, final State state) {
+        this(descriptor,state,null);
+    }
+
+    public ConnectionStateChanged(final ConnectionDescriptor descriptor, final State state, final ConnectionIdentifier connectionIdentifier) {
         super();
         this.descriptor = descriptor;
         this.state = state;
+        this.connectionIdentifier = connectionIdentifier;
     }
 
     public ConnectionStateChanged(final State state) {
         this(null, state);
+    }
+
+    public ConnectionStateChanged(final State state, final ConnectionIdentifier connectionIdentifier) {
+        this(null, state, connectionIdentifier);
     }
 
     public ConnectionDescriptor descriptor() {
@@ -51,5 +62,9 @@ public final class ConnectionStateChanged {
 
     public State state() {
         return state;
+    }
+
+    public ConnectionIdentifier connectionIdentifier() {
+        return connectionIdentifier;
     }
 }

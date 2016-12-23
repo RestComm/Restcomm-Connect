@@ -19,6 +19,26 @@
  */
 package org.mobicents.servlet.restcomm.mgcp;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import org.mobicents.servlet.restcomm.fsm.Action;
+import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
+import org.mobicents.servlet.restcomm.fsm.State;
+import org.mobicents.servlet.restcomm.fsm.Transition;
+import org.mobicents.servlet.restcomm.patterns.Observe;
+import org.mobicents.servlet.restcomm.patterns.Observing;
+import org.mobicents.servlet.restcomm.patterns.StopObserving;
+
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.JainMgcpResponseEvent;
 import jain.protocol.ip.mgcp.message.CreateConnection;
 import jain.protocol.ip.mgcp.message.CreateConnectionResponse;
@@ -34,28 +54,7 @@ import jain.protocol.ip.mgcp.message.parms.LocalOptionExtension;
 import jain.protocol.ip.mgcp.message.parms.LocalOptionValue;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import org.mobicents.servlet.restcomm.fsm.Action;
-import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
-import org.mobicents.servlet.restcomm.fsm.State;
-import org.mobicents.servlet.restcomm.fsm.Transition;
-import org.mobicents.servlet.restcomm.patterns.Observe;
-import org.mobicents.servlet.restcomm.patterns.Observing;
-import org.mobicents.servlet.restcomm.patterns.StopObserving;
-
 import scala.concurrent.duration.Duration;
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -109,6 +108,7 @@ public final class Connection extends UntypedActor {
         transitions.add(new Transition(uninitialized, closed));
         transitions.add(new Transition(closed, openingHalfWay));
         transitions.add(new Transition(closed, opening));
+        transitions.add(new Transition(closed, modifying));
         transitions.add(new Transition(halfOpen, closing));
         transitions.add(new Transition(halfOpen, modifying));
         transitions.add(new Transition(open, closing));
@@ -262,7 +262,7 @@ public final class Connection extends UntypedActor {
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.Undefined());
             // Notify the observers.
-            final ConnectionStateChanged event = new ConnectionStateChanged(ConnectionStateChanged.State.CLOSED);
+            final ConnectionStateChanged event = new ConnectionStateChanged(ConnectionStateChanged.State.CLOSED, connId);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
@@ -307,7 +307,7 @@ public final class Connection extends UntypedActor {
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.Undefined());
             // Notify the observers.
-            final ConnectionStateChanged event = new ConnectionStateChanged(localDesc, ConnectionStateChanged.State.HALF_OPEN);
+            final ConnectionStateChanged event = new ConnectionStateChanged(localDesc, ConnectionStateChanged.State.HALF_OPEN, connId);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
@@ -334,7 +334,7 @@ public final class Connection extends UntypedActor {
                 final ModifyConnectionResponse response = (ModifyConnectionResponse) message;
                 localDesc = response.getLocalConnectionDescriptor();
             }
-            final ConnectionStateChanged event = new ConnectionStateChanged(localDesc, ConnectionStateChanged.State.OPEN);
+            final ConnectionStateChanged event = new ConnectionStateChanged(localDesc, ConnectionStateChanged.State.OPEN, connId);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
@@ -435,7 +435,9 @@ public final class Connection extends UntypedActor {
             final UpdateConnection request = (UpdateConnection) message;
             final String sessionId = Integer.toString(session.id());
             final CallIdentifier callId = new CallIdentifier(sessionId);
-            final ModifyConnection mdcx = new ModifyConnection(source, callId, endpointId, connId);
+            ConnectionIdentifier requestedConnId = request.connectionIdentifier();
+            requestedConnId = requestedConnId==null ? connId:requestedConnId;
+            final ModifyConnection mdcx = new ModifyConnection(source, callId, endpointId, requestedConnId);
             final ConnectionMode mode = request.mode();
             if (mode != null) {
                 mdcx.setMode(mode);

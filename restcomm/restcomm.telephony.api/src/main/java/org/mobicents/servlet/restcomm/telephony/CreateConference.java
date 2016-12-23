@@ -20,6 +20,7 @@
 package org.mobicents.servlet.restcomm.telephony;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -27,13 +28,19 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 @Immutable
 public final class CreateConference {
     private final String name;
+    private final Sid initialitingCallSid;
 
-    public CreateConference(final String name) {
+    public CreateConference(final String name, final Sid initialitingCallSid) {
         super();
         this.name = name;
+        this.initialitingCallSid = initialitingCallSid;
     }
 
     public String name() {
         return name;
+    }
+
+    public Sid initialitingCallSid(){
+        return initialitingCallSid;
     }
 }

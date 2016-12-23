@@ -19,11 +19,26 @@
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActorContext;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.fax;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.gather;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.hangup;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.record;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.servlet.sip.SipServletResponse;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -61,24 +76,11 @@ import org.mobicents.servlet.restcomm.telephony.DestroyCall;
 import org.mobicents.servlet.restcomm.telephony.Reject;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 
-import javax.servlet.sip.SipServletResponse;
-import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.fax;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.gather;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.hangup;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.record;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActorContext;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * @author gvagenas@telestax.com

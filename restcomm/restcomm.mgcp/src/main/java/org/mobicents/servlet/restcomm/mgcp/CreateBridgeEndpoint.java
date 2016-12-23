@@ -26,9 +26,18 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class CreateBridgeEndpoint extends AbstractCreateMessage {
+    private String endpointName;
 
     public CreateBridgeEndpoint(final MediaSession session) {
         super(session);
+    }
+
+    public CreateBridgeEndpoint(final MediaSession session, final String endpointName) {
+         this(session);
+         this.endpointName = endpointName;
+    }
+    public String endpointName() {
+        return this.endpointName;
     }
 
 }

@@ -1,0 +1,146 @@
+[plantuml, cascading-conference-mrb-sequence, svg]     
+....
+title cascading-conference-mrb-sequence
+
+actor participant1
+actor participant2
+actor participant3
+
+box "Client" #LightGreen
+	participant participant1
+	participant participant2
+	participant participant3
+end box
+
+box "Telephony/OtherProjects" #LightBlue
+    participant Restcomm
+end box
+
+box "MediaServerController" #LightYellow
+	participant CallController
+	participant ConferenceController
+end box
+
+box "MediaResourceBroker" #LightPink
+	participant MediaResourceBroker
+end box
+
+box "Database" #LightBlue
+	participant DAO
+end box
+
+box "MediaGatway" #LightGrey
+	participant MediaGatway
+end box
+
+box "MediaServer" #LightYellow
+	participant RMS1
+	participant RMS2
+	participant RMS3
+end box
+
+participant1 -> Restcomm: sip/sdp Dial bridge
+Restcomm -->participant1: sip 100/Trying
+
+Restcomm -> CallController: new CallController(MediaResourceBroker)
+CallController -> MediaResourceBroker: GetMediaGateway \n(preference = null, callSid)
+MediaResourceBroker -> CallController: MediaGateway according to algo.\nRMS1
+MediaResourceBroker <-->DAO: updateMediaServerInfo\nin call_detail_record table's \nnew column (ms_id)
+CallController <--> MediaGatway: Q. CRCX bridge$, ivr$\nA. bridge1, ivr1\nQ.CRCX bridge1, sdp\nA.success, sdp
+CallController --> Restcomm: success, sdp
+Restcomm --> participant1: sip/sdp 200 ok
+participant1 --> Restcomm: ACK
+participant1<-->RMS1: RTP 
+
+== 1st Call In Progress ==
+
+Restcomm->Restcomm: Create Conference
+Restcomm->ConferenceController: CreateMediaSession(ms_id (we got it from call record) )
+ConferenceController-> MediaResourceBroker: GetMediaGatewayForConference (preference=ms_id)
+MediaResourceBroker<->DAO: getMasterMediaServerForConference\nfrom conference_detail_record table's new column ms_id\nas it will be null which means its the first participant.
+MediaResourceBroker<->DAO: updateMediaServerForConference (master)\nin conference_detail_record table's new column ms_id
+MediaResourceBroker -> ConferenceController: RMS1 (since we asked for same MS as call's)
+ConferenceController<->MediaGatway: MediaSession Created\nConferenceEndpoint created (cnf1@RMS1)\nMediaGroup Created & Started
+MediaResourceBroker -> DAO: update cnfEndpoint\nin conferenceBridging table.
+participant1<-->RMS1: RTP 
+
+== 1st participant joined Conference ==
+
+participant2 -> Restcomm: sip/sdp Dial bridge
+Restcomm -->participant2: sip 100/Trying
+
+Restcomm -> CallController: new CallController(MediaResourceBroker)
+CallController -> MediaResourceBroker: GetMediaGateway \n(preference = null, callSid)
+MediaResourceBroker -> CallController: MediaGateway according to algo.\nRMS2
+MediaResourceBroker <-->DAO: updateMediaServerInfo\nin call_detail_record table's \nnew column (ms_id)
+CallController <--> MediaGatway: Q. CRCX bridge$, ivr$\n<b>A. bridge2, ivr2\nQ.CRCX bridge2, sdp\nA.success, sdp
+CallController --> Restcomm: success, sdp
+Restcomm --> participant2: sip/sdp 200 ok
+participant2 --> Restcomm: ACK
+participant2<-->RMS2: RTP
+
+== 2nd Call In Progress ==
+
+Restcomm->Restcomm: Create Conference
+Restcomm->ConferenceController: CreateMediaSession(ms_id (we got it from call record) )
+ConferenceController-> MediaResourceBroker: GetMediaGatewayForConference (preference=ms_id)
+MediaResourceBroker -> DAO: updateSlaveMediaServerForConference(conferenceSid, callSid, slaveMSId)\nin new conference_bridging_status table.
+MediaResourceBroker<->DAO: getMasterMediaServerForConference\nfrom conference_detail_record table's new column ms_id
+MediaResourceBroker -> ConferenceController: RMS2 (since we asked for same MS as call's)
+ConferenceController<->MediaGatway: MediaSession Created\nConferenceEndpoint created  <b>(cnf2@RMS2)\nMediaGroup Created & Started
+MediaResourceBroker -> DAO: update cnfEndpoint\nin conferenceBridging table.
+participant2<-->RMS2: RTP 
+
+== 2nd participant joined Conference but incomplete ==
+ConferenceController->MediaResourceBroker: JoinCall(participant2)
+MediaResourceBroker <-> DAO: getConferenceBridgingStatus(callSid)\nreturns master_ms_id (RMS1), master_ms_cnf_ep_id(cnf1)\nslave_ms_id(RMS2), slave_ms_cnf_ep_id(cnf2)\nis_bridged_together=false
+MediaResourceBroker -> MediaResourceBroker: as bridging_status is null so create bridges.
+
+MediaResourceBroker -> MediaGatway: CRCX bridge$@RMS1 (bridge at master)
+MediaGatway -> MediaResourceBroker: bridge3@RMS1 , sdp
+MediaResourceBroker <--> DAO: add master_bridge_id
+
+MediaResourceBroker -> MediaGatway: CRCX bridge$@RMS2 (bridge at slave),\nsdp from bridge3@RMS1
+MediaGatway -> MediaResourceBroker: bridge4@RMS2 , sdp
+MediaResourceBroker <--> DAO: add slave_bridge_id
+
+MediaResourceBroker <--> MediaGatway: MDCX bridge3@RMS1 , sdp from bridge4@RMS2
+
+MediaResourceBroker <--> MediaGatway: Create local connection\nCRCX cnf1@RMS1, bridge3@RMS1
+MediaResourceBroker <--> MediaGatway: Create local connection\nCRCX cnf2@RMS2, bridge4@RMS2
+
+MediaResourceBroker -> DAO: updatebridgingstatus=true
+
+RMS2<-->RMS1: RTP
+participant2<-->participant1: RTP
+
+== 3rd participant joined Conference at RC3 but incomplete ==
+
+ConferenceController->MediaResourceBroker: JoinCall(participant3)
+MediaResourceBroker <-> DAO: getConferenceBridgingStatus(callSid)\nreturns master_ms_id (RMS1), master_ms_cnf_ep_id(cnf1)\nslave_ms_id(RMS3), slave_ms_cnf_ep_id(cnf3)\nis_bridged_together=false
+MediaResourceBroker -> MediaResourceBroker: as bridging_status is null so create bridges.
+
+MediaResourceBroker -> MediaResourceBroker: As rtp bridge is already created on Master.
+MediaResourceBroker -> MediaGatway: CRCX bridge3@RMS1
+MediaGatway -> MediaResourceBroker: bridge3@RMS1 , sdp
+
+MediaResourceBroker -> MediaGatway: CRCX bridge$@RMS3 (bridge at slave),\nsdp from bridge3@RMS1
+MediaGatway -> MediaResourceBroker: bridge5@RMS3 , sdp
+MediaResourceBroker <--> DAO: add slave_bridge_id
+
+MediaResourceBroker <--> MediaGatway: MDCX bridge3@RMS1 , sdp from bridge4@RMS2
+
+MediaResourceBroker <--> MediaGatway: Create local connection\nCRCX cnf3@RMS3, bridge5@RMS3
+
+MediaResourceBroker -> DAO: updatebridgingstatus=true
+
+RMS3<-->RMS1: RTP
+participant3<-->participant1: RTP
+participant3<-->participant2: RTP
+
+== everything well mixed by far ==
+== Jean decides to leave ==
+
+participant1 -> Restcomm: BYE
+
+....

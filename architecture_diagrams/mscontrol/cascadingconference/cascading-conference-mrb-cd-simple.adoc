@@ -1,0 +1,30 @@
+[plantuml, cascading-conference-mrb-class-diagram-simple, svg] 
+....
+interface MediaServerController{
+    
+}
+class MediaResourceBroker{
+    
+}
+class MediaGateway{
+    
+}
+class Call{
+    
+}
+class Conference{
+    
+}
+class DaoManager{
+
+}
+
+
+MediaServerController o-- MediaResourceBroker: observes
+MediaResourceBroker *-- MediaGateway
+DaoManager --o MediaServerController
+CallManager --> Call: creates a call
+ConferenceCenter --> Conference: creates a conference
+MediaServerController --* Call: observes
+MediaServerController --* Conference: observes
+....

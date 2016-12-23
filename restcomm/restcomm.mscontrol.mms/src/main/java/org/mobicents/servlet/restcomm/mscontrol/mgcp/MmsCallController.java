@@ -21,9 +21,6 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.mgcp;
 
-import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -59,11 +56,13 @@ import org.mobicents.servlet.restcomm.mgcp.InitializeLink;
 import org.mobicents.servlet.restcomm.mgcp.LinkStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayInfo;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
+import org.mobicents.servlet.restcomm.mgcp.MediaResourceBrokerResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
 import org.mobicents.servlet.restcomm.mgcp.OpenLink;
 import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
 import org.mobicents.servlet.restcomm.mgcp.UpdateLink;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetMediaGateway;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
@@ -98,6 +97,9 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -110,6 +112,7 @@ public class MmsCallController extends MediaServerController {
     // Finite State Machine
     private final FiniteStateMachine fsm;
     private final State uninitialized;
+    private final State acquiringMediaGateway;
     private final State acquiringMediaGatewayInfo;
     private final State acquiringMediaSession;
     private final State acquiringBridge;
@@ -147,7 +150,10 @@ public class MmsCallController extends MediaServerController {
     private ActorRef outboundCallBridgeEndpoint;
 
     // MGCP runtime stuff
-    private final ActorRef mediaGateway;
+    //private final ActorRef mediaGateway;
+    // TODO rename following variable to 'mediaGateway'
+    private ActorRef mediaGateway;
+    private final ActorRef mrb;
     private MediaGatewayInfo gatewayInfo;
     private MediaSession session;
     private ActorRef bridgeEndpoint;
@@ -171,12 +177,16 @@ public class MmsCallController extends MediaServerController {
     // Observer pattern
     private final List<ActorRef> observers;
 
-    public MmsCallController(final ActorRef mediaGateway) {
+    private ConnectionIdentifier connectionIdentifier;
+
+    //public MmsCallController(final List<ActorRef> mediaGateways, final Configuration configuration) {
+    public MmsCallController(final ActorRef mrb) {
         super();
         final ActorRef source = self();
 
         // Initialize the states for the FSM.
         this.uninitialized = new State("uninitialized", null, null);
+        this.acquiringMediaGateway = new State("acquiring media gateway from mrb", new AcquiringMediaGateway(source), null);
         this.acquiringMediaGatewayInfo = new State("acquiring media gateway info", new AcquiringMediaGatewayInfo(source), null);
         this.acquiringMediaSession = new State("acquiring media session", new AcquiringMediaSession(source), null);
         this.acquiringBridge = new State("acquiring media bridge", new AcquiringBridge(source), null);
@@ -202,7 +212,8 @@ public class MmsCallController extends MediaServerController {
 
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
-        transitions.add(new Transition(this.uninitialized, this.acquiringMediaGatewayInfo));
+        transitions.add(new Transition(this.uninitialized, this.acquiringMediaGateway));
+        transitions.add(new Transition(this.acquiringMediaGateway, this.acquiringMediaGatewayInfo));
         transitions.add(new Transition(this.uninitialized, this.closingRemoteConnection));
         transitions.add(new Transition(this.acquiringMediaGatewayInfo, this.acquiringMediaSession));
         transitions.add(new Transition(this.acquiringMediaSession, this.acquiringBridge));
@@ -257,7 +268,7 @@ public class MmsCallController extends MediaServerController {
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
 
         // MGCP runtime stuff
-        this.mediaGateway = mediaGateway;
+        this.mrb = mrb;
 
         // Call runtime stuff
         this.localSdp = "";
@@ -290,7 +301,7 @@ public class MmsCallController extends MediaServerController {
     }
 
     private ActorRef createMediaGroup(final Object message) {
-        // No need to create new media group is current one is active
+        // No need to create new media group if current one is active
         if (this.mediaGroup != null && !this.mediaGroup.isTerminated()) {
             return this.mediaGroup;
         }
@@ -442,7 +453,17 @@ public class MmsCallController extends MediaServerController {
             onCollect((Collect) message, self, sender);
         } else if (EndpointStateChanged.class.equals(klass)) {
             onEndpointStateChanged((EndpointStateChanged) message, self, sender);
+        } else if (MediaResourceBrokerResponse.class.equals(klass)) {
+            onMediaResourceBrokerResponse((MediaResourceBrokerResponse<?>) message, self, sender);
         }
+    }
+
+    private void onMediaResourceBrokerResponse(MediaResourceBrokerResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
+        logger.info("got MRB response in call controller");
+        //TODO: check state here and then do the transition
+        this.mediaGateway = (ActorRef) message.get();
+        fsm.transition(message, acquiringMediaGatewayInfo);
+
     }
 
     private void onObserve(Observe message, ActorRef self, ActorRef sender) {
@@ -468,8 +489,9 @@ public class MmsCallController extends MediaServerController {
         this.callOutbound = message.isOutbound();
         this.remoteSdp = message.getSessionDescription();
         this.webrtc = message.isWebrtc();
+        this.callId = message.callSid();
 
-        fsm.transition(message, acquiringMediaGatewayInfo);
+        fsm.transition(message, acquiringMediaGateway);
     }
 
     private void onCloseMediaSession(CloseMediaSession message, ActorRef self, ActorRef sender) throws Exception {
@@ -638,8 +660,10 @@ public class MmsCallController extends MediaServerController {
     }
 
     private void onJoinConference(JoinConference message, ActorRef self, ActorRef sender) throws Exception {
-        // Ask the remote media session controller for the bridge endpoint
+        // Ask the remote media session controller for the bridge endpoint.
+        //Why ??
         this.bridge = sender;
+        //internalLinkEndpoint is basically conference endpoint.
         this.internalLinkEndpoint = (ActorRef) message.getEndpoint();
         this.internalLinkMode = message.getConnectionMode();
 
@@ -714,6 +738,18 @@ public class MmsCallController extends MediaServerController {
     /*
      * ACTIONS
      */
+    private final class AcquiringMediaGateway extends AbstractAction {
+
+        public AcquiringMediaGateway(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            mrb.tell(new GetMediaGateway(callId), self());
+        }
+    }
+
     private final class AcquiringMediaGatewayInfo extends AbstractAction {
 
         public AcquiringMediaGatewayInfo(final ActorRef source) {
@@ -824,11 +860,13 @@ public class MmsCallController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             if (is(updatingInternalLink)) {
-                call.tell(new JoinComplete(), super.source);
+                call.tell(new JoinComplete(bridgeEndpoint, session.id(), connectionIdentifier), super.source);
             } else if (is(closingInternalLink)) {
                 call.tell(new Left(), super.source);
             } else if (is(openingRemoteConnection) || is(updatingRemoteConnection)) {
                 ConnectionStateChanged connState = (ConnectionStateChanged) message;
+                connectionIdentifier = connState.connectionIdentifier();
+                logger.info("connectionIdentifier: "+connectionIdentifier);
                 localSdp = connState.descriptor().toString();
                 MediaSessionInfo mediaSessionInfo = new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(),
                         localSdp, remoteSdp);
@@ -1073,7 +1111,7 @@ public class MmsCallController extends MediaServerController {
             // Notify observers the controller has stopped
             broadcast(new MediaServerControllerStateChanged(state));
         }
-        }
+    }
 
         protected void cleanup() {
             if(logger.isInfoEnabled()) {
@@ -1103,7 +1141,9 @@ public class MmsCallController extends MediaServerController {
                 if(logger.isInfoEnabled()) {
                     logger.info("Call Controller: " + self().path() + " about to stop bridge endpoint: " + bridgeEndpoint.path());
                 }
+
             mediaGateway.tell(new DestroyEndpoint(bridgeEndpoint), self());
+
                 context().stop(bridgeEndpoint);
                 bridgeEndpoint = null;
             }

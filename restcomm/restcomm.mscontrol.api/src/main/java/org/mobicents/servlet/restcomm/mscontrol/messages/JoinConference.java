@@ -21,9 +21,9 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.messages;
 
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telesta.com)

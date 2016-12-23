@@ -47,13 +47,13 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.api.EmailRequest;
+import org.mobicents.servlet.restcomm.api.Mail;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.email.EmailService;
-import org.mobicents.servlet.restcomm.api.EmailRequest;
-import org.mobicents.servlet.restcomm.api.Mail;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -85,8 +85,8 @@ import org.mobicents.servlet.restcomm.ussd.commons.UssdMessageType;
 import org.mobicents.servlet.restcomm.ussd.commons.UssdRestcommResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
-import akka.actor.ActorRef;
 import akka.actor.Actor;
+import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -497,7 +497,7 @@ public class UssdInterpreter extends UntypedActor {
                 }
                 final String direction = callInfo.direction();
                 if ("inbound".equals(direction)) {
-                    ussdCall.tell(new Answer(), source);
+                    ussdCall.tell(new Answer(callInfo.sid()), source);
                     // fsm.transition(message, downloadingRcml);
                 } else {
                     fsm.transition(message, downloadingRcml);

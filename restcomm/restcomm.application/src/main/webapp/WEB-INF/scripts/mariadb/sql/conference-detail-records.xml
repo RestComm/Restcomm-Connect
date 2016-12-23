@@ -5,9 +5,7 @@
 	namespace="org.mobicents.servlet.sip.restcomm.dao.ConferenceDetailRecordsDao">
 
     <insert id="addConferenceDetailRecord" parameterType="map">
-        INSERT INTO restcomm_conference_detail_records (sid, date_created, date_updated, account_sid, status,
-        friendly_name, api_version, uri) VALUES (#{sid},
-		#{date_created}, #{date_updated}, #{account_sid}, #{status}, #{friendly_name}, #{api_version}, #{uri});
+        call addConferenceDetailRecord( #{sid}, #{date_created}, #{date_updated}, #{account_sid}, #{status}, #{friendly_name}, #{api_version}, #{uri}, #{master_ms_id}, #{master_present} );
     </insert>
 	<select id="getConferenceDetailRecord" parameterType="string" resultType="hashmap">
 		SELECT * FROM restcomm_conference_detail_records WHERE sid=#{sid};
@@ -16,7 +14,7 @@
         SELECT * FROM restcomm_conference_detail_records WHERE account_sid=#{account_sid};
     </select>
     <select id="getConferenceDetailRecordsByStatus" parameterType="string" resultType="hashmap">
-       SELECT * FROM restcomm_conference_detail_records WHERE status=#{status};
+       SELECT * FROM restcomm_conference_detail_records WHERE status like #{status};
     </select>
     <select id="getConferenceDetailRecordsByDateCreated" parameterType="date" resultType="hashmap">
         SELECT * FROM restcomm_conference_detail_records WHERE date_created&gt;=#{date_created} AND date_created&lt;DATE_ADD(#{date_created},INTERVAL 1 DAY);
@@ -38,7 +36,7 @@
 		<if test="dateUpdated != null">
 			AND date_updated &lt;= DATE_ADD(#{dateUpdated},INTERVAL 1 DAY) order by date_created
 		</if>
-
+		;
 	</select>
 	<select id="getConferenceDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter" resultType="hashmap">
 		SELECT * FROM restcomm_conference_detail_records AS restcomm_conference_detail_records WHERE account_sid=#{accountSid}
@@ -55,7 +53,7 @@
 			AND date_updated &lt;= DATE_ADD(#{dateUpdated},INTERVAL 1 DAY) order by date_created
 		</if>
 
-		LIMIT #{limit} OFFSET #{offset}
+		LIMIT #{limit} OFFSET #{offset};
 	</select>
   
     <delete id="removeConferenceDetailRecord" parameterType="string">
@@ -64,8 +62,38 @@
     <delete id="removeConferenceDetailRecords" parameterType="string">
         DELETE FROM restcomm_conference_detail_records WHERE account_sid=#{account_sid};
     </delete>
-    <update id="updateConferenceDetailRecord" parameterType="map">
-        UPDATE restcomm_conference_detail_records SET date_updated=#{date_updated}, status=#{status} WHERE sid=#{sid};
+    <update id="updateConferenceDetailRecordStatus" parameterType="map">
+            UPDATE 
+        	restcomm_conference_detail_records 
+        	SET status=#{status}, date_updated=#{date_updated} 
+        	WHERE sid=#{sid};
+    </update>
+    <update id="updateConferenceDetailRecordMasterEndpointID" parameterType="map">
+            UPDATE 
+        	restcomm_conference_detail_records 
+        	SET 
+        		master_conference_endpoint_id=#{master_conference_endpoint_id}, 
+        		master_ivr_endpoint_id=#{master_ivr_endpoint_id}, 
+        		master_ivr_endpoint_session_id=#{master_ivr_endpoint_session_id},
+        		master_ivr_conn_id=#{master_ivr_conn_id}, 
+        		date_updated=#{date_updated}
+        	WHERE sid=#{sid};
+    </update>
+    <update id="updateConferenceDetailRecordMasterBridgeEndpointID" parameterType="map">
+            UPDATE 
+        	restcomm_conference_detail_records 
+        	SET 
+        		master_bridge_endpoint_id=#{master_bridge_endpoint_id}, 
+        		master_bridge_endpoint_session_id=#{master_bridge_endpoint_session_id},
+        		master_bridge_conn_id=#{master_bridge_conn_id},
+        		date_updated=#{date_updated}
+        	WHERE sid=#{sid};
+    </update>
+    <update id="updateMasterPresent" parameterType="map">
+            UPDATE 
+        	restcomm_conference_detail_records 
+        	SET master_present=#{master_present}, date_updated=#{date_updated}
+        	WHERE sid=#{sid};
     </update>
 
 </mapper>

@@ -28,7 +28,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  *
  */
 @Immutable
-public final class MediaServerControllerStateChanged {
+public class MediaServerControllerStateChanged {
 
     public enum MediaServerControllerState {
         PENDING, ACTIVE, FAILED, INACTIVE;
@@ -53,5 +53,4 @@ public final class MediaServerControllerStateChanged {
     public MediaSessionInfo getMediaSession() {
         return mediaSession;
     }
-
 }

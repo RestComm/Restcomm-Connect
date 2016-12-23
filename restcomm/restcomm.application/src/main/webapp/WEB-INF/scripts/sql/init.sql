@@ -134,7 +134,8 @@ CREATE TABLE "restcomm_call_detail_records" (
 "muted" BOOLEAN, 
 "start_conference_on_enter" BOOLEAN,
 "end_conference_on_exit" BOOLEAN,
-"on_hold" BOOLEAN
+"on_hold" BOOLEAN, 
+"ms_id" VARCHAR(34)
 );
 
 CREATE TABLE "restcomm_conference_detail_records" (
@@ -145,7 +146,8 @@ CREATE TABLE "restcomm_conference_detail_records" (
 "status" VARCHAR(100) NOT NULL,
 "friendly_name" VARCHAR(60),
 "api_version" VARCHAR(10) NOT NULL,
-"uri" LONGVARCHAR NOT NULL
+"uri" LONGVARCHAR NOT NULL, 
+"ms_id" VARCHAR(34)
 );
 
 CREATE TABLE "restcomm_clients" (
@@ -288,4 +290,21 @@ CREATE TABLE "restcomm_gateways" (
 CREATE TABLE "update_scripts" (
 "script" VARCHAR(255) NOT NULL,
 "date_executed" DATETIME NOT NULL
+);
+
+CREATE TABLE "media_servers" (
+"ms_id" VARCHAR(34) NOT NULL PRIMARY KEY, 
+"ms_ip_address" VARCHAR(34), 
+"ms_port" VARCHAR(34), 
+"compatibility" VARCHAR(34), 
+"timeout" VARCHAR(34)
+);
+
+CREATE TABLE "media_resource_broker_entity" (
+"conference_sid" VARCHAR(34) NOT NULL, 
+"slave_ms_id" VARCHAR(34) NOT NULL, 
+"slave_ms_bridge_ep_id" VARCHAR(34) NOT NULL,
+"slave_ms_cnf_ep_id" VARCHAR(34) NOT NULL,
+"is_bridged_together" BOOLEAN NOT NULL DEFAULT FALSE, 
+"slave_ms_sdp" VARCHAR(2000) NOT NULL
 );

@@ -21,6 +21,7 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.mgcp;
 
+import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerControllerFactory;
 
 import akka.actor.Actor;
@@ -38,18 +39,25 @@ import akka.actor.UntypedActorFactory;
 public class MmsControllerFactory implements MediaServerControllerFactory {
 
     private final ActorSystem system;
-    private final ActorRef mediaGateway;
+    //private final ActorRef mediaGateway;
+    // A list of media gateways.
+    //private final List<ActorRef> mediaGateways;
     private final CallControllerFactory callControllerFactory;
     private final ConferenceControllerFactory conferenceControllerFactory;
     private final BridgeControllerFactory bridgeControllerFactory;
+    // configurations
+    //private final Configuration configuration;
+    private final ActorRef mrb;
 
-    public MmsControllerFactory(ActorSystem system, ActorRef mediaGateway) {
+    public MmsControllerFactory(ActorSystem system, ActorRef mrb, Configuration configuration) {
         super();
         this.system = system;
-        this.mediaGateway = mediaGateway;
+        //this.mediaGateways = mediaGateways;
         this.callControllerFactory = new CallControllerFactory();
         this.conferenceControllerFactory = new ConferenceControllerFactory();
         this.bridgeControllerFactory = new BridgeControllerFactory();
+        //this.configuration = configuration;
+        this.mrb = mrb;
     }
 
     @Override
@@ -73,7 +81,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            return new MmsCallController(mediaGateway);
+            return new MmsCallController(mrb);
         }
 
     }
@@ -84,7 +92,8 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            return new MmsConferenceController(mediaGateway);
+            //return new MmsConferenceController(mediaGateways, configuration);
+            return new MmsConferenceController(mrb);
         }
 
     }
@@ -95,7 +104,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            return new MmsBridgeController(mediaGateway);
+            return new MmsBridgeController(mrb);
         }
 
     }
