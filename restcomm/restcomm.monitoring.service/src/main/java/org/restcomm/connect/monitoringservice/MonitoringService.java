@@ -322,6 +322,10 @@ public class MonitoringService extends UntypedActor{
             CallStateChanged.State callState = message.state();
             callStateMap.put(senderPath, callState);
             CallInfo callInfo = callDetailsMap.get(senderPath);
+            if (callStateMap.containsKey(senderPath) && callState.equals(callInfo.state())) {
+                String errMsg = String.format("MonitoringService FSM_EXCEPTION. Call already in the call state map. call state: %s, call path: %s , callInfo: %s ", callState, senderPath, callInfo);
+                logger.error(errMsg);
+            }
             if (callInfo != null) {
                 callInfo.setState(callState);
                 if (callState.equals(CallStateChanged.State.FAILED)) {
