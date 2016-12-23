@@ -1,7 +1,9 @@
 <Response>
-    <Say>Welcome to the Telestax conference bridge</Say>
-    <Say>Powered by TelScale RestComm</Say>
-    <Say>You are now joining the conference bridge</Say>
+    <Play>/restcomm/audio/demo-prompt.wav</Play>
+    <Play>/restcomm/audio/demo-prompt.wav</Play>
+    <Play>/restcomm/audio/demo-prompt.wav</Play>
+    <Play>/restcomm/audio/demo-prompt.wav</Play>
+    <Play>/restcomm/audio/demo-prompt.wav</Play>
     <Dial callerId="+17863580884">
         <Conference maxParticipants="500">RestComm</Conference>
     </Dial>
