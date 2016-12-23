@@ -1,47 +1,54 @@
-<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-    <div class="container-fluid">
-        <div class="navbar-header">
-            <span class="navbar-brand"><img src="resources/img/telestax-logo-dark.png" class="navbar-telestax" /> <img src="resources/img/restcomm-logo.png" class="navbar-restcomm" /> RESTCOMM</span>
+<div class="logo-container" ng-if="!!!loggedAccount">
+    <img src="resources/img/v2/restcomm-dashboard.png" class="restcomm-dashboard">
+    <button class="sign-up-btn" type="submit" ng-show="false">Sign up</button>
+</div>
+
+<div class="logo-container-inside container-fluid" ng-if="!!loggedAccount" ng-controller="UserMenuCtrl">
+    <div class="row">
+        <div class="col-md-6 restcomm-dashboard-inside">
+            <img src="resources/img/v2/restcomm-dashboard-inside.png">
         </div>
-        <div class="navbar-collapse collapse">
-            <div ng-if="!!loggedAccount" ng-controller="UserMenuCtrl">
-                <ul class="nav navbar-nav">
-                    <li><a> </a></li>
-                    <li><a ng-href="#/dashboard"><i class="fa fa-dashboard"></i> Dashboard</a></li>
-                    <li class="divider-vertical"></li>
-                    <li><a ng-href="#/numbers"><i class="fa fa-phone"></i> Numbers</a></li>
-                    <li class="divider-vertical"></li>
-                    <li><a ng-href="#/logs"><i class="fa fa-file-text-o"></i> Logs</a></li>
-                    <li class="divider-vertical"></li>
-                    <!--<li><a ng-click="testNotifications()"><i class="fa fa-flag-checkered"></i> Notification</a></li>-->
-                    <!--<li class="divider-vertical"></li>-->
-                    <li><a ng-href="/restcomm-rvd/" target="_blank"><i class="fa fa-pencil"></i> Visual Designer</a></li>
-                    <li class="divider-vertical"></li>
-                    <li><a ng-href="#/ras" ><i class="fa fa-shopping-cart"></i> Restcomm Apps</a></li>
-                    <li class="divider-vertical"></li>
-                    <!--<li><a ng-href="#/providers"><i class="fa fa-cogs"></i> Providers</a></li>-->
-                    <!--<li class="divider-vertical"></li>-->
-                    <!--<li><a ng-href="#/usage"><i class="fa fa-bar-chart"></i> Usage</a></li>-->
-                    <!--<li class="divider-vertical"></li>-->
-                </ul>
-                <i ng-show="loggedAccount.role == 'Administrator'" class="fa fa-info-circle pull-right text-danger clickable" style="padding-top: 12px;" ng-click="showAboutModal()"></i>
-                <ul class="nav navbar-nav pull-right">
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{ friendlyName }} <b class="caret"></b></a>
-                        <ul id="dropdown-list" class="dropdown-menu pull-right">
-                            <li><a href="#/profile/{{sid}}"><i class="fa fa-cog"></i> Account Settings</a></li>
-                            <li class="divider"></li>
-                            <li><a href="#/subaccounts"><i class="fa fa-cog"></i> Sub Accounts</a></li>
-                           <!-- <li ng-repeat="account in accountsList" ng-hide="account.sid == sid"><a href="#"><i ng-class="account.type == 'Full' ? 'fa fa-suitcase' : 'fa fa-code'"> </i> {{account.friendly_name}}</a></li>-->
-                            <li class="disabled"><a href="#"></a> </li>
-                            <li class="disabled"><a href="#"></a> </li>
-                            <li class=""><a href="#" onclick="return false;" ng-click="showRegisterAccountModal();"><i class="fa fa-plus"></i> Create New Account...</a> </li>
-                            <li class="divider"></li>
-                            <li><a href="#/login" ng-click="logout()"><i class="fa fa-sign-out"></i> Sign Out</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div><!--/.nav-collapse -->
+        <div class="col-md-6">
+            <ul class="nav navbar-nav pull-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"> {{ friendlyName }} <b class="caret"></b></a>
+                    <ul id="dropdown-list" class="dropdown-menu user-dropdown-menu pull-right">
+                        <li><a href="#/profile/{{sid}}"><img src="resources/img/v2/icons-dropdown/drop-down-icon-settings.png"> Account Settings</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#/subaccounts"><img src="resources/img/v2/icons-dropdown/drop-down-icon-sub-accounts.png"> Sub Accounts</a></li>
+                        <li class="disabled"><a href="#"></a> </li>
+                        <li class="disabled"><a href="#"></a> </li>
+                        <li class=""><a href="#" onclick="return false;" ng-click="showRegisterAccountModal();"><img src="resources/img/v2/icons-dropdown/drop-down-icon-create-account.png"> Create New Account</a> </li>
+                        <li class="divider"></li>
+                        <li><a href="#/login" ng-click="logout()"><img src="resources/img/v2/icons-dropdown/drop-down-icon-sign-out.png"> Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-9 col-md-offset-3 dashboard-menu">
+            <span>
+                <a ng-href="#/dashboard"><img src="resources/img/v2/icons-navbar/d-r-icon-home.png"> Home</a>
+            </span>
+            <span>
+                <a ng-href="#/numbers"><img src="resources/img/v2/icons-navbar/d-r-icon-numbers.png"> Numbers</a>
+            </span>
+            <span>
+                <a ng-href="#/numbers/clients"><img src="resources/img/v2/icons-navbar/d-r-icon-clients.png"> Clients</a>
+            </span>
+            <span>
+                <a href="/olympus" target="_blank"><img src="resources/img/v2/icons-navbar/d-r-icon-olympus.png"> Olympus</a>
+            </span>
+            <span>
+                <a id="rvd-link" href="/restcomm-rvd" target="_blank"><img src="resources/img/v2/icons-navbar/d-r-icon-v-d.png"> Visual Designer</a>
+            </span>
+            <span>
+                <a ng-href="#/logs"><img src="resources/img/v2/icons-navbar/d-r-icon-logs.png"> Logs</a>
+            </span>
+            <span>
+                <a ng-href="#/ras"><img src="resources/img/v2/icons-navbar/d-r-icon-apps.png"> Apps</a>
+            </span>
+        </div>
     </div>
 </div>

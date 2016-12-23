@@ -1,36 +1,42 @@
-<rc-numbers-pills></rc-numbers-pills>
+<!--<rc-numbers-pills></rc-numbers-pills>-->
 
-<rc-page-title icon="phone" title="NUMBERS" sub-title="RESTCOMM NUMBERS"></rc-page-title>
+<!--<rc-page-title icon="phone" title="NUMBERS" sub-title="RESTCOMM NUMBERS"></rc-page-title>-->
 
 <div class="row">
     <div class="col-md-12">
-        <div class="pull-left">
-            <!--<button class="btn btn-primary" ng-click="showRegisterIncomingNumberModal()"><i class="fa fa-plus"></i> Register Number</button>-->
-            <a href="#/numbers/register-incoming" class="btn btn-primary"><i class="fa fa-plus"></i> Register Number</a>
+        <div id="search-register">
+            <div id="search">
+                <form method="get" action="/search">
+                    <img id="search-icon" src="resources/img/v2/search-icon.png">
+                    <input name="q" type="text" size="40" placeholder="Search..." ng-model="query.phone_number">
+                </form>
+            </div>
+            <div>
+                <a href="#/numbers/register-incoming" class="btn-register pull-right"><b>+</b> Register number</a>
+            </div>
         </div>
-
-        <div ng-show="numbersList.length > 0"><rc-list-filter filter="query.phone_number"></rc-list-filter></div>
 
         <div ng-hide="(numbersList | filter:query).length > 0" class="jumbotron no-records-alert">
             <h2><i class="fa fa-exclamation-circle"></i> No incoming numbers <span ng-show="numbersList.length == 0">registered</span> <span ng-show="numbersList.length > 0">matching query</span>. <small>Register one now!</small></h2>
         </div>
 
-        <table ng-show="(numbersList | filter:query).length > 0" class="table table-striped table-hover" ng-cloak>
-            <thead>
-                <th class="width-20pc">NUMBER</th>
-                <th class="width-20pc" colspan="2">NAME</th>
-                <th>FEATURES</th>
-                <th class="width-10pc">&nbsp;</th>
+        <table ng-show="(numbersList | filter:query).length > 0" class="table table-hover" ng-cloak>
+            <thead style="font-size: 18px;">
+            <th class="width-20pc">Number</th>
+            <th>&nbsp;</th>
+            <th class="width-30pc">Name</th>
+            <th>Features</th>
+            <th class="width-10pc">&nbsp;</th>
             </thead>
             <tbody>
-            <tr ng-repeat="pn in filtered = (numbersList | filter:query)">
-                <td><h4 class="text-center"><a href="#/numbers/incoming/{{pn.sid}}">{{ pn.phone_number  }}</a></h4></td>
+            <tr class="number-row" ng-repeat="pn in filtered = (numbersList | filter:query)">
+                <td><h4><a href="#/numbers/incoming/{{pn.sid}}">{{ pn.phone_number  }}</a></h4></td>
+                <td class="edit-number"><h5><i class="fa fa-pencil clickable" ng-click="editingFriendlyName = pn.phone_number"></i></h5></td>
                 <td>
-                    <h5 class="text-center" ng-hide="editingFriendlyName == pn.phone_number">{{ pn.friendly_name  }} </h5>
-                    <h5 class="text-center col-md-10" ng-show="editingFriendlyName == pn.phone_number"><input type="text" class="form-control input-sm" onkeyup="if(event.keyCode == 13) {this.blur()}" ng-model="pn.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(pn)" autofocus /></h5>
+                    <h5 class="" ng-hide="editingFriendlyName == pn.phone_number">{{ pn.friendly_name  }} </h5>
+                    <h5 class="col-md-10" ng-show="editingFriendlyName == pn.phone_number"><input type="text" class="form-control input-sm" onkeyup="if(event.keyCode == 13) {this.blur()}" ng-model="pn.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(pn)" autofocus /></h5>
                 </td>
-                <td><h5><i class="fa fa-pencil clickable" ng-click="editingFriendlyName = pn.phone_number"></i></h5></td>
-                <td>
+                <td style="font-size: 14px;">
                     <span ng-show="{{ pn.voice_url.length > 0 || pn.voice_application_sid.length > 0 }}"><i class="fa fa-microphone available-feature"></i> <small title='{{ pn.voice_url }}{{ pn.voice_application_sid }}'> {{ pn.voice_url }} {{ pn.voice_application_name }} </small></span>
                     <span class="opacity30" ng-hide="{{ pn.voice_url.length > 0 || pn.voice_application_sid.length > 0 }}"><i class="fa fa-microphone-slash unavailable-feature"></i> <small> http://www.restcomm.org/demo/voice/</small></span>
                     <br>
@@ -43,10 +49,12 @@
                     -->
                 </td>
                 <td class="text-right">
-                    <div class="btn-delete-div"><button class="btn btn-danger" ng-click="confirmNumberDelete(pn)">Delete</button></div>
+                    <div class="btn-delete-div"><button class="btn btn-link" ng-click="confirmNumberDelete(pn)"><img src="resources/img/v2/delete-number.png"></button></div>
                 </td>
             </tr>
             </tbody>
         </table>
+
+
     </div>
 </div>
