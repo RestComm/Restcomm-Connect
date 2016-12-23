@@ -219,5 +219,5 @@ if [ "$COLLECT_LOGS" = "true" ]; then
 fi
 
 # Stop RestComm and Media Server
-stopRestcomm
+#stopRestcomm
 echo $'\n********** Restcomm stopped\n'
