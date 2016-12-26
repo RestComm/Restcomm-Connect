@@ -53,6 +53,7 @@ import org.restcomm.connect.mscontrol.api.messages.StartRecording;
 import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StopRecording;
+import org.restcomm.connect.mscontrol.mms.MgcpMediaGroup;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
