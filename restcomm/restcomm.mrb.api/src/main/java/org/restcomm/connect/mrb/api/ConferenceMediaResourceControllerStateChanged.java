@@ -49,7 +49,7 @@ public class ConferenceMediaResourceControllerStateChanged {
     }
 
     public ConferenceMediaResourceControllerStateChanged(MediaServerControllerState state, final boolean distroyEndpoint) {
-    	this(state, null, distroyEndpoint);
+        this(state, null, distroyEndpoint);
     }
 
     public ConferenceMediaResourceControllerStateChanged(MediaServerControllerState state) {

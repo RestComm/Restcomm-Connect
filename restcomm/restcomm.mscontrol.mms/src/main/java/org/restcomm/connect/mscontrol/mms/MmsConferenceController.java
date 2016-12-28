@@ -577,7 +577,7 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-        	ConferenceMediaResourceControllerStateChanged response = (ConferenceMediaResourceControllerStateChanged) message;
+            ConferenceMediaResourceControllerStateChanged response = (ConferenceMediaResourceControllerStateChanged) message;
             // CMRC might ask you not to destroy endpoint bcz master have left firt and other slaves are still connected to this conference endpoint.
             if(response.distroyEndpoint()){
                 // Destroy Bridge Endpoint and its connections
