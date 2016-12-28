@@ -71,52 +71,57 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  *
  */
 public class MgcpMediaGroup extends MediaGroup {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     // Finite state machine stuff.
-    private final State uninitialized;
-    private final State active;
-    private final State inactive;
+    protected final State uninitialized;
+    protected final State active;
+    protected final State inactive;
     // Special intermediate states.
-    private final State acquiringIvr;
-    private final State acquiringLink;
-    private final State initializingLink;
-    private final State openingLink;
-    private final State updatingLink;
-    private final State deactivating;
+    protected final State acquiringIvr;
+    protected final State acquiringLink;
+    protected final State initializingLink;
+    protected final State openingLink;
+    protected final State updatingLink;
+    protected final State deactivating;
     // Join Outboundcall Bridge endpoint to the IVR
-    private final State acquiringInternalLink;
-    private final State initializingInternalLink;
-    private final State openingInternalLink;
-    private final State updatingInternalLink;
+    protected final State acquiringInternalLink;
+    protected final State initializingInternalLink;
+    protected final State openingInternalLink;
+    protected final State updatingInternalLink;
 
     // FSM.
     private final FiniteStateMachine fsm;
 
     // MGCP runtime stuff.
-    private final ActorRef gateway;
-    private final ActorRef endpoint;
-    private final MediaSession session;
-    private ActorRef link;
-    private final String ivrEndpointName;
-    private ActorRef ivr;
-    private boolean ivrInUse;
-    private MgcpEvent lastEvent;
+    protected final ActorRef gateway;
+    protected final ActorRef endpoint;
+    protected final MediaSession session;
+    protected ActorRef link;
+    protected final String ivrEndpointName;
+    protected ActorRef ivr;
+    protected boolean ivrInUse;
+    protected MgcpEvent lastEvent;
 
     // Runtime stuff.
-    private final List<ActorRef> observers;
-    private ActorRef originator;
+    protected final List<ActorRef> observers;
+    protected ActorRef originator;
 
-    private ActorRef internalLinkEndpoint;
-    private ActorRef internalLink;
-    private ConnectionMode internalLinkMode;
+    protected ActorRef internalLinkEndpoint;
+    protected ActorRef internalLink;
+    protected ConnectionMode internalLinkMode;
 
-    private ConnectionIdentifier ivrConnectionIdentifier;
-    private final String primaryEndpointId;
-    private final String secondaryEndpointId;
+    protected ConnectionIdentifier ivrConnectionIdentifier;
+    protected final String primaryEndpointId;
+    protected final String secondaryEndpointId;
+
+    public MgcpMediaGroup(final ActorRef gateway, final MediaSession session, final ActorRef endpoint) {
+        this(gateway, session, endpoint, null, null);
+    }
 
     public MgcpMediaGroup(final ActorRef gateway, final MediaSession session, final ActorRef endpoint, final String ivrEndpointName) {
         this(gateway, session, endpoint, ivrEndpointName, null);
@@ -189,7 +194,7 @@ public class MgcpMediaGroup extends MediaGroup {
         this.observers = new ArrayList<ActorRef>();
     }
 
-    private void collect(final Object message) {
+    protected void collect(final Object message) {
         final ActorRef self = self();
         final Collect request = (Collect) message;
         final PlayCollect.Builder builder = PlayCollect.builder();
@@ -209,7 +214,7 @@ public class MgcpMediaGroup extends MediaGroup {
         ivrInUse = true;
     }
 
-    private void play(final Object message) {
+    protected void play(final Object message) {
         final ActorRef self = self();
         final Play request = (Play) message;
         final List<URI> uris = request.uris();
@@ -223,7 +228,7 @@ public class MgcpMediaGroup extends MediaGroup {
     }
 
     @SuppressWarnings("unchecked")
-    private void notification(final Object message) {
+    protected void notification(final Object message) {
         final IvrEndpointResponse<String> response = (IvrEndpointResponse<String>) message;
         final ActorRef self = self();
         MediaGroupResponse<String> event = null;
@@ -240,7 +245,7 @@ public class MgcpMediaGroup extends MediaGroup {
         ivrInUse = false;
     }
 
-    private void observe(final Object message) {
+    protected void observe(final Object message) {
         final ActorRef self = self();
         final Observe request = (Observe) message;
         final ActorRef observer = request.observer();
@@ -347,11 +352,11 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private boolean is(State state) {
+    protected boolean is(State state) {
         return state != null && state.equals(this.fsm.state());
     }
 
-    private void onEndpointStateChanged(EndpointStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+    protected void onEndpointStateChanged(EndpointStateChanged message, ActorRef self, ActorRef sender) throws Exception {
         if (is(deactivating)) {
             if (sender.equals(this.ivr) && EndpointState.DESTROYED.equals(message.getState())) {
                 this.ivr.tell(new StopObserving(self), self);
@@ -360,7 +365,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private void record(final Object message) {
+    protected void record(final Object message) {
         final ActorRef self = self();
         final Record request = (Record) message;
         final PlayRecord.Builder builder = PlayRecord.builder();
@@ -380,7 +385,7 @@ public class MgcpMediaGroup extends MediaGroup {
         ivrInUse = true;
     }
 
-    private void stop(MgcpEvent signal) {
+    protected void stop(MgcpEvent signal) {
         if (ivrInUse) {
             final ActorRef self = self();
             ivr.tell(new StopEndpoint(signal), self);
@@ -389,7 +394,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private void stopObserving(final Object message) {
+    protected void stopObserving(final Object message) {
         final StopObserving request = (StopObserving) message;
         final ActorRef observer = request.observer();
         if (observer != null) {
@@ -397,7 +402,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private abstract class AbstractAction implements Action {
+    protected abstract class AbstractAction implements Action {
         protected final ActorRef source;
 
         public AbstractAction(final ActorRef source) {
@@ -406,7 +411,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private final class AcquiringIvr extends AbstractAction {
+    protected final class AcquiringIvr extends AbstractAction {
         public AcquiringIvr(final ActorRef source) {
             super(source);
         }
@@ -424,13 +429,13 @@ public class MgcpMediaGroup extends MediaGroup {
             }
             if(logger.isInfoEnabled()) {
                 logger.info("MediaGroup :" + self().path() + " state: " + fsm.state().toString() + " session: " + session.id()
-                    + " will ask to get IvrEndpoint");
+                    + " will ask to get IvrEndpoint: "+ivrEndpointName);
             }
             gateway.tell(new CreateIvrEndpoint(session, ivrEndpointName), source);
         }
     }
 
-    private final class AcquiringLink extends AbstractAction {
+    protected final class AcquiringLink extends AbstractAction {
         public AcquiringLink(final ActorRef source) {
             super(source);
         }
@@ -457,7 +462,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private final class InitializingLink extends AbstractAction {
+    protected final class InitializingLink extends AbstractAction {
         public InitializingLink(final ActorRef source) {
             super(source);
         }
@@ -482,7 +487,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private final class OpeningLink extends AbstractAction {
+    protected final class OpeningLink extends AbstractAction {
         public OpeningLink(final ActorRef source) {
             super(source);
         }
@@ -497,7 +502,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private final class UpdatingLink extends AbstractAction {
+    protected final class UpdatingLink extends AbstractAction {
         public UpdatingLink(final ActorRef source) {
             super(source);
         }
@@ -510,7 +515,7 @@ public class MgcpMediaGroup extends MediaGroup {
     }
 
     // Join OutboundCall Bridge endpoint to the IVR endpoint for recording - START
-    private final class AcquiringInternalLink extends AbstractAction {
+    protected final class AcquiringInternalLink extends AbstractAction {
         public AcquiringInternalLink(final ActorRef source) {
             super(source);
         }
@@ -527,7 +532,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private final class InitializingInternalLink extends AbstractAction {
+    protected final class InitializingInternalLink extends AbstractAction {
         public InitializingInternalLink(final ActorRef source) {
             super(source);
         }
@@ -542,7 +547,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private final class OpeningInternalLink extends AbstractAction {
+    protected final class OpeningInternalLink extends AbstractAction {
         public OpeningInternalLink(final ActorRef source) {
             super(source);
         }
@@ -553,7 +558,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private final class UpdatingInternalLink extends AbstractAction {
+    protected final class UpdatingInternalLink extends AbstractAction {
         public UpdatingInternalLink(final ActorRef source) {
             super(source);
         }
@@ -567,7 +572,7 @@ public class MgcpMediaGroup extends MediaGroup {
 
     // Join OutboundCall Bridge endpoint to the IVR endpoint for recording - END
 
-    private final class Active extends AbstractAction {
+    protected final class Active extends AbstractAction {
         public Active(final ActorRef source) {
             super(source);
         }
@@ -582,7 +587,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private final class Inactive extends AbstractAction {
+    protected final class Inactive extends AbstractAction {
         public Inactive(final ActorRef source) {
             super(source);
         }
@@ -610,7 +615,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private final class Deactivating extends AbstractAction {
+    protected final class Deactivating extends AbstractAction {
         public Deactivating(final ActorRef source) {
             super(source);
         }
