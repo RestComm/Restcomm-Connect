@@ -43,7 +43,6 @@ import org.restcomm.connect.mgcp.MediaSession;
 import org.restcomm.connect.mrb.api.ConferenceMediaResourceControllerStateChanged;
 import org.restcomm.connect.mrb.api.StartConferenceMediaResourceController;
 import org.restcomm.connect.mrb.api.StopConferenceMediaResourceController;
-import org.restcomm.connect.mrb.api.StopConferenceMediaResourceControllerResponse;
 import org.restcomm.connect.mscontrol.api.messages.MediaGroupResponse;
 import org.restcomm.connect.mscontrol.api.messages.MediaGroupStateChanged;
 import org.restcomm.connect.mscontrol.api.messages.Play;
@@ -237,9 +236,8 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
     private void onStopConferenceMediaResourceController(StopConferenceMediaResourceController message, ActorRef self,
             ActorRef sender) throws Exception {
-        if(logger.isInfoEnabled())
-            logger.info("onStopConferenceMediaResourceController");
-        sender.tell(new StopConferenceMediaResourceControllerResponse(true), sender);
+        if(logger.isDebugEnabled())
+            logger.debug("onStopConferenceMediaResourceController");
         fsm.transition(message, stopping);
     }
 
@@ -264,9 +262,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
                     this.mediaGroup = null;
 
                     // Move to next state
-                    if (this.mediaGroup == null && this.localConfernceEndpoint == null) {
-                        this.fsm.transition(message, fail ? failed : inactive);
-                    }
+                    this.fsm.transition(message, fail ? failed : inactive);
                 }
                 break;
 
@@ -440,7 +436,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         @Override
         public void execute(Object message) throws Exception {
             // Notify observers the controller has stopped
-            broadcast(new ConferenceMediaResourceControllerStateChanged(state));
+            broadcast(new ConferenceMediaResourceControllerStateChanged(state, true));
         }
 
     }
