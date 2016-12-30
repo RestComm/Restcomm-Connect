@@ -793,6 +793,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             fsm.transition(conferenceWaitUris, conferencing);
             return;
         }
+        if(logger.isInfoEnabled()) {
+            logger.info("current outboundCallState " + outboundCallState.state());
+        }
         if (callState.equals(CallStateChanged.State.COMPLETED)) {
             fsm.transition(message, finished);
         } else {
@@ -1054,6 +1057,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final CallStateChanged event = (CallStateChanged) message;
         if (sender == call)
             callState = event.state();
+        else
+            outboundCallState = event;
         if(logger.isInfoEnabled()){
             logger.info("VoiceInterpreter received CallStateChanged event: "+event.state()+ " from "+(sender == call? "call" : "outboundCall")+ ", sender path: " + sender.path() +", current VI state: "+fsm.state());
         }
@@ -1185,7 +1190,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             fsm.transition(message, finished);
                     }
                 break;
-            case IN_PROGRESS:
+            case WAIT_FOR_ANSWER:
                 if (is(initializingCall) || is(rejecting)) {
                     if (parser != null) {
                         //This is an inbound call
@@ -1198,6 +1203,26 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     //Do nothing here
                     //fsm.transition(message, conferencing);
                 } else if (is(forking)) {
+                    if (outboundCall == null || !sender.equals(call)) {
+                        outboundCall = sender;
+                    }
+                    fsm.transition(message, acquiringOutboundCallInfo);
+                } else if (is(conferencing)) {
+                    // Call left the conference successfully
+                    if (!liveCallModification) {
+                        // Hang up the call
+                        final Hangup hangup = new Hangup();
+                        call.tell(hangup, sender);
+                    } else {
+                        // XXX start processing new RCML and give instructions to call
+                        // Ask the parser for the next action to take.
+                        final GetNextVerb next = GetNextVerb.instance();
+                        parser.tell(next, self());
+                    }
+                }
+                break;
+            case IN_PROGRESS:
+                if (is(forking)) {
                     if (outboundCall == null || !sender.equals(call)) {
                         outboundCall = sender;
                     }
@@ -2087,6 +2112,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 record(bridge);
             }
+            call.tell(message, self());
         }
     }
 

@@ -27,6 +27,7 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 @Immutable
 public final class Hangup {
     private String message;
+    private Integer sipResponse;
 
     public Hangup() {
         super();
@@ -36,7 +37,15 @@ public final class Hangup {
         this.message = message;
     }
 
+    public Hangup(final Integer sipResponse) {
+        this.sipResponse = sipResponse;
+    }
+
     public String getMessage() {
         return message;
+    }
+
+    public Integer getSipResponse() {
+        return sipResponse;
     }
 }
