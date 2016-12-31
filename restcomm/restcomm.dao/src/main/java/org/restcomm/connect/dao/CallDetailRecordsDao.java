@@ -57,6 +57,8 @@ public interface CallDetailRecordsDao {
 
     List<CallDetailRecord> getCallDetailRecordsByInstanceId(Sid instanceId);
 
+    List<CallDetailRecord> getRunningCallDetailRecordsByInstanceId(Sid instanceId);
+
     List<CallDetailRecord> getCallDetailRecordsByMsId(String msId);
 
     Double getAverageCallDurationLast24Hours(Sid instanceId) throws ParseException;
