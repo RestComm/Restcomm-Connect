@@ -173,6 +173,10 @@
 		SELECT * FROM "restcomm_call_detail_records" WHERE "instanceid"=#{instanceid};
 	</select>
   
+  <select id="getRunningCallDetailRecordsByInstanceId" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_call_detail_records" WHERE "instanceid"=#{instanceid} and "status" ='in-progress';
+  </select>
+
   <select id="getCallDetailRecordsByConferenceSid" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_call_detail_records" WHERE "conference_sid"=#{conference_sid};
   </select>

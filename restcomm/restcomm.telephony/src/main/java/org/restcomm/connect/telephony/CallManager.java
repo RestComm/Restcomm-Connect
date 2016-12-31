@@ -121,6 +121,9 @@ import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
 import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 import static javax.servlet.sip.SipServletResponse.SC_OK;
+import org.restcomm.connect.dao.CallDetailRecordsDao;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.dao.entities.Transcription.Status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -280,6 +283,31 @@ public final class CallManager extends UntypedActor {
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.CallManager);
         if (logger.isInfoEnabled()) {
             logger.info("CallManager extensions: "+(extensions != null ? extensions.size() : "0"));
+        }
+        firstTimeCleanup();
+    }
+
+    private void firstTimeCleanup() {
+        if (logger.isInfoEnabled())
+            logger.info("Initial CallManager cleanup. Will check running state calls in DB and update state of the calls.");
+        String instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
+        Sid sid = new Sid(instanceId);
+        final CallDetailRecordsDao callDetailRecordsDao = storage.getCallDetailRecordsDao();
+        List<CallDetailRecord> results= callDetailRecordsDao.getRunningCallDetailRecordsByInstanceId(sid);
+        for (CallDetailRecord result : results) {
+            result.setStatus(Status.COMPLETED.toString());
+            if (logger.isDebugEnabled()) {
+                    logger.debug("Call From: " + result.getFrom() + " change state from IN_PROGRESS to COMPLETED");
+            }
+            callDetailRecordsDao.updateCallDetailRecord(result);
+        }
+        results = callDetailRecordsDao.getRunningCallDetailRecordsByInstanceId(sid);
+        if (logger.isInfoEnabled()) {
+            if (results != null) {
+                logger.info("There are: " + results.size() + " Calls in progress after cleanup.");
+            } else {
+                logger.info("There is no Call in progress after cleanup.");
+            }
         }
     }
 
