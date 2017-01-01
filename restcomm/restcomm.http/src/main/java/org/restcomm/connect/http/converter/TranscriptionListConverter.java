@@ -84,7 +84,7 @@ public final class TranscriptionListConverter extends AbstractConverter implemen
             result.addProperty("last_page_uri", getLastPageUri());
         }
 
-        result.add("messages", array);
+        result.add("transcriptions", array);
 
         return result;
     }

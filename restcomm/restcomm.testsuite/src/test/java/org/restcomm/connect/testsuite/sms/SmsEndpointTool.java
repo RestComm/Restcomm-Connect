@@ -32,6 +32,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import java.util.Map;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -135,4 +136,63 @@ public class SmsEndpointTool {
         return jsonArray;
     }
 
+    public JsonObject getSmsMessageList (String deploymentUrl, String username, String authToken) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        String url = getAccountsUrl(deploymentUrl, username, true);
+        WebResource webResource = jerseyClient.resource(url);
+        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        JsonParser parser = new JsonParser();
+        JsonObject jsonObject = parser.parse(response).getAsJsonObject();
+        return jsonObject;
+    }
+
+    public JsonObject getSmsMessageList (String deploymentUrl, String username, String authToken, Integer page, Integer pageSize, Boolean json) {
+
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        String url = getAccountsUrl(deploymentUrl, username, true);
+        WebResource webResource = jerseyClient.resource(url);
+        String response;
+
+        if (page != null || pageSize != null) {
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+
+            if (page != null)
+                params.add("Page", String.valueOf(page));
+            if (pageSize != null)
+                params.add("PageSize", String.valueOf(pageSize));
+
+            response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+                    .get(String.class);
+        } else {
+            response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+        }
+
+        JsonParser parser = new JsonParser();
+        JsonObject jsonObject = parser.parse(response).getAsJsonObject();
+        return jsonObject;
+    }
+
+    public JsonObject getSmsMessageListUsingFilter(String deploymentUrl, String username, String authToken, Map<String, String> filters) {
+
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        String url = getAccountsUrl(deploymentUrl, username, true);
+        WebResource webResource = jerseyClient.resource(url);
+
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+
+        for (String filterName : filters.keySet()) {
+            String filterData = filters.get(filterName);
+            params.add(filterName, filterData);
+        }
+        webResource = webResource.queryParams(params);
+
+        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        JsonParser parser = new JsonParser();
+        JsonObject jsonObject = parser.parse(response).getAsJsonObject();
+
+        return jsonObject;
+    }
 }
