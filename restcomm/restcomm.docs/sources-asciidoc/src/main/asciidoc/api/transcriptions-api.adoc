@@ -42,3 +42,155 @@ A Transcription resource represents a transcription of a recording. A transcript
 ==== Supported Operations
 
 **HTTP GET**. Returns the list representation of all the Transcription resources for this Account, including the properties above.
+
+== Get list of Transcriptions
+
+This will display list of transcription
+
+From the bash terminal, you can run the command below:
+
+....
+curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json  
+....
+
+The response will be similar to the one below.
+
+[source,lang:xml,decode:true]
+----
+[
+{"page":0,"num_pages":0,"page_size":50,"total":34,"start":"0","end":"34","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?Page=0&PageSize=50","previous_page_uri":"null","next_page_uri":"null","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?Page=0&PageSize=50","transcriptions":
+    [
+        {
+            "sid": "RF20000000000000000000000000000001",
+            "date_created":"Wed, 30 Oct 2013 16:28:33 +0900",
+            "date_updated":"Wed, 30 Oct 2013 16:28:33 +0900",
+            "account_sid":"ACae6e420f425248d6a26948c17a9e2acf",
+            "status":"completed",
+            "recording_sid":"CA5FB00000000000000000000000000002",
+            "duration":"14.70275",
+            "transcription_text":"Hello, Welcome to RestComm Connect",
+            "price":"0.0",
+            "uri":"/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions/NOb88ccff6c9e04f989de9415a555ad84d.json.json"
+        },
+        ...
+    ]
+}
+]
+----
+
+== List Filter
+
+**HTTP GET**. The following GET query string parameters allow you to limit the list returned. Note, parameters are case-sensitive:
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|===========================================================================================================================================================================================================================================================================
+|Parameter |Description
+|StartTime |Only show transcriptions that started on this date, given as YYYY-MM-DD. Also supports inequalities, such as StartTime=YYYY-MM-DD for transcriptions that started at or before midnight on a date, and StartTime=YYYY-MM-DD for transcriptions that started at or after midnight on a date.
+|EndTime |Only show transcriptions that ended on this date, given as YYYY-MM-DD. Also supports inequalities, such as StartTime=YYYY-MM-DD for transcriptions that started at or before midnight on a date, and StartTime=YYYY-MM-DD for transcriptions that started at or after midnight on a date.
+|TranscriptionText |Only show transcriptions that contain this TranscriptionText
+|===========================================================================================================================================================================================================================================================================
+
+ 
+
+=== Filter using the TranscriptionText parameter.
+
+The example below will only return Transcriptions that contain this TranscriptionText
+
+....
+ curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?TranscriptionText=RestComm
+....
+
+The result will be similar to the one below
+
+[source,lang:xml,decode:true]
+----
+[
+{"page":0,"num_pages":0,"page_size":50,"total":13,"start":"0","end":"13","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?Page=0&PageSize=50","previous_page_uri":"null","next_page_uri":"null","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?Page=0&PageSize=50","transcriptions":
+    [
+        {
+            "sid": "RF20000000000000000000000000000001",
+            "date_created":"Wed, 30 Oct 2013 16:28:33 +0900",
+            "date_updated":"Wed, 30 Oct 2013 16:28:33 +0900",
+            "account_sid":"ACae6e420f425248d6a26948c17a9e2acf",
+            "status":"completed",
+            "recording_sid":"CA5FB00000000000000000000000000002",
+            "duration":"14.70275",
+            "transcription_text":"Hello, Welcome to RestComm Connect",
+            "price":"0.0",
+            "uri":"/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions/NOb88ccff6c9e04f989de9415a555ad84d.json.json"
+        },
+        ...
+    ]
+]
+----
+
+== Paging Information
+
+*HTTP GET.* The following GET query string parameters allow you to limit the list returned. Note, parameters are case-sensitive:
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|=======================================================================
+|PParameter |Description
+|Page |The current page number. Zero-indexed, so the first page is 0.
+|NumPages |The total number of pages.
+|PageSize |How many items are in each page
+|Total |The total number of items in the list.
+|Start |The position in the overall list of the first item in this page.
+|End |The position in the overall list of the last item in this page.
+|=======================================================================
+
+ 
+
+=== Example. 
+
+The command below will return a single item from the list of transcriptions using the PageSize parameter
+
+....
+curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?PageSize=1
+....
+
+The result of the *PageSize* parameter
+
+[source,lang:xml,decode:true]
+----
+[
+{{"page":0,"num_pages":34,"page_size":1,"total":34,"start":"0","end":"0","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?Page=0&PageSize=1","previous_page_uri":"null","next_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?Page=1&PageSize=1&AfterSid=RF20000000000000000000000000000001","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?Page=34&PageSize=1","transcriptions":
+    [
+        {
+            "sid": "RF20000000000000000000000000000001",
+            "date_created":"Wed, 30 Oct 2013 16:28:33 +0900",
+            "date_updated":"Wed, 30 Oct 2013 16:28:33 +0900",
+            "account_sid":"ACae6e420f425248d6a26948c17a9e2acf",
+            "status":"completed",
+            "recording_sid":"CA5FB00000000000000000000000000002",
+            "duration":"14.70275",
+            "transcription_text":"Hello, Welcome to RestComm Connect",
+            "price":"0.0",
+            "uri":"/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions/NOb88ccff6c9e04f989de9415a555ad84d.json.json"
+        }
+    ]
+}
+]
+----
+
+ 
+
+== Additional Paging Information.
+
+The API returns URIs to the next, previous, first and last pages of the returned list as shown in the table below:
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|============================================================
+|Parameter |Description
+|Uri |The URI of the current page.
+|Firstpageuri |The URI for the first page of this list.
+|Nextpageuri |The URI for the next page of this list.
+|Previouspageuri |The URI for the previous page of this list.
+|Lastpageuri |The URI for the last page of this list.
+|============================================================

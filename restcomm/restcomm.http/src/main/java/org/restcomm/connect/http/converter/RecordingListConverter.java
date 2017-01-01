@@ -61,12 +61,12 @@ public final class RecordingListConverter extends AbstractConverter implements J
     }
 
     @Override
-    public JsonObject serialize(RecordingList cdrList, Type type, JsonSerializationContext context) {
+    public JsonObject serialize(RecordingList recList, Type type, JsonSerializationContext context) {
 
         JsonObject result = new JsonObject();
 
         JsonArray array = new JsonArray();
-        for (Recording cdr : cdrList.getRecordings()) {
+        for (Recording cdr : recList.getRecordings()) {
             array.add(context.serialize(cdr));
         }
 
@@ -76,11 +76,11 @@ public final class RecordingListConverter extends AbstractConverter implements J
             result.addProperty("page_size", pageSize);
             result.addProperty("total", total);
             result.addProperty("start", getFirstIndex());
-            result.addProperty("end", getLastIndex(cdrList));
+            result.addProperty("end", getLastIndex(recList));
             result.addProperty("uri", pathUri);
             result.addProperty("first_page_uri", getFirstPageUri());
             result.addProperty("previous_page_uri", getPreviousPageUri());
-            result.addProperty("next_page_uri", getNextPageUri(cdrList));
+            result.addProperty("next_page_uri", getNextPageUri(recList));
             result.addProperty("last_page_uri", getLastPageUri());
         }
 
