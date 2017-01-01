@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This is free software; you can redistribute it and/or modify it under 
+	the terms of the GNU Lesser General Public License as published by the Free 
+	Software Foundation; either version 2.1 of the License, or (at your option) 
+	any later version. This software is distributed in the hope that it will 
+	be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General 
+	Public License for more details. You should have received a copy of the GNU 
+	Lesser General Public License along with this software; if not, write to 
+	the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, 
+	MA 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
+<!-- The Speech Synthesizer is responsible for turning text in to speech 
+	for play back by the media gateway. -->
+<speech-synthesizer class="org.restcomm.connect.tts.awspolly.AWSPollySpeechSyntetizer">
+        <aws-access-key>AKIAIUNATGMYSBSXMYDA</aws-access-key>
+        <aws-secret-key>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</aws-secret-key>
+        <aws-region>US_EAST_1</aws-region>
+        <speakers>
+                <ja-JP><female>Mizuki</female><male></male></ja-JP>
+                <tr-TR><female>Filiz</female><male></male></tr-TR>
+                <ru-RU><female>Tatyana</female><male>Maxim</male></ru-RU>
+                <ro-RO><female>Carmen</female><male>Maxim</male></ro-RO>
+                <pt-PT><female>Ines</female><male>Cristiano</male></pt-PT>
+                <pt-BR><female>Vitoria</female><male>Ricardo</male></pt-BR>
+                <pl-PL><female>Maja</female><male>Jan</male></pl-PL>
+                <nl-NL><female>Lotte</female><male>Ruben</male></nl-NL>
+                <nb-NO><female>Liv</female><male></male></nb-NO>
+                <it-IT><female>Carla</female><male>Giorgio</male></it-IT>
+                <is-IS><female>Dora</female><male>Karl</male></is-IS>
+                <fr-FR><female>Celine</female><male>Mathieu</male></fr-FR>
+                <fr-CA><female>Chantal</female><male></male></fr-CA>
+                <es-US><female>Penelope</female><male>Miguel</male></es-US>
+                <es-ES><female>Conchita</female><male>Enrique</male></es-ES>
+                <en-GB-WLS><female></female><male>Geraint</male></en-GB-WLS>
+                <cy-GB><female>Gwyneth</female><male></male></cy-GB>
+                <en-US><female>Joanna</female><male>Joey</male></en-US>
+                <en-IN><female>Raveena</female><male></male></en-IN>
+                <en-GB><female>Emma</female><male>Brian</male></en-GB>
+                <en-AU><female>Nicole</female><male>Russell</male></en-AU>
+                <de-DE><female>Marlene</female><male>Hans</male></de-DE>
+                <da-DK><female>Naja</female><male>Mads</male></da-DK>
+        </speakers>
+</speech-synthesizer>
