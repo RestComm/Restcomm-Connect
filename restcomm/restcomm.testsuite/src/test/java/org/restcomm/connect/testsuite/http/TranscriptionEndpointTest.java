@@ -49,7 +49,6 @@ public class TranscriptionEndpointTest extends EndpointTest{
         JsonObject firstPage = TranscriptionEndpointTool.getInstance().getTranscriptionList(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken);
         int totalSize = firstPage.get("total").getAsInt();
-        logger.info("[VuNguyen] : total transcription = " + totalSize);
         JsonArray firstPageTranscriptionsArray = firstPage.get("transcriptions").getAsJsonArray();
         int firstPageTranscriptionsArraySize = firstPageTranscriptionsArray.size();
         assertTrue(firstPageTranscriptionsArraySize == 34);

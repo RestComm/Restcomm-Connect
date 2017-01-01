@@ -347,7 +347,7 @@ The output showing the same Call ID
 
 === Filter using the From parameter.
 
-he example below will only return Calls made from client Alice
+The example below will only return Calls made from client Alice
 
 ....
  curl -X GET  http://administrator%40company.com:77f8c12cc7166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?From=alice
