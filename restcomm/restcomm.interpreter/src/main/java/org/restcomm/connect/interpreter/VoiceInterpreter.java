@@ -902,7 +902,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 sendMail(notification);
             }
             if (logger.isDebugEnabled()) {
-                logger.debug("DiskCacheResponse is " + response);
+                logger.debug("DiskCacheResponse is " + response.toString());
             }
             if (is(checkingCache) || is(processingGatherChildren)) {
                 fsm.transition(message, synthesizing);
