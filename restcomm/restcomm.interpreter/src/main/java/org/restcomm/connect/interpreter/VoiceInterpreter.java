@@ -895,12 +895,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, processingGatherChildren);
             }
         } else {
-            if (logger.isDebugEnabled()) {
-                logger.debug("DiskCacheResponse is " + response.toString());
-            }
             if (is(checkingCache) || is(processingGatherChildren)) {
                 fsm.transition(message, synthesizing);
             } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("DiskCacheResponse is " + response.toString());
+                }
                 fsm.transition(message, hangingUp);
             }
         }
