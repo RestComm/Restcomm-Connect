@@ -896,7 +896,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
         } else {
             if(response.cause() != null){
-                Notification notification = notification(ERROR_NOTIFICATION, 13233, response.cause().getMessage());
+                Notification notification = notification(WARNING_NOTIFICATION, 13233, response.cause().getMessage());
                 final NotificationsDao notifications = storage.getNotificationsDao();
                 notifications.addNotification(notification);
                 sendMail(notification);
