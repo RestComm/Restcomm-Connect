@@ -168,7 +168,7 @@ public final class DiskCache extends UntypedActor {
                 response = new DiskCacheResponse(cache((DiskCacheRequest) message));
             } catch (final Exception exception) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Error while caching", exception);
+                    logger.debug("Issue while caching", exception);
                 }
                 response = new DiskCacheResponse(exception);
             }
