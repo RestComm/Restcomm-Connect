@@ -81,7 +81,6 @@ public abstract class StandardResponse<T> {
 
     @Override
     public String toString() {
-        return (new StringBuffer("StandardResponse [succeeded=").append(succeeded).append(", cause=").append(cause)
-                .append(", message=").append(message).append(", object=").append(object).append("]")).toString();
+        return (new StringBuffer("StandardResponse [succeeded=").append(succeeded).append(", cause=").append(cause).append(", message=").append(message).append(", object=").append(object).append("]")).toString();
     }
 }

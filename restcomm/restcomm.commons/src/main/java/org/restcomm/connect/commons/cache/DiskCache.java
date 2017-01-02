@@ -113,7 +113,7 @@ public final class DiskCache extends UntypedActor {
             // return URI.create(matchedFile.getAbsolutePath());
             return URI.create(this.cacheUri + filename);
         } else {
-            throw new FileNotFoundException(filename);
+            throw new FileNotFoundException("File "+filename+" NotFound");
         }
     }
 

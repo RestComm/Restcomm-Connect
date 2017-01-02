@@ -43,6 +43,9 @@ public final class DiskCacheResponse extends StandardResponse<URI> {
 
     @Override
     public String toString() {
-        return "DiskCacheResponse [" + super.toString() + "]";
+        if(cause() == null){
+            return (new StringBuffer("DiskCacheResponse [succeeded=").append(succeeded()).append(", cause=").append(cause()).append(", message=").append(error()).append(", object=").append(get()).append("]")).toString();
+        }
+        return (new StringBuffer("StandardResponse [succeeded=").append(succeeded()).append(", cause=").append(cause().getMessage()).append(", message=").append(error()).append(", object=").append(get()).append("]")).toString();
     }
 }

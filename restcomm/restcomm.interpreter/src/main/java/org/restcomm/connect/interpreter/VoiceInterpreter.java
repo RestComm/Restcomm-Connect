@@ -895,12 +895,18 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, processingGatherChildren);
             }
         } else {
+            if(response.cause() != null){
+                Notification notification = notification(ERROR_NOTIFICATION, 13233, response.cause().getMessage());
+                final NotificationsDao notifications = storage.getNotificationsDao();
+                notifications.addNotification(notification);
+                sendMail(notification);
+            }
+            if (logger.isDebugEnabled()) {
+                logger.debug("DiskCacheResponse is " + response);
+            }
             if (is(checkingCache) || is(processingGatherChildren)) {
                 fsm.transition(message, synthesizing);
             } else {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("DiskCacheResponse is " + response.toString());
-                }
                 fsm.transition(message, hangingUp);
             }
         }
