@@ -1,3 +1,25 @@
+<div class="col-md-2 custom-width-select in-box-separator">
+    <select ng-change="onTargetChanged(targetVar)" ng-model="targetVar" class="selectpicker-custom">
+        <option value="URL">URL</option>
+        <option value="Application">RVD Application</option>
+    </select>
+</div>
+<div class="col-md-7 custom-width-url-app in-box-separator" ng-show="targetVar === 'URL'">
+    <input class="textbox-url" type="text" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="urlVar" ng-show="targetVar === 'URL'">
+    <select ng-model="methodVar" class="selectpicker-post-get">
+        <option value="POST">POST</option>
+        <option value="GET">GET</option>
+    </select>
+</div>
+<div class="col-md-7 custom-width-url-app in-box-separator" ng-show="targetVar === 'Application'">
+    <select ng-change="setApp()" class="app-selection-picker" ng-model="appNameVar">
+        <option value="">No application selected</option>
+        <option value="create_new_project">Create new project</option>
+        <option ng-repeat="app in apps | orderBy:'projectName'" value={{app.sid}}>{{ app.projectName }}</option>
+    </select>
+</div>
+
+<!--
 <div class="input-group">
     <div class="input-group-btn" ng-show="urlOnlyVar == false">
         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">{{targetVar}} <span class="caret"></span></button>
@@ -22,10 +44,10 @@
             <li><a href="/restcomm-rvd/" target="_blank"><i class="fa fa-sitemap"></i> Create New...</a></li>
             <li class="divider"></li>
             <li ng-repeat="app in apps|orderBy:'projectName'">
-                <!-- <a href title="{{app.startUrl}}" ng-click="$parent.$parent.urlVar = app.startUrl">{{app.name}}</a> -->
                 <a href title="{{app.startUrl}}" ng-click="setApplication(app)">{{app.projectName}}</a>
             </li>
             <li role="presentation" class="dropdown-header">{{apps.length}} applications</li>
         </ul>
     </div>
 </div>
+-->
