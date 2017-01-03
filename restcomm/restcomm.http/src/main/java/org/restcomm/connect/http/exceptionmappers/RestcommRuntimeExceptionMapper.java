@@ -45,7 +45,8 @@ public class RestcommRuntimeExceptionMapper implements ExceptionMapper<RestcommR
 
     @Override
     public Response toResponse(RestcommRuntimeException e) {
-        logger.error(e);
+        if (logger.isDebugEnabled())
+            logger.debug("Converting response to a corresponding http status.");
 
         if (e instanceof NotAuthenticated) {
             return Response.status(Response.Status.UNAUTHORIZED).header("WWW-Authenticate","Basic realm=\"Restcomm realm\"").build();
