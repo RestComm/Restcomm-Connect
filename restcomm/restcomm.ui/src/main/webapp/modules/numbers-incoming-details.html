@@ -1,7 +1,96 @@
-<rc-numbers-pills></rc-numbers-pills>
+<!--<rc-numbers-pills></rc-numbers-pills>-->
 
-<rc-page-title icon="phone" title="{{ numberDetails.phone_number }}" sub-title="{{ numberDetails.friendly_name }}"></rc-page-title>
+<!--<rc-page-title icon="phone" title="{{ numberDetails.phone_number }}" sub-title="{{ numberDetails.friendly_name }}"></rc-page-title>-->
 
+<h3>{{ numberDetails.phone_number }}<small>_{{ numberDetails.friendly_name }}</small></h3>
+
+<h4 class="voice-sms-ussd">Voice</h4>
+<div class="row number-infos-border">
+    <div class="col-md-2">
+        <h4 class="voice-video-ussd-request">Voice Request</h4>
+    </div>
+    <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="numberDetails.voice_application_sid" url-only-var="false" method-var="numberDetails.voice_method" url-var="numberDetails.voice_url" apps="localVoiceApps"></rc-endpoint-url>
+</div>
+<div class="row number-infos-border-expand" ng-show="showVoiceAdvanced">
+    <div class="col-md-2" style="padding-right: 0;">
+        <h4 class="number-advanced-label">Voice Fallback URL</h4>
+    </div>
+    <div class="col-md-10">
+        <input class="textbox-url-expand" type="text" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="numberDetails.voice_fallback_url">
+        <select class="selectpicker-post-get" ng-model="numberDetails.voice_fallback_method">
+            <option value="POST">POST</option>
+            <option value="GET">GET</option>
+        </select>
+    </div>
+    <div class="col-md-2" style="padding-right: 0;">
+        <h4 class="number-advanced-label">Voice Callback URL</h4>
+    </div>
+    <div class="col-md-10">
+        <input class="textbox-url-expand" type="text" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="numberDetails.status_callback">
+        <select class="selectpicker-post-get" ng-model="numberDetails.status_callback_method">
+            <option value="POST">POST</option>
+            <option value="GET">GET</option>
+        </select>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-2 col-md-offset-10">
+        <a href="" class="number-advanced-toggle" ng-click="showVoiceAdvanced = !showVoiceAdvanced"><span ng-show="showVoiceAdvanced">hide </span>advanced</a>
+    </div>
+</div>
+
+<h4 class="voice-sms-ussd">SMS</h4>
+<div class="row number-infos-border">
+    <div class="col-md-2">
+        <h4 class="voice-video-ussd-request">Voice Request</h4>
+    </div>
+    <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="numberDetails.sms_application_sid" url-only-var="false" method-var="numberDetails.sms_method" url-var="numberDetails.sms_url" apps="localSmsApps"></rc-endpoint-url>
+</div>
+<div class="row number-infos-border-expand" ng-show="showSmsAdvanced">
+    <div class="col-md-2" style="padding-right: 0;">
+        <h4 class="number-advanced-label">SMS Fallback URL</h4>
+    </div>
+    <div class="col-md-10">
+        <input class="textbox-url-expand" type="text" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="numberDetails.sms_fallback_url">
+        <select class="selectpicker-post-get" ng-model="numberDetails.voice_fallback_method">
+            <option value="POST">POST</option>
+            <option value="GET">GET</option>
+        </select>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-2 col-md-offset-10">
+        <a href="" class="number-advanced-toggle" ng-click="showSmsAdvanced = !showSmsAdvanced"><span ng-show="showSmsAdvanced">hide </span>advanced</a>
+    </div>
+</div>
+
+<h4 class="voice-sms-ussd">USSD</h4>
+<div class="row number-infos-border">
+    <div class="col-md-2">
+        <h4 class="voice-video-ussd-request">USSD Request</h4>
+    </div>
+    <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="numberDetails.ussd_application_sid" url-only-var="false" method-var="numberDetails.ussd_method" url-var="numberDetails.ussd_url" apps="localUssdApps"></rc-endpoint-url>
+</div>
+<div class="row number-infos-border-expand" ng-show="showUssdAdvanced">
+    <div class="col-md-2" style="padding-right: 0;">
+        <h4 class="number-advanced-label">USSD Fallback URL</h4>
+    </div>
+    <div class="col-md-10">
+        <input class="textbox-url-expand" type="text" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="numberDetails.ussd_fallback_url">
+        <select class="selectpicker-post-get" ng-model="numberDetails.ussd_fallback_method">
+            <option value="POST">POST</option>
+            <option value="GET">GET</option>
+        </select>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-2 col-md-offset-10">
+        <a href="" class="number-advanced-toggle" ng-click="showUssdAdvanced = !showUssdAdvanced"><span ng-show="showUssdAdvanced">hide </span>advanced</a>
+    </div>
+</div>
+
+
+<!--
 <div class="well well-sm">
     <h3 class="text-muted details-header">Voice</h3>
     <fieldset>
@@ -81,10 +170,15 @@
         </label>
     </fieldset>
 </div>
-<div class="">
-    <span class="pull-right">
-        <a href="#/numbers" class="btn btn-default">Close</a>
-        <button class="btn btn-primary" ng-click="updateIncomingNumber(numberDetails)">Save Changes</button>
-    </span>
-    <button class="btn btn-danger" ng-click="confirmNumberDelete(numberDetails)">Release Number</button>
+-->
+<div class="row" style="margin: 20px 0;">
+    <div class="col-md-4">
+        <button class="number-details-btn release-number-btn" ng-click="confirmNumberDelete(numberDetails)">Release Number</button>
+    </div>
+    <div class="col-md-8">
+        <span class="pull-right">
+            <a href="#/numbers"><button class="number-details-btn close-btn">Close</button></a>
+            <button class="number-details-btn save-changes-btn" ng-click="updateIncomingNumber(numberDetails)">Save Changes</button>
+        </span>
+    </div>
 </div>
