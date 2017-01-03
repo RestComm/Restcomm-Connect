@@ -136,8 +136,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
-    static String EMAIL_SENDER;
-
+    static String EMAIL_SENDER = "restcomm@restcomm.org";
 
     // States for the FSM.
     // ==========================
