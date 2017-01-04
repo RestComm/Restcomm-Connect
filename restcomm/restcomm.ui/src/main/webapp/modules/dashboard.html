@@ -1,45 +1,26 @@
 <rc-page-title icon="dashboard" title="DASHBOARD" sub-title=""></rc-page-title>
 
 <div class="row">
-    <div class="form-group col-md-6">
-        <div class="input-group">
-            <span class="input-group-addon"><i class="fa fa-user"></i> Account SID</span>
-            <input class="form-control" id="roSid" type="text" value="{{ loggedAccount.sid }}" readonly />
-        </div>
-    </div>
-    <div class="form-group col-md-6">
-        <div class="input-group">
-            <span class="input-group-addon"><i class="fa fa-lock"></i> Auth Token</span>
-            <input class="form-control" id="roToken" type="password" value="{{ authToken }}" readonly />
-            <input class="form-control truncate hidden" id="roToken" type="text" value="{{ authToken }}" readonly />
-            <span class="input-group-addon btn" onclick="$(this).parent().children('input').toggleClass('hidden')">&nbsp;<i class="fa fa-eye-slash"></i>&nbsp;</span>
+    <div class="form-group col-md-12 account-sid-auth-token-box">
+        <div class="row">
+            <div class="col-md-6">
+            Account SID <input type="text" class="account-sid-auth-token-input" value="{{ loggedAccount.sid }}" readonly>
+            </div>
+            <div class="col-md-6">
+                Auth Token
+                <input type="{{authTokenType}}" class="account-sid-auth-token-input" value="{{ authToken }}" readonly ng-init="authTokenType = 'password'">
+                <img src="resources/img/v2/d-r-pass-visible.png" class="auth-token-toggle" ng-click="authTokenType = (authTokenType === 'password' ? 'text' : 'password')">
+            </div>
         </div>
     </div>
 </div>
 
-<div class="row">
+<div class="row analytics-title">
     <div class="col-md-6 col-md-offset-0">
-        <h3 class="text-left"><i class="fa fa-columns"></i> API EXPLORER</h3>
-    </div>
-    <div class="col-md-6 col-md-offset-0">
-        <h3 class="text-left"><i class="fa fa-bug"></i> DEBUGGER</h3>
-    </div>
-</div>
-<div class="row">
-    <div class="col-md-6 col-md-offset-0 well well-sm dashboard-container">
-        <h1 class="text-center"><i class="fa fa-lightbulb-o fa-4x text-muted"></i></h1>
-    </div>
-    <div class="col-md-6 col-md-offset-0 well well-sm dashboard-container">
-        <h1 class="text-center"><i class="fa fa-wrench fa-4x text-muted"></i></h1>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-6 col-md-offset-0">
-        <h3 class="text-left"><i class="fa fa-microphone"></i> VOICE ANALYTICS <small>(30 days)</small></h3>
+        <h3 class="voice-analytics">Voice Analytics<small> (30 days)</small></h3>
     </div>
     <div class="col-md-6 col-md-offset-0">
-        <h3 class="text-left"><i class="fa fa-comment"></i> SMS ANALYTICS <small>(30 days)</small></h3>
+        <h3 class="voice-analytics">SMS Analytics<small> (30 days)</small></h3>
     </div>
 </div>
 <div class="row">
