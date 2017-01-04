@@ -173,8 +173,9 @@
 		SELECT * FROM "restcomm_call_detail_records" WHERE "instanceid"=#{instanceid};
 	</select>
   
-  <select id="getRunningCallDetailRecordsByInstanceId" parameterType="string" resultType="hashmap">
-    SELECT * FROM "restcomm_call_detail_records" WHERE "instanceid"=#{instanceid} and "status" ='in-progress';
+  <select id="getInCompleteCallDetailRecordsByInstanceId" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_call_detail_records" WHERE "instanceid"=#{instanceid} AND (UPPER("status") = ('IN_PROGRESS') OR 
+      UPPER("status") = ('IN-PROGRESS') OR UPPER("status") = ('RINGING') OR UPPER("status") = ('QUEUED'));
   </select>
 
   <select id="getCallDetailRecordsByConferenceSid" parameterType="string" resultType="hashmap">
