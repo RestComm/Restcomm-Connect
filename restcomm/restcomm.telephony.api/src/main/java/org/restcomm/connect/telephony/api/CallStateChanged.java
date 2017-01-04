@@ -64,4 +64,9 @@ public final class CallStateChanged {
     public Integer sipResponse() {
         return sipResponse;
     }
+
+    @Override
+    public String toString() {
+        return "CallStateChanged [state=" + state + ", sipResponse=" + sipResponse + "]";
+    }
 }

@@ -76,6 +76,7 @@ import org.restcomm.connect.telephony.api.ChangeCallDirection;
 import org.restcomm.connect.telephony.api.ConferenceInfo;
 import org.restcomm.connect.telephony.api.ConferenceResponse;
 import org.restcomm.connect.telephony.api.CreateCall;
+import org.restcomm.connect.telephony.api.CreateConference;
 import org.restcomm.connect.telephony.api.Dial;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.GetCallObservers;
@@ -218,6 +219,7 @@ public final class Call extends UntypedActor {
     private boolean disableSdpPatchingOnUpdatingMediaSession;
 
     private Sid inboundCallSid;
+    private boolean inboundConfirmCall;
     private int collectTimeout;
     private String collectFinishKey;
     private boolean collectSipInfoDtmf = false;
@@ -273,11 +275,13 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.initializing, this.canceling));
         transitions.add(new Transition(this.initializing, this.dialing));
         transitions.add(new Transition(this.initializing, this.failed));
+        transitions.add(new Transition(this.initializing, this.inProgress));
         transitions.add(new Transition(this.initializing, this.waitingForAnswer));
         transitions.add(new Transition(this.initializing, this.stopping));
         transitions.add(new Transition(this.waitingForAnswer, this.inProgress));
         transitions.add(new Transition(this.waitingForAnswer, this.joining));
         transitions.add(new Transition(this.waitingForAnswer, this.canceling));
+        transitions.add(new Transition(this.waitingForAnswer, this.completed));
         transitions.add(new Transition(this.waitingForAnswer, this.stopping));
         transitions.add(new Transition(this.dialing, this.canceling));
         transitions.add(new Transition(this.dialing, this.stopping));
@@ -500,6 +504,8 @@ public final class Call extends UntypedActor {
             onConferenceResponse((ConferenceResponse) message);
         } else if (BridgeStateChanged.class.equals(klass)) {
             onBridgeStateChanged((BridgeStateChanged) message, self, sender);
+        } else if (CreateConference.class.equals(klass)) {
+            onCreateConference((CreateConference) message);
         }
     }
 
@@ -1505,6 +1511,7 @@ public final class Call extends UntypedActor {
 
     private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
         inboundCallSid = message.callSid();
+        inboundConfirmCall = message.confirmCall();
         if (is(ringing) && !invite.getSession().getState().equals(SipSession.State.TERMINATED)) {
                 fsm.transition(message, initializing);
         } else {
@@ -1634,7 +1641,7 @@ public final class Call extends UntypedActor {
         } else if ("INFO".equalsIgnoreCase(method)) {
             processInfo(message);
         } else if ("ACK".equalsIgnoreCase(method)) {
-            if (isInbound() && is(waitingForAnswer)) {
+            if (isInbound() && (is(initializing) || is(waitingForAnswer))) {
                 if(logger.isInfoEnabled()) {
                     logger.info("ACK received moving state to inProgress");
                 }
@@ -1778,7 +1785,7 @@ public final class Call extends UntypedActor {
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
         if(logger.isDebugEnabled()) {
-            logger.debug("Got Hangup for Call, from: "+from+" to: "+to+" state: "+fsm.state()+" conferencing: "+conferencing +" conference: "+conference);
+            logger.debug("Got Hangup: "+message+" for Call, from: "+from+" to: "+to+" state: "+fsm.state()+" conferencing: "+conferencing +" conference: "+conference);
         }
 
         // Stop recording if necessary
@@ -1978,7 +1985,12 @@ public final class Call extends UntypedActor {
                     if (!(SipSession.State.CONFIRMED.equals(sessionState) || SipSession.State.TERMINATED.equals(sessionState))) {
                         // Issue #1649:
                         mediaSessionInfo = message.getMediaSession();
-                        fsm.transition(message, waitingForAnswer);
+                        if(inboundConfirmCall){
+                            sendInviteOk();
+                        }
+                        else{
+                            fsm.transition(message, waitingForAnswer);
+                        }
                     } else if (SipSession.State.CONFIRMED.equals(sessionState) && is(inProgress)) {
                         // We have an ongoing call and Restcomm executes new RCML app on that
                         // If the sipSession state is Confirmed, then update SDP with the new SDP from MMS
@@ -2177,23 +2189,8 @@ public final class Call extends UntypedActor {
         if (is(inProgress)) {
             switch (message.getState()) {
                 case BRIDGED:
-                    final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
-                    final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
-                    String answer = null;
-                    if (mediaSessionInfo.usesNat()) {
-                        final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
-                        answer = SdpUtils.patch("application/sdp", sdp, externalIp);
-                    } else {
-                        answer = mediaSessionInfo.getLocalSdp().toString();
-                    }
-                    // Issue #215:
-                    // https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
-                    answer = SdpUtils.endWithNewLine(answer);
-                    okay.setContent(answer, "application/sdp");
-                    addCustomHeaders(okay);
-                    okay.send();
+                    sendInviteOk();
                     break;
-
                 case FAILED:
                     fsm.transition(message, stopping);
                 default:
@@ -2204,6 +2201,29 @@ public final class Call extends UntypedActor {
                 logger.debug("Received BridgeStateChanged for Call: "+self.path()+", but state is :"+fsm.state().toString());
             }
         }
+    }
+
+    private void onCreateConference(CreateConference message) throws Exception{
+        sendInviteOk();
+        fsm.transition(message, inProgress);
+    }
+
+    private void sendInviteOk() throws Exception{
+        final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
+        final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
+        String answer = null;
+        if (mediaSessionInfo.usesNat()) {
+            final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
+            answer = SdpUtils.patch("application/sdp", sdp, externalIp);
+        } else {
+            answer = mediaSessionInfo.getLocalSdp().toString();
+        }
+        // Issue #215:
+        // https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
+        answer = SdpUtils.endWithNewLine(answer);
+        okay.setContent(answer, "application/sdp");
+        addCustomHeaders(okay);
+        okay.send();
     }
 
     @Override

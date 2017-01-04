@@ -93,9 +93,9 @@ public class DialActionTest {
     @ArquillianResource
     URL deploymentUrl;
     
-    //Dial Action URL: http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/DialAction Method: POST
+    //Dial Action URL: http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8050/restcomm/2012-04-24/DialAction Method: POST
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
+    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8050
 
     private static SipStackTool tool1;
     private static SipStackTool tool2;
@@ -123,7 +123,7 @@ public class DialActionTest {
     private SipPhone georgePhone;
     private String georgeContact = "sip:+131313@127.0.0.1:5070";
 
-    private String dialClientWithActionUrl = "sip:+12223334455@127.0.0.1:5080"; // Application: dial-client-entry_wActionUrl.xml
+    private String dialClientWithActionUrl = "sip:+12223334455@127.0.0.1:5050"; // Application: dial-client-entry_wActionUrl.xml
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
@@ -138,17 +138,17 @@ public class DialActionTest {
 
     @Before
     public void before() throws Exception {
-        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
-        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
+        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5050");
+        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, bobContact);
 
-        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
-        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
+        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5050");
+        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, aliceContact);
 
-        henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
-        henriquePhone = henriqueSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, henriqueContact);
+        henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5050");
+        henriquePhone = henriqueSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, henriqueContact);
 
-        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
-        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
+        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5050");
+        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, georgeContact);
     }
 
     @After
@@ -206,12 +206,7 @@ public class DialActionTest {
         }
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        bobCall.sendInviteOkAck();
-        bobCall.listenForDisconnect();
-
-        assertTrue(bobCall.waitForDisconnect(40 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
+        assertEquals(Response.SERVER_INTERNAL_ERROR, bobCall.getLastReceivedResponse().getStatusCode());
 
         try {
             Thread.sleep(10 * 1000);
@@ -264,12 +259,7 @@ public class DialActionTest {
         }
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        bobCall.sendInviteOkAck();
-        bobCall.listenForDisconnect();
-
-        assertTrue(bobCall.waitForDisconnect(40 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
+        assertEquals(Response.SERVER_INTERNAL_ERROR, bobCall.getLastReceivedResponse().getStatusCode());
 
         try {
             Thread.sleep(10 * 1000);
@@ -311,7 +301,7 @@ public class DialActionTest {
                     .withStatus(200)));
         
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -331,17 +321,17 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
@@ -391,7 +381,7 @@ public class DialActionTest {
                     .withStatus(200)));
         
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -411,17 +401,17 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
@@ -469,7 +459,7 @@ public class DialActionTest {
                     .withStatus(200)));
         
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -489,17 +479,17 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
@@ -547,7 +537,7 @@ public class DialActionTest {
                     .withStatus(200)));
         
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -567,12 +557,6 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         assertTrue(aliceCall.listenForCancel());
@@ -580,9 +564,10 @@ public class DialActionTest {
         assertNotNull(cancelTransaction);
         assertTrue(aliceCall.respondToCancel(cancelTransaction, Response.OK, "Alice-OK-2-Cancel", 3600));
 
+        assertTrue(bobCall.waitOutgoingCallResponse(120 * 1000));
+        assertEquals(Response.REQUEST_TIMEOUT, bobCall.getLastReceivedResponse().getStatusCode());
+        
         Thread.sleep(3700);
-
-        assertTrue(bobCall.disconnect());
 
         Thread.sleep(10000);
         
@@ -622,7 +607,7 @@ public class DialActionTest {
                     .withStatus(200)));
         
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -642,20 +627,13 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-        bobCall.listenForDisconnect();
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.BUSY_HERE, "Busy-Alice", 3600));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
-        assertTrue(bobCall.waitForDisconnect(50 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.BUSY_HERE, bobCall.getLastReceivedResponse().getStatusCode());
 
         try {
             Thread.sleep(10 * 1000);
@@ -697,7 +675,7 @@ public class DialActionTest {
                         .withStatus(200)));
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -717,14 +695,7 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
         String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-        bobCall.listenForDisconnect();
 
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         aliceCall.listenForCancel();
@@ -732,8 +703,8 @@ public class DialActionTest {
         logger.info("About to execute LCM to hangup the call");
         RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid,"completed", null);
 
-        assertTrue(bobCall.waitForDisconnect(50 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
+        assertTrue(bobCall.waitOutgoingCallResponse(120 * 1000));
+        assertEquals(Response.SERVER_INTERNAL_ERROR, bobCall.getLastReceivedResponse().getStatusCode());
 
 //        logger.info("&&&&&&&&&&&&&&&&&&&&&& Alice about to listen for CANCEL");
 //        SipTransaction sipTransaction = aliceCall.waitForCancel(50 * 1000);
@@ -764,7 +735,7 @@ public class DialActionTest {
                     .withStatus(200)));
         
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -793,12 +764,6 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         
@@ -810,6 +775,12 @@ public class DialActionTest {
 //                ArrayList<String> replaceHeaders)
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null, null));
 //        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, null, null, receivedBody));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
@@ -856,7 +827,7 @@ public class DialActionTest {
                         .withStatus(200)));
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -876,12 +847,6 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         Thread.sleep(2000); //Ringing time
@@ -889,6 +854,12 @@ public class DialActionTest {
 
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000); //Talk time
@@ -953,7 +924,7 @@ public class DialActionTest {
                         .withStatus(200)));
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
 
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
@@ -974,21 +945,14 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-        bobCall.listenForDisconnect();
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         Thread.sleep(2000); //Ringing Time
         assertTrue(aliceCall.sendIncomingCallResponse(Response.BUSY_HERE, "Busy-Alice", 3600));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
-        assertTrue(bobCall.waitForDisconnect(50 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.BUSY_HERE, bobCall.getLastReceivedResponse().getStatusCode());
 
         try {
             Thread.sleep(10 * 1000);

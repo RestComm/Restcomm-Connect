@@ -793,9 +793,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             fsm.transition(conferenceWaitUris, conferencing);
             return;
         }
-        if(logger.isInfoEnabled()) {
-            logger.info("current outboundCallState " + outboundCallState.state());
-        }
         if (callState.equals(CallStateChanged.State.COMPLETED)) {
             fsm.transition(message, finished);
         } else {
@@ -1060,7 +1057,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         else
             outboundCallState = event;
         if(logger.isInfoEnabled()){
-            logger.info("VoiceInterpreter received CallStateChanged event: "+event.state()+ " from "+(sender == call? "call" : "outboundCall")+ ", sender path: " + sender.path() +", current VI state: "+fsm.state());
+            logger.info("VoiceInterpreter received CallStateChanged event: "+event+ " from "+(sender == call? "call" : "outboundCall")+ ", sender path: " + sender.path() +", current VI state: "+fsm.state());
         }
 
         Attribute attribute = null;
@@ -1239,6 +1236,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         final GetNextVerb next = GetNextVerb.instance();
                         parser.tell(next, self());
                     }
+                }
+                // Update the storage for conferencing.
+                if (callRecord != null && !is(initializingCall) && !is(rejecting)) {
+                    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
+                    callRecord = records.getCallDetailRecord(callRecord.getSid());
+                    callRecord = callRecord.setStatus(callState.toString());
+                    records.updateCallDetailRecord(callRecord);
                 }
                 break;
             }
@@ -1538,7 +1542,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 verb = (Tag) message;
 
                 // Answer the call.
-                call.tell(new Answer(callRecord.getSid()), source);
+                boolean confirmCall = false;
+                if (!Verbs.dial.equals(verb.name())) {
+                    confirmCall=true;
+                }
+                call.tell(new Answer(callRecord.getSid(),confirmCall), source);
             }
         }
     }
@@ -1698,7 +1706,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                 } else {
                     if (call != null) {
-                        call.tell(new Hangup(), null);
+                        Integer sipResponse = outboundCallState != null ? outboundCallState.sipResponse() : null;
+                        call.tell(new Hangup(sipResponse), null);
                     }
                     final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
@@ -1911,6 +1920,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         sid = callRecord.getSid();
                     }
                     final CreateConference create = new CreateConference(buffer.toString(), sid);
+                    call.tell(create, self());
                     conferenceManager.tell(create, source);
                 } else {
                     // Handle forking.
