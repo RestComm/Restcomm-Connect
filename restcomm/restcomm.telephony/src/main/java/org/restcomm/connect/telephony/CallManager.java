@@ -123,7 +123,6 @@ import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 import static javax.servlet.sip.SipServletResponse.SC_OK;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
-import org.restcomm.connect.dao.entities.Transcription.Status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -293,21 +292,17 @@ public final class CallManager extends UntypedActor {
         String instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
         Sid sid = new Sid(instanceId);
         final CallDetailRecordsDao callDetailRecordsDao = storage.getCallDetailRecordsDao();
-        List<CallDetailRecord> results= callDetailRecordsDao.getRunningCallDetailRecordsByInstanceId(sid);
+        List<CallDetailRecord> results= callDetailRecordsDao.getInCompleteCallDetailRecordsByInstanceId(sid);
         for (CallDetailRecord result : results) {
-            result.setStatus(Status.COMPLETED.toString());
+            CallDetailRecord updatedResult = result.setStatus(CallStateChanged.State.COMPLETED.name());
             if (logger.isDebugEnabled()) {
-                    logger.debug("Call From: " + result.getFrom() + " change state from IN_PROGRESS to COMPLETED");
+                    logger.debug("Call From: " + updatedResult.getFrom() + " change status from " + result.getStatus() + " to COMPLETED");
             }
-            callDetailRecordsDao.updateCallDetailRecord(result);
+            callDetailRecordsDao.updateCallDetailRecord(updatedResult);
         }
-        results = callDetailRecordsDao.getRunningCallDetailRecordsByInstanceId(sid);
+        results = callDetailRecordsDao.getInCompleteCallDetailRecordsByInstanceId(sid);
         if (logger.isInfoEnabled()) {
-            if (results != null) {
-                logger.info("There are: " + results.size() + " Calls in progress after cleanup.");
-            } else {
-                logger.info("There is no Call in progress after cleanup.");
-            }
+            logger.info("There are: " + results.size() + " calls in progress after cleanup.");
         }
     }
 
