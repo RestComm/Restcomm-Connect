@@ -172,7 +172,7 @@ public class ClientsDialTest {
     URL deploymentUrl;
 
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
+    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8050
 
     private static SipStackTool tool1;
     private static SipStackTool tool2;
@@ -863,12 +863,13 @@ public class ClientsDialTest {
         assertTrue(georgeCall.waitForIncomingCall(5 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "RINGING-George", 3600));
 
+        georgeCall.listenForCancel();
+        
         SipTransaction mariaCancelTransaction = mariaCall.sendCancel();
         assertTrue(mariaCancelTransaction != null);
 
         SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(5 * 1000);
         assertTrue(georgeCancelTransaction != null);
-
         georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK-George", 3600);
     }
 
@@ -1023,6 +1024,9 @@ public class ClientsDialTest {
         assertTrue(georgeCancelTransaction != null);
 
         georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK-George", 3600);
+        
+        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.REQUEST_TERMINATED, mariaCall.getLastReceivedResponse().getStatusCode());
 
         //        Thread.sleep(3000);
         //        georgeCall.listenForDisconnect();

@@ -91,11 +91,11 @@ public final class UserAgentManagerTest {
 
     @Before
     public void before() throws Exception {
-        sipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
-        phone = sipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
+        sipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5050");
+        phone = sipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, aliceContact);
 
-        sipStack2 = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
-        phone2 = sipStack2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
+        sipStack2 = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5050");
+        phone2 = sipStack2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, bobContact);
     }
 
     @After
@@ -112,7 +112,7 @@ public final class UserAgentManagerTest {
     @Test
     public void registerUserAgent() throws Exception {
 //        deployer.deploy("UserAgentTest");
-        SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
         Credential c = new Credential("127.0.0.1","alice", "1234");
         phone.addUpdateCredential(c);
         assertTrue(phone.register(uri, "alice", "1234", "sip:127.0.0.1:5070", 3600, 3600));
@@ -126,7 +126,7 @@ public final class UserAgentManagerTest {
     @Test
     public void registerUserAgentWithTransport() throws Exception {
 //        deployer.deploy("UserAgentTest");
-        SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
         Credential c = new Credential("127.0.0.1","alice", "1234");
         phone.addUpdateCredential(c);
         assertTrue(phone.register(uri, "alice", "1234", "sip:127.0.0.1:5070;transport=udp", 3600, 3600));
@@ -140,7 +140,7 @@ public final class UserAgentManagerTest {
     @Test
     public void registerUserAgentWithReRegister() throws Exception {
 //        deployer.deploy("UserAgentTest");
-        SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
         Credential c = new Credential("127.0.0.1","alice", "1234");
         phone.addUpdateCredential(c);
         assertTrue(phone.register(uri, "alice", "1234", "sip:127.0.0.1:5070", 3600, 3600));
@@ -158,7 +158,7 @@ public final class UserAgentManagerTest {
     public void registerUserAgentWithOptionsPing() throws ParseException, InterruptedException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
-        SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
         Credential c = new Credential("127.0.0.1","alice", "1234");
         phone.addUpdateCredential(c);
         assertTrue(phone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5070;transport=udp", 3600, 3600));
@@ -182,7 +182,7 @@ public final class UserAgentManagerTest {
     public void registerUserAgentWithExceptionOnOptionsPing() throws ParseException, InterruptedException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
-        SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
         Credential c = new Credential("127.0.0.1","alice", "1234");
         phone.addUpdateCredential(c);
         assertTrue(phone.register(uri, "alice", "1234", "sip:127.0.0.1:5070;transport=udp", 3600, 3600));
@@ -202,7 +202,7 @@ public final class UserAgentManagerTest {
     public void registerUserAgentWithExceptionOnOptionsPingForGeorge() throws ParseException, InterruptedException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
-        SipURI uri = sipStack2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = sipStack2.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
         Credential c = new Credential("127.0.0.1","bob", "1234");
         phone2.addUpdateCredential(c);
         assertTrue(phone2.register(uri, "bob", "1234", bobContact, 3600, 3600));

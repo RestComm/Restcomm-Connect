@@ -80,9 +80,9 @@ public final class CallTest {
 
     @Before
     public void before() throws Exception {
-        receiver = tool.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
-        phone = receiver.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:+17778889999@127.0.0.1:5070");
-        phone2 = receiver.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:+17778889998@127.0.0.1:5070");
+        receiver = tool.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5050");
+        phone = receiver.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, "sip:+17778889999@127.0.0.1:5070");
+        phone2 = receiver.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, "sip:+17778889998@127.0.0.1:5070");
     }
 
     @After
@@ -105,7 +105,7 @@ public final class CallTest {
         deployer.deploy("CallTest");
         phone.setLoopback(true);
         final SipCall call = phone.createSipCall();
-        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334444@127.0.0.1:5080", null, body,
+        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334444@127.0.0.1:5050", null, body,
                 "application", "sdp", null, null);
         assertLastOperationSuccess(call);
         assertTrue(call.waitOutgoingCallResponse(5 * 1000));
@@ -142,7 +142,7 @@ public final class CallTest {
         deployer.deploy("CallTest");
         phone.setLoopback(true);
         final SipCall call = phone.createSipCall();
-        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334445@127.0.0.1:5080", null, body,
+        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334445@127.0.0.1:5050", null, body,
                 "application", "sdp", null, null);
         assertLastOperationSuccess(call);
         assertTrue(call.waitOutgoingCallResponse(5 * 1000));
@@ -162,7 +162,7 @@ public final class CallTest {
         deployer.deploy("CallTest");
         phone.setLoopback(true);
         final SipCall call = phone.createSipCall();
-        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334446@127.0.0.1:5080", null, body,
+        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334446@127.0.0.1:5050", null, body,
                 "application", "sdp", null, null);
         assertLastOperationSuccess(call);
         assertTrue(call.waitOutgoingCallResponse(5 * 1000));
@@ -191,7 +191,7 @@ public final class CallTest {
         deployer.deploy("CallTest");
         phone.setLoopback(true);
         final SipCall call = phone.createSipCall();
-        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334447@127.0.0.1:5080", null, body,
+        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334447@127.0.0.1:5050", null, body,
                 "application", "sdp", null, null);
         assertLastOperationSuccess(call);
         assertTrue(call.waitOutgoingCallResponse(5 * 1000));
@@ -220,7 +220,7 @@ public final class CallTest {
         deployer.deploy("CallTest");
         phone.setLoopback(true);
         final SipCall call = phone.createSipCall();
-        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334448@127.0.0.1:5080", null, body,
+        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334448@127.0.0.1:5050", null, body,
                 "application", "sdp", null, null);
         assertLastOperationSuccess(call);
         assertTrue(call.waitOutgoingCallResponse(5 * 1000));
@@ -249,7 +249,7 @@ public final class CallTest {
         deployer.deploy("CallTest");
         phone.setLoopback(true);
         final SipCall call = phone.createSipCall();
-        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334449@127.0.0.1:5080", null, body,
+        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334449@127.0.0.1:5050", null, body,
                 "application", "sdp", null, null);
         assertLastOperationSuccess(call);
         assertTrue(call.waitOutgoingCallResponse(5 * 1000));
@@ -278,7 +278,7 @@ public final class CallTest {
         deployer.deploy("CallTest");
         phone.setLoopback(true);
         final SipCall call = phone.createSipCall();
-        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334450@127.0.0.1:5080", null, body,
+        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334450@127.0.0.1:5050", null, body,
                 "application", "sdp", null, null);
         assertLastOperationSuccess(call);
         assertTrue(call.waitOutgoingCallResponse(5 * 1000));
@@ -307,7 +307,7 @@ public final class CallTest {
         deployer.deploy("CallTest");
         phone.setLoopback(true);
         final SipCall call = phone.createSipCall();
-        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334453@127.0.0.1:5080", null, body,
+        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334453@127.0.0.1:5050", null, body,
                 "application", "sdp", null, null);
         assertLastOperationSuccess(call);
         assertTrue(call.waitOutgoingCallResponse(5 * 1000));
@@ -336,7 +336,7 @@ public final class CallTest {
         deployer.deploy("CallTest");
         phone.setLoopback(true);
         final SipCall call = phone.createSipCall();
-        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334451@127.0.0.1:5080", null, body,
+        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334451@127.0.0.1:5050", null, body,
                 "application", "sdp", null, null);
         assertLastOperationSuccess(call);
         assertTrue(call.waitOutgoingCallResponse(5 * 1000));
@@ -365,7 +365,7 @@ public final class CallTest {
         deployer.deploy("CallTest");
         phone.setLoopback(true);
         final SipCall call = phone.createSipCall();
-        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334452@127.0.0.1:5080", null, body,
+        call.initiateOutgoingCall("sip:+17778889999@127.0.0.1:5070", "sip:+12223334452@127.0.0.1:5050", null, body,
                 "application", "sdp", null, null);
         assertLastOperationSuccess(call);
         assertTrue(call.waitOutgoingCallResponse(5 * 1000));

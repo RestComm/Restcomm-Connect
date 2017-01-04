@@ -48,4 +48,9 @@ public final class Hangup {
     public Integer getSipResponse() {
         return sipResponse;
     }
+
+    @Override
+    public String toString() {
+        return "Hangup [message=" + message + ", sipResponse=" + sipResponse + "]";
+    }
 }
