@@ -1059,6 +1059,8 @@ public final class CallManager extends UntypedActor {
         List<ActorRef> callObservers = response.get();
 
         // Get the Voice Interpreter currently handling the call
+        //TODO possible bug here. Since we have more than one call observer, later there might be the case that the first one is not the VI
+        //TODO set the VI using specific message, also get the VI using specific message. The VI will still be in the observers list but it will set/get using specific method
         ActorRef existingInterpreter = callObservers.iterator().next();
 
         // Get the outbound leg of this call
@@ -1066,8 +1068,11 @@ public final class CallManager extends UntypedActor {
         Object answer = (Object) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
 
         ActorRef relatedCall = null;
+        List<ActorRef> listOfRelatedCalls = null;
         if (answer instanceof ActorRef) {
             relatedCall = (ActorRef) answer;
+        } else if (answer instanceof List) {
+            listOfRelatedCalls = (List<ActorRef>) answer;
         }
 
         if(logger.isInfoEnabled()) {
@@ -1075,6 +1080,9 @@ public final class CallManager extends UntypedActor {
             logger.info("Initial Call path: " + call.path());
             if (relatedCall != null) {
                 logger.info("Related Call path: " + relatedCall.path());
+            }
+            if (listOfRelatedCalls != null) {
+                logger.info("List of related calls received, size of the list: "+listOfRelatedCalls.size());
             }
             // Cleanup all observers from both call legs
             logger.info("Will tell Call actors to stop observing existing Interpreters");
@@ -1085,6 +1093,11 @@ public final class CallManager extends UntypedActor {
         call.tell(new StopObserving(), self());
         if (relatedCall != null) {
             relatedCall.tell(new StopObserving(), self());
+        }
+        if (listOfRelatedCalls != null) {
+            for(ActorRef branch: listOfRelatedCalls) {
+                branch.tell(new StopObserving(), self());
+            }
         }
         if(logger.isInfoEnabled()) {
             logger.info("Existing observers removed from Calls actors");
@@ -1122,7 +1135,7 @@ public final class CallManager extends UntypedActor {
         }
 
         // Check what to do with the second/outbound call leg of the call
-        if (relatedCall != null) {
+        if (relatedCall != null && listOfRelatedCalls == null) {
             if (moveConnectedCallLeg) {
                 final ActorRef relatedInterpreter = builder.build();
                 if(logger.isInfoEnabled()) {
@@ -1141,6 +1154,15 @@ public final class CallManager extends UntypedActor {
                 }
                 relatedCall.tell(new Hangup(), null);
 //                getContext().stop(relatedCall);
+            }
+        }
+        if (listOfRelatedCalls != null) {
+            for (ActorRef branch: listOfRelatedCalls) {
+                branch.tell(new Hangup(), null);
+            }
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("LiveCallModification request while dial forking, terminated %d calls", listOfRelatedCalls.size());
+                logger.info(msg);
             }
         }
     }
