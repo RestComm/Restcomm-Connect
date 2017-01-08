@@ -1277,6 +1277,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (bridge != null) {
                 // Stop the bridge
                 bridge.tell(new StopBridge(liveCallModification), self());
+                recordingCall = false;
                 bridge = null;
             }
         } else if (state != null && (state.equals(CallStateChanged.State.BUSY) ||
@@ -2117,12 +2118,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         target.tell(message, null);
     }
 
-    private void recordCall() {
-        if(logger.isInfoEnabled()) {
-            logger.info("Start recording of the call");
-        }
-        record(call);
-    }
+//    private void recordCall() {
+//        if(logger.isInfoEnabled()) {
+//            logger.info("Start recording of the call");
+//        }
+//        record(call);
+//    }
 
     private void recordConference() {
         logger.info("Start recording of the conference");
@@ -2849,9 +2850,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // XXX review bridge cleanup!!
 
             // Cleanup bridge
-            if ((bridge != null) && (is(forking) || is(acquiringOutboundCallInfo) || is(bridged))) {
+//            if ((bridge != null) && (is(forking) || is(acquiringOutboundCallInfo) || is(bridged))) {
+            if (bridge != null) {
                 // Stop the bridge
                 bridge.tell(new StopBridge(liveCallModification), super.source);
+                recordingCall = false;
                 bridge = null;
             }
             // Cleanup the outbound call if necessary.
