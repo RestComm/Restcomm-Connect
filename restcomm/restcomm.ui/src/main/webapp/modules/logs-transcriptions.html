@@ -1,91 +1,100 @@
-<rc-logs-pills></rc-logs-pills>
+<!--<rc-logs-pills></rc-logs-pills>-->
 
-<rc-page-title icon="file-text-o" title="LOGS" sub-title="TRANSCRIPTIONS"></rc-page-title>
+<!--<rc-page-title icon="file-text-o" title="LOGS" sub-title="TRANSCRIPTIONS"></rc-page-title>-->
 
-<div class="row">
-    <div class="col-md-12">
-        <div ng-show="transcriptionsLogsList.length > 0 || search" class="pull-right record-filter-div">
-            <form class="form-inline" role="form">
-                <div class="form-group col-md-2">
-                    <div class="input-group">
-                        <span class="input-group-addon">From</span>
-                        <input type="text" class="input-sm form-control" placeholder="From" ng-model="search.from" disabled />
-                    </div>
-                </div>
-                <div class="form-group col-md-2">
-                    <div class="input-group">
-                        <span class="input-group-addon">To</span>
-                        <input type="text" class="input-sm form-control" placeholder="To" ng-model="search.to" disabled />
-                    </div>
-                </div>
-                <div class="form-group col-md-2 date-group-sm">
-                    <div class="input-group">
-                        <span class="input-group-addon">Date</span>
-                        <input id="startpicker" pick-a-date="date" class="input-sm form-control" placeholder="Start Date" ng-model="search.start_time" />
+<div class="row secondary-tabs">
+    <div class="col-md-10 col-md-offset-1">
+        <a href="#/logs/calls">Calls</a>
+        <a href="#/logs/messages">Messages</a>
+        <a href="#/logs/recordings">Recordings</a>
+        <a href="#/logs/transcriptions" class="active">Transcriptions</a>
+        <a href="#/logs/notifications">Notifications</a>
+    </div>
+</div>
+
+<div class="row logs-search-container" ng-show="transcriptionsLogsList.length > 0">
+    <div class="row">
+        <div class="col-md-4 logs-search-title">Peers</div>
+        <div class="col-md-4 logs-search-title">Dates</div>
+        <div class="col-md-2 logs-search-title">Transcription Text</div>
+    </div>
+    <div class="row">
+        <form>
+            <div class="col-md-2">
+                <input type="text" class="logs-search-input" placeholder="From" ng-model="search.from" disabled />
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="logs-search-input" placeholder="To" ng-model="search.to" disabled />
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="logs-search-input" placeholder="Date" ng-model="search.start_time" />
+                <!--
+                                        <input id="startpicker" pick-a-date="date" class="input-sm form-control" placeholder="Start Date" ng-model="search.start_time" />
                         <span class="input-group-btn">
                             <button  type="button" id="startDate" class="btn btn-default input-sm" ng-click="openDate('startDate')"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
-                    </div>
-                </div>
-                <div class="form-group col-md-2 date-group-sm">
-                    <div class="input-group">
-                        <span class="input-group-addon">To</span>
-                        <input id="endpicker" pick-a-date="date" pick-a-date-options="options"  class="input-sm form-control" placeholder="End Date" ng-model="search.end_time" />
-                        <span class="input-group-btn">
+                -->
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="logs-search-input" placeholder="Date" ng-model="search.end_time" />
+                <!--
+                <input id="endpicker" pick-a-date="date" pick-a-date-options="options"  class="input-sm form-control" placeholder="End Date" ng-model="search.end_time" />
+                <span class="input-group-btn">
                             <button  type="button" id="endDate" class="btn btn-default input-sm" ng-click="openDate('endDate')"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
-                    </div>
-                </div>
-                <div class="form-group col-md-2">
-                    <div class="input-group">
-                        <span class="input-group-addon">Text</span>
-                        <input type="text" class="input-sm form-control" placeholder="Transcription Text" ng-model="search.transcription_text" />
-                    </div>
-                </div>
-                <button class="btn btn-default btn-sm" ng-click="getTranscriptionsList()"><i class="fa fa-search"></i></button>
-            </form>
-        </div>
-
-        <div ng-hide="(transcriptionsLogsList | filter:query).length > 0" class="jumbotron no-records-alert">
-            <h2><i class="fa fa-exclamation-circle"></i> No transcriptions<span ng-show="transcriptionsLogsList.length == 0"></span><span ng-show="transcriptionsLogsList.length > 0"> matching query</span>. <small>Confirm there's paper in the tray!</small></h2>
-        </div>
-
-        <table ng-show="(transcriptionsLogsList | filter:query).length > 0" class="table table-striped table-hover" ng-cloak>
-            <thead>
-            <th class="width-20pc" style="border-bottom: 3px solid #428bca;text-align: center;">DATE<span class="pull-right"><button style="border-style: solid; border-color: #DCDCDC; border-width: 0px; background-color: #fff;" ng-click="sortBy('date_created');toggleD=!toggleD;reverse=toggleD"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></button></span></th>
-            <th class="width-10pc" style="border-bottom: 3px solid #428bca;text-align: center;">STATUS</th>
-            <th class="width-10pc" style="border-bottom: 3px solid #428bca;text-align: center;">DURATION</th>
-            <th class="width-15pc" style="border-bottom: 3px solid #428bca;text-align: center;">RECORDING</th>
-            <th class="width-30pc" style="border-bottom: 3px solid #428bca;text-align: center;">TEXT</th>
-            <!--<th class="width-5pc">&nbsp;</th>-->
-            </thead>
-            <tbody>
-            <tr ng-repeat="transcription in filtered = (transcriptionsLogsList | filter:query | orderBy:sort:reverse)">
-                <td><a href="" ng-click="showTranscriptionDetailsModal(transcription)">{{ transcription.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
-                <td><div class="text-center">{{ transcription.status ? transcription.status : '?' }}</div></td>
-                <td><div class="text-center">{{ transcription.duration ? transcription.duration : '?' }}s</div></td>
-                <td><div class="text-center"><a href="/restcomm/2012-04-24/Accounts/{{ transcription.account_sid }}/Transcriptions/{{ transcription.sid }}">{{ transcription.recording_sid }}</a></div></td>
-                <td><div class="text-center" title="{{ transcription.transcription_text }}">{{ transcription.transcription_text.length > 35 ? (transcription.transcription_text | limitTo:32) + '...' : transcription.transcription_text }}</div></td>
-                <!--<td><div class="text-center"><a href="" class="clean-link"><i class="fa fa-print" uib-tooltip="Export"></i></a></div></td>-->
-            </tr>
-            </tbody>
-            <tfoot>
-            <td><small class="pull-left">{{ totalTranscription }} Transcription{{ totalTranscription == 1 ? "" : "s" }}</small></td>
-            <td colspan=3>
-                <form class="form-inline text-center">
-                    <h6>Items / Page</h6>
-                    <div class="btn-group buttons-per-page" data-toggle="buttons-radio">
-                        <button type="button" class="btn btn-sm btn-default" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
-                        <button type="button" class="btn btn-sm btn-default" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
-                        <button type="button" class="btn btn-sm btn-default" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
-                    </div>
-                </form>
-            </td>
-            <td colspan="99">
-                <!--<pagination class="pagination pagination-sm pull-right" total-items="transcriptionsLogsList.length" items-per-page="entryLimit" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>-->
-                <uib-pagination class="pagination pagination-sm pull-right" total-items="totalTranscription" items-per-page="entryLimit" data-boundary-links="true" data-current-page="currentPage" ng-change="pageChanged()" ng-model="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
-            </td>
-            </tfoot>
-        </table>
+                -->
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="logs-search-input" placeholder="Transcription Text" ng-model="search.transcription_text" />
+            </div>
+            <div class="col-md-2">
+                <button class="logs-search-button" type="submit" ng-click="getTranscriptionsList()"></button>
+            </div>
+        </form>
     </div>
+</div>
+
+<p>&nbsp;</p>
+
+<div ng-hide="(transcriptionsLogsList | filter:query).length > 0" class="jumbotron no-records-alert">
+    <h2><i class="fa fa-exclamation-circle"></i> No transcriptions<span ng-show="transcriptionsLogsList.length == 0"></span><span ng-show="transcriptionsLogsList.length > 0"> matching query</span>. <small>Confirm there's paper in the tray!</small></h2>
+</div>
+
+<div class="row">
+    <table ng-show="(transcriptionsLogsList | filter:query).length > 0" class="table table-hover" ng-cloak>
+        <thead class="logs-table-header">
+        <th class="width-20pc" ng-click="sortBy('date_created');toggleD=!toggleD;reverse=toggleD">Date<span class="pull-right" ng-show="predicate === 'date_created'"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></span></th>
+        <th class="width-10pc">Status</th>
+        <th class="width-10pc">Duration</th>
+        <th class="width-15pc">Recording</th>
+        <th class="width-30pc">Text</th>        <!--<th class="width-5pc">&nbsp;</th>-->
+        </thead>
+        <tbody>
+        <tr ng-repeat="transcription in filtered = (transcriptionsLogsList | filter:query | orderBy:sort:reverse)">
+            <td><a href="" ng-click="showTranscriptionDetailsModal(transcription)">{{ transcription.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
+            <td><div class="text-center">{{ transcription.status ? transcription.status : '?' }}</div></td>
+            <td><div class="text-center">{{ transcription.duration ? transcription.duration : '?' }}s</div></td>
+            <td><div class="text-center"><a href="/restcomm/2012-04-24/Accounts/{{ transcription.account_sid }}/Transcriptions/{{ transcription.sid }}">{{ transcription.recording_sid }}</a></div></td>
+            <td><div class="text-center" title="{{ transcription.transcription_text }}">{{ transcription.transcription_text.length > 35 ? (transcription.transcription_text | limitTo:32) + '...' : transcription.transcription_text }}</div></td>
+            <!--<td><div class="text-center"><a href="" class="clean-link"><i class="fa fa-print" uib-tooltip="Export"></i></a></div></td>-->
+        </tr>
+        </tbody>
+        <tfoot>
+        <td><small class="pull-left">{{ totalTranscription }} Transcription{{ totalTranscription == 1 ? "" : "s" }}</small></td>
+        <td colspan=3>
+            <form class="form-inline text-center">
+                <h6>Items / Page</h6>
+                <div class="btn-group buttons-per-page" data-toggle="buttons-radio">
+                    <button type="button" class="btn btn-sm btn-default" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
+                    <button type="button" class="btn btn-sm btn-default" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
+                    <button type="button" class="btn btn-sm btn-default" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
+                </div>
+            </form>
+        </td>
+        <td colspan="99">
+            <!--<pagination class="pagination pagination-sm pull-right" total-items="transcriptionsLogsList.length" items-per-page="entryLimit" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>-->
+            <uib-pagination class="pagination pagination-sm pull-right" total-items="totalTranscription" items-per-page="entryLimit" data-boundary-links="true" data-current-page="currentPage" ng-change="pageChanged()" ng-model="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
+        </td>
+        </tfoot>
+    </table>
 </div>

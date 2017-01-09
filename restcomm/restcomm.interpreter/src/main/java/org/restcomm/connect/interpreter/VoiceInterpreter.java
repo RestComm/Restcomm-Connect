@@ -365,6 +365,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(conferencing, playing));
         transitions.add(new Transition(conferencing, startDialing));
         transitions.add(new Transition(conferencing, creatingSmsSession));
+        transitions.add(new Transition(conferencing, sendingEmail));
         transitions.add(new Transition(finishConferencing, ready));
         transitions.add(new Transition(finishConferencing, faxing));
         transitions.add(new Transition(finishConferencing, sendingEmail));
@@ -900,6 +901,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (is(checkingCache) || is(processingGatherChildren)) {
                 fsm.transition(message, synthesizing);
             } else {
+                if(response.cause() != null){
+                    Notification notification = notification(WARNING_NOTIFICATION, 13233, response.cause().getMessage());
+                    final NotificationsDao notifications = storage.getNotificationsDao();
+                    notifications.addNotification(notification);
+                    sendMail(notification);
+                }
                 fsm.transition(message, hangingUp);
             }
         }
