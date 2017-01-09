@@ -24,11 +24,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
 import java.net.URL;
-import java.text.ParseException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -540,7 +540,7 @@ public class LiveCallModificationTest {
         JsonObject callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
                 callSid, null, rcmlUrl, true);
 
-        Thread.sleep(6000);
+        Thread.sleep(10000);
 
         JsonObject confObject = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(confObject);
@@ -647,6 +647,271 @@ public class LiveCallModificationTest {
 
         assertTrue(georgeCall.waitForDisconnect(10000));
         assertTrue(georgeCall.respondToDisconnect());
+    }
+
+    private String dialFork = "<Response><Dial record=\"true\" timeout=\"150\" action=\"/completed\"><Client>alice</Client><Number>+131313</Number></Dial></Response>";
+    @Test
+    public void testTerminateDialForkCallWhileRinging_LCM_to_dial_branches() throws Exception {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialFork)));
+
+        stubFor(post(urlPathEqualTo("/completed"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        // Register Alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare Alice to receive call
+        final SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Prepare George phone to receive call
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        Credential c = new Credential("127.0.0.1", "bob", "1234");
+        bobPhone.addUpdateCredential(c);
+
+        // Initiate a call using Bob
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitForAuthorisation(5000));
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        String georgeCallSid = georgeCall.getLastReceivedRequest().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Trying-Alice", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        String aliceCallSid = aliceCall.getLastReceivedRequest().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+
+        georgeCall.listenForCancel();
+        aliceCall.listenForCancel();
+
+        //LCM request to terminate RINGING calls
+        JsonObject callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, aliceCallSid, "canceled", null);
+        assertNotNull(callResult);
+        callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, georgeCallSid, "canceled", null);
+        assertNotNull(callResult);
+
+        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(30000);
+        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(30000);
+        assertNotNull(aliceCancelTransaction);
+        assertNotNull(georgeCancelTransaction);
+
+        georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK-2-Cancel-George", 3600);
+        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK-2-Cancel-Alice", 3600);
+
+        bobCall.disconnect();
+
+        //Wait to cancel the other branches
+        Thread.sleep(3000);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
+    }
+
+    @Test
+    public void testTerminateDialForkCallWhileRinging_LCM_to_initial_call() throws Exception {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialFork)));
+
+        stubFor(post(urlPathEqualTo("/completed"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        // Register Alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare Alice to receive call
+        final SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Prepare George phone to receive call
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        Credential c = new Credential("127.0.0.1", "bob", "1234");
+        bobPhone.addUpdateCredential(c);
+
+        // Initiate a call using Bob
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitForAuthorisation(5000));
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        String georgeCallSid = georgeCall.getLastReceivedRequest().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Trying-Alice", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        String aliceCallSid = aliceCall.getLastReceivedRequest().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+
+        georgeCall.listenForCancel();
+        aliceCall.listenForCancel();
+
+        //LCM request to terminate the initial call which is in-progress
+        JsonObject callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
+                callSid, "completed", null);
+        assertNotNull(callResult);
+
+        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(30000);
+        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(30000);
+        assertNotNull(aliceCancelTransaction);
+        assertNotNull(georgeCancelTransaction);
+
+        georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK-2-Cancel-George", 3600);
+        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK-2-Cancel-Alice", 3600);
+
+        //Wait to cancel the other branches
+        Thread.sleep(3000);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
+    }
+
+    private String hangupRcml = "<Response><Hangup></Hangup></Response>";
+
+    @Test
+    public void testTerminateDialForkCallWhileRinging_LCM_to_move_initial_call_to_hangup_rcml() throws Exception {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialFork)));
+
+        stubFor(post(urlPathEqualTo("/completed"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        stubFor(post(urlPathEqualTo("/hangupRcml"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(hangupRcml)));
+
+        // Register Alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare Alice to receive call
+        final SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Prepare George phone to receive call
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        Credential c = new Credential("127.0.0.1", "bob", "1234");
+        bobPhone.addUpdateCredential(c);
+
+        // Initiate a call using Bob
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitForAuthorisation(5000));
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        String georgeCallSid = georgeCall.getLastReceivedRequest().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Trying-Alice", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        String aliceCallSid = aliceCall.getLastReceivedRequest().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+
+        georgeCall.listenForCancel();
+        aliceCall.listenForCancel();
+
+        //LCM request to move initial call to Hangup RCML
+        String hangupUrl = "http://127.0.0.1:8090/hangupRcml";
+        JsonObject callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
+                callSid, null, hangupUrl);
+        assertNotNull(callResult);
+
+        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(30000);
+        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(30000);
+        assertNotNull(aliceCancelTransaction);
+        assertNotNull(georgeCancelTransaction);
+
+        georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK-2-Cancel-George", 3600);
+        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK-2-Cancel-Alice", 3600);
+
+        //Wait to cancel the other branches
+        Thread.sleep(3000);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
     }
 
     @Deployment(name = "LiveCallModificationTest", managed = true, testable = false)
