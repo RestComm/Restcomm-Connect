@@ -51,8 +51,8 @@ public final class ProxyManagerTest {
 
     @Before
     public void before() throws Exception {
-        receiver = tool.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5050");
-        phone = receiver.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, "sip:alice@127.0.0.1:5070");
+        receiver = tool.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5060");
+        phone = receiver.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, "sip:alice@127.0.0.1:5070");
     }
 
     @After

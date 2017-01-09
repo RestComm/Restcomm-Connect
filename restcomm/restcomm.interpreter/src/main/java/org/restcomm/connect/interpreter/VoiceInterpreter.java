@@ -1219,7 +1219,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 break;
             case IN_PROGRESS:
-                if (is(forking)) {
+                if (is(initializingCall) || is(rejecting)) {
+                    if (parser != null) {
+                        //This is an inbound call
+                        fsm.transition(message, ready);
+                    } else {
+                        //This is a REST API created outgoing call
+                        fsm.transition(message, downloadingRcml);
+                    }
+                } else if (is(forking)) {
                     if (outboundCall == null || !sender.equals(call)) {
                         outboundCall = sender;
                     }

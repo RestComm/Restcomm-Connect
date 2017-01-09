@@ -93,7 +93,7 @@ public class NoAuthRegisterClientTest {
     private SipPhone mariaPhone2;
     private String mariaContact2 = "sip:maria@127.0.1.1:5093";
 
-    private String mariaRestcommContact = "sip:maria@127.0.0.1:5050";
+    private String mariaRestcommContact = "sip:maria@127.0.0.1:5060";
     
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
     // of the VoiceURL will be executed.
@@ -117,14 +117,14 @@ public class NoAuthRegisterClientTest {
     @Before
     public void before() throws Exception {
 
-        georgeSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5050");
-        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, georgeContact);
+        georgeSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5060");
+        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, georgeContact);
 
-        mariaSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5050");
-        mariaPhone = mariaSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, mariaContact);
+        mariaSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5060");
+        mariaPhone = mariaSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, mariaContact);
 
-        mariaSipStack2 = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.1.1", "5093", "127.0.0.1:5050");
-        mariaPhone2 = mariaSipStack2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, mariaContact2);
+        mariaSipStack2 = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.1.1", "5093", "127.0.0.1:5060");
+        mariaPhone2 = mariaSipStack2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, mariaContact2);
 
         mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria", strongPassword, null);
         georgeRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "george", strongPassword, null);
@@ -161,7 +161,7 @@ public class NoAuthRegisterClientTest {
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(georgeRestcommClientSid);
         
-        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
 
         assertTrue(georgePhone.register(uri, "", "", georgeContact, 3600, 3600));
         Thread.sleep(3000);
@@ -246,7 +246,7 @@ public class NoAuthRegisterClientTest {
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(georgeRestcommClientSid);
 
-        SipURI uri = georgeSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = georgeSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
 
         assertTrue(georgePhone.register(uri, "", "", georgeContact, 3600, 3600));
         assertTrue(mariaPhone.register(uri, "", "", mariaContact, 3600, 3600));

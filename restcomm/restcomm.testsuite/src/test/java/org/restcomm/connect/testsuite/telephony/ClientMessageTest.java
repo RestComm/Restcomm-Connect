@@ -83,7 +83,7 @@ public class ClientMessageTest {
     private SipPhone mariaPhone;
     private String mariaContact = "sip:maria@127.0.0.1:5092";
     private String mariaRestcommClientSid;
-    private String mariaRestcommContact = "sip:maria@127.0.0.1:5050";
+    private String mariaRestcommContact = "sip:maria@127.0.0.1:5060";
     
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
     // of the VoiceURL will be executed.
@@ -104,11 +104,11 @@ public class ClientMessageTest {
     @Before
     public void before() throws Exception {
 
-        georgeSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5050");
-        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, georgeContact);
+        georgeSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5060");
+        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, georgeContact);
 
-        mariaSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5050");
-        mariaPhone = mariaSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, mariaContact);
+        mariaSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5060");
+        mariaPhone = mariaSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, mariaContact);
 
         mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria", "1234qwerT", null);
         georgeRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "george", "1234qwerT", null);
@@ -138,7 +138,7 @@ public class ClientMessageTest {
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(georgeRestcommClientSid);
 
-        SipURI uri = georgeSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = georgeSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
 
         assertTrue(georgePhone.register(uri, "george", "1234qwerT", georgeContact, 3600, 3600));
         assertTrue(mariaPhone.register(uri, "maria", "1234qwerT", mariaContact, 3600, 3600));
@@ -155,7 +155,7 @@ public class ClientMessageTest {
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(georgeRestcommClientSid);
         
-        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
 
         assertTrue(georgePhone.register(uri, "george", "1234qwerT", georgeContact, 3600, 3600));
         Thread.sleep(3000);
