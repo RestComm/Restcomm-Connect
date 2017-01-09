@@ -61,12 +61,12 @@ public final class TranscriptionListConverter extends AbstractConverter implemen
     }
 
     @Override
-    public JsonObject serialize(TranscriptionList cdrList, Type type, JsonSerializationContext context) {
+    public JsonObject serialize(TranscriptionList transList, Type type, JsonSerializationContext context) {
 
         JsonObject result = new JsonObject();
 
         JsonArray array = new JsonArray();
-        for (Transcription cdr : cdrList.getTranscriptions()) {
+        for (Transcription cdr : transList.getTranscriptions()) {
             array.add(context.serialize(cdr));
         }
 
@@ -76,15 +76,15 @@ public final class TranscriptionListConverter extends AbstractConverter implemen
             result.addProperty("page_size", pageSize);
             result.addProperty("total", total);
             result.addProperty("start", getFirstIndex());
-            result.addProperty("end", getLastIndex(cdrList));
+            result.addProperty("end", getLastIndex(transList));
             result.addProperty("uri", pathUri);
             result.addProperty("first_page_uri", getFirstPageUri());
             result.addProperty("previous_page_uri", getPreviousPageUri());
-            result.addProperty("next_page_uri", getNextPageUri(cdrList));
+            result.addProperty("next_page_uri", getNextPageUri(transList));
             result.addProperty("last_page_uri", getLastPageUri());
         }
 
-        result.add("messages", array);
+        result.add("transcriptions", array);
 
         return result;
     }

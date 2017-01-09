@@ -63,12 +63,12 @@ public final class SmsMessageListConverter extends AbstractConverter implements 
     }
 
     @Override
-    public JsonObject serialize(SmsMessageList cdrList, Type type, JsonSerializationContext context) {
+    public JsonObject serialize(SmsMessageList smsList, Type type, JsonSerializationContext context) {
 
         JsonObject result = new JsonObject();
 
         JsonArray array = new JsonArray();
-        for (SmsMessage cdr : cdrList.getSmsMessages()) {
+        for (SmsMessage cdr : smsList.getSmsMessages()) {
             array.add(context.serialize(cdr));
         }
 
@@ -78,11 +78,11 @@ public final class SmsMessageListConverter extends AbstractConverter implements 
             result.addProperty("page_size", pageSize);
             result.addProperty("total", total);
             result.addProperty("start", getFirstIndex());
-            result.addProperty("end", getLastIndex(cdrList));
+            result.addProperty("end", getLastIndex(smsList));
             result.addProperty("uri", pathUri);
             result.addProperty("first_page_uri", getFirstPageUri());
             result.addProperty("previous_page_uri", getPreviousPageUri());
-            result.addProperty("next_page_uri", getNextPageUri(cdrList));
+            result.addProperty("next_page_uri", getNextPageUri(smsList));
             result.addProperty("last_page_uri", getLastPageUri());
         }
 
