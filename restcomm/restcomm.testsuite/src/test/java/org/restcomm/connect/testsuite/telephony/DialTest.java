@@ -88,7 +88,7 @@ public class DialTest {
     private Deployer deployer;
 
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8050
+    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
@@ -130,25 +130,25 @@ public class DialTest {
     private SipPhone fotiniPhone;
     private String fotiniContact = "sip:fotini@127.0.0.1";
 
-    private String dialConf = "sip:+12223334451@127.0.0.1:5050";
-    private String dialFork = "sip:+12223334452@127.0.0.1:5050";
-    private String dialForkWithStatusCallback = "sip:7779@127.0.0.1:5050";
-    private String dialFork_with_RCML = "sip:+12223334462@127.0.0.1:5050";
-    private String dialURI = "sip:+12223334454@127.0.0.1:5050";
-    private String dialClient = "sip:+12223334455@127.0.0.1:5050";
-    private String dialClientWithScreeningUrl = "sip:+12223337777@127.0.0.1:5050";
-    private String dialClientWithScreeningRelativeUrl = "sip:+12223337788@127.0.0.1:5050";
-    private String dialClientWithRecord = "sip:+12223334499@127.0.0.1:5050";
-    private String dialNumber = "sip:+12223334456@127.0.0.1:5050";
-    private String notFoundDialNumber = "sip:+12223334457@127.0.0.1:5050";
-    private String dialSip = "sip:+12223334458@127.0.0.1:5050";
-    private String dialSipSecurity = "sip:+12223334459@127.0.0.1:5050";
-    private String dialSipTagScreening = "sip:+12223334460@127.0.0.1:5050";
-    private String dialSipDialTagScreening = "sip:+12223334461@127.0.0.1:5050";
-    private String dialDIDGreaterThan15Digits = "sip:+12345678912345678912@127.0.0.1:5050";
-    private String dialClientWithRecordWithStatusCallback = "sip:7777@127.0.0.1:5050";
-    private String dialForCustomHeaders = "sip:7778@127.0.0.1:5050";
-    private String recordWithRCMLFromRecordAction = "sip:+12223334448@127.0.0.1:5050";
+    private String dialConf = "sip:+12223334451@127.0.0.1:5060";
+    private String dialFork = "sip:+12223334452@127.0.0.1:5060";
+    private String dialForkWithStatusCallback = "sip:7779@127.0.0.1:5060";
+    private String dialFork_with_RCML = "sip:+12223334462@127.0.0.1:5060";
+    private String dialURI = "sip:+12223334454@127.0.0.1:5060";
+    private String dialClient = "sip:+12223334455@127.0.0.1:5060";
+    private String dialClientWithScreeningUrl = "sip:+12223337777@127.0.0.1:5060";
+    private String dialClientWithScreeningRelativeUrl = "sip:+12223337788@127.0.0.1:5060";
+    private String dialClientWithRecord = "sip:+12223334499@127.0.0.1:5060";
+    private String dialNumber = "sip:+12223334456@127.0.0.1:5060";
+    private String notFoundDialNumber = "sip:+12223334457@127.0.0.1:5060";
+    private String dialSip = "sip:+12223334458@127.0.0.1:5060";
+    private String dialSipSecurity = "sip:+12223334459@127.0.0.1:5060";
+    private String dialSipTagScreening = "sip:+12223334460@127.0.0.1:5060";
+    private String dialSipDialTagScreening = "sip:+12223334461@127.0.0.1:5060";
+    private String dialDIDGreaterThan15Digits = "sip:+12345678912345678912@127.0.0.1:5060";
+    private String dialClientWithRecordWithStatusCallback = "sip:7777@127.0.0.1:5060";
+    private String dialForCustomHeaders = "sip:7778@127.0.0.1:5060";
+    private String recordWithRCMLFromRecordAction = "sip:+12223334448@127.0.0.1:5060";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -162,23 +162,23 @@ public class DialTest {
 
     @Before
     public void before() throws Exception {
-        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5050");
-        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, bobContact);
+        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5060");
+        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, bobContact);
 
-        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5050");
-        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, aliceContact);
+        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5060");
+        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, aliceContact);
 
-        aliceTcpSipStack = tool6.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5093", "127.0.0.1:5050");
-        aliceTcpPhone = aliceTcpSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5050, aliceTcpContact);
+        aliceTcpSipStack = tool6.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5093", "127.0.0.1:5060");
+        aliceTcpPhone = aliceTcpSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5060, aliceTcpContact);
 
-        henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5050");
-        henriquePhone = henriqueSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, henriqueContact);
+        henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5060");
+        henriquePhone = henriqueSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, henriqueContact);
 
-        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5050");
-        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, georgeContact);
+        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5060");
+        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, georgeContact);
 
-        fotiniSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5060", "127.0.0.1:5050");
-        fotiniPhone = fotiniSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, fotiniContact);
+        fotiniSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5060", "127.0.0.1:5060");
+        fotiniPhone = fotiniSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, fotiniContact);
     }
 
     @After
@@ -364,7 +364,7 @@ public class DialTest {
         deployer.deploy("DialTest");
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -393,7 +393,7 @@ public class DialTest {
         deployer.deploy("DialTest");
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -448,14 +448,14 @@ public class DialTest {
         int initialCdrSize = 0;
 
         //Check CDR
-        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8050/restcomm", adminAccountSid, adminAuthToken);
+        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
         if (cdrs != null) {
             initialCdrSize = cdrs.get("calls").getAsJsonArray().size();
         }
 
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -507,7 +507,7 @@ public class DialTest {
         Thread.sleep(3000);
 
         //Check CDR
-        cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8050/restcomm", adminAccountSid, adminAuthToken);
+        cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
         assertNotNull(cdrs);
         JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
         System.out.println("cdrsArray.size(): "+cdrsArray.size());
@@ -521,13 +521,13 @@ public class DialTest {
         int initialCdrSize = 0;
 
         //Check CDR
-        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8050/restcomm", adminAccountSid, adminAuthToken);
+        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
         if (cdrs != null) {
             initialCdrSize = cdrs.get("calls").getAsJsonArray().size();
         }
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -577,7 +577,7 @@ public class DialTest {
         Thread.sleep(6000);
 
         //Check CDR
-        cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8050/restcomm", adminAccountSid, adminAuthToken);
+        cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
         assertNotNull(cdrs);
         JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
         if (((JsonObject)cdrsArray.get(initialCdrSize)).get("direction").getAsString().equalsIgnoreCase("inbound")) {
@@ -599,7 +599,7 @@ public class DialTest {
         deployer.deploy("DialTest");
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -659,7 +659,7 @@ public class DialTest {
         deployer.deploy("DialTest");
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -711,7 +711,7 @@ public class DialTest {
         deployer.deploy("DialTest");
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -764,7 +764,7 @@ public class DialTest {
         aliceTcpPhone.setLoopback(true);
 
         // Phone2 register as alice
-        SipURI uri = aliceTcpSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceTcpSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
         assertTrue(aliceTcpPhone.register(uri, "alice", "1234", aliceTcpContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -822,7 +822,7 @@ public class DialTest {
         deployer.deploy("DialTest");
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -874,7 +874,7 @@ public class DialTest {
         deployer.deploy("DialTest");
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -928,7 +928,7 @@ public class DialTest {
 
         Thread.sleep(5000);
 
-        final String deploymentUrl = "http://127.0.0.1:8050/restcomm/";
+        final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
         assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(0)).get("duration").getAsString()));
@@ -945,7 +945,7 @@ public class DialTest {
                         .withStatus(200)));
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -999,7 +999,7 @@ public class DialTest {
 
         Thread.sleep(5000);
 
-        final String deploymentUrl = "http://127.0.0.1:8050/restcomm/";
+        final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
         assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(0)).get("duration").getAsString()));
@@ -1035,7 +1035,7 @@ public class DialTest {
                         .withStatus(200)));
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -1089,7 +1089,7 @@ public class DialTest {
 
         Thread.sleep(5000);
 
-        final String deploymentUrl = "http://127.0.0.1:8050/restcomm/";
+        final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
         assertTrue(recordings.size() == 1);
@@ -1268,7 +1268,7 @@ public class DialTest {
                 null, null));
         // the number dialed uses a callerId of "+13055872294", which is what George should receive
         String contactHeader = georgeCall.getLastReceivedRequest().getMessage().getHeader("Contact").toString().replaceAll("\r\n","");
-        assertTrue(contactHeader.equalsIgnoreCase("Contact: \"+13055872294\" <sip:+13055872294@127.0.0.1:5050>"));
+        assertTrue(contactHeader.equalsIgnoreCase("Contact: \"+13055872294\" <sip:+13055872294@127.0.0.1:5060>"));
         assertTrue(georgeCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
@@ -1289,7 +1289,7 @@ public class DialTest {
     public synchronized void testDialNumberGeorge_403Forbidden() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
 
-//        SipURI uri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+//        SipURI uri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
 //        assertTrue(bobPhone.register(uri, "bob", "1234", bobContact, 3600, 3600));
 //        
 //        Credential c = new Credential("127.0.0.1", "bob", "1234");
@@ -1375,7 +1375,7 @@ public class DialTest {
         Thread.sleep(1000);
     }
 
-    final String dialNumberNoCallerId = "<Response><Dial><Number url=\"http://127.0.0.1:8050/restcomm/hello-play.xml\">131313</Number></Dial></Response>";
+    final String dialNumberNoCallerId = "<Response><Dial><Number url=\"http://127.0.0.1:8080/restcomm/hello-play.xml\">131313</Number></Dial></Response>";
 //Test for Issue 210: https://telestax.atlassian.net/browse/RESTCOMM-210
 //Bob callerId should pass to the call created by Dial Number
 @Test @Ignore
@@ -1395,7 +1395,7 @@ public synchronized void testDialNumberGeorgePassInitialCallerId() throws Interr
 
     // Create outgoing call with first phone
     final SipCall bobCall = bobPhone.createSipCall();
-    bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5050", null, body, "application", "sdp", null, null);
+    bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5060", null, body, "application", "sdp", null, null);
     assertLastOperationSuccess(bobCall);
     assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
     final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -1439,7 +1439,7 @@ public synchronized void testDialFork() throws InterruptedException, ParseExcept
     deployer.deploy("DialTest");
 
     // Register Alice
-    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
     assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
     // Prepare Alice to receive call
@@ -1530,7 +1530,7 @@ public synchronized void testDialForkWithStatusCallback() throws InterruptedExce
                     .withStatus(200)));
 
     // Register Alice
-    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
     assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
     // Prepare Alice to receive call
@@ -1638,7 +1638,7 @@ public synchronized void testDialForkNoAnswerButFromHenrique() throws Interrupte
     deployer.deploy("DialTest");
 
     // Register Alice
-    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
     assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
     // Prepare Alice to receive call
@@ -1724,7 +1724,7 @@ public synchronized void testDialForkNoAnswerButFromGeorgePSTN() throws Interrup
     deployer.deploy("DialTest");
 
     // Register Alice
-    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
     assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
     // Prepare Alice to receive call
@@ -1813,7 +1813,7 @@ public synchronized void testDialForkNoAnswerButFromAliceClient() throws Interru
     deployer.deploy("DialTest");
 
     // Register Alice
-    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
     assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
     // Prepare Alice to receive call
@@ -1900,7 +1900,7 @@ public synchronized void testDialForkNoAnswerMoveToTheNextVerbAndCallFotini() th
     deployer.deploy("DialTest");
 
     // Register Alice
-    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
     assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
     // Prepare Alice to receive call
@@ -1993,7 +1993,7 @@ public synchronized void testDialForkNoAnswerMoveToTheNextVerbAndCallFotini() th
 } 
 
 //    @Rule
-//    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8050
+//    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
 private String rcmlToReturn = "<Dial timeout=\"50\"><Uri>sip:fotini@127.0.0.1:5060</Uri></Dial>";
 //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
 @Test @Ignore
@@ -2007,7 +2007,7 @@ public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURL()
                     .withBody(rcmlToReturn)));
 
     // Register Alice
-    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
     assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
     // Prepare Alice to receive call
@@ -2214,7 +2214,7 @@ public synchronized void testDialSip() throws InterruptedException, ParseExcepti
     deployer.deploy("DialTest");
 
     // Phone2 register as alice
-    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
     assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
     // Prepare second phone to receive call
@@ -2278,7 +2278,7 @@ public synchronized void testDialSipAuth() throws InterruptedException, ParseExc
     deployer.deploy("DialTest");
 
     // Phone2 register as alice
-    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
     assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
     // Prepare second phone to receive call
@@ -2366,7 +2366,7 @@ public synchronized void testDialSipTagScreening() throws InterruptedException, 
     deployer.deploy("DialTest");
 
     // Phone2 register as alice
-    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
     assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
     // Prepare second phone to receive call
@@ -2433,7 +2433,7 @@ public synchronized void testDialSipDialTagScreening() throws InterruptedExcepti
     deployer.deploy("DialTest");
 
     // Phone2 register as alice
-    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
     assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
     // Prepare second phone to receive call
@@ -2499,7 +2499,7 @@ public synchronized void testDialSipDialTagScreening180Decline() throws Interrup
     deployer.deploy("DialTest");
 
     // Phone2 register as alice
-    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+    SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
     assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
     // Prepare second phone to receive call

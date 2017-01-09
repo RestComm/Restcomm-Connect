@@ -192,6 +192,7 @@ public final class Call extends UntypedActor {
     private boolean receivedBye;
     private boolean muted;
     private boolean webrtc;
+    private boolean initialInviteOkSent;
 
     // Conferencing
     private ActorRef conference;
@@ -1410,7 +1411,7 @@ public final class Call extends UntypedActor {
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
-        if (is(inProgress)) {
+        if (is(inProgress) || is(waitingForAnswer)) {
             // Forward to media server controller
             this.msController.tell(message, sender);
         }
@@ -2209,21 +2210,27 @@ public final class Call extends UntypedActor {
     }
 
     private void sendInviteOk() throws Exception{
-        final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
-        final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
-        String answer = null;
-        if (mediaSessionInfo.usesNat()) {
-            final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
-            answer = SdpUtils.patch("application/sdp", sdp, externalIp);
-        } else {
-            answer = mediaSessionInfo.getLocalSdp().toString();
+        if (logger.isInfoEnabled()) {
+            logger.info("sending initial invite ok,  initialInviteOkSent:"+ initialInviteOkSent);
         }
-        // Issue #215:
-        // https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
-        answer = SdpUtils.endWithNewLine(answer);
-        okay.setContent(answer, "application/sdp");
-        addCustomHeaders(okay);
-        okay.send();
+        if(!initialInviteOkSent){
+            final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
+            final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
+            String answer = null;
+            if (mediaSessionInfo.usesNat()) {
+                final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
+                answer = SdpUtils.patch("application/sdp", sdp, externalIp);
+            } else {
+                answer = mediaSessionInfo.getLocalSdp().toString();
+            }
+            // Issue #215:
+            // https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
+            answer = SdpUtils.endWithNewLine(answer);
+            okay.setContent(answer, "application/sdp");
+            addCustomHeaders(okay);
+            okay.send();
+            initialInviteOkSent = true;
+        }
     }
 
     @Override
