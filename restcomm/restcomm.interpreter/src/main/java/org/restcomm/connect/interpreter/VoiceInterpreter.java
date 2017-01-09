@@ -1241,7 +1241,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         if (outboundCall != null && outboundCall.equals(sender)) {
             outboundCall = null;
         }
-        dialBranches.remove(sender);
+        if (dialBranches != null && dialBranches.contains(sender))
+            dialBranches.remove(sender);
     }
 
     private void checkDialBranch(Object message, ActorRef sender, Attribute attribute) {
@@ -1316,6 +1317,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     private void onGetRelatedCall(GetRelatedCall message, ActorRef self, ActorRef sender) {
         final ActorRef callActor = message.call();
+        if (is(forking)) {
+            sender.tell(dialBranches, self);
+            return;
+        }
         if (outboundCall != null) {
             if (callActor.equals(outboundCall)) {
                 sender.tell(call, self);
