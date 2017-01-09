@@ -67,7 +67,7 @@ You need to configure Restcomm to send SMS messages and DID phone calls to a Ser
 Note the encoding used *%2B13216549878* instead of the **+13216549878**  The *+* sign is encoded to to send SMS from the command line. "**From**" DID number The "**From**" number should be the DID SMS enabled number from VoIP Innovations. From the bash terminal, you can run the command below:
 
 ....
-curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B13216549878" -d "From=%2B19876543212" -d "Body=This is a test from RestComm"
+curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B13216549878" -d "From=%2B19876543212" -d "Body=This is a test from RestComm"
 ....
 
 == Get list of SMS Messages
@@ -77,7 +77,7 @@ This will display list of message sent
 From the bash terminal, you can run the command below:
 
 ....
-curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages  
+curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages  
 ....
 
 [[example-post-response---xml-and-json]]
@@ -86,7 +86,7 @@ curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 === XML POST Response
 
 ----
-curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:myPWD@my_IP/restcomm/2012-04-24/Accounts/ACae6e0f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B1321654879" -d "From=%2B1654123987" -d "Body=This is a test from RestComm"
+curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e0f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B1321654879" -d "From=%2B1654123987" -d "Body=This is a test from RestComm"
 ---- 
 
 
@@ -113,25 +113,25 @@ curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:myPWD@my_IP/restcomm/201
 === JSON POST Response
 
 ----
-curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:myPWD@my_IP/restcomm/2012-04-20f425248d6a26948c17a9e2acf/SMS/Messages.json -d "To=%2B1321654879" -d "From=%2B1654123987" -d "Body=This is a test from RestComm"
+curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-20f425248d6a26948c17a9e2acf/SMS/Messages.json -d "To=%2B1321654879" -d "From=%2B1654123987" -d "Body=This is a test from RestComm"
 ----
 
 
 ----
 {
   "sid": "SM5dd70f7ea54e47f1a49749debeec3f7f",
-  "date_created": "Thu, 19 Nov 2015 07:21:35 -0500",
-  "date_updated": "Thu, 19 Nov 2015 07:21:35 -0500",
-  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
-  "from": "+1654123987",
-  "to": "+1321654879",
-  "body": "This is a test from RestComm",
-  "status": "sending",
-  "direction": "outbound-api",
-  "price": "0",
-  "price_unit": "USD",
-  "api_version": "2012-04-24",
-  "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages/SM5dd70f7ea54e47f1a49749debeec3f7f.json"
+  "date_created":"Thu, 19 Nov 2015 07:21:35 -0500",
+  "date_updated":"Thu, 19 Nov 2015 07:21:35 -0500",
+  "account_sid":"ACae6e420f425248d6a26948c17a9e2acf",
+  "from":"+1654123987",
+  "to":"+1321654879",
+  "body":"This is a test from RestComm",
+  "status":"sending",
+  "direction":"outbound-api",
+  "price":"0",
+  "price_unit":"USD",
+  "api_version":"2012-04-24",
+  "uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages/SM5dd70f7ea54e47f1a49749debeec3f7f.json"
 ----
 
 [[example-get-response]]
@@ -140,44 +140,31 @@ curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:myPWD@my_IP/restcomm/201
 === JSON GET Response
 
 ----
-curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:my_PWD@my_IP/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json 
+curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json 
 ----
 
 
 ----
-[
-  {
-    "sid": "SM55ce5cf07b9649c283cbacab4dae56a9",
-    "date_created": "Thu, 19 Nov 2015 07:21:24 -0500",
-    "date_updated": "Thu, 19 Nov 2015 07:21:24 -0500",
-    "date_sent": "2015-11-19T07:21:24.000-05:00",
-    "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
-    "from": "+19876543212",
-    "to": "+13216549878",
-    "body": "This is a test from RestComm",
-    "status": "sent",
-    "direction": "outbound-api",
-    "price": "0",
-    "price_unit": "USD",
-    "api_version": "2012-04-24",
-    "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages/SM55ce5cf07b9649c283cbacab4dae56a9.json"
-  },
-  {
-    "sid": "SM5dd70f7ea54e47f1a49749debeec3f7f",
-    "date_created": "Thu, 19 Nov 2015 07:21:35 -0500",
-    "date_updated": "Thu, 19 Nov 2015 07:21:35 -0500",
-    "date_sent": "2015-11-19T07:21:35.000-05:00",
-    "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
-    "from": "+19876543212",
-    "to": "+13216549878",
-    "body": "This is a test from RestComm",
-    "status": "sent",
-    "direction": "outbound-api",
-    "price": "0",
-    "price_unit": "USD",
-    "api_version": "2012-04-24",
-    "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages/SM5dd70f7ea54e47f1a49749debeec3f7f.json"
-  }
+[   {"page":0,"num_pages":0,"page_size":50,"total":34,"start":"0","end":"34","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?Page=0&PageSize=50","previous_page_uri":"null","next_page_uri":"null","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?Page=0&PageSize=50","messages":
+    [
+      {
+        "sid":"SM55ce5cf07b9649c283cbacab4dae56a9",
+        "date_created":"Thu, 19 Nov 2015 07:21:24 -0500",
+        "date_updated":"Thu, 19 Nov 2015 07:21:24 -0500",
+        "date_sent":"2015-11-19T07:21:24.000-05:00",
+        "account_sid":"ACae6e420f425248d6a26948c17a9e2acf",
+        "from":"+19876543212",
+        "to":"+13216549878",
+        "body":"This is a test from RestComm",
+        "status":"sent",
+        "direction":"outbound-api",
+        "price":"0",
+        "price_unit":"USD",
+        "api_version":"2012-04-24",
+        "uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages/SM55ce5cf07b9649c283cbacab4dae56a9.json"
+      },
+      ...
+    ]
 ]
 ----
 
@@ -185,25 +172,151 @@ curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:my_PWD@my_IP/restcomm/201
 == Get Response Using SMS SID
 
 ----
-curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:my_PWD@my_IP/restcomm/2012-04-24/Accounts/ACae6e42f425248d6a26948c17a9e2acf/SMS/Messages/SM55ce5cf07b9649c283cbacab4dae56a9.json 
+curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e42f425248d6a26948c17a9e2acf/SMS/Messages/SM55ce5cf07b9649c283cbacab4dae56a9.json 
 ----
 
 
 ----
 {
-  "sid": "SM55ce5cf07b9649c283cbacab4dae56a9",
-  "date_created": "Thu, 19 Nov 2015 07:21:24 -0500",
-  "date_updated": "Thu, 19 Nov 2015 07:21:24 -0500",
-  "date_sent": "2015-11-19T07:21:24.000-05:00",
-  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
-  "from": "+19876543212",
-  "to": "+13216549878",
-  "body": "This is a test from RestComm",
-  "status": "sent",
-  "direction": "outbound-api",
-  "price": "0",
-  "price_unit": "USD",
-  "api_version": "2012-04-24",
-  "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages/SM55ce5cf07b9649c283cbacab4dae56a9.json"
+  "sid":"SM55ce5cf07b9649c283cbacab4dae56a9",
+  "date_created":"Thu, 19 Nov 2015 07:21:24 -0500",
+  "date_updated":"Thu, 19 Nov 2015 07:21:24 -0500",
+  "date_sent":"2015-11-19T07:21:24.000-05:00",
+  "account_sid":"ACae6e420f425248d6a26948c17a9e2acf",
+  "from":"+19876543212",
+  "to":"+13216549878",
+  "body":"This is a test from RestComm",
+  "status":"sent",
+  "direction":"outbound-api",
+  "price":"0",
+  "price_unit":"USD",
+  "api_version":"2012-04-24",
+  "uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages/SM55ce5cf07b9649c283cbacab4dae56a9.json"
 }
 ----
+ 
+
+== List Filter
+
+**HTTP GET**. The following GET query string parameters allow you to limit the list returned. Note, parameters are case-sensitive:
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|===========================================================================================================================================================================================================================================================================
+|Parameter |Description
+|To |Only show messages to this phone number or Client identifier.
+|From |Only show messages from this phone number or Client identifier.
+|StartTime |Only show messages that started on this date, given as YYYY-MM-DD. Also supports inequalities, such as StartTime=YYYY-MM-DD for messages that started at or before midnight on a date, and StartTime=YYYY-MM-DD for messages that started at or after midnight on a date.
+|EndTime |Only show messages that ended on this date, given as YYYY-MM-DD. Also supports inequalities, such as StartTime=YYYY-MM-DD for messages that started at or before midnight on a date, and StartTime=YYYY-MM-DD for messages that started at or after midnight on a date.
+|Body |Only show messages that contain this body.
+|===========================================================================================================================================================================================================================================================================
+
+ 
+
+=== Filter using the From parameter.
+
+The example below will only return Messages made from client Alice
+
+....
+ curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?From=alice
+....
+
+The result will be similar to the one below
+
+[source,lang:xml,decode:true]
+----
+[
+{"page":0,"num_pages":0,"page_size":50,"total":1,"start":"0","end":"1","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?Page=0&PageSize=50","previous_page_uri":"null","next_page_uri":"null","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?Page=0&PageSize=50","messages":
+    [
+      {
+        "sid":"SM55ce5cf07b9649c283cbacab4dae56a9",
+        "date_created":"Thu, 19 Nov 2015 07:21:24 -0500",
+        "date_updated":"Thu, 19 Nov 2015 07:21:24 -0500",
+        "date_sent":"2015-11-19T07:21:24.000-05:00",
+        "account_sid":"ACae6e420f425248d6a26948c17a9e2acf",
+        "from":"alice",
+        "to":"+13216549878",
+        "body":"This is a test from RestComm",
+        "status":"sent",
+        "direction":"outbound-api",
+        "price":"0",
+        "price_unit":"USD",
+        "api_version":"2012-04-24",
+        "uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages/SM55ce5cf07b9649c283cbacab4dae56a9.json"
+      }
+    ]
+]
+----
+
+== Paging Information
+
+*HTTP GET.* The following GET query string parameters allow you to limit the list returned. Note, parameters are case-sensitive:
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|=======================================================================
+|PParameter |Description
+|Page |The current page number. Zero-indexed, so the first page is 0.
+|NumPages |The total number of pages.
+|PageSize |How many items are in each page
+|Total |The total number of items in the list.
+|Start |The position in the overall list of the first item in this page.
+|End |The position in the overall list of the last item in this page.
+|=======================================================================
+
+ 
+
+=== Example. 
+
+The command below will return a single item from the list of messages using the PageSize parameter
+
+....
+curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?PageSize=1
+....
+
+The result of the *PageSize* parameter
+
+[source,lang:xml,decode:true]
+----
+[
+{"page":0,"num_pages":34,"page_size":1,"total":34,"start":"0","end":"0","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?Page=0&PageSize=1","previous_page_uri":"null","next_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?Page=1&PageSize=1&AfterSid=SM00ae962506694a61a4e29d776918a747","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?Page=34&PageSize=1","messages":
+    [
+        {
+            "sid":"SM00ae962506694a61a4e29d776918a747",
+            "date_created":"Fri, 5 Jul 2013 21:32:40 +0900",
+            "date_updated":"Fri, 5 Jul 2013 21:32:40 +0900",
+            "account_sid":"ACae6e420f425248d6a26948c17a9e2acf",
+            "from":"19549376176",
+            "to":"+13213557674",
+            "body":"Hello",
+            "status":"received",
+            "direction":"inbound",
+            "price":"0.00",
+            "price_unit":"USD",
+            "api_version":"2012-04-24",
+            "uri":"/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages/SM00ae962506694a61a4e29d776918a747.json"
+        }
+    ]
+}
+]
+----
+
+ 
+
+== Additional Paging Information.
+
+The API returns URIs to the next, previous, first and last pages of the returned list as shown in the table below:
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|============================================================
+|Parameter |Description
+|Uri |The URI of the current page.
+|Firstpageuri |The URI for the first page of this list.
+|Nextpageuri |The URI for the next page of this list.
+|Previouspageuri |The URI for the previous page of this list.
+|Lastpageuri |The URI for the last page of this list.
+|============================================================
