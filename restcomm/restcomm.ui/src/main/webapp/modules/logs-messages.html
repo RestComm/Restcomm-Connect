@@ -1,69 +1,80 @@
-<rc-logs-pills></rc-logs-pills>
+<!--<rc-logs-pills></rc-logs-pills>-->
 
-<rc-page-title icon="file-text-o" title="LOGS" sub-title="MESSAGES"></rc-page-title>
+<!--<rc-page-title icon="file-text-o" title="LOGS" sub-title="MESSAGES"></rc-page-title>-->
 
-<div class="row">
-    <div class="col-md-12">
-        <div ng-show="messagesLogsList.length > 0 || search" class="pull-left record-filter-div">
-            <form class="form-inline" role="form">
-                <div class="form-group col-md-2">
-                    <div class="input-group">
-                        <span class="input-group-addon">From</span>
-                        <input type="text" class="input-sm form-control" placeholder="From" ng-model="search.from" />
-                    </div>
-                </div>
-                <div class="form-group col-md-2">
-                    <div class="input-group">
-                        <span class="input-group-addon">To</span>
-                        <input type="text" class="input-sm form-control" placeholder="To" ng-model="search.to" />
-                    </div>
-                </div>
-                <div class="form-group col-md-2 date-group-sm">
-                    <div class="input-group">
-                        <span class="input-group-addon">Date</span>
-                        <input id="startpicker" pick-a-date="date" class="input-sm form-control" placeholder="Start Date" ng-model="search.start_time" />
+<div class="row secondary-tabs">
+    <div class="col-md-10 col-md-offset-1">
+        <a href="#/logs/calls">Calls</a>
+        <a href="#/logs/messages" class="active">Messages</a>
+        <a href="#/logs/recordings">Recordings</a>
+        <a href="#/logs/transcriptions">Transcriptions</a>
+        <a href="#/logs/notifications">Notifications</a>
+    </div>
+</div>
+
+<div class="row logs-search-container" ng-show="messagesLogsList.length > 0">
+    <div class="row">
+        <div class="col-md-4 logs-search-title">Peers</div>
+        <div class="col-md-4 logs-search-title">Dates</div>
+        <div class="col-md-2 logs-search-title">Message Body</div>
+    </div>
+    <div class="row">
+        <form>
+            <div class="col-md-2">
+                <input type="text" class="logs-search-input" placeholder="From" ng-model="search.from" />
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="logs-search-input" placeholder="To" ng-model="search.to" />
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="logs-search-input" placeholder="Start date" ng-model="search.start_time" />
+                <!--
+                                        <input id="startpicker" pick-a-date="date" class="input-sm form-control" placeholder="Start Date" ng-model="search.start_time" />
                         <span class="input-group-btn">
                             <button  type="button" id="startDate" class="btn btn-default input-sm" ng-click="openDate('startDate')"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
-                    </div>
-                </div>
-                <div class="form-group col-md-2 date-group-sm">
-                    <div class="input-group">
-                        <span class="input-group-addon">To</span>
-                        <input id="endpicker" pick-a-date="date" pick-a-date-options="options"  class="input-sm form-control" placeholder="End Date" ng-model="search.end_time" />
+                -->
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="logs-search-input" placeholder="End date" ng-model="search.end_time" />
+                <!--
+                                       <input id="endpicker" pick-a-date="date" pick-a-date-options="options"  class="input-sm form-control" placeholder="End Date" ng-model="search.end_time" />
                         <span class="input-group-btn">
                             <button  type="button" id="endDate" class="btn btn-default input-sm" ng-click="openDate('endDate')"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
-                    </div>
-                </div>
-                <div class="form-group col-md-2">
-                    <div class="input-group">
-                        <span class="input-group-addon">Body</span>
-                        <input type="text" class="input-sm form-control" placeholder="Message Body" ng-model="search.body" />
-                    </div>
-                </div>
-                <button class="btn btn-default btn-sm" ng-click="getMessagesList()"><i class="fa fa-search"></i></button>
-            </form>
-        </div>
+                -->
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="logs-search-input" placeholder="Message Body" ng-model="search.body" />
+            </div>
+            <div class="col-md-2">
+                <button class="logs-search-button" type="submit" ng-click="getMessagesList()"></button>
+            </div>
+        </form>
+    </div>
+</div>
 
-        <div ng-hide="(messagesLogsList | filter:query).length > 0" class="jumbotron no-records-alert">
-            <h2><i class="fa fa-exclamation-circle"></i> No message records <span ng-show="messagesLogsList.length == 0"></span> <span ng-show="messagesLogsList.length > 0">matching query</span>. <small>Text your friends!</small></h2>
-        </div>
+<p>&nbsp;</p>
 
-        <table ng-show="(messagesLogsList | filter:query).length > 0" class="table table-striped table-hover" ng-cloak>
-            <thead>
-            <th class="width-20pc" style="border-bottom: 3px solid #428bca;text-align: center;">DATE<span class="pull-right"><button style="border-style: solid; border-color: #DCDCDC; border-width: 0px; background-color: #fff;" ng-click="sortBy('date_created');toggleD=!toggleD;reverse=toggleD"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></button></span></th>
+<div ng-hide="(messagesLogsList | filter:query).length > 0" class="jumbotron no-records-alert">
+    <h2><i class="fa fa-exclamation-circle"></i> No message records <span ng-show="messagesLogsList.length == 0"></span> <span ng-show="messagesLogsList.length > 0">matching query</span>. <small>Text your friends!</small></h2>
+</div>
+
+<div class="row">
+    <table ng-show="(messagesLogsList | filter:query).length > 0" class="table table-hover" ng-cloak>
+        <thead class="logs-table-header">
+            <th class="width-20pc" ng-click="sortBy('date_created');toggleD=!toggleD;reverse=toggleD">Date<span class="pull-right" ng-show="predicate === 'date_created'"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></span></th>
             <!--th class="width-20pc">DATE <button ng-click="toggle=!toggle"><span  ng-class="{'glyphicon glyphicon-arrow-up':toggle,'glyphicon glyphicon-arrow-down':!toggle}" ></span></button></th-->
-            <th class="width-10pc" style="border-bottom: 3px solid #428bca;text-align: center;" >DIRECTION</th>
-            <th class="width-15pc" style="border-bottom: 3px solid #428bca;text-align: center;">FROM</th>
-            <th class="width-15pc" style="border-bottom: 3px solid #428bca;text-align: center;">TO</th>
-            <th class="width-10pc" style="border-bottom: 3px solid #428bca;text-align: center;">STATUS</th>
-            <th class="width-20pc" style="border-bottom: 3px solid #428bca;text-align: center;">BODY</th>
-            <th class="width-10pc" style="border-bottom: 3px solid #428bca;text-align: center;">COST</th>
+            <th class="width-10pc">Direction</th>
+            <th class="width-15pc">From</th>
+            <th class="width-15pc">To</th>
+            <th class="width-10pc">Status</th>
+            <th class="width-20pc">Body</th>
+            <th class="width-10pc">Cost</th>
             <!--<th class="width-15pc">&nbsp;</th>-->
-            </thead>
-            <tbody>
-            <tr ng-repeat="message in filtered = (messagesLogsList | filter:query | orderBy:sort:reverse)">
+        </thead>
+        <tbody>
+            <tr ng-repeat="message in filtered = (messagesLogsList | filter:query | orderBy:sort:reverse)" class="logs-table-row">
                 <td><a href="" ng-click="showMessageDetailsModal(message)">{{ message.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
                 <td><div class="text-center"><i ng-class="message.direction == 'inbound' ? 'fa fa-sign-in' : (message.direction == 'outbound-reply' ? 'fa fa-sign-out' : '')"></i><!-- {{ message.direction ? message.direction : '?' }} --></div></td>
                 <td><div class="text-center">{{ message.from ? message.from : '?' }}</div></td>
@@ -72,8 +83,8 @@
                 <td><div class="text-center" title="{{ message.body }}">{{ message.body ? (message.body.length > 15 ? (message.body | limitTo:12) + '...' : message.body) : '. . .' }}</div></td>
                 <td><div class="text-center">$ {{ message.price ? message.price : '0.00' }}</div></td>
             </tr>
-            </tbody>
-            <tfoot>
+        </tbody>
+        <tfoot>
             <td><small class="pull-left">{{ totalMessage }} Message{{ totalMessage == 1 ? "" : "s" }}</small></td>
             <td colspan=3>
                 <form class="form-inline text-center">
@@ -88,7 +99,6 @@
             <td colspan="99">
                 <uib-pagination class="pagination pagination-sm pull-right" total-items="totalMessage" items-per-page="entryLimit" ng-change="pageChanged()" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
             </td>
-            </tfoot>
-        </table>
-    </div>
+        </tfoot>
+    </table>
 </div>

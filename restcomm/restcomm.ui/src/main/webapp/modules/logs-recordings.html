@@ -1,76 +1,87 @@
-<rc-logs-pills></rc-logs-pills>
+<!--<rc-logs-pills></rc-logs-pills>-->
 
-<rc-page-title icon="file-text-o" title="LOGS" sub-title="RECORDINGS"></rc-page-title>
+<!--<rc-page-title icon="file-text-o" title="LOGS" sub-title="RECORDINGS"></rc-page-title>-->
 
-<div class="row">
-    <div class="col-md-12">
-        <div ng-show="recordingsLogsList.length > 0 || search" class="record-filter-div pull-right">
-            <form class="form-inline" role="form">
-                <div class="form-group col-md-2">
-                    <div class="input-group">
-                        <span class="input-group-addon">From</span>
-                        <input type="text" class="input-sm form-control" placeholder="From" ng-model="search.from" disabled />
-                    </div>
-                </div>
-                <div class="form-group col-md-2">
-                    <div class="input-group">
-                        <span class="input-group-addon">To</span>
-                        <input type="text" class="input-sm form-control" placeholder="To" ng-model="search.to" disabled />
-                    </div>
-                </div>
-                <div class="form-group col-md-2 date-group-sm">
-                    <div class="input-group">
-                        <span class="input-group-addon">Date</span>
-                        <input id="startpicker" pick-a-date="date" class="input-sm form-control" placeholder="Start Date" ng-model="search.start_time" />
+<div class="row secondary-tabs">
+    <div class="col-md-10 col-md-offset-1">
+        <a href="#/logs/calls">Calls</a>
+        <a href="#/logs/messages">Messages</a>
+        <a href="#/logs/recordings" class="active">Recordings</a>
+        <a href="#/logs/transcriptions">Transcriptions</a>
+        <a href="#/logs/notifications">Notifications</a>
+    </div>
+</div>
+
+<div class="row logs-search-container" ng-show="recordingsLogsList.length > 0">
+    <div class="row">
+        <div class="col-md-4 logs-search-title">Peers</div>
+        <div class="col-md-4 logs-search-title">Dates</div>
+        <div class="col-md-2 logs-search-title">Call SID</div>
+    </div>
+    <div class="row">
+        <form>
+            <div class="col-md-2">
+                <input type="text" class="logs-search-input" placeholder="From" ng-model="search.from" disabled />
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="logs-search-input" placeholder="To" ng-model="search.to" disabled />
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="logs-search-input" placeholder="Start date" ng-model="search.start_time" />
+                <!--
+                                        <input id="startpicker" pick-a-date="date" class="input-sm form-control" placeholder="Start Date" ng-model="search.start_time" />
                         <span class="input-group-btn">
                             <button  type="button" id="startDate" class="btn btn-default input-sm" ng-click="openDate('startDate')"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
-                    </div>
-                </div>
-                <div class="form-group col-md-2 date-group-sm">
-                    <div class="input-group">
-                        <span class="input-group-addon">To</span>
-                        <input id="endpicker" pick-a-date="date" pick-a-date-options="options"  class="input-sm form-control" placeholder="End Date" ng-model="search.end_time" />
+                -->
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="logs-search-input" placeholder="End date" ng-model="search.end_time" />
+                <!--
+                                        <input id="endpicker" pick-a-date="date" pick-a-date-options="options"  class="input-sm form-control" placeholder="End Date" ng-model="search.end_time" />
                         <span class="input-group-btn">
                             <button  type="button" id="endDate" class="btn btn-default input-sm" ng-click="openDate('endDate')"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
-                    </div>
-                </div>
-                <div class="form-group col-md-2">
-                    <div class="input-group">
-                        <span class="input-group-addon">Call</span>
-                        <input type="text" class="input-sm form-control" placeholder="Call SID" ng-model="search.call_sid" />
-                    </div>
-                </div>
-                <button class="btn btn-default btn-sm" ng-click="getRecordingsLogsList()"><i class="fa fa-search"></i></button>
-            </form>
-        </div>
+                -->
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="logs-search-input" placeholder="Call SID" ng-model="search.call_sid" />
+            </div>
+            <div class="col-md-2">
+                <button class="logs-search-button" type="submit" ng-click="getRecordingsLogsList()"></button>
+            </div>
+        </form>
+    </div>
+</div>
 
-        <div ng-hide="(recordingsLogsList | filter:query).length > 0" class="jumbotron no-records-alert">
-            <h2><i class="fa fa-exclamation-circle"></i> No recordings<span ng-show="recordingsLogsList.length == 0"></span><span ng-show="recordingsLogsList.length > 0"> matching query</span>. <small>Ask the NSA for some!</small></h2>
-        </div>
+<p>&nbsp;</p>
 
-        <table ng-show="(recordingsLogsList | filter:query).length > 0" class="table table-striped table-hover" ng-cloak>
-            <thead>
-            <th class="width-20pc" style="border-bottom: 3px solid #428bca;text-align: center;">DATE<span class="pull-right"><button style="border-style: solid; border-color: #DCDCDC; border-width: 0px; background-color: #fff;" ng-click="sortBy('date_created');toggleD=!toggleD;reverse=toggleD"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></button></span></th>
-            <th class="width-10pc" style="border-bottom: 3px solid #428bca;text-align: center;">FROM</th>
-            <th class="width-10pc" style="border-bottom: 3px solid #428bca;text-align: center;">TO</th>
-            <th class="width-15pc" style="border-bottom: 3px solid #428bca;text-align: center;">DURATION</th>
-            <th class="width-30pc" style="border-bottom: 3px solid #428bca;text-align: center;">CALL</th>
-            <th class="width-5pc"  style="border-bottom: 3px solid #428bca;text-align: center;">&nbsp;</th>
-            </thead>
-            <tbody>
+<div ng-hide="(recordingsLogsList | filter:query).length > 0" class="jumbotron no-records-alert">
+    <h2><i class="fa fa-exclamation-circle"></i> No recordings<span ng-show="recordingsLogsList.length == 0"></span><span ng-show="recordingsLogsList.length > 0"> matching query</span>. <small>Ask the NSA for some!</small></h2>
+</div>
+
+<div class="row">
+    <table ng-show="(recordingsLogsList | filter:query).length > 0" class="table table-striped table-hover" ng-cloak>
+        <thead class="logs-table-header">
+            <th class="width-20pc" ng-click="sortBy('date_created');toggleD=!toggleD;reverse=toggleD">Date<span class="pull-right" ng-show="predicate === 'date_created'"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></span></th>
+            <th class="width-10pc">From</th>
+            <th class="width-10pc">To</th>
+            <th class="width-15pc">Duration</th>
+            <th class="width-30pc">Call</th>
+            <th class="width-5pc" >&nbsp;</th>
+        </thead>
+        <tbody>
             <tr ng-repeat="recording in filtered = (recordingsLogsList | filter:query | orderBy:sort:reverse)">
                 <td><a href="" ng-click="showRecordingDetailsModal(recording)">{{ recording.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
-                <td><div>{{ recording.from ? recording.from : '&lt;caller&gt;' }}</div></td>
-                <td><div>{{ recording.to ? recording.to : '&lt;callee&gt;' }}</div></td>
+                <td><div class="text-center">{{ recording.from ? recording.from : '&lt;caller&gt;' }}</div></td>
+                <td><div class="text-center">{{ recording.to ? recording.to : '&lt;callee&gt;' }}</div></td>
                 <td><div class="text-center">{{ recording.duration ? (recording.duration + "s") : '. . .' }}</div></td>
                 <td><div class="text-center"><a href="#/logs/calls/{{ recording.call_sid }}">{{ recording.call_sid }}</a></div></td>
                 <!-- <td><div class="text-center"><a href="/restcomm/recordings/{{ recording.sid }}.wav" target="_blank" uib-tooltip="Download"><i class="fa fa-download"></i></a></div></td> -->
                 <td><div class="text-center"><a href="{{ recording.file_uri }}" target="_blank" uib-tooltip="Download"><i class="fa fa-download"></i></a></div></td>
             </tr>
-            </tbody>
-            <tfoot>
+        </tbody>
+        <tfoot>
             <td><small class="pull-left">{{ totalRecording }} Messages{{ totalRecording == 1 ? "" : "s" }}</small></td>
             <td colspan=3>
                 <form class="form-inline text-center">
@@ -86,7 +97,6 @@
                 <!--<pagination class="pagination pagination-sm pull-right" on-select-page="pageChanged(page)" total-items="recordingsLogsList.length" items-per-page="entryLimit" page="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>-->
                 <uib-pagination class="pagination pagination-sm pull-right" total-items="totalRecording" items-per-page="entryLimit" ng-model="currentPage" ng-change="pageChanged()" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
             </td>
-            </tfoot>
-        </table>
-    </div>
+        </tfoot>
+    </table>
 </div>
