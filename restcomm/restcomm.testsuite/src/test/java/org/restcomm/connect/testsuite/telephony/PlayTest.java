@@ -83,7 +83,7 @@ public class PlayTest {
     private MgcpUnit mgcpUnit;
     private MgcpEventListener mgcpEventListener;
 
-    private String dialPlay = "sip:+12223334444@127.0.0.1:5060";
+    private String dialPlay = "sip:+12223334444@127.0.0.1:5080";
 
     /**
      * 
@@ -99,8 +99,8 @@ public class PlayTest {
 
     @Before
     public void before() throws Exception {
-        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5060");
-        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, bobContact);
+        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
+        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
 
         mgcpUnit = new MgcpUnit();
         mgcpEventListener = mgcpUnit.getMgcpEventListener();

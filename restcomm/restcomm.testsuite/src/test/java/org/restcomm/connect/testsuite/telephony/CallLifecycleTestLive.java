@@ -91,17 +91,17 @@ import static org.junit.Assert.assertTrue;
 
     @Before
     public void before() throws Exception {
-        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "192.168.1.151", "5090", "192.168.1.151:5060");
-        bobPhone = bobSipStack.createSipPhone("192.168.1.151", SipStack.PROTOCOL_UDP, 5060, bobContact);
+        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "192.168.1.151", "5090", "192.168.1.151:5080");
+        bobPhone = bobSipStack.createSipPhone("192.168.1.151", SipStack.PROTOCOL_UDP, 5080, bobContact);
 
-        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "192.168.1.151", "5091", "192.168.1.151:5060");
-        alicePhone = aliceSipStack.createSipPhone("192.168.1.151", SipStack.PROTOCOL_UDP, 5060, aliceContact);
+        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "192.168.1.151", "5091", "192.168.1.151:5080");
+        alicePhone = aliceSipStack.createSipPhone("192.168.1.151", SipStack.PROTOCOL_UDP, 5080, aliceContact);
 
-        henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "192.168.1.151", "5092", "192.168.1.151:5060");
-        henriquePhone = henriqueSipStack.createSipPhone("192.168.1.151", SipStack.PROTOCOL_UDP, 5060, henriqueContact);
+        henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "192.168.1.151", "5092", "192.168.1.151:5080");
+        henriquePhone = henriqueSipStack.createSipPhone("192.168.1.151", SipStack.PROTOCOL_UDP, 5080, henriqueContact);
 
-        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "192.168.1.151", "5070", "192.168.1.151:5060");
-        georgePhone = georgeSipStack.createSipPhone("192.168.1.151", SipStack.PROTOCOL_UDP, 5060, georgeContact);
+        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "192.168.1.151", "5070", "192.168.1.151:5080");
+        georgePhone = georgeSipStack.createSipPhone("192.168.1.151", SipStack.PROTOCOL_UDP, 5080, georgeContact);
     }
 
     @After
@@ -146,7 +146,7 @@ import static org.junit.Assert.assertTrue;
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1234@192.168.1.151:5060", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1234@192.168.1.151:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitForAuthorisation(5 * 1000));
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -171,7 +171,7 @@ import static org.junit.Assert.assertTrue;
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1234@192.168.1.151:5060", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1234@192.168.1.151:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitForAuthorisation(5 * 1000));
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));

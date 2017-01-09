@@ -253,37 +253,37 @@ public class ClientsDialTest {
     @Before
     public void before() throws Exception {
 
-        aliceSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5060");
-        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, aliceContact);
+        aliceSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
+        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
 
-        aliceSipStack2 = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5060");
-        alicePhone2 = aliceSipStack2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, aliceContact2);
+        aliceSipStack2 = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
+        alicePhone2 = aliceSipStack2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact2);
 
-        mariaSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5060");
-        mariaPhone = mariaSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, mariaContact);
+        mariaSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
+        mariaPhone = mariaSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, mariaContact);
 
-        dimitriSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5093", "127.0.0.1:5060");
-        dimitriPhone = dimitriSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, dimitriContact);
+        dimitriSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5093", "127.0.0.1:5080");
+        dimitriPhone = dimitriSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, dimitriContact);
 
-        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5060");
-        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, georgeContact);
+        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
+        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
 
-        clientWithAppSipStack = tool6.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5095", "127.0.0.1:5060");
-        clientWithAppPhone = clientWithAppSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, clientWithAppContact);
+        clientWithAppSipStack = tool6.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5095", "127.0.0.1:5080");
+        clientWithAppPhone = clientWithAppSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, clientWithAppContact);
 
         mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria", clientPassword, null);
         dimitriRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "dimitri", clientPassword, null);
         clientWithAppClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "clientWithApp", clientPassword, "http://127.0.0.1:8090/1111");
 
-        fotiniSipStackTcp = tool7.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5096", "127.0.0.1:5060");
-        fotiniPhoneTcp = fotiniSipStackTcp.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5060, fotiniContactTcp);
+        fotiniSipStackTcp = tool7.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5096", "127.0.0.1:5080");
+        fotiniPhoneTcp = fotiniSipStackTcp.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5080, fotiniContactTcp);
         fotiniClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "fotini", clientPassword, null);
 
-        bobSipStackTcp = tool8.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5097", "127.0.0.1:5060");
-        bobPhoneTcp = bobSipStackTcp.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5060, bobContactTcp);
+        bobSipStackTcp = tool8.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5097", "127.0.0.1:5080");
+        bobPhoneTcp = bobSipStackTcp.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5080, bobContactTcp);
 
-        leftySipStack = tool9.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5098", "127.0.0.1:5060");
-        leftyPhone = leftySipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, leftyContact);
+        leftySipStack = tool9.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5098", "127.0.0.1:5080");
+        leftyPhone = leftySipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, leftyContact);
     }
 
     @After
@@ -345,7 +345,7 @@ public class ClientsDialTest {
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(dimitriRestcommClientSid);
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
         assertTrue(mariaPhone.register(uri, "maria", clientPassword, mariaContact, 3600, 3600));
@@ -364,7 +364,7 @@ public class ClientsDialTest {
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(dimitriRestcommClientSid);
 
-        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
         assertTrue(mariaPhone.register(uri, "maria", clientPassword, mariaContact, 3600, 3600));
         assertTrue(dimitriPhone.register(uri, "dimitri", clientPassword, dimitriContact, 3600, 3600));
@@ -442,7 +442,7 @@ public class ClientsDialTest {
 
         assertNotNull(mariaRestcommClientSid);
 
-        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         Thread.sleep(1000);
         assertTrue(mariaPhone.register(uri, "maria", clientPassword, mariaContact, 3600, 3600));
         Thread.sleep(3000);
@@ -528,7 +528,7 @@ public class ClientsDialTest {
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(dimitriRestcommClientSid);
 
-        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(mariaPhone.register(uri, "maria", clientPassword, mariaContact, 14400, 3600));
         Thread.sleep(3000);
 
@@ -539,7 +539,7 @@ public class ClientsDialTest {
 
         // Maria initiates a call to Dimitri
         final SipCall mariaCall = mariaPhone.createSipCall();
-        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5060", null, body, "application", "sdp", null, null);
+        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(mariaCall);
         assertTrue(mariaCall.waitForAuthorisation(3000));
 
@@ -586,7 +586,7 @@ public class ClientsDialTest {
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(dimitriRestcommClientSid);
 
-        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(mariaPhone.register(uri, "maria", clientPassword, mariaContact, 14400, 3600));
         Thread.sleep(3000);
 
@@ -608,7 +608,7 @@ public class ClientsDialTest {
 
         // Maria initiates a call to Dimitri
         final SipCall mariaCall = mariaPhone.createSipCall();
-        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5060", null, body, "application", "sdp", null, replaceHeaders);
+        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5080", null, body, "application", "sdp", null, replaceHeaders);
         assertLastOperationSuccess(mariaCall);
         assertTrue(mariaCall.waitForAuthorisation(3000));
 
@@ -654,7 +654,7 @@ public class ClientsDialTest {
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(dimitriRestcommClientSid);
 
-        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(mariaPhone.register(uri, "maria", clientPassword, mariaContact, 14400, 3600));
         Thread.sleep(3000);
 
@@ -676,7 +676,7 @@ public class ClientsDialTest {
 
         // Maria initiates a call to Dimitri
         final SipCall mariaCall = mariaPhone.createSipCall();
-        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5060", null, body, "application", "sdp", null, replaceHeaders);
+        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5080", null, body, "application", "sdp", null, replaceHeaders);
         assertLastOperationSuccess(mariaCall);
         assertTrue(mariaCall.waitForAuthorisation(3000));
 
@@ -710,7 +710,7 @@ public class ClientsDialTest {
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(dimitriRestcommClientSid);
 
-        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(mariaPhone.register(uri, "maria", clientPassword, mariaContact, 14400, 3600));
         Thread.sleep(3000);
 
@@ -732,7 +732,7 @@ public class ClientsDialTest {
 
         // Maria initiates a call to Dimitri
         final SipCall mariaCall = mariaPhone.createSipCall();
-        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5060", null, body, "application", "sdp", null, replaceHeaders);
+        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5080", null, body, "application", "sdp", null, replaceHeaders);
         assertLastOperationSuccess(mariaCall);
         assertTrue(mariaCall.waitForAuthorisation(3000));
 
@@ -765,7 +765,7 @@ public class ClientsDialTest {
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(dimitriRestcommClientSid);
 
-        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(mariaPhone.register(uri, "maria", clientPassword, mariaContact, 14400, 3600));
         Thread.sleep(3000);
 
@@ -787,7 +787,7 @@ public class ClientsDialTest {
 
         // Maria initiates a call to Dimitri
         final SipCall mariaCall = mariaPhone.createSipCall();
-        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5060", null, body, "application", "sdp", null, replaceHeaders);
+        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5080", null, body, "application", "sdp", null, replaceHeaders);
         assertLastOperationSuccess(mariaCall);
         assertTrue(mariaCall.waitForAuthorisation(3000));
 
@@ -821,7 +821,7 @@ public class ClientsDialTest {
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(dimitriRestcommClientSid);
 
-        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(mariaPhone.register(uri, "maria", clientPassword, mariaContact, 14400, 3600));
         Thread.sleep(3000);
 
@@ -843,7 +843,7 @@ public class ClientsDialTest {
 
         // Maria initiates a call to Dimitri
         final SipCall mariaCall = mariaPhone.createSipCall();
-        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5060", null, body, "application", "sdp", null, replaceHeaders);
+        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5080", null, body, "application", "sdp", null, replaceHeaders);
         assertLastOperationSuccess(mariaCall);
         assertTrue(mariaCall.waitForAuthorisation(3000));
 
@@ -879,7 +879,7 @@ public class ClientsDialTest {
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(dimitriRestcommClientSid);
 
-        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(mariaPhone.register(uri, "maria", clientPassword, mariaContact, 14400, 3600));
         Thread.sleep(3000);
 
@@ -894,7 +894,7 @@ public class ClientsDialTest {
 
         // Maria initiates a call to Dimitri
         final SipCall mariaCall = mariaPhone.createSipCall();
-        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5060", null, webRtcBody, "application", "sdp", null, null);
+        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5080", null, webRtcBody, "application", "sdp", null, null);
         assertLastOperationSuccess(mariaCall);
         assertTrue(mariaCall.waitForAuthorisation(3000));
 
@@ -937,12 +937,12 @@ public class ClientsDialTest {
     @Test
     public void testClientDialToInvalidNumber() throws ParseException, InterruptedException, InvalidArgumentException, SipException {
         String invalidNumber = "+123456789";
-        SipPhone outboundProxy = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5060, "sip:"+invalidNumber+"@127.0.0.1:5070");
+        SipPhone outboundProxy = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:"+invalidNumber+"@127.0.0.1:5070");
         
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(dimitriRestcommClientSid);
 
-        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(mariaPhone.register(uri, "maria", clientPassword, mariaContact, 14400, 3600));
         Thread.sleep(3000);
 
@@ -953,7 +953,7 @@ public class ClientsDialTest {
 
         // Maria initiates a call to invalid number
         final SipCall mariaCall = mariaPhone.createSipCall();
-        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+invalidNumber+"@127.0.0.1:5060", null, body, "application", "sdp", null, null);
+        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+invalidNumber+"@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(mariaCall);
         assertTrue(mariaCall.waitForAuthorisation(3000));
 
@@ -984,7 +984,7 @@ public class ClientsDialTest {
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(dimitriRestcommClientSid);
 
-        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(mariaPhone.register(uri, "maria", clientPassword, mariaContact, 14400, 3600));
         Thread.sleep(3000);
 
@@ -995,7 +995,7 @@ public class ClientsDialTest {
 
         // Maria initiates a call to Dimitri
         final SipCall mariaCall = mariaPhone.createSipCall();
-        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5060", null, body, "application", "sdp", null, null);
+        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(mariaCall);
         assertTrue(mariaCall.waitForAuthorisation(3000));
 
@@ -1046,7 +1046,7 @@ public class ClientsDialTest {
                         .withBody(dialClientRcml)));
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -1055,7 +1055,7 @@ public class ClientsDialTest {
 
         // Create outgoing call with first phone
         final SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.initiateOutgoingCall(georgeContact, "sip:1111@127.0.0.1:5060", null, body, "application", "sdp", null, null);
+        georgeCall.initiateOutgoingCall(georgeContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(georgeCall);
         assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
         final int response = georgeCall.getLastReceivedResponse().getStatusCode();
@@ -1105,7 +1105,7 @@ public class ClientsDialTest {
 
         // Create outgoing call with first phone
         final SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.initiateOutgoingCall(georgeContact, "sip:1111@127.0.0.1:5060", null, body, "application", "sdp", null, null);
+        georgeCall.initiateOutgoingCall(georgeContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(georgeCall);
         assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
         final int response = georgeCall.getLastReceivedResponse().getStatusCode();
@@ -1130,7 +1130,7 @@ public class ClientsDialTest {
                         .withBody(dialWebRTCClientForkRcml)));
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -1139,7 +1139,7 @@ public class ClientsDialTest {
 
         // Create outgoing call with first phone
         final SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.initiateOutgoingCall(georgeContact, "sip:1111@127.0.0.1:5060", null, body, "application", "sdp", null, null);
+        georgeCall.initiateOutgoingCall(georgeContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(georgeCall);
         assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
         final int response = georgeCall.getLastReceivedResponse().getStatusCode();
@@ -1183,7 +1183,7 @@ public class ClientsDialTest {
                         .withBody(dialAliceDimitriRcml)));
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
         assertTrue(alicePhone2.register(uri, "alice", "1234", aliceContact2, 3600, 3600));
 
@@ -1200,7 +1200,7 @@ public class ClientsDialTest {
 
         // Create outgoing call with first phone
         final SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.initiateOutgoingCall(georgeContact, "sip:1111@127.0.0.1:5060", null, body, "application", "sdp", null, null);
+        georgeCall.initiateOutgoingCall(georgeContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(georgeCall);
         assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
         final int response = georgeCall.getLastReceivedResponse().getStatusCode();
@@ -1274,7 +1274,7 @@ public class ClientsDialTest {
                         .withBody(dialWebRTCClientForkRcml)));
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
         assertTrue(alicePhone2.register(uri, "alice", "1234", aliceContact2, 3600, 3600));
 
@@ -1287,7 +1287,7 @@ public class ClientsDialTest {
 
         // Create outgoing call with first phone
         final SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.initiateOutgoingCall(georgeContact, "sip:1111@127.0.0.1:5060", null, body, "application", "sdp", null, null);
+        georgeCall.initiateOutgoingCall(georgeContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(georgeCall);
         assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
         final int response = georgeCall.getLastReceivedResponse().getStatusCode();
@@ -1353,7 +1353,7 @@ public class ClientsDialTest {
                         .withBody(dialWebRTCClientForkRcml)));
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
         assertTrue(alicePhone2.register(uri, "alice", "1234", aliceContact2, 3600, 3600));
 
@@ -1366,7 +1366,7 @@ public class ClientsDialTest {
 
         // Create outgoing call with first phone
         final SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.initiateOutgoingCall(georgeContact, "sip:1111@127.0.0.1:5060", null, body, "application", "sdp", null, null);
+        georgeCall.initiateOutgoingCall(georgeContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(georgeCall);
         assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
         final int response = georgeCall.getLastReceivedResponse().getStatusCode();
@@ -1409,7 +1409,7 @@ public class ClientsDialTest {
 
         assertNotNull(clientWithAppClientSid);
 
-        SipURI uri = clientWithAppSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = clientWithAppSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(clientWithAppPhone.register(uri, "clientWithApp", clientPassword, clientWithAppContact, 3600, 3600));
         Credential c = new Credential("127.0.0.1", "clientWithApp", clientPassword);
         clientWithAppPhone.addUpdateCredential(c);
@@ -1418,7 +1418,7 @@ public class ClientsDialTest {
         georgeCall.listenForIncomingCall();
 
         SipCall clientWithAppCall = clientWithAppPhone.createSipCall();
-        clientWithAppCall.initiateOutgoingCall(clientWithAppContact, "sip:3090909090@127.0.0.1:5060", null, body, "application", "sdp", null, null);
+        clientWithAppCall.initiateOutgoingCall(clientWithAppContact, "sip:3090909090@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(clientWithAppCall);
         assertTrue(clientWithAppCall.waitForAuthorisation(5000));
         assertTrue(clientWithAppCall.waitOutgoingCallResponse(5000));
@@ -1456,7 +1456,7 @@ public class ClientsDialTest {
     @Test @Ignore //This will fail because SipUnit when working on TCP will pick an ephemeral port different than the one at Contact header
     public void testClientsCallEachOtherOnTcp() throws ParseException, InterruptedException {
 
-        SipURI uri = fotiniSipStackTcp.getAddressFactory().createSipURI(null, "127.0.0.1:5060");
+        SipURI uri = fotiniSipStackTcp.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
         assertTrue(fotiniPhoneTcp.register(uri, "fotini", clientPassword, fotiniContactTcp, 3600, 3600));
         Thread.sleep(3000);
