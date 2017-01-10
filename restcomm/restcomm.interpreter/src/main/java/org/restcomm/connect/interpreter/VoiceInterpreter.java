@@ -204,10 +204,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     private boolean enable200OkDelay;
 
+    // IMS authentication
+    private boolean asImsUa;
+    private String imsUaLogin;
+    private String imsUaPassword;
+
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
                             final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
-                            final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring, final String rcml) {
+                            final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring, final String rcml,
+                            final boolean asImsUa, final String imsUaLogin, final String imsUaPassword) {
         super();
         final ActorRef source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
@@ -413,6 +419,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.downloader = downloader();
         this.monitoring = monitoring;
         this.rcml = rcml;
+        this.asImsUa = asImsUa;
+        this.imsUaLogin = imsUaLogin;
+        this.imsUaPassword = imsUaPassword;
     }
 
     private boolean is(State state) {
@@ -1107,8 +1116,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         else {
                             //case for LCM testTerminateDialForkCallWhileRinging_LCM_to_dial_branches
                             callState = event.state();
-                        }
                     }
+                }
                 }
                 break;
             case BUSY:
@@ -1541,10 +1550,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 boolean confirmCall = true;
                 if (enable200OkDelay && Verbs.dial.equals(verb.name())) {
                     confirmCall=false;
-                }
-                call.tell(new Answer(callRecord.getSid(),confirmCall), source);
             }
+                call.tell(new Answer(callRecord.getSid(),confirmCall), source);
         }
+    }
     }
 
     private final class DownloadingRcml extends AbstractAction {
@@ -1999,16 +2008,21 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
                     String username = null;
                     String password = null;
-                    if (child.attribute("username") != null) {
-                        username = child.attribute("username").value();
-                    }
-                    if (child.attribute("password") != null) {
-                        password = child.attribute("password").value();
-                    }
-                    if (username == null || username.isEmpty()) {
-                        if (storage.getClientsDao().getClient(callInfo.from()) != null) {
-                            username = callInfo.from();
-                            password = storage.getClientsDao().getClient(callInfo.from()).getPassword();
+                    if (asImsUa) {
+                        username = imsUaLogin;
+                        password = imsUaPassword;
+                    } else {
+                        if (child.attribute("username") != null) {
+                            username = child.attribute("username").value();
+                        }
+                        if (child.attribute("password") != null) {
+                            password = child.attribute("password").value();
+                        }
+                        if (username == null || username.isEmpty()) {
+                            if (storage.getClientsDao().getClient(callInfo.from()) != null) {
+                                username = callInfo.from();
+                                password = storage.getClientsDao().getClient(callInfo.from()).getPassword();
+                            }
                         }
                     }
                     if (call != null && callInfo != null) {
@@ -2118,8 +2132,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             if(enable200OkDelay && verb !=null && Verbs.dial.equals(verb.name())){
                 call.tell(message, self());
-            }
         }
+    }
     }
 
     private void record(ActorRef target) {

@@ -84,6 +84,8 @@ public final class UserAgentManager extends UntypedActor {
     private ActorRef monitoringService;
     private final int pingInterval;
     private final String instanceId;
+
+    // IMS authentication
     private boolean actAsImsUa;
     private String imsProxyAddress;
     private int imsProxyPort;
@@ -119,7 +121,7 @@ public final class UserAgentManager extends UntypedActor {
             this.actAsImsUa = actAsImsUa && imsProxyAddress != null && !imsProxyAddress.isEmpty()
                     && imsDomain != null && !imsDomain.isEmpty();
         }
-        
+
         firstTimeCleanup();
     }
 
@@ -396,6 +398,9 @@ public final class UserAgentManager extends UntypedActor {
          * if (toTransport.equalsIgnoreCase("ws") || toTransport.equalsIgnoreCase("wss")) {
             return;
         }*/
+        if (actAsImsUa && (toTransport.equalsIgnoreCase("ws") || toTransport.equalsIgnoreCase("wss"))) {
+            return;
+        }
         final SipURI outboundInterface = outboundInterface(toTransport);
         StringBuilder buffer = new StringBuilder();
         buffer.append("sip:restcomm").append("@").append(outboundInterface.getHost());
