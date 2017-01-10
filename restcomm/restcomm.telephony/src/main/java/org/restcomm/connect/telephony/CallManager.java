@@ -98,6 +98,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import javax.servlet.sip.TelURL;
 import javax.sip.header.RouteHeader;
 import javax.sip.message.Response;
 import java.io.IOException;
@@ -135,6 +136,7 @@ public final class CallManager extends UntypedActor {
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
     static final String EMAIL_SENDER = "restcomm@restcomm.org";
     static final String EMAIL_SUBJECT = "RestComm Error Notification - Attention Required";
+    static final int DEFAUL_IMS_PROXY_PORT = -1;
 
     private final ActorSystem system;
     private final Configuration configuration;
@@ -177,6 +179,12 @@ public final class CallManager extends UntypedActor {
 
     //List of extensions for CallManager
     List<RestcommExtensionGeneric> extensions;
+
+    // IMS authentication
+    private boolean actAsImsUa;
+    private String imsProxyAddress;
+    private int imsProxyPort;
+    private String imsDomain;
 
     // used for sending warning and error logs to notification engine and to the console
     private void sendNotification(String errMessage, int errCode, String errType, boolean createNotification) {
@@ -281,6 +289,23 @@ public final class CallManager extends UntypedActor {
         if (logger.isInfoEnabled()) {
             logger.info("CallManager extensions: "+(extensions != null ? extensions.size() : "0"));
         }
+
+        final Configuration imsAuthentication = runtime.subset("ims-authentication");
+        this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
+        if (actAsImsUa) {
+            this.imsProxyAddress = imsAuthentication.getString("proxy-address");
+            this.imsProxyPort = imsAuthentication.getInt("proxy-port");
+            if (imsProxyPort == 0) {
+                imsProxyPort = DEFAUL_IMS_PROXY_PORT;
+            }
+            this.imsDomain = imsAuthentication.getString("domain");
+            if (actAsImsUa && (imsProxyAddress == null || imsProxyAddress.isEmpty()
+                    || imsDomain == null || imsDomain.isEmpty())) {
+                logger.warning("ims proxy-address or domain is not configured");
+            }
+            this.actAsImsUa = actAsImsUa && imsProxyAddress != null && !imsProxyAddress.isEmpty()
+                    && imsDomain != null && !imsDomain.isEmpty();
+        }
     }
 
     private ActorRef call() {
@@ -340,6 +365,24 @@ public final class CallManager extends UntypedActor {
             final SipServletResponse okay = request.createResponse(SC_OK);
             okay.send();
             return;
+        }
+        if (actAsImsUa) {
+            boolean isFromIms = isFromIms(request);
+            if (!isFromIms) {
+                //This is a WebRTC client that dials out
+                String user = request.getHeader("X-RestComm-Ims-User");
+                String pass = request.getHeader("X-RestComm-Ims-Password");
+                request.removeHeader("X-RestComm-Ims-User");
+                request.removeHeader("X-RestComm-Ims-Password");
+                imsProxyThroughMediaServer(request, null, request.getTo().getURI(), user, pass, isFromIms);
+//                proxyThroughMediaServer(request, null, request.getTo().getURI().toString(), "48399000047@neofon.tp.pl", "Ims12Ims", false);
+                return;
+            } else {
+                logger.info("in client null");
+                // Client is null, check if this call is for a registered DID (application)
+                imsProxyThroughMediaServer(request, null, request.getTo().getURI(), "", "", isFromIms);
+                return;
+            }
         }
         //Run proInboundAction Extensions here
         // If it's a new invite lets try to handle it.
@@ -1196,7 +1239,10 @@ public final class CallManager extends UntypedActor {
                 break;
             }
             case SIP: {
-                if (executePreOutboundAction(callRequest)) {
+                if (actAsImsUa) {
+                    outboundToIms(request, sender);
+                }
+                else if (executePreOutboundAction(callRequest)) {
                     outboundToSip(request, sender);
                 }  else {
                     //Extensions didn't allowed this call
@@ -1810,5 +1856,161 @@ public final class CallManager extends UntypedActor {
             }
         }
         return result;
+    }
+
+    private boolean isFromIms(final SipServletRequest request) throws ServletParseException {
+        SipURI uri = (SipURI)request.getRequestURI();
+        return uri.getUser() == null;
+    }
+
+    private Registration findRegistration(javax.servlet.sip.URI regUri){
+        if(regUri == null){
+            return null;
+        }
+        String formattedNumber = null;
+        if (regUri.isSipURI()) {
+            formattedNumber = ((SipURI)regUri).getUser().replaceFirst("\\+","");
+        } else {
+            formattedNumber = ((TelURL)regUri).getPhoneNumber().replaceFirst("\\+","");
+        }
+        if(logger.isInfoEnabled()) {
+            logger.info("looking for registrations for number: " + formattedNumber);
+        }
+        final RegistrationsDao registrationsDao = storage.getRegistrationsDao();
+        List<Registration> registrations = registrationsDao.getRegistrations(formattedNumber);
+
+        if(registrations == null || registrations.size() ==0){
+            return null;
+        }
+        else{
+            return registrations.get(0);
+        }
+    }
+
+    private void imsProxyThroughMediaServer(final SipServletRequest request, final Client client,
+            final javax.servlet.sip.URI destUri, final String user, final String password, boolean isFromIms)
+                    throws IOException {
+        javax.servlet.sip.URI srcUri = request.getFrom().getURI();
+        if(logger.isInfoEnabled()) {
+            logger.info("imsProxyThroughMediaServer, isFromIms: " + isFromIms +
+                    ", destUri: " + destUri + ", srcUri: " + srcUri);
+        }
+        final Configuration runtime = configuration.subset("runtime-settings");
+        String destNumber = destUri.toString();
+        String rcml = "<Response><Dial>" + destNumber + "</Dial></Response>";
+
+        javax.servlet.sip.URI regUri = null;
+        if (isFromIms) {
+            regUri = destUri;
+        } else {
+            regUri = srcUri;
+        }
+
+        Registration reg = findRegistration(regUri);
+        if (reg == null) {
+            if(logger.isInfoEnabled()) {
+                logger.info("registrations not found");
+            }
+            final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
+            response.send();
+            // We didn't find anyway to handle the call.
+            String errMsg = "Call cannot be processed because the registration: " + regUri.toString()
+                    + "cannot be found";
+            sendNotification(errMsg, 11005, "error", true);
+            return;
+        } else {
+            if (isFromIms) {
+                rcml = "<Response><Dial><Client>" + reg.getUserName() + "</Client></Dial></Response>";
+            }
+            boolean isFromWebRTC = false;
+            if (!isFromIms) {
+                isFromWebRTC = reg.isWebRTC();
+            } else {
+                Registration srcReg = findRegistration(srcUri);
+                if (srcReg != null) {
+                    isFromWebRTC = srcReg.isWebRTC();
+                }
+            }
+            if(logger.isInfoEnabled()) {
+                logger.info("isFromWebRTC: " + isFromWebRTC);
+            }
+
+            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+            builder.setConfiguration(configuration);
+            builder.setStorage(storage);
+            builder.setCallManager(self());
+            builder.setConferenceManager(conferences);
+            builder.setBridgeManager(bridges);
+            builder.setSmsService(sms);
+            builder.setAccount(Sid.generate(Sid.Type.APPLICATION));
+            builder.setVersion(runtime.getString("api-version"));
+            builder.setRcml(rcml);
+            builder.setMonitoring(monitoring);
+            builder.setAsImsUa(actAsImsUa);
+            if (actAsImsUa) {
+                builder.setImsUaLogin(user);
+                builder.setImsUaPassword(password);
+            }
+            final ActorRef interpreter = builder.build();
+            //TODO KM
+            //final ActorRef call = call(isFromWebRTC, true);
+            final ActorRef call = call();
+            final SipApplicationSession application = request.getApplicationSession();
+            application.setAttribute(Call.class.getName(), call);
+            call.tell(request, self());
+            interpreter.tell(new StartInterpreter(call), self());
+        }
+    }
+
+    private void outboundToIms(final CreateCall request, final ActorRef sender) throws ServletParseException {
+        if (logger.isInfoEnabled()) {
+            logger.info("outboundToIms: "+request);
+        }
+        SipURI from;
+        SipURI to;
+
+        to = (SipURI) sipFactory.createURI(request.to());
+        if (request.from() == null) {
+            from = sipFactory.createSipURI(null, imsDomain);
+        } else {
+            if (request.from() != null && request.from().contains("@")) {
+                // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we
+                // allow to use it directly
+                from = (SipURI) sipFactory.createURI(request.from());
+            } else {
+                from = sipFactory.createSipURI(request.from(), imsDomain);
+            }
+        }
+        if (from == null || to == null) {
+            //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
+            final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: "+request.to();
+            logger.error(errMsg);
+            sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+        } else {
+            final ActorRef call = call();
+            final ActorRef self = self();
+            final Configuration runtime = configuration.subset("runtime-settings");
+            if (logger.isInfoEnabled()) {
+                logger.info("outboundToIms: from: "+from +", to: " + to);
+            }
+            final String proxyUsername = (request.username() != null) ? request.username() : activeProxyUsername;
+            final String proxyPassword = (request.password() != null) ? request.password() : activeProxyPassword;
+            boolean isToWebRTC = false;
+            Registration toReg = findRegistration(to);
+            if(toReg !=null){
+                isToWebRTC = toReg.isWebRTC();
+            }
+            if (logger.isInfoEnabled()) {
+                logger.info("outboundToIms: isToWebRTC: "+isToWebRTC);
+            }
+            InitializeOutbound init = new InitializeOutbound(request.from(), from, to, proxyUsername, proxyPassword, request.timeout(),
+                    request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage, isToWebRTC,
+                    true, imsProxyAddress, imsProxyPort);
+            if (request.parentCallSid() != null) {
+                init.setParentCallSid(request.parentCallSid());
+            }
+            call.tell(init, self);
+            sender.tell(new CallManagerResponse<ActorRef>(call), self());
+        }
     }
 }

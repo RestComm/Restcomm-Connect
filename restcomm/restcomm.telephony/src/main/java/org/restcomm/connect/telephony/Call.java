@@ -96,6 +96,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import javax.servlet.sip.TelURL;
 import javax.sip.header.RecordRouteHeader;
 import javax.sip.header.RouteHeader;
 import javax.sip.message.Response;
@@ -167,7 +168,7 @@ public final class Call extends UntypedActor {
     private Sid accountId;
     private String name;
     private SipURI from;
-    private SipURI to;
+    private javax.servlet.sip.URI to;
     // custom headers for SIP Out https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     private Map<String, String> headers;
     private String username;
@@ -226,6 +227,10 @@ public final class Call extends UntypedActor {
     private boolean collectSipInfoDtmf = false;
 
     private boolean enable200OkDelay;
+
+    private boolean outboundToIms;
+    private String imsProxyAddress;
+    private int imsProxyPort;
 
     public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
         super();
@@ -361,7 +366,13 @@ public final class Call extends UntypedActor {
 
     private CallResponse<CallInfo> info() {
         final String from = this.from.getUser();
-        final String to = this.to.getUser();
+        String to = null;
+        if(this.to.isSipURI()){
+            to =  ((SipURI)this.to).getUser();
+        }
+        else{
+            to =  ((TelURL)this.to).getPhoneNumber();
+        }
         final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime);
         return new CallResponse<CallInfo>(info);
     }
@@ -594,6 +605,9 @@ public final class Call extends UntypedActor {
             parentCallSid = request.getParentCallSid();
             recordsDao = request.getDaoManager().getCallDetailRecordsDao();
             isFromApi = request.isFromApi();
+            outboundToIms = request.isOutboundToIms();
+            imsProxyAddress = request.getImsProxyAddress();
+            imsProxyPort = request.getImsProxyPort();
             String toHeaderString = to.toString();
             if (toHeaderString.indexOf('?') != -1) {
                 // custom headers parsing for SIP Out
@@ -629,7 +643,14 @@ public final class Call extends UntypedActor {
                     builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
                     builder.setDateCreated(created);
                     builder.setAccountSid(accountId);
-                    builder.setTo(to.getUser());
+                    String toUser = null;
+                    if(to.isSipURI()){
+                        toUser =  ((SipURI)to).getUser();
+                    }
+                    else{
+                        toUser =  ((TelURL)to).getPhoneNumber();
+                    }
+                    builder.setTo(toUser);
                     builder.setCallerName(name);
                     builder.setStartTime(new DateTime());
                     String fromString = (from.getUser() != null ? from.getUser() : "CALLS REST API");
@@ -673,16 +694,23 @@ public final class Call extends UntypedActor {
             mediaSessionInfo = response.getMediaSession();
 
             // Create a SIP invite to initiate a new session.
-            final StringBuilder buffer = new StringBuilder();
-            buffer.append(to.getHost());
-            if (to.getPort() > -1) {
-                buffer.append(":").append(to.getPort());
+            final SipURI uri;
+            if (!outboundToIms) {
+                final StringBuilder buffer = new StringBuilder();
+                buffer.append(((SipURI)to).getHost());
+                if (((SipURI)to).getPort() > -1) {
+                    buffer.append(":").append(((SipURI)to).getPort());
+                }
+                String transport = ((SipURI)to).getTransportParam();
+                if (transport != null) {
+                    buffer.append(";transport=").append(((SipURI)to).getTransportParam());
+                }
+                uri = factory.createSipURI(null, buffer.toString());
+            } else {
+                uri = factory.createSipURI(null, imsProxyAddress);
+                uri.setPort(imsProxyPort);
+                uri.setLrParam(true);
             }
-            String transport = to.getTransportParam();
-            if (transport != null) {
-                buffer.append(";transport=").append(to.getTransportParam());
-            }
-            final SipURI uri = factory.createSipURI(null, buffer.toString());
             final SipApplicationSession application = factory.createApplicationSession();
             application.setAttribute(Call.class.getName(), self);
             if (name != null && !name.isEmpty()) {
@@ -1292,7 +1320,14 @@ public final class Call extends UntypedActor {
                 // Record call data
                 if (outgoingCallRecord != null && isOutbound() && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
                     outgoingCallRecord = outgoingCallRecord.setStatus(external.toString());
-                    outgoingCallRecord = outgoingCallRecord.setAnsweredBy(to.getUser());
+                    String toUser = null;
+                    if(to.isSipURI()){
+                        toUser =  ((SipURI)to).getUser();
+                    }
+                    else{
+                        toUser =  ((TelURL)to).getPhoneNumber();
+                    }
+                    outgoingCallRecord = outgoingCallRecord.setAnsweredBy(toUser);
 
                     if (conferencing) {
                         outgoingCallRecord = outgoingCallRecord.setConferenceSid(conferenceSid);
@@ -1714,6 +1749,12 @@ public final class Call extends UntypedActor {
                     this.invite = challengeRequest;
                     // https://github.com/Mobicents/RestComm/issues/147 Make sure we send the SDP again
                     this.invite.setContent(message.getRequest().getContent(), "application/sdp");
+                    if (outboundToIms) {
+                        final SipURI uri = factory.createSipURI(null, imsProxyAddress);
+                        uri.setPort(imsProxyPort);
+                        uri.setLrParam(true);
+                        challengeRequest.pushRoute(uri);
+                    }
                     challengeRequest.send();
                 }
                 break;
