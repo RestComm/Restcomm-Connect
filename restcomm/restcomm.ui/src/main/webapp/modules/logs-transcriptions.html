@@ -12,7 +12,7 @@
     </div>
 </div>
 
-<div class="row logs-search-container" ng-show="transcriptionsLogsList.length > 0">
+<div class="row logs-search-container" ng-show="transcriptionsLogsList.length > 0 || search">
     <div class="row">
         <div class="col-md-4 logs-search-title">Peers</div>
         <div class="col-md-4 logs-search-title">Dates</div>
@@ -63,7 +63,10 @@
 <div class="row">
     <table ng-show="(transcriptionsLogsList | filter:query).length > 0" class="table table-hover" ng-cloak>
         <thead class="logs-table-header">
-        <th class="width-20pc" ng-click="sortBy('date_created');toggleD=!toggleD;reverse=toggleD">Date<span class="pull-right" ng-show="predicate === 'date_created'"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></span></th>
+        <!-- disabled order toggling  until it is properly supported by server side
+        <th class="width-20pc" ng-click="sortBy('date_created');toggleD=!toggleD;reverse=toggleD;pageChanged()">Date<span class="pull-right" ng-show="predicate === 'date_created'"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></span></th>
+        -->
+        <th class="width-20pc">Date</th>
         <th class="width-10pc">Status</th>
         <th class="width-10pc">Duration</th>
         <th class="width-15pc">Recording</th>
