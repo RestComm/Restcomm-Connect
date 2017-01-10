@@ -292,15 +292,8 @@ public final class CallManager extends UntypedActor {
         String instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
         Sid sid = new Sid(instanceId);
         final CallDetailRecordsDao callDetailRecordsDao = storage.getCallDetailRecordsDao();
-        List<CallDetailRecord> results= callDetailRecordsDao.getInCompleteCallDetailRecordsByInstanceId(sid);
-        for (CallDetailRecord result : results) {
-            CallDetailRecord updatedResult = result.setStatus(CallStateChanged.State.COMPLETED.name());
-            if (logger.isDebugEnabled()) {
-                    logger.debug("Call From: " + updatedResult.getFrom() + " change status from " + result.getStatus() + " to COMPLETED");
-            }
-            callDetailRecordsDao.updateCallDetailRecord(updatedResult);
-        }
-        results = callDetailRecordsDao.getInCompleteCallDetailRecordsByInstanceId(sid);
+        callDetailRecordsDao.updateInCompleteCallDetailRecordsToCompletedByInstanceId(sid);
+        List<CallDetailRecord> results = callDetailRecordsDao.getInCompleteCallDetailRecordsByInstanceId(sid);
         if (logger.isInfoEnabled()) {
             logger.info("There are: " + results.size() + " calls in progress after cleanup.");
         }

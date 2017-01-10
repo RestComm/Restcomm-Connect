@@ -298,6 +298,17 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         }
     }
 
+    @Override
+    public void updateInCompleteCallDetailRecordsToCompletedByInstanceId(Sid instanceId) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateInCompleteCallDetailRecordsToCompletedByInstanceId", instanceId.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
     private CallDetailRecord toCallDetailRecord(final Map<String, Object> map) {
         final String msId = DaoUtils.readString(map.get("ms_id"));
         final Sid sid = DaoUtils.readSid(map.get("sid"));

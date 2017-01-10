@@ -205,4 +205,10 @@
     		"end_conference_on_exit"=#{end_conference_on_exit}, "on_hold"=#{on_hold}, "ms_id"=#{ms_id} 
     WHERE "sid"=#{sid};
   </update>
+  <update id="updateInCompleteCallDetailRecordsToCompletedByInstanceId" parameterType="string">
+    UPDATE "restcomm_call_detail_records"
+      SET "status"='COMPLETED'
+      WHERE "instanceid"=#{instanceid} AND (UPPER("status") = ('IN_PROGRESS') OR 
+        UPPER("status") = ('IN-PROGRESS') OR UPPER("status") = ('RINGING') OR UPPER("status") = ('QUEUED'));
+  </update>
 </mapper>

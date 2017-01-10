@@ -71,6 +71,8 @@ public interface CallDetailRecordsDao {
 
     void updateCallDetailRecord(CallDetailRecord cdr);
 
+    void updateInCompleteCallDetailRecordsToCompletedByInstanceId(Sid instanceId);
+
     // Support for filtering of calls list result, Issue 153
     List<CallDetailRecord> getCallDetailRecords(CallDetailRecordFilter filter);
 
