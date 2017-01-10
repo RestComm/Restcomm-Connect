@@ -62,6 +62,15 @@
 			from those users -->
 		<authenticate>true</authenticate>
 
+		<!-- If authenticate is set to true Restcomm can work as IMS Client. To enable set act-as-ims-ua to true and
+		 configure IMS domain and IMS Proxy (e.g. P-CSCF or SBC) -->
+		<ims-authentication>
+			<act-as-ims-ua>true</act-as-ims-ua>
+			<domain>neofon.tp.pl</domain>
+			<proxy-address>neofon.tp.pl</proxy-address>
+			<proxy-port>5060</proxy-port>
+		</ims-authentication>
+		
 		<!-- Interval time in seconds that Restcomm will send keepalive messages (OPTIONS) to registered clients -->
 		<ping-interval>60</ping-interval>
 
