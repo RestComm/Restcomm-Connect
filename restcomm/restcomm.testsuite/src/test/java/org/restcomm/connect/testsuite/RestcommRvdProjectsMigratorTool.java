@@ -68,16 +68,25 @@ public class RestcommRvdProjectsMigratorTool {
     }
 
     public JsonArray getEntitiesList(String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid,
-            Endpoint endpoint) {
+            Endpoint endpoint, String propertyName) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
         String url = getEntitiesUrl(deploymentUrl, adminAccountSid, endpoint);
         WebResource webResource = jerseyClient.resource(url);
         String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
-        JsonObject jsonObject = parser.parse(response).getAsJsonObject();
-        JsonArray jsonResponse = jsonObject.get("notifications").getAsJsonArray();
+        JsonArray jsonResponse;
+        if (propertyName == null) {
+            jsonResponse = parser.parse(response).getAsJsonArray();
+        } else {
+            JsonObject jsonObject = parser.parse(response).getAsJsonObject();
+            jsonResponse = jsonObject.get(propertyName).getAsJsonArray();
+        }
         return jsonResponse;
+    }
+
+    public JsonArray getEntitiesList(String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid, Endpoint endpoint) {
+        return getEntitiesList(deploymentUrl, adminUsername, adminAuthToken, adminAccountSid, endpoint, null);
     }
 
     private String getEntitiesUrl(String deploymentUrl, String accountSid, Endpoint endpoint) {
