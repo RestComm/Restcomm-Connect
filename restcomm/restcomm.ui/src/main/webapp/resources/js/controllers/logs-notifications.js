@@ -32,6 +32,10 @@ rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout,
   };
   */
 
+  $scope.pageChanged = function() {
+      $scope.getNotificationsLogsList($scope.currentPage-1);
+  };
+
   $scope.filter = function() {
     $timeout(function() { //wait for 'filtered' to be changed
       /* change pagination with $scope.filtered */
