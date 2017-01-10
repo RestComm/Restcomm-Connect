@@ -63,9 +63,8 @@ curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b0
 
 The response will be similar to the one below.
 
-[source,lang:xml,decode:true]
+[source,decode:true]
 ----
-[
 {"page":0,"num_pages":0,"page_size":50,"total":34,"start":"0","end":"34","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?Page=0&PageSize=50","previous_page_uri":"null","next_page_uri":"null","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?Page=0&PageSize=50","recordings":
     [
         {
@@ -82,7 +81,6 @@ The response will be similar to the one below.
         ...
     ]
 }
-]
 ----
 
 NOTE: *<Sid>* holds the file name of the recorded message. The recording Sid.**wav** is available in the file system only. 
@@ -121,7 +119,6 @@ The result will be similar to the one below
 
 [source,lang:xml,decode:true]
 ----
-[
 {"page":0,"num_pages":0,"page_size":50,"total":17,"start":"0","end":"17","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?Page=0&PageSize=50","previous_page_uri":"null","next_page_uri":"null","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?Page=0&PageSize=50","recordings":
     [
         {
@@ -137,7 +134,7 @@ The result will be similar to the one below
         },
         ...
     ]
-]
+}
 ----
 
 == Paging Information
@@ -171,7 +168,6 @@ The result of the *PageSize* parameter
 
 [source,lang:xml,decode:true]
 ----
-[
 {"page":0,"num_pages":34,"page_size":1,"total":34,"start":"0","end":"0","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?Page=0&PageSize=1","previous_page_uri":"null","next_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?Page=1&PageSize=1&AfterSid=RF50675909d9c94acda36f0e119b6cb431","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?Page=34&PageSize=1","recordings":
     [
         {
@@ -187,7 +183,6 @@ The result of the *PageSize* parameter
         }
     ]
 }
-]
 ----
 
  

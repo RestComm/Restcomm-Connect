@@ -47,9 +47,7 @@ A *Notification* resource represents a single log entry made by RestComm while h
 
 == Get list of Notifications
 
-This will display list of notification
-
-From the bash terminal, you can run the command below:
+To retrieve a list of notification run the following command from a bash terminal:
 
 ....
 curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications  
@@ -66,7 +64,6 @@ curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 
 
 ----
-[   
 {"page":0,"num_pages":0,"page_size":50,"total":34,"start":"0","end":"34","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications.json?Page=0&PageSize=50","previous_page_uri":"null","next_page_uri":"null","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications.json?Page=0&PageSize=50","notifications":
     [
       {
@@ -89,7 +86,6 @@ curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
       ...
     ]
 }
-]
 ----
  
 
@@ -104,16 +100,16 @@ curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 |Parameter |Description
 |StartTime |Only show notifications that started on this date, given as YYYY-MM-DD. Also supports inequalities, such as StartTime=YYYY-MM-DD for notifications that started at or before midnight on a date, and StartTime=YYYY-MM-DD for notifications that started at or after midnight on a date.
 |EndTime |Only show notifications that ended on this date, given as YYYY-MM-DD. Also supports inequalities, such as StartTime=YYYY-MM-DD for notifications that started at or before midnight on a date, and StartTime=YYYY-MM-DD for notifications that started at or after midnight on a date.
-|ErrorCode |Only show notifications that have been returned this Error Code
+|ErrorCode |Only show notifications that returned this Error Code
 |RequestUrl |Only show notifications that have this RequestUrl
 |MessageText |Only show notifications that contain this MessageText.
 |===========================================================================================================================================================================================================================================================================
 
  
 
-=== Filter using the ErrorCode parameter.
+=== Filter using the ErrorCode parameter
 
-The example below will only return Messages made from client Alice
+The example below will only return Messages sent from client Alice
 
 ....
  curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications.json?ErrorCode=1
@@ -121,9 +117,8 @@ The example below will only return Messages made from client Alice
 
 The result will be similar to the one below
 
-[source,lang:xml,decode:true]
+[source]
 ----
-[
 {"page":0,"num_pages":0,"page_size":50,"total":19,"start":"0","end":"19","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications.json?Page=0&PageSize=50","previous_page_uri":"null","next_page_uri":"null","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications.json?Page=0&PageSize=50","notifications":
     [
       {
@@ -145,7 +140,7 @@ The result will be similar to the one below
       },
       ...
     ]
-]
+}
 ----
 
 == Paging Information
@@ -177,9 +172,8 @@ curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 
 The result of the *PageSize* parameter
 
-[source,lang:xml,decode:true]
+[source]
 ----
-[
 {"page":0,"num_pages":34,"page_size":1,"total":34,"start":"0","end":"0","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications.json?Page=0&PageSize=1","previous_page_uri":"null","next_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications.json?Page=1&PageSize=1&AfterSid=RF10000000000000000000000000000001","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications.json?Page=34&PageSize=1","notifications":
     [
         {
@@ -201,7 +195,6 @@ The result of the *PageSize* parameter
         }
     ]
 }
-]
 ----
 
  
