@@ -107,7 +107,7 @@ public class RvdController extends SecuredRestService {
                 rvdContext.getProjectLogger().log(e.getMessage()).tag("app", appname).tag("EXCEPTION").done();
             rcmlResponse = Interpreter.rcmlOnException();
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            logger.warn(e.getMessage());
             if (rvdContext.getProjectSettings().getLogging())
                 rvdContext.getProjectLogger().log(e.getMessage()).tag("app", appname).tag("EXCEPTION").done();
             rcmlResponse = Interpreter.rcmlOnException();
