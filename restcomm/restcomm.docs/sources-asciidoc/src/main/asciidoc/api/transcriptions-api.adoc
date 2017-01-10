@@ -104,9 +104,8 @@ The example below will only return Transcriptions that contain this Transcriptio
 
 The result will be similar to the one below
 
-[source,lang:xml,decode:true]
+[source,decode:true]
 ----
-[
 {"page":0,"num_pages":0,"page_size":50,"total":13,"start":"0","end":"13","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?Page=0&PageSize=50","previous_page_uri":"null","next_page_uri":"null","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?Page=0&PageSize=50","transcriptions":
     [
         {
@@ -123,7 +122,7 @@ The result will be similar to the one below
         },
         ...
     ]
-]
+}
 ----
 
 == Paging Information
@@ -157,8 +156,7 @@ The result of the *PageSize* parameter
 
 [source,lang:xml,decode:true]
 ----
-[
-{{"page":0,"num_pages":34,"page_size":1,"total":34,"start":"0","end":"0","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?Page=0&PageSize=1","previous_page_uri":"null","next_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?Page=1&PageSize=1&AfterSid=RF20000000000000000000000000000001","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?Page=34&PageSize=1","transcriptions":
+{"page":0,"num_pages":34,"page_size":1,"total":34,"start":"0","end":"0","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?Page=0&PageSize=1","previous_page_uri":"null","next_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?Page=1&PageSize=1&AfterSid=RF20000000000000000000000000000001","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions.json?Page=34&PageSize=1","transcriptions":
     [
         {
             "sid": "RF20000000000000000000000000000001",
@@ -174,7 +172,6 @@ The result of the *PageSize* parameter
         }
     ]
 }
-]
 ----
 
  
