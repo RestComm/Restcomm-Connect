@@ -103,19 +103,19 @@ public class ImsClientsDialTest {
     @Before
     public void before() throws Exception {
     	
-    	imsSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5060", "127.0.0.1:5050");
+    	imsSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5060", "127.0.0.1:5080");
 
-        augustSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5050");
-        augustPhone = augustSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, augustContact);
-        imsAugustPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, augustContact);
+        augustSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
+        augustPhone = augustSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, augustContact);
+        imsAugustPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, augustContact);
         imsAugustPhone.setLoopback(true);
         
-        juliusSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5050");
-        juliusPhone = juliusSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, juliusContact);
-        imsJuliusPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, juliusContact);
+        juliusSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
+        juliusPhone = juliusSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, juliusContact);
+        imsJuliusPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, juliusContact);
         imsJuliusPhone.setLoopback(true);
         
-        pstnPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, pstnContact);
+        pstnPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, pstnContact);
         
         if(isAugustRegistered){
         	unregisterAugust();
@@ -695,7 +695,7 @@ public class ImsClientsDialTest {
         replaceHeaders.add(userAgentHeader.toString());
 
         // August initiates a call to pstn
-        URI uri1 = augustSipStack.getAddressFactory().createURI("sip:127.0.0.1:5050");
+        URI uri1 = augustSipStack.getAddressFactory().createURI("sip:127.0.0.1:5080");
         SipURI sipURI = (SipURI) uri1;
         sipURI.setLrParam();
         Address address = augustSipStack.getAddressFactory().createAddress(uri1);
@@ -755,14 +755,14 @@ public class ImsClientsDialTest {
 
         // Create outgoing call with pstn phone
         ArrayList<String> replaceHeaders = new ArrayList<String>();
-        URI uri1 = augustSipStack.getAddressFactory().createURI("sip:august@127.0.0.1:5050");
+        URI uri1 = augustSipStack.getAddressFactory().createURI("sip:august@127.0.0.1:5080");
         SipURI sipURI = (SipURI) uri1;
         sipURI.setLrParam();
         Address address = augustSipStack.getAddressFactory().createAddress(uri1);
         ToHeader toHeader = augustSipStack.getHeaderFactory().createToHeader(address, null);
         replaceHeaders.add(toHeader.toString());
         
-        pstnCall.initiateOutgoingCall(pstnContact, "sip:127.0.0.1:5050", null, body, "application", "sdp", null, replaceHeaders);
+        pstnCall.initiateOutgoingCall(pstnContact, "sip:127.0.0.1:5080", null, body, "application", "sdp", null, replaceHeaders);
         assertLastOperationSuccess(pstnCall);
         assertTrue(pstnCall.waitOutgoingCallResponse(5 * 1000));
         int responsePstn = pstnCall.getLastReceivedResponse().getStatusCode();

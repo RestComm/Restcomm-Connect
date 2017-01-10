@@ -58,6 +58,13 @@
 		<!-- If set to true Restcomm will authenticate users and incoming messages 
 			from those users -->
 		<authenticate>true</authenticate>
+		
+		<ims-authentication>
+			<act-as-ims-ua>false</act-as-ims-ua>
+			<domain></domain>
+			<proxy-address></proxy-address>
+			<proxy-port></proxy-port>
+		</ims-authentication>
 
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) 
 			when creating an outbound call -->

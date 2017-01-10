@@ -154,10 +154,10 @@
 	<phone-number-provisioning
 		class="org.restcomm.connect.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
 		<callback-urls>
-			<voice url="localhost:5050" method="SIP" />
-			<sms url="localhost:5050" method="SIP" />
-			<fax url="localhost:5050" method="SIP" />
-			<ussd url="localhost:5050" method="SIP" />
+			<voice url="localhost:5080" method="SIP" />
+			<sms url="localhost:5080" method="SIP" />
+			<fax url="localhost:5080" method="SIP" />
+			<ussd url="localhost:5080" method="SIP" />
 		</callback-urls>
 		<voip-innovations>
 			<login></login>
