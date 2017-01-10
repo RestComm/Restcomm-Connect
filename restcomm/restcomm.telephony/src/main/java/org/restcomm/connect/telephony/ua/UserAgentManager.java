@@ -36,6 +36,7 @@ import java.util.UUID;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.sip.Address;
+import javax.servlet.sip.Parameterable;
 import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
@@ -71,6 +72,10 @@ import akka.event.LoggingAdapter;
  * @author jean.deruelle@telestax.com
  */
 public final class UserAgentManager extends UntypedActor {
+    private static final int DEFAUL_IMS_PROXY_PORT = -1;
+    private static final String REGISTER = "REGISTER";
+    private static final String REQ_PARAMETER = "Req";
+
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private boolean authenticateUsers = true;
     private final SipFactory factory;
@@ -79,6 +84,10 @@ public final class UserAgentManager extends UntypedActor {
     private ActorRef monitoringService;
     private final int pingInterval;
     private final String instanceId;
+    private boolean actAsImsUa;
+    private String imsProxyAddress;
+    private int imsProxyPort;
+    private String imsDomain;
 
     public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage,
             final ServletContext servletContext) {
@@ -93,6 +102,24 @@ public final class UserAgentManager extends UntypedActor {
         pingInterval = runtime.getInt("ping-interval", 60);
         logger.info("About to run firstTimeCleanup()");
         instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
+
+        final Configuration imsAuthentication = runtime.subset("ims-authentication");
+        this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
+        if (actAsImsUa) {
+            this.imsProxyAddress = imsAuthentication.getString("proxy-address");
+            this.imsProxyPort = imsAuthentication.getInt("proxy-port");
+            if (imsProxyPort == 0) {
+                imsProxyPort = DEFAUL_IMS_PROXY_PORT;
+            }
+            this.imsDomain = imsAuthentication.getString("domain");
+            if (actAsImsUa && (imsProxyAddress == null || imsProxyAddress.isEmpty()
+                    || imsDomain == null || imsDomain.isEmpty())) {
+                logger.warning("ims proxy-address or domain is not configured");
+            }
+            this.actAsImsUa = actAsImsUa && imsProxyAddress != null && !imsProxyAddress.isEmpty()
+                    && imsDomain != null && !imsDomain.isEmpty();
+        }
+        
         firstTimeCleanup();
     }
 
@@ -244,7 +271,9 @@ public final class UserAgentManager extends UntypedActor {
                 if (logger.isDebugEnabled()) {
                     logger.debug("REGISTER request received: "+request.toString());
                 }
-                if(authenticateUsers) { // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
+                if (actAsImsUa) {
+                    proxyRequestToIms(request);
+                } else if(authenticateUsers) { // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
                     final String authorization = request.getHeader("Proxy-Authorization");
                     if (authorization != null) {
                       if (permitted(authorization, method)) {
@@ -264,6 +293,8 @@ public final class UserAgentManager extends UntypedActor {
             SipServletResponse response = (SipServletResponse) message;
             if (response.getStatus()>400 && response.getMethod().equalsIgnoreCase("OPTIONS")) {
                 removeRegistration(response);
+            } else if (actAsImsUa && response.getMethod().equalsIgnoreCase(REGISTER)) {
+                proxyResponseFromIms(message, response);
             } else {
                 pong(message);
             }
@@ -587,4 +618,162 @@ public final class UserAgentManager extends UntypedActor {
         }
         return map;
     }
+
+    private void proxyResponseFromIms(Object message, SipServletResponse response) throws ServletParseException, IOException {
+        if(logger.isDebugEnabled()) {
+            logger.debug("REGISTER IMS Response received: "+message);
+        }
+        final SipServletRequest incomingRequest = (SipServletRequest) response.getApplicationSession().getAttribute(REQ_PARAMETER);
+        String wwwAuthenticate = response.getHeader("WWW-Authenticate");
+        final Address contact = incomingRequest.getAddressHeader("Contact");
+        final SipURI uri = (SipURI) contact.getURI();
+        final String ip = incomingRequest.getInitialRemoteAddr();
+        final int port = incomingRequest.getInitialRemotePort();
+        String ua = incomingRequest.getHeader("User-Agent");
+        String name = contact.getDisplayName();
+        final SipURI to = (SipURI) incomingRequest.getTo().getURI();
+        final String aor = to.toString();
+        final String user = to.getUser();
+        boolean isLBPresent = false;
+        //Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
+        final String initialIpBeforeLB = incomingRequest.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+        final String initialPortBeforeLB = incomingRequest.getHeader("X-Sip-Balancer-InitialRemotePort");
+        if(initialIpBeforeLB != null && !initialIpBeforeLB.isEmpty() && initialPortBeforeLB != null && !initialPortBeforeLB.isEmpty()) {
+            if(logger.isInfoEnabled()) {
+                logger.info("Client in front of LB. Patching URI: "+uri.toString()+" with IP: "+initialIpBeforeLB+" and PORT: "+initialPortBeforeLB+" for USER: "+user);
+            }
+            patch(uri, initialIpBeforeLB, Integer.valueOf(initialPortBeforeLB));
+            isLBPresent = true;
+        } else {
+            if(logger.isInfoEnabled()) {
+                logger.info("Patching URI: " + uri.toString() + " with IP: " + ip + " and PORT: " + port + " for USER: " + user);
+            }
+            patch(uri, ip, port);
+        }
+        SipServletResponse incomingLegResposne = incomingRequest.createResponse(response.getStatus(), response.getReasonPhrase());
+        if (wwwAuthenticate != null) {
+            incomingLegResposne.addHeader("WWW-Authenticate", wwwAuthenticate);
+        }
+        int ttl = 3600;
+        final Address imsContact = response.getAddressHeader("Contact");
+        if (imsContact != null) {
+            ttl = imsContact.getExpires();
+            if (ttl == -1) {
+                final String expires = response.getRequest().getHeader("Expires");
+                if (expires != null) {
+                    ttl = parseInt(expires);
+                } else {
+                    ttl = 3600;
+                }
+            }
+            final SipURI sipURI = (SipURI) contact.getURI();
+            String newContact = contact(sipURI, ttl);
+            if(logger.isInfoEnabled()) {
+                logger.info("ttl: "+ttl);
+                logger.info("new contact: "+newContact);
+
+            }
+            incomingLegResposne.setHeader("Contact", newContact);
+        }
+
+        if(logger.isInfoEnabled()) {
+            logger.info("outgoing leg state: "+response.getSession().getState());
+            logger.info("incoming leg state: "+incomingLegResposne.getSession().getState());
+
+        }
+        if (response.getStatus()>400) {
+            removeRegistration(response);
+        } else if (response.getStatus()==200) {
+            String transport = (uri.getTransportParam()==null?incomingRequest.getParameter("transport"):uri.getTransportParam()); //Issue #935, take transport of initial request-uri if contact-uri has no transport parameter
+            if (transport == null && !incomingRequest.getInitialTransport().equalsIgnoreCase("udp")) {
+                //Issue1068, if Contact header or RURI doesn't specify transport, check InitialTransport from
+                transport = incomingRequest.getInitialTransport();
+            }
+            final Sid sid = Sid.generate(Sid.Type.REGISTRATION);
+            final DateTime now = DateTime.now();
+            final StringBuffer buffer = new StringBuffer();
+            buffer.append("sip:").append(user).append("@").append(uri.getHost()).append(":").append(uri.getPort());
+            // https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than
+            if (transport != null) {
+                buffer.append(";transport=").append(transport);
+            }
+            final String address = buffer.toString();
+
+            if (name == null)
+                name = user;
+            if (ua == null)
+                ua = "GenericUA";
+            boolean webRTC = isWebRTC(transport, ua);
+            final Registration registration = new Registration(sid, RestcommConfiguration.getInstance().getMain().getInstanceId(), now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent);
+            final RegistrationsDao registrations = storage.getRegistrationsDao();
+
+            if (ttl == 0) {
+                // Remove Registration if ttl=0
+                registrations.removeRegistration(registration);
+                incomingLegResposne.setHeader("Expires", "0");
+                monitoringService.tell(new UserRegistration(user, address, false), self());
+                if(logger.isInfoEnabled()) {
+                    logger.info("The user agent manager unregistered " + user + " at address "+address+":"+port);
+                }
+            } else {
+                monitoringService.tell(new UserRegistration(user, address, true), self());
+                if (registrations.hasRegistration(registration)) {
+                    // Update Registration if exists
+                    registrations.updateRegistration(registration);
+                    if(logger.isInfoEnabled()) {
+                        logger.info("The user agent manager updated " + user + " at address " + address+":"+port);
+                    }
+                } else {
+                    // Add registration since it doesn't exists on the DB
+                    registrations.addRegistration(registration);
+                    if(logger.isInfoEnabled()) {
+                        logger.info("The user agent manager registered " + user + " at address " + address+":"+port);
+                    }
+                }
+            }
+
+        }
+        incomingLegResposne.send();
+        if(logger.isDebugEnabled()) {
+            logger.debug("REGISTER IMS Response sent: "+incomingLegResposne);
+        }
+    }
+
+    private void proxyRequestToIms(SipServletRequest request) throws ServletParseException, IOException {
+        // TODO question - this method is deprecated but only that can be used to set callId which has to be the same for both REGISTER messages
+        final SipServletRequest outgoingRequest = factory.createRequest(request, true);
+        Parameterable via = outgoingRequest.getParameterableHeader("Via");
+        if (via == null) {
+            seltLocalContact(outgoingRequest);
+        } else {
+            String[] strings = via.getValue().trim().split(" ");
+            if (strings.length != 2) {
+                seltLocalContact(outgoingRequest);
+            } else {
+                outgoingRequest.removeHeader("Contact");
+                String addressFromVia = strings[1].trim();
+                Address address = factory.createAddress("sip:" + addressFromVia);
+                outgoingRequest.setAddressHeader("Contact", address);
+            }
+        }
+        request.getApplicationSession().setAttribute(REQ_PARAMETER, request);
+        final SipURI routeToRegistrar = factory.createSipURI(null, imsProxyAddress);
+        routeToRegistrar.setLrParam(true);
+        routeToRegistrar.setPort(imsProxyPort);
+        outgoingRequest.pushRoute(routeToRegistrar);
+        final SipURI requestUri = factory.createSipURI(null, imsDomain);
+        outgoingRequest.setRequestURI(requestUri);
+        if(logger.isDebugEnabled()) {
+            logger.debug("Sending to ims proxy: "+ outgoingRequest);
+        }
+        outgoingRequest.send();
+    }
+
+    private void seltLocalContact(SipServletRequest outgoingRequest) throws ServletParseException {
+        Address contact = outgoingRequest.getAddressHeader("Contact");
+        SipURI sipURI = ((SipURI)contact.getURI());
+        sipURI.setPort(outgoingRequest.getLocalPort());
+        sipURI.setHost(outgoingRequest.getLocalAddr());
+    }
+
 }
