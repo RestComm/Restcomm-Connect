@@ -10,7 +10,7 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
+import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.commons.dao.Sid;
