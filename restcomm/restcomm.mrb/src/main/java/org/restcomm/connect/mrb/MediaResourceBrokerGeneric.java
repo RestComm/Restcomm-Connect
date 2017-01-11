@@ -189,7 +189,8 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
 
     private void updateMSIdinCallDetailRecord(final String msId, final Sid callSid){
         if(callSid == null){
-            logger.error("Call Id is not specisfied");
+            if(logger.isDebugEnabled())
+                logger.debug("Call Id is not specisfied, it can be an outbound call.");
         }else{
             CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
             CallDetailRecord cdr = dao.getCallDetailRecord(callSid);
