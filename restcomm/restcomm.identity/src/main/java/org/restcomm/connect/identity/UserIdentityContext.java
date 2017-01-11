@@ -31,7 +31,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
-import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
+import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
 
