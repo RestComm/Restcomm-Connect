@@ -85,15 +85,18 @@ public class MybatisDaoManager implements DaoManager {
     private MediaResourceBrokerDao mediaResourceBrokerDao;
     private ExtensionsConfigurationDao extensionsConfigurationDao;
 
+    protected String confRootPath; // .../WEB-INF/conf/
+
     public MybatisDaoManager() {
         super();
     }
 
     @Override
-    public void configure(final Configuration configuration, Configuration daoManagerConfiguration) {
+    public void configure(final Configuration configuration, Configuration daoManagerConfiguration, String confRootPath) {
         this.configuration = daoManagerConfiguration.subset("dao-manager");
         this.amazonS3Configuration = configuration.subset("amazon-s3");
         this.runtimeConfiguration = configuration.subset("runtime-settings");
+        this.confRootPath = confRootPath;
     }
 
     @Override

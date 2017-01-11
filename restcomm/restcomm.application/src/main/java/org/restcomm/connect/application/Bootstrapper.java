@@ -214,10 +214,10 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         }
     }
 
-    private DaoManager storage(final Configuration configuration, Configuration daoManagerConfiguration, final ClassLoader loader) throws ObjectInstantiationException {
+    private DaoManager storage(final Configuration configuration, Configuration daoManagerConfiguration, final ClassLoader loader, String confRootPath) throws ObjectInstantiationException {
         final String classpath = daoManagerConfiguration.getString("dao-manager[@class]");
         final DaoManager daoManager = (DaoManager) new ObjectFactory(loader).getObjectInstance(classpath);
-        daoManager.configure(configuration, daoManagerConfiguration );
+        daoManager.configure(configuration, daoManagerConfiguration, confRootPath );
         daoManager.start();
         return daoManager;
     }
@@ -243,6 +243,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(Bootstrapper.class)) {
             final ServletContext context = event.getServletContext();
+            final String confRootPath = context.getRealPath("WEB-INF/conf/");
             final String path = context.getRealPath("WEB-INF/conf/restcomm.xml");
             final String extensionConfigurationPath = context.getRealPath("WEB-INF/conf/extensions.xml");
             final String daoManagerConfigurationPath = context.getRealPath("WEB-INF/conf/dao-manager.xml");
@@ -291,7 +292,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Create the storage system.
             DaoManager storage = null;
             try {
-                storage = storage(xml, daoManagerConf, loader);
+                storage = storage(xml, daoManagerConf, loader, confRootPath);
             } catch (final ObjectInstantiationException exception) {
                 logger.error("ObjectInstantiationException during initialization: ", exception);
             }
