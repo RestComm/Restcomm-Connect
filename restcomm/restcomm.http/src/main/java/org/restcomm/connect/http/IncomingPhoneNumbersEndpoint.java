@@ -430,6 +430,26 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
 
         }
 
+        if (data.containsKey("ReferUrl")) {
+            URI uri = getUrl("ReferUrl", data);
+            incomingPhoneNumber.setReferUrl( isEmpty(uri.toString()) ? null : uri );
+        }
+
+        if (data.containsKey("ReferMethod")) {
+            incomingPhoneNumber.setReferMethod(getMethod("ReferMethod", data));
+        }
+
+        if (data.containsKey("ReferApplicationSid")) {
+            if ( org.apache.commons.lang.StringUtils.isEmpty( data.getFirst("ReferApplicationSid") ) )
+                incomingPhoneNumber.setReferApplicationSid(null);
+            else
+                incomingPhoneNumber.setReferApplicationSid(getSid("ReferApplicationSid", data));
+        }
+
+        if (data.containsKey("VoiceCapable")) {
+            incomingPhoneNumber.setVoiceCapable(Boolean.parseBoolean(data.getFirst("VoiceCapable")));
+        }
+
         if (data.containsKey("VoiceCapable")) {
             incomingPhoneNumber.setVoiceCapable(Boolean.parseBoolean(data.getFirst("VoiceCapable")));
         }
