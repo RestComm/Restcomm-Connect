@@ -77,6 +77,7 @@ import org.restcomm.connect.telephony.api.Answer;
 import org.restcomm.connect.telephony.api.BridgeManagerResponse;
 import org.restcomm.connect.telephony.api.BridgeStateChanged;
 import org.restcomm.connect.telephony.api.CallFail;
+import org.restcomm.connect.telephony.api.CallHoldStateChange;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CallResponse;
@@ -552,6 +553,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             onGetRelatedCall((GetRelatedCall) message, self, sender);
         } else if (JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete)message);
+        } else if (CallHoldStateChange.class.equals(klass)) {
+            onCallHoldStateChange((CallHoldStateChange)message, sender);
         }
     }
 
@@ -1366,6 +1369,19 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // and now it changes again to a new url, the outbound call is null since
             // When we joined the call to the conference, we made outboundCall = null;
             sender.tell(new org.restcomm.connect.telephony.api.NotFound(), sender);
+        }
+    }
+
+    private void onCallHoldStateChange(CallHoldStateChange message, ActorRef sender){
+        if (logger.isInfoEnabled()) {
+            logger.info("CallHoldStateChange received, state: " + message.state());
+        }
+        if (asImsUa){
+            if (sender.equals(outboundCall)) {
+                call.tell(message, self());
+            } else if (sender.equals(call)) {
+                outboundCall.tell(message, self());
+            }
         }
     }
 

@@ -51,6 +51,8 @@
 			<domain></domain>
 			<proxy-address></proxy-address>
 			<proxy-port></proxy-port>
+			<call-id-prefix></call-id-prefix>
+			<user-agent></user-agent>
 		</ims-authentication>
 
 		<!-- Interval time in seconds that Restcomm will send keepalive messages (OPTIONS) to registered clients -->

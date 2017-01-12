@@ -27,6 +27,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.mobicents.javax.servlet.sip.SipFactoryExt;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
@@ -68,6 +69,7 @@ import org.restcomm.connect.mscontrol.api.messages.UpdateMediaSession;
 import org.restcomm.connect.telephony.api.Answer;
 import org.restcomm.connect.telephony.api.BridgeStateChanged;
 import org.restcomm.connect.telephony.api.CallFail;
+import org.restcomm.connect.telephony.api.CallHoldStateChange;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
@@ -116,6 +118,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -136,6 +139,10 @@ public final class Call extends UntypedActor {
     private static final String INBOUND = "inbound";
     private static final String OUTBOUND_API = "outbound-api";
     private static final String OUTBOUND_DIAL = "outbound-dial";
+
+    // Call Hold actions
+    private static final String CALL_ON_HOLD_ACTION = "action=onHold";
+    private static final String CALL_OFF_HOLD_ACTION = "action=offHold";
 
     // Finite State Machine
     private final FiniteStateMachine fsm;
@@ -231,6 +238,8 @@ public final class Call extends UntypedActor {
     private boolean outboundToIms;
     private String imsProxyAddress;
     private int imsProxyPort;
+
+    private boolean isOnHold;
 
     public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
         super();
@@ -519,6 +528,8 @@ public final class Call extends UntypedActor {
             onConferenceResponse((ConferenceResponse) message);
         } else if (BridgeStateChanged.class.equals(klass)) {
             onBridgeStateChanged((BridgeStateChanged) message, self, sender);
+        } else if (CallHoldStateChange.class.equals(klass)) {
+            onCallHoldStateChange((CallHoldStateChange)message, sender);
         }
     }
 
@@ -528,6 +539,25 @@ public final class Call extends UntypedActor {
         if (logger.isInfoEnabled()) {
             String infoMsg = String.format("Conference response, name %s, state %s, participants %d", ci.name(), ci.state(), ci.globalParticipants());
             logger.info(infoMsg);
+        }
+    }
+
+    private void onCallHoldStateChange(CallHoldStateChange message, ActorRef sender) throws IOException{
+        if (logger.isInfoEnabled()) {
+            logger.info("CallHoldStateChange received, state: " + message.state() + " isOnHold " + isOnHold);
+        }
+        if(is(inProgress)){
+            if (!isOnHold && CallHoldStateChange.State.ONHOLD.equals(message.state())) {
+                final SipServletRequest messageRequest = invite.getSession().createRequest("MESSAGE");
+                messageRequest.setContent(CALL_ON_HOLD_ACTION, "text/plain");
+                messageRequest.send();
+                isOnHold = true;
+            } else if (isOnHold && CallHoldStateChange.State.OFFHOLD.equals(message.state())) {
+                final SipServletRequest messageRequest = invite.getSession().createRequest("MESSAGE");
+                messageRequest.setContent(CALL_OFF_HOLD_ACTION, "text/plain");
+                messageRequest.send();
+                isOnHold = false;
+            }
         }
     }
 
@@ -713,16 +743,28 @@ public final class Call extends UntypedActor {
             }
             final SipApplicationSession application = factory.createApplicationSession();
             application.setAttribute(Call.class.getName(), self);
+            String callId = null;
+            String userAgent = null;
+            if(outboundToIms){
+                final Configuration imsAuthentication = configuration.subset("runtime-settings").subset("ims-authentication");
+                final String callIdPrefix = imsAuthentication.getString("call-id-prefix");
+                userAgent = imsAuthentication.getString("user-agent");
+                callId = callIdPrefix + UUID.randomUUID().toString();
+            }
             if (name != null && !name.isEmpty()) {
                 // Create the from address using the inital user displayed name
                 // Example: From: "Alice" <sip:userpart@host:port>
                 final Address fromAddress = factory.createAddress(from, name);
                 final Address toAddress = factory.createAddress(to);
-                invite = factory.createRequest(application, "INVITE", fromAddress, toAddress);
+                invite = ((SipFactoryExt)factory).createRequestWithCallID(application, "INVITE", fromAddress, toAddress, callId);
             } else {
-                invite = factory.createRequest(application, "INVITE", from, to);
+                invite = ((SipFactoryExt)factory).createRequestWithCallID(application, "INVITE", from, to, callId);
             }
             invite.pushRoute(uri);
+
+            if(userAgent!=null){
+                invite.setHeader("User-Agent", userAgent);
+            }
 
             if (headers != null) {
                 // adding custom headers for SIP Out
@@ -1634,6 +1676,19 @@ public final class Call extends UntypedActor {
 
                 final UpdateMediaSession update = new UpdateMediaSession(answer);
                 msController.tell(update, self());
+
+                if(isCallOnHoldSdp(answer)){
+                    final CallHoldStateChange.State onHold = CallHoldStateChange.State.ONHOLD;
+                    for (final ActorRef observer : this.observers) {
+                        observer.tell(new CallHoldStateChange(onHold), self());
+                    }
+                }
+                else if(isCallOffHoldSdp(answer)){
+                    final CallHoldStateChange.State offHold = CallHoldStateChange.State.OFFHOLD;
+                    for (final ActorRef observer : this.observers) {
+                        observer.tell(new CallHoldStateChange(offHold), self());
+                    }
+                }
             }
         } else if ("CANCEL".equalsIgnoreCase(method)) {
             if (is(initializing)) {
@@ -2273,6 +2328,26 @@ public final class Call extends UntypedActor {
             okay.send();
             initialInviteOkSent = true;
         }
+    }
+
+    private boolean isCallOnHoldSdp(String answer){
+        if(answer.contains("a=inactive")){
+            return true;
+        }
+        if(answer.contains("a=sendonly")){
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isCallOffHoldSdp(String answer){
+        if(answer.contains("a=sendrecv")){
+            return true;
+        }
+        if(!answer.contains("a=inactive")){
+            return true;
+        }
+        return false;
     }
 
     @Override

@@ -64,6 +64,8 @@
 			<domain></domain>
 			<proxy-address></proxy-address>
 			<proxy-port></proxy-port>
+			<call-id-prefix></call-id-prefix>
+			<user-agent></user-agent>
 		</ims-authentication>
 
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) 
