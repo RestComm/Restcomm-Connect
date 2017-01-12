@@ -19,12 +19,14 @@ public class ExtensionController {
     private List smsSessionExtensions;
     private List ussdCallManagerExtensions;
     private List restApiExtensions;
+    private List geolocationApiExtensions;
 
     private ExtensionController(){
         this.callManagerExtensions = new CopyOnWriteArrayList();
         this.smsSessionExtensions = new CopyOnWriteArrayList();
         this.ussdCallManagerExtensions = new CopyOnWriteArrayList();
         this.restApiExtensions = new CopyOnWriteArrayList();
+        this.geolocationApiExtensions = new CopyOnWriteArrayList();
     }
 
     public static ExtensionController getInstance() {
@@ -44,6 +46,8 @@ public class ExtensionController {
             return ussdCallManagerExtensions;
         } else if (type.equals(ExtensionType.RestApi) && (restApiExtensions != null && restApiExtensions.size() > 0)) {
             return restApiExtensions;
+        } else if (type.equals(ExtensionType.GeolocationApi) && (geolocationApiExtensions != null && geolocationApiExtensions.size() > 0)) {
+            return geolocationApiExtensions;
         } else {
             return null;
         }
@@ -76,6 +80,12 @@ public class ExtensionController {
                 restApiExtensions.add(extension);
                 if (logger.isDebugEnabled()) {
                     logger.debug("RestApi extension added: "+extensionName);
+                }
+            }
+            if (type.equals(ExtensionType.GeolocationApi)) {
+                geolocationApiExtensions.add(extension);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("GeolocationApi extension added: "+extensionName);
                 }
             }
         }

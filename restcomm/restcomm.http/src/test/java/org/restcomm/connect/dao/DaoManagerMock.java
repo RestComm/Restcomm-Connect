@@ -146,6 +146,10 @@ public class DaoManagerMock implements DaoManager {
     }
 
     @Override
+    public GeolocationDao getGeolocationDao() {
+        return null;
+    }
+
     public void configure(Configuration configuration, Configuration daoManagerConfiguration) {
 
     }
