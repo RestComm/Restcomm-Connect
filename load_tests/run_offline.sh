@@ -12,6 +12,8 @@ echo "ulimit -n: " `ulimit -n`
 
 PERFRECORDER_VERSION=34
 export LOCAL_RESTCOMM_ADDRESS='192.168.1.151'
+export LOCAL_RESTCOMM_NETWORK='192.168.1.1'
+export LOCAL_RESTCOMM_SUBNET='255.255.255.0'
 export LOCAL_VOICERSS='5aa416d17f5d40fa990194cd9b3df41d'
 LOCAL_INTERFACE_TMP='wlan0'
 
@@ -50,6 +52,14 @@ if [ -z $RESTCOMM_ADDRESS ] || [ "$RESTCOMM_ADDRESS" == ''  ]; then
 fi
 echo "...Restcomm IP Address \"$RESTCOMM_ADDRESS\""
 LOCAL_ADDRESS=$RESTCOMM_ADDRESS
+
+read -p "Restcomm network [$LOCAL_RESTCOMM_NETWORK]: " RESTCOMM_NETWORK
+RESTCOMM_NETWORK=${RESTCOMM_NETWORK:-$LOCAL_RESTCOMM_NETWORK}
+echo "...Restcomm Network \"$RESTCOMM_NETWORK\""
+
+read -p "Restcomm subnet [$LOCAL_RESTCOMM_SUBNET]: " RESTCOMM_SUBNET
+RESTCOMM_SUBNET=${RESTCOMM_SUBNET:-$LOCAL_RESTCOMM_SUBNET}
+echo "...Restcomm Subnet \"$RESTCOMM_SUBNET\""
 
 read -p "Local interface [$LOCAL_INTERFACE_TMP]: " LOCAL_INTERFACE
 LOCAL_INTERFACE=${LOCAL_INTERFACE:-$LOCAL_INTERFACE_TMP}
@@ -100,6 +110,10 @@ read -p 'Remove existing workspace [true]: ' REMOVE_EXISTING_WORKSPACE
 REMOVE_EXISTING_WORKSPACE=${REMOVE_EXISTING_WORKSPACE:-true}
 echo "...Remove existing workspace \"$REMOVE_EXISTING_WORKSPACE\""
 
+read -p 'Use load tests from master branch? [false]: ' USE_SCRIPTS_FROM_MASTER
+USE_SCRIPTS_FROM_MASTER=${USE_SCRIPTS_FROM_MASTER:-false}
+echo "...Use scripts from master \"$USE_SCRIPTS_FROM_MASTER\""
+
 export GITHUB_RESTCOMM_MASTER=$WORKSPACE/github-master
 export RELEASE=$WORKSPACE/release
 
@@ -122,10 +136,12 @@ if [ $REMOVE_EXISTING_WORKSPACE == "true" ] || [ $REMOVE_EXISTING_WORKSPACE == "
     fi
 
     echo "Will clone Restcomm to $GITHUB_RESTCOMM_HOME"
+    mkdir -p $GITHUB_RESTCOMM_HOME
     git clone -b $RESTCOMM_BRANCH https://github.com/RestComm/RestComm-Core.git $GITHUB_RESTCOMM_HOME
 
-    cp -ar ./* $GITHUB_RESTCOMM_HOME/load_tests
-    # cp -ar $GITHUB_RESTCOMM_MASTER/load_tests $GITHUB_RESTCOMM_HOME/load_tests
+    if [ $USE_SCRIPTS_FROM_MASTER == "true" ] || [ $USE_SCRIPTS_FROM_MASTER == "TRUE" ]; then
+      cp -ar $GITHUB_RESTCOMM_MASTER/load_tests $GITHUB_RESTCOMM_HOME/load_tests
+    fi
 
     cd $GITHUB_RESTCOMM_HOME/load_tests/
     echo "About to start building Restcomm locally to $RELEASE"
@@ -228,7 +244,8 @@ echo "*******************************************************************"
 
 cd $GITHUB_RESTCOMM_HOME/load_tests/
 echo "Current dir: $(pwd)"
-./run.sh $RESTCOMM_ADDRESS $LOCAL_ADDRESS $SIMULTANEOUS_CALLS $MAXIMUM_CALLS $CALL_RATE $TEST_NAME
+#./run.sh $RESTCOMM_ADDRESS $LOCAL_ADDRESS $SIMULTANEOUS_CALLS $MAXIMUM_CALLS $CALL_RATE $TEST_NAME
+./run.sh $RESTCOMM_ADDRESS $RESTCOMM_NETWORK $RESTCOMM_SUBNET $LOCAL_ADDRESS $SIMULTANEOUS_CALLS $MAXIMUM_CALLS $CALL_RATE $TEST_NAME
 echo "Creating PerfCorder HTML ... "
 cat $RESULTS_DIR/PerfCorderAnalysis.xml | $TOOLS_DIR/pc_html_gen.sh > $RESULTS_DIR/PerfCorderAnalysis.html 2> $RESULTS_DIR/htmlgen.log
 #prepare logs to be archived

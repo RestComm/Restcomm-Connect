@@ -1328,15 +1328,26 @@ public final class Call extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("Completing Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" current external state: "+external);
             }
+            if (external.equals(CallStateChanged.State.COMPLETED)) {
+                String errMsg = String.format("CALL FSM_EXCEPTION Call already in completed state, id: %s, from: %s to: %s direction: %s current external state: %s ", id, from, to, direction, external);
+                logger.error(errMsg);
+            }
+
+            CallStateChanged.State existingState = external;
 
             //In the case of canceled that reach the completed method, don't change the external state
             if (!external.equals(CallStateChanged.State.CANCELED)) {
                 // Notify the observers.
                 external = CallStateChanged.State.COMPLETED;
             }
-            final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
+            if (external.equals(existingState) && existingState.equals(CallStateChanged.State.COMPLETED)) {
+                final CallStateChanged event = new CallStateChanged(external);
+                for (final ActorRef observer : observers) {
+                    observer.tell(event, source);
+                }
+            } else {
+                logger.info("external.equals(existingState)"+external.equals(existingState));
+                logger.info("existingState.equals(CallStateChanged.State.COMPLETED)"+existingState.equals(CallStateChanged.State.COMPLETED));
             }
 
             if(logger.isInfoEnabled()) {
