@@ -69,6 +69,8 @@
 			<domain>neofon.tp.pl</domain>
 			<proxy-address>neofon.tp.pl</proxy-address>
 			<proxy-port>5060</proxy-port>
+			<call-id-prefix>WebRTCGW__1@</call-id-prefix>
+			<user-agent>WebRTCGW/1.0</user-agent>
 		</ims-authentication>
 		
 		<!-- Interval time in seconds that Restcomm will send keepalive messages (OPTIONS) to registered clients -->

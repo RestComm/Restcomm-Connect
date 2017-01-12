@@ -1,10 +1,42 @@
 package org.restcomm.connect.testsuite.telephony;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import gov.nist.javax.sip.header.ContentType;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import javax.sip.Dialog;
+import javax.sip.InvalidArgumentException;
+import javax.sip.RequestEvent;
+import javax.sip.SipException;
+import javax.sip.address.Address;
+import javax.sip.address.SipURI;
+import javax.sip.address.URI;
+import javax.sip.header.ContactHeader;
+import javax.sip.header.Header;
+import javax.sip.header.ProxyAuthenticateHeader;
+import javax.sip.header.RouteHeader;
+import javax.sip.header.ToHeader;
+import javax.sip.header.UserAgentHeader;
+import javax.sip.header.WWWAuthenticateHeader;
+import javax.sip.message.Request;
+import javax.sip.message.Response;
 
 import org.apache.log4j.Logger;
-import org.cafesip.sipunit.*;
+import org.cafesip.sipunit.Credential;
+import org.cafesip.sipunit.SipCall;
+import org.cafesip.sipunit.SipPhone;
+import org.cafesip.sipunit.SipRequest;
+import org.cafesip.sipunit.SipStack;
+import org.cafesip.sipunit.SipTransaction;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -13,31 +45,17 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.telephony.security.DigestServerAuthenticationMethod;
+import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
-import javax.sip.Dialog;
-import javax.sip.InvalidArgumentException;
-import javax.sip.RequestEvent;
-import javax.sip.ResponseEvent;
-import javax.sip.SipException;
-import javax.sip.address.Address;
-import javax.sip.address.SipURI;
-import javax.sip.address.URI;
-import javax.sip.header.*;
-import javax.sip.message.Request;
-import javax.sip.message.Response;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.*;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 /**
  * Test for clients with or without VoiceURL (Bitbucket issue 115). Clients without VoiceURL can dial anything.
@@ -92,7 +110,8 @@ public class ImsClientsDialTest {
     private SipPhone pstnPhone;
     private String pstnContact = "sip:"+pstnNumber+"@127.0.0.1:5060";
 
-
+    private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
+    private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("ImsClientsDialTest1");
@@ -129,7 +148,6 @@ public class ImsClientsDialTest {
 
     @After
     public void after() throws Exception {
-    	System.out.println("dupa after");
         if (augustPhone != null) {
             augustPhone.dispose();
         }
@@ -264,23 +282,38 @@ public class ImsClientsDialTest {
                 null));
         // temporary end
         
+        Thread.sleep(1000);
+        
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertTrue( liveCalls == 2);
+        assertTrue(liveCallsArraySize  == 2);
+        
+        /*Map<String, String> filters = new HashMap<String, String>();
+        filters.put("Status", "in-progress");
+        
+        JsonObject filteredCallsByStatusObject = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, filters);
+        assertEquals(2, filteredCallsByStatusObject.get("calls").getAsJsonArray().size());*/
 
-
-        Thread.sleep(3000);
+        Thread.sleep(1000);
+        
         pstnCall.listenForDisconnect();
         assertTrue(augustCall.disconnect());
 
         assertTrue(pstnCall.waitForDisconnect(5 * 1000));
         assertTrue(pstnCall.respondToDisconnect());
-
         
         Thread.sleep(1000);
         
+       
+        /*JsonObject allCalls = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertEquals(0, allCalls.get("calls").getAsJsonArray().size());*/
         unregisterAugust();
     }
 
     @Test
-    public void testWebRTCClientOutgoingAHold() throws ParseException, InterruptedException, InvalidArgumentException {
+    public void testWebRTCClientOutgoingAHold() throws SipException, ParseException, InterruptedException, InvalidArgumentException {
 
         logger.info("testWebRTCClientOutgoingAHold");
         registerAugust();
@@ -319,14 +352,41 @@ public class ImsClientsDialTest {
         
         Thread.sleep(1000);
         
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertTrue( liveCalls == 2);
+        assertTrue(liveCallsArraySize  == 2);
+        
         //HOLD - start
         SipTransaction augustReinviteTx = augustCall.sendReinvite(augustContact, augustContact, body + "a=sendonly", "application", "sdp");
         assertTrue(augustCall.waitReinviteResponse(augustReinviteTx, 5 * 1000));
         augustCall.sendReinviteOkAck(augustReinviteTx);
+        
+        assertTrue(pstnCall.waitForMessage(5 * 1000));
+        lastReceivedRequest = pstnCall.getLastReceivedRequest();
+        receivedBody = new String(lastReceivedRequest.getRawContent());
+        assertTrue(receivedBody.equals("action=onHold"));
+        SipTransaction pstnMessageTx = pstnCall.getLastTransaction();
+        Request pstnMessage = pstnMessageTx.getServerTransaction().getRequest();
+        Response pstnMessageAccepted = imsSipStack.getMessageFactory().createResponse(Response.ACCEPTED, pstnMessage);
+        pstnMessageTx.getServerTransaction().sendResponse(pstnMessageAccepted);
+        
+        augustReinviteTx = augustCall.sendReinvite(augustContact, augustContact, body + "a=sendrecv", "application", "sdp");
+        assertTrue(augustCall.waitReinviteResponse(augustReinviteTx, 5 * 1000));
+        augustCall.sendReinviteOkAck(augustReinviteTx);
+        
+        assertTrue(pstnCall.waitForMessage(5 * 1000));
+        lastReceivedRequest = pstnCall.getLastReceivedRequest();
+        receivedBody = new String(lastReceivedRequest.getRawContent());
+        assertTrue(receivedBody.equals("action=offHold"));
+        pstnMessageTx = pstnCall.getLastTransaction();
+        pstnMessage = pstnMessageTx.getServerTransaction().getRequest();
+        pstnMessageAccepted = imsSipStack.getMessageFactory().createResponse(Response.ACCEPTED, pstnMessage);
+        pstnMessageTx.getServerTransaction().sendResponse(pstnMessageAccepted);
         //HOLD - end
 
-
-        Thread.sleep(3000);
+        Thread.sleep(1000);
+        
         pstnCall.listenForDisconnect();
         assertTrue(augustCall.disconnect());
 
@@ -338,7 +398,7 @@ public class ImsClientsDialTest {
     }
     
     @Test
-    public void testWebRTCClientOutgoingBHold() throws ParseException, InterruptedException, InvalidArgumentException {
+    public void testWebRTCClientOutgoingBHold() throws SipException, ParseException, InterruptedException, InvalidArgumentException {
 
         logger.info("testWebRTCClientOutgoingBHold");
         registerAugust();
@@ -379,14 +439,45 @@ public class ImsClientsDialTest {
         
         Thread.sleep(1000);
         
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertTrue( liveCalls == 2);
+        assertTrue(liveCallsArraySize  == 2);
+        
+        Thread.sleep(1000);
+        
         //HOLD - start
+        augustCall.listenForMessage();
+        
         SipTransaction pstnReinviteTx = pstnCall.sendReinvite(pstnContact, pstnContact, body + "a=sendonly", "application", "sdp");
         assertTrue(pstnCall.waitReinviteResponse(pstnReinviteTx, 5 * 1000));
         pstnCall.sendReinviteOkAck(pstnReinviteTx);
+        
+        assertTrue(augustCall.waitForMessage(5 * 1000));
+        lastReceivedRequest = augustCall.getLastReceivedRequest();
+        receivedBody = new String(lastReceivedRequest.getRawContent());
+        assertTrue(receivedBody.equals("action=onHold"));
+        SipTransaction augustMessageTx = augustCall.getLastTransaction();
+        Request augustMessage = augustMessageTx.getServerTransaction().getRequest();
+        Response augustMessageAccepted = augustSipStack.getMessageFactory().createResponse(Response.ACCEPTED, augustMessage);
+        augustMessageTx.getServerTransaction().sendResponse(augustMessageAccepted);
+        
+        pstnReinviteTx = pstnCall.sendReinvite(pstnContact, pstnContact, body + "a=sendrecv", "application", "sdp");
+        assertTrue(pstnCall.waitReinviteResponse(pstnReinviteTx, 5 * 1000));
+        pstnCall.sendReinviteOkAck(pstnReinviteTx);
+        
+        assertTrue(augustCall.waitForMessage(5 * 1000));
+        lastReceivedRequest = augustCall.getLastReceivedRequest();
+        receivedBody = new String(lastReceivedRequest.getRawContent());
+        assertTrue(receivedBody.equals("action=offHold"));
+        augustMessageTx = augustCall.getLastTransaction();
+        augustMessage = augustMessageTx.getServerTransaction().getRequest();
+        augustMessageAccepted = augustSipStack.getMessageFactory().createResponse(Response.ACCEPTED, augustMessage);
+        augustMessageTx.getServerTransaction().sendResponse(augustMessageAccepted);
         //HOLD - end
 
 
-        Thread.sleep(3000);
+        Thread.sleep(1000);
         augustCall.listenForDisconnect();
         assertTrue(pstnCall.disconnect());
 
@@ -423,7 +514,14 @@ public class ImsClientsDialTest {
         }
         assertTrue(pstnCall.sendInviteOkAck());*/
         
-        Thread.sleep(3000);
+        Thread.sleep(1000);
+        
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertTrue( liveCalls == 2);
+        assertTrue(liveCallsArraySize  == 2);
+        
+        Thread.sleep(1000);
 
         // hangup.
         augustCall.listenForDisconnect();
@@ -436,7 +534,7 @@ public class ImsClientsDialTest {
     }
     
     @Test
-    public void testWebRTCClientIncomingAHold() throws InterruptedException, ParseException {
+    public void testWebRTCClientIncomingAHold() throws SipException, InterruptedException, ParseException, InvalidArgumentException {
         logger.info("testWebRTCClientIncomingAHold");
        
         registerAugust();
@@ -463,10 +561,39 @@ public class ImsClientsDialTest {
         
         Thread.sleep(1000);
         
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertTrue( liveCalls == 2);
+        assertTrue(liveCallsArraySize  == 2);
+        
+        Thread.sleep(1000);
+        
         //HOLD - start
         SipTransaction pstnReinviteTx = pstnCall.sendReinvite(pstnContact, pstnContact, body + "a=sendonly", "application", "sdp");
         assertTrue(pstnCall.waitReinviteResponse(pstnReinviteTx, 5 * 1000));
         pstnCall.sendReinviteOkAck(pstnReinviteTx);
+        
+        assertTrue(augustCall.waitForMessage(5 * 1000));
+        SipRequest lastReceivedRequest = augustCall.getLastReceivedRequest();
+        receivedBody = new String(lastReceivedRequest.getRawContent());
+        assertTrue(receivedBody.equals("action=onHold"));
+        SipTransaction augustMessageTx = augustCall.getLastTransaction();
+        Request augustMessage = augustMessageTx.getServerTransaction().getRequest();
+        Response augustMessageAccepted = augustSipStack.getMessageFactory().createResponse(Response.ACCEPTED, augustMessage);
+        augustMessageTx.getServerTransaction().sendResponse(augustMessageAccepted);
+        
+        pstnReinviteTx = pstnCall.sendReinvite(pstnContact, pstnContact, body + "a=sendrecv", "application", "sdp");
+        assertTrue(pstnCall.waitReinviteResponse(pstnReinviteTx, 5 * 1000));
+        pstnCall.sendReinviteOkAck(pstnReinviteTx);
+        
+        assertTrue(augustCall.waitForMessage(5 * 1000));
+        lastReceivedRequest = augustCall.getLastReceivedRequest();
+        receivedBody = new String(lastReceivedRequest.getRawContent());
+        assertTrue(receivedBody.equals("action=offHold"));
+        augustMessageTx = augustCall.getLastTransaction();
+        augustMessage = augustMessageTx.getServerTransaction().getRequest();
+        augustMessageAccepted = augustSipStack.getMessageFactory().createResponse(Response.ACCEPTED, augustMessage);
+        augustMessageTx.getServerTransaction().sendResponse(augustMessageAccepted);
         //HOLD - end
 
         // hangup.
@@ -481,7 +608,7 @@ public class ImsClientsDialTest {
     }
     
     @Test
-    public void testWebRTCClientIncomingBHold() throws InterruptedException, ParseException {
+    public void testWebRTCClientIncomingBHold() throws SipException, InvalidArgumentException, InterruptedException, ParseException {
         logger.info("testWebRTCClientIncomingBHold");
        
         registerAugust();
@@ -508,11 +635,41 @@ public class ImsClientsDialTest {
         
         Thread.sleep(1000);
         
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertTrue( liveCalls == 2);
+        assertTrue(liveCallsArraySize  == 2);
+        
+        Thread.sleep(1000);
+        
         //HOLD - start
+        pstnCall.listenForMessage();
+        
         SipTransaction augustReinviteTx = augustCall.sendReinvite(augustContact, augustContact, body + "a=sendonly", "application", "sdp");
         assertTrue(augustCall.waitReinviteResponse(augustReinviteTx, 5 * 1000));
-        augustCall.sendReinviteOkAck(augustReinviteTx);        
-        Thread.sleep(1000);
+        augustCall.sendReinviteOkAck(augustReinviteTx);
+        
+        assertTrue(pstnCall.waitForMessage(5 * 1000));
+        SipRequest lastReceivedRequest = pstnCall.getLastReceivedRequest();
+        receivedBody = new String(lastReceivedRequest.getRawContent());
+        assertTrue(receivedBody.equals("action=onHold"));
+        SipTransaction pstnMessageTx = pstnCall.getLastTransaction();
+        Request pstnMessage = pstnMessageTx.getServerTransaction().getRequest();
+        Response pstnMessageAccepted = imsSipStack.getMessageFactory().createResponse(Response.ACCEPTED, pstnMessage);
+        pstnMessageTx.getServerTransaction().sendResponse(pstnMessageAccepted);
+        
+        augustReinviteTx = augustCall.sendReinvite(augustContact, augustContact, body + "a=sendrecv", "application", "sdp");
+        assertTrue(augustCall.waitReinviteResponse(augustReinviteTx, 5 * 1000));
+        augustCall.sendReinviteOkAck(augustReinviteTx);
+        
+        assertTrue(pstnCall.waitForMessage(5 * 1000));
+        lastReceivedRequest = pstnCall.getLastReceivedRequest();
+        receivedBody = new String(lastReceivedRequest.getRawContent());
+        assertTrue(receivedBody.equals("action=offHold"));
+        pstnMessageTx = pstnCall.getLastTransaction();
+        pstnMessage = pstnMessageTx.getServerTransaction().getRequest();
+        pstnMessageAccepted = imsSipStack.getMessageFactory().createResponse(Response.ACCEPTED, pstnMessage);
+        pstnMessageTx.getServerTransaction().sendResponse(pstnMessageAccepted);
         //HOLD - end
 
         // hangup.
@@ -536,7 +693,7 @@ public class ImsClientsDialTest {
         archive.delete("/WEB-INF/sip.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
-        archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("sip-ims.xml", "/sip.xml");
         archive.addAsWebInfResource("restcomm-ims.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("dial-conference-entry.xml");
@@ -645,42 +802,6 @@ public class ImsClientsDialTest {
         augustPhone.addUpdateCredential(c);
     }
     
-    private void registerJulius() throws ParseException, InterruptedException{
-    	SipURI uri = juliusSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        executorService.execute(new Runnable() {
-            @Override
-            public void run() {
-            	imsJuliusPhone.listenRequestMessage();
-                RequestEvent requestEvent = imsJuliusPhone.waitRequest(10000);
-                assertNotNull(requestEvent);
-                try {
-                    Response response = imsSipStack.getMessageFactory().createResponse(200, requestEvent.getRequest());
-                    ContactHeader contactHeader = juliusSipStack.getHeaderFactory().createContactHeader();
-                    contactHeader.setExpires(14400);
-                    contactHeader.setAddress(juliusSipStack.getAddressFactory().createAddress(imsContact));
-                    response.addHeader(contactHeader);
-                    imsJuliusPhone.sendReply(requestEvent, response);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                    fail(e.getMessage());
-                } catch (InvalidArgumentException e) {
-                    e.printStackTrace();
-                    fail(e.getMessage());
-                }
-
-            }
-        });
-
-        assertTrue(juliusPhone.register(uri, "julius", "1234", juliusContact, 14400, 3600));
-        isJuliusRegistered = true;
-        Thread.sleep(1000);
-        
-        Credential c = new Credential("127.0.0.1", "julius", "1234");
-        juliusPhone.addUpdateCredential(c);
-    }
-    
     private void initiateAugust(SipCall toCall, String toUri, SipCall augustCall) throws ParseException, InterruptedException {
         toCall.listenForIncomingCall();
 
@@ -762,7 +883,7 @@ public class ImsClientsDialTest {
         ToHeader toHeader = augustSipStack.getHeaderFactory().createToHeader(address, null);
         replaceHeaders.add(toHeader.toString());
         
-        pstnCall.initiateOutgoingCall(pstnContact, "sip:127.0.0.1:5080", null, body, "application", "sdp", null, replaceHeaders);
+        pstnCall.initiateOutgoingCall(pstnContact, "sip:127.0.0.1:5050", null, body, "application", "sdp", null, replaceHeaders);
         assertLastOperationSuccess(pstnCall);
         assertTrue(pstnCall.waitOutgoingCallResponse(5 * 1000));
         int responsePstn = pstnCall.getLastReceivedResponse().getStatusCode();
