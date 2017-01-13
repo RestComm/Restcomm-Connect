@@ -1241,7 +1241,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         if (outboundCall != null && outboundCall.equals(sender)) {
             outboundCall = null;
         }
-        dialBranches.remove(sender);
+        if (dialBranches != null && dialBranches.contains(sender))
+            dialBranches.remove(sender);
     }
 
     private void checkDialBranch(Object message, ActorRef sender, Attribute attribute) {
@@ -1276,6 +1277,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (bridge != null) {
                 // Stop the bridge
                 bridge.tell(new StopBridge(liveCallModification), self());
+                recordingCall = false;
                 bridge = null;
             }
         } else if (state != null && (state.equals(CallStateChanged.State.BUSY) ||
@@ -1316,6 +1318,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     private void onGetRelatedCall(GetRelatedCall message, ActorRef self, ActorRef sender) {
         final ActorRef callActor = message.call();
+        if (is(forking)) {
+            sender.tell(dialBranches, self);
+            return;
+        }
         if (outboundCall != null) {
             if (callActor.equals(outboundCall)) {
                 sender.tell(call, self);
@@ -2112,12 +2118,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         target.tell(message, null);
     }
 
-    private void recordCall() {
-        if(logger.isInfoEnabled()) {
-            logger.info("Start recording of the call");
-        }
-        record(call);
-    }
+//    private void recordCall() {
+//        if(logger.isInfoEnabled()) {
+//            logger.info("Start recording of the call");
+//        }
+//        record(call);
+//    }
 
     private void recordConference() {
         logger.info("Start recording of the conference");
@@ -2844,9 +2850,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // XXX review bridge cleanup!!
 
             // Cleanup bridge
-            if ((bridge != null) && (is(forking) || is(acquiringOutboundCallInfo) || is(bridged))) {
+//            if ((bridge != null) && (is(forking) || is(acquiringOutboundCallInfo) || is(bridged))) {
+            if (bridge != null) {
                 // Stop the bridge
                 bridge.tell(new StopBridge(liveCallModification), super.source);
+                recordingCall = false;
                 bridge = null;
             }
             // Cleanup the outbound call if necessary.
