@@ -21,7 +21,7 @@ package org.restcomm.connect.dao;
 
 import java.util.List;
 
-import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
+import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
 
