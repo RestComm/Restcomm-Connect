@@ -500,6 +500,15 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
             } catch (Exception exception) {
                 return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
             }
+        } else {
+            if (logger.isInfoEnabled()) {
+                if (url == null) {
+                    logger.info("Problem during Call Update, Url is null. Make sure you provide Url parameter");
+                }
+                if (call == null) {
+                    logger.info("Problem during Call update, Call is null. Make sure you provide the proper Call SID");
+                }
+            }
         }
 
         if (APPLICATION_JSON_TYPE == responseType) {
