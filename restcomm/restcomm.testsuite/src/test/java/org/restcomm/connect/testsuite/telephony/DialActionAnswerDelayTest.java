@@ -76,9 +76,9 @@ import com.google.gson.JsonObject;
  * 
  */
 @RunWith(Arquillian.class)
-public class DialActionTest {
+public class DialActionAnswerDelayTest {
 
-    private final static Logger logger = Logger.getLogger(DialActionTest.class.getName());
+    private final static Logger logger = Logger.getLogger(DialActionAnswerDelayTest.class.getName());
 
     private static final String version = Version.getVersion();
     private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
@@ -130,10 +130,10 @@ public class DialActionTest {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        tool1 = new SipStackTool("DialActionTest1");
-        tool2 = new SipStackTool("DialActionTest2");
-        tool3 = new SipStackTool("DialActionTest3");
-        tool4 = new SipStackTool("DialActionTest4");
+        tool1 = new SipStackTool("DialActionAnswerDelayTest1");
+        tool2 = new SipStackTool("DialActionAnswerDelayTest2");
+        tool3 = new SipStackTool("DialActionAnswerDelayTest3");
+        tool4 = new SipStackTool("DialActionAnswerDelayTest4");
     }
 
     @Before
@@ -206,12 +206,7 @@ public class DialActionTest {
         }
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        bobCall.sendInviteOkAck();
-        bobCall.listenForDisconnect();
-
-        assertTrue(bobCall.waitForDisconnect(40 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
+        assertEquals(Response.SERVER_INTERNAL_ERROR, bobCall.getLastReceivedResponse().getStatusCode());
 
         try {
             Thread.sleep(10 * 1000);
@@ -264,12 +259,7 @@ public class DialActionTest {
         }
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        bobCall.sendInviteOkAck();
-        bobCall.listenForDisconnect();
-
-        assertTrue(bobCall.waitForDisconnect(40 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
+        assertEquals(Response.SERVER_INTERNAL_ERROR, bobCall.getLastReceivedResponse().getStatusCode());
 
         try {
             Thread.sleep(10 * 1000);
@@ -331,17 +321,17 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
@@ -411,17 +401,17 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
@@ -489,17 +479,17 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
@@ -567,12 +557,6 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         assertTrue(aliceCall.listenForCancel());
@@ -580,9 +564,10 @@ public class DialActionTest {
         assertNotNull(cancelTransaction);
         assertTrue(aliceCall.respondToCancel(cancelTransaction, Response.OK, "Alice-OK-2-Cancel", 3600));
 
+        assertTrue(bobCall.waitOutgoingCallResponse(120 * 1000));
+        assertEquals(Response.REQUEST_TIMEOUT, bobCall.getLastReceivedResponse().getStatusCode());
+        
         Thread.sleep(3700);
-
-        assertTrue(bobCall.disconnect());
 
         Thread.sleep(10000);
         
@@ -642,20 +627,13 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-        bobCall.listenForDisconnect();
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.BUSY_HERE, "Busy-Alice", 3600));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
-        assertTrue(bobCall.waitForDisconnect(50 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.BUSY_HERE, bobCall.getLastReceivedResponse().getStatusCode());
 
         try {
             Thread.sleep(10 * 1000);
@@ -688,74 +666,7 @@ public class DialActionTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
-
-    @Test
-    public void testDialActionHangupWithLCM() throws Exception {
-
-        stubFor(post(urlPathMatching("/DialAction.*"))
-                .willReturn(aResponse()
-                        .withStatus(200)));
-
-        // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
-
-        // Prepare second phone to receive call
-        SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.listenForIncomingCall();
-
-        // Create outgoing call with first phone
-        final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-
-        if (response == Response.TRYING) {
-            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-        bobCall.listenForDisconnect();
-
-        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
-        aliceCall.listenForCancel();
-
-        logger.info("About to execute LCM to hangup the call");
-        RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid,"completed", null);
-
-        assertTrue(bobCall.waitForDisconnect(50 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
-
-//        logger.info("&&&&&&&&&&&&&&&&&&&&&& Alice about to listen for CANCEL");
-//        SipTransaction sipTransaction = aliceCall.waitForCancel(50 * 1000);
-//        assertNotNull(sipTransaction);
-//        aliceCall.respondToCancel(sipTransaction,200,"Alice-OK-To-Cancel",3600);
-//        aliceCall.respondToCancel(sipTransaction,487,"Alice-Request-Terminated",3600);
-
-        Thread.sleep(10 * 1000);
-
-        logger.info("About to check the DialAction Requests");
-        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
-        assertTrue(requests.size() == 1);
-        String requestBody = requests.get(0).getBodyAsString();
-        String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=completed"));
-        assertTrue(requestBody.contains("To=%2B12223334455"));
-        assertTrue(requestBody.contains("From=bob"));
-        assertTrue(requestBody.contains("DialCallDuration=0"));
-        assertTrue(requestBody.contains("CallStatus=completed"));
-        Iterator iter = Arrays.asList(params).iterator();
-    }
-
+    
     @Test
     public void testSipInviteCustomHeaders() throws ParseException, InterruptedException {
         
@@ -793,12 +704,6 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         
@@ -810,6 +715,12 @@ public class DialActionTest {
 //                ArrayList<String> replaceHeaders)
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null, null));
 //        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, null, null, receivedBody));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
@@ -876,12 +787,6 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         Thread.sleep(2000); //Ringing time
@@ -889,6 +794,12 @@ public class DialActionTest {
 
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000); //Talk time
@@ -974,21 +885,14 @@ public class DialActionTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-        bobCall.listenForDisconnect();
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         Thread.sleep(2000); //Ringing Time
         assertTrue(aliceCall.sendIncomingCallResponse(Response.BUSY_HERE, "Busy-Alice", 3600));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
-        assertTrue(bobCall.waitForDisconnect(50 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.BUSY_HERE, bobCall.getLastReceivedResponse().getStatusCode());
 
         try {
             Thread.sleep(10 * 1000);
@@ -1035,7 +939,7 @@ public class DialActionTest {
         assertTrue(dialCdr.get("direction").getAsString().equalsIgnoreCase("outbound-api"));
     }
 
-    @Deployment(name = "DialAction", managed = true, testable = false)
+    @Deployment(name = "DialActionAnswerDelay", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
@@ -1044,7 +948,7 @@ public class DialActionTest {
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/conf/restcomm.xml");
+        archive.delete("/WEB-INF/conf/restcomm-delay.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");

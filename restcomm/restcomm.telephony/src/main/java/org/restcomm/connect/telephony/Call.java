@@ -76,7 +76,6 @@ import org.restcomm.connect.telephony.api.ChangeCallDirection;
 import org.restcomm.connect.telephony.api.ConferenceInfo;
 import org.restcomm.connect.telephony.api.ConferenceResponse;
 import org.restcomm.connect.telephony.api.CreateCall;
-import org.restcomm.connect.telephony.api.CreateConference;
 import org.restcomm.connect.telephony.api.Dial;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.GetCallObservers;
@@ -225,6 +224,8 @@ public final class Call extends UntypedActor {
     private String collectFinishKey;
     private boolean collectSipInfoDtmf = false;
 
+    private boolean enable200OkDelay;
+
     public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
         super();
         final ActorRef source = self();
@@ -342,6 +343,7 @@ public final class Call extends UntypedActor {
         this.recording = false;
         this.configuration = configuration;
         this.disableSdpPatchingOnUpdatingMediaSession = this.configuration.subset("runtime-settings").getBoolean("disable-sdp-patching-on-updating-mediasession", false);
+        this.enable200OkDelay = this.configuration.subset("runtime-settings").getBoolean("enable-200-ok-delay",false);
     }
 
     private boolean is(State state) {
@@ -505,8 +507,6 @@ public final class Call extends UntypedActor {
             onConferenceResponse((ConferenceResponse) message);
         } else if (BridgeStateChanged.class.equals(klass)) {
             onBridgeStateChanged((BridgeStateChanged) message, self, sender);
-        } else if (CreateConference.class.equals(klass)) {
-            onCreateConference((CreateConference) message);
         }
     }
 
@@ -1829,7 +1829,7 @@ public final class Call extends UntypedActor {
             }
         }
         if (sessionState == SipSession.State.INITIAL.name() || (sessionState == SipSession.State.EARLY.name() && isInbound())) {
-            int sipResponse = hangup.getSipResponse() != null ? hangup.getSipResponse() : Response.SERVER_INTERNAL_ERROR;
+            int sipResponse = (enable200OkDelay && hangup.getSipResponse() != null) ? hangup.getSipResponse() : Response.SERVER_INTERNAL_ERROR;
             final SipServletResponse resp = invite.createResponse(sipResponse);
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
                 resp.addHeader("Reason",hangup.getMessage());
@@ -2202,11 +2202,6 @@ public final class Call extends UntypedActor {
                 logger.debug("Received BridgeStateChanged for Call: "+self.path()+", but state is :"+fsm.state().toString());
             }
         }
-    }
-
-    private void onCreateConference(CreateConference message) throws Exception{
-        sendInviteOk();
-        fsm.transition(message, inProgress);
     }
 
     private void sendInviteOk() throws Exception{
