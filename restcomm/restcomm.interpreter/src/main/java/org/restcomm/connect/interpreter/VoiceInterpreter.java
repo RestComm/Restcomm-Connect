@@ -202,6 +202,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private ActorRef bridge;
     private boolean beep;
 
+    private boolean enable200OkDelay;
+
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
                             final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
@@ -407,6 +409,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.storage = storage;
         final Configuration runtime = configuration.subset("runtime-settings");
         playMusicForConference = Boolean.parseBoolean(runtime.getString("play-music-for-conference","false"));
+        this.enable200OkDelay = this.configuration.subset("runtime-settings").getBoolean("enable-200-ok-delay",false);
         this.downloader = downloader();
         this.monitoring = monitoring;
         this.rcml = rcml;
@@ -1188,36 +1191,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 break;
             case WAIT_FOR_ANSWER:
-                if (is(initializingCall) || is(rejecting)) {
-                    if (parser != null) {
-                        //This is an inbound call
-                        fsm.transition(message, ready);
-                    } else {
-                        //This is a REST API created outgoing call
-                        fsm.transition(message, downloadingRcml);
-                    }
-                } else if (is(joiningConference)) {
-                    //Do nothing here
-                    //fsm.transition(message, conferencing);
-                } else if (is(forking)) {
-                    if (outboundCall == null || !sender.equals(call)) {
-                        outboundCall = sender;
-                    }
-                    fsm.transition(message, acquiringOutboundCallInfo);
-                } else if (is(conferencing)) {
-                    // Call left the conference successfully
-                    if (!liveCallModification) {
-                        // Hang up the call
-                        final Hangup hangup = new Hangup();
-                        call.tell(hangup, sender);
-                    } else {
-                        // XXX start processing new RCML and give instructions to call
-                        // Ask the parser for the next action to take.
-                        final GetNextVerb next = GetNextVerb.instance();
-                        parser.tell(next, self());
-                    }
-                }
-                break;
             case IN_PROGRESS:
                 if (is(initializingCall) || is(rejecting)) {
                     if (parser != null) {
@@ -1550,9 +1523,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 verb = (Tag) message;
 
                 // Answer the call.
-                boolean confirmCall = false;
-                if (!Verbs.dial.equals(verb.name())) {
-                    confirmCall=true;
+                boolean confirmCall = true;
+                if (enable200OkDelay && Verbs.dial.equals(verb.name())) {
+                    confirmCall=false;
                 }
                 call.tell(new Answer(callRecord.getSid(),confirmCall), source);
             }
@@ -1928,7 +1901,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         sid = callRecord.getSid();
                     }
                     final CreateConference create = new CreateConference(buffer.toString(), sid);
-                    call.tell(create, self());
                     conferenceManager.tell(create, source);
                 } else {
                     // Handle forking.

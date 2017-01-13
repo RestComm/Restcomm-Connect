@@ -402,6 +402,8 @@
 		</languages>
 	</speech-synthesizer>
 
+	<enable-200-ok-delay>false</enable-200-ok-delay>
+
 	<!-- AT&T Speech Synthesizer plugin -->
 	<!-- <speech-synthesizer class="AttSpeechSynthesizer">
 		<host>127.0.0.1</host> <port>7000</port> <tts-client-directory></tts-client-directory> 
