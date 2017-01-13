@@ -1805,6 +1805,7 @@ public final class Call extends UntypedActor {
             }
             addCustomHeaders(cancel);
             cancel.send();
+            external = CallStateChanged.State.CANCELED;
             fsm.transition(hangup, completed);
             return;
         } else {

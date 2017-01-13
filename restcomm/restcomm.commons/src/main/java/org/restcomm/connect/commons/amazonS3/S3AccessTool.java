@@ -19,31 +19,30 @@
  */
 package org.restcomm.connect.commons.amazonS3;
 
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.Calendar;
-import java.util.Date;
-
-import javax.activation.MimetypesFileTypeMap;
-
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.StorageClass;
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+
+import javax.activation.MimetypesFileTypeMap;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -61,9 +60,12 @@ public class S3AccessTool {
     private boolean reducedRedundancy;
     private int daysToRetainPublicUrl;
     private boolean removeOriginalFile;
+    private boolean testing;
+    private String testingUrl;
 
     public S3AccessTool(final String accessKey, final String securityKey, final String bucketName, final String folder,
-            final boolean reducedRedundancy, final int daysToRetainPublicUrl, final boolean removeOriginalFile,final String bucketRegion) {
+            final boolean reducedRedundancy, final int daysToRetainPublicUrl, final boolean removeOriginalFile,
+                        final String bucketRegion, final boolean testing, final String testingUrl) {
         this.accessKey = accessKey;
         this.securityKey = securityKey;
         this.bucketName = bucketName;
@@ -72,6 +74,8 @@ public class S3AccessTool {
         this.daysToRetainPublicUrl = daysToRetainPublicUrl;
         this.removeOriginalFile = removeOriginalFile;
         this.bucketRegion = bucketRegion;
+        this.testing = testing;
+        this.testingUrl = testingUrl;
     }
 
     public URI uploadFile(final String fileToUpload) {
@@ -82,6 +86,11 @@ public class S3AccessTool {
             logger.info("S3 Region: "+bucketRegion.toString());
         }
         try {
+            if (testing && (!testingUrl.isEmpty() || !testingUrl.equals(""))) {
+                s3client.setEndpoint(testingUrl);
+//                s3client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
+                FileUtils.touch(new File(URI.create(fileToUpload)));
+            }
             StringBuffer bucket = new StringBuffer();
             bucket.append(bucketName);
             if (folder != null && !folder.isEmpty())
@@ -90,7 +99,7 @@ public class S3AccessTool {
             if(logger.isInfoEnabled()){
                 logger.info("File to upload to S3: "+fileUri.toString());
             }
-            File file = new File(fileUri);
+             File file = new File(fileUri);
 //            while (!file.exists()){}
 //            logger.info("File exist: "+file.exists());
             //First generate the Presigned URL, buy some time for the file to be written on the disk
@@ -140,11 +149,14 @@ public class S3AccessTool {
             logger.error("Request ID:       " + ase.getRequestId());
             return null;
         } catch (AmazonClientException ace) {
-            logger.error("Caught an AmazonClientException, which ");
+            logger.error("Caught an AmazonClientException ");
             logger.error("Error Message: " + ace.getMessage());
             return null;
         } catch (URISyntaxException e) {
             logger.error("URISyntaxException: "+e.getMessage());
+            return null;
+        } catch (IOException e) {
+            logger.error("Problem while trying to touch recording file for testing", e);
             return null;
         }
     }
