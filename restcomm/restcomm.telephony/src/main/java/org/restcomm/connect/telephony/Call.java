@@ -1973,6 +1973,10 @@ public final class Call extends UntypedActor {
 
     private void onMediaServerControllerStateChanged(MediaServerControllerStateChanged message, ActorRef self, ActorRef sender)
             throws Exception {
+        if(logger.isInfoEnabled()) {
+            logger.info("onMediaServerControllerStateChanged " + message.getState()
+                 + " inboundConfirmCall " + inboundConfirmCall);
+       }
         switch (message.getState()) {
             case PENDING:
                 if (is(initializing)) {

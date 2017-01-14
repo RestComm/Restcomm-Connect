@@ -75,9 +75,9 @@ import static org.junit.Assert.assertTrue;
  * 
  */
 @RunWith(Arquillian.class)
-public class CallLifecycleDelayAnswerTest {
+public class CallLifecycleAnswerDelayTest {
 
-    private final static Logger logger = Logger.getLogger(CallLifecycleDelayAnswerTest.class.getName());
+    private final static Logger logger = Logger.getLogger(CallLifecycleAnswerDelayTest.class.getName());
 
     private static final String version = Version.getVersion();
     private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
@@ -1006,11 +1006,11 @@ public class CallLifecycleDelayAnswerTest {
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/conf/restcomm-delay.xml");
+        archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.delete("/WEB-INF/classes/application.conf");
         archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm_calllifecycle.xml", "conf/restcomm.xml");
+        archive.addAsWebInfResource("restcomm_calllifecycle-delay.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_callLifecycleTest", "data/hsql/restcomm.script");
         archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
         archive.addAsWebResource("dial-client-entry_wActionUrl.xml");

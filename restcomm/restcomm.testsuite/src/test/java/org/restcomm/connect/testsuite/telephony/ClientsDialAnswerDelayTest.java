@@ -803,13 +803,6 @@ public class ClientsDialAnswerDelayTest {
         georgeCall.sendInviteOkAck();
         assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        Thread.sleep(2000);
-
-        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        assertTrue( liveCalls == 2);
-        assertTrue(liveCallsArraySize  == 2);
-
         Thread.sleep(3000);
 
         // hangup.
@@ -821,11 +814,6 @@ public class ClientsDialAnswerDelayTest {
         assertTrue(aliceCall.respondToDisconnect());
 
         Thread.sleep(500);
-        
-        liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        assertTrue(liveCalls == 0);
-        assertTrue(liveCallsArraySize == 0);
     }
     
     private String dialWebRTCClientForkRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client>bob</Client><Client>alice</Client></Dial></Response>";
@@ -885,13 +873,6 @@ public class ClientsDialAnswerDelayTest {
         georgeCall.sendInviteOkAck();
         assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        Thread.sleep(2000);
-
-        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        assertTrue( liveCalls == 2);
-        assertTrue(liveCallsArraySize  == 2);
-
         Thread.sleep(3000);
 
         // hangup.
@@ -903,9 +884,6 @@ public class ClientsDialAnswerDelayTest {
         assertTrue(aliceCall.respondToDisconnect());
 
         Thread.sleep(500);
-        
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
     }
 
     @Test
@@ -957,9 +935,6 @@ public class ClientsDialAnswerDelayTest {
         assertEquals(Response.SERVICE_UNAVAILABLE, georgeCall.getLastReceivedResponse().getStatusCode());
 
         Thread.sleep(500);
-        
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
     }
     
     private String clientWithAppHostedAppRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Number>+151261006100</Number></Dial></Response>";
@@ -1025,10 +1000,10 @@ public class ClientsDialAnswerDelayTest {
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/conf/restcomm-delay.xml");
+        archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
+        archive.addAsWebInfResource("restcomm-delay.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("dial-conference-entry.xml");
         archive.addAsWebResource("dial-fork-entry.xml");

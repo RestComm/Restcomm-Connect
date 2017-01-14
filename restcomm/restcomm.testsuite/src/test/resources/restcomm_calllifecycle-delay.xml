@@ -53,7 +53,7 @@
 		<authenticate>true</authenticate>
 
 		<!-- Interval time in seconds that Restcomm will send keepalive messages (OPTIONS) to registered clients -->
-		<ping-interval>60</ping-interval>
+		<ping-interval>15</ping-interval>
 
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) 
 			when creating an outbound call -->
@@ -68,6 +68,18 @@
 			for B2BUA sessions with the discovered external IP Address of the peer -->
 		<!-- Default value: true -->
 		<patch-for-nat-b2bua-sessions>true</patch-for-nat-b2bua-sessions>
+
+		<!-- Set to true so Restcomm will send 100 Trying on initial Request-->
+		<!-- Used only for testing. !!! Don't enable this for production -->
+		<send-trying-for-initial-requests>true</send-trying-for-initial-requests>
+
+		<!--Play background music for conference rooms with 1 participant even if startConference=true? Music will stop after the second participant joins-->
+		<!--Default value: false -->
+		<play-music-for-conference>false</play-music-for-conference>
+
+		<!-- Set to true so Restcomm won't patch the SDP answer answered received trying to cope with NAT -->
+		<!-- Default value: false -->
+		<disable-sdp-patching-on-updating-mediasession>true</disable-sdp-patching-on-updating-mediasession>
 
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
@@ -136,10 +148,6 @@
 				<permission>RestComm:Read:Transcriptions</permission>
 				<permission>RestComm:*:OutboundProxies</permission>
 			</role>
-			<role name="Unprivileged">
-				<permission>RestComm:Read:Accounts</permission>
-			</role>
-			<role name="Guest"></role>
 		</security-roles>
 		
 		<enable-200-ok-delay>true</enable-200-ok-delay>
@@ -254,54 +262,6 @@
 		<outbound-endpoint>127.0.0.1:5090</outbound-endpoint>
 	</sms-aggregator>
 
-	<!-- by default activateSmppConnection is set to false -->
-
-	<smpp class="org.restcomm.connect.sms.smpp.SmppService" activateSmppConnection ="false">
-		<connections>
-			<connection activateAddressMapping="false" sourceAddressMap="" destinationAddressMap="" tonNpiValue="1">
-				<!-- Name must be unique for each connection -->
-				<name>test</name>
-				<systemid>test</systemid>
-				<peerip>127.0.0.1</peerip>
-				<peerport>2776</peerport>
-				<bindtype>TRANSCEIVER</bindtype>
-				<!-- These are optional params -->
-				<password>test</password>
-				<systemtype>sms</systemtype>
-				<!-- byte value for interface version 0x34 is 3.4, 0x33 is 3.3 and 0x50
-					is 5.0 -->
-				<interfaceversion>0x34</interfaceversion>
-				<ton>-1</ton>
-				<npi>-1</npi>
-				<range></range>
-				<!-- Default value is 1. The window size is the amount of unacknowledged
-					requests that are permitted to be outstanding/unacknowledged at any given
-					time. If more requests are added, the underlying stack will throw an exception. -->
-				<windowsize>1</windowsize>
-				<!-- Default value is 60000 milli seconds. This parameter is used to
-					specify the time to wait until a slot opens up in the 'sendWindow'. -->
-				<windowwaittimeout>60000</windowwaittimeout>
-				<!-- BIND request must be sent within configured timeout in ms -->
-				<connecttimeout>10000</connecttimeout>
-				<!-- Set the amount of time to wait for an endpoint to respond to a request
-					before it expires. Defaults to disabled (-1). -->
-				<requestexpirytimeout>30000</requestexpirytimeout>
-				<!-- Sets the amount of time between executions of monitoring the window
-					for requests that expire. It's recommended that this generally either matches
-					or is half the value of requestExpiryTimeout. Therefore, at worst a request
-					would could take up 1.5X the requestExpiryTimeout to clear out. -->
-				<windowmonitorinterval>15000</windowmonitorinterval>
-				<logbytes>true</logbytes>
-				<countersenabled>true</countersenabled>
-				<!-- Default value is 30000 milli seconds. When SMPP connects to a remote
-					server, it sends an 'ENQUIRE_LINK' after every configured enquire-link-delay.
-					If no response received for 3 consecutive requests, connection will be killed
-					and attempted to connect again -->
-				<enquirelinkdelay>30000</enquirelinkdelay>
-			</connection>
-		</connections>
-	</smpp>
-
 	<!-- The Fax Service is used to send and receive faxes on behalf of RestComm. -->
 	<fax-service class="org.restcomm.connect.fax.InterfaxService">
 		<user></user>
@@ -379,7 +339,6 @@
 			<swedish>sv-se</swedish>
 		</languages>
 	</voicerss>
-
 	<!-- AT&T Speech Synthesizer plugin -->
 	<!-- <speech-synthesizer class="org.restcomm.connect.tts.att.AttSpeechSynthesizer">
 		<host>127.0.0.1</host> <port>7000</port> <tts-client-directory></tts-client-directory> 

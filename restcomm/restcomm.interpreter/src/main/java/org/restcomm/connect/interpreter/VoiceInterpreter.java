@@ -1084,7 +1084,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     callManager.tell(new DestroyCall(sender), self());
                     return;
                 } else {
-                    if (sender == call) {
+                    if (enable200OkDelay && dialBranches != null && sender.equals(call)) {
+                        if (callRecord != null) {
+                            final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
+                            callRecord = records.getCallDetailRecord(callRecord.getSid());
+                            callRecord = callRecord.setStatus(callState.toString());
+                            records.updateCallDetailRecord(callRecord);
+                        }
+                        fsm.transition(message, finishDialing);
+                    } else if (sender == call) {
                         //Move to finished state only if the call actor send the Cancel.
                         fsm.transition(message, finished);
                     } else {

@@ -49,8 +49,8 @@ import static org.junit.Assert.assertTrue;
  * @author jean.deruelle@telestax.com
  */
 @RunWith(Arquillian.class)
-public class TestDialVerbPartThreeDelayAnswer {
-    private final static Logger logger = Logger.getLogger(TestDialVerbPartThreeDelayAnswer.class.getName());
+public class TestDialVerbPartThreeAnswerDelay {
+    private final static Logger logger = Logger.getLogger(TestDialVerbPartThreeAnswerDelay.class.getName());
 
     private static final String version = Version.getVersion();
     private static final byte[] bytes = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
@@ -532,10 +532,10 @@ public class TestDialVerbPartThreeDelayAnswer {
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/conf/restcomm-delay.xml");
+        archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
+        archive.addAsWebInfResource("restcomm-delay.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialTest_new", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");
         return archive;
