@@ -475,8 +475,6 @@
 			<swedish>sv-se</swedish>
 		</languages>
 	</voicerss>
-	
-	<enable-200-ok-delay>false</enable-200-ok-delay>
 
 	<!-- AT&T Speech Synthesizer plugin -->
 	<!-- <speech-synthesizer class="org.restcomm.connect.tts.att.AttSpeechSynthesizer">
