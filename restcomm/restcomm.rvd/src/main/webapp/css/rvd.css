@@ -365,6 +365,18 @@ li.verb {
 	background-color: #f0f0f0;
 }
 
+/* jquery-ui customizations */
+
+.ui-sortable .ui-state-highlight {
+	border: 1px solid #f69c55;
+    background: #f69c55;
+    border-radius: 5px;
+	color: #f69c55;
+    height: 10px;
+    margin-bottom: 5px;
+}
+
+
 /*
  *
  * BOOTSTRAP CUSTOMIZATIONS
