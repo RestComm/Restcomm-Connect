@@ -71,7 +71,7 @@ public class AWSPollySpeechSyntetizer extends UntypedActor {
         this.pollyClient = new AmazonPollyClient(credentials);
 
         //set AWS Region
-        if (awsRegion != null) {
+        if ((awsRegion != null) && (!"".equals(awsRegion))) {
             pollyClient.setRegion(Region.getRegion(Regions.valueOf(awsRegion.toUpperCase())));
         } else {
             pollyClient.setRegion(Region.getRegion(Regions.DEFAULT_REGION));
