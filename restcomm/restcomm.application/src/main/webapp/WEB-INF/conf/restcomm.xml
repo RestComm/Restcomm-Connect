@@ -146,6 +146,13 @@
 			<ussd-gateway-password></ussd-gateway-password>
 		</ussd-gateway>
 
+		<!-- TelScale GMLC -->
+		<gmlc>
+			<gmlc-uri></gmlc-uri>
+			<gmlc-user></gmlc-user>
+			<gmlc-password></gmlc-password>
+		</gmlc>
+
 		<!-- Each permission is represented as three columns Domain:Action:Target
 			Possible actions are Create, Read, Modify, Delete. -->
 		<security-roles>
@@ -169,6 +176,7 @@
 				<permission>RestComm:*:OutboundProxies</permission>
 				<permission>RestComm:*:EmailMessages</permission>
 				<permission>RestComm:*:Usage</permission>
+				<permission>RestComm:*:Geolocation</permission>
 			</role>
 		</security-roles>
 	</runtime-settings>
