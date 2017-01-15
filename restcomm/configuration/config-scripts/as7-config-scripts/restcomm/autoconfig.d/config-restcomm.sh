@@ -214,6 +214,10 @@ configSpeechRecognizer() {
 configSpeechSynthesizers() {
 	if [[ "$TTSSYSTEM" == "voicerss" ]]; then
 	    configVoiceRSS $VOICERSS_KEY
+
+	elif [[ "$TTSSYSTEM" == "awspolly" ]]; then
+		configAWSPolly $AWS_ACCESS_KEY $AWS_SECRET_KEY $AWS_REGION
+
 	else
 	    configAcapela $ACAPELA_APPLICATION $ACAPELA_LOGIN $ACAPELA_PASSWORD
 	 fi
@@ -260,6 +264,29 @@ configVoiceRSS() {
  	else
  	     echo 'Please set KEY for VoiceRSS TTS'
     fi
+}
+
+## Description: Configures AWS Polly Speech Synthesizer
+## Parameters : 1.AWS Access Key
+## 				2.AWS Secret key
+## 				3.AWS Region
+configAWSPolly() {
+ if [[ -z $AWS_ACCESS_KEY || -z $AWS_SECRET_KEY || -z $AWS_REGION ]]; then
+        echo '!Please make sure that all necessary settings for AWS Polly are set!'
+ else
+         FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+         sed -i 's|<speech-synthesizer active=".*"/>|<speech-synthesizer active="awspolly"/>|' $FILE
+
+	        sed -e "/<awspolly class=\"org.restcomm.connect.tts.awspolly.AWSPollySpeechSyntetizer\">/ {
+		        N
+		        N; s|<aws-access-key>.*</aws-access-key>|<aws-access-key>$1</aws-access-key>|
+		        N; s|<aws-secret-key>.*</aws-secret-key>|<aws-secret-key>$2</aws-secret-key>|
+		        N; s|<aws-region>.*</aws-region>|<aws-region>$3</aws-region>|
+	        }" $FILE > $FILE.bak
+
+        mv $FILE.bak $FILE
+        echo 'Configured AWS Polly Speech Synthesizer'
+ fi
 }
 
 ## Description: Updates RestComm DARS properties for RestComm
