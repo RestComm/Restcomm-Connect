@@ -100,6 +100,14 @@ read -p 'Remove existing workspace [true]: ' REMOVE_EXISTING_WORKSPACE
 REMOVE_EXISTING_WORKSPACE=${REMOVE_EXISTING_WORKSPACE:-true}
 echo "...Remove existing workspace \"$REMOVE_EXISTING_WORKSPACE\""
 
+read -p 'Collect logs at the end of the test [true]: ' COLLECT_LOGS
+COLLECT_LOGS=${COLLECT_LOGS:-true}
+echo "...Collect logs at the end of the test \"$COLLECT_LOGS\""
+
+echo "****************************************************"
+read -p 'Ready to start the test. Press enter'
+echo "****************************************************"
+
 export GITHUB_RESTCOMM_MASTER=$WORKSPACE/github-master
 export RELEASE=$WORKSPACE/release
 
