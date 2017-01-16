@@ -201,6 +201,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     CallInfo callInfo = null;
     // The call state.
     CallStateChanged.State callState = null;
+    // The last outbound call state.
+    CallStateChanged outboundCallState = null;
     // A call detail record.
     CallDetailRecord callRecord = null;
 
@@ -1233,7 +1235,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 //Blocked SMS Session request
                 call.tell(new Hangup(((SmsServiceResponse)message).cause().getMessage()), self());
             } else {
-                call.tell(new Hangup(), source);
+                Integer sipResponse = outboundCallState != null ? outboundCallState.sipResponse() : null;
+                call.tell(new Hangup(sipResponse), source);
             }
         }
     }
