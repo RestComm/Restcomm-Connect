@@ -187,6 +187,7 @@ public final class Call extends UntypedActor {
     private DateTime callUpdatedTime;
     private final List<ActorRef> observers;
     private boolean receivedBye;
+    private boolean sentBye;
     private boolean muted;
     private boolean webrtc;
 
@@ -1765,7 +1766,7 @@ public final class Call extends UntypedActor {
                 // before moving to a stopping state
                 conference.tell(new RemoveParticipant(self()), self());
             }else {
-                if (!receivedBye) {
+                if (!receivedBye && !sentBye) {
                     // Send BYE to client if RestComm took initiative to hangup the call
                     sendBye(message);
                 }
@@ -1916,6 +1917,7 @@ public final class Call extends UntypedActor {
             }
             try {
                 bye.send();
+                sentBye = true;
             } catch (Exception e) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Exception during Send Bye: "+e.toString());
