@@ -191,6 +191,12 @@
 
 		<dependency>
 			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.tts.awspolly</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.restcomm</groupId>
 			<artifactId>restcomm-connect.tts.api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
@@ -266,7 +272,21 @@
 			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 		</dependency>
-
+	 <dependency>
+	  <groupId>org.glassfish.jersey.containers</groupId>
+	  <artifactId>jersey-container-servlet</artifactId>
+	  <version>2.5.1</version>
+	 </dependency>
+	 <dependency>
+	  <groupId>org.glassfish.jersey.core</groupId>
+	  <artifactId>jersey-client</artifactId>
+	  <version>2.5.1</version>
+	 </dependency>
+	 <dependency>
+	  <groupId>org.glassfish.jersey.media</groupId>
+	  <artifactId>jersey-media-moxy</artifactId>
+	  <version>2.5.1</version>
+	 </dependency>
 	</dependencies>
 
 	<profiles>

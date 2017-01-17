@@ -26,6 +26,7 @@ import akka.event.LoggingAdapter;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Region;
+import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.polly.AmazonPollyClient;
 import com.amazonaws.services.polly.model.OutputFormat;
@@ -72,7 +73,7 @@ public class AWSPollySpeechSyntetizer extends UntypedActor {
 
         //set AWS Region
         if ((awsRegion != null) && (!"".equals(awsRegion))) {
-            pollyClient.setRegion(Region.getRegion(Regions.valueOf(awsRegion.toUpperCase())));
+            pollyClient.setRegion(RegionUtils.getRegion(awsRegion));
         } else {
             pollyClient.setRegion(Region.getRegion(Regions.DEFAULT_REGION));
         }
