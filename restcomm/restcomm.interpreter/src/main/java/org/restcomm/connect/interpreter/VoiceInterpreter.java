@@ -2907,6 +2907,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final int seconds = (int) (end.getMillis() - callRecord.getStartTime().getMillis()) / 1000;
                 callRecord = callRecord.setDuration(seconds);
                 records.updateCallDetailRecord(callRecord);
+                if(asImsUa){
+                    records.removeCallDetailRecord(callRecord.getSid());
+                }
             }
             if (!dialActionExecuted) {
                 executeDialAction(message, outboundCall);
