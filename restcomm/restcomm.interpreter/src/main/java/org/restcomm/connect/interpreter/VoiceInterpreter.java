@@ -2110,7 +2110,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 record(bridge);
             }
-            call.tell(message, self());
+            if(enable200OkDelay){
+                call.tell(message, self());
+            }
         }
     }
 
