@@ -185,6 +185,7 @@ public final class CallManager extends UntypedActor {
     private String imsProxyAddress;
     private int imsProxyPort;
     private String imsDomain;
+    private String imsAccount;
 
     // used for sending warning and error logs to notification engine and to the console
     private void sendNotification(String errMessage, int errCode, String errType, boolean createNotification) {
@@ -299,6 +300,7 @@ public final class CallManager extends UntypedActor {
                 imsProxyPort = DEFAUL_IMS_PROXY_PORT;
             }
             this.imsDomain = imsAuthentication.getString("domain");
+            this.imsAccount = imsAuthentication.getString("account");
             if (actAsImsUa && (imsProxyAddress == null || imsProxyAddress.isEmpty()
                     || imsDomain == null || imsDomain.isEmpty())) {
                 logger.warning("ims proxy-address or domain is not configured");
@@ -1942,7 +1944,7 @@ public final class CallManager extends UntypedActor {
             builder.setConferenceManager(conferences);
             builder.setBridgeManager(bridges);
             builder.setSmsService(sms);
-            builder.setAccount(Sid.generate(Sid.Type.APPLICATION));
+            builder.setAccount(Sid.generate(Sid.Type.ACCOUNT,imsAccount));
             builder.setVersion(runtime.getString("api-version"));
             builder.setRcml(rcml);
             builder.setMonitoring(monitoring);
@@ -1952,8 +1954,6 @@ public final class CallManager extends UntypedActor {
                 builder.setImsUaPassword(password);
             }
             final ActorRef interpreter = builder.build();
-            //TODO KM
-            //final ActorRef call = call(isFromWebRTC, true);
             final ActorRef call = call();
             final SipApplicationSession application = request.getApplicationSession();
             application.setAttribute(Call.class.getName(), call);
