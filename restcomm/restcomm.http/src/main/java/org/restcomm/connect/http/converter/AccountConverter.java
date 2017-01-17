@@ -20,7 +20,6 @@
 package org.restcomm.connect.http.converter;
 
 import java.lang.reflect.Type;
-import java.net.URI;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
