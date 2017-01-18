@@ -48,6 +48,7 @@ import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.http.converter.CallDetailRecordListConverter;
 import org.restcomm.connect.http.converter.RecordingConverter;
+import org.restcomm.connect.identity.AuthType;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CallResponse;
@@ -148,7 +149,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 
     protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
         Account account = daos.getAccountsDao().getAccount(accountSid);
-        secure(account, "RestComm:Read:Calls");
+        secure(account, "RestComm:Read:Calls", AuthType.AuthToken);
         final CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
         final CallDetailRecord cdr = dao.getCallDetailRecord(new Sid(sid));
         if (cdr == null) {
@@ -170,7 +171,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
     // Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
     protected Response getCalls(final String accountSid, UriInfo info, MediaType responseType) {
         Account account = daos.getAccountsDao().getAccount(accountSid);
-        secure(account, "RestComm:Read:Calls");
+        secure(account, "RestComm:Read:Calls", AuthType.AuthToken);
 
         boolean localInstanceOnly = true;
         try {
@@ -306,7 +307,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         } catch (final IllegalArgumentException exception){
             return status(INTERNAL_SERVER_ERROR).entity(buildErrorResponseBody(exception.getMessage(),responseType)).build();
         }
-        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
+        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls", AuthType.AuthToken);
         try {
             validate(data);
             if (normalizePhoneNumbers)
@@ -410,7 +411,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
     protected Response updateCall(final String sid, final String callSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid accountSid = new Sid(sid);
         Account account = daos.getAccountsDao().getAccount(accountSid);
-        secure(account, "RestComm:Modify:Calls");
+        secure(account, "RestComm:Modify:Calls", AuthType.AuthToken);
 
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
 
@@ -539,7 +540,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getRecordingsByCall(final String accountSid, final String callSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings", AuthType.AuthToken);
 
         final List<Recording> recordings = recordingsDao.getRecordingsByCall(new Sid(callSid));
         if (APPLICATION_JSON_TYPE == responseType) {

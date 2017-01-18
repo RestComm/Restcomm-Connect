@@ -9,6 +9,10 @@ Accounts and sub-accounts are useful for things like segmenting phone numbers an
 
 */2012-04-24/Accounts/\{AccountSid}*
 
+*/2012-04-24/Accounts/\{EmailAddress}*
+
+Both the Account `sid` and the `email_address` fields can be used as identifiers to access an account.
+
 === Resource Properties
 
 [cols=",",options="header",]
@@ -18,20 +22,27 @@ Accounts and sub-accounts are useful for things like segmenting phone numbers an
 |DateCreated |The date that this account was created.
 |DateUpdated |The date that this account was last updated.
 |FriendlyName |A description of this account, up to 64 characters long. By default the FriendlyName is your email address.
+|EmailAddress | The email address of the account.
 |Status |The status of this account. Possible values are active, suspended, and closed.
-|AuthToken |The authorization token for this account. This should not be shared.
+|AuthToken (not always present) |The authorization token for this account. This should not be shared.
 |Uri |The URI for this account, relative to https://localhost:port/restcomm.
 |=========================================================================================================================
 
 === Supported Operations
 
-*HTTP GET.* Returns the representation of an Account resource, including the properties above.
+==== *HTTP GET*
 
-* Account Resource URI. */2012-04-24/Accounts/\{EmailAddress}*
+Returns the representation of an Account resource, including the properties above.
 
-**HTTP POST/PUT**. Modifies an Account resource and returns the representation, including the properties above. Below you will find a list of optional parameters.
+===== *Credentials*
 
-=== Request Parameters
+Both _Password_ and _AuthToken_ credentials can be used to retrieve an account.
+
+==== *HTTP POST/PUT*
+
+Modifies an Account resource and returns the representation, including the properties above. Below you will find a list of optional parameters.
+
+==== Request Parameters
 
 [cols=",",options="header",]
 |==============================================================================================
@@ -41,14 +52,85 @@ Accounts and sub-accounts are useful for things like segmenting phone numbers an
 |Password |A password that will be used to generate the AuthToken for the new Account resource.
 |==============================================================================================
 
-**Get information about the default account.**
+===== *Credentials*
+
+Only _Password_ credentials are allowed for PUT/POST operations.
+
+==== *AuthToken Reset*
+
+*POST /2012-04-24/Accounts/{AccountSid}/resetAuthToken*
+
+Resets the Authorization token for an account and returns the updated Account.
+
+===== *Credentials*
+
+Requires _Password_ credentials.
+
+=== Credential types
+
+Not all Account operations will work with the same type of credentials. Retrieving a single account will work both when _Auth Token_  or a _Password_ are used as credentials. More critical operations such as account _update_ or AuthToken _reset_ will require a _Password_.
+
+==== AuthToken presense in responses
+Typically, most operations that return an Account won't include the AuthToken property in the response. There are two cases however when the AuthToken is present.
+
+1. Retrieving one's own account using _Password_ credentials. 'Own' here means that the account SID in the credentials is the same as the SID of the account that is requested.
+
+2. Account's AuthToken reset operation returns an Account that includes the newlly created AuthToken.
+
+=== Use cases
+
+==== *Get information about the default account*
 
 ....
 curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf
 ....
 
+This returns
+----
+<RestcommResponse>
+  <Account>
+    <Sid>ACae6e420f425248d6a26948c17a9e2acf</Sid>
+    <FriendlyName>Default Administrator Account</FriendlyName>
+    <Status>active</Status>
+    <Type>Full</Type>
+    <DateCreated>2012-04-24T00:00:00.000-06:00</DateCreated>
+    <DateUpdated>2012-04-24T00:00:00.000-06:00</DateUpdated>
+    <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf</Uri>
+    <SubresourceUris>
+      <AvailablePhoneNumbers>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/AvailablePhoneNumbers</AvailablePhoneNumbers>
+      <Calls>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls</Calls>
+      <Conferences>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Conferences</Conferences>
+      <IncomingPhoneNumbers>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers</IncomingPhoneNumbers>
+      <Notifications>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications</Notifications>
+      <OutgoingCallerIds>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/OutgoingCallerIds</OutgoingCallerIds>
+      <Recordings>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings</Recordings>
+      <Sandbox>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Sandbox</Sandbox>
+      <SMSMessages>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages</SMSMessages>
+      <Transcriptions>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions</Transcriptions>
+    </SubresourceUris>
+  </Account>
+----
 
-**Change default account password(AuthToken).**
+In order to include the _AuthToken_ in the response, use _Password_ credentials:
+....
+curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:{password}@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf
+....
+This will return:
+----
+<RestcommResponse>
+  <Account>
+    <Sid>ACae6e420f425248d6a26948c17a9e2acf</Sid>
+    ...
+    <AuthToken>77f8c12cc7b8f8423e5c38b035249166</AuthToken>
+    ...
+    <FriendlyName>Default Administrator Account</FriendlyName>
+    <Status>active</Status>
+    <Type>Full</Type>
+    ...
+  </Account>
+----
+
+==== **Change default account password**
 
 To update an account you need to provide the SID of the account or the email address of the account (make sure you url escape the @ sign of the email address)
 
@@ -80,7 +162,6 @@ The above commands will print an output similar to the one below:
     <Type>Full</Type>
     <DateCreated>2012-04-24T00:00:00.000-06:00</DateCreated>
     <DateUpdated>2012-04-24T00:00:00.000-06:00</DateUpdated>
-    <AuthToken>77f8c12cc7b8f8423e5c38b035249166</AuthToken>
     <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf</Uri>
     <SubresourceUris>
       <AvailablePhoneNumbers>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/AvailablePhoneNumbers</AvailablePhoneNumbers>
@@ -97,18 +178,27 @@ The above commands will print an output similar to the one below:
   </Account>
 ----
 
-[[Accounts_List]]
-== Account List Resource
+[[sub-accounts]]
+== Sub-Accounts
 
-* Account List Resource URI. */2012-04-24/Accounts*
+An account may have children accounts called _Sub-Accounts_. Parent accounts have access to their sub-accounts. You can read more about Sub-Accounts and Multi-tenancy http://docs.telestax.com/restcomm-multi-tenancy-and-managing-sub-accounts/[HERE].
+{nbsp}
+
+=== Account List Resource URI
+
+*/2012-04-24/Accounts*
 
 === Supported Operations
 
-**HTTP GET**. Returns the list representation of all the *Sub-Account* resources for this **Account**, including the properties above.
+==== *HTTP GET*
 
-**HTTP POST**. Creates a new Sub-Account and returns the representation of the Sub-Account resource, including the properties above. Below you will find a list of required and optional parameters.  
+Returns the list representation of all the *Sub-Account* resources for this **Account**, including the properties above.
 
-=== Request Parameters
+==== *HTTP POST*
+
+Creates a new Sub-Account and returns the representation of the Sub-Account resource, including the properties above. Below you will find a list of required and optional parameters.  
+
+==== Request Parameters
 
 [cols=",",options="header",]
 |==============================================================================================================================================================================================================================
@@ -121,33 +211,15 @@ The above commands will print an output similar to the one below:
 |==============================================================================================================================================================================================================================
 
 
-[[sub-accounts]]
-== Sub-Accounts
+==== Create a new Sub-Account
 
-You can read more about Sub-Accounts and Multi-tenancy http://docs.telestax.com/restcomm-multi-tenancy-and-managing-sub-accounts/[HERE]
-
-
-----
-curl -X GET https://[primarySid]:[primaryAuthToken]@127.0.0.1:8080/restcomm/2012-04-24/Accounts/[secondarySid]/
-----
-
-=== Get a list of all current accounts
-
-----
-curl -X GET https://[primarySid]:[primaryAuthToken]@127.0.0.1:8080/restcomm/2012-04-24/Accounts/
-----
-
-Here is an example of how to createa a **sub-account**. The sub-account will inherit the same permissions has the Administrator's account.
+To create a new sub-account under account `administrator@company.com`:
 
 ....
-curl -X POST https://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ -d "FriendlyName=MySubAccount" -d "EmailAddress=test@telestax.com" -d "Password=restcomm"
+curl -X POST https://administrator%40company.com:{password}}@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ -d "FriendlyName=MySubAccount" -d "EmailAddress=test@telestax.com" -d "Password=restcomm"
 ....
 
-
-=== Supported Operations
-
-NOTE: the **SID**, Email and the *AuthToken* (see output below) of the sub-account can now be used instead of the Administrator's account  
-
+The response will be:
 ----
 <RestcommResponse>
   <Account>
@@ -174,32 +246,50 @@ NOTE: the **SID**, Email and the *AuthToken* (see output below) of the sub-accou
   </Account>
 ----
 
+Note the following:
+
+- The **SID**, Email and the *AuthToken* (see output below) of the sub-account can now be used instead of the Administrator's account
+- The sub-account will inherit role/permissions from  its creator, in this case `administrator@company.com`. You can alter this bahavior by explicitly passing the _Role_ parameter.
+- _Password_ credentials have been used. Sub-account creation is a critical operation and won't work with _AuthToken_ credentials.
+
+{nbsp}
+
+==== Get a single Sub-Account
+
+To retrieve a sub-account using parent account credentials:
+
+----
+curl -X GET https://[primarySid]:[primaryAuthToken]@127.0.0.1:8080/restcomm/2012-04-24/Accounts/[secondarySid]/
+----
+
+{nbsp}
+
+==== Get a list of all Sub-Accounts
+
+To retrieve a list with all sub-accounts of a 'primary' parent account:
+
+----
+curl -X GET https://[primarySid]:[primaryAuthToken]@127.0.0.1:8080/restcomm/2012-04-24/Accounts/
+----
+
+{nbsp}
+
 [[close-sub-accounts]]
-=== Close Sub-Accounts
+==== Close a Sub-Account
 
-.JSON Account Closing
+To close an an account permanently:
 ----
-curl -X PUT https://ACae6e420f425248d6a26948c17a9e2acf:PWD@127.0.0.1:8080/restcomm/2012-04-24/Accounts.json/AC3b8f0dd2e5026abde018446cbb3b185d -d "Status=closed"
-----
-
-.XML Account Closing
-----
-curl -X PUT https://ACae6e420f425248d6a26948c17a9e2acf:PWD@127.0.0.1:8080/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d -d "Status=closed"
+curl -X PUT https://ACae6e420f425248d6a26948c17a9e2acf:{password}@127.0.0.1:8080/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d -d "Status=closed"
 ----
 
-The command above will close an account permanently. When an account is closed access to the system through it is revoked and most of its resources are deleted. The actual account entity will remain present though.
+When an account is closed access to the system through it is revoked and most of its resources are deleted. The actual account entity will remain present though.
 
 [[delete-sub-accounts]]
-=== Delete Sub-Accounts (deprecated)
+==== Delete Sub-Accounts (deprecated)
 
-.XML Account Deletion
 ----
 curl -X DELETE https://ACae6e420f425248d6a26948c17a9e2acf:PWD@192.168.1.3:8080/restcomm/2012-04-24/Accounts/<Sub-Account-SID>
 ----
 
-.JSON Account Deletion
-----
-curl -X DELETE https://ACae6e420f425248d6a26948c17a9e2acf:PWD@192.168.1.3:8080/restcomm/2012-04-24/Accounts.json/<Sub-Account-SID>.json
-----
 
 NOTE: Account deletion has been deprecated from the REST API. Both of these methods will return HTTP 405. You will need to **close** the account instead.

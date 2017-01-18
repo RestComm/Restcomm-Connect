@@ -46,6 +46,7 @@ import org.restcomm.connect.http.converter.AvailableCountriesList;
 import org.restcomm.connect.http.converter.IncomingPhoneNumberConverter;
 import org.restcomm.connect.http.converter.IncomingPhoneNumberListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.identity.AuthType;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberParameters;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
@@ -222,7 +223,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
 
     protected Response getIncomingPhoneNumber(final String accountSid, final String sid, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Read:IncomingPhoneNumbers");
+        secure(operatedAccount, "RestComm:Read:IncomingPhoneNumbers", AuthType.AuthToken);
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
         if (incomingPhoneNumber == null) {
             return status(NOT_FOUND).build();
@@ -244,7 +245,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
     }
 
     protected Response getAvailableCountries(final String accountSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers", AuthType.AuthToken);
         List<String> countries = phoneNumberProvisioningManager.getAvailableCountries();
         if(countries == null) {
             countries = new ArrayList<String>();
@@ -262,7 +263,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
 
     protected Response getIncomingPhoneNumbers(final String accountSid, final String phoneNumberFilter, final String friendlyNameFilter,
             PhoneNumberType phoneNumberType, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers", AuthType.AuthToken);
         IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter, phoneNumberFilter);
         final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
 
@@ -278,7 +279,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
 
     protected Response putIncomingPhoneNumber(final String accountSid, final MultivaluedMap<String, String> data,
             PhoneNumberType phoneNumberType, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Create:IncomingPhoneNumbers");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Create:IncomingPhoneNumbers", AuthType.AuthToken);
         try {
             validate(data);
         } catch (final NullPointerException exception) {
@@ -343,7 +344,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
     public Response updateIncomingPhoneNumber(final String accountSid, final String sid,
             final MultivaluedMap<String, String> data, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Modify:IncomingPhoneNumbers");
+        secure(operatedAccount, "RestComm:Modify:IncomingPhoneNumbers", AuthType.AuthToken);
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
         secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD );
         boolean updated = true;
@@ -477,7 +478,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
 
     public Response deleteIncomingPhoneNumber(final String accountSid, final String sid) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Delete:IncomingPhoneNumbers");
+        secure(operatedAccount, "RestComm:Delete:IncomingPhoneNumbers", AuthType.AuthToken);
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
         secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD);
         if(phoneNumberProvisioningManager != null && (incomingPhoneNumber.isPureSip() == null || !incomingPhoneNumber.isPureSip())) {

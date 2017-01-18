@@ -48,6 +48,7 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.http.converter.CallDetailRecordConverter;
 import org.restcomm.connect.http.converter.CallDetailRecordListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.identity.AuthType;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CallResponse;
@@ -109,7 +110,7 @@ public class UssdPushEndpoint extends SecuredEndpoint {
     @SuppressWarnings("unchecked")
     protected Response putCall(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid accountId = new Sid(accountSid);
-        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
+        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls", AuthType.AuthToken);
         try {
             validate(data);
         } catch (final RuntimeException exception) {

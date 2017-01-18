@@ -1,0 +1,69 @@
+<rc-page-title icon="user" title="Sub-Accounts" sub-title="New"></rc-page-title>
+<div class="row">
+    <div class="col-md-12">
+        <form name="profileForm" class="form-horizontal">
+            <div class="well">
+                <h3 class="text-muted details-header"><i class="fa fa-user"></i> Account Settings</h3>
+                <!--
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="account-sid">Account SID</label>
+                    <div class="col-md-8">
+                        <input id="account-sid" type="text" class="form-control" placeholder="Account SID" ng-value="newAccount.sid" readonly />
+                    </div>
+                </div>
+                -->
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="friendly-name">
+                        <h5 class="no-margins">Friendly Name</h5>
+                    </label>
+                    <div class="col-md-8">
+                        <input id="friendly-name" type="text" class="form-control" placeholder="Friendly Name" maxlength="64" ng-model="newAccount.friendly_name" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="email-address">Email Address</label>
+                    <div class="col-md-8">
+                        <input name="email" id="email-address" type="email" class="form-control" placeholder="Email Address" ng-model="newAccount.email_address" autofocus required />
+                    </div>
+                </div>
+                <div class="form-group" ng-class="{'has-error':!profileForm.newPassword.$valid}">
+                    <label class="col-md-4 control-label">
+                        <h5 class="no-margins">Password</h5>
+                    </label>
+                    <div class="col-md-4">
+                        <div ng-show="newAccount.password" class="col-md-12 password-strength" ng-password-strength="newAccount.password" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-" style="padding: inherit;">
+                            <uib-progressbar value="pwdStrength"></uib-progressbar>
+                        </div>
+                        <input id="newPassword" name="newPassword" type="password" class="form-control" ng-class="{'password-transparent' : newAccount.password}" placeholder="New Password" ng-model="newAccount.password" />
+                    </div>
+                    <div class="col-md-4">
+                        <input id="passwordConfirmation" name="newPassword2" type="password" class="form-control" placeholder="Confirm New Password" ng-model="newPassword2" ng-init="''" equals="{{newAccount.password}}" required />
+                    </div>
+                </div>
+                <div class="form-group" >
+                    <label class="col-md-4 control-label" for="role">Role</label>
+                    <div class="col-md-8">
+                        <select id="role" ng-model='newAccount.role' class="form-control" ng-init="newAccount.role = availableRoles[0]" ng-options="availableRole for availableRole in availableRoles"></select>
+                    </div>
+                </div>
+                <div class="form-group" >
+                    <label class="col-md-4 control-label">Status</label>
+                    <div class="col-md-8">
+                        <select class="form-control" ng-init="newAccount.status = statuses[1]" ng-model="newAccount.status" ng-options="status for status in statuses">
+                        </select>
+                    </div>
+                </div>
+                <div class="row form-horizontal">
+                    <div class="col-md-12">
+                        <uib-alert type="alert.type" close="closeAlert()" ng-show="$parent.alert.show">{{alert.msg}}</uib-alert>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <div class="pull-right">
+            <!--<button class="btn btn-primary pull-right margin-left-10" ng-click="updateProfile()" ng-show="profileForm.$dirty" ng-disabled="(newPassword && pwdStrength < 50) || passwordsDiffer">Create</button>-->
+            <button class="btn btn-default" ui-sref="restcomm.subaccounts">Cancel</button>
+            <button class="btn btn-primary" ng-disabled="pwdStrength < 50 || profileForm.$invalid" ng-click="createAccount(newAccount)">Register</button>
+        </div>
+    </div>
+</div>

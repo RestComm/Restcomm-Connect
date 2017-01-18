@@ -37,9 +37,11 @@ import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.exceptions.AuthorizationException;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
+import org.restcomm.connect.http.exceptions.InvalidAuthorizationType;
 import org.restcomm.connect.http.exceptions.NotAuthenticated;
 import org.restcomm.connect.http.exceptions.OperatedAccountMissing;
 import org.restcomm.connect.identity.AuthOutcome;
+import org.restcomm.connect.identity.AuthType;
 import org.restcomm.connect.identity.IdentityContext;
 import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.identity.shiro.RestcommRoles;
@@ -67,8 +69,12 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     // types of secured resources used to apply different policies to applications, numbers etc.
     public enum SecuredType {
+        //Security Level Control type for Applications, used in ApplicationsEndpoint
         SECURED_APP,
-        SECURED_ACCOUNT, SECURED_STANDARD
+        //Security Level Control type for Accounts, used in AccountsEndpoint
+        SECURED_ACCOUNT,
+        //Security Level Control type for general use, all the REST API Endpoints
+        SECURED_STANDARD
     }
 
     protected Logger logger = Logger.getLogger(SecuredEndpoint.class);
@@ -136,10 +142,36 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      *
      * @param permission - e.g. 'RestComm:Create:Accounts'
      */
-    protected void checkPermission(final String permission) {
-        //checkAuthenticatedAccount(); // ok there is a valid authenticated account
+    private void checkPermission(final String permission) {
         if ( checkPermission(permission, userIdentityContext.getEffectiveAccountRoles()) != AuthOutcome.OK )
             throw new InsufficientPermission();
+    }
+
+    /**
+     * Grants access by permission. It will also make sure the Authentication type is correct
+     * Permission check will take into account AuthType also.
+     * Several endpoint methods should be allowed for AuthToken or Password or Any AuthType
+     *
+     * @param permission
+     * @param authType
+     */
+    protected void checkPermission(final String permission, AuthType authType) {
+        checkAuthType(authType);
+        checkPermission(permission);
+    }
+
+    /**
+     * Assert the request has the appropriate authentication type according to the authTypeFilter used.
+     * @param authTypeFilter
+     */
+    protected void checkAuthType(AuthType authTypeFilter) {
+        checkAuthenticatedAccount();
+        if (authTypeFilter == AuthType.ANY)
+            return; // any authType is allowed
+        if (authTypeFilter == userIdentityContext.getAuthType())
+            return;
+        else
+            throw new InvalidAuthorizationType();
     }
 
     // boolean overloaded form of checkAuthenticatedAccount(permission)
@@ -164,6 +196,16 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         secure(operatedAccount, permission, SecuredType.SECURED_STANDARD);
     }
 
+    protected void secure(final Account operatedAccount, final String permission, AuthType authType) throws AuthorizationException {
+        checkAuthType(authType);
+        secure(operatedAccount,permission);
+    }
+
+    protected void secure(final Account operatedAccount, final String permission, SecuredType type, AuthType authType) throws AuthorizationException {
+        checkAuthType(authType);
+        secure(operatedAccount, permission, type);
+    }
+
     protected void secure(final Account operatedAccount, final String permission, SecuredType type) throws AuthorizationException {
         checkAuthenticatedAccount();
         checkPermission(permission); // check an authenticated account allowed to do "permission" is available
@@ -183,6 +225,11 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
             if (secureLevelControlAccounts(operatedAccount) != AuthOutcome.OK)
                 throw new InsufficientPermission();
         }
+    }
+
+    protected void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type, AuthType authType) throws AuthorizationException {
+        checkAuthType(authType);
+        secure(operatedAccount, resourceAccountSid, type);
     }
 
     protected void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type) throws AuthorizationException {

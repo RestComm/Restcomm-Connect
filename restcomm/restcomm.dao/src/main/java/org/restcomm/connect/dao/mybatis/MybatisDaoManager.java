@@ -57,12 +57,12 @@ import org.restcomm.connect.dao.UsageDao;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe
-public final class MybatisDaoManager implements DaoManager {
+public class MybatisDaoManager implements DaoManager {
     private Configuration configuration;
     private Configuration amazonS3Configuration;
     private Configuration runtimeConfiguration;
     private S3AccessTool s3AccessTool;
-    private AccountsDao accountsDao;
+    protected AccountsDao accountsDao;
     private ApplicationsDao applicationsDao;
     private AvailablePhoneNumbersDao availablePhoneNumbersDao;
     private CallDetailRecordsDao callDetailRecordsDao;
@@ -85,15 +85,18 @@ public final class MybatisDaoManager implements DaoManager {
     private MediaResourceBrokerDao mediaResourceBrokerDao;
     private ExtensionsConfigurationDao extensionsConfigurationDao;
 
+    protected String confRootPath; // .../WEB-INF/conf/
+
     public MybatisDaoManager() {
         super();
     }
 
     @Override
-    public void configure(final Configuration configuration, Configuration daoManagerConfiguration) {
+    public void configure(final Configuration configuration, Configuration daoManagerConfiguration, String confRootPath) {
         this.configuration = daoManagerConfiguration.subset("dao-manager");
         this.amazonS3Configuration = configuration.subset("amazon-s3");
         this.runtimeConfiguration = configuration.subset("runtime-settings");
+        this.confRootPath = confRootPath;
     }
 
     @Override

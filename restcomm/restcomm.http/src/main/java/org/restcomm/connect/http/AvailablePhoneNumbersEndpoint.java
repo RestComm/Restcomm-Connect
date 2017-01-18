@@ -31,6 +31,7 @@ import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.AvailablePhoneNumberConverter;
 import org.restcomm.connect.http.converter.AvailablePhoneNumberListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.identity.AuthType;
 import org.restcomm.connect.provisioning.number.api.PhoneNumber;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
@@ -100,7 +101,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends SecuredEndpoint {
     }
 
     protected Response getAvailablePhoneNumbers(final String accountSid, final String isoCountryCode, PhoneNumberSearchFilters listFilters, String filterPattern, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:AvailablePhoneNumbers");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:AvailablePhoneNumbers", AuthType.AuthToken);
         String searchPattern = "";
         if (filterPattern != null && !filterPattern.isEmpty()) {
             for(int i = 0; i < filterPattern.length(); i ++) {

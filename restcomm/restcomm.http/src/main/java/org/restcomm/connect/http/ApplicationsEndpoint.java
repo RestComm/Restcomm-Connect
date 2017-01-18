@@ -58,6 +58,7 @@ import org.restcomm.connect.commons.util.StringUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+import org.restcomm.connect.identity.AuthType;
 
 /**
  * @author guilherme.jansen@telestax.com
@@ -119,7 +120,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
 
     protected Response getApplication(final String accountSid, final String sid, final MediaType responseType) {
         Account account;
-        secure(account = accountsDao.getAccount(accountSid), "RestComm:Read:Applications");
+        secure(account = accountsDao.getAccount(accountSid), "RestComm:Read:Applications", AuthType.AuthToken);
         Application application = null;
         if (Sid.pattern.matcher(sid).matches()) {
             application = dao.getApplication(new Sid(sid));
@@ -152,7 +153,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
     protected Response getApplications(final String accountSid, final MediaType responseType) {
         Account account;
         account = accountsDao.getAccount(accountSid);
-        secure(account, "RestComm:Read:Applications", SecuredType.SECURED_APP);
+        secure(account, "RestComm:Read:Applications", SecuredType.SECURED_APP, AuthType.AuthToken);
         final List<Application> applications = dao.getApplications(account.getSid());
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new ApplicationList(applications));
@@ -168,7 +169,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
             final MediaType responseType) {
         Account account;
         account = accountsDao.getAccount(accountSid);
-        secure(account, "RestComm:Create:Applications", SecuredType.SECURED_APP);
+        secure(account, "RestComm:Create:Applications", SecuredType.SECURED_APP, AuthType.AuthToken);
         try {
             validate(data);
         } catch (final NullPointerException exception) {
@@ -209,7 +210,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
     protected Response updateApplication(final String accountSid, final String sid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
         Account account;
-        secure(account = accountsDao.getAccount(accountSid), "RestComm:Modify:Applications");
+        secure(account = accountsDao.getAccount(accountSid), "RestComm:Modify:Applications", AuthType.AuthToken);
         final Application application = dao.getApplication(new Sid(sid));
         if (application == null) {
             return status(NOT_FOUND).build();

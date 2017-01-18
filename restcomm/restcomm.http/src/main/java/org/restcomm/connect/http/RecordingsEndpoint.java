@@ -48,6 +48,7 @@ import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.http.converter.RecordingConverter;
+import org.restcomm.connect.identity.AuthType;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -86,7 +87,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
 
     protected Response getRecording(final String accountSid, final String sid, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Read:Recordings");
+        secure(operatedAccount, "RestComm:Read:Recordings", AuthType.AuthToken);
         final Recording recording = dao.getRecording(new Sid(sid));
         if (recording == null) {
             return status(NOT_FOUND).build();
@@ -104,7 +105,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getRecordings(final String accountSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings", AuthType.AuthToken);
         final List<Recording> recordings = dao.getRecordings(new Sid(accountSid));
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(recordings), APPLICATION_JSON).build();
@@ -117,7 +118,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getRecordingsByCall(final String accountSid, final String callSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings", AuthType.AuthToken);
 
         final List<Recording> recordings = dao.getRecordingsByCall(new Sid(callSid));
         if (APPLICATION_JSON_TYPE == responseType) {

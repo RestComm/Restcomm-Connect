@@ -56,6 +56,7 @@ import org.restcomm.connect.commons.dao.Sid;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+import org.restcomm.connect.identity.AuthType;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -98,7 +99,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
     protected Response getConference(final String accountSid, final String sid, final MediaType responseType) {
         Account account = daoManager.getAccountsDao().getAccount(accountSid);
         try {
-            secure(account, "RestComm:Read:Conferences");
+            secure(account, "RestComm:Read:Conferences", AuthType.AuthToken);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -127,7 +128,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
     protected Response getConferences(final String accountSid, UriInfo info, MediaType responseType) {
         Account account = daoManager.getAccountsDao().getAccount(accountSid);
         try {
-            secure(account, "RestComm:Read:Conferences");
+            secure(account, "RestComm:Read:Conferences", AuthType.AuthToken);
             //secureLevelControl(daoManager.getAccountsDao(), accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();

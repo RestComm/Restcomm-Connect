@@ -39,7 +39,7 @@ rcServices.factory('SessionService', function() {
   }
 });
 
-rcServices.factory('AuthService',function(RCommAccounts,$http, $location, SessionService, md5, Notifications, $q, IdentityConfig, KeycloakAuth){
+rcServices.factory('AuthService',function(RCommAccounts, RCommCritical, $http, $location, SessionService, md5, Notifications, $q, IdentityConfig, KeycloakAuth, $uibModal){
     var account = null;
     var uninitialized = null;
 
@@ -142,7 +142,9 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     // updates all necessary state
     function setActiveAccount(newAccount) {
         account = newAccount;
-        SessionService.setStoredCredentials(newAccount);
+        // replace the stored credentials only if they are indeed in the response
+        if (newAccount.auth_token)
+            SessionService.setStoredCredentials(newAccount);
         if (account && account.status == 'uninitialized')
             uninitialized = true;
         else
@@ -216,34 +218,25 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     // resolved: nothing returned
     // rejected: PASSWORD_UPDATE_FAILED
     // Call it when authenticated and in Restcomm auth mode
-    function updatePassword(newPassword) {
-        var deferred = $q.defer();
-        var apiPath = "/restcomm/2012-04-24/Accounts.json/" + account.sid;
-        var auth_header = basicAuthHeader(account.sid, account.auth_token, true)
+    function updatePassword(oldPassword, newPassword) {
+        var auth_header = basicAuthHeader(account.sid, oldPassword, true);
         var params = {Password: newPassword};
-        var update = $http({
-        method: 'PUT',
-        url: apiPath,
-        data: $.param(params),
-        headers: {
-            Authorization: auth_header,
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }}).
-        success(function(account) {
-          setActiveAccount(account);
-          deferred.resolve();
-        }).
-        error(function(data) {
-          clearActiveAccount();
-          deferred.reject('PASSWORD_UPDATE_FAILED');
+        return RCommCritical.updateAccount(account.sid, auth_header, $.param(params)).then(function (response) {
+            // success
+            setActiveAccount(response.data);
+        }, function (response) {
+            // error
+            if (response.status == 401)
+                throw 'AUTHENTICATION_ERROR';
+            else
+                throw 'PASSWORD_UPDATE_FAILED';
         });
-        return deferred.promise;
     }
 
 
     // applies to Restcomm authorization (not keycloak)
-    function onAuthError() {
-        if (IdentityConfig.securedByRestcomm()) {
+    function onAuthError(noLoginRedirect) {
+        if (IdentityConfig.securedByRestcomm() && !noLoginRedirect) {
             SessionService.unset('sid');
             account = null;
             //$state.go("public.login");
@@ -262,6 +255,26 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         return null;
     }
 
+    function askForPassword(title, body) {
+        return $uibModal.open({
+            animation: false,
+            size: 'sm',
+            templateUrl: 'modules/modals/modal-ask-password.html',
+            controller: function ($scope,$uibModalInstance) {
+                $scope.modalTitle = title || "Password required";
+                $scope.modalBody = body || "This operation requires elevated privileges. Please provide your password:";
+                $scope.returnPassword = function (password) {
+                    $uibModalInstance.close(password);
+                }
+
+                $scope.cancel = function () {
+                    $uibModalInstance.dismiss();
+                }
+            }
+        });
+    };
+
+
     // public interface
     return {
         login: login,
@@ -273,7 +286,11 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         isUninitialized: isUninitialized,
         onAuthError: onAuthError,
         onError403: onError403,
-        updatePassword: updatePassword
+        updatePassword: updatePassword,
+        askForPassword: askForPassword,
+        basicAuthHeader: basicAuthHeader,
+        clearActiveAccount: clearActiveAccount,
+        setActiveAccount: setActiveAccount
     }
 });
 
@@ -446,6 +463,47 @@ uiModalDialog.run(["$templateCache", function (e) {
   e.put("template/dialog/message.html", '<div class="modal-header">   <h3 class="no-margins">{{ title }}</h3></div><div class="modal-body">  <p>{{ message }}</p></div><div class="modal-footer">    <button ng-repeat="btn in buttons" ng-click="close(btn.result)" class=btn ng-class="btn.cssClass">{{ btn.label }}</button></div>')
 }]);
 
+/**
+* Here go critical operations that require password authentication (instead of AithToken)
+*/
+rcServices.factory('RCommCritical', function ($http) {
+    return {
+        updateAccount: function (accountSid, authHeader, body) {
+            return $http({
+                url: '/restcomm/2012-04-24/Accounts.json/'+accountSid,
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': authHeader
+                },
+                data: body,
+                noLoginRedirect: true
+            });
+        },
+        createAccount: function (authHeader, body) {
+            return $http({
+                url: '/restcomm/2012-04-24/Accounts.json',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': authHeader
+                },
+                data: body,
+                noLoginRedirect: true
+            });
+        },
+        resetAccountAuthToken: function (accountSid, authHeader) {
+            return $http({
+                url: '/restcomm/2012-04-24/Accounts.json/'+accountSid+"/resetAuthToken",
+                method: 'POST',
+                headers: {
+                    'Authorization': authHeader
+                },
+                noLoginRedirect: true
+            });
+        }
+    }
+});
 
 rcServices.factory('RCommAccounts', function($resource) {
   return $resource('/restcomm/2012-04-24/Accounts/:accountSid.:format', {
@@ -463,7 +521,7 @@ rcServices.factory('RCommAccounts', function($resource) {
         headers : {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
-      },
+      },   // use RcommCritical.updateAccount()  if need to use password or not trigger loggins on 401,
       update: {
         method:'PUT',
         url: '/restcomm/2012-04-24/Accounts.:format/:accountSid',

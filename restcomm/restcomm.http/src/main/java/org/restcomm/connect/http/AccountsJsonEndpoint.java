@@ -86,5 +86,10 @@ public final class AccountsJsonEndpoint extends AccountsEndpoint {
         return updateAccount(accountSid, data, APPLICATION_JSON_TYPE);
     }
 
+    @Path("/{accountSid}/resetAuthToken")
+    @POST
+    public Response resetAuthTokenWithJsonResult(@PathParam("accountSid") final String accountSid) {
+        return resetAccountAuthToken(accountSid,  APPLICATION_JSON_TYPE);
+    }
 
 }

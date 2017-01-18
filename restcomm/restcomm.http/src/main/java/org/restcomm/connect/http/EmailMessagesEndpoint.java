@@ -37,6 +37,7 @@ import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.identity.AuthType;
 
 
 /**
@@ -127,7 +128,7 @@ public class EmailMessagesEndpoint extends SecuredEndpoint {
 
     @SuppressWarnings("unchecked")
     protected Response putEmailMessage(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Create:EmailMessages"); //need to fix for Emails.
+        secure(accountsDao.getAccount(accountSid), "RestComm:Create:EmailMessages", AuthType.AuthToken); //need to fix for Emails.
         try {
             validate(data);
             normalize(data);

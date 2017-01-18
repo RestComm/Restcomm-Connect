@@ -33,6 +33,7 @@ import org.restcomm.connect.http.converter.VersionConverter;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.UsageDao;
 import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.identity.AuthType;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -78,7 +79,7 @@ public class VersionEndpoint extends SecuredEndpoint {
     }
 
     protected Response getVersion(final String accountSid, final MediaType mediaType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage", AuthType.AuthToken);
 
         VersionEntity versionEntity = Version.getVersionEntity();
 

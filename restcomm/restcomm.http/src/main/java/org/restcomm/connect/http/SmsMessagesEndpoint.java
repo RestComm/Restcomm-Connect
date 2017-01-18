@@ -47,6 +47,7 @@ import org.restcomm.connect.dao.entities.SmsMessage.Status;
 import org.restcomm.connect.dao.entities.SmsMessageList;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.identity.AuthType;
 import org.restcomm.connect.sms.api.CreateSmsSession;
 import org.restcomm.connect.sms.api.SmsServiceResponse;
 import org.restcomm.connect.sms.api.SmsSessionAttribute;
@@ -123,7 +124,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
 
     protected Response getSmsMessage(final String accountSid, final String sid, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Read:SmsMessages");
+        secure(operatedAccount, "RestComm:Read:SmsMessages", AuthType.AuthToken);
         final SmsMessage smsMessage = dao.getSmsMessage(new Sid(sid));
         if (smsMessage == null) {
             return status(NOT_FOUND).build();
@@ -141,7 +142,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     }
 
     protected Response getSmsMessages(final String accountSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:SmsMessages");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:SmsMessages", AuthType.AuthToken);
         final List<SmsMessage> smsMessages = dao.getSmsMessages(new Sid(accountSid));
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(smsMessages), APPLICATION_JSON).build();
@@ -179,7 +180,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     @SuppressWarnings("unchecked")
     protected Response putSmsMessage(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Create:SmsMessages");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Create:SmsMessages", AuthType.AuthToken);
         try {
             validate(data);
             if(normalizePhoneNumbers)

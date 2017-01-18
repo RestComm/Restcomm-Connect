@@ -33,3 +33,16 @@ Restcomm Accounts have the following subresources. Click on a link to read the A
 * <<monitoring-service.adoc#monitoring, Restcomm API - Supervisor/Monitoring Service>>
 * <<conferences-api.adoc#conferenceapi, Restcomm API - Conference Management>>
 * <<participants-api.adoc#participantsapi, Restcomm API - Conference Participants Management>>
+
+== Authentication and credentials
+
+Restcomm REST API uses basic HTTP authentication. Typicaly, the account `Sid` is used as _username_ and account `AuthToken`
+as _password_. There are few exceptions to this rule where the account `Password` is used instead for critical operations.
+For example,  account modification methods in the <<account-api.adoc#account,Accounts API>>. Such exceptions will be pointed out
+in their individual documentation section.
+
+
+
+
+
+

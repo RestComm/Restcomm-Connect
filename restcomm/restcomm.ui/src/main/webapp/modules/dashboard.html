@@ -1,4 +1,4 @@
-<!--<rc-page-title icon="dashboard" title="DASHBOARD" sub-title=""></rc-page-title>-->
+<rc-page-title icon="dashboard" title="DASHBOARD" sub-title=""></rc-page-title>
 
 <div class="row">
     <div class="form-group col-md-12 account-sid-auth-token-box">
@@ -8,7 +8,7 @@
             </div>
             <div class="col-md-6">
                 Auth Token
-                <input type="{{authTokenType}}" class="account-sid-auth-token-input" value="{{ loggedAccount.auth_token }}" readonly ng-init="authTokenType = 'password'">
+                <input type="{{authTokenType}}" class="account-sid-auth-token-input" value="{{ authToken }}" readonly ng-init="authTokenType = 'password'">
                 <img src="resources/img/v2/d-r-pass-visible.png" class="auth-token-toggle" ng-click="authTokenType = (authTokenType === 'password' ? 'text' : 'password')">
             </div>
         </div>

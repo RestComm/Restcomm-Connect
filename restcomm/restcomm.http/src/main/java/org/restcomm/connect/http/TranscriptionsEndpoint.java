@@ -48,6 +48,7 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Transcription;
 import org.restcomm.connect.dao.entities.TranscriptionList;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.identity.AuthType;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -86,7 +87,7 @@ public abstract class TranscriptionsEndpoint extends SecuredEndpoint {
 
     protected Response getTranscription(final String accountSid, final String sid, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Read:Transcriptions");
+        secure(operatedAccount, "RestComm:Read:Transcriptions", AuthType.AuthToken);
         final Transcription transcription = dao.getTranscription(new Sid(sid));
         if (transcription == null) {
             return status(NOT_FOUND).build();
@@ -104,7 +105,7 @@ public abstract class TranscriptionsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getTranscriptions(final String accountSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Transcriptions");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Transcriptions", AuthType.AuthToken);
         final List<Transcription> transcriptions = dao.getTranscriptions(new Sid(accountSid));
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(transcriptions), APPLICATION_JSON).build();

@@ -30,6 +30,7 @@ import org.restcomm.connect.dao.entities.GatewayList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.http.converter.GatewayListConverter;
+import org.restcomm.connect.identity.AuthType;
 import org.restcomm.connect.telephony.api.RegisterGateway;
 import org.restcomm.connect.commons.util.StringUtils;
 
@@ -115,7 +116,7 @@ public class GatewaysEndpoint extends SecuredEndpoint {
     }
 
     protected Response getGateways(final String accountSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Gateways");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Gateways", AuthType.AuthToken);
         final List<Gateway> gateways = dao.getGateways();
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new GatewayList(gateways));
@@ -128,7 +129,7 @@ public class GatewaysEndpoint extends SecuredEndpoint {
     }
 
     protected Response putGateway(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Create:Gateways");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Create:Gateways", AuthType.AuthToken);
         try {
             validate(data);
         } catch (final RuntimeException exception) {
@@ -151,7 +152,7 @@ public class GatewaysEndpoint extends SecuredEndpoint {
     }
 
     protected Response updateGateway(final String accountSid, final String sid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Modify:Gateways");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Modify:Gateways", AuthType.AuthToken);
         Gateway gateway = dao.getGateway(new Sid(sid));
         if (gateway == null) {
             return status(NOT_FOUND).build();

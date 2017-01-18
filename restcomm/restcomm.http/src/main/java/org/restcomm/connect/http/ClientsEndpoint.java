@@ -37,6 +37,7 @@ import org.restcomm.connect.http.converter.ClientConverter;
 import org.restcomm.connect.http.converter.ClientListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
+import org.restcomm.connect.identity.AuthType;
 import org.restcomm.connect.identity.passwords.PasswordValidator;
 import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 
@@ -139,7 +140,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
 
     protected Response getClient(final String accountSid, final String sid, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Read:Clients");
+        secure(operatedAccount, "RestComm:Read:Clients", AuthType.AuthToken);
         final Client client = dao.getClient(new Sid(sid));
         if (client == null) {
             return status(NOT_FOUND).build();
@@ -157,7 +158,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getClients(final String accountSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Clients");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Clients", AuthType.AuthToken);
         final List<Client> clients = dao.getClients(new Sid(accountSid));
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new ClientList(clients));
@@ -189,7 +190,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
     }
 
     public Response putClient(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Create:Clients");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Create:Clients", AuthType.AuthToken);
         try {
             validate(data);
         } catch (final NullPointerException exception) {
@@ -224,7 +225,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
     protected Response updateClient(final String accountSid, final String sid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Modify:Clients");
+        secure(operatedAccount, "RestComm:Modify:Clients", AuthType.AuthToken);
         final Client client = dao.getClient(new Sid(sid));
         if (client == null) {
             return status(NOT_FOUND).build();

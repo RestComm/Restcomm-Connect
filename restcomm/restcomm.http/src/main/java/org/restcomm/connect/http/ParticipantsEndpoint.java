@@ -64,6 +64,7 @@ import org.restcomm.connect.dao.entities.CallDetailRecordList;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.identity.AuthType;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
@@ -136,7 +137,7 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
     protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
         Account account = daos.getAccountsDao().getAccount(accountSid);
         try {
-            secure(account, "RestComm:Read:Calls");
+            secure(account, "RestComm:Read:Calls", AuthType.AuthToken);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -164,7 +165,7 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
     protected Response getCalls(final String accountSid, final String conferenceSid, UriInfo info, MediaType responseType) {
         Account account = daos.getAccountsDao().getAccount(accountSid);
         try {
-            secure(account, "RestComm:Read:Calls");
+            secure(account, "RestComm:Read:Calls", AuthType.AuthToken);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -259,7 +260,7 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
         final Sid accountSid = new Sid(sid);
         Account account = daos.getAccountsDao().getAccount(accountSid);
         try {
-            secure(account, "RestComm:Modify:Calls");
+            secure(account, "RestComm:Modify:Calls", AuthType.AuthToken);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

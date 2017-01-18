@@ -47,6 +47,7 @@ import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
 import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.identity.AuthType;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.GetLiveCalls;
 import org.restcomm.connect.telephony.api.MonitoringServiceResponse;
@@ -104,7 +105,7 @@ public class SupervisorEndpoint extends SecuredEndpoint{
     }
 
     protected Response pong(final String accountSid, final MediaType responseType) {
-        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
+        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls", AuthType.AuthToken);
         CallDetailRecordFilter filterForTotal;
         try {
             filterForTotal = new CallDetailRecordFilter("", null, null, null, null, null,null,

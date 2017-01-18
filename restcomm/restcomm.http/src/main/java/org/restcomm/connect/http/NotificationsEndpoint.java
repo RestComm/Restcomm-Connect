@@ -48,6 +48,7 @@ import org.restcomm.connect.dao.entities.NotificationList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.identity.AuthType;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -86,7 +87,7 @@ public abstract class NotificationsEndpoint extends SecuredEndpoint {
 
     protected Response getNotification(final String accountSid, final String sid, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Read:Notifications");
+        secure(operatedAccount, "RestComm:Read:Notifications", AuthType.AuthToken);
         final Notification notification = dao.getNotification(new Sid(sid));
         if (notification == null) {
             return status(NOT_FOUND).build();
@@ -104,7 +105,7 @@ public abstract class NotificationsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getNotifications(final String accountSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Notifications");
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Notifications", AuthType.AuthToken);
         final List<Notification> notifications = dao.getNotifications(new Sid(accountSid));
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(notifications), APPLICATION_JSON).build();

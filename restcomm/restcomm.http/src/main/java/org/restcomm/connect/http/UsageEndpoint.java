@@ -53,6 +53,7 @@ import org.restcomm.connect.http.converter.UsageConverter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+import org.restcomm.connect.identity.AuthType;
 
 /**
  * @author charles.roufay@telestax.com (Charles Roufay)
@@ -93,7 +94,7 @@ public abstract class UsageEndpoint extends SecuredEndpoint {
   }
 
   protected Response getUsage(final String accountSid, final String subresource, UriInfo info, final MediaType responseType) {
-    secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage");
+    secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage", AuthType.AuthToken);
 
     String categoryStr = info.getQueryParameters().getFirst("Category");
     String startDateStr = info.getQueryParameters().getFirst("StartDate");
