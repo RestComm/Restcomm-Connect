@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -65,56 +66,80 @@ import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 import akka.actor.ActorRef;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
-import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  *
  */
 public class MgcpMediaGroup extends MediaGroup {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     // Finite state machine stuff.
-    private final State uninitialized;
-    private final State active;
-    private final State inactive;
+    protected final State uninitialized;
+    protected final State active;
+    protected final State inactive;
     // Special intermediate states.
-    private final State acquiringIvr;
-    private final State acquiringLink;
-    private final State initializingLink;
-    private final State openingLink;
-    private final State updatingLink;
-    private final State deactivating;
+    protected final State acquiringIvr;
+    protected final State acquiringLink;
+    protected final State initializingLink;
+    protected final State openingLink;
+    protected final State updatingLink;
+    protected final State deactivating;
     // Join Outboundcall Bridge endpoint to the IVR
-    private final State acquiringInternalLink;
-    private final State initializingInternalLink;
-    private final State openingInternalLink;
-    private final State updatingInternalLink;
+    protected final State acquiringInternalLink;
+    protected final State initializingInternalLink;
+    protected final State openingInternalLink;
+    protected final State updatingInternalLink;
 
     // FSM.
     private final FiniteStateMachine fsm;
 
     // MGCP runtime stuff.
-    private final ActorRef gateway;
-    private final ActorRef endpoint;
-    private final MediaSession session;
-    private ActorRef link;
-    private ActorRef ivr;
-    private boolean ivrInUse;
-    private MgcpEvent lastEvent;
+    protected final ActorRef gateway;
+    protected final ActorRef endpoint;
+    protected final MediaSession session;
+    protected ActorRef link;
+    protected final String ivrEndpointName;
+    protected ActorRef ivr;
+    protected boolean ivrInUse;
+    protected MgcpEvent lastEvent;
 
     // Runtime stuff.
-    private final List<ActorRef> observers;
-    private ActorRef originator;
+    protected final List<ActorRef> observers;
+    protected ActorRef originator;
 
-    private ActorRef internalLinkEndpoint;
-    private ActorRef internalLink;
-    private ConnectionMode internalLinkMode;
+    protected ActorRef internalLinkEndpoint;
+    protected ActorRef internalLink;
+    protected ConnectionMode internalLinkMode;
+
+    protected ConnectionIdentifier ivrConnectionIdentifier;
+    protected final String primaryEndpointId;
+    protected final String secondaryEndpointId;
 
     public MgcpMediaGroup(final ActorRef gateway, final MediaSession session, final ActorRef endpoint) {
+        this(gateway, session, endpoint, null, null);
+    }
+
+    public MgcpMediaGroup(final ActorRef gateway, final MediaSession session, final ActorRef endpoint, final String ivrEndpointName) {
+        this(gateway, session, endpoint, ivrEndpointName, null);
+    }
+
+    public MgcpMediaGroup(final ActorRef gateway, final MediaSession session, final ActorRef endpoint, final String ivrEndpointName, final ConnectionIdentifier ivrConnectionIdentifier) {
+        this(gateway, session, endpoint, ivrEndpointName, ivrConnectionIdentifier, null, null);
+    }
+
+    public MgcpMediaGroup(final ActorRef gateway, final MediaSession session, final ActorRef endpoint, final String ivrEndpointName, final ConnectionIdentifier ivrConnectionIdentifier, final String primaryEndpointId, final String secondaryEndpointId) {
         super();
         final ActorRef source = self();
+        if(logger.isDebugEnabled())
+            logger.debug("MgcpMediaGroup: "+ source.path() + " gateway: "+gateway
+                    + " session: "+session + " endpoint: "+endpoint + " ivrEndpointName: "
+                    + ivrEndpointName + " ivrConnectionIdentifier: "+ivrConnectionIdentifier
+                    + " primaryEndpointId: "+primaryEndpointId+" secondaryEndpointId: "
+                    + secondaryEndpointId);
         // Initialize the states for the FSM.
         uninitialized = new State("uninitialized", null, null);
         active = new State("active", new Active(source), null);
@@ -161,11 +186,15 @@ public class MgcpMediaGroup extends MediaGroup {
         this.session = session;
         this.endpoint = endpoint;
         this.ivrInUse = false;
+        this.ivrEndpointName = ivrEndpointName;
+        this.ivrConnectionIdentifier = ivrConnectionIdentifier;
+        this.primaryEndpointId = primaryEndpointId;
+        this.secondaryEndpointId = secondaryEndpointId;
         // Initialize the rest of the media group state.
         this.observers = new ArrayList<ActorRef>();
     }
 
-    private void collect(final Object message) {
+    protected void collect(final Object message) {
         final ActorRef self = self();
         final Collect request = (Collect) message;
         final PlayCollect.Builder builder = PlayCollect.builder();
@@ -185,7 +214,7 @@ public class MgcpMediaGroup extends MediaGroup {
         ivrInUse = true;
     }
 
-    private void play(final Object message) {
+    protected void play(final Object message) {
         final ActorRef self = self();
         final Play request = (Play) message;
         final List<URI> uris = request.uris();
@@ -199,7 +228,7 @@ public class MgcpMediaGroup extends MediaGroup {
     }
 
     @SuppressWarnings("unchecked")
-    private void notification(final Object message) {
+    protected void notification(final Object message) {
         final IvrEndpointResponse<String> response = (IvrEndpointResponse<String>) message;
         final ActorRef self = self();
         MediaGroupResponse<String> event = null;
@@ -211,11 +240,12 @@ public class MgcpMediaGroup extends MediaGroup {
         // for (final ActorRef observer : observers) {
         // observer.tell(event, self);
         // }
-        this.originator.tell(event, self);
+        if (originator != null)
+            this.originator.tell(event, self);
         ivrInUse = false;
     }
 
-    private void observe(final Object message) {
+    protected void observe(final Object message) {
         final ActorRef self = self();
         final Observe request = (Observe) message;
         final ActorRef observer = request.observer();
@@ -244,9 +274,9 @@ public class MgcpMediaGroup extends MediaGroup {
             stopObserving(message);
         } else if (MediaGroupStatus.class.equals(klass)) {
             if (active.equals(state)) {
-                sender().tell(new MediaGroupStateChanged(MediaGroupStateChanged.State.ACTIVE), self());
+                sender().tell(new MediaGroupStateChanged(MediaGroupStateChanged.State.ACTIVE, ivr, ivrConnectionIdentifier), self());
             } else {
-                sender().tell(new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE), self());
+                sender().tell(new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE, ivr, ivrConnectionIdentifier), self());
             }
         } else if (StartMediaGroup.class.equals(klass)) {
             if(logger.isInfoEnabled()) {
@@ -276,6 +306,7 @@ public class MgcpMediaGroup extends MediaGroup {
                     fsm.transition(message, openingInternalLink);
                 }
             } else if (LinkStateChanged.State.OPEN == response.state()) {
+                ivrConnectionIdentifier = response.connectionIdentifier();
                 if (openingLink.equals(state)) {
                     fsm.transition(message, updatingLink);
                 } else if (updatingLink.equals(state)) {
@@ -298,6 +329,8 @@ public class MgcpMediaGroup extends MediaGroup {
             onEndpointStateChanged((EndpointStateChanged) message, self(), sender);
         } else if (active.equals(state)) {
             if (Play.class.equals(klass)) {
+                if(logger.isDebugEnabled())
+                    logger.debug("MgcpMediaGroup: got a request to play something at conference ivr..");
                 play(message);
             } else if (Collect.class.equals(klass)) {
                 collect(message);
@@ -319,11 +352,11 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private boolean is(State state) {
+    protected boolean is(State state) {
         return state != null && state.equals(this.fsm.state());
     }
 
-    private void onEndpointStateChanged(EndpointStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+    protected void onEndpointStateChanged(EndpointStateChanged message, ActorRef self, ActorRef sender) throws Exception {
         if (is(deactivating)) {
             if (sender.equals(this.ivr) && EndpointState.DESTROYED.equals(message.getState())) {
                 this.ivr.tell(new StopObserving(self), self);
@@ -332,7 +365,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private void record(final Object message) {
+    protected void record(final Object message) {
         final ActorRef self = self();
         final Record request = (Record) message;
         final PlayRecord.Builder builder = PlayRecord.builder();
@@ -352,7 +385,7 @@ public class MgcpMediaGroup extends MediaGroup {
         ivrInUse = true;
     }
 
-    private void stop(MgcpEvent signal) {
+    protected void stop(MgcpEvent signal) {
         if (ivrInUse) {
             final ActorRef self = self();
             ivr.tell(new StopEndpoint(signal), self);
@@ -361,7 +394,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private void stopObserving(final Object message) {
+    protected void stopObserving(final Object message) {
         final StopObserving request = (StopObserving) message;
         final ActorRef observer = request.observer();
         if (observer != null) {
@@ -369,7 +402,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private abstract class AbstractAction implements Action {
+    protected abstract class AbstractAction implements Action {
         protected final ActorRef source;
 
         public AbstractAction(final ActorRef source) {
@@ -378,7 +411,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private final class AcquiringIvr extends AbstractAction {
+    protected final class AcquiringIvr extends AbstractAction {
         public AcquiringIvr(final ActorRef source) {
             super(source);
         }
@@ -396,13 +429,13 @@ public class MgcpMediaGroup extends MediaGroup {
             }
             if(logger.isInfoEnabled()) {
                 logger.info("MediaGroup :" + self().path() + " state: " + fsm.state().toString() + " session: " + session.id()
-                    + " will ask to get IvrEndpoint");
+                    + " will ask to get IvrEndpoint: "+ivrEndpointName);
             }
-            gateway.tell(new CreateIvrEndpoint(session), source);
+            gateway.tell(new CreateIvrEndpoint(session, ivrEndpointName), source);
         }
     }
 
-    private final class AcquiringLink extends AbstractAction {
+    protected final class AcquiringLink extends AbstractAction {
         public AcquiringLink(final ActorRef source) {
             super(source);
         }
@@ -425,11 +458,11 @@ public class MgcpMediaGroup extends MediaGroup {
                 logger.info("MediaGroup :" + self().path() + " state: " + fsm.state().toString() + " session: " + session.id()
                     + " ivr endpoint: " + ivr.path() + " will ask to get Link");
             }
-            gateway.tell(new CreateLink(session), source);
+            gateway.tell(new CreateLink(session, ivrConnectionIdentifier), source);
         }
     }
 
-    private final class InitializingLink extends AbstractAction {
+    protected final class InitializingLink extends AbstractAction {
         public InitializingLink(final ActorRef source) {
             super(source);
         }
@@ -454,7 +487,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private final class OpeningLink extends AbstractAction {
+    protected final class OpeningLink extends AbstractAction {
         public OpeningLink(final ActorRef source) {
             super(source);
         }
@@ -463,13 +496,13 @@ public class MgcpMediaGroup extends MediaGroup {
         public void execute(final Object message) throws Exception {
             if(logger.isInfoEnabled()) {
                 logger.info("MediaGroup :" + self().path() + " state: " + fsm.state().toString() + " session: " + session.id()
-                    + " link: " + link.path() + " will ask to open Link");
+                    + " link: " + link.path() + " will ask to open Link with primaryEndpointId: "+ primaryEndpointId+" secondaryEndpointId: "+secondaryEndpointId);
             }
-            link.tell(new OpenLink(ConnectionMode.SendRecv), source);
+            link.tell(new OpenLink(ConnectionMode.SendRecv, primaryEndpointId, secondaryEndpointId), source);
         }
     }
 
-    private final class UpdatingLink extends AbstractAction {
+    protected final class UpdatingLink extends AbstractAction {
         public UpdatingLink(final ActorRef source) {
             super(source);
         }
@@ -482,7 +515,7 @@ public class MgcpMediaGroup extends MediaGroup {
     }
 
     // Join OutboundCall Bridge endpoint to the IVR endpoint for recording - START
-    private final class AcquiringInternalLink extends AbstractAction {
+    protected final class AcquiringInternalLink extends AbstractAction {
         public AcquiringInternalLink(final ActorRef source) {
             super(source);
         }
@@ -495,11 +528,11 @@ public class MgcpMediaGroup extends MediaGroup {
                 internalLinkEndpoint = request.endpoint();
                 internalLinkMode = request.mode();
             }
-            gateway.tell(new CreateLink(session), source);
+            gateway.tell(new CreateLink(session, ivrConnectionIdentifier), source);
         }
     }
 
-    private final class InitializingInternalLink extends AbstractAction {
+    protected final class InitializingInternalLink extends AbstractAction {
         public InitializingInternalLink(final ActorRef source) {
             super(source);
         }
@@ -514,7 +547,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private final class OpeningInternalLink extends AbstractAction {
+    protected final class OpeningInternalLink extends AbstractAction {
         public OpeningInternalLink(final ActorRef source) {
             super(source);
         }
@@ -525,7 +558,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private final class UpdatingInternalLink extends AbstractAction {
+    protected final class UpdatingInternalLink extends AbstractAction {
         public UpdatingInternalLink(final ActorRef source) {
             super(source);
         }
@@ -539,7 +572,7 @@ public class MgcpMediaGroup extends MediaGroup {
 
     // Join OutboundCall Bridge endpoint to the IVR endpoint for recording - END
 
-    private final class Active extends AbstractAction {
+    protected final class Active extends AbstractAction {
         public Active(final ActorRef source) {
             super(source);
         }
@@ -547,14 +580,14 @@ public class MgcpMediaGroup extends MediaGroup {
         @Override
         public void execute(final Object message) throws Exception {
             // Notify the observers.
-            final MediaGroupStateChanged event = new MediaGroupStateChanged(MediaGroupStateChanged.State.ACTIVE);
+            final MediaGroupStateChanged event = new MediaGroupStateChanged(MediaGroupStateChanged.State.ACTIVE, ivr, ivrConnectionIdentifier);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
         }
     }
 
-    private final class Inactive extends AbstractAction {
+    protected final class Inactive extends AbstractAction {
         public Inactive(final ActorRef source) {
             super(source);
         }
@@ -572,7 +605,7 @@ public class MgcpMediaGroup extends MediaGroup {
             }
 
             // Notify the observers.
-            final MediaGroupStateChanged event = new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE);
+            final MediaGroupStateChanged event = new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE, ivr, ivrConnectionIdentifier);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
@@ -582,7 +615,7 @@ public class MgcpMediaGroup extends MediaGroup {
         }
     }
 
-    private final class Deactivating extends AbstractAction {
+    protected final class Deactivating extends AbstractAction {
         public Deactivating(final ActorRef source) {
             super(source);
         }
