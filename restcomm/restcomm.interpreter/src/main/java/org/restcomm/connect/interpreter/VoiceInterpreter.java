@@ -1101,7 +1101,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         if (dialBranches != null && dialBranches.contains(sender)) {
                             removeDialBranch(message, sender);
                         }
-                        checkDialBranch(message, sender, attribute);
+                        if (dialBranches != null && !dialBranches.isEmpty()){
+                            checkDialBranch(message, sender, attribute);
+                        } else {
+                            fsm.transition(message, finishDialing);
+                            callState = CallStateChanged.State.COMPLETED;
+                            fsm.transition(message, finished);
+                        }
                         return;
                     }
                 } else {
