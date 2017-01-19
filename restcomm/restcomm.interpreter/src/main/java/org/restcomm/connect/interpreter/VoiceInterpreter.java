@@ -1104,6 +1104,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             removeDialBranch(message, sender);
                             checkDialBranch(message, sender, attribute);
                         }
+                        else {
+                            //case for LCM testTerminateDialForkCallWhileRinging_LCM_to_dial_branches
+                            callState = event.state();
+                        }
                     }
                 }
                 break;
@@ -2353,6 +2357,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if(logger.isInfoEnabled()) {
                     logger.info("Received timeout, will cancel branches, current VoiceIntepreter state: " + state);
                 }
+                if(enable200OkDelay){
+                    outboundCallResponse = SipServletResponse.SC_REQUEST_TIMEOUT;
+                }
                 //The forking timeout reached, we have to cancel all dial branches
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
@@ -2368,7 +2375,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (outboundCall != null) {
                     outboundCall.tell(new Cancel(), source);
-                    call.tell(new Hangup(SipServletResponse.SC_REQUEST_TIMEOUT), self());
+                    call.tell(new Hangup(outboundCallResponse), self());
                 }
                 dialChildren = null;
                 callback();
