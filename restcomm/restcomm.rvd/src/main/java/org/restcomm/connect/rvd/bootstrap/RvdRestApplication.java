@@ -2,6 +2,7 @@ package org.restcomm.connect.rvd.bootstrap;
 
 import javax.ws.rs.core.Application;
 
+import org.restcomm.connect.rvd.http.ResponseWrapperExceptionMapper;
 import org.restcomm.connect.rvd.http.resources.NotificationsRestService;
 import org.restcomm.connect.rvd.http.AuthorizationExceptionMapper;
 import org.restcomm.connect.rvd.http.ProjectDoesNotExistMapper;
@@ -37,6 +38,7 @@ public class RvdRestApplication extends Application {
         classes.add(ProjectDoesNotExistMapper.class);
         classes.add(StorageExceptionMapper.class);
         classes.add(AuthorizationExceptionMapper.class);
+        classes.add(ResponseWrapperExceptionMapper.class);
         return classes;
     }
 

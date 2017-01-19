@@ -3,6 +3,7 @@ package org.restcomm.connect.rvd;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
+import org.restcomm.connect.rvd.exceptions.ProjectDoesNotExist;
 import org.restcomm.connect.rvd.model.ProjectSettings;
 import org.restcomm.connect.rvd.storage.FsProjectStorage;
 import org.restcomm.connect.rvd.storage.exceptions.StorageEntityNotFound;
@@ -14,16 +15,16 @@ public class ProjectAwareRvdContext extends RvdContext {
     private ProjectLogger projectLogger;
     private ProjectSettings projectSettings;
 
-    public ProjectAwareRvdContext(String projectName, HttpServletRequest request, ServletContext servletContext, RvdConfiguration configuration) throws StorageException {
+    public ProjectAwareRvdContext(String projectName, HttpServletRequest request, ServletContext servletContext, RvdConfiguration configuration) throws ProjectDoesNotExist {
         super(request, servletContext, configuration);
         if (projectName == null)
             throw new IllegalArgumentException();
         setProjectName(projectName);
     }
 
-    public ProjectAwareRvdContext(HttpServletRequest request, ServletContext servletContext, RvdConfiguration configuration) {
-        super(request, servletContext, configuration);
-    }
+//    public ProjectAwareRvdContext(HttpServletRequest request, ServletContext servletContext, RvdConfiguration configuration) {
+//        super(request, servletContext, configuration);
+//    }
 
     public ProjectLogger getProjectLogger() {
         return projectLogger;
@@ -33,20 +34,19 @@ public class ProjectAwareRvdContext extends RvdContext {
         return projectSettings;
     }
 
-    public void setProjectName(String projectName) {
+    void setProjectName(String projectName) throws ProjectDoesNotExist {
         this.projectName = projectName;
-        if (projectName != null) {
-            this.projectLogger = new ProjectLogger(projectName, getSettings(), getMarshaler());
-            try {
-                this.projectSettings = FsProjectStorage.loadProjectSettings(projectName, workspaceStorage);
-            } catch (StorageEntityNotFound e) {
-                this.projectSettings = ProjectSettings.createDefault();
-            } catch (StorageException e) {
-                throw new RuntimeException(e); // serious error
-            }
-        } else {
-            this.projectLogger = null;
-            this.projectSettings = null;
+        // make sure the project exists
+        if (!FsProjectStorage.projectExists(projectName, workspaceStorage)) {
+            throw new ProjectDoesNotExist("Project '" + projectName + "' does not exist.");
+        }
+        this.projectLogger = new ProjectLogger(projectName, getSettings(), getMarshaler());
+        try {
+            this.projectSettings = FsProjectStorage.loadProjectSettings(projectName, workspaceStorage);
+        } catch (StorageEntityNotFound e) {
+            this.projectSettings = ProjectSettings.createDefault();
+        } catch (StorageException e) {
+            throw new RuntimeException(e); // serious error
         }
     }
 
