@@ -1108,6 +1108,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         fsm.transition(message, finishDialing);
                     } else if (sender == call) {
                         //Move to finished state only if the call actor send the Cancel.
+                        if(asImsUa){
+                            if(callRecord != null){
+                                final CallDetailRecordsDao callRecords = storage.getCallDetailRecordsDao();
+                                callRecords.removeCallDetailRecord(callRecord.getSid());
+                            }
+                        }
+                            
                         fsm.transition(message, finished);
                     } else {
                         //This is a Cancel from a dial branch previously canceled
