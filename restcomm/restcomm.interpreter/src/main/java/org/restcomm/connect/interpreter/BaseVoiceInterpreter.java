@@ -121,6 +121,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import javax.servlet.sip.SipServletResponse;
+
 import static akka.pattern.Patterns.ask;
 
 /**
@@ -201,8 +203,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     CallInfo callInfo = null;
     // The call state.
     CallStateChanged.State callState = null;
-    // The last outbound call state.
-    CallStateChanged outboundCallState = null;
+    // The last outbound call response.
+    Integer outboundCallResponse = null;
     // A call detail record.
     CallDetailRecord callRecord = null;
 
@@ -1234,9 +1236,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             } else if (message instanceof SmsServiceResponse) {
                 //Blocked SMS Session request
                 call.tell(new Hangup(((SmsServiceResponse)message).cause().getMessage()), self());
-            } else {
-                Integer sipResponse = outboundCallState != null ? outboundCallState.sipResponse() : null;
+            } else if (Tag.class.equals(klass) && Verbs.hangup.equals(verb.name())) {
+                Integer sipResponse = outboundCallResponse != null ? outboundCallResponse : SipServletResponse.SC_REQUEST_TERMINATED;
                 call.tell(new Hangup(sipResponse), source);
+            } else {
+                call.tell(new Hangup(outboundCallResponse), source);
             }
         }
     }
