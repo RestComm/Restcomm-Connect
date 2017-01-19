@@ -93,14 +93,14 @@ public class LiveCallModificationAnswerDelayTest {
 
     @Before
     public void before() throws Exception {
-        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5050");
-        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, bobContact);
+        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
+        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
 
-        georgeSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5050");
-        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, georgeContact);
+        georgeSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
+        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
 
-        aliceSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5050");
-        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5050, aliceContact);
+        aliceSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
+        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
     }
 
     @After
@@ -143,7 +143,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8050/restcomm/dial-number-entry.xml";
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
 
         JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -195,7 +195,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8050/restcomm/dial-number-entry.xml";
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
 
         JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -254,7 +254,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8050/restcomm/dial-number-entry-lcm.xml";
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry-lcm.xml";
 
         JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -293,7 +293,7 @@ public class LiveCallModificationAnswerDelayTest {
         georgeCall.listenForIncomingCall();
 
         // Register Alice Restcomm client
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         SipCall aliceCall = alicePhone.createSipCall();
@@ -301,7 +301,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8050/restcomm/dial-number-entry.xml";
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
 
         JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -328,7 +328,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         Thread.sleep(10000);
         System.out.println("\n ******************** \nAbout to redirect the call\n ********************\n");
-        rcmlUrl = "http://127.0.0.1:8050/restcomm/dial-client-entry.xml";
+        rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
 
         callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
                 callSid, null, rcmlUrl);
@@ -376,7 +376,7 @@ public class LiveCallModificationAnswerDelayTest {
                         .withBody(dialConference)));
 
         // Register Alice Restcomm client
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         SipCall aliceCall = alicePhone.createSipCall();
@@ -386,7 +386,7 @@ public class LiveCallModificationAnswerDelayTest {
         bobPhone.addUpdateCredential(bobCredential);
 
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5050", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertTrue(bobCall.waitForAuthorisation(5000));
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -436,7 +436,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         Thread.sleep(10000);
         System.out.println("\n ******************** \nAbout to redirect the call\n ********************\n");
-        String rcmlUrl = "http://127.0.0.1:8050/restcomm/dial-client-entry.xml";
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
 
         JsonObject callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
                 callSid, null, rcmlUrl);
@@ -501,14 +501,14 @@ public class LiveCallModificationAnswerDelayTest {
         Credential c = new Credential("127.0.0.1", "bob", "1234");
         bobPhone.addUpdateCredential(c);
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         SipCall aliceCall = alicePhone.createSipCall();
         aliceCall.listenForIncomingCall();
 
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5050", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertTrue(bobCall.waitForAuthorisation(5000));
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -597,7 +597,7 @@ public class LiveCallModificationAnswerDelayTest {
         georgeCall.listenForIncomingCall();
 
         // Register Alice Restcomm client
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         SipCall aliceCall = alicePhone.createSipCall();
@@ -605,7 +605,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8050/restcomm/dial-number-entry.xml";
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
 
         JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -632,7 +632,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         Thread.sleep(10000);
         System.out.println("\n ******************** \nAbout to redirect the call\n ********************\n");
-        rcmlUrl = "http://127.0.0.1:8050/restcomm/dial-client-entry.xml";
+        rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
 
         String invalidCallSid = Sid.generate(Sid.Type.CALL).toString();
 
@@ -652,7 +652,7 @@ public class LiveCallModificationAnswerDelayTest {
 
     private String dialFork = "<Response><Dial record=\"true\" timeout=\"150\" action=\"/completed\"><Client>alice</Client><Number>+131313</Number></Dial></Response>";
     @Test
-    @Ignore // Problem with CDRs status after call is disconnected
+    //@Ignore // Problem with CDRs status after call is disconnected
     public void testTerminateDialForkCallWhileRinging_LCM_to_dial_branches() throws Exception {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -665,7 +665,7 @@ public class LiveCallModificationAnswerDelayTest {
                         .withStatus(200)));
 
         // Register Alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare Alice to receive call
@@ -682,7 +682,7 @@ public class LiveCallModificationAnswerDelayTest {
         // Initiate a call using Bob
         final SipCall bobCall = bobPhone.createSipCall();
 
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5050", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitForAuthorisation(5000));
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -724,7 +724,7 @@ public class LiveCallModificationAnswerDelayTest {
         aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK-2-Cancel-Alice", 3600);
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.REQUEST_TERMINATED, bobCall.getLastReceivedResponse().getStatusCode());
+        assertEquals(Response.SERVER_INTERNAL_ERROR, bobCall.getLastReceivedResponse().getStatusCode());
 
         //Wait to cancel the other branches
         Thread.sleep(3000);
@@ -743,11 +743,11 @@ public class LiveCallModificationAnswerDelayTest {
         cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, bobCallSid);
         jsonObj = cdr.getAsJsonObject();
         logger.info("Status for call: "+bobCallSid+" : "+jsonObj.get("status").getAsString());
-        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("canceled"));
     }
 
     @Test
-    @Ignore // Problem with CDRs status after call is disconnected
+    //@Ignore // Problem with CDRs status after call is disconnected
     public void testTerminateDialForkCallWhileRinging_LCM_to_initial_call() throws Exception {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -760,7 +760,7 @@ public class LiveCallModificationAnswerDelayTest {
                         .withStatus(200)));
 
         // Register Alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare Alice to receive call
@@ -777,7 +777,7 @@ public class LiveCallModificationAnswerDelayTest {
         // Initiate a call using Bob
         final SipCall bobCall = bobPhone.createSipCall();
 
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5050", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitForAuthorisation(5000));
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -847,7 +847,7 @@ public class LiveCallModificationAnswerDelayTest {
     private String hangupRcml = "<Response><Hangup></Hangup></Response>";
 
     @Test
-    @Ignore // Problem with CDRs status after call is disconnected
+    //@Ignore // Problem with CDRs status after call is disconnected
     public void testTerminateDialForkCallWhileRinging_LCM_to_move_initial_call_to_hangup_rcml() throws Exception {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -866,7 +866,7 @@ public class LiveCallModificationAnswerDelayTest {
                         .withBody(hangupRcml)));
 
         // Register Alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5050");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare Alice to receive call
@@ -883,7 +883,7 @@ public class LiveCallModificationAnswerDelayTest {
         // Initiate a call using Bob
         final SipCall bobCall = bobPhone.createSipCall();
 
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5050", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitForAuthorisation(5000));
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
