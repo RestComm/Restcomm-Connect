@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Enumeration;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
@@ -29,10 +31,12 @@ import org.apache.log4j.Logger;
 import org.restcomm.connect.rvd.ProjectAwareRvdContext;
 import org.restcomm.connect.rvd.RvdConfiguration;
 import org.restcomm.connect.rvd.exceptions.AccessApiException;
+import org.restcomm.connect.rvd.exceptions.ProjectDoesNotExist;
 import org.restcomm.connect.rvd.exceptions.callcontrol.CallControlBadRequestException;
 import org.restcomm.connect.rvd.exceptions.callcontrol.CallControlException;
 import org.restcomm.connect.rvd.exceptions.callcontrol.CallControlInvalidConfigurationException;
 import org.restcomm.connect.rvd.exceptions.callcontrol.UnauthorizedCallControlAccess;
+import org.restcomm.connect.rvd.exceptions.ResponseWrapperException;
 import org.restcomm.connect.rvd.identity.AccountProvider;
 import org.restcomm.connect.rvd.identity.UserIdentityContext;
 import org.restcomm.connect.rvd.interpreter.Interpreter;
@@ -60,17 +64,29 @@ import org.restcomm.connect.rvd.utils.RvdUtils;
 @Path("apps")
 public class RvdController extends SecuredRestService {
     static final Logger logger = Logger.getLogger(RvdController.class.getName());
+    Pattern appIdPattern = Pattern.compile("^apps\\/([a-zA-Z0-9]+)(\\/|$)");
 
     private RvdConfiguration rvdSettings;
     private ProjectAwareRvdContext rvdContext;
 
     private WorkspaceStorage workspaceStorage;
     private ModelMarshaler marshaler;
+    @Context
+    UriInfo uriInfo;
+    String applicationId; // contains a valid applicationId
 
     @PostConstruct
     public void init() {
         super.init();
-        rvdContext = new ProjectAwareRvdContext(request, servletContext, applicationContext.getConfiguration());
+        // An application SID is required for all RvdController methods. Throw error if it's not there.
+        this.applicationId = extractAppIdFromPath(uriInfo.getPath());
+        if (applicationId == null)
+            throw new ResponseWrapperException( Response.status(Status.BAD_REQUEST).build() );
+        try {
+            rvdContext = new ProjectAwareRvdContext(applicationId, request, servletContext, applicationContext.getConfiguration());
+        } catch (ProjectDoesNotExist projectDoesNotExist) {
+            throw new ResponseWrapperException( Response.status(Status.NOT_FOUND).build() );
+        }
         rvdSettings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();
         workspaceStorage = rvdContext.getWorkspaceStorage();
@@ -121,9 +137,8 @@ public class RvdController extends SecuredRestService {
     @GET
     @Path("{appname}/controller")
     @Produces(MediaType.APPLICATION_XML)
-    public Response controllerGet(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest,
+    public Response controllerGet( @Context HttpServletRequest httpRequest,
             @Context UriInfo ui) {
-        rvdContext.setProjectName(appname);
         if(logger.isInfoEnabled()) {
             logger.info("Received Restcomm GET request");
         }
@@ -136,15 +151,14 @@ public class RvdController extends SecuredRestService {
         }
         MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
 
-        return runInterpreter(appname, httpRequest, requestParams);
+        return runInterpreter(applicationId, httpRequest, requestParams);
     }
 
     @POST
     @Path("{appname}/controller")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_XML)
-    public Response controllerPost(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
-        rvdContext.setProjectName(appname);
+    public Response controllerPost(@Context HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams) {
 
         if(logger.isInfoEnabled()) {
             logger.info("Received Restcomm POST request");
@@ -153,17 +167,16 @@ public class RvdController extends SecuredRestService {
             logger.debug(httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
             logger.debug("POST Params: " + requestParams.toString());
         }
-        return runInterpreter(appname, httpRequest, requestParams);
+        return runInterpreter(applicationId, httpRequest, requestParams);
     }
 
     @GET
     @Path("{appname}/resources/{filename}")
-    public Response getWav(@PathParam("appname") String projectName, @PathParam("filename") String filename) {
-        rvdContext.setProjectName(projectName);
+    public Response getWav(@PathParam("filename") String filename) {
         InputStream wavStream;
 
         try {
-            wavStream = FsProjectStorage.getWav(projectName, filename, workspaceStorage);
+            wavStream = FsProjectStorage.getWav(applicationId, filename, workspaceStorage);
             return Response.ok(wavStream, "audio/x-wav")
                     .header("Content-Disposition", "attachment; filename = " + filename).build();
         } catch (WavItemDoesNotExist e) {
@@ -318,14 +331,13 @@ public class RvdController extends SecuredRestService {
     @GET
     @Path("{appname}/start{extension: (.html)?}")
     @Produces(MediaType.TEXT_HTML)
-    public Response executeActionHtml(@PathParam("appname") String projectName, @Context HttpServletRequest request,
+    public Response executeActionHtml(@Context HttpServletRequest request,
             @QueryParam("to") String toParam, @QueryParam("from") String fromParam, @QueryParam("token") String accessToken,
             @Context UriInfo ui) {
         String selectedMediaType = MediaType.TEXT_HTML;
         try {
-            rvdContext.setProjectName(projectName);
             AccountProvider accountProvider = applicationContext.getAccountProvider();
-            RestcommCallArray calls = executeAction(projectName, request, toParam, fromParam, accessToken, ui, accountProvider);
+            RestcommCallArray calls = executeAction(applicationId, request, toParam, fromParam, accessToken, ui, accountProvider);
             // build call-sid part of message
             StringBuffer messageBuffer = new StringBuffer("[");
             for (int i=0; i<calls.size(); i++) {
@@ -358,14 +370,13 @@ public class RvdController extends SecuredRestService {
     @GET
     @Path("{appname}/start.json")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response executeActionJson(@PathParam("appname") String projectName, @Context HttpServletRequest request,
+    public Response executeActionJson(@Context HttpServletRequest request,
             @QueryParam("to") String toParam, @QueryParam("from") String fromParam, @QueryParam("token") String accessToken,
             @Context UriInfo ui) {
         String selectedMediaType = MediaType.APPLICATION_JSON;
         try {
-            rvdContext.setProjectName(projectName);
             AccountProvider accountProvider = applicationContext.getAccountProvider();
-            RestcommCallArray calls = executeAction(projectName, request, toParam, fromParam, accessToken, ui, accountProvider);
+            RestcommCallArray calls = executeAction(applicationId, request, toParam, fromParam, accessToken, ui, accountProvider);
             return buildWebTriggerJsonResponse(CallControlAction.createCall, CallControlStatus.success, 200, calls);
         } catch (UnauthorizedCallControlAccess e) {
             logger.warn(e);
@@ -387,13 +398,12 @@ public class RvdController extends SecuredRestService {
 
     @GET
     @Path("{appname}/log")
-    public Response appLog(@PathParam("appname") String appName) {
+    public Response appLog() {
         secure();
         try {
-            rvdContext.setProjectName(appName);
 
             // make sure logging is enabled before allowing access to sensitive log information
-            ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(appName, workspaceStorage);
+            ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(applicationId, workspaceStorage);
             if (projectSettings == null || projectSettings.getLogging() == false)
                 return Response.status(Status.NOT_FOUND).build();
 
@@ -419,13 +429,11 @@ public class RvdController extends SecuredRestService {
 
     @DELETE
     @Path("{appname}/log")
-    public Response resetAppLog(@PathParam("appname") String appName) {
+    public Response resetAppLog() {
         secure();
         try {
-            rvdContext.setProjectName(appName);
-
             // make sure logging is enabled before allowing access to sensitive log information
-            ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(appName, workspaceStorage);
+            ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(applicationId, workspaceStorage);
             if (projectSettings == null || projectSettings.getLogging() == false)
                 return Response.status(Status.NOT_FOUND).build();
 
@@ -435,6 +443,21 @@ public class RvdController extends SecuredRestService {
             // !!! return hangup!!!
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    /**
+     * Tries to extract the appId part from paths like: 'apps/APd13dc2c651884534b2fd7c7b98cac354/controller...'
+     *
+     * @param path
+     * @return the extracted application sid or null if nothing is matched
+     */
+    String extractAppIdFromPath(String path) {
+        String uri_string = path.toString();
+        Matcher matcher = appIdPattern.matcher(uri_string);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
     }
 
 }
