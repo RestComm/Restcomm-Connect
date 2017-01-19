@@ -33,6 +33,11 @@ public final class Hangup {
         super();
     }
 
+    public Hangup(final String message, final Integer sipResponse) {
+        this.message = message;
+        this.sipResponse = sipResponse;
+    }
+
     public Hangup(final String message) {
         this.message = message;
     }
