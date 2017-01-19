@@ -1372,7 +1372,7 @@ public final class Call extends UntypedActor {
             }
             CallStateChanged event = new CallStateChanged(external);
             if (external.equals(CallStateChanged.State.CANCELED)) {
-                event = new CallStateChanged(external, SipServletResponse.SC_REQUEST_TIMEOUT);
+                event = new CallStateChanged(external);
             }
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
@@ -2193,7 +2193,7 @@ public final class Call extends UntypedActor {
     }
 
     private void onBridgeStateChanged(BridgeStateChanged message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(inProgress)) {
+        if (is(inProgress) && isInbound() && enable200OkDelay) {
             switch (message.getState()) {
                 case BRIDGED:
                     sendInviteOk();

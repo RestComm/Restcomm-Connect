@@ -1058,7 +1058,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         if (sender == call)
             callState = event.state();
         else
-            outboundCallState = event;
+            if(event.sipResponse()!=null && event.sipResponse()>=400){
+                outboundCallResponse = event.sipResponse();
+            }
         if(logger.isInfoEnabled()){
             logger.info("VoiceInterpreter received CallStateChanged event: "+event+ " from "+(sender == call? "call" : "outboundCall")+ ", sender path: " + sender.path() +", current VI state: "+fsm.state());
         }
@@ -1696,8 +1698,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                 } else {
                     if (call != null) {
-                        Integer sipResponse = outboundCallState != null ? outboundCallState.sipResponse() : null;
-                        call.tell(new Hangup(sipResponse), null);
+                        call.tell(new Hangup(outboundCallResponse), null);
                     }
                     final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
@@ -2111,7 +2112,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 record(bridge);
             }
-            if(enable200OkDelay){
+            if(enable200OkDelay && verb !=null && Verbs.dial.equals(verb.name())){
                 call.tell(message, self());
             }
         }
@@ -2368,7 +2369,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (outboundCall != null) {
                     outboundCall.tell(new Cancel(), source);
-                    call.tell(new Hangup(), self());
+                    call.tell(new Hangup(SipServletResponse.SC_REQUEST_TIMEOUT), self());
                 }
                 dialChildren = null;
                 callback();
