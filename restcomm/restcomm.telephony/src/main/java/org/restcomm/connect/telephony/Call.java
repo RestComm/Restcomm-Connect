@@ -822,7 +822,7 @@ public final class Call extends UntypedActor {
             if (message instanceof SipServletRequest) {
                 invite = (SipServletRequest) message;
                 from = (SipURI) invite.getFrom().getURI();
-                to = (SipURI) invite.getTo().getURI();
+                to = invite.getTo().getURI();
                 timeout = -1;
                 direction = INBOUND;
                 try {
