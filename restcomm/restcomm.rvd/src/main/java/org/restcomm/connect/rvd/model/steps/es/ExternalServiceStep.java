@@ -311,7 +311,10 @@ public class ExternalServiceStep extends Step {
                 } else if (logger.isDebugEnabled()) {
                     logger.debug("ES: No parsing will be done to the response");
                 }
-            } finally {
+            } catch (JsonSyntaxException e) {
+                throw new BadExternalServiceResponse("External Service request received a malformed JSON response" );
+
+            }finally {
                 if (response != null) {
                     response.close();
                     HttpClientUtils.closeQuietly(client);
