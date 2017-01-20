@@ -7,6 +7,7 @@ import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.restcomm.connect.rvd.concurrency.ResidentProjectInfo;
 import org.restcomm.connect.rvd.model.ModelMarshaler;
 
 /**
@@ -20,17 +21,25 @@ public class ProjectLogger {
 
     private static final int MAX_TAGS = 5;
     private String projectName;
-    private String logFilePath;
     private ModelMarshaler marshaler;
     private boolean useMarshaler;
 
+    static int backlogCount = 3; // number rotated log files in addition to the main log file (total files = backlogSize + 1)
+    static int triggerRotationSize = 1000; // the size of the main log file in bytes that will trigger the rotation when exceeded
+    static String logFilenameBase; // the full path of the main log file without the extension e.g. /home/user/workspace/APxxx/project (without '.log')
+    File mainLogFile;
+
+    ResidentProjectInfo semaphores;
+
     // Temporary variable holding log message as it is built.
 
-    public ProjectLogger(String projectName, RvdConfiguration settings,ModelMarshaler marshaler) {
+    public ProjectLogger(String projectName, RvdConfiguration settings,ModelMarshaler marshaler, ResidentProjectInfo semaphores) {
         this.projectName = projectName;
-        this.logFilePath = settings.getProjectBasePath(projectName) + File.separator + RvdConfiguration.PROJECT_LOG_FILENAME;
+        this.logFilenameBase = settings.getProjectBasePath(projectName) + File.separator + RvdConfiguration.PROJECT_LOG_FILENAME;
+        mainLogFile = new File(logFilenameBase + ".log");
         this.marshaler = marshaler;
         this.useMarshaler = true;
+        this.semaphores = semaphores;
     }
 
     private Object payload;
@@ -102,24 +111,75 @@ public class ProjectLogger {
         // data is ready for writing. Make sure no newlines are there
 
         try {
-            FileUtils.writeStringToFile(new File(logFilePath), buffer.toString(), Charset.forName("UTF-8"), true);
+            FileUtils.writeStringToFile(mainLogFile, buffer.toString(), Charset.forName("UTF-8"), true);
         } catch (IOException e) {
             logger.warn("Error writing to application log for " + projectName, e);
         }
+
+        // check for log retation
+        if (needsRotate())
+            rotate();
     }
 
     public String getLogFilePath() {
-        return logFilePath;
+        return mainLogFile.getPath();
     }
 
     // clear the log file
+    // TODO check this method for concurrency issues
     public void reset() {
         try {
-            FileUtils.writeStringToFile(new File(logFilePath), "");
+            FileUtils.writeStringToFile(mainLogFile, "");
         } catch (IOException e) {
             logger.warn("Error clearing application log for " + projectName, e);
         }
     }
+
+    // do we need to rotate the application log files ?
+    boolean needsRotate() {
+        if ( mainLogFile.length() >  triggerRotationSize) {
+            return true;
+        }
+        return false;
+    }
+
+    /*
+    rename project-n-1.log -> project-n.log
+    rename project-n-2.log -> project-n-1.log
+    copy project.log -> project1.log
+    create project-new.log
+    rename project-new.log -> project.log
+    */
+    void rotate() {
+        /*  Rotation algorithm
+            create project-new.log (should atomic on FS level and fail if it already exists)
+            rename project-n-1.log -> project-n.log
+            rename project-n-2.log -> project-n-1.log
+            copy project.log -> project1.log
+            rename project-new.log -> project.log
+        */
+        synchronized (semaphores.logRotationSemaphore) {
+            // create a new blank file (it will become the new mainlog file)
+            // TODO make sure file creation fails if the file is already there.
+            // TODO abort rotation in case another rotation is already in place i.e. project-new.log already exists
+            File newfile = new File(logFilenameBase + "-new.log");
+            // increase index of all backlog files (rename)
+            for (int i = backlogCount - 1; i <= 1; i--) {
+                File backlogFile = new File(logFilenameBase + "-" + i + ".log");
+                backlogFile.renameTo(new File(logFilenameBase + "-" + (i + 1) + ".log"));
+            }
+            // copy main log file to the backlog
+            try {
+                FileUtils.copyFile(mainLogFile, new File(logFilenameBase + "-1.log"));
+            } catch (IOException e) {
+                throw new RuntimeException("Error rotating application log files for project " + projectName, e);
+            }
+            // rename the new blank file to the name of the main log file
+            newfile.renameTo(mainLogFile);
+        }
+    }
+
+
 
 
 }
