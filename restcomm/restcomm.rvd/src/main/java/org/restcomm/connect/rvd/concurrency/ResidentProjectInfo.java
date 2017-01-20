@@ -18,27 +18,17 @@
  *
  */
 
-package org.restcomm.connect.rvd.http.resources;
-
-import junit.framework.Assert;
-import org.junit.Test;
-
-import java.net.URI;
-import java.net.URISyntaxException;
+package org.restcomm.connect.rvd.concurrency;
 
 /**
+ * Information for a project that needs to stay in memory. For example semaphores etc.
+ *
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public class RvdControllerTest {
+public class ResidentProjectInfo {
 
-    @Test
-    public void testAppIdExtraction() throws URISyntaxException {
-        RvdController controller = new RvdController();
-        String appId = controller.extractAppIdFromPath("apps/AP73926e7113fa4d95981aa96b76eca854/bla/bla");
-        Assert.assertEquals("AP73926e7113fa4d95981aa96b76eca854",appId);
-        appId = controller.extractAppIdFromPath("apps/AP73926e7113fa4d95981aa96b76eca854");
-        Assert.assertEquals("AP73926e7113fa4d95981aa96b76eca854",appId);
-        appId = controller.extractAppIdFromPath("apps/AP73926e7113fa4d95981aa96b76eca854-a");
-        Assert.assertNull(appId);
-    }
+    //public static class
+
+    public Object logRotationSemaphore = new Object(); // application log rotation synchronizes on this
+    // ...
 }

@@ -83,7 +83,7 @@ public class RvdController extends SecuredRestService {
         if (applicationId == null)
             throw new ResponseWrapperException( Response.status(Status.BAD_REQUEST).build() );
         try {
-            rvdContext = new ProjectAwareRvdContext(applicationId, request, servletContext, applicationContext.getConfiguration());
+            rvdContext = new ProjectAwareRvdContext(applicationId, applicationContext.getProjectRegistry().getProjectSemaphores(applicationId),request, servletContext, applicationContext.getConfiguration());
         } catch (ProjectDoesNotExist projectDoesNotExist) {
             throw new ResponseWrapperException( Response.status(Status.NOT_FOUND).build() );
         }
@@ -401,14 +401,13 @@ public class RvdController extends SecuredRestService {
     public Response appLog() {
         secure();
         try {
-
             // make sure logging is enabled before allowing access to sensitive log information
             ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(applicationId, workspaceStorage);
             if (projectSettings == null || projectSettings.getLogging() == false)
                 return Response.status(Status.NOT_FOUND).build();
-
             InputStream logStream;
             try {
+                // TODO make sure getLogFilePath() returns the right value here
                 logStream = new FileInputStream(rvdContext.getProjectLogger().getLogFilePath());
                 return Response.ok(logStream, "text/plain").header("Cache-Control", "no-cache, no-store, must-revalidate")
                         .header("Pragma", "no-cache").build();
