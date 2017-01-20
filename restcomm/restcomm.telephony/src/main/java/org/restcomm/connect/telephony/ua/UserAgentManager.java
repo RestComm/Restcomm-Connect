@@ -398,9 +398,6 @@ public final class UserAgentManager extends UntypedActor {
          * if (toTransport.equalsIgnoreCase("ws") || toTransport.equalsIgnoreCase("wss")) {
             return;
         }*/
-        if (actAsImsUa && (toTransport.equalsIgnoreCase("ws") || toTransport.equalsIgnoreCase("wss"))) {
-            return;
-        }
         final SipURI outboundInterface = outboundInterface(toTransport);
         StringBuilder buffer = new StringBuilder();
         buffer.append("sip:restcomm").append("@").append(outboundInterface.getHost());
