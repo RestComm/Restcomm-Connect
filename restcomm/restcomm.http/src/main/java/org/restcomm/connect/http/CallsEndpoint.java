@@ -19,21 +19,39 @@
  */
 package org.restcomm.connect.http;
 
-import akka.actor.ActorRef;
-import akka.util.Timeout;
+import static akka.pattern.Patterns.ask;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.thoughtworks.xstream.XStream;
+import java.net.URI;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.SipServletResponse;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.http.converter.CallDetailRecordConverter;
-import org.restcomm.connect.http.converter.RecordingListConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -45,9 +63,11 @@ import org.restcomm.connect.dao.entities.CallDetailRecordList;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.dao.entities.RecordingList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.http.converter.CallDetailRecordConverter;
 import org.restcomm.connect.http.converter.CallDetailRecordListConverter;
 import org.restcomm.connect.http.converter.RecordingConverter;
+import org.restcomm.connect.http.converter.RecordingListConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CallResponse;
@@ -57,36 +77,19 @@ import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.UpdateCallScript;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.thoughtworks.xstream.XStream;
+
+import akka.actor.ActorRef;
+import akka.util.Timeout;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import java.net.URI;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
 
 //import org.joda.time.DateTime;
 
@@ -471,7 +474,13 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
                     if (call != null) {
                         call.tell(new Hangup(), null);
                     }
-                } else {
+                } else if (callInfo.state().name().equalsIgnoreCase("wait_for_answer")){
+                    // We can cancel Wait For Answer calls
+                    if (call != null) {
+                        call.tell(new Hangup(SipServletResponse.SC_REQUEST_TERMINATED), null);
+                    }
+                }
+                else{
                     // Do Nothing. We can only cancel Queued or Ringing calls
                 }
             }
@@ -479,7 +488,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
             if (status.equalsIgnoreCase("completed")) {
                 // Specifying "completed" will attempt to hang up a call even if it's already in progress.
                 if (call != null) {
-                    call.tell(new Hangup(), null);
+                    call.tell(new Hangup(SipServletResponse.SC_REQUEST_TERMINATED), null);
                 }
             }
         }
