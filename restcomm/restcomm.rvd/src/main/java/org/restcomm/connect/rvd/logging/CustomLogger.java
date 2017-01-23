@@ -24,7 +24,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.rvd.RvdConfiguration;
 import org.restcomm.connect.rvd.concurrency.LogRotationSemaphore;
-import org.restcomm.connect.rvd.model.ModelMarshaler;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,8 +41,8 @@ public class CustomLogger {
 
     protected static final int MAX_TAGS = 5;
 
-    int backlogCount = 3; // number rotated log files in addition to the main log file (total files = backlogSize + 1)
-    int triggerRotationSize = 1000000; // the size of the main log file in bytes that will trigger the rotation when exceeded
+    int backlogCount = RvdConfiguration.PROJECT_LOG_BACKLOG_COUNT; // number rotated log files in addition to the main log file (total files = backlogSize + 1)
+    int triggerRotationSize = RvdConfiguration.PROJECT_LOG_ROTATION_SIZE; // the size of the main log file in bytes that will trigger the rotation when exceeded
     String logFilenameBase; // the full path of the main log file without the extension e.g. /home/user/workspace/APxxx/project (without '.log')
     File mainLogFile;
 
