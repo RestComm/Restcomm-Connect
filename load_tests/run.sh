@@ -1,7 +1,7 @@
 #!/bin/bash
 ##
-## Descript+ion: Restcomm performance test script
-## Author     : George Vagenas
+## Description: Restcomm performance test script
+## Authors    : George Vagenas, Henrique Rosa
 #
 
 if [ $# -lt 6 ]; then
@@ -117,12 +117,6 @@ case "$TEST_NAME" in
     echo ""
     sleep 15
     $CURRENT_FOLDER/tests/hello-play/helloplay.sh
-    sleep 60
-    cp $CURRENT_FOLDER/tests/hello-play/*rtt.csv $RESULTS_DIR/
-    collectMonitoringServiceMetrics
-    sleep 5
-    stopRestcomm
-    echo $'\n********** Restcomm stopped\n'
     ;;
 "conference")
     echo "Testing Conference"
@@ -141,12 +135,6 @@ case "$TEST_NAME" in
     echo ""
     sleep 15
     $CURRENT_FOLDER/tests/conference/conference.sh
-    sleep 45
-    cp $CURRENT_FOLDER/tests/conference/*rtt.csv $RESULTS_DIR/
-    collectMonitoringServiceMetrics
-    sleep 5
-    stopRestcomm
-    echo $'\n********** Restcomm stopped\n'
     ;;
 "helloplay-one-minute")
     echo "Testing Hello-Play with one minute anno"
@@ -165,12 +153,6 @@ case "$TEST_NAME" in
     echo ""
     sleep 15
     $CURRENT_FOLDER/tests/hello-play-one-minute/helloplay-one-minute.sh
-    sleep 45
-    cp $CURRENT_FOLDER/tests/hello-play-one-minute/*rtt.csv $RESULTS_DIR/
-    collectMonitoringServiceMetrics
-    sleep 5
-    stopRestcomm
-    echo $'\n********** Restcomm stopped\n'
     ;;
 "dialclient")
   echo "Testing DialClient"
@@ -192,12 +174,6 @@ case "$TEST_NAME" in
   screen -dmS 'dialclient-server' $CURRENT_FOLDER/tests/dialclient/dialclient-server.sh
   #Next run the client script that will initiate callls to Restcomm
   $CURRENT_FOLDER/tests/dialclient/dialclient-client.sh
-  sleep 45
-  cp $CURRENT_FOLDER/tests/dialclient/*rtt.csv $RESULTS_DIR/
-  collectMonitoringServiceMetrics
-  sleep 5
-  stopRestcomm
-  echo $'\n********** Restcomm stopped\n'
   ;;
 "gather")
     echo "Testing Gather"
@@ -216,13 +192,26 @@ case "$TEST_NAME" in
     echo ""
     sleep 15
     $CURRENT_FOLDER/tests/gather/gather.sh
-    sleep 45
-    cp $CURRENT_FOLDER/tests/gather/*rtt.csv $RESULTS_DIR/
-    collectMonitoringServiceMetrics
-    sleep 5
-    stopRestcomm
-    echo $'\n********** Restcomm stopped\n'
     ;;
 *) echo "Not known test: $TEST_NAME"
+    exit 1;
    ;;
 esac
+
+# Let things cool down
+sleep 60
+
+# Collect monitor metrics
+collectMonitoringServiceMetrics
+sleep 5
+
+# Collect logs and system data
+if [ "$COLLECT_LOGS" = "true" ]; then
+    echo "Collecting logs ..."
+    chmod 777 $RESTCOMM_HOME/bin/restcomm/logs_collect.sh
+    $RESTCOMM_HOME/bin/restcomm/logs_collect.sh -z
+fi
+
+# Stop RestComm and Media Server
+#stopRestcomm
+echo $'\n********** Restcomm stopped\n'
