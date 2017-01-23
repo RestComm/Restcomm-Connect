@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.restcomm.connect.rvd.concurrency.ResidentProjectInfo;
 import org.restcomm.connect.rvd.exceptions.ProjectDoesNotExist;
+import org.restcomm.connect.rvd.logging.ProjectLogger;
 import org.restcomm.connect.rvd.model.ProjectSettings;
 import org.restcomm.connect.rvd.storage.FsProjectStorage;
 import org.restcomm.connect.rvd.storage.exceptions.StorageEntityNotFound;
@@ -22,7 +23,7 @@ public class ProjectAwareRvdContext extends RvdContext {
             throw new IllegalArgumentException();
         setProjectName(projectName);
         // setup application logging
-        this.projectLogger = new ProjectLogger(projectName, getSettings(), getMarshaler(), residentInfo);
+        this.projectLogger = new ProjectLogger(projectName, getSettings(), getMarshaler(), residentInfo.logRotationSemaphore);
         // initialize project settings
         try {
             this.projectSettings = FsProjectStorage.loadProjectSettings(projectName, workspaceStorage);

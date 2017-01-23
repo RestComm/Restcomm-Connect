@@ -21,9 +21,16 @@ import org.restcomm.connect.rvd.utils.RvdUtils;
 
 import com.thoughtworks.xstream.XStream;
 
+/**
+ * Configuration settings for RVD. Contains both static hardcoded and loaded values.
+ *
+ * Besides hardcoded values, information form rvd.xml as well as proxied values from restcomm.xml
+ * are also contained.
+ *
+ * @author otsakir@gmail.com - Orestis Tsakiridis
+ */
 public class RvdConfiguration {
     static final Logger logger = Logger.getLogger(RvdConfiguration.class.getName());
-    private static RvdConfiguration instance = null;
 
     private static final String WORKSPACE_DIRECTORY_NAME = "workspace";
     public static final String PROTO_DIRECTORY_PREFIX = "_proto";

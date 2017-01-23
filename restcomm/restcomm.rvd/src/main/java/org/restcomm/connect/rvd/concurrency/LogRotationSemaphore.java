@@ -21,14 +21,7 @@
 package org.restcomm.connect.rvd.concurrency;
 
 /**
- * Information for a project that needs to stay in memory. For example semaphores etc.
- *
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public class ResidentProjectInfo {
-
-    //public static class
-
-    public LogRotationSemaphore logRotationSemaphore = new LogRotationSemaphore(); // application log rotation synchronizes on this
-    // ...
+public class LogRotationSemaphore {
 }
