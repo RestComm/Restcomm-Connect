@@ -21,12 +21,7 @@
 package org.restcomm.connect.rvd.logging;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.Date;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
 import org.restcomm.connect.rvd.RvdConfiguration;
 import org.restcomm.connect.rvd.concurrency.LogRotationSemaphore;
 import org.restcomm.connect.rvd.model.ModelMarshaler;
@@ -38,7 +33,6 @@ import org.restcomm.connect.rvd.model.ModelMarshaler;
  *
  */
 public class ProjectLogger extends CustomLogger {
-    static final Logger logger = Logger.getLogger(ProjectLogger.class.getName());
 
     private ModelMarshaler marshaler;
     private boolean useMarshaler;
@@ -75,7 +69,7 @@ public class ProjectLogger extends CustomLogger {
     }
 
     public ProjectLogger tag(String name, String value) {
-        tag(name, value);
+        super.tag(name, value);
         return this;
     }
 

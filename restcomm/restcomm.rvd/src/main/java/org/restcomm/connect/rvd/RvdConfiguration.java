@@ -45,8 +45,11 @@ public class RvdConfiguration {
     public static final String MODULE_PREFIX = "module_"; // a  prefix for rvd module-scoped variable names
     public static final String CORE_VARIABLE_PREFIX = "core_"; // a prefix for rvd variables that come from Restcomm parameters
     public static final String PACKAGING_DIRECTORY_NAME = "packaging";
-    public static final String TICKET_COOKIE_NAME = "rvdticket"; // the name of the cookie that is used to store ticket ids for authentication
-    public static final String PROJECT_LOG_FILENAME = "projectLog";
+    // application logging
+    public static final String PROJECT_LOG_FILENAME = "rvdapp"; //will produce rvdapp.log, rvdapp-1.log etc.
+    public static final int PROJECT_LOG_BACKLOG_COUNT = 3; // the number of rotated files besides the main log file
+    public static final int PROJECT_LOG_ROTATION_SIZE = 300000;
+    // App Store
     public static final String DEFAULT_APPSTORE_DOMAIN = "apps.restcomm.com";
     // the names of the parameters supplied by restcomm request when starting an application
     public static final HashSet<String> builtinRestcommParameters = new HashSet<String>(Arrays.asList(new String[]
