@@ -44,12 +44,13 @@ public class ProjectLogger extends CustomLogger {
     private boolean useMarshaler;
 
     public ProjectLogger(String projectName, RvdConfiguration settings, ModelMarshaler marshaler, LogRotationSemaphore semaphore) {
-        super(settings.getProjectBasePath(projectName) + File.separator + RvdConfiguration.PROJECT_LOG_FILENAME, semaphore);
-        this.logFilenameBase = settings.getProjectBasePath(projectName) + File.separator + RvdConfiguration.PROJECT_LOG_FILENAME;
-        mainLogFile = new File(logFilenameBase + ".log");
+        this(settings.getProjectBasePath(projectName) + File.separator + RvdConfiguration.PROJECT_LOG_FILENAME, marshaler, semaphore);
+    }
+
+    public ProjectLogger(String logFilenameBase, ModelMarshaler marshaler, LogRotationSemaphore semaphore) {
+        super(logFilenameBase, semaphore);
         this.marshaler = marshaler;
         this.useMarshaler = true;
-        this.semaphore = semaphore;
     }
 
     /**
@@ -63,7 +64,13 @@ public class ProjectLogger extends CustomLogger {
      */
     public ProjectLogger log(Object payload, boolean useMarshaler){
         this.useMarshaler = useMarshaler;
-        log(payload);
+        super.log(payload);
+        return this;
+    }
+
+    public ProjectLogger log(Object payload) {
+        this.useMarshaler = true; // default
+        super.log(payload);
         return this;
     }
 
