@@ -137,7 +137,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         String rootUri = runtimeConfiguration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
-        buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
+        buffer.append("/").append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
         return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
     }
@@ -407,7 +407,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         String rootUri = runtimeConfiguration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
-        buffer.append(rootUri).append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
+        buffer.append("/").append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
                 .append("/Clients/").append(sid.toString());
         builder.setUri(URI.create(buffer.toString()));
         return builder.build();

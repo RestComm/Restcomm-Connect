@@ -193,7 +193,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
-        buffer.append(rootUri).append(apiVersion).append("/Accounts/").append(accountSid.toString())
+        buffer.append("/").append(apiVersion).append("/Accounts/").append(accountSid.toString())
         .append("/IncomingPhoneNumbers/").append(sid.toString());
         builder.setUri(URI.create(buffer.toString()));
         return builder.build();
