@@ -25,11 +25,9 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.*;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -46,6 +44,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -229,12 +231,21 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
             String targetMSISDN = data.getFirst("DeviceIdentifier");
             Configuration gmlcConf = configuration.subset("gmlc");
             String gmlcURI = gmlcConf.getString("gmlc-uri");
-            URL url = new URL("http://"+gmlcURI+"/restcomm/gmlc/rest?msisdn="+targetMSISDN);
-            BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
+            String gmlcUser = gmlcConf.getString("gmlc-user");
+            URL url = new URL(gmlcURI+targetMSISDN);
+            HttpClient client = HttpClientBuilder.create().build();
+            HttpGet request = new HttpGet(String.valueOf(url));
+            request.addHeader("User-Agent", gmlcUser);
+            HttpResponse response = client.execute(request);
+            //BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
+            BufferedReader br = new BufferedReader(
+                new InputStreamReader(response.getEntity().getContent()));
             String gmlcResponse = null;
             while (null != (gmlcResponse = br.readLine())) {
                 List<String> items = Arrays.asList(gmlcResponse.split("\\s*,\\s*"));
-                logger.info("Data retrieved from GMLC: "+items.toString());
+                if (logger.isInfoEnabled() ) {
+                    logger.info("Data retrieved from GMLC: "+items.toString());
+                }
                 for (String item : items) {
                     for (int i = 0; i < items.size(); i++) {
                         if (item.contains("mcc")) {
@@ -277,20 +288,25 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
                 }
                 if (gmlcURI != null && gmlcResponse != null) {
                     // For debugging/logging purposes only
-                    logger.info("Geolocation data of " + targetMSISDN + " retrieved from GMCL at: " + gmlcURI);
-                    logger.info("MCC (Mobile Country Code) = " + getInteger("MobileCountryCode", data));
-                    logger.info("MNC (Mobile Network Code) = " + data.getFirst("MobileNetworkCode"));
-                    logger.info("LAC (Location Area Code) = " + data.getFirst("LocationAreaCode"));
-                    logger.info("CI (Cell ID) = " + data.getFirst("CellId"));
-                    logger.info("AOL (Age of Location) = " + getInteger("LocationAge", data));
-                    logger.info("NNN (Network Node Number/Address) = " + +getLong("NetworkEntityAddress", data));
-                    logger.info("Devide Latitude = " + data.getFirst("DeviceLatitude"));
-                    logger.info("Devide Longitude = " + data.getFirst("DeviceLongitude"));
-                    logger.info("Civic Address = " + data.getFirst("FormattedAddress"));
+                    if (logger.isDebugEnabled() ) {
+                        logger.debug("Geolocation data of " + targetMSISDN + " retrieved from GMCL at: " + gmlcURI);
+                        logger.debug("MCC (Mobile Country Code) = " + getInteger("MobileCountryCode", data));
+                        logger.debug("MNC (Mobile Network Code) = " + data.getFirst("MobileNetworkCode"));
+                        logger.debug("LAC (Location Area Code) = " + data.getFirst("LocationAreaCode"));
+                        logger.debug("CI (Cell ID) = " + data.getFirst("CellId"));
+                        logger.debug("AOL (Age of Location) = " + getInteger("LocationAge", data));
+                        logger.debug("NNN (Network Node Number/Address) = " + +getLong("NetworkEntityAddress", data));
+                        logger.debug("Devide Latitude = " + data.getFirst("DeviceLatitude"));
+                        logger.debug("Devide Longitude = " + data.getFirst("DeviceLongitude"));
+                        logger.debug("Civic Address = " + data.getFirst("FormattedAddress"));
+                    }
                 }
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            if (logger.isInfoEnabled() ) {
+                logger.info("An exception occurred when retrieving data from GMLC");
+            }
+            return status(INTERNAL_SERVER_ERROR).entity(ex.getMessage()).build();
         }
 
         Geolocation geolocation = createFrom(new Sid(accountSid), data, geolocationType);
@@ -519,9 +535,6 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
             } catch (final Exception exception) {
                 return status(UNAUTHORIZED).build();
             }
-            /*********************************************/
-            /*** Query GMLC for Location Data, stage 2 ***/
-            /*********************************************/
 
             geolocation = update(geolocation, data);
             dao.updateGeolocation(geolocation);
