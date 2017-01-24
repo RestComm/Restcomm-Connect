@@ -68,11 +68,11 @@ import com.google.gson.JsonObject;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
-public class ImsClientsDialTest {
+public class ImsClientsDialAnswerDelayTest {
 
     private static final String version = Version.getVersion();
     
-    private static Logger logger = Logger.getLogger(ImsClientsDialTest.class);
+    private static Logger logger = Logger.getLogger(ImsClientsDialAnswerDelayTest.class);
 
     private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
         53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
@@ -262,14 +262,23 @@ public class ImsClientsDialTest {
         SipCall pstnCall = pstnPhone.createSipCall();
         final SipCall augustCall = augustPhone.createSipCall();
         initiateAugust(pstnCall,pstnContact,augustCall);
-
+        
         assertTrue(pstnCall.waitForIncomingCall(5 * 1000));
-        assertTrue(pstnCall.sendIncomingCallResponse(Response.RINGING, "RINGING-pstn", 3600));
+        assertTrue(pstnCall.sendIncomingCallResponse(Response.RINGING, "RINGING-Pstn", 3600));
+        
+        Thread.sleep(500);
 
         SipRequest lastReceivedRequest = pstnCall.getLastReceivedRequest();
         String receivedBody = new String(lastReceivedRequest.getRawContent());
-        assertTrue(pstnCall.sendIncomingCallResponse(Response.OK, "OK-pstn", 3600, receivedBody, "application", "sdp", null,
+        assertTrue(pstnCall.sendIncomingCallResponse(Response.OK, "OK-Pstn", 3600, receivedBody, "application", "sdp", null,
                 null));
+
+        int responseAugust = augustCall.getLastReceivedResponse().getStatusCode();
+            while(responseAugust != Response.OK){
+                assertTrue(augustCall.waitOutgoingCallResponse(5 * 1000));
+                responseAugust = augustCall.getLastReceivedResponse().getStatusCode();
+            }
+        assertTrue(augustCall.sendInviteOkAck());
         
         Thread.sleep(1000);
         
@@ -297,6 +306,8 @@ public class ImsClientsDialTest {
         
         unregisterAugust();
     }
+    
+    
 
     @Test
     public void testWebRTCClientOutgoingAHold() throws SipException, ParseException, InterruptedException, InvalidArgumentException {
@@ -307,14 +318,23 @@ public class ImsClientsDialTest {
         SipCall pstnCall = pstnPhone.createSipCall();
         final SipCall augustCall = augustPhone.createSipCall();
         initiateAugust(pstnCall,pstnContact,augustCall);
-
+        
         assertTrue(pstnCall.waitForIncomingCall(5 * 1000));
-        assertTrue(pstnCall.sendIncomingCallResponse(Response.RINGING, "RINGING-pstn", 3600));
-
+        assertTrue(pstnCall.sendIncomingCallResponse(Response.RINGING, "RINGING-Pstn", 3600));
+        
+        Thread.sleep(500);
+        
         SipRequest lastReceivedRequest = pstnCall.getLastReceivedRequest();
         String receivedBody = new String(lastReceivedRequest.getRawContent());
-        assertTrue(pstnCall.sendIncomingCallResponse(Response.OK, "OK-pstn", 3600, receivedBody, "application", "sdp", null,
+        assertTrue(pstnCall.sendIncomingCallResponse(Response.OK, "OK-Pstn", 3600, receivedBody, "application", "sdp", null,
                 null));
+        
+        int responseAugust = augustCall.getLastReceivedResponse().getStatusCode();
+        while(responseAugust != Response.OK){
+            assertTrue(augustCall.waitOutgoingCallResponse(5 * 1000));
+            responseAugust = augustCall.getLastReceivedResponse().getStatusCode();
+        }
+        assertTrue(augustCall.sendInviteOkAck());
         
         Thread.sleep(1000);
         
@@ -381,15 +401,24 @@ public class ImsClientsDialTest {
         SipCall pstnCall = pstnPhone.createSipCall();
         final SipCall augustCall = augustPhone.createSipCall();
         initiateAugust(pstnCall,pstnContact,augustCall);
-     
+        
         assertTrue(pstnCall.waitForIncomingCall(5 * 1000));
-        assertTrue(pstnCall.sendIncomingCallResponse(Response.RINGING, "RINGING-pstn", 3600));
+        assertTrue(pstnCall.sendIncomingCallResponse(Response.RINGING, "RINGING-Pstn", 3600));
+        
+        Thread.sleep(500);
 
         SipRequest lastReceivedRequest = pstnCall.getLastReceivedRequest();
         String receivedBody = new String(lastReceivedRequest.getRawContent());
-        assertTrue(pstnCall.sendIncomingCallResponse(Response.OK, "OK-pstn", 3600, receivedBody, "application", "sdp", null,
+        assertTrue(pstnCall.sendIncomingCallResponse(Response.OK, "OK-Pstn", 3600, receivedBody, "application", "sdp", null,
                 null));
         
+        int responseAugust = Response.RINGING;
+        while(responseAugust != Response.OK){
+            assertTrue(augustCall.waitOutgoingCallResponse(5 * 1000));
+            responseAugust = augustCall.getLastReceivedResponse().getStatusCode();
+        }
+        assertTrue(augustCall.sendInviteOkAck());     
+                
         Thread.sleep(1000);
         
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
@@ -468,6 +497,13 @@ public class ImsClientsDialTest {
         assertTrue(augustCall.sendIncomingCallResponse(Response.OK, "OK-August", 3600, receivedBody, "application", "sdp", null,
                 null));
         assertTrue(augustCall.waitForAck(50 * 1000));
+
+        int responsePstn = Response.RINGING;
+        while(responsePstn != Response.OK){
+            assertTrue(pstnCall.waitOutgoingCallResponse(5 * 1000));
+            responsePstn = pstnCall.getLastReceivedResponse().getStatusCode();
+        }
+        assertTrue(pstnCall.sendInviteOkAck());
         
         Thread.sleep(1000);
         
@@ -512,11 +548,45 @@ public class ImsClientsDialTest {
         assertTrue(augustCall.waitForIncomingCall(30 * 1000));
         assertTrue(augustCall.sendIncomingCallResponse(Response.BUSY_HERE, "Busy-August", 3600));
         assertTrue(augustCall.waitForAck(50 * 1000));
+
+
+        int responsePstn = Response.RINGING;
+        while(responsePstn != Response.BUSY_HERE){
+            assertTrue(pstnCall.waitOutgoingCallResponse(5 * 1000));
+            responsePstn = pstnCall.getLastReceivedResponse().getStatusCode();
+        }
+        Thread.sleep(1000);
         
-        pstnCall.listenForDisconnect();
-        assertTrue(pstnCall.waitForDisconnect(30 * 1000));
-        assertTrue(pstnCall.respondToDisconnect());
+        Map<String, String> filters = new HashMap<String, String>();                
+        JsonObject filteredCallsByStatusObject = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, filters);
+        assertEquals(0, filteredCallsByStatusObject.get("calls").getAsJsonArray().size());
         
+        unregisterAugust();
+    }
+    
+    @Test
+    public void testWebRTCClientIncomingFail() throws InterruptedException, ParseException {
+        logger.info("testWebRTCClientIncomingFail");
+       
+        registerAugust();
+        
+        
+        SipCall augustCall = augustPhone.createSipCall();
+        SipCall pstnCall = pstnPhone.createSipCall();       
+        initiatePstn(pstnCall, augustCall);
+        
+
+        assertTrue(augustCall.waitForIncomingCall(30 * 1000));
+        assertTrue(augustCall.sendIncomingCallResponse(Response.SERVICE_UNAVAILABLE, "ServiceUnavailable-August", 3600));
+        assertTrue(augustCall.waitForAck(50 * 1000));
+
+
+        int responsePstn = Response.RINGING;
+        while(responsePstn != Response.SERVICE_UNAVAILABLE){
+            assertTrue(pstnCall.waitOutgoingCallResponse(5 * 1000));
+            responsePstn = pstnCall.getLastReceivedResponse().getStatusCode();
+        }
         Thread.sleep(1000);
         
         Map<String, String> filters = new HashMap<String, String>();                
@@ -545,6 +615,13 @@ public class ImsClientsDialTest {
         assertTrue(augustCall.sendIncomingCallResponse(Response.OK, "OK-August", 3600, receivedBody, "application", "sdp", null,
                 null));
         assertTrue(augustCall.waitForAck(50 * 1000));
+
+        int responsePstn = Response.RINGING;
+        while(responsePstn != Response.OK){
+            assertTrue(pstnCall.waitOutgoingCallResponse(5 * 1000));
+            responsePstn = pstnCall.getLastReceivedResponse().getStatusCode();
+        }
+        assertTrue(pstnCall.sendInviteOkAck());
         
         Thread.sleep(1000);
         
@@ -621,6 +698,13 @@ public class ImsClientsDialTest {
         assertTrue(augustCall.sendIncomingCallResponse(Response.OK, "OK-August", 3600, receivedBody, "application", "sdp", null,
                 null));
         assertTrue(augustCall.waitForAck(50 * 1000));
+
+        int responsePstn = Response.RINGING;
+        while(responsePstn != Response.OK){
+            assertTrue(pstnCall.waitOutgoingCallResponse(5 * 1000));
+            responsePstn = pstnCall.getLastReceivedResponse().getStatusCode();
+        }
+        assertTrue(pstnCall.sendInviteOkAck());
         
         Thread.sleep(1000);
         
@@ -693,31 +777,17 @@ public class ImsClientsDialTest {
         initiatePstn(pstnCall, augustCall);
         
         assertTrue(augustCall.waitForIncomingCall(5 * 1000));
-        assertTrue(augustCall.sendIncomingCallResponse(Response.RINGING, "RINGING-pstn", 3600));
-        SipTransaction augustInviteTx = augustCall.getLastTransaction();   
+        assertTrue(augustCall.sendIncomingCallResponse(Response.RINGING, "RINGING-august", 3600));
         assertTrue(augustCall.listenForCancel());
-        assertTrue(pstnCall.listenForDisconnect());
         
         Thread.sleep(30000);
-        
-        
+
         SipTransaction augustCancelTransaction = augustCall.waitForCancel(5 * 1000);
         assertTrue(augustCancelTransaction != null);
-        augustCall.respondToCancel(augustCancelTransaction, 200, "OK-pstn", 3600);
-        logger.info("finish waiting");
+        augustCall.respondToCancel(augustCancelTransaction, 200, "OK-august", 3600);
         
-        Request augustInvite = augustInviteTx.getServerTransaction().getRequest();
-        Response augustResponseTerminated = imsSipStack.getMessageFactory().createResponse(Response.REQUEST_TERMINATED, augustInvite);
-        try{
-            augustInviteTx.getServerTransaction().sendResponse(augustResponseTerminated);
-        }
-        catch(Exception e){
-            e.printStackTrace();
-        }
-        
-           assertTrue(pstnCall.waitForDisconnect(5 * 1000));
-           assertTrue(pstnCall.respondToDisconnect());
-           logger.info("august disconnected");
+        assertTrue(pstnCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.REQUEST_TIMEOUT, pstnCall.getLastReceivedResponse().getStatusCode());
         
        Map<String, String> filters = new HashMap<String, String>();                
        JsonObject filteredCallsByStatusObject = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(),
@@ -741,10 +811,45 @@ public class ImsClientsDialTest {
 
         assertTrue(pstnCall.waitForIncomingCall(5 * 1000));
         assertTrue(pstnCall.sendIncomingCallResponse(Response.BUSY_HERE, "Busy-Pstn", 3600));
+
         
-        augustCall.listenForDisconnect();
-        assertTrue(augustCall.waitForDisconnect(30 * 1000));
-        assertTrue(augustCall.respondToDisconnect());
+        int responseAugust = Response.RINGING;
+        while(responseAugust != Response.BUSY_HERE){
+            assertTrue(augustCall.waitOutgoingCallResponse(5 * 1000));
+            responseAugust = augustCall.getLastReceivedResponse().getStatusCode();
+        }
+        
+        Thread.sleep(1000);
+        
+        Map<String, String> filters = new HashMap<String, String>();                
+        JsonObject filteredCallsByStatusObject = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, filters);
+        assertEquals(0, filteredCallsByStatusObject.get("calls").getAsJsonArray().size());
+        
+        unregisterAugust();
+    }
+    
+    @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    public void testWebRTCClientOutgoingFail() throws ParseException, InterruptedException {
+
+        logger.info("testWebRTCClientOutgoingFail");
+        registerAugust();
+
+
+        SipCall pstnCall = pstnPhone.createSipCall();
+        final SipCall augustCall = augustPhone.createSipCall();
+        initiateAugust(pstnCall,pstnContact,augustCall);
+
+
+        assertTrue(pstnCall.waitForIncomingCall(5 * 1000));
+        assertTrue(pstnCall.sendIncomingCallResponse(Response.SERVICE_UNAVAILABLE, "ServiceUnavailable-Pstn", 3600));
+
+        
+        int responseAugust = Response.RINGING;
+        while(responseAugust != Response.SERVICE_UNAVAILABLE){
+            assertTrue(augustCall.waitOutgoingCallResponse(5 * 1000));
+            responseAugust = augustCall.getLastReceivedResponse().getStatusCode();
+        }
         Thread.sleep(1000);
         
         Map<String, String> filters = new HashMap<String, String>();                
@@ -829,29 +934,16 @@ public class ImsClientsDialTest {
         
         assertTrue(pstnCall.waitForIncomingCall(5 * 1000));
         assertTrue(pstnCall.sendIncomingCallResponse(Response.RINGING, "RINGING-pstn", 3600));
-        SipTransaction pstnInviteTx = pstnCall.getLastTransaction();   
         assertTrue(pstnCall.listenForCancel());
-        assertTrue(augustCall.listenForDisconnect());
         
         Thread.sleep(30000);
-        
+
         SipTransaction pstnCancelTransaction = pstnCall.waitForCancel(5 * 1000);
         assertTrue(pstnCancelTransaction != null);
         pstnCall.respondToCancel(pstnCancelTransaction, 200, "OK-pstn", 3600);
-        logger.info("finish waiting");
         
-        Request pstnInvite = pstnInviteTx.getServerTransaction().getRequest();
-        Response pstnResponseTerminated = imsSipStack.getMessageFactory().createResponse(Response.REQUEST_TERMINATED, pstnInvite);
-        try{
-            pstnInviteTx.getServerTransaction().sendResponse(pstnResponseTerminated);
-        }
-        catch(Exception e){
-            e.printStackTrace();
-        }
-        
-           assertTrue(augustCall.waitForDisconnect(5 * 1000));
-           assertTrue(augustCall.respondToDisconnect());
-           logger.info("august disconnected");
+        assertTrue(augustCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.REQUEST_TIMEOUT, augustCall.getLastReceivedResponse().getStatusCode());
         
        Map<String, String> filters = new HashMap<String, String>();                
        JsonObject filteredCallsByStatusObject = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(),
@@ -998,11 +1090,7 @@ public class ImsClientsDialTest {
             assertEquals(Response.RINGING, augustCall.getLastReceivedResponse().getStatusCode());
             augustDialog = augustCall.getDialog();
             assertNotNull(augustDialog);
-        }       
-        
-        assertTrue(augustCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, augustCall.getLastReceivedResponse().getStatusCode());
-        assertTrue(augustCall.sendInviteOkAck());
+        }
         
         assertTrue(toCall.waitForIncomingCall(5 * 1000));
 
@@ -1047,11 +1135,7 @@ public class ImsClientsDialTest {
         if (responsePstn == Response.TRYING) {
             assertTrue(pstnCall.waitOutgoingCallResponse(5 * 1000));
             assertEquals(Response.RINGING, pstnCall.getLastReceivedResponse().getStatusCode());
-        }    
-        
-        assertTrue(pstnCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, pstnCall.getLastReceivedResponse().getStatusCode());
-        assertTrue(pstnCall.sendInviteOkAck());
+        }
     }
 
     @Deployment(name = "ImsClientsDialTest", managed = true, testable = false)
@@ -1065,7 +1149,7 @@ public class ImsClientsDialTest {
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip-ims.xml", "/sip.xml");
-        archive.addAsWebInfResource("restcomm-ims.xml", "conf/restcomm.xml");
+        archive.addAsWebInfResource("restcomm-ims-delay.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_imsDialTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("dial-conference-entry.xml");
         archive.addAsWebResource("dial-fork-entry.xml");
