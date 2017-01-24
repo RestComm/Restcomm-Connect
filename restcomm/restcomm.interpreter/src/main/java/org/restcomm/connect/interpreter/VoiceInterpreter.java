@@ -1105,6 +1105,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             callRecord = callRecord.setStatus(callState.toString());
                             records.updateCallDetailRecord(callRecord);
                         }
+                        if(asImsUa){
+                            final CallDetailRecordsDao callRecords = storage.getCallDetailRecordsDao();
+                            callRecords.removeCallDetailRecord(callRecord.getSid());
+                        }
                         fsm.transition(message, finishDialing);
                     } else if (sender == call) {
                         //Move to finished state only if the call actor send the Cancel.
@@ -1114,7 +1118,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                                 callRecords.removeCallDetailRecord(callRecord.getSid());
                             }
                         }
-                            
+
                         fsm.transition(message, finished);
                     } else {
                         //This is a Cancel from a dial branch previously canceled
