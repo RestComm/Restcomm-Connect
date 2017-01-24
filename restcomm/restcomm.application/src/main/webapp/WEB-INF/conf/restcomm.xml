@@ -153,7 +153,7 @@
 
 		<!-- TelScale GMLC -->
 		<gmlc>
-			<gmlc-uri></gmlc-uri>
+			<gmlc-uri>http://GMLC-IP:port/restcomm/gmlc/rest?msisdn=</gmlc-uri> <!-- Change GMLC-IP:port to appropriate value-->
 			<gmlc-user></gmlc-user>
 			<gmlc-password></gmlc-password>
 		</gmlc>
