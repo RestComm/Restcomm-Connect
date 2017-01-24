@@ -92,7 +92,7 @@ public class GatewaysEndpoint extends SecuredEndpoint {
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
-        buffer.append(rootUri).append(getApiVersion(data)).append("/Management/").append("Gateways/").append(sid.toString());
+        buffer.append("/").append(getApiVersion(data)).append("/Management/").append("Gateways/").append(sid.toString());
         builder.setUri(URI.create(buffer.toString()));
         return builder.build();
     }
