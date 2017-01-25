@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -70,19 +72,46 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         return getIncomingPhoneNumber("getIncomingPhoneNumberByValue", phoneNumber);
     }
 
-    private IncomingPhoneNumber getIncomingPhoneNumber(final String selector, Object parameter) {
+   private IncomingPhoneNumber getIncomingPhoneNumber(final String selector, Object parameter) {
         final SqlSession session = sessions.openSession();
-        try {
+        
+        // check for exact match, if result is null, check for regex match
+         try {
             final Map<String, Object> result = session.selectOne(namespace + selector, parameter);
             if (result != null) {
                 return toIncomingPhoneNumber(result);
-            } else {
-                return null;
+           } else if (  !(parameter instanceof Sid)) {
+
+           final List<IncomingPhoneNumber> incomingPhoneNumbers = getAllIncomingPhoneNumbers();
+            //phoneNumber dialed by caller
+        CharSequence phoneNumberDialed = (CharSequence) parameter;
+        String restcommHostedPhoneNumber = "";
+        for( int i = 0; i< incomingPhoneNumbers.size(); i++){
+            //remove prepended + sign to avoid Regex conflict
+         restcommHostedPhoneNumber = incomingPhoneNumbers.get(i).getPhoneNumber().replace("+", "");
+         //check if number is USSD
+         //add "/" to deal with "*" that prepends ussd short code needed to handle regex
+         String ussdNumber = incomingPhoneNumbers.get(i).getPhoneNumber().replace("+", "");
+         if (ussdNumber.startsWith("*") && ussdNumber.endsWith("#")){
+             restcommHostedPhoneNumber = "/" + restcommHostedPhoneNumber ;
+         }
+        //compare dialed number with restcomm hosted number regex
+         Pattern p = Pattern.compile(restcommHostedPhoneNumber);
+        Matcher m = p.matcher(phoneNumberDialed);
+         if (m.find() ) {
+       final Map<String, Object> resultRestcommRegexHostedNumber = session.selectOne(namespace + selector, restcommHostedPhoneNumber);
+        if (resultRestcommRegexHostedNumber != null) {
+                return toIncomingPhoneNumber(resultRestcommRegexHostedNumber);
             }
-        } finally {
+            }
+            }
+            }
+                return null;
+
+         }finally {
             session.close();
-        }
-    }
+         }
+}
 
     @Override
     public List<IncomingPhoneNumber> getIncomingPhoneNumbers(final Sid accountSid) {
