@@ -310,10 +310,8 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
 
         Geolocation geolocation = createFrom(new Sid(accountSid), data, geolocationType);
 
-        if (geolocation.getResponseStatus() != null) {
-            if (geolocation.getResponseStatus().equals(responseStatus.Rejected.toString())) {
-                dao.addGeolocation(geolocation);
-            }
+        if (geolocation.getResponseStatus() != null
+            && geolocation.getResponseStatus().equals(responseStatus.Rejected.toString())) {
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(geolocation);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -323,7 +321,17 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
                 return null;
             }
         } else {
-            return status(NOT_FOUND).build();
+
+            dao.addGeolocation(geolocation);
+
+            if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(geolocation);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(geolocation), APPLICATION_JSON).build();
+            } else {
+                return null;
+            }
         }
     }
 
