@@ -98,6 +98,11 @@
 			Default value: false -->
 		<disable-sdp-patching-on-updating-mediasession>false</disable-sdp-patching-on-updating-mediasession>
 
+		<!-- If this is set to TRUE, when verb is Dial, delay 200 OK to INVITE until outbound dial answers
+			 or send appropriate response according to the response from outbound dial-->
+		<!--  https://github.com/RestComm/Restcomm-Connect/issues/1649 -->
+		<enable-200-ok-delay>false</enable-200-ok-delay>
+
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
 			<outbound-proxy-user></outbound-proxy-user>
@@ -271,6 +276,8 @@
 		<days-to-retain-public-url>180</days-to-retain-public-url>
 		<remove-original-file>true</remove-original-file>
 		<bucket-region>us-east-1</bucket-region>
+		<testing>false</testing>
+		<testing-url>http://127.0.0.1:8090/s3</testing-url>
 	</amazon-s3>
 
 	<!-- Defines how RestComm communicates with the Media Server Control layer.

@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
+import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
 

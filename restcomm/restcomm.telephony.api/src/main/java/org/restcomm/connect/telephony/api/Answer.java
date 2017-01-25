@@ -30,13 +30,25 @@ import org.restcomm.connect.commons.dao.Sid;
 public final class Answer {
 
     private final Sid callSid;
+    private final boolean confirmCall;
 
     public Answer(Sid callSid) {
         super();
         this.callSid = callSid;
+        this.confirmCall = false;
+    }
+
+    public Answer(Sid callSid, boolean confirmCall) {
+        super();
+        this.callSid = callSid;
+        this.confirmCall = confirmCall;
     }
 
     public Sid callSid() {
         return callSid;
+    }
+
+    public boolean confirmCall() {
+        return confirmCall;
     }
 }

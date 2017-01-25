@@ -18,7 +18,7 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.dao.exceptions;
+package org.restcomm.connect.dao.exceptions;
 
 import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
 
