@@ -17,23 +17,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.mrb.api;
 
-import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+package org.restcomm.connect.rvd.exceptions;
+
+import javax.ws.rs.core.Response;
 
 /**
- * @author maria.farooq@telestax.com (Maria Farooq)
+ * General purpose runtime exception that can carry the response. Typically
+ * it's handled by an exception mapper.
+ *
+ * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-@Immutable
-public final class StopConferenceMediaResourceControllerResponse {
+public class ResponseWrapperException extends RuntimeException {
+    Response response;
 
-    private final boolean distroyEndpoint;
-    public StopConferenceMediaResourceControllerResponse(final boolean distroyEndpoint) {
-        super();
-        this.distroyEndpoint = distroyEndpoint;
+    public ResponseWrapperException(Response response) {
+        this.response = response;
     }
 
-    public boolean distroyEndpoint(){
-        return distroyEndpoint;
+    public Response getResponse() {
+        return response;
     }
 }

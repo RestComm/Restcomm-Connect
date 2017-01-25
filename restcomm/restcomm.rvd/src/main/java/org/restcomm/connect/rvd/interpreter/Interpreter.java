@@ -22,7 +22,7 @@ import org.apache.log4j.Logger;
 import org.restcomm.connect.rvd.ApplicationContext;
 import org.restcomm.connect.rvd.ProjectAwareRvdContext;
 import org.restcomm.connect.rvd.RvdConfiguration;
-import org.restcomm.connect.rvd.ProjectLogger;
+import org.restcomm.connect.rvd.logging.ProjectLogger;
 import org.restcomm.connect.rvd.exceptions.InterpreterException;
 import org.restcomm.connect.rvd.exceptions.RvdException;
 import org.restcomm.connect.rvd.exceptions.UndefinedTarget;

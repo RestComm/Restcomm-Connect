@@ -3,6 +3,7 @@ package org.restcomm.connect.rvd;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
+import org.restcomm.connect.rvd.logging.ProjectLogger;
 import org.restcomm.connect.rvd.model.ModelMarshaler;
 import org.restcomm.connect.rvd.storage.WorkspaceStorage;
 
