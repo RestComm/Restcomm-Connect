@@ -37,6 +37,51 @@ angular.module('Rvd')
 		}
 	}
 })
+.directive('controlStep', function () {
+    return {
+        restict: 'E',
+        templateUrl: "templates/directive/controlStep.html",
+        scope: {
+            stepModel: '=model'
+        },
+        link: function (scope) {
+
+            // TODO initialize conditionLastId from existing conditions (set it to the max)
+            // construction for conditions using a locally unique identifier
+            var conditionLastId = 0;
+            function newCondition() {
+                return {
+                   name: "C" + (++conditionLastId),
+                   operator : "equals",
+                   operand1 : "",
+                   operand2 : ""
+               }
+            }
+
+            console.log("inside controlStep link()");
+            console.log(scope.stepModel);
+            // initialize control step members
+            var stepModel = scope.stepModel;
+            stepModel.conditions = stepModel.conditions || [newCondition()];
+
+            scope.addCondition = function () {
+                stepModel.conditions.push(newCondition());
+            }
+
+            scope.removeCondition = function (conditionName) {
+                for (var i=0; i<stepModel.conditions.length; i++) {
+                    if (stepModel.conditions[i].name = conditionName)
+                        stepModel.conditions.splice(i,1);
+                }
+            }
+        },
+        controller: function ($scope) {
+            console.log("inside controlStep directive");
+            console.log($scope.stepModel);
+        }
+    }
+
+})
 ;
 
 angular.module('Rvd').directive('conferenceDialNoun', function (RvdConfiguration) {

@@ -120,7 +120,21 @@ label {
 	color: orange;
 }
 
+/* control-step styling */
 
+.step.control-step .conditions {
+    border-right-width: 1px;
+    border-right-style: inset;
+}
+.control-step .condition {
+    margin-bottom: 10px;
+}
+.control-step .condition .operand {
+    width: 37%;
+}
+.control-step .condition .operator {
+    width: 20%;
+}
 
 
 /* override jquery-ui colors since theme-roller never responded */
