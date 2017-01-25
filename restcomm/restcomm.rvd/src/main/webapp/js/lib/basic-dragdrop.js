@@ -34,6 +34,7 @@ angular.module('basicDragdrop', [])
             element.sortable({
                 revert:true,
                 handle:'.rvd-handle',
+                placeholder: "ui-state-highlight"
             });
             
             element.bind("sortstart", function (event,ui) {

@@ -49,7 +49,6 @@ import org.restcomm.connect.mrb.api.GetMediaGateway;
 import org.restcomm.connect.mrb.api.MediaGatewayForConference;
 import org.restcomm.connect.mrb.api.StartConferenceMediaResourceController;
 import org.restcomm.connect.mrb.api.StopConferenceMediaResourceController;
-import org.restcomm.connect.mrb.api.StopConferenceMediaResourceControllerResponse;
 import org.restcomm.connect.mscontrol.api.MediaServerController;
 import org.restcomm.connect.mscontrol.api.messages.CloseMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
@@ -226,8 +225,6 @@ public final class MmsConferenceController extends MediaServerController {
             onEndpointStateChanged((EndpointStateChanged) message, self, sender);
         } else if (MediaResourceBrokerResponse.class.equals(klass)) {
             onMediaResourceBrokerResponse((MediaResourceBrokerResponse<?>) message, self, sender);
-        } else if (StopConferenceMediaResourceControllerResponse.class.equals(klass)) {
-            fsm.transition(message, stopping);
         } else if(JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
         } else if(ConferenceMediaResourceControllerStateChanged.class.equals(klass)) {
@@ -298,6 +295,7 @@ public final class MmsConferenceController extends MediaServerController {
                 break;
 
             case INACTIVE:
+                fsm.transition(message, stopping);
                 break;
 
             default:
@@ -579,9 +577,9 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            StopConferenceMediaResourceControllerResponse response = (StopConferenceMediaResourceControllerResponse) message;
+            ConferenceMediaResourceControllerStateChanged response = (ConferenceMediaResourceControllerStateChanged) message;
             // CMRC might ask you not to destroy endpoint bcz master have left firt and other slaves are still connected to this conference endpoint.
-            if(response.distroyEndpoint()){
+            if(response.destroyEndpoint()){
                 // Destroy Bridge Endpoint and its connections
                 cnfEndpoint.tell(new DestroyEndpoint(), super.source);
             }else{
@@ -613,6 +611,11 @@ public final class MmsConferenceController extends MediaServerController {
             if (cnfEndpoint != null) {
                 mediaGateway.tell(new DestroyEndpoint(cnfEndpoint), super.source);
                 cnfEndpoint = null;
+            }
+
+            if(conferenceMediaResourceController != null){
+                context().stop(conferenceMediaResourceController);
+                conferenceMediaResourceController = null;
             }
 
             // Notify observers the controller has stopped

@@ -21,6 +21,7 @@
 package org.restcomm.connect.rvd;
 
 import org.restcomm.connect.rvd.commons.http.CustomHttpClientBuilder;
+import org.restcomm.connect.rvd.concurrency.ProjectRegistry;
 import org.restcomm.connect.rvd.identity.AccountProvider;
 
 /**
@@ -30,6 +31,7 @@ public class ApplicationContextBuilder {
     RvdConfiguration configuration;
     CustomHttpClientBuilder httpClientBuilder;
     AccountProvider accountProvider;
+    ProjectRegistry projectRegistry;
 
     public ApplicationContextBuilder setConfiguration(RvdConfiguration configuration) {
         this.configuration = configuration;
@@ -46,11 +48,17 @@ public class ApplicationContextBuilder {
         return this;
     }
 
+    public ApplicationContextBuilder setProjectRegistry(ProjectRegistry projectRegistry) {
+        this.projectRegistry = projectRegistry;
+        return this;
+    }
+
     public ApplicationContext build() {
         ApplicationContext instance = new ApplicationContext();
         instance.configuration = this.configuration;
         instance.httpClientBuilder = this.httpClientBuilder;
         instance.accountProvider = this.accountProvider;
+        instance.projectRegistry = this.projectRegistry;
         return instance;
     }
 }
