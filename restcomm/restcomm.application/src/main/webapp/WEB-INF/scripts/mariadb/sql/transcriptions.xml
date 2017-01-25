@@ -38,7 +38,7 @@
   </update>
 
   <select id="getTotalTranscriptionByUsingFilters" parameterType="org.restcomm.connect.dao.entities.TranscriptionFilter" resultType="int">
-            SELECT COUNT(*) FROM "restcomm_transcriptions" WHERE
+            SELECT COUNT(*) FROM restcomm_transcriptions WHERE
 
             <!-- are we counting cdrs from a single account or from an account set -->
             <if test="accountSidSet == null">
@@ -73,7 +73,7 @@
     </select>
 
     <select id="getTranscriptionsByUsingFilters" parameterType="org.restcomm.connect.dao.entities.TranscriptionFilter" resultType="hashmap">
-            SELECT * FROM "restcomm_transcriptions" AS "restcomm_transcriptions" WHERE
+            SELECT * FROM restcomm_transcriptions AS restcomm_transcriptions WHERE
 
             <!-- are we retrieving cdrs from a single account or from an account set -->
             <if test="accountSidSet == null">

@@ -37,7 +37,7 @@
   </select>
 
   <select id="getTotalSmsMessageByUsingFilters" parameterType="org.restcomm.connect.dao.entities.SmsMessageFilter" resultType="int">
-            SELECT COUNT(*) FROM "restcomm_sms_messages" WHERE
+            SELECT COUNT(*) FROM restcomm_sms_messages WHERE
 
             <!-- are we counting cdrs from a single account or from an account set -->
             <if test="accountSidSet == null">
@@ -78,7 +78,7 @@
     </select>
 
     <select id="getSmsMessagesByUsingFilters" parameterType="org.restcomm.connect.dao.entities.SmsMessageFilter" resultType="hashmap">
-            SELECT * FROM "restcomm_sms_messages" AS "restcomm_sms_messages" WHERE
+            SELECT * FROM restcomm_sms_messages AS restcomm_sms_messages WHERE
 
             <!-- are we retrieving cdrs from a single account or from an account set -->
             <if test="accountSidSet == null">

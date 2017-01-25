@@ -34,7 +34,7 @@
   </delete>
 
   <select id="getTotalRecordingByUsingFilters" parameterType="org.restcomm.connect.dao.entities.RecordingFilter" resultType="int">
-            SELECT COUNT(*) FROM "restcomm_recordings" WHERE
+            SELECT COUNT(*) FROM restcomm_recordings WHERE
 
             <!-- are we counting cdrs from a single account or from an account set -->
             <if test="accountSidSet == null">
@@ -69,7 +69,7 @@
     </select>
 
     <select id="getRecordingsByUsingFilters" parameterType="org.restcomm.connect.dao.entities.RecordingFilter" resultType="hashmap">
-            SELECT * FROM "restcomm_recordings" AS "restcomm_recordings" WHERE
+            SELECT * FROM restcomm_recordings AS restcomm_recordings WHERE
 
             <!-- are we counting cdrs from a single account or from an account set -->
             <if test="accountSidSet == null">

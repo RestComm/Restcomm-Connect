@@ -44,7 +44,7 @@
   </delete>
 
   <select id="getTotalNotificationByUsingFilters" parameterType="org.restcomm.connect.dao.entities.NotificationFilter" resultType="int">
-            SELECT COUNT(*) FROM "restcomm_notifications" WHERE
+            SELECT COUNT(*) FROM restcomm_notifications WHERE
 
             <!-- are we counting cdrs from a single account or from an account set -->
             <if test="accountSidSet == null">
@@ -84,7 +84,7 @@
     </select>
 
     <select id="getNotificationsByUsingFilters" parameterType="org.restcomm.connect.dao.entities.NotificationFilter" resultType="hashmap">
-            SELECT * FROM "restcomm_notifications" AS "restcomm_notifications" WHERE
+            SELECT * FROM restcomm_notifications AS restcomm_notifications WHERE
 
             <!-- are we counting cdrs from a single account or from an account set -->
             <if test="accountSidSet == null">
