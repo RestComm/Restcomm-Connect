@@ -217,12 +217,4 @@ public final class DaoUtils {
         }
     }
 
-    public static String writeGeolocationType(Geolocation.GeolocationType geolocationType) {
-        if (geolocationType != null) {
-            return geolocationType.toString();
-        } else {
-            return null;
-        }
-    }
-
 }
