@@ -232,19 +232,18 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
             Configuration gmlcConf = configuration.subset("gmlc");
             String gmlcURI = gmlcConf.getString("gmlc-uri");
             String gmlcUser = gmlcConf.getString("gmlc-user");
-            URL url = new URL(gmlcURI+targetMSISDN);
+            URL url = new URL(gmlcURI + targetMSISDN);
             HttpClient client = HttpClientBuilder.create().build();
             HttpGet request = new HttpGet(String.valueOf(url));
             request.addHeader("User-Agent", gmlcUser);
             HttpResponse response = client.execute(request);
-            //BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
             BufferedReader br = new BufferedReader(
                 new InputStreamReader(response.getEntity().getContent()));
             String gmlcResponse = null;
             while (null != (gmlcResponse = br.readLine())) {
                 List<String> items = Arrays.asList(gmlcResponse.split("\\s*,\\s*"));
-                if (logger.isInfoEnabled() ) {
-                    logger.info("Data retrieved from GMLC: "+items.toString());
+                if (logger.isInfoEnabled()) {
+                    logger.info("Data retrieved from GMLC: " + items.toString());
                 }
                 for (String item : items) {
                     for (int i = 0; i < items.size(); i++) {
@@ -288,7 +287,7 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
                 }
                 if (gmlcURI != null && gmlcResponse != null) {
                     // For debugging/logging purposes only
-                    if (logger.isDebugEnabled() ) {
+                    if (logger.isDebugEnabled()) {
                         logger.debug("Geolocation data of " + targetMSISDN + " retrieved from GMCL at: " + gmlcURI);
                         logger.debug("MCC (Mobile Country Code) = " + getInteger("MobileCountryCode", data));
                         logger.debug("MNC (Mobile Network Code) = " + data.getFirst("MobileNetworkCode"));
@@ -303,7 +302,7 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
                 }
             }
         } catch (Exception ex) {
-            if (logger.isInfoEnabled() ) {
+            if (logger.isInfoEnabled()) {
                 logger.info("An exception occurred when retrieving data from GMLC");
             }
             return status(INTERNAL_SERVER_ERROR).entity(ex.getMessage()).build();
@@ -311,8 +310,10 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
 
         Geolocation geolocation = createFrom(new Sid(accountSid), data, geolocationType);
 
-        if (geolocation.getResponseStatus() != null
-            && geolocation.getResponseStatus().equals(responseStatus.Rejected.toString())) {
+        if (geolocation.getResponseStatus() != null) {
+            if (geolocation.getResponseStatus().equals(responseStatus.Rejected.toString())) {
+                dao.addGeolocation(geolocation);
+            }
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(geolocation);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -322,17 +323,7 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
                 return null;
             }
         } else {
-
-            dao.addGeolocation(geolocation);
-
-            if (APPLICATION_XML_TYPE == responseType) {
-                final RestCommResponse response = new RestCommResponse(geolocation);
-                return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
-                return ok(gson.toJson(geolocation), APPLICATION_JSON).build();
-            } else {
-                return null;
-            }
+            return status(NOT_FOUND).build();
         }
     }
 
