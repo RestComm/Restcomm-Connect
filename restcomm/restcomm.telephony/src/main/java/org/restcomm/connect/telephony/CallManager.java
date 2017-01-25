@@ -1656,7 +1656,22 @@ public final class CallManager extends UntypedActor {
         final ActorContext context = getContext();
 
         // TODO: The context.actorFor has been depreciated for actorSelection at the latest Akka release.
-        return context.actorFor(callPath);
+        ActorRef call = null;
+        if (callPath != null) {
+            try {
+                call = context.actorFor(callPath);
+            } catch (Exception e) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Problem during call lookup, callPath: "+callPath);
+                }
+                return null;
+            }
+        } else {
+            if (logger.isInfoEnabled()) {
+                logger.info("CallPath is null, call lookup cannot be executed");
+            }
+        }
+        return call;
     }
 
     public void timeout(final Object message) {

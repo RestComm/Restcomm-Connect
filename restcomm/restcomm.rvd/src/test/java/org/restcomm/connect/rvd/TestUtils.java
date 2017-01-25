@@ -21,8 +21,11 @@
 package org.restcomm.connect.rvd;
 
 import org.apache.commons.io.FileUtils;
+import org.restcomm.connect.rvd.model.ModelMarshaler;
+import org.restcomm.connect.rvd.model.client.ProjectState;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Random;
@@ -35,9 +38,13 @@ import java.util.Random;
  */
 public class TestUtils {
     public static File createTempWorkspace() {
+        return createRandomDir("workspace");
+    }
+
+    public static File createRandomDir(String prefix) {
         String tempDirLocation = System.getProperty("java.io.tmpdir");
         Random ran = new Random();
-        String workspaceLocation = tempDirLocation + "/workspace" + ran.nextInt(10000);
+        String workspaceLocation = tempDirLocation + "/" + prefix + ran.nextInt(10000);
         File workspaceDir = new File(workspaceLocation);
         workspaceDir.mkdir();
 
@@ -54,6 +61,15 @@ public class TestUtils {
         File usersDir = new File(usersLocation);
         usersDir.mkdir();
         return usersDir;
+    }
+
+    // TODO hasen't been tested or used.
+    public static File createDefaultProject(String projectName, String owner, File workspaceDir, ModelMarshaler marshaler) throws IOException {
+        File projectFile = new File(workspaceDir.getPath() + "/" + projectName);
+        projectFile.mkdir();
+        String state = marshaler.toData(ProjectState.createEmptyVoice(owner));
+        FileUtils.writeStringToFile(new File(workspaceDir.getPath() + "/" + projectName + "/state"), state );
+        return projectFile;
     }
 
     public static RvdConfiguration initRvdConfiguration(String contextToUse) {
