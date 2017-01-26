@@ -126,7 +126,7 @@ label {
     border-right-width: 1px;
     border-right-style: inset;
 }
-.control-step .condition {
+.control-step .condition, .control-step .action{
     margin-bottom: 10px;
 }
 .control-step .condition .operand {
@@ -134,6 +134,15 @@ label {
 }
 .control-step .condition .operator {
     width: 20%;
+}
+.control-step .action-assign .action-param {
+    width: 27%;
+}
+.control-step .action .action-kind {
+    width: 36%;
+}
+.control-step .action-continue-to .action-param {
+    width:61%;
 }
 
 

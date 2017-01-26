@@ -37,7 +37,7 @@ angular.module('Rvd')
 		}
 	}
 })
-.directive('controlStep', function () {
+.directive('controlStep', function (nodeRegistry) {
     return {
         restict: 'E',
         templateUrl: "templates/directive/controlStep.html",
@@ -57,23 +57,71 @@ angular.module('Rvd')
                    operand2 : ""
                }
             }
+            scope.conditionJoiner = "all"; // all / any
+
+            var actionLastId = 0;
+            function newAction() {
+                return {
+                   name: "A" + (++actionLastId),
+                   kind : "continueTo" // continueTo / assign
+               }
+            }
 
             console.log("inside controlStep link()");
             console.log(scope.stepModel);
             // initialize control step members
             var stepModel = scope.stepModel;
             stepModel.conditions = stepModel.conditions || [newCondition()];
+            stepModel.actions = stepModel.actions || [];
+            if (!stepModel.conditionExpression)
+                rebuildConditionExpression();
 
             scope.addCondition = function () {
                 stepModel.conditions.push(newCondition());
+                rebuildConditionExpression();
             }
-
             scope.removeCondition = function (conditionName) {
                 for (var i=0; i<stepModel.conditions.length; i++) {
-                    if (stepModel.conditions[i].name = conditionName)
+                    if (stepModel.conditions[i].name = conditionName) {
                         stepModel.conditions.splice(i,1);
+                        rebuildConditionExpression();
+                        return;
+                    }
                 }
             }
+            scope.addAction = function () {
+                stepModel.actions.push(newAction());
+            }
+            scope.removeAction = function (actionName) {
+                for (var i=0; i<stepModel.actions.length; i++) {
+                    if (stepModel.actions[i].name = actionName) {
+                        stepModel.actions.splice(i,1);
+                        return;
+                    }
+                }
+            }
+            function rebuildConditionExpression() {
+                var conditions = stepModel.conditions;
+                var joiner = scope.conditionJoiner;
+                var expression;
+
+                if (!conditions || conditions.length == 0)
+                    expression = undefined; // do nothing - 'expression; stays undefined
+                else {
+                    var names = [];
+                    for (var i=0; i<conditions.length;i++)
+                        names.push(conditions[i].name);
+                    if (joiner == "all")
+                        expression = names.join(" AND ")
+                    if (joiner == "any")
+                        expression = names.join(" OR ");
+                }
+
+                stepModel.conditionExpression = expression;
+            }
+            scope.rebuildConditionExpression = rebuildConditionExpression;
+
+            scope.getAllTargets = nodeRegistry.getNodes;
         },
         controller: function ($scope) {
             console.log("inside controlStep directive");
