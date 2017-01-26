@@ -5,8 +5,7 @@
 	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 		<div class="row">
 			<div class="conditions col-lg-6 col-md-6">
-				<h4>Condition</h4>
-				<button ng-click="addCondition()" class="btn btn-default"><i class="fa fa-plus"></i></button>
+				<h4>Conditions</h4>
 				<div ng-repeat="condition in stepModel.conditions" class="row condition">
                     <div class="col-md-10 col-lg-10 form-inline">
                         <div class="form-group operand">
@@ -28,16 +27,59 @@
                     <div class="col-md-2 col-lg-2">
                         <button ng-click="removeCondition(condition.name)" class="btn btn-default"><i class="fa fa-trash-o"></i></button>
                     </div>
-                    <!--
-                    <div class="col-md-2 col-lg-2">
-
-                    </div>
-                    -->
 				</div>
+                <div class="form-group">
+                    <button ng-click="addCondition()" class="btn btn-primary"><i class="fa fa-plus"></i></button>
+                </div>
+                <div ng-show="stepModel.conditions.length > 1" class="form-group">
+                    <select ng-model="conditionJoiner" ng-change="rebuildConditionExpression()" class="form-control">
+                        <option value="all">All conditions should stand</option>
+                        <option value="any">Any condition should stand</option>
+                    </select>
+                </div>
 			</div>
 			<div class="action col-lg-6 col-md-6">
 				<h4>Actions</h4>
-				<button class="btn pull-right"></button>
+                <div ng-repeat="action in stepModel.actions" class="row action">
+                    <div ng-switch on="action.kind" class="col-md-10 col-lg-10 form-inline">
+                        <!-- continueTo action -->
+                        <div ng-switch-when="continueTo" class="action-continue-to">
+                            <div class="form-group action-kind">
+                                <select ng-model="action.kind" class="form-control">
+                                    <option value="continueTo">Continue To</option>
+                                    <option value="assign">Assign</option>
+                                </select>
+                            </div>
+                            <div class="form-group action-param">
+                                <select sync-model ng-model='action.param1' ng-options='target.name as target.label for target in getAllTargets()' class="form-control" required>
+                                    <option value=""></option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- assign action -->
+                        <div ng-switch-when="assign" class="action-assign">
+                            <div class="form-group action-kind">
+                                <select ng-model="action.kind" class="form-control">
+                                    <option value="continueTo">Continue To</option>
+                                    <option value="assign">Assign</option>
+                                </select>
+                            </div>
+                            <div class="form-group action-param">
+                                <input ng-model="action.param1" type="text" class="form-control">
+                            </div>
+                            <i class="fa fa-arrow-right"></i>
+                            <div class="form-group action-param">
+                                <input ng-model="action.param2" type="text" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-lg-2">
+                        <button ng-click="removeAction(action.name)" class="btn btn-default"><i class="fa fa-trash-o"></i></button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button ng-click="addAction()" class="btn btn-primary"><i class="fa fa-plus"></i></button>
+                </div>
 			</div>
 		</div>
 	</div>
