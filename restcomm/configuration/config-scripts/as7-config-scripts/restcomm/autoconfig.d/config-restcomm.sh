@@ -531,12 +531,13 @@ confRVD(){
 	fi
 }
 
-#Auto Configure RMS Networking, if  CONF_MANUAL=false.
+#Auto Configure RMS Networking, if  MANUAL_SETUP=false.
 configRMSNetworking() {
-    if [[ "$CONF_MANUAL" == "false" || "$CONF_MANUAL" == "FALSE" ]]; then
-        sed -i "s|<BIND_ADDRESS>.*</BIND_ADDRESS>|<BIND_ADDRESS>${BIND_ADDRESS}</BIND_ADDRESS>|" $RESTCOMM_BIN/restcomm/mediaserver.conf
-        sed -i "s|<NETWORK>.*</NETWORK>|<NETWORK>${BIND_NETWORK}</NETWORK>|" $RESTCOMM_BIN/restcomm/mediaserver.conf
-        sed -i "s|<SUBNET>.*</SUBNET>|<SUBNET>${BIND_SUBNET_MASK}</SUBNET>|" $RESTCOMM_BIN/restcomm/mediaserver.conf
+    if [[ "$MANUAL_SETUP" == "false" || "$MANUAL_SETUP" == "FALSE" ]]; then
+        sed -i "s|BIND_ADDRESS=.*|BIND_ADDRESS=${BIND_ADDRESS}|" $RESTCOMM_BIN/restcomm/mediaserver.conf
+        sed -i "s|MGCP_ADDRESS=.*|MGCP_ADDRESS=${BIND_ADDRESS}|" $RESTCOMM_BIN/restcomm/mediaserver.conf
+        sed -i "s|NETWORK=.*|NETWORK=${BIND_NETWORK}|" $RESTCOMM_BIN/restcomm/mediaserver.conf
+        sed -i "s|SUBNET=.*|SUBNET=${BIND_SUBNET_MASK}|" $RESTCOMM_BIN/restcomm/mediaserver.conf
     fi
 }
 

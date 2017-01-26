@@ -155,7 +155,7 @@ fi
 
 # configure restcomm installation
 
-if [[ "$CONF_MANUAL" == "false" || "$CONF_MANUAL" == "FALSE" ]]; then
+if [[ "$MANUAL_SETUP" == "false" || "$MANUAL_SETUP" == "FALSE" ]]; then
     source $BASEDIR/autoconfigure.sh
 fi
 
