@@ -358,10 +358,13 @@ public final class Call extends UntypedActor {
         this.liveCallModification = false;
         this.recording = false;
         this.configuration = configuration;
-        this.disableSdpPatchingOnUpdatingMediaSession = this.configuration.subset("runtime-settings").getBoolean("disable-sdp-patching-on-updating-mediasession", false);
-        this.enable200OkDelay = this.configuration.subset("runtime-settings").getBoolean("enable-200-ok-delay",false);
-        final Configuration imsAuthentication = this.configuration.subset("runtime-settings").subset("ims-authentication");
-        this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
+        final Configuration runtime = this.configuration.subset("runtime-settings");
+        this.disableSdpPatchingOnUpdatingMediaSession = runtime.getBoolean("disable-sdp-patching-on-updating-mediasession", false);
+        this.enable200OkDelay = runtime.getBoolean("enable-200-ok-delay",false);
+        if(runtime.containsKey("ims-authentication")){
+            final Configuration imsAuthentication = runtime.subset("ims-authentication");
+            this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
+        }
     }
 
     private boolean is(State state) {
@@ -748,7 +751,7 @@ public final class Call extends UntypedActor {
             application.setAttribute(Call.class.getName(), self);
             String callId = null;
             String userAgent = null;
-            if(outboundToIms){
+            if(outboundToIms && configuration.subset("runtime-settings").containsKey("ims-authentication")){
                 final Configuration imsAuthentication = configuration.subset("runtime-settings").subset("ims-authentication");
                 final String callIdPrefix = imsAuthentication.getString("call-id-prefix");
                 userAgent = imsAuthentication.getString("user-agent");

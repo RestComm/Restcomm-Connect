@@ -291,22 +291,24 @@ public final class CallManager extends UntypedActor {
             logger.info("CallManager extensions: "+(extensions != null ? extensions.size() : "0"));
         }
 
-        final Configuration imsAuthentication = runtime.subset("ims-authentication");
-        this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
-        if (actAsImsUa) {
-            this.imsProxyAddress = imsAuthentication.getString("proxy-address");
-            this.imsProxyPort = imsAuthentication.getInt("proxy-port");
-            if (imsProxyPort == 0) {
-                imsProxyPort = DEFAUL_IMS_PROXY_PORT;
+        if(runtime.containsKey("ims-authentication")){
+            final Configuration imsAuthentication = runtime.subset("ims-authentication");
+            this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
+            if (actAsImsUa) {
+                this.imsProxyAddress = imsAuthentication.getString("proxy-address");
+                this.imsProxyPort = imsAuthentication.getInt("proxy-port");
+                if (imsProxyPort == 0) {
+                    imsProxyPort = DEFAUL_IMS_PROXY_PORT;
+                }
+                this.imsDomain = imsAuthentication.getString("domain");
+                this.imsAccount = imsAuthentication.getString("account");
+                if (actAsImsUa && (imsProxyAddress == null || imsProxyAddress.isEmpty()
+                        || imsDomain == null || imsDomain.isEmpty())) {
+                    logger.warning("ims proxy-address or domain is not configured");
+                }
+                this.actAsImsUa = actAsImsUa && imsProxyAddress != null && !imsProxyAddress.isEmpty()
+                        && imsDomain != null && !imsDomain.isEmpty();
             }
-            this.imsDomain = imsAuthentication.getString("domain");
-            this.imsAccount = imsAuthentication.getString("account");
-            if (actAsImsUa && (imsProxyAddress == null || imsProxyAddress.isEmpty()
-                    || imsDomain == null || imsDomain.isEmpty())) {
-                logger.warning("ims proxy-address or domain is not configured");
-            }
-            this.actAsImsUa = actAsImsUa && imsProxyAddress != null && !imsProxyAddress.isEmpty()
-                    && imsDomain != null && !imsDomain.isEmpty();
         }
     }
 
