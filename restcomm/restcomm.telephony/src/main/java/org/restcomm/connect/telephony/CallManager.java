@@ -373,17 +373,15 @@ public final class CallManager extends UntypedActor {
         if (actAsImsUa) {
             boolean isFromIms = isFromIms(request);
             if (!isFromIms) {
-                //This is a WebRTC client that dials out
+                //This is a WebRTC client that dials out to IMS
                 String user = request.getHeader("X-RestComm-Ims-User");
                 String pass = request.getHeader("X-RestComm-Ims-Password");
                 request.removeHeader("X-RestComm-Ims-User");
                 request.removeHeader("X-RestComm-Ims-Password");
                 imsProxyThroughMediaServer(request, null, request.getTo().getURI(), user, pass, isFromIms);
-//                proxyThroughMediaServer(request, null, request.getTo().getURI().toString(), "48399000047@neofon.tp.pl", "Ims12Ims", false);
                 return;
             } else {
-                logger.info("in client null");
-                // Client is null, check if this call is for a registered DID (application)
+                //This is a IMS that dials out to WebRTC client
                 imsProxyThroughMediaServer(request, null, request.getTo().getURI(), "", "", isFromIms);
                 return;
             }
@@ -1909,7 +1907,8 @@ public final class CallManager extends UntypedActor {
         } else {
             regUri = srcUri;
         }
-
+        // Lookup of registration is based on srcUri (if call is toward IMS),
+        // or is based on destUri (if call is from IMS)
         Registration reg = findRegistration(regUri);
         if (reg == null) {
             if(logger.isInfoEnabled()) {
@@ -1926,19 +1925,11 @@ public final class CallManager extends UntypedActor {
             if (isFromIms) {
                 rcml = "<Response><Dial><Client>" + reg.getUserName() + "</Client></Dial></Response>";
             }
-            boolean isFromWebRTC = false;
-            if (!isFromIms) {
-                isFromWebRTC = reg.isWebRTC();
-            } else {
-                Registration srcReg = findRegistration(srcUri);
-                if (srcReg != null) {
-                    isFromWebRTC = srcReg.isWebRTC();
-                }
-            }
-            if(logger.isInfoEnabled()) {
-                logger.info("isFromWebRTC: " + isFromWebRTC);
-            }
 
+            if(logger.isInfoEnabled()) {
+                logger.info("rcml: " + rcml);
+            }
+            
             final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
             builder.setConfiguration(configuration);
             builder.setStorage(storage);
