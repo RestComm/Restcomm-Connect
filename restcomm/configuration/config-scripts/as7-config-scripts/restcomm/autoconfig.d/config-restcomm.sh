@@ -531,6 +531,14 @@ confRVD(){
 	fi
 }
 
+#Auto Configure RMS Networking, if  CONF_MANUAL=false.
+configRMSNetworking() {
+    if [[ "$CONF_MANUAL" == "false" || "$CONF_MANUAL" == "FALSE" ]]; then
+        sed -i "s|<BIND_ADDRESS>.*</BIND_ADDRESS>|<BIND_ADDRESS>${BIND_ADDRESS}</BIND_ADDRESS>|" $RESTCOMM_BIN/restcomm/mediaserver.conf
+        sed -i "s|<NETWORK>.*</NETWORK>|<NETWORK>${BIND_NETWORK}</NETWORK>|" $RESTCOMM_BIN/restcomm/mediaserver.conf
+        sed -i "s|<SUBNET>.*</SUBNET>|<SUBNET>${BIND_SUBNET_MASK}</SUBNET>|" $RESTCOMM_BIN/restcomm/mediaserver.conf
+    fi
+}
 
 # MAIN
 echo 'Configuring RestComm...'
@@ -569,4 +577,5 @@ configHypertextPort
 configOutboundProxy
 otherRestCommConf
 confRVD
+configRMSNetworking
 echo 'Configured RestComm!'

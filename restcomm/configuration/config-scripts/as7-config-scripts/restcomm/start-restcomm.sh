@@ -132,7 +132,10 @@ if [[ -z "$PRIVATE_IP" || -z "$SUBNET_MASK" || -z "$NETWORK" || -z "$BROADCAST_A
 echo "Looking for the IP Address, subnet, network and broadcast_address"
 	source $BASEDIR/utils/read-network-props.sh "$NET_INTERFACE"
 fi
+
 BIND_ADDRESS="$PRIVATE_IP"
+BIND_NETWORK="$NETWORK"
+BIND_SUBNET_MASK="$SUBNET_MASK"
 
 if [[ -z "$STATIC_ADDRESS" ]]; then
 	STATIC_ADDRESS=$BIND_ADDRESS
