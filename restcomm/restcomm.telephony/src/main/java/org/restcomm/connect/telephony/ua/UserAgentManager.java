@@ -104,22 +104,23 @@ public final class UserAgentManager extends UntypedActor {
         pingInterval = runtime.getInt("ping-interval", 60);
         logger.info("About to run firstTimeCleanup()");
         instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
-
+        if(runtime.containsKey("ims-authentication")){
         final Configuration imsAuthentication = runtime.subset("ims-authentication");
-        this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
-        if (actAsImsUa) {
-            this.imsProxyAddress = imsAuthentication.getString("proxy-address");
-            this.imsProxyPort = imsAuthentication.getInt("proxy-port");
-            if (imsProxyPort == 0) {
-                imsProxyPort = DEFAUL_IMS_PROXY_PORT;
+            this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
+            if (actAsImsUa) {
+                this.imsProxyAddress = imsAuthentication.getString("proxy-address");
+                this.imsProxyPort = imsAuthentication.getInt("proxy-port");
+                if (imsProxyPort == 0) {
+                    imsProxyPort = DEFAUL_IMS_PROXY_PORT;
+                }
+                this.imsDomain = imsAuthentication.getString("domain");
+                if (actAsImsUa && (imsProxyAddress == null || imsProxyAddress.isEmpty()
+                        || imsDomain == null || imsDomain.isEmpty())) {
+                    logger.warning("ims proxy-address or domain is not configured");
+                }
+                this.actAsImsUa = actAsImsUa && imsProxyAddress != null && !imsProxyAddress.isEmpty()
+                        && imsDomain != null && !imsDomain.isEmpty();
             }
-            this.imsDomain = imsAuthentication.getString("domain");
-            if (actAsImsUa && (imsProxyAddress == null || imsProxyAddress.isEmpty()
-                    || imsDomain == null || imsDomain.isEmpty())) {
-                logger.warning("ims proxy-address or domain is not configured");
-            }
-            this.actAsImsUa = actAsImsUa && imsProxyAddress != null && !imsProxyAddress.isEmpty()
-                    && imsDomain != null && !imsDomain.isEmpty();
         }
 
         firstTimeCleanup();
