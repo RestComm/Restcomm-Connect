@@ -106,7 +106,7 @@ curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:myPWD@my_IP/restcomm/201
     <Price>0</Price>
     <PriceUnit>USD</PriceUnit>
     <ApiVersion>2012-04-24</ApiVersion>
-    <Uri>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages/SM55ce5cf07b9649c283cbacab4dae56a9</Uri>
+    <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages/SM55ce5cf07b9649c283cbacab4dae56a9</Uri>
   </SMSMessage>
 ----
 
