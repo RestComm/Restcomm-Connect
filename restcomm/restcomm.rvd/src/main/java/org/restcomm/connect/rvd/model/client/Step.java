@@ -6,6 +6,7 @@ import org.restcomm.connect.rvd.exceptions.InterpreterException;
 import org.restcomm.connect.rvd.interpreter.Interpreter;
 import org.restcomm.connect.rvd.interpreter.Target;
 import org.restcomm.connect.rvd.interpreter.exceptions.RVDUnsupportedHandlerVerb;
+import org.restcomm.connect.rvd.jsonvalidation.ValidationErrorItem;
 import org.restcomm.connect.rvd.model.rcml.RcmlStep;
 import org.restcomm.connect.rvd.storage.exceptions.StorageException;
 
@@ -60,5 +61,9 @@ public abstract class Step {
     public String process(Interpreter interpreter, HttpServletRequest httpRequest) throws InterpreterException {
         // a placeholder implementation for steps that don't have an actual imlpementation
         return null;
+    }
+
+    public ValidationErrorItem validate(String stepPath) {
+        return null; // assume valid unless overriden
     }
 }
