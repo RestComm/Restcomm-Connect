@@ -54,8 +54,11 @@ public abstract class Step {
         throw new RVDUnsupportedHandlerVerb();
     }
 
-    // a placeholder function for steps that don't have an actual imlpementation
+    /**
+     * @returns String - The module name to continue rendering with. null, to continue processing the existing module
+     */
     public String process(Interpreter interpreter, HttpServletRequest httpRequest) throws InterpreterException {
+        // a placeholder implementation for steps that don't have an actual imlpementation
         return null;
     }
 }

@@ -1,0 +1,44 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+	"title": "Say step",
+	"type": "object",
+	"properties": {
+		"name":{"type": "string"},
+		"kind": {"enum": ["control"]},
+		"label": {"type": "string"},
+		"title": {"type": "string"},
+		"conditions":{
+			"type": "array",
+			"items": { "$ref": "#/definitions/condition"}
+		},
+		"actions":{
+			"type":"array",
+			"items": { "$ref": "#/definitions/action"}
+		},
+		"conditionExpression":{"type":"string"}
+	},
+	"required": ["name","kind"],
+	"definitions": {
+		"condition": {
+			"type":"object",
+			"properties": {
+				"name": {"type":"string", "minLength": 1},
+				"operator": {"type":"string", "enum": ["equals","greater","less","isTrue","isFalse"]},
+				"operand1": {"type":"string"},
+				"operand2": {"type":"string"}
+			},
+			"required": ["name","operator"]
+		},
+		"action": {
+			"type":"object",
+			"properties": {
+				"name": {"type":"string", "minLength": 1},
+				"kind": {"type":"string", "enum": ["continueTo","assign"]},
+				"param1": {"type":"string"},
+				"param2": {"type":"string"}
+			},
+			"required": ["name","kind"]
+		}
+	}
+}
+
