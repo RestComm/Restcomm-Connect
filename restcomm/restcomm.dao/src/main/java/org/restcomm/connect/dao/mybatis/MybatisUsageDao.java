@@ -54,30 +54,54 @@ public final class MybatisUsageDao implements UsageDao {
   }
 
   @Override
+  public List<Usage> getUsage(final Sid accountSid, String uri) {
+    return getUsageCalls(accountSid, null, null, null, uri, "getAllTimeCalls");
+  }
+
+  @Override
+  public List<Usage> getUsageDaily(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate, String uri) {
+    return getUsageCalls(accountSid, category, startDate, endDate, uri, "getDailyCalls");
+  }
+
+  @Override
+  public List<Usage> getUsageMonthly(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate, String uri) {
+    return getUsageCalls(accountSid, category, startDate, endDate, uri, "getMonthlyCalls");
+  }
+
+  @Override
+  public List<Usage> getUsageYearly(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate, String uri) {
+    return getUsageCalls(accountSid, category, startDate, endDate, uri, "getYearlyCalls");
+  }
+
+  @Override
+  public List<Usage> getUsageAllTime(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate, String uri) {
+    return getUsageCalls(accountSid, category, startDate, endDate, uri, "getAllTimeCalls");
+  }
+
+  @Override
   public List<Usage> getUsage(final Sid accountSid) {
-    return getUsageCalls(accountSid, null, null, null, "getAllTimeCalls");
+    return getUsage(accountSid, "");
   }
 
   @Override
   public List<Usage> getUsageDaily(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate) {
-    return getUsageCalls(accountSid, category, startDate, endDate, "getDailyCalls");
+    return getUsageDaily(accountSid, category, startDate, endDate, "");
   }
 
   @Override
   public List<Usage> getUsageMonthly(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate) {
-    return getUsageCalls(accountSid, category, startDate, endDate, "getMonthlyCalls");
+    return getUsageMonthly(accountSid, category, startDate, endDate, "");
   }
 
   @Override
   public List<Usage> getUsageYearly(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate) {
-    return getUsageCalls(accountSid, category, startDate, endDate, "getYearlyCalls");
+    return getUsageYearly(accountSid, category, startDate, endDate, "");
   }
 
   @Override
   public List<Usage> getUsageAllTime(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate) {
-    return getUsageCalls(accountSid, category, startDate, endDate, "getAllTimeCalls");
+    return getUsageAllTime(accountSid, category, startDate, endDate, "");
   }
-
   /*
   @Override
   public List<Usage> getUsageToday(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate) {
@@ -100,12 +124,16 @@ public final class MybatisUsageDao implements UsageDao {
   }
   */
   private List<Usage> getUsageCalls(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate, final String queryName) {
+    return getUsageCalls(accountSid, category, startDate, endDate, "", queryName);
+  }
+  private List<Usage> getUsageCalls(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate, String uri, final String queryName) {
     long startTime = System.currentTimeMillis();
     final SqlSession session = sessions.openSession();
     Map<String, Object> params = new HashMap<String, Object>();
     params.put("sid", accountSid.toString());
     params.put("startDate", new Date(startDate.getMillis()));
     params.put("endDate", new Date(endDate.getMillis()));
+    params.put("uri", uri);
     fillParametersByCategory(category, params);
     try {
       final List<Map<String, Object>> results = session.selectList(namespace + queryName, params);
@@ -145,6 +173,8 @@ public final class MybatisUsageDao implements UsageDao {
   private Map<String, Object> fillParametersByCategory(Usage.Category category, Map<String, Object> params) {
     // FIXME: handle no category, meaning all
     if (category == null) category = Usage.Category.CALLS;
+
+    params.put("category", category.toString());
     switch (category) {
       case CALLS:
       case CALLS_INBOUND:
