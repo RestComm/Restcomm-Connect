@@ -121,10 +121,12 @@ import java.util.regex.Pattern;
 
 import static akka.pattern.Patterns.ask;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_ACCEPTED;
 import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
 import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_TEMPORARILY_UNAVAILABLE;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -656,6 +658,13 @@ public final class CallManager extends UntypedActor {
     private void transfer(SipServletRequest request) throws Exception {
         final SipApplicationSession appSession = request.getApplicationSession();
         ActorRef call = (ActorRef) appSession.getAttribute(Call.class.getName());
+        if (call == null) {
+            SipServletResponse servletResponse = request.createResponse(SC_TEMPORARILY_UNAVAILABLE, "REFER should be sent in dialog");
+            servletResponse.setHeader("Event", "refer");
+            servletResponse.setHeader("Retry-After", "1800000");
+            servletResponse.send();
+            return;
+        }
 
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
 
@@ -672,6 +681,18 @@ public final class CallManager extends UntypedActor {
 
         call = lookup(new GetCall(cdr.getCallPath()));
         IncomingPhoneNumber number = storage.getIncomingPhoneNumbersDao().getIncomingPhoneNumber(cdr.getTo());
+
+        if (number.getReferUrl() == null && number.getReferApplicationSid() == null) {
+            SipServletResponse servletResponse = request.createResponse(SC_TEMPORARILY_UNAVAILABLE, "Set either incoming phone number Refer URL or Refer application");
+            servletResponse.setHeader("Event", "refer");
+            servletResponse.setHeader("Retry-After", "1800000");
+            servletResponse.send();
+            return;
+        }
+
+        SipServletResponse servletResponse = request.createResponse(SC_ACCEPTED);
+        servletResponse.setHeader("Event", "refer");
+        servletResponse.send();
 
         // Get first call leg observers
         Future<Object> future = (Future<Object>) ask(call, new GetCallObservers(), expires);
@@ -695,7 +716,7 @@ public final class CallManager extends UntypedActor {
         }
 
         if(logger.isInfoEnabled()) {
-            logger.info("About to start Live Call Modification");
+            logger.info("About to start Call Transfer");
             logger.info("Initial Call path: " + call.path());
             if (relatedCall != null) {
                 logger.info("Related Call path: " + relatedCall.path());
@@ -707,7 +728,7 @@ public final class CallManager extends UntypedActor {
             logger.info("Will tell Call actors to stop observing existing Interpreters");
         }
         if (logger.isDebugEnabled()) {
-            logger.debug("LCM account: "+ cdr.getAccountSid() +", new RCML url: "+ number.getReferUrl());
+            logger.debug("Call Transfer account: "+ cdr.getAccountSid() +", new RCML url: "+ number.getReferUrl());
         }
         call.tell(new StopObserving(), self());
         if (relatedCall != null) {
@@ -736,17 +757,16 @@ public final class CallManager extends UntypedActor {
         builder.setSmsService(sms);
         builder.setAccount(cdr.getAccountSid());
         builder.setVersion(cdr.getApiVersion());
-        builder.setMethod(number.getReferMethod());
 
         if (number.getReferApplicationSid() != null) {
             Application application = storage.getApplicationsDao().getApplication(number.getReferApplicationSid());
-            builder.setReferUrl(UriUtils.resolve(application.getRcmlUrl()));
+            builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
         } else {
-            builder.setReferUrl(UriUtils.resolve(number.getReferUrl()));
+            builder.setUrl(UriUtils.resolve(number.getReferUrl()));
         }
 
-        builder.setReferMethod((number.getReferMethod() != null && number.getReferMethod().length() > 0) ? number.getReferMethod() : "POST");
-        builder.setReferTarget(request.getHeader("Refer-To").replace("<", "").replace(">", ""));
+        builder.setMethod((number.getReferMethod() != null && number.getReferMethod().length() > 0) ? number.getReferMethod() : "POST");
+        builder.setReferTarget(((SipURI)request.getAddressHeader("Refer-To").getURI()).getUser());
 
         builder.setFallbackUrl(null);
         builder.setFallbackMethod("POST");
@@ -775,7 +795,7 @@ public final class CallManager extends UntypedActor {
                 branch.tell(new Hangup(), null);
             }
             if (logger.isInfoEnabled()) {
-                String msg = String.format("LiveCallModification request while dial forking, terminated %d calls", listOfRelatedCalls.size());
+                String msg = String.format("Call Transfer while dial forking, terminated %d calls", listOfRelatedCalls.size());
                 logger.info(msg);
             }
         }

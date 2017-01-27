@@ -189,6 +189,10 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         builder.setUssdFallbackMethod(getMethod("UssdFallbackMethod",data));
         builder.setUssdApplicationSid(getSid("UssdApplicationSid",data));
 
+        builder.setReferUrl(getUrl("ReferUrl", data));
+        builder.setReferMethod(getMethod("ReferMethod", data));
+        builder.setReferApplicationSid(getSid("ReferApplicationSid",data));
+
         final Configuration configuration = this.configuration.subset("runtime-settings");
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");

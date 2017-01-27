@@ -26,6 +26,10 @@
 						<var>request.method</var>
 						<value>OPTIONS</value>
 					</equal>
+					<equal>
+						<var>request.method</var>
+						<value>REFER</value>
+					</equal>
 				</or>
 			</pattern>
 		</servlet-mapping>

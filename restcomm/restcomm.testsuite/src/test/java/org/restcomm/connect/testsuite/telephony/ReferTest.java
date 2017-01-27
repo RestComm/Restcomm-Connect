@@ -24,6 +24,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
+import org.cafesip.sipunit.ReferSubscriber;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipRequest;
@@ -66,12 +67,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.cafesip.sipunit.SipAssert.assertNoSubscriptionErrors;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
  * Test for SIP Refer support according to the RFC5589 spec in order to provide call transfer capabilities to deskphone
- * sip clients that use SIP Refer to implement call tranfer.
+ * sip clients that use SIP Refer to implement call transfer.
  */
 @RunWith(Arquillian.class)
 public class ReferTest {
@@ -175,7 +178,6 @@ public class ReferTest {
 
         stubFor(get(urlPathEqualTo("/2222"))
                 .withQueryParam("transferTarget", equalTo("alice"))
-                .withQueryParam("transferTargetUri", equalTo("sip%3Aalice%40127.0.0.1%3A5080"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
@@ -195,18 +197,18 @@ public class ReferTest {
         bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
 
         assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));//TODO
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-        logger.info("Last response: "+response);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int callResponse = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(callResponse == Response.TRYING || callResponse == Response.RINGING);
+        logger.info("Last response: "+callResponse);
 
-        if (response == Response.TRYING) {
+        if (callResponse == Response.TRYING) {
             assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
             logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));//TODO-----------------
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
         assertTrue(bobCall.sendInviteOkAck());
 
@@ -222,11 +224,17 @@ public class ReferTest {
 
         SipURI referTo = georgeSipStack.getAddressFactory().createSipURI("alice", "127.0.0.1:5080");
 
-        georgePhone.refer(georgeCall.getDialog(), referTo, null, 5000);
+        ReferSubscriber subscription = georgePhone.refer(georgeCall.getDialog(), referTo, null, 5000);
+        assertNotNull(subscription);
+        assertTrue(subscription.isSubscriptionPending());
+
+        assertTrue(subscription.processResponse(1000));
+        assertTrue(subscription.isSubscriptionPending());
+        assertNoSubscriptionErrors(subscription);
 
         georgeCall.listenForDisconnect();
         assertTrue(georgeCall.waitForDisconnect(10000));
-        assertTrue(georgeCall.listenForDisconnect());
+        assertTrue(georgeCall.respondToDisconnect());
 
         assertTrue(aliceCall.waitForIncomingCall(5000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Alice-Trying", 3600));
@@ -285,6 +293,131 @@ public class ReferTest {
         assertTrue(maxConcurrentOutgoingCalls==1);
     }
 
+    @Test
+    public void testTransferWithAbsentReferUrlAndApplication() throws ParseException, InterruptedException, MalformedURLException, SipException {
+
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialGeorgeRcml)));
+
+        stubFor(get(urlPathEqualTo("/2222"))
+                .withQueryParam("transferTarget", equalTo("alice"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialAliceRcml)));
+
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, "sip:1212@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int callResponse = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(callResponse == Response.TRYING || callResponse == Response.RINGING);
+        logger.info("Last response: "+callResponse);
+
+        if (callResponse == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
+
+        SipRequest lastReceivedRequest = georgeCall.getLastReceivedRequest();
+        String receivedBody = new String(lastReceivedRequest.getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "George-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(georgeCall.waitForAck(5000));
+
+        SipURI referTo = georgeSipStack.getAddressFactory().createSipURI("alice", "127.0.0.1:5080");
+
+        ReferSubscriber subscription = georgePhone.refer(georgeCall.getDialog(), referTo, null, 5000);
+        assertNull(subscription);
+        assertEquals("Received response status: 480, reason: Set either incoming phone number Refer URL or Refer application", georgePhone.getErrorMessage());
+    }
+
+    @Test
+    public void testTransferWithOutOfDialogRefer() throws ParseException, InterruptedException, MalformedURLException, SipException {
+
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialGeorgeRcml)));
+
+        stubFor(get(urlPathEqualTo("/2222"))
+                .withQueryParam("transferTarget", equalTo("alice"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialAliceRcml)));
+
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int callResponse = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(callResponse == Response.TRYING || callResponse == Response.RINGING);
+        logger.info("Last response: "+callResponse);
+
+        if (callResponse == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
+
+        SipRequest lastReceivedRequest = georgeCall.getLastReceivedRequest();
+        String receivedBody = new String(lastReceivedRequest.getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "George-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(georgeCall.waitForAck(5000));
+
+        SipURI referTo = georgeSipStack.getAddressFactory().createSipURI("alice", "127.0.0.1:5080");
+
+        ReferSubscriber subscription = georgePhone.refer(bobContact, referTo, null, 5000, null);
+        assertNotNull(subscription);
+        assertFalse(subscription.processResponse(1000));
+        assertEquals("Received response status: 480, reason: REFER should be sent in dialog", subscription.getErrorMessage());
+    }
+
     private String dialJoeRcml = "<Response><Dial><Client>joe</Client></Dial></Response>";
     @Test
     public void testTransferIncorrectReferTarget() throws ParseException, InterruptedException, MalformedURLException, SipException {
@@ -297,7 +430,6 @@ public class ReferTest {
 
         stubFor(get(urlPathEqualTo("/2222"))
                 .withQueryParam("transferTarget", equalTo("joe"))
-                .withQueryParam("transferTargetUri", equalTo("sip%3Ajoe%40127.0.0.1%3A5080"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
@@ -317,7 +449,7 @@ public class ReferTest {
         bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
 
         assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));//TODO
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
         assertTrue(response == Response.TRYING || response == Response.RINGING);
         logger.info("Last response: "+response);
@@ -328,7 +460,7 @@ public class ReferTest {
             logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));//TODO-----------------
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
         assertTrue(bobCall.sendInviteOkAck());
 
@@ -349,7 +481,7 @@ public class ReferTest {
         georgePhone.refer(georgeCall.getDialog(), referTo, null, 5000);
 
         assertTrue(georgeCall.waitForDisconnect(5000));
-        assertTrue(georgeCall.listenForDisconnect());
+        assertTrue(georgeCall.respondToDisconnect());
 
         assertTrue(bobCall.waitForDisconnect(5000));
         assertTrue(bobCall.respondToDisconnect());
