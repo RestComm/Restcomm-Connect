@@ -57,6 +57,11 @@ public final class VoiceInterpreterBuilder {
     private ActorRef monitoring;
     private String rcml;
 
+    // IMS authentication
+    private boolean asImsUa;
+    private String imsUaLogin;
+    private String imsUaPassword;
+
     /**
      * @author thomas.quintana@telestax.com (Thomas Quintana)
      */
@@ -72,7 +77,8 @@ public final class VoiceInterpreterBuilder {
             @Override
             public UntypedActor create() throws Exception {
                 return new VoiceInterpreter(configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod,
-                        statusCallback, statusCallbackMethod, emailAddress, calls, conferences, bridges, sms, storage, monitoring, rcml);
+                        statusCallback, statusCallbackMethod, emailAddress, calls, conferences, bridges, sms, storage, monitoring, rcml,
+                        asImsUa, imsUaLogin, imsUaPassword);
             }
         }));
     }
@@ -146,4 +152,16 @@ public final class VoiceInterpreterBuilder {
     }
 
     public void setRcml(final String rcml) { this.rcml = rcml; }
+
+    public void setAsImsUa(boolean asImsUa) {
+        this.asImsUa = asImsUa;
+    }
+
+    public void setImsUaLogin(String imsUaLogin) {
+        this.imsUaLogin = imsUaLogin;
+    }
+
+    public void setImsUaPassword(String imsUaPassword) {
+        this.imsUaPassword = imsUaPassword;
+    }
 }
