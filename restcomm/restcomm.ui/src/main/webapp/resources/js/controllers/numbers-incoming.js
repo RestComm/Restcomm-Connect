@@ -70,7 +70,6 @@ rcMod.controller('NumberDetailsCtrl', function ($scope, $stateParams, $location,
     $scope.localVoiceApps = Applications.filterByKind(localApps, 'voice');
     $scope.localSmsApps = Applications.filterByKind(localApps, 'sms');
     $scope.localUssdApps = Applications.filterByKind(localApps, 'ussd');
-    $scope.localReferApps = Applications.filterByKind(localApps, 'voice');
 
   //$scope.countries = countries;
   $scope.countries = allCountries;

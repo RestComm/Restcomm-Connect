@@ -155,7 +155,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private final State finishConferencing;
     private final State downloadingRcml;
     private final State downloadingFallbackRcml;
-    private final State downloadingReferRcml;
     private final State initializingCall;
     // private final State initializedCall;
     private final State ready;
@@ -207,15 +206,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
-                            final String statusCallbackMethod,
-                            final URI referUrl, final String referMethod, final String referTarget,
+                            final String statusCallbackMethod, String referTarget,
                             final String emailAddress, final ActorRef callManager,
                             final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring, final String rcml) {
         super();
         final ActorRef source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
         downloadingFallbackRcml = new State("downloading fallback rcml", new DownloadingFallbackRcml(source), null);
-        downloadingReferRcml = new State("downloading refer rcml", new DownloadingReferRcml(source), null);
         initializingCall = new State("initializing call", new InitializingCall(source), null);
         // initializedCall = new State("initialized call", new InitializedCall(source), new PostInitializedCall(source));
         ready = new State("ready", new Ready(source), null);
@@ -244,11 +241,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(acquiringSynthesizerInfo, finished));
         transitions.add(new Transition(acquiringCallInfo, initializingCall));
         transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
-        transitions.add(new Transition(acquiringCallInfo, downloadingReferRcml));
         transitions.add(new Transition(acquiringCallInfo, finished));
         transitions.add(new Transition(acquiringCallInfo, ready));
         transitions.add(new Transition(initializingCall, downloadingRcml));
-        transitions.add(new Transition(initializingCall, downloadingReferRcml));
         transitions.add(new Transition(initializingCall, ready));
         transitions.add(new Transition(initializingCall, finishDialing));
         transitions.add(new Transition(initializingCall, hangingUp));
@@ -262,11 +257,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(downloadingFallbackRcml, hangingUp));
         transitions.add(new Transition(downloadingFallbackRcml, finished));
         transitions.add(new Transition(downloadingFallbackRcml, notFound));
-        transitions.add(new Transition(downloadingReferRcml, ready));
-        transitions.add(new Transition(downloadingReferRcml, notFound));
-        transitions.add(new Transition(downloadingReferRcml, downloadingFallbackRcml));
-        transitions.add(new Transition(downloadingReferRcml, hangingUp));
-        transitions.add(new Transition(downloadingReferRcml, finished));
         transitions.add(new Transition(ready, initializingCall));
         transitions.add(new Transition(ready, faxing));
         transitions.add(new Transition(ready, sendingEmail));
@@ -410,8 +400,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.fallbackMethod = fallbackMethod;
         this.statusCallback = statusCallback;
         this.statusCallbackMethod = statusCallbackMethod;
-        this.referUrl = referUrl;
-        this.referMethod = referMethod;
         this.referTarget = referTarget;
         this.emailAddress = emailAddress;
         this.configuration = configuration;
@@ -1006,11 +994,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     createInitialCallRecord((CallResponse<CallInfo>) message);
                     fsm.transition(message, ready);
                 } else {
-                    if (referTarget == null) {
-                        fsm.transition(message, downloadingRcml);
-                    } else {
-                        fsm.transition(message, downloadingReferRcml);
-                    }
+                    fsm.transition(message, downloadingRcml);
                 }
             } else {
                 fsm.transition(message, initializingCall);
@@ -1230,11 +1214,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         fsm.transition(message, ready);
                     } else {
                         //This is a REST API created outgoing call
-                        if (referTarget == null) {
-                            fsm.transition(message, downloadingRcml);
-                        } else {
-                            fsm.transition(message, downloadingReferRcml);
-                        }
+                        fsm.transition(message, downloadingRcml);
                     }
                 } else if (is(forking)) {
                     if (outboundCall == null || !sender.equals(call)) {
@@ -1424,6 +1404,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final String forwardedFrom = (callInfo.forwardedFrom() == null || callInfo.forwardedFrom().isEmpty()) ? "null" : callInfo.forwardedFrom();
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
         parameters.add(new BasicNameValuePair("CallTimestamp", callInfo.dateCreated().toString()));
+        if (referTarget != null) {
+            parameters.add(new BasicNameValuePair("transferTarget", referTarget));
+        }
         // logger.info("Type " + callInfo.type());
         SipServletResponse lastResponse = callInfo.lastResponse();
         if (CreateCall.Type.SIP == callInfo.type()) {
@@ -1676,27 +1659,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
-    private final class DownloadingReferRcml extends AbstractAction {
-        public DownloadingReferRcml(final ActorRef source) {
-            super(source);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void execute(final Object message) throws Exception {
-            final Class<?> klass = message.getClass();
-            if (CallResponse.class.equals(klass)) {
-                createInitialCallRecord((CallResponse<CallInfo>) message);
-            }
-            // Ask the downloader to get us the application that will be executed.
-            final List<NameValuePair> parameters = parameters();
-            parameters.add(new BasicNameValuePair("transferTarget", referTarget.substring(0, referTarget.indexOf("@")).replace("sip:", "")));
-            parameters.add(new BasicNameValuePair("transferTargetUri", referTarget));
-            request = new HttpRequestDescriptor(referUrl, referMethod, parameters);
-            downloader.tell(request, source);
-        }
-    }
-
     private final class Ready extends AbstractAction {
         public Ready(final ActorRef source) {
             super(source);
@@ -1727,8 +1689,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 source.tell(verb, source);
                 return;
             } else if (downloadingRcml.equals(state) || downloadingFallbackRcml.equals(state) || redirecting.equals(state)
-                    || downloadingReferRcml.equals(state) || finishGathering.equals(state) || finishRecording.equals(state)
-                    || sendingSms.equals(state) || finishDialing.equals(state) || finishConferencing.equals(state) || is(forking)) {
+                    || finishGathering.equals(state) || finishRecording.equals(state) || sendingSms.equals(state)
+                    || finishDialing.equals(state) || finishConferencing.equals(state) || is(forking)) {
                 response = ((DownloaderResponse) message).get();
                 if (parser != null) {
                     context.stop(parser);
