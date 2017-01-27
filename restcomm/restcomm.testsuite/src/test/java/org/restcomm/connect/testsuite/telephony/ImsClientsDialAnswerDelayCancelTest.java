@@ -28,6 +28,7 @@ import javax.sip.header.ProxyAuthenticateHeader;
 import javax.sip.header.RouteHeader;
 import javax.sip.header.ToHeader;
 import javax.sip.header.UserAgentHeader;
+import javax.sip.message.Request;
 import javax.sip.message.Response;
 
 import org.apache.log4j.Logger;
@@ -185,6 +186,8 @@ public class ImsClientsDialAnswerDelayCancelTest {
         
         assertTrue(pstnCall.waitForIncomingCall(5 * 1000));
         assertTrue(pstnCall.sendIncomingCallResponse(Response.RINGING, "RINGING-Pstn", 3600));
+        SipTransaction pstnInviteTx = pstnCall.getLastTransaction();
+        Request pstnInvite = pstnInviteTx.getServerTransaction().getRequest();
         
         Thread.sleep(500);
 
@@ -196,6 +199,14 @@ public class ImsClientsDialAnswerDelayCancelTest {
         SipTransaction pstnCancelTransaction = pstnCall.waitForCancel(5 * 1000);
         assertTrue(pstnCancelTransaction != null);
         pstnCall.respondToCancel(pstnCancelTransaction, 200, "OK-pstn", 3600);
+        
+        Response pstnResponseTerminated = imsSipStack.getMessageFactory().createResponse(Response.REQUEST_TERMINATED, pstnInvite);
+        try{
+            pstnInviteTx.getServerTransaction().sendResponse(pstnResponseTerminated);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
         
         assertTrue(augustCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.REQUEST_TERMINATED, augustCall.getLastReceivedResponse().getStatusCode());
@@ -224,7 +235,8 @@ public class ImsClientsDialAnswerDelayCancelTest {
 
         assertTrue(augustCall.waitForIncomingCall(30 * 1000));
         assertTrue(augustCall.sendIncomingCallResponse(Response.RINGING, "Ringing-August", 3600));
-
+        SipTransaction augustInviteTx = augustCall.getLastTransaction();
+        Request augustInvite = augustInviteTx.getServerTransaction().getRequest();
 
         augustCall.listenForCancel();
         
@@ -234,6 +246,14 @@ public class ImsClientsDialAnswerDelayCancelTest {
         SipTransaction augustCancelTransaction = augustCall.waitForCancel(5 * 1000);
         assertTrue(augustCancelTransaction != null);
         augustCall.respondToCancel(augustCancelTransaction, 200, "OK-pstn", 3600);
+        
+        Response augustResponseTerminated = imsSipStack.getMessageFactory().createResponse(Response.REQUEST_TERMINATED, augustInvite);
+        try{
+            augustInviteTx.getServerTransaction().sendResponse(augustResponseTerminated);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
         
         assertTrue(pstnCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.REQUEST_TERMINATED, pstnCall.getLastReceivedResponse().getStatusCode());

@@ -361,7 +361,7 @@ public final class Call extends UntypedActor {
         final Configuration runtime = this.configuration.subset("runtime-settings");
         this.disableSdpPatchingOnUpdatingMediaSession = runtime.getBoolean("disable-sdp-patching-on-updating-mediasession", false);
         this.enable200OkDelay = runtime.getBoolean("enable-200-ok-delay",false);
-        if(runtime.containsKey("ims-authentication")){
+        if(!runtime.subset("ims-authentication").isEmpty()){
             final Configuration imsAuthentication = runtime.subset("ims-authentication");
             this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
         }
@@ -751,7 +751,7 @@ public final class Call extends UntypedActor {
             application.setAttribute(Call.class.getName(), self);
             String callId = null;
             String userAgent = null;
-            if(outboundToIms && configuration.subset("runtime-settings").containsKey("ims-authentication")){
+            if(outboundToIms && !configuration.subset("runtime-settings").subset("ims-authentication").isEmpty()){
                 final Configuration imsAuthentication = configuration.subset("runtime-settings").subset("ims-authentication");
                 final String callIdPrefix = imsAuthentication.getString("call-id-prefix");
                 userAgent = imsAuthentication.getString("user-agent");
@@ -1020,9 +1020,6 @@ public final class Call extends UntypedActor {
                 outgoingCallRecord = outgoingCallRecord.setRingDuration(seconds);
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
-            if(actAsImsUa){
-                recordsDao.removeCallDetailRecord(outgoingCallRecord.getSid());
-            }
         }
     }
 
@@ -1055,9 +1052,6 @@ public final class Call extends UntypedActor {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
-            if(actAsImsUa){
-                recordsDao.removeCallDetailRecord(outgoingCallRecord.getSid());
-            }
         }
     }
 
@@ -1085,9 +1079,6 @@ public final class Call extends UntypedActor {
             if (outgoingCallRecord != null && isOutbound()) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
-            }
-            if(actAsImsUa){
-                recordsDao.removeCallDetailRecord(outgoingCallRecord.getSid());
             }
         }
     }
@@ -1132,9 +1123,6 @@ public final class Call extends UntypedActor {
             if (outgoingCallRecord != null && isOutbound()) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
-            }
-            if(actAsImsUa){
-                recordsDao.removeCallDetailRecord(outgoingCallRecord.getSid());
             }
         }
     }
@@ -1490,9 +1478,6 @@ public final class Call extends UntypedActor {
                     logger.debug("End: " + outgoingCallRecord.getEndTime());
                     logger.debug("Duration: " + seconds);
                     logger.debug("Just updated CDR for completed call");
-                }
-                if(actAsImsUa){
-                    recordsDao.removeCallDetailRecord(outgoingCallRecord.getSid());
                 }
             }
         }
@@ -2383,6 +2368,10 @@ public final class Call extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("Exception during Call postStop while trying to remove observers: "+exception);
             }
+        }
+
+        if(actAsImsUa && outgoingCallRecord!=null){
+            recordsDao.removeCallDetailRecord(outgoingCallRecord.getSid());
         }
         super.postStop();
     }
