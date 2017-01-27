@@ -22,8 +22,10 @@ package org.restcomm.connect.rvd.model.steps.control;
 
 import org.restcomm.connect.rvd.exceptions.InterpreterException;
 import org.restcomm.connect.rvd.interpreter.Interpreter;
+import org.restcomm.connect.rvd.jsonvalidation.ValidationErrorItem;
 import org.restcomm.connect.rvd.model.client.Step;
 import org.restcomm.connect.rvd.model.rcml.RcmlStep;
+import org.restcomm.connect.rvd.utils.RvdUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -58,7 +60,27 @@ public class ControlStep extends Step {
     }
 
     public String process(Interpreter interpreter, HttpServletRequest httpRequest) throws InterpreterException {
+        return null;
+    }
 
+    /**
+     * Checks for semantic validation error in the state object and returns them as ErrorItems. If no error
+     * is detected null is returned
+     *
+     * @return null or a ValidationErrorItem object
+     * @param stepPath
+     */
+    @Override
+    public ValidationErrorItem validate(String stepPath) {
+        if (actions != null && actions.size() > 0) {
+            for (Action action: actions) {
+                if (action.kind.equals("continueTo")) {
+                    if (RvdUtils.isEmpty(action.param1)) {
+                        return new ValidationErrorItem("error","No target module specified",stepPath);
+                    }
+                }
+            }
+        }
         return null;
     }
 }
