@@ -808,7 +808,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             fsm.transition(conferenceWaitUris, conferencing);
             return;
         }
-        if (callState.equals(CallStateChanged.State.COMPLETED)) {
+        if (callState.equals(CallStateChanged.State.COMPLETED) || callState.equals(CallStateChanged.State.CANCELED)) {
             fsm.transition(message, finished);
         } else {
             if (!isParserFailed) {
