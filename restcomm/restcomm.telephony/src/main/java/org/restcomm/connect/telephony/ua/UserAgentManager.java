@@ -104,8 +104,8 @@ public final class UserAgentManager extends UntypedActor {
         pingInterval = runtime.getInt("ping-interval", 60);
         logger.info("About to run firstTimeCleanup()");
         instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
-        if(runtime.containsKey("ims-authentication")){
-        final Configuration imsAuthentication = runtime.subset("ims-authentication");
+        if(!runtime.subset("ims-authentication").isEmpty()){
+            final Configuration imsAuthentication = runtime.subset("ims-authentication");
             this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
             if (actAsImsUa) {
                 this.imsProxyAddress = imsAuthentication.getString("proxy-address");

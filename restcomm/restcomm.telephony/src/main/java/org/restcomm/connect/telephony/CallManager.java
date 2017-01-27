@@ -291,7 +291,7 @@ public final class CallManager extends UntypedActor {
             logger.info("CallManager extensions: "+(extensions != null ? extensions.size() : "0"));
         }
 
-        if(runtime.containsKey("ims-authentication")){
+        if(!runtime.subset("ims-authentication").isEmpty()){
             final Configuration imsAuthentication = runtime.subset("ims-authentication");
             this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
             if (actAsImsUa) {
@@ -1929,7 +1929,7 @@ public final class CallManager extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("rcml: " + rcml);
             }
-            
+
             final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
             builder.setConfiguration(configuration);
             builder.setStorage(storage);

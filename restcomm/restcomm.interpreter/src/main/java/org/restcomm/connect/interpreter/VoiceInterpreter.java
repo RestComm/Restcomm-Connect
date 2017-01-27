@@ -1105,20 +1105,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             callRecord = callRecord.setStatus(callState.toString());
                             records.updateCallDetailRecord(callRecord);
                         }
-                        if(asImsUa){
-                            final CallDetailRecordsDao callRecords = storage.getCallDetailRecordsDao();
-                            callRecords.removeCallDetailRecord(callRecord.getSid());
-                        }
                         fsm.transition(message, finishDialing);
                     } else if (sender == call) {
                         //Move to finished state only if the call actor send the Cancel.
-                        if(asImsUa){
-                            if(callRecord != null){
-                                final CallDetailRecordsDao callRecords = storage.getCallDetailRecordsDao();
-                                callRecords.removeCallDetailRecord(callRecord.getSid());
-                            }
-                        }
-
                         fsm.transition(message, finished);
                     } else {
                         //This is a Cancel from a dial branch previously canceled
@@ -2918,9 +2907,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final int seconds = (int) (end.getMillis() - callRecord.getStartTime().getMillis()) / 1000;
                 callRecord = callRecord.setDuration(seconds);
                 records.updateCallDetailRecord(callRecord);
-                if(asImsUa){
-                    records.removeCallDetailRecord(callRecord.getSid());
-                }
             }
             if (!dialActionExecuted) {
                 executeDialAction(message, outboundCall);
@@ -3047,6 +3033,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             getContext().stop(self());
             postCleanup();
+        }
+        if(asImsUa){
+            if(callRecord != null){
+                final CallDetailRecordsDao callRecords = storage.getCallDetailRecordsDao();
+                callRecords.removeCallDetailRecord(callRecord.getSid());
+            }
         }
         super.postStop();
     }
