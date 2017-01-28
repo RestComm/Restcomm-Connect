@@ -17,8 +17,8 @@
 			TO_CHAR(DATE_ADD("date_created", INTERVAL 1 DAY), 'YYYY-MM-DD') AS "end_date",
 			CONCAT(#{uri},
 				'?Category=', #{category},
-				'&StartDate=', TO_CHAR("date_created", 'YYYY-MM-DD'),
-				'&EndDate=', TO_CHAR(DATE_ADD("date_created", INTERVAL 1 DAY), 'YYYY-MM-DD')
+				'&amp;StartDate=', TO_CHAR("date_created", 'YYYY-MM-DD'),
+				'&amp;EndDate=', TO_CHAR(DATE_ADD("date_created", INTERVAL 1 DAY), 'YYYY-MM-DD')
 				) AS "uri"
 		FROM
 			"${tableName}"
@@ -47,8 +47,8 @@
 			LEAST(TO_CHAR(LAST_DAY("date_created"), 'YYYY-MM-DD'), #{endDate}) AS "end_date",
 			CONCAT(#{uri},
 				'?Category=', #{category},
-				'&StartDate=', GREATEST(CONCAT(TO_CHAR("date_created", 'YYYY-MM'), '-01'), #{startDate}),
-				'&EndDate=', LEAST(TO_CHAR(LAST_DAY("date_created"), 'YYYY-MM-DD'), #{endDate})
+				'&amp;StartDate=', GREATEST(CONCAT(TO_CHAR("date_created", 'YYYY-MM'), '-01'), #{startDate}),
+				'&amp;EndDate=', LEAST(TO_CHAR(LAST_DAY("date_created"), 'YYYY-MM-DD'), #{endDate})
 				) AS "uri"
 		FROM
 			"${tableName}"
@@ -76,8 +76,8 @@
 			LEAST(CONCAT(YEAR("date_created"), '-12-31'), #{endDate}) AS "end_date",
 			CONCAT(#{uri},
 				'?Category=', #{category},
-				'&StartDate=', GREATEST(CONCAT(YEAR("date_created"), '-01-01'), #{startDate}),
-				'&EndDate=', LEAST(CONCAT(YEAR("date_created"), '-12-31'), #{endDate})
+				'&amp;StartDate=', GREATEST(CONCAT(YEAR("date_created"), '-01-01'), #{startDate}),
+				'&amp;EndDate=', LEAST(CONCAT(YEAR("date_created"), '-12-31'), #{endDate})
 				) AS "uri"
 		FROM
 			"${tableName}"
@@ -105,8 +105,8 @@
 			LEAST(MAX("date_created"), #{endDate}) AS "end_date",
 			CONCAT(#{uri},
 				'?Category=', #{category},
-				'&StartDate=', GREATEST(MIN("date_created"), #{startDate}),
-				'&EndDate=', LEAST(MAX("date_created"), #{endDate})
+				'&amp;StartDate=', GREATEST(MIN("date_created"), #{startDate}),
+				'&amp;EndDate=', LEAST(MAX("date_created"), #{endDate})
 				) AS "uri"
 		FROM
 			"${tableName}"
