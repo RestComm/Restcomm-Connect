@@ -67,8 +67,6 @@ angular.module('Rvd')
                }
             }
 
-            console.log("inside controlStep link()");
-            console.log(scope.stepModel);
             // initialize control step members
             var stepModel = scope.stepModel;
             stepModel.conditions = stepModel.conditions || [newCondition()];
@@ -120,12 +118,11 @@ angular.module('Rvd')
                 stepModel.conditionExpression = expression;
             }
             scope.rebuildConditionExpression = rebuildConditionExpression;
+            scope.removeStep = function (step) {
+                scope.$emit("step-removed", step);
+            }
 
             scope.getAllTargets = nodeRegistry.getNodes;
-        },
-        controller: function ($scope) {
-            console.log("inside controlStep directive");
-            console.log($scope.stepModel);
         }
     }
 

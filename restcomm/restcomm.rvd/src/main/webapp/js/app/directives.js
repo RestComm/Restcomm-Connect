@@ -7,6 +7,14 @@ angular.module('Rvd').directive('stepHeading', function () {
 	}
 });
 
+angular.module('Rvd').directive('directiveStepHeading', function () {
+	return {
+		restrict: 'E',
+		transclude:true,
+		templateUrl: 'templates/steps/directiveStepHeading.html'
+	}
+});
+
 /*
  * Usage:
  * 

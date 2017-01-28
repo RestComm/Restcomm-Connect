@@ -274,7 +274,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $statePar
 				return new model(stepname);
 			}]);
 
-			console.log("adding step - " + m[1]);
+			//console.log("adding step - " + m[1]);
 			$scope.$apply( function ()	{
 				listmodel.splice(pos,0, step);
 			});
@@ -821,8 +821,16 @@ angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http',
 
 }]);
 
+/*
+    Contains step management operations for a specific module
+*/
 angular.module('Rvd').controller("nodeController",["$scope", "nodeRegistry", function ($scope, nodeRegistry) {
 		$scope.node = nodeRegistry.getNode($scope.nodeSummary.name);
+		// handle step removel notifications from individual steps (only control-step supports it for now)
+		$scope.$on("step-removed", function (event, step) {
+		    var steps = event.currentScope.node.steps;
+            steps.splice( steps.indexOf(step), 1);
+		});
 }]);
 
 angular.module('Rvd').controller("nodeTabController",["$scope", "nodeRegistry", function ($scope, nodeRegistry) {
