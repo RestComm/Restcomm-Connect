@@ -83,6 +83,11 @@ public final class IncomingPhoneNumberConverter extends AbstractConverter implem
         writeUssdApplicationSid(incomingPhoneNumber.getUssdApplicationSid(), writer);
         if (incomingPhoneNumber.getUssdApplicationSid() != null)
             writeUssdApplicationName(incomingPhoneNumber.getUssdApplicationName(), writer);
+        writeReferUrl(incomingPhoneNumber.getReferUrl(), writer);
+        writeReferMethod(incomingPhoneNumber.getReferMethod(), writer);
+        writeReferApplicationSid(incomingPhoneNumber.getReferApplicationSid(), writer);
+        if (incomingPhoneNumber.getReferApplicationSid() != null)
+            writeReferApplicationName(incomingPhoneNumber.getReferApplicationName(), writer);
         writeCapabilities(incomingPhoneNumber.isVoiceCapable(), incomingPhoneNumber.isSmsCapable(), incomingPhoneNumber.isMmsCapable(), incomingPhoneNumber.isFaxCapable(), writer);
         writeApiVersion(incomingPhoneNumber.getApiVersion(), writer);
         writeUri(incomingPhoneNumber.getUri(), writer);
@@ -123,6 +128,11 @@ public final class IncomingPhoneNumberConverter extends AbstractConverter implem
         writeUssdApplicationSid(incomingPhoneNumber.getUssdApplicationSid(), object);
         if (incomingPhoneNumber.getUssdApplicationSid() != null)
             writeUssdApplicationName(incomingPhoneNumber.getUssdApplicationName(), object);
+        writeReferUrl(incomingPhoneNumber.getReferUrl(), object);
+        writeReferMethod(incomingPhoneNumber.getReferMethod(), object);
+        writeReferApplicationSid(incomingPhoneNumber.getReferApplicationSid(), object);
+        if (incomingPhoneNumber.getReferApplicationSid() != null)
+            writeReferApplicationName(incomingPhoneNumber.getReferApplicationName(), object);
         writeCapabilities(incomingPhoneNumber.isVoiceCapable(), incomingPhoneNumber.isSmsCapable(), incomingPhoneNumber.isMmsCapable(), incomingPhoneNumber.isFaxCapable(), object);
         writeApiVersion(incomingPhoneNumber.getApiVersion(), object);
         writeUri(incomingPhoneNumber.getUri(), object);
@@ -158,6 +168,22 @@ public final class IncomingPhoneNumberConverter extends AbstractConverter implem
             object.addProperty("ussd_application_sid", ussdApplicationSid.toString());
         } else {
             object.add("ussd_application_sid", JsonNull.INSTANCE);
+        }
+    }
+
+    private void writeReferApplicationSid(final Sid referApplicationSid, final JsonObject object) {
+        if (referApplicationSid != null) {
+            object.addProperty("refer_application_sid", referApplicationSid.toString());
+        } else {
+            object.add("refer_application_sid", JsonNull.INSTANCE);
+        }
+    }
+
+    private void writeReferApplicationSid(final Sid referApplicationSid, final HierarchicalStreamWriter writer) {
+        if (referApplicationSid != null) {
+            writer.startNode("ReferApplicationSid");
+            writer.setValue(referApplicationSid.toString());
+            writer.endNode();
         }
     }
 
@@ -197,6 +223,19 @@ public final class IncomingPhoneNumberConverter extends AbstractConverter implem
     private void writeUssdApplicationName(final String ussdApplicationName, final HierarchicalStreamWriter writer) {
         writer.startNode("UssdApplicationName");
         writer.setValue(ussdApplicationName);
+        writer.endNode();
+    }
+
+    private void writeReferApplicationName(final String referApplicationName, final JsonObject object) {
+        if (referApplicationName != null)
+            object.addProperty("refer_application_name", referApplicationName);
+        else
+            object.add("refer_application_name", JsonNull.INSTANCE);
+    }
+
+    private void writeReferApplicationName(final String referApplicationName, final HierarchicalStreamWriter writer) {
+        writer.startNode("ReferApplicationName");
+        writer.setValue(referApplicationName);
         writer.endNode();
     }
 }
