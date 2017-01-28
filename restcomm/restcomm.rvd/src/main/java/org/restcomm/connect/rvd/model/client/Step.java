@@ -10,6 +10,8 @@ import org.restcomm.connect.rvd.jsonvalidation.ValidationErrorItem;
 import org.restcomm.connect.rvd.model.rcml.RcmlStep;
 import org.restcomm.connect.rvd.storage.exceptions.StorageException;
 
+import java.util.List;
+
 public abstract class Step {
 
     private String kind;
@@ -63,7 +65,7 @@ public abstract class Step {
         return null;
     }
 
-    public ValidationErrorItem validate(String stepPath) {
+    public List<ValidationErrorItem> validate(String stepPath, Node parentModule) {
         return null; // assume valid unless overriden
     }
 }
