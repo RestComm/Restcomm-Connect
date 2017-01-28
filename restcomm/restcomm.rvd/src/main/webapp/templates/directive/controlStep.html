@@ -20,7 +20,7 @@
                                 <option value="isFalse">is False</option>
                             </select>
                         </div>
-                        <div class="form-group operand">
+                        <div ng-hide="isUnaryOperator(condition.operator)" class="form-group operand">
                             <input ng-model="condition.operand2" type="text" class="form-control" placeholder="operand 2">
                         </div>
                     </div>

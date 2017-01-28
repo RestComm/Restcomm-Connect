@@ -87,6 +87,11 @@ angular.module('Rvd')
                     }
                 }
             }
+            scope.isUnaryOperator = function (operator) {
+                if (operator == "isTrue" || operator == "isFalse")
+                    return true;
+                return false;
+            }
             scope.addAction = function () {
                 stepModel.actions.push(newAction());
             }

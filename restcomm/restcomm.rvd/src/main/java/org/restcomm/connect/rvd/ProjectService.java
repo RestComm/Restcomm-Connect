@@ -302,9 +302,10 @@ public class ProjectService {
         for (Node node: project.getNodes()) {
             for (Step step: node.getSteps()) {
                 String stepPath = new StringBuffer("/nodes/").append(i).append("/steps/").append(j).toString();
-                ValidationErrorItem error = step.validate(stepPath);
-                if (error != null)
-                    result.appendError(error);
+                List<ValidationErrorItem> errors = step.validate(stepPath, node);
+                if (errors != null && errors.size() > 0)
+                    for (ValidationErrorItem error: errors)
+                        result.appendError(error);
                 j ++;
             }
             i ++;

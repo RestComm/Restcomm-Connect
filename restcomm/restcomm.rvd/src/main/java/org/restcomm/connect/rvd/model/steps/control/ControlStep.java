@@ -23,11 +23,14 @@ package org.restcomm.connect.rvd.model.steps.control;
 import org.restcomm.connect.rvd.exceptions.InterpreterException;
 import org.restcomm.connect.rvd.interpreter.Interpreter;
 import org.restcomm.connect.rvd.jsonvalidation.ValidationErrorItem;
+import org.restcomm.connect.rvd.model.client.Node;
 import org.restcomm.connect.rvd.model.client.Step;
 import org.restcomm.connect.rvd.model.rcml.RcmlStep;
 import org.restcomm.connect.rvd.utils.RvdUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -36,6 +39,9 @@ import java.util.List;
 public class ControlStep extends Step {
 
     public static class Condition {
+        public static List<String> unaryOperator = Arrays.asList("isTrue","isFalse");
+        public static List<String> binaryOperator = Arrays.asList("equals","greater","less");
+
         String name;
         String operator;
         String operand1;
@@ -65,22 +71,50 @@ public class ControlStep extends Step {
 
     /**
      * Checks for semantic validation error in the state object and returns them as ErrorItems. If no error
-     * is detected null is returned
+     * is detected an empty list is returned
      *
-     * @return null or a ValidationErrorItem object
+     * @return a list of ValidationErrorItem objects or an empty list
      * @param stepPath
+     * @param module
      */
     @Override
-    public ValidationErrorItem validate(String stepPath) {
-        if (actions != null && actions.size() > 0) {
-            for (Action action: actions) {
-                if (action.kind.equals("continueTo")) {
-                    if (RvdUtils.isEmpty(action.param1)) {
-                        return new ValidationErrorItem("error","No target module specified",stepPath);
+    public List<ValidationErrorItem> validate(String stepPath, Node module) {
+        List<ValidationErrorItem> errorItems = new ArrayList<ValidationErrorItem>();
+        if (conditions != null && conditions.size() > 0) {
+            for (Condition condition: conditions) {
+                // if the operator is binary, both operands should exist
+                if (Condition.binaryOperator.contains(condition.operator)) {
+                    if ( RvdUtils.isEmpty(condition.operand1) )
+                        errorItems.add(new ValidationErrorItem("error","operand1 is not specified",stepPath));
+                    if (RvdUtils.isEmpty(condition.operand2 ))
+                        errorItems.add(new ValidationErrorItem("error","operand2 is not specified",stepPath));
+                } else
+                if (Condition.unaryOperator.contains(condition.operator)) {
+                    if ( RvdUtils.isEmpty(condition.operand1 )) {
+                        errorItems.add(new ValidationErrorItem("error","operand1 is not specified",stepPath));
                     }
                 }
             }
         }
-        return null;
+        if (actions != null && actions.size() > 0) {
+            for (Action action: actions) {
+                if (action.kind.equals("continueTo")) {
+                    if (RvdUtils.isEmpty(action.param1)) {
+                        errorItems.add(new ValidationErrorItem("error","No target module specified",stepPath));
+                    } else
+                    if (action.param1.equals(module.getName()))
+                        errorItems.add(new ValidationErrorItem("error","Cyclic module execution detected",stepPath));
+                } else
+                if (action.kind.equals("assign")) {
+                    if (RvdUtils.isEmpty(action.param1)) {
+                        errorItems.add(new ValidationErrorItem("error","Assignment misses source",stepPath));
+                    }
+                    if (RvdUtils.isEmpty(action.param2)) {
+                        errorItems.add(new ValidationErrorItem("error","Assignment misses destination",stepPath));
+                    }
+                }
+            }
+        }
+        return errorItems;
     }
 }
