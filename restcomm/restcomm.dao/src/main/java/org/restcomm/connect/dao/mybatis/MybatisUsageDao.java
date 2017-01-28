@@ -185,9 +185,10 @@ public final class MybatisUsageDao implements UsageDao {
       case CALLS_SIP:
         params.put("tableName", "restcomm_call_detail_records");
         //NB: #1690 display duration as minutes rounded up
-        params.put("usageExprPre", "COALESCE( CEIL(SUM(");
+        params.put("usageExprPre", "CAST(COALESCE( CEIL(SUM(");
         params.put("usageExprCol", "duration");
-        params.put("usageExprSuf", ") /60),0)");
+        //explicitly cast to BIGINT to get back Long
+        params.put("usageExprSuf", ") /60),0) AS BIGINT)");
         break;
       case SMS:
       case SMS_INBOUND:
@@ -216,9 +217,10 @@ public final class MybatisUsageDao implements UsageDao {
       default:
         params.put("tableName", "restcomm_call_detail_records");
         //NB: #1690 display duration as minutes rounded up
-        params.put("usageExprPre", "COALESCE( CEIL(SUM(");
+        params.put("usageExprPre", "CAST(COALESCE( CEIL(SUM(");
         params.put("usageExprCol", "duration");
-        params.put("usageExprSuf", ") /60),0)");
+        //explicitly cast to BIGINT to get back Long
+        params.put("usageExprSuf", ") /60),0) AS BIGINT)");
         break;
     }
     return params;
