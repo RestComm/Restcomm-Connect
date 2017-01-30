@@ -121,12 +121,7 @@ import java.util.regex.Pattern;
 
 import static akka.pattern.Patterns.ask;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_ACCEPTED;
-import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_TEMPORARILY_UNAVAILABLE;
+import static javax.servlet.sip.SipServletResponse.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -657,8 +652,9 @@ public final class CallManager extends UntypedActor {
 
     private void transfer(SipServletRequest request) throws Exception {
         final SipApplicationSession appSession = request.getApplicationSession();
-        ActorRef call = (ActorRef) appSession.getAttribute(Call.class.getName());
-        if (call == null) {
+        //Initates the transfer
+        ActorRef transferor = (ActorRef) appSession.getAttribute(Call.class.getName());
+        if (transferor == null) {
             SipServletResponse servletResponse = request.createResponse(SC_TEMPORARILY_UNAVAILABLE, "REFER should be sent in dialog");
             servletResponse.setHeader("Event", "refer");
             servletResponse.setHeader("Retry-After", "1800000");
@@ -668,74 +664,107 @@ public final class CallManager extends UntypedActor {
 
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
 
-        Future<Object> infoFuture = (Future<Object>) ask(call, new GetCallInfo(), expires);
+        Future<Object> infoFuture = (Future<Object>) ask(transferor, new GetCallInfo(), expires);
         CallResponse<CallInfo> infoResponse = (CallResponse<CallInfo>) Await.result(infoFuture,
                 Duration.create(10, TimeUnit.SECONDS));
         CallInfo callInfo = infoResponse.get();
 
+        CallDetailRecord cdr = null;
         CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
+        SipServletResponse servletResponse = null;
 
-        CallDetailRecord cdr = dao.getCallDetailRecord(callInfo.sid());
-        Sid parentCallSid = cdr.getParentCallSid();
-        cdr = dao.getCallDetailRecord(parentCallSid);
-
-        call = lookup(new GetCall(cdr.getCallPath()));
-        IncomingPhoneNumber number = storage.getIncomingPhoneNumbersDao().getIncomingPhoneNumber(cdr.getTo());
-
-        if (number.getReferUrl() == null && number.getReferApplicationSid() == null) {
-            SipServletResponse servletResponse = request.createResponse(SC_TEMPORARILY_UNAVAILABLE, "Set either incoming phone number Refer URL or Refer application");
+        if (callInfo != null) {
+            try {
+                String user = ((SipURI)request.getFrom().getURI()).getUser();
+                if (storage.getClientsDao().getClient(user) != null) {
+                    if (callInfo.direction().equalsIgnoreCase("inbound")) {
+                        cdr = dao.getCallDetailRecord(callInfo.sid());
+                    } else {
+                        cdr = dao.getCallDetailRecord(dao.getCallDetailRecord(callInfo.sid()).getParentCallSid());
+                    }
+                } else {
+                    servletResponse = request.createResponse(SC_METHOD_NOT_ALLOWED, "Set either incoming phone number Refer URL or Refer application");
+                    servletResponse.setHeader("Event", "refer");
+                    servletResponse.send();
+                    return;
+                }
+            } catch (Exception e) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Problem while trying to get the CDR of the call");
+                }
+                servletResponse = request.createResponse(SC_NOT_ACCEPTABLE, "Set either incoming phone number Refer URL or Refer application");
+                servletResponse.setHeader("Event", "refer");
+                servletResponse.send();
+                return;
+            }
+        } else {
+            if (logger.isInfoEnabled()) {
+                logger.info("CallInfo is null. Cannot proceed to call transfer");
+            }
+            servletResponse = request.createResponse(SC_METHOD_NOT_ALLOWED, "Set either incoming phone number Refer URL or Refer application");
             servletResponse.setHeader("Event", "refer");
             servletResponse.setHeader("Retry-After", "1800000");
             servletResponse.send();
             return;
         }
 
-        SipServletResponse servletResponse = request.createResponse(SC_ACCEPTED);
+        IncomingPhoneNumber number = storage.getIncomingPhoneNumbersDao().getIncomingPhoneNumber(cdr.getTo());
+
+        if (number.getReferUrl() == null && number.getReferApplicationSid() == null) {
+            servletResponse = request.createResponse(SC_TEMPORARILY_UNAVAILABLE, "Set either incoming phone number Refer URL or Refer application");
+            servletResponse.setHeader("Event", "refer");
+            servletResponse.setHeader("Retry-After", "1800000");
+            servletResponse.send();
+            return;
+        }
+
+        servletResponse = request.createResponse(SC_ACCEPTED);
         servletResponse.setHeader("Event", "refer");
         servletResponse.send();
 
-        // Get first call leg observers
-        Future<Object> future = (Future<Object>) ask(call, new GetCallObservers(), expires);
+        // Get first transferor leg observers
+        Future<Object> future = (Future<Object>) ask(transferor, new GetCallObservers(), expires);
         CallResponse<List<ActorRef>> response = (CallResponse<List<ActorRef>>) Await.result(future,
                 Duration.create(10, TimeUnit.SECONDS));
         List<ActorRef> callObservers = response.get();
 
-        // Get the Voice Interpreter currently handling the call
+        // Get the Voice Interpreter currently handling the transferor
         ActorRef existingInterpreter = callObservers.iterator().next();
 
-        // Get the outbound leg of this call
-        future = (Future<Object>) ask(existingInterpreter, new GetRelatedCall(call), expires);
+        // Get the outbound leg of this transferor
+        future = (Future<Object>) ask(existingInterpreter, new GetRelatedCall(transferor), expires);
         Object answer = (Object) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
 
-        ActorRef relatedCall = null;
-        List<ActorRef> listOfRelatedCalls = null;
+        //Transferee will be transfered to the transfer target
+        ActorRef transferee = null;
+        List<ActorRef> listOfTransfereeCalls = null;
         if (answer instanceof ActorRef) {
-            relatedCall = (ActorRef) answer;
+            transferee = (ActorRef) answer;
         } else if (answer instanceof List) {
-            listOfRelatedCalls = (List<ActorRef>) answer;
+            listOfTransfereeCalls = (List<ActorRef>) answer;
         }
 
         if(logger.isInfoEnabled()) {
             logger.info("About to start Call Transfer");
-            logger.info("Initial Call path: " + call.path());
-            if (relatedCall != null) {
-                logger.info("Related Call path: " + relatedCall.path());
+            logger.info("Transferor Call path: " + transferor.path());
+            if (transferee != null) {
+                logger.info("Transferee Call path: " + transferee.path());
             }
-            if (listOfRelatedCalls != null) {
-                logger.info("List of related calls received, size of the list: "+listOfRelatedCalls.size());
+            if (listOfTransfereeCalls != null) {
+                logger.info("List of related calls received, size of the list: "+listOfTransfereeCalls.size());
             }
-            // Cleanup all observers from both call legs
+            // Cleanup all observers from both transferor legs
             logger.info("Will tell Call actors to stop observing existing Interpreters");
         }
         if (logger.isDebugEnabled()) {
             logger.debug("Call Transfer account: "+ cdr.getAccountSid() +", new RCML url: "+ number.getReferUrl());
         }
-        call.tell(new StopObserving(), self());
-        if (relatedCall != null) {
-            relatedCall.tell(new StopObserving(), self());
+        transferor.tell(new StopObserving(), self());
+        if (transferee != null) {
+            transferee.tell(new StopObserving(), self());
         }
-        if (listOfRelatedCalls != null) {
-            for(ActorRef branch: listOfRelatedCalls) {
+        if (listOfTransfereeCalls != null) {
+            for(ActorRef branch: listOfTransfereeCalls) {
                 branch.tell(new StopObserving(), self());
             }
         }
@@ -774,31 +803,33 @@ public final class CallManager extends UntypedActor {
         builder.setStatusCallbackMethod("POST");
         builder.setMonitoring(monitoring);
 
-        // Ask first call leg to execute with the new Interpreter
+        // Ask first transferor leg to execute with the new Interpreter
         final ActorRef interpreter = builder.build();
         system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), interpreter,
-                new StartInterpreter(call), system.dispatcher());
+                new StartInterpreter(transferee), system.dispatcher());
         if(logger.isInfoEnabled()) {
-            logger.info("New Intepreter for first call leg: " + interpreter.path() + " started");
+            logger.info("New Intepreter for first transferor leg: " + interpreter.path() + " started");
         }
 
-        // Check what to do with the second/outbound call leg of the call
-        if (relatedCall != null && listOfRelatedCalls == null) {
-            if(logger.isInfoEnabled()) {
-                logger.info("will hangup relatedCall: "+relatedCall.path());
-            }
-            relatedCall.tell(new Hangup(), null);
-
-        }
-        if (listOfRelatedCalls != null) {
-            for (ActorRef branch: listOfRelatedCalls) {
-                branch.tell(new Hangup(), null);
-            }
-            if (logger.isInfoEnabled()) {
-                String msg = String.format("Call Transfer while dial forking, terminated %d calls", listOfRelatedCalls.size());
-                logger.info(msg);
-            }
-        }
+        transferor.tell(new Hangup(), null);
+//
+//        // Check what to do with the second/outbound transferor leg of the transferor
+//        if (transferor != null && listOfTransfereeCalls == null) {
+//            if(logger.isInfoEnabled()) {
+//                logger.info("will hangup transferee: "+transferee.path());
+//            }
+//
+//
+//        }
+//        if (listOfTransfereeCalls != null) {
+//            for (ActorRef branch: listOfTransfereeCalls) {
+//                branch.tell(new Hangup(), null);
+//            }
+//            if (logger.isInfoEnabled()) {
+//                String msg = String.format("Call Transfer while dial forking, terminated %d calls", listOfTransfereeCalls.size());
+//                logger.info(msg);
+//            }
+//        }
     }
 
     /**
