@@ -50,7 +50,7 @@
     "n".*,
     "a_voice"."friendly_name" "voice_application_name",
     "a_sms"."friendly_name" "sms_application_name",
-    "a_ussd"."friendly_name" "ussd_application_name"
+    "a_ussd"."friendly_name" "ussd_application_name",
     "a_refer"."friendly_name" "refer_application_name"
     FROM "restcomm_incoming_phone_numbers" "n"
     LEFT OUTER JOIN "restcomm_applications" "a_voice"  ON "n"."voice_application_sid" = "a_voice"."sid"
