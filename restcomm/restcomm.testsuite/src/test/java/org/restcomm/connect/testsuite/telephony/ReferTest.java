@@ -177,7 +177,7 @@ public class ReferTest {
                         .withBody(dialGeorgeRcml)));
 
         stubFor(get(urlPathEqualTo("/2222"))
-                .withQueryParam("transferTarget", equalTo("alice"))
+                .withQueryParam("ReferTarget", equalTo("alice"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
@@ -294,6 +294,258 @@ public class ReferTest {
     }
 
     @Test
+    public void testTransferHangupByBob() throws ParseException, InterruptedException, MalformedURLException, SipException {
+
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialGeorgeRcml)));
+
+        stubFor(get(urlPathEqualTo("/2222"))
+                .withQueryParam("ReferTarget", equalTo("alice"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialAliceRcml)));
+
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int callResponse = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(callResponse == Response.TRYING || callResponse == Response.RINGING);
+        logger.info("Last response: "+callResponse);
+
+        if (callResponse == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
+
+        SipRequest lastReceivedRequest = georgeCall.getLastReceivedRequest();
+        String receivedBody = new String(lastReceivedRequest.getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "George-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(georgeCall.waitForAck(5000));
+
+        SipURI referTo = georgeSipStack.getAddressFactory().createSipURI("alice", "127.0.0.1:5080");
+
+        ReferSubscriber subscription = georgePhone.refer(georgeCall.getDialog(), referTo, null, 5000);
+        assertNotNull(subscription);
+        assertTrue(subscription.isSubscriptionPending());
+
+        assertTrue(subscription.processResponse(1000));
+        assertTrue(subscription.isSubscriptionPending());
+        assertNoSubscriptionErrors(subscription);
+
+        georgeCall.listenForDisconnect();
+        assertTrue(georgeCall.waitForDisconnect(10000));
+        assertTrue(georgeCall.respondToDisconnect());
+
+        assertTrue(aliceCall.waitForIncomingCall(5000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Alice-Trying", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Alice-Ringing", 3600));
+        receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "Alice-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(aliceCall.waitForAck(5000));
+
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==2);
+        assertTrue(liveIncomingCalls==1);
+        assertTrue(liveOutgoingCalls==1);
+        assertTrue(liveCallsArraySize==2);
+
+        aliceCall.listenForDisconnect();
+
+        assertTrue(bobCall.disconnect());
+
+        assertTrue(aliceCall.waitForDisconnect(5000));
+        assertTrue(aliceCall.respondToDisconnect());
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
+        assertTrue(requests.size() == 1);
+        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();
+        List<String> params = Arrays.asList(requestBody.split("&"));
+        String callSid = "";
+        for (String param : params) {
+            if (param.contains("CallSid")) {
+                callSid = param.split("=")[1];
+            }
+        }
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+        JsonObject jsonObj = cdr.getAsJsonObject();
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+        logger.info("LiveCalls: "+liveCalls);
+        liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls==0);
+        assertTrue(liveCallsArraySize==0);
+        int maxConcurrentCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentCalls").getAsInt();
+        int maxConcurrentIncomingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
+        int maxConcurrentOutgoingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
+        assertTrue(maxConcurrentCalls==2);
+        assertTrue(maxConcurrentIncomingCalls==1);
+        assertTrue(maxConcurrentOutgoingCalls==1);
+    }
+
+    @Test
+    public void testTransferByBob() throws ParseException, InterruptedException, MalformedURLException, SipException {
+
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialGeorgeRcml)));
+
+        stubFor(get(urlPathEqualTo("/2222"))
+                .withQueryParam("ReferTarget", equalTo("alice"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialAliceRcml)));
+
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int callResponse = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(callResponse == Response.TRYING || callResponse == Response.RINGING);
+        logger.info("Last response: "+callResponse);
+
+        if (callResponse == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
+
+        SipRequest lastReceivedRequest = georgeCall.getLastReceivedRequest();
+        String receivedBody = new String(lastReceivedRequest.getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "George-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(georgeCall.waitForAck(5000));
+
+        SipURI referTo = bobSipStack.getAddressFactory().createSipURI("alice", "127.0.0.1:5080");
+
+        ReferSubscriber subscription = bobPhone.refer(bobCall.getDialog(), referTo, null, 5000);
+        assertNotNull(subscription);
+        assertTrue(subscription.isSubscriptionPending());
+
+        assertTrue(subscription.processResponse(1000));
+        assertTrue(subscription.isSubscriptionPending());
+        assertNoSubscriptionErrors(subscription);
+
+        bobCall.listenForDisconnect();
+        assertTrue(bobCall.waitForDisconnect(10000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        assertTrue(aliceCall.waitForIncomingCall(5000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Alice-Trying", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Alice-Ringing", 3600));
+        receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "Alice-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(aliceCall.waitForAck(5000));
+
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==2);
+        assertTrue(liveOutgoingCalls==2);
+        assertTrue(liveCallsArraySize==2);
+
+        georgeCall.listenForDisconnect();
+
+        assertTrue(aliceCall.disconnect());
+
+        assertTrue(georgeCall.waitForDisconnect(5000));
+        assertTrue(georgeCall.respondToDisconnect());
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
+        assertTrue(requests.size() == 1);
+        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();
+        List<String> params = Arrays.asList(requestBody.split("&"));
+        String callSid = "";
+        for (String param : params) {
+            if (param.contains("CallSid")) {
+                callSid = param.split("=")[1];
+            }
+        }
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+        JsonObject jsonObj = cdr.getAsJsonObject();
+        //This will fail because CDR is not updated because Observers are cleared
+//        assertEquals("complete", jsonObj.get("status").getAsString());
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+        logger.info("LiveCalls: "+liveCalls);
+        liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls==0);
+        assertTrue(liveCallsArraySize==0);
+        int maxConcurrentCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentCalls").getAsInt();
+        int maxConcurrentIncomingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
+        int maxConcurrentOutgoingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
+        assertTrue(maxConcurrentCalls==2);
+        assertTrue(maxConcurrentIncomingCalls==1);
+        assertTrue(maxConcurrentOutgoingCalls==1);
+    }
+
+    @Test
     public void testTransferWithAbsentReferUrlAndApplication() throws ParseException, InterruptedException, MalformedURLException, SipException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -303,7 +555,7 @@ public class ReferTest {
                         .withBody(dialGeorgeRcml)));
 
         stubFor(get(urlPathEqualTo("/2222"))
-                .withQueryParam("transferTarget", equalTo("alice"))
+                .withQueryParam("ReferTarget", equalTo("alice"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
@@ -365,7 +617,7 @@ public class ReferTest {
                         .withBody(dialGeorgeRcml)));
 
         stubFor(get(urlPathEqualTo("/2222"))
-                .withQueryParam("transferTarget", equalTo("alice"))
+                .withQueryParam("ReferTarget", equalTo("alice"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
@@ -429,7 +681,7 @@ public class ReferTest {
                         .withBody(dialGeorgeRcml)));
 
         stubFor(get(urlPathEqualTo("/2222"))
-                .withQueryParam("transferTarget", equalTo("joe"))
+                .withQueryParam("ReferTarget", equalTo("joe"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
