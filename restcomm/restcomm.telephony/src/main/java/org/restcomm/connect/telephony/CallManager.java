@@ -683,9 +683,8 @@ public final class CallManager extends UntypedActor {
         IncomingPhoneNumber number = storage.getIncomingPhoneNumbersDao().getIncomingPhoneNumber(cdr.getTo());
 
         if (number.getReferUrl() == null && number.getReferApplicationSid() == null) {
-            SipServletResponse servletResponse = request.createResponse(SC_TEMPORARILY_UNAVAILABLE, "Set either incoming phone number Refer URL or Refer application");
+            SipServletResponse servletResponse = request.createResponse(SC_NOT_FOUND, "Set either incoming phone number Refer URL or Refer application");
             servletResponse.setHeader("Event", "refer");
-            servletResponse.setHeader("Retry-After", "1800000");
             servletResponse.send();
             return;
         }
