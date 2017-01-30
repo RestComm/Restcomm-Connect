@@ -121,12 +121,7 @@ import java.util.regex.Pattern;
 
 import static akka.pattern.Patterns.ask;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_ACCEPTED;
-import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_TEMPORARILY_UNAVAILABLE;
+import static javax.servlet.sip.SipServletResponse.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -656,13 +651,21 @@ public final class CallManager extends UntypedActor {
     }
 
     private void transfer(SipServletRequest request) throws Exception {
+        CallDetailRecord cdr = null;
+        CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
+
+        SipServletResponse servletResponse = null;
+
         final SipApplicationSession appSession = request.getApplicationSession();
         //Initates the transfer
         ActorRef transferor = (ActorRef) appSession.getAttribute(Call.class.getName());
         if (transferor == null) {
-            SipServletResponse servletResponse = request.createResponse(SC_TEMPORARILY_UNAVAILABLE, "REFER should be sent in dialog");
+            if (logger.isInfoEnabled()) {
+                logger.info("Transferor Call Actor is null, cannot proceed with SIP Refer");
+            }
+            servletResponse = request.createResponse(SC_NOT_FOUND);
+            servletResponse.setHeader("Reason", "SIP REFER should be sent in dialog");
             servletResponse.setHeader("Event", "refer");
-            servletResponse.setHeader("Retry-After", "1800000");
             servletResponse.send();
             return;
         }
@@ -674,34 +677,33 @@ public final class CallManager extends UntypedActor {
                 Duration.create(10, TimeUnit.SECONDS));
         CallInfo callInfo = infoResponse.get();
 
-        CallDetailRecord cdr = null;
-        CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
-        SipServletResponse servletResponse = null;
-
         //Call must be in-progress to accept Sip Refer
         if (callInfo != null && callInfo.state().equals(CallStateChanged.State.IN_PROGRESS)) {
             try {
                 if (callInfo.direction().equalsIgnoreCase("inbound")) {
+                    //Transferror is the inbound leg of the call
                     cdr = dao.getCallDetailRecord(callInfo.sid());
                 } else {
+                    //Transferor is the outbound leg of the call
                     cdr = dao.getCallDetailRecord(dao.getCallDetailRecord(callInfo.sid()).getParentCallSid());
                 }
             } catch (Exception e) {
                 if (logger.isInfoEnabled()) {
                     logger.info("Problem while trying to get the CDR of the call");
                 }
-                servletResponse = request.createResponse(SC_SERVER_INTERNAL_ERROR, "Problem during execution of SIP Refer");
+                servletResponse = request.createResponse(SC_SERVER_INTERNAL_ERROR);
+                servletResponse.setHeader("Reason", "SIP Refer problem during execution");
                 servletResponse.setHeader("Event", "refer");
                 servletResponse.send();
                 return;
             }
         } else {
             if (logger.isInfoEnabled()) {
-                logger.info("CallInfo is null. Cannot proceed to call transfer");
+                logger.info("CallInfo is null or call state not in-progress. Cannot proceed to call transfer");
             }
-            servletResponse = request.createResponse(SC_METHOD_NOT_ALLOWED, "SIP Refer pre-conditions failed, call info is null or call not in progress");
+            servletResponse = request.createResponse(SC_NOT_FOUND);
+            servletResponse.setHeader("Reason", "SIP Refer pre-conditions failed, call info is null or call not in progress");
             servletResponse.setHeader("Event", "refer");
-            servletResponse.setHeader("Retry-After", "1800000");
             servletResponse.send();
             return;
         }
@@ -709,7 +711,11 @@ public final class CallManager extends UntypedActor {
         IncomingPhoneNumber number = storage.getIncomingPhoneNumbersDao().getIncomingPhoneNumber(cdr.getTo());
 
         if (number.getReferUrl() == null && number.getReferApplicationSid() == null) {
-            servletResponse = request.createResponse(SC_NOT_FOUND, "Set either incoming phone number Refer URL or Refer application");
+            if (logger.isInfoEnabled()) {
+                logger.info("Refer URL or Refer Applicatio for incoming phone number is null, cannot proceed with SIP Refer");
+            }
+            servletResponse = request.createResponse(SC_NOT_FOUND);
+            servletResponse.setHeader("Reason", "SIP Refer failed. Set Refer URL or Refer application for incoming phone number");
             servletResponse.setHeader("Event", "refer");
             servletResponse.send();
             return;
