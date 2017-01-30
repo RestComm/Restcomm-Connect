@@ -685,7 +685,7 @@ public final class CallManager extends UntypedActor {
                 if (logger.isInfoEnabled()) {
                     logger.info("Problem while trying to get the CDR of the call");
                 }
-                servletResponse = request.createResponse(SC_NOT_ACCEPTABLE, "Set either incoming phone number Refer URL or Refer application");
+                servletResponse = request.createResponse(SC_SERVER_INTERNAL_ERROR, "Problem during execution of SIP Refer");
                 servletResponse.setHeader("Event", "refer");
                 servletResponse.send();
                 return;
@@ -694,7 +694,7 @@ public final class CallManager extends UntypedActor {
             if (logger.isInfoEnabled()) {
                 logger.info("CallInfo is null. Cannot proceed to call transfer");
             }
-            servletResponse = request.createResponse(SC_METHOD_NOT_ALLOWED, "Set either incoming phone number Refer URL or Refer application");
+            servletResponse = request.createResponse(SC_METHOD_NOT_ALLOWED, "SIP Refer pre-conditions failed, call info is null or call not in progress");
             servletResponse.setHeader("Event", "refer");
             servletResponse.setHeader("Retry-After", "1800000");
             servletResponse.send();
