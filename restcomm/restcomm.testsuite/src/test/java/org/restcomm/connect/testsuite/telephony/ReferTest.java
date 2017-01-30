@@ -604,7 +604,7 @@ public class ReferTest {
 
         ReferSubscriber subscription = georgePhone.refer(georgeCall.getDialog(), referTo, null, 5000);
         assertNull(subscription);
-        assertEquals("Received response status: 404, reason: Set either incoming phone number Refer URL or Refer application", georgePhone.getErrorMessage());
+        assertEquals("Received response status: 404, reason: Not found", georgePhone.getErrorMessage());
     }
 
     @Test
@@ -667,7 +667,7 @@ public class ReferTest {
         ReferSubscriber subscription = georgePhone.refer(bobContact, referTo, null, 5000, null);
         assertNotNull(subscription);
         assertFalse(subscription.processResponse(1000));
-        assertEquals("Received response status: 480, reason: REFER should be sent in dialog", subscription.getErrorMessage());
+        assertEquals("Received response status: 404, reason: Not found", subscription.getErrorMessage());
     }
 
     private String dialJoeRcml = "<Response><Dial><Client>joe</Client></Dial></Response>";
