@@ -121,7 +121,12 @@ import java.util.regex.Pattern;
 
 import static akka.pattern.Patterns.ask;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.*;
+import static javax.servlet.sip.SipServletResponse.SC_ACCEPTED;
+import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_TEMPORARILY_UNAVAILABLE;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -704,9 +709,8 @@ public final class CallManager extends UntypedActor {
         IncomingPhoneNumber number = storage.getIncomingPhoneNumbersDao().getIncomingPhoneNumber(cdr.getTo());
 
         if (number.getReferUrl() == null && number.getReferApplicationSid() == null) {
-            servletResponse = request.createResponse(SC_TEMPORARILY_UNAVAILABLE, "Set either incoming phone number Refer URL or Refer application");
+            servletResponse = request.createResponse(SC_NOT_FOUND, "Set either incoming phone number Refer URL or Refer application");
             servletResponse.setHeader("Event", "refer");
-            servletResponse.setHeader("Retry-After", "1800000");
             servletResponse.send();
             return;
         }
