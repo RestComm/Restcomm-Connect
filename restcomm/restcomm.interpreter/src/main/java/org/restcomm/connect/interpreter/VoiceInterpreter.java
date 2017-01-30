@@ -1405,7 +1405,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
         parameters.add(new BasicNameValuePair("CallTimestamp", callInfo.dateCreated().toString()));
         if (referTarget != null) {
-            parameters.add(new BasicNameValuePair("transferTarget", referTarget));
+            parameters.add(new BasicNameValuePair("referTarget", referTarget));
         }
         // logger.info("Type " + callInfo.type());
         SipServletResponse lastResponse = callInfo.lastResponse();
