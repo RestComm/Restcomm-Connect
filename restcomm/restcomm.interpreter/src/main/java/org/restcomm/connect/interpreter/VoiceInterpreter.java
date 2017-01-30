@@ -206,7 +206,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
-                            final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
+                            final String statusCallbackMethod, String referTarget,
+                            final String emailAddress, final ActorRef callManager,
                             final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring, final String rcml) {
         super();
         final ActorRef source = self();
@@ -399,6 +400,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.fallbackMethod = fallbackMethod;
         this.statusCallback = statusCallback;
         this.statusCallbackMethod = statusCallbackMethod;
+        this.referTarget = referTarget;
         this.emailAddress = emailAddress;
         this.configuration = configuration;
         this.callManager = callManager;
@@ -1402,6 +1404,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final String forwardedFrom = (callInfo.forwardedFrom() == null || callInfo.forwardedFrom().isEmpty()) ? "null" : callInfo.forwardedFrom();
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
         parameters.add(new BasicNameValuePair("CallTimestamp", callInfo.dateCreated().toString()));
+        if (referTarget != null) {
+            parameters.add(new BasicNameValuePair("ReferTarget", referTarget));
+        }
         // logger.info("Type " + callInfo.type());
         SipServletResponse lastResponse = callInfo.lastResponse();
         if (CreateCall.Type.SIP == callInfo.type()) {
@@ -2190,7 +2195,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
 
-            if (outboundCall != null) {
+            if (outboundCall != null && !outboundCall.isTerminated()) {
                 try {
                     if(logger.isInfoEnabled()) {
                         logger.info("Trying to get outboundCall Info");
