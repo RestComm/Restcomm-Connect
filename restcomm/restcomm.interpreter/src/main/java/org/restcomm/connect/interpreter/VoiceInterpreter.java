@@ -1405,7 +1405,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
         parameters.add(new BasicNameValuePair("CallTimestamp", callInfo.dateCreated().toString()));
         if (referTarget != null) {
-            parameters.add(new BasicNameValuePair("referTarget", referTarget));
+            parameters.add(new BasicNameValuePair("ReferTarget", referTarget));
         }
         // logger.info("Type " + callInfo.type());
         SipServletResponse lastResponse = callInfo.lastResponse();
@@ -2195,7 +2195,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
 
-            if (outboundCall != null) {
+            if (outboundCall != null && !outboundCall.isTerminated()) {
                 try {
                     if(logger.isInfoEnabled()) {
                         logger.info("Trying to get outboundCall Info");

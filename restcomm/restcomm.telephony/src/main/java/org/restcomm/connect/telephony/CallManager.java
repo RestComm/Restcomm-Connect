@@ -673,20 +673,13 @@ public final class CallManager extends UntypedActor {
         CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
         SipServletResponse servletResponse = null;
 
-        if (callInfo != null) {
+        //Call must be in-progress to accept Sip Refer
+        if (callInfo != null && callInfo.state().equals(CallStateChanged.State.IN_PROGRESS)) {
             try {
-                String user = ((SipURI)request.getFrom().getURI()).getUser();
-                if (storage.getClientsDao().getClient(user) != null) {
-                    if (callInfo.direction().equalsIgnoreCase("inbound")) {
-                        cdr = dao.getCallDetailRecord(callInfo.sid());
-                    } else {
-                        cdr = dao.getCallDetailRecord(dao.getCallDetailRecord(callInfo.sid()).getParentCallSid());
-                    }
+                if (callInfo.direction().equalsIgnoreCase("inbound")) {
+                    cdr = dao.getCallDetailRecord(callInfo.sid());
                 } else {
-                    servletResponse = request.createResponse(SC_METHOD_NOT_ALLOWED, "Set either incoming phone number Refer URL or Refer application");
-                    servletResponse.setHeader("Event", "refer");
-                    servletResponse.send();
-                    return;
+                    cdr = dao.getCallDetailRecord(dao.getCallDetailRecord(callInfo.sid()).getParentCallSid());
                 }
             } catch (Exception e) {
                 if (logger.isInfoEnabled()) {
@@ -737,21 +730,13 @@ public final class CallManager extends UntypedActor {
 
         //Transferee will be transfered to the transfer target
         ActorRef transferee = null;
-        List<ActorRef> listOfTransfereeCalls = null;
-        if (answer instanceof ActorRef) {
-            transferee = (ActorRef) answer;
-        } else if (answer instanceof List) {
-            listOfTransfereeCalls = (List<ActorRef>) answer;
-        }
+        transferee = (ActorRef) answer;
 
         if(logger.isInfoEnabled()) {
             logger.info("About to start Call Transfer");
             logger.info("Transferor Call path: " + transferor.path());
             if (transferee != null) {
                 logger.info("Transferee Call path: " + transferee.path());
-            }
-            if (listOfTransfereeCalls != null) {
-                logger.info("List of related calls received, size of the list: "+listOfTransfereeCalls.size());
             }
             // Cleanup all observers from both transferor legs
             logger.info("Will tell Call actors to stop observing existing Interpreters");
@@ -762,11 +747,6 @@ public final class CallManager extends UntypedActor {
         transferor.tell(new StopObserving(), self());
         if (transferee != null) {
             transferee.tell(new StopObserving(), self());
-        }
-        if (listOfTransfereeCalls != null) {
-            for(ActorRef branch: listOfTransfereeCalls) {
-                branch.tell(new StopObserving(), self());
-            }
         }
         if(logger.isInfoEnabled()) {
             logger.info("Existing observers removed from Calls actors");
@@ -808,28 +788,13 @@ public final class CallManager extends UntypedActor {
         system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), interpreter,
                 new StartInterpreter(transferee), system.dispatcher());
         if(logger.isInfoEnabled()) {
-            logger.info("New Intepreter for first transferor leg: " + interpreter.path() + " started");
+            logger.info("New Intepreter for transferee call leg: " + interpreter.path() + " started");
         }
 
+        if(logger.isInfoEnabled()) {
+            logger.info("will hangup transferor: "+transferor.path());
+        }
         transferor.tell(new Hangup(), null);
-//
-//        // Check what to do with the second/outbound transferor leg of the transferor
-//        if (transferor != null && listOfTransfereeCalls == null) {
-//            if(logger.isInfoEnabled()) {
-//                logger.info("will hangup transferee: "+transferee.path());
-//            }
-//
-//
-//        }
-//        if (listOfTransfereeCalls != null) {
-//            for (ActorRef branch: listOfTransfereeCalls) {
-//                branch.tell(new Hangup(), null);
-//            }
-//            if (logger.isInfoEnabled()) {
-//                String msg = String.format("Call Transfer while dial forking, terminated %d calls", listOfTransfereeCalls.size());
-//                logger.info(msg);
-//            }
-//        }
     }
 
     /**
