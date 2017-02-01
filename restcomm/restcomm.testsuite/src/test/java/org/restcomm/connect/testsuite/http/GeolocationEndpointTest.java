@@ -21,6 +21,12 @@
 
 package org.restcomm.connect.testsuite.http;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -31,6 +37,7 @@ import java.util.Locale;
 
 import javax.ws.rs.core.MultivaluedMap;
 
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
@@ -44,6 +51,7 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.dao.entities.Geolocation;
@@ -71,18 +79,41 @@ public class GeolocationEndpointTest {
     @ArquillianResource
     URL deploymentUrl;
 
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
+
     private String adminUsername = "administrator@company.com";
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     @After
     public void after() throws InterruptedException {
+        wireMockRule.resetRequests();
         Thread.sleep(1000);
     }
 
+    String gmlcResponse = "GMLC_RESPONSE";
     @Test
     public void testCreateAndGetImmediateGeolocation()
         throws ParseException, IllegalArgumentException, ClientProtocolException, IOException {
+
+        String msisdn = "TestDevId4Immediate";
+
+        //This is for POST requests
+        stubFor(post(urlPathEqualTo("/restcomm/gmlc/rest"))
+                .withQueryParam("msisdn", equalTo(msisdn))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(gmlcResponse)));
+
+        //This is for GET requests - REMOVE if not needed
+        stubFor(get(urlPathEqualTo("/restcomm/gmlc/rest"))
+                .withQueryParam("msisdn", equalTo(msisdn))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(gmlcResponse)));
 
         // Define Immediate Geolocation attributes for this method
         String deviceIdentifier;
@@ -90,7 +121,7 @@ public class GeolocationEndpointTest {
         // Test create Immediate type of Geolocation via POST (only mandatory parameters)
         // Parameter values Assignment
         MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
-        geolocationParams.add("DeviceIdentifier", deviceIdentifier = "TestDevId4Immediate");
+        geolocationParams.add("DeviceIdentifier", deviceIdentifier = msisdn);
         geolocationParams.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
         // HTTP POST Geolocation creation with given parameters values
         JsonObject geolocationJson = RestcommGeolocationsTool.getInstance().createImmediateGeolocation(deploymentUrl.toString(),
