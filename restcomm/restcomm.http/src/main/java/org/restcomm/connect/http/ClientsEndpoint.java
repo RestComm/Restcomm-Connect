@@ -25,7 +25,6 @@ import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -128,8 +127,6 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             if ( ! org.apache.commons.lang.StringUtils.isEmpty( data.getFirst("VoiceApplicationSid") ) )
                 builder.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
         }
-        String rootUri = configuration.getString("root-uri");
-        rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
         buffer.append("/").append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
                 .append("/Clients/").append(sid.toString());
