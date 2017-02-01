@@ -32,7 +32,6 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.loader.ObjectInstantiationException;
-import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Account;
@@ -194,8 +193,6 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         builder.setReferApplicationSid(getSid("ReferApplicationSid",data));
 
         final Configuration configuration = this.configuration.subset("runtime-settings");
-        String rootUri = configuration.getString("root-uri");
-        rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
         buffer.append("/").append(apiVersion).append("/Accounts/").append(accountSid.toString())
         .append("/IncomingPhoneNumbers/").append(sid.toString());

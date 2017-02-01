@@ -19,21 +19,18 @@
  */
 package org.restcomm.connect.http.converter;
 
-import java.lang.reflect.Type;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
-
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.commons.util.StringUtils;
 
 import javax.ws.rs.core.MediaType;
+import java.lang.reflect.Type;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
@@ -44,12 +41,10 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 @ThreadSafe
 public final class AccountConverter extends AbstractConverter implements JsonSerializer<Account> {
     private final String apiVersion;
-    private final String rootUri;
 
     public AccountConverter(final Configuration configuration) {
         super(configuration);
         this.apiVersion = configuration.getString("api-version");
-        rootUri = StringUtils.addSuffixIfNotPresent(configuration.getString("root-uri"), "/");
     }
 
     @SuppressWarnings("rawtypes")

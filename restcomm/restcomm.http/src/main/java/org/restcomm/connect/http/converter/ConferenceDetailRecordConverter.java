@@ -19,19 +19,17 @@
  */
 package org.restcomm.connect.http.converter;
 
-import java.lang.reflect.Type;
-
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
-import org.restcomm.connect.commons.util.StringUtils;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
+
+import java.lang.reflect.Type;
 
 /**
  * @author maria
@@ -39,11 +37,10 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 @ThreadSafe
 public final class ConferenceDetailRecordConverter extends AbstractConverter implements JsonSerializer<ConferenceDetailRecord> {
     private final String apiVersion;
-    private final String rootUri;
+
     public ConferenceDetailRecordConverter(final Configuration configuration) {
         super(configuration);
         apiVersion = configuration.getString("api-version");
-        rootUri = StringUtils.addSuffixIfNotPresent(configuration.getString("root-uri"), "/");
     }
 
     @SuppressWarnings("rawtypes")
