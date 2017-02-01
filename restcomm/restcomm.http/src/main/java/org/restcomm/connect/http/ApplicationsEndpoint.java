@@ -107,7 +107,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
-        buffer.append(rootUri).append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
+        buffer.append("/").append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
                 .append("/Applications/").append(sid.toString());
         builder.setUri(URI.create(buffer.toString()));
         builder.setRcmlUrl(getUrl("RcmlUrl", data));

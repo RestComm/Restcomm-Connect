@@ -109,7 +109,7 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
-        buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(accountSid.toString())
+        buffer.append("/").append(getApiVersion(null)).append("/Accounts/").append(accountSid.toString())
                 .append("/OutgoingCallerIds/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
         return new OutgoingCallerId(sid, now, now, friendlyName, accountSid, phoneNumberUtil.format(phoneNumber,

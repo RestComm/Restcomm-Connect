@@ -103,7 +103,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
 
     private String prefix(final Account account, MediaType responseType) {
         final StringBuilder buffer = new StringBuilder();
-        buffer.append(rootUri).append(apiVersion).append("/Accounts");
+        buffer.append("/").append(apiVersion).append("/Accounts");
         if(responseType == APPLICATION_JSON_TYPE) {
             buffer.append(".json");
         }

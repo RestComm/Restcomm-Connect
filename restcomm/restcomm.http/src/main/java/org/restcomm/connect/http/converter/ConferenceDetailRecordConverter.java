@@ -107,7 +107,7 @@ public final class ConferenceDetailRecordConverter extends AbstractConverter imp
 
     private String prefix(final ConferenceDetailRecord cdr) {
         final StringBuilder buffer = new StringBuilder();
-        buffer.append(rootUri).append(apiVersion).append("/Accounts/");
+        buffer.append("/").append(apiVersion).append("/Accounts/");
         buffer.append(cdr.getAccountSid().toString()).append("/Conferences/");
         buffer.append(cdr.getSid());
         return buffer.toString();
