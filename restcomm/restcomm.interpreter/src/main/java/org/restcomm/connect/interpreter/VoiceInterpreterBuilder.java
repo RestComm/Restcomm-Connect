@@ -53,6 +53,7 @@ public final class VoiceInterpreterBuilder {
     private String fallbackMethod;
     private URI statusCallback;
     private String statusCallbackMethod;
+    private String referTarget;
     private String emailAddress;
     private ActorRef monitoring;
     private String rcml;
@@ -72,7 +73,7 @@ public final class VoiceInterpreterBuilder {
             @Override
             public UntypedActor create() throws Exception {
                 return new VoiceInterpreter(configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod,
-                        statusCallback, statusCallbackMethod, emailAddress, calls, conferences, bridges, sms, storage, monitoring, rcml);
+                        statusCallback, statusCallbackMethod, referTarget, emailAddress, calls, conferences, bridges, sms, storage, monitoring, rcml);
             }
         }));
     }
@@ -131,6 +132,10 @@ public final class VoiceInterpreterBuilder {
 
     public void setStatusCallbackMethod(final String statusCallbackMethod) {
         this.statusCallbackMethod = statusCallbackMethod;
+    }
+
+    public void setReferTarget(final String referTarget) {
+        this.referTarget = referTarget;
     }
 
     public void setEmailAddress(final String emailAddress) {

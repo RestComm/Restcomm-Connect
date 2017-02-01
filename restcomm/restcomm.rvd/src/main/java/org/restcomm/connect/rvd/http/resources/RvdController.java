@@ -40,6 +40,8 @@ import org.restcomm.connect.rvd.exceptions.ResponseWrapperException;
 import org.restcomm.connect.rvd.identity.AccountProvider;
 import org.restcomm.connect.rvd.identity.UserIdentityContext;
 import org.restcomm.connect.rvd.interpreter.Interpreter;
+import org.restcomm.connect.rvd.interpreter.exceptions.BadExternalServiceResponse;
+import org.restcomm.connect.rvd.interpreter.exceptions.ESProcessFailed;
 import org.restcomm.connect.rvd.interpreter.exceptions.RemoteServiceError;
 import org.restcomm.connect.rvd.model.CallControlInfo;
 import org.restcomm.connect.rvd.model.ModelMarshaler;
@@ -117,7 +119,7 @@ public class RvdController extends SecuredRestService {
                 interpreter.getProjectLogger().log( rcmlResponse, false).tag("app", appname).tag("RCML").done();
             }
 
-        } catch (RemoteServiceError e) {
+        } catch (RemoteServiceError | ESProcessFailed | BadExternalServiceResponse e){
             logger.warn(e.getMessage());
             if (rvdContext.getProjectSettings().getLogging())
                 rvdContext.getProjectLogger().log(e.getMessage()).tag("app", appname).tag("EXCEPTION").done();

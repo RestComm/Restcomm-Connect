@@ -55,13 +55,16 @@ public final class IncomingPhoneNumber {
     private Sid smsApplicationSid;
     private String smsApplicationName;
     private URI uri;
-
     private URI ussdUrl;
     private String ussdMethod;
     private URI ussdFallbackUrl;
     private String ussdFallbackMethod;
     private Sid ussdApplicationSid;
     private String ussdApplicationName;
+    private URI referUrl;
+    private String referMethod;
+    private Sid referApplicationSid;
+    private String referApplicationName;
 
     // Capabilities
     private Boolean voiceCapable;
@@ -76,10 +79,11 @@ public final class IncomingPhoneNumber {
             final String voiceFallbackMethod, final URI statusCallback, final String statusCallbackMethod,
             final Sid voiceApplicationSid, final URI smsUrl, final String smsMethod, final URI smsFallbackUrl,
             final String smsFallbackMethod, final Sid smsApplicationSid, final URI uri, final URI ussdUrl, final String ussdMethod, final URI ussdFallbackUrl,
-            final String ussdFallbackMethod, final Sid ussdApplicationSid) {
+            final String ussdFallbackMethod, final Sid ussdApplicationSid,
+            final URI referUrl, final String referMethod, final Sid referApplicationSid) {
         this(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, cost, apiVersion, hasVoiceCallerIdLookup,
                 voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod,
-                voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, null, null, null, null, null);
+                voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, referUrl, referMethod, referApplicationSid, null, null, null, null, null);
     }
 
     public IncomingPhoneNumber(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
@@ -88,11 +92,15 @@ public final class IncomingPhoneNumber {
                                final String voiceFallbackMethod, final URI statusCallback, final String statusCallbackMethod,
                                final Sid voiceApplicationSid, final URI smsUrl, final String smsMethod, final URI smsFallbackUrl,
                                final String smsFallbackMethod, final Sid smsApplicationSid, final URI uri, final URI ussdUrl, final String ussdMethod, final URI ussdFallbackUrl,
-                               final String ussdFallbackMethod, final Sid ussdApplicationSid, final Boolean voiceCapable,
+                               final String ussdFallbackMethod, final Sid ussdApplicationSid,
+                               final URI referUrl, final String referMethod, final Sid referApplicationSid,
+                               final Boolean voiceCapable,
                                final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable, final Boolean pureSip) {
         this(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, cost, apiVersion, hasVoiceCallerIdLookup,
                 voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod,
-                voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable, pureSip, null, null, null);
+                voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid,
+                        referUrl, referMethod, referApplicationSid,
+                voiceCapable, smsCapable, mmsCapable, faxCapable, pureSip, null, null, null, null);
     }
 
     public IncomingPhoneNumber(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
@@ -101,8 +109,10 @@ public final class IncomingPhoneNumber {
             final String voiceFallbackMethod, final URI statusCallback, final String statusCallbackMethod,
             final Sid voiceApplicationSid, final URI smsUrl, final String smsMethod, final URI smsFallbackUrl,
             final String smsFallbackMethod, final Sid smsApplicationSid, final URI uri, final URI ussdUrl, final String ussdMethod, final URI ussdFallbackUrl,
-            final String ussdFallbackMethod, final Sid ussdApplicationSid, final Boolean voiceCapable,
-            final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable, final Boolean pureSip, final String voiceApplicationName, final String smsApplicationName, final String ussdApplicationName) {
+            final String ussdFallbackMethod, final Sid ussdApplicationSid,
+            final URI referUrl, final String referMethod, final Sid referApplicationSid,
+            final Boolean voiceCapable,
+            final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable, final Boolean pureSip, final String voiceApplicationName, final String smsApplicationName, final String ussdApplicationName, final String referApplicationName) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -131,6 +141,9 @@ public final class IncomingPhoneNumber {
         this.ussdFallbackUrl = ussdFallbackUrl;
         this.ussdFallbackMethod = ussdFallbackMethod;
         this.ussdApplicationSid = ussdApplicationSid;
+        this.referUrl = referUrl;
+        this.referMethod = referMethod;
+        this.referApplicationSid = referApplicationSid;
         this.voiceCapable = voiceCapable;
         this.smsCapable = smsCapable;
         this.mmsCapable = mmsCapable;
@@ -139,6 +152,7 @@ public final class IncomingPhoneNumber {
         this.voiceApplicationName = voiceApplicationName;
         this.smsApplicationName = smsApplicationName;
         this.ussdApplicationName = ussdApplicationName;
+        this.referApplicationName = referApplicationName;
     }
 
     /**
@@ -520,6 +534,62 @@ public final class IncomingPhoneNumber {
     }
 
     /**
+     * @return the referUrl
+     */
+    public URI getReferUrl() {
+        return referUrl;
+    }
+
+    /**
+     * @param referUrl the referUrl to set
+     */
+    public void setReferUrl(URI referUrl) {
+        this.referUrl = referUrl;
+    }
+
+    /**
+     * @return the referMethod
+     */
+    public String getReferMethod() {
+        return referMethod;
+    }
+
+    /**
+     * @param referMethod the referMethod to set
+     */
+    public void setReferMethod(String referMethod) {
+        this.referMethod = referMethod;
+    }
+
+    /**
+     * @return the referApplicationSid
+     */
+    public Sid getReferApplicationSid() {
+        return referApplicationSid;
+    }
+
+    /**
+     * @param referApplicationSid the referApplicationSid to set
+     */
+    public void setReferApplicationSid(Sid referApplicationSid) {
+        this.referApplicationSid = referApplicationSid;
+    }
+
+    /**
+     * @return the referApplicationName
+     */
+    public String getReferApplicationName() {
+        return referApplicationName;
+    }
+
+    /**
+     * @param referApplicationName the referApplicationName to set
+     */
+    public void setReferApplicationName(String referApplicationName) {
+        this.referApplicationName = referApplicationName;
+    }
+
+    /**
      * @return the voiceCapable
      */
     public Boolean isVoiceCapable() {
@@ -640,6 +710,10 @@ public final class IncomingPhoneNumber {
         private String ussdFallbackMethod;
         private Sid ussdApplicationSid;
 
+        private URI referUrl;
+        private String referMethod;
+        private Sid referApplicationSid;
+
         // Capabilities
         private Boolean voiceCapable;
         private Boolean smsCapable;
@@ -657,7 +731,9 @@ public final class IncomingPhoneNumber {
             return new IncomingPhoneNumber(sid, now, now, friendlyName, accountSid, phoneNumber, cost, apiVersion,
                     hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                     statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                    smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable, pureSip);
+                    smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid,
+                    referUrl, referMethod, referApplicationSid,
+                    voiceCapable, smsCapable, mmsCapable, faxCapable, pureSip);
         }
 
         public void setSid(final Sid sid) {
@@ -758,6 +834,30 @@ public final class IncomingPhoneNumber {
 
         public void setUssdApplicationSid(final Sid ussdApplicationSid) {
             this.ussdApplicationSid = ussdApplicationSid;
+        }
+
+        public URI getReferUrl() {
+            return referUrl;
+        }
+
+        public void setReferUrl(URI referUrl) {
+            this.referUrl = referUrl;
+        }
+
+        public String getReferMethod() {
+            return referMethod;
+        }
+
+        public void setReferMethod(String referMethod) {
+            this.referMethod = referMethod;
+        }
+
+        public Sid getReferApplicationSid() {
+            return referApplicationSid;
+        }
+
+        public void setReferApplicationSid(Sid referApplicationSid) {
+            this.referApplicationSid = referApplicationSid;
         }
 
         public void setVoiceCapable(Boolean voiceCapable) {

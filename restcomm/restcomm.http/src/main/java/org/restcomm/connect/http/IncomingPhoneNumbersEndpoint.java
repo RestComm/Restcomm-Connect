@@ -189,6 +189,10 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         builder.setUssdFallbackMethod(getMethod("UssdFallbackMethod",data));
         builder.setUssdApplicationSid(getSid("UssdApplicationSid",data));
 
+        builder.setReferUrl(getUrl("ReferUrl", data));
+        builder.setReferMethod(getMethod("ReferMethod", data));
+        builder.setReferApplicationSid(getSid("ReferApplicationSid",data));
+
         final Configuration configuration = this.configuration.subset("runtime-settings");
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
@@ -428,6 +432,26 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             else
                 incomingPhoneNumber.setSmsApplicationSid(getSid("SmsApplicationSid", data));
 
+        }
+
+        if (data.containsKey("ReferUrl")) {
+            URI uri = getUrl("ReferUrl", data);
+            incomingPhoneNumber.setReferUrl( isEmpty(uri.toString()) ? null : uri );
+        }
+
+        if (data.containsKey("ReferMethod")) {
+            incomingPhoneNumber.setReferMethod(getMethod("ReferMethod", data));
+        }
+
+        if (data.containsKey("ReferApplicationSid")) {
+            if ( org.apache.commons.lang.StringUtils.isEmpty( data.getFirst("ReferApplicationSid") ) )
+                incomingPhoneNumber.setReferApplicationSid(null);
+            else
+                incomingPhoneNumber.setReferApplicationSid(getSid("ReferApplicationSid", data));
+        }
+
+        if (data.containsKey("VoiceCapable")) {
+            incomingPhoneNumber.setVoiceCapable(Boolean.parseBoolean(data.getFirst("VoiceCapable")));
         }
 
         if (data.containsKey("VoiceCapable")) {

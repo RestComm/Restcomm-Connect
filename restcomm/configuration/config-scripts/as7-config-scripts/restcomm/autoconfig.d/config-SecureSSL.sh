@@ -20,6 +20,10 @@ NoSslRestConf(){
 	mv $FILE.bak $FILE
 	sed -e "s/<.*connector name=\"http\".*>/<connector name=\"http\" protocol=\"HTTP\/1.1\" scheme=\"http\" socket-binding=\"http\"\/> /" $FILE > $FILE.bak
 	mv $FILE.bak $FILE
+
+    sed -i "s|SSL_ENABLED=.*|SSL_ENABLED=false|" $RESTCOMM_BIN/restcomm/mediaserver.conf
+    sed -i "s|SSL_KEYSTORE=.*|SSL_KEYSTORE=restcomm.jks|" $RESTCOMM_BIN/restcomm/mediaserver.conf
+    sed -i "s|SSL_PASSWORD=.*|SSL_PASSWORD=changeme|" $RESTCOMM_BIN/restcomm/mediaserver.conf
 }
 
 ####funcitions for SECURESSL="SELF" || SECURESSL="AUTH" ####
@@ -95,22 +99,6 @@ SslRestCommConf(){
 	echo "Properly configured HTTPS Connector to use trustStore file $CERTIFICATION_FILE"
 }
 
-#SSL configuration for RMS. Use certificate at JAVA_OPTS.
-SslRmsConf(){
-	echo "TRUSTSTORE_PASSWORD is set to '$TRUSTSTORE_PASSWORD' will properly configure MMS";
-	FILE=$MMS_HOME/bin/run.sh
-	if [[ "$TRUSTSTORE_FILE" = /* ]]; then
-		CERTIFICATION_FILE=$TRUSTSTORE_FILE
-	else
-		CERTIFICATION_FILE=$RESTCOMM_HOME/standalone/configuration/$TRUSTSTORE_FILE
-	fi
-	JAVA_OPTS_TRUSTORE="-Djavax.net.ssl.trustStore=$CERTIFICATION_FILE -Djavax.net.ssl.trustStorePassword=$TRUSTSTORE_PASSWORD"
-	sed -e "/# Setup MMS specific properties/ {
-	  N; s|JAVA_OPTS=.*|JAVA_OPTS=\"-Dprogram\.name=\\\$PROGNAME $RMS_JAVA_OPTS $JAVA_OPTS_TRUSTORE\"|
-	}" $FILE > $FILE.bak
-	mv $FILE.bak $FILE
-	echo "Properly configured MMS to use trustStore file $RESTCOMM_HOME/standalone/configuration/$TRUSTSTORE_FILE"
-}
 #If self-sighned create certificate.
 #else use authorized.
 CertConfigure(){
@@ -177,6 +165,24 @@ MssStackConf(){
     \javax.net.ssl.keyStoreType=JKS' $RESTCOMM_CONF/mss-sip-stack.properties
 }
 
+
+#SIP-Servlets configuration for HTTPS.
+#For both Self-signed and Authorized certificate.
+SslRMSConf(){
+    if [[ "$MANUAL_SETUP" == "false" || "$MANUAL_SETUP" == "FALSE" ]]; then
+
+    	if [[ "$TRUSTSTORE_FILE" = /* ]]; then
+		    CERTIFICATION_FILE=$TRUSTSTORE_FILE
+	    else
+		    CERTIFICATION_FILE="$RESTCOMM_CONF/$TRUSTSTORE_FILE"
+	    fi
+
+        sed -i "s|SSL_ENABLED=.*|SSL_ENABLED=true|" $RESTCOMM_BIN/restcomm/mediaserver.conf
+        sed -i "s|SSL_KEYSTORE=.*|SSL_KEYSTORE=${CERTIFICATION_FILE}|" $RESTCOMM_BIN/restcomm/mediaserver.conf
+        sed -i "s|SSL_PASSWORD=.*|SSL_PASSWORD=${TRUSTSTORE_PASSWORD}|" $RESTCOMM_BIN/restcomm/mediaserver.conf
+    fi
+}
+
 # MAIN
 echo 'RestComm SSL Configuring ...'
 
@@ -186,9 +192,9 @@ if [[ "$SECURESSL" = "SELF" ||  "$SECURESSL" = "AUTH" ]]; then
 	else
   		echo "SECURE $SECURESSL"
 		SslRestCommConf
-		SslRmsConf
 		CertConfigure
 		MssStackConf
+		SslRMSConf
 	fi
 elif [[ "$SECURESSL" == "false" || "$SECURESSL" == "FALSE" ]]; then
 	NoSslRestConf
