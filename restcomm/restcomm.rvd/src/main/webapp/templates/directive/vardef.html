@@ -1,0 +1,10 @@
+<input ng-model="varExpression" type="text" class="form-control">
+<div class="dropdown">
+    <small class="btn-link dropdown-toggle var-scope">scope</small>
+    <small class="text-muted">{{varScope ? ": "+varScope : ""}}</small>
+    <ul class="dropdown-menu">
+        <li><a ng-click="setVarScope('app')">Application</a></li>
+        <li><a ng-click="setVarScope('mod')">Module</a></li>
+    </ul>
+</div>
+

@@ -45,7 +45,7 @@
                         <!-- continueTo action -->
                         <div ng-switch-when="continueTo" class="action-continue-to">
                             <div class="form-group action-kind">
-                                <select ng-model="action.kind" class="form-control">
+                                <select ng-model="action.kind" ng-change="actionKindChanged(action.kind)" class="form-control">
                                     <option value="continueTo">Continue To</option>
                                     <option value="assign">Assign</option>
                                 </select>
@@ -59,7 +59,7 @@
                         <!-- assign action -->
                         <div ng-switch-when="assign" class="action-assign">
                             <div class="form-group action-kind">
-                                <select ng-model="action.kind" class="form-control">
+                                <select ng-model="action.kind" ng-change="actionKindChanged(action)" class="form-control">
                                     <option value="continueTo">Continue To</option>
                                     <option value="assign">Assign</option>
                                 </select>
@@ -69,7 +69,7 @@
                             </div>
                             <i class="fa fa-arrow-right"></i>
                             <div class="form-group action-param">
-                                <input ng-model="action.param2" type="text" class="form-control">
+                                <vardef variable="action.param2" variable-scope="action.param3"></vardef>
                             </div>
                         </div>
                     </div>

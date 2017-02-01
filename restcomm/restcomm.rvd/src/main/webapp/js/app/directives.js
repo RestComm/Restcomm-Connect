@@ -329,3 +329,21 @@ angular.module('Rvd').directive('rvdDropdown', function() {
 	}
 });
 
+angular.module('Rvd').directive('vardef', function () {
+    return {
+        restrict: "E",
+        scope: {
+            varExpression: '=variable',
+            varScope: '=variableScope'
+        },
+        templateUrl: "templates/directive/vardef.html",
+        link: function (scope) {
+            console.log('in vardef directive link');
+
+            scope.setVarScope = function(varscope) {
+                scope.varScope = varscope;
+            }
+        }
+    }
+});
+
