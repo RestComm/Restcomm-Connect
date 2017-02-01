@@ -311,7 +311,7 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
             }
         } catch (Exception ex) {
             if (logger.isInfoEnabled()) {
-                logger.info("An exception occurred when retrieving data from GMLC");
+                logger.info("Problem while trying to retrieve data from GMLC");
             }
             return status(INTERNAL_SERVER_ERROR).entity(ex.getMessage()).build();
         }
