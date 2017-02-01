@@ -115,7 +115,7 @@
 		</ussd-gateway>
 
 		<gmlc>
-			<gmlc-uri>http://GMLC-IP:port/restcomm/gmlc/rest?msisdn=</gmlc-uri> <!-- Change GMLC-IP:port to appropriate value-->
+			<gmlc-uri>http://127.0.0.1:8090/restcomm/gmlc/rest?msisdn=</gmlc-uri> <!-- Change GMLC-IP:port to appropriate value-->
 			<gmlc-user></gmlc-user>
 			<gmlc-password></gmlc-password>
 		</gmlc>
