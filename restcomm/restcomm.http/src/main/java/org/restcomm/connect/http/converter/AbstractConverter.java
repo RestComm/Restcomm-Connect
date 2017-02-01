@@ -513,6 +513,38 @@ public abstract class AbstractConverter implements Converter {
         }
     }
 
+    protected void writeReferUrl(final URI referUrl, final HierarchicalStreamWriter writer) {
+        if (referUrl != null) {
+            writer.startNode("ReferUrl");
+            writer.setValue(referUrl.toString());
+            writer.endNode();
+        }
+    }
+
+    protected void writeReferMethod(final String referMethod, final HierarchicalStreamWriter writer) {
+        writer.startNode("ReferMethod");
+        if (referMethod != null) {
+            writer.setValue(referMethod);
+        }
+        writer.endNode();
+    }
+
+    protected void writeReferUrl(final URI referUrl, final JsonObject object) {
+        if (referUrl != null) {
+            object.addProperty("refer_url", referUrl.toString());
+        } else {
+            object.add("refer_url", JsonNull.INSTANCE);
+        }
+    }
+
+    protected void writeReferMethod(final String referMethod, final JsonObject object) {
+        if (referMethod != null) {
+            object.addProperty("refer_method", referMethod);
+        } else {
+            object.add("refer_method", JsonNull.INSTANCE);
+        }
+    }
+
     protected void writeCapabilities(final Boolean voiceCapable, final Boolean smsCapable, final Boolean mmsCapable,
             final Boolean faxCapable, final HierarchicalStreamWriter writer) {
         writer.startNode("Capabilities");

@@ -324,6 +324,10 @@ var createNumberParams = function(number, isSIP) {
   params["UssdFallbackUrl"] = number.ussd_fallback_url;
   params["UssdFallbackMethod"] = number.ussd_fallback_method;
   params["UssdApplicationSid"] = number.ussd_application_sid;
+  params["ReferUrl"] = number.refer_url;
+  params["ReferMethod"] = number.refer_method;
+  params["ReferApplicationSid"] = number.refer_application_sid; // || number.referApplicationSid;
+
   if(isSIP) {
 	  params["isSIP"] = "true";
   }
