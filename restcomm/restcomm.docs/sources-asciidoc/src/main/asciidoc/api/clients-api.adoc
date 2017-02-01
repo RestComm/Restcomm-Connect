@@ -166,7 +166,7 @@ XML GET Response
       <Status>1</Status>
       <VoiceMethod>POST</VoiceMethod>
       <VoiceFallbackMethod>POST</VoiceFallbackMethod>
-      <Uri>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL3003328d0de04ba68f38de85b732ed56</Uri>
+      <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL3003328d0de04ba68f38de85b732ed56</Uri>
     </Client>
     <Client>
       <Sid>CLa2b99142e111427fbb489c3de357f60a</Sid>
@@ -180,7 +180,7 @@ XML GET Response
       <Status>1</Status>
       <VoiceMethod>POST</VoiceMethod>
       <VoiceFallbackMethod>POST</VoiceFallbackMethod>
-      <Uri>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa2b99142e111427fbb489c3de357f60a</Uri>
+      <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa2b99142e111427fbb489c3de357f60a</Uri>
     </Client>
   </Clients>
 </RestcommResponse>
