@@ -35,7 +35,8 @@
 				"name": {"type":"string", "minLength": 1},
 				"kind": {"type":"string", "enum": ["continueTo","assign"]},
 				"param1": {"type":"string"},
-				"param2": {"type":"string"}
+				"param2": {"type":"string"},
+				"param3": {"type":"string"}
 			},
 			"required": ["name","kind"]
 		}

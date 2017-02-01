@@ -146,6 +146,13 @@ label {
 }
 
 
+/* variable definition */
+
+vardef .dropdown {
+    position: absolute;
+}
+
+
 /* override jquery-ui colors since theme-roller never responded */
 /*
 .ui-widget-header {

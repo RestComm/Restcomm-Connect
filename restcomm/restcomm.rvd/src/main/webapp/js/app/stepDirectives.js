@@ -103,6 +103,12 @@ angular.module('Rvd')
                     }
                 }
             }
+            scope.actionKindChanged = function (action) {
+                delete action.param1;
+                delete action.param2;
+                delete action.param3;
+            }
+
             function rebuildConditionExpression() {
                 var conditions = stepModel.conditions;
                 var joiner = scope.conditionJoiner;
