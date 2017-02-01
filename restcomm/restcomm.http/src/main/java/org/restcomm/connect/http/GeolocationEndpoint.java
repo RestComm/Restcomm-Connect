@@ -45,6 +45,9 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.http.HttpResponse;
+// import org.apache.http.auth.AuthScope;
+// import org.apache.http.auth.Credentials;
+// import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -231,11 +234,16 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
             String targetMSISDN = data.getFirst("DeviceIdentifier");
             Configuration gmlcConf = configuration.subset("gmlc");
             String gmlcURI = gmlcConf.getString("gmlc-uri");
+            // Authorization for further stage of the project
             String gmlcUser = gmlcConf.getString("gmlc-user");
+            String gmlcPassword = gmlcConf.getString("gmlc-password");
+            // Credentials credentials = new UsernamePasswordCredentials(gmlcUser, gmlcPassword);
             URL url = new URL(gmlcURI + targetMSISDN);
             HttpClient client = HttpClientBuilder.create().build();
             HttpGet request = new HttpGet(String.valueOf(url));
+            // Authorization for further stage of the project
             request.addHeader("User-Agent", gmlcUser);
+            request.addHeader("User-Password", gmlcPassword);
             HttpResponse response = client.execute(request);
             BufferedReader br = new BufferedReader(
                 new InputStreamReader(response.getEntity().getContent()));
