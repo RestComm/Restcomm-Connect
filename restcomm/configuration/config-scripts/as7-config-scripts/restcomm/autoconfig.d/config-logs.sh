@@ -33,12 +33,6 @@ configure_RC_logs(){
 	}" $RESTCOMM_CONF/standalone-sip.xml
 }
 
-configure_RMS_log(){
-    FILE=$MMS_HOME/conf/log4j.xml
-    sed -i  "s|<param name=\"Threshold\" value=\".*\" />|<param name=\"Threshold\" value=\"${LOG_LEVEL}\" />|"  $FILE
-    sed -i  "s|<priority value=\".*\"/>|<priority value=\"${LOG_LEVEL}\"/>|"  $FILE
-}
-
 config_on_thefly(){
     FILE=$RESTCOMM_BIN/restcomm/set-log-level.sh
     MNGMTPORT=$((9999 + PORT_OFFSET))
@@ -59,7 +53,6 @@ config_AKKA_logs(){
 
 #MAIN
 if [ -n "$LOG_LEVEL" ]; then
-    configure_RMS_log
     configure_RC_logs
     config_on_thefly
     config_AKKA_logs

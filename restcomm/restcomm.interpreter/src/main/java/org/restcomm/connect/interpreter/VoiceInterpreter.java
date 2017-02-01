@@ -202,9 +202,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private ActorRef bridge;
     private boolean beep;
 
+    private boolean enable200OkDelay;
+
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
-                            final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
+                            final String statusCallbackMethod, String referTarget,
+                            final String emailAddress, final ActorRef callManager,
                             final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring, final String rcml) {
         super();
         final ActorRef source = self();
@@ -397,6 +400,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.fallbackMethod = fallbackMethod;
         this.statusCallback = statusCallback;
         this.statusCallbackMethod = statusCallbackMethod;
+        this.referTarget = referTarget;
         this.emailAddress = emailAddress;
         this.configuration = configuration;
         this.callManager = callManager;
@@ -407,6 +411,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.storage = storage;
         final Configuration runtime = configuration.subset("runtime-settings");
         playMusicForConference = Boolean.parseBoolean(runtime.getString("play-music-for-conference","false"));
+        this.enable200OkDelay = this.configuration.subset("runtime-settings").getBoolean("enable-200-ok-delay",false);
         this.downloader = downloader();
         this.monitoring = monitoring;
         this.rcml = rcml;
@@ -1054,8 +1059,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final CallStateChanged event = (CallStateChanged) message;
         if (sender == call)
             callState = event.state();
+        else
+            if(event.sipResponse()!=null && event.sipResponse()>=400){
+                outboundCallResponse = event.sipResponse();
+            }
         if(logger.isInfoEnabled()){
-            logger.info("VoiceInterpreter received CallStateChanged event: "+event.state()+ " from "+(sender == call? "call" : "outboundCall")+ ", sender path: " + sender.path() +", current VI state: "+fsm.state());
+            logger.info("VoiceInterpreter received CallStateChanged event: "+event+ " from "+(sender == call? "call" : "outboundCall")+ ", sender path: " + sender.path() +", current VI state: "+fsm.state());
         }
 
         Attribute attribute = null;
@@ -1079,7 +1088,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     callManager.tell(new DestroyCall(sender), self());
                     return;
                 } else {
-                    if (sender == call) {
+                    if (enable200OkDelay && dialBranches != null && sender.equals(call)) {
+                        if (callRecord != null) {
+                            final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
+                            callRecord = records.getCallDetailRecord(callRecord.getSid());
+                            callRecord = callRecord.setStatus(callState.toString());
+                            records.updateCallDetailRecord(callRecord);
+                        }
+                        fsm.transition(message, finishDialing);
+                    } else if (sender == call) {
                         //Move to finished state only if the call actor send the Cancel.
                         fsm.transition(message, finished);
                     } else {
@@ -1088,6 +1105,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         if (dialBranches != null && dialBranches.contains(sender)) {
                             removeDialBranch(message, sender);
                             checkDialBranch(message, sender, attribute);
+                        }
+                        else {
+                            //case for LCM testTerminateDialForkCallWhileRinging_LCM_to_dial_branches
+                            callState = event.state();
                         }
                     }
                 }
@@ -1185,6 +1206,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             fsm.transition(message, finished);
                     }
                 break;
+            case WAIT_FOR_ANSWER:
             case IN_PROGRESS:
                 if (is(initializingCall) || is(rejecting)) {
                     if (parser != null) {
@@ -1194,9 +1216,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         //This is a REST API created outgoing call
                         fsm.transition(message, downloadingRcml);
                     }
-                } else if (is(joiningConference)) {
-                    //Do nothing here
-                    //fsm.transition(message, conferencing);
                 } else if (is(forking)) {
                     if (outboundCall == null || !sender.equals(call)) {
                         outboundCall = sender;
@@ -1214,6 +1233,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         final GetNextVerb next = GetNextVerb.instance();
                         parser.tell(next, self());
                     }
+                }
+                // Update the storage for conferencing.
+                if (callRecord != null && !is(initializingCall) && !is(rejecting)) {
+                    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
+                    callRecord = records.getCallDetailRecord(callRecord.getSid());
+                    callRecord = callRecord.setStatus(callState.toString());
+                    records.updateCallDetailRecord(callRecord);
                 }
                 break;
             }
@@ -1357,6 +1383,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
         final String callSid = callInfo.sid().toString();
         parameters.add(new BasicNameValuePair("CallSid", callSid));
+        parameters.add(new BasicNameValuePair("InstanceId", RestcommConfiguration.getInstance().getMain().getInstanceId()));
         if (outboundCallInfo != null) {
             final String outboundCallSid = outboundCallInfo.sid().toString();
             parameters.add(new BasicNameValuePair("OutboundCallSid", outboundCallSid));
@@ -1377,6 +1404,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final String forwardedFrom = (callInfo.forwardedFrom() == null || callInfo.forwardedFrom().isEmpty()) ? "null" : callInfo.forwardedFrom();
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
         parameters.add(new BasicNameValuePair("CallTimestamp", callInfo.dateCreated().toString()));
+        if (referTarget != null) {
+            parameters.add(new BasicNameValuePair("ReferTarget", referTarget));
+        }
         // logger.info("Type " + callInfo.type());
         SipServletResponse lastResponse = callInfo.lastResponse();
         if (CreateCall.Type.SIP == callInfo.type()) {
@@ -1513,7 +1543,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 verb = (Tag) message;
 
                 // Answer the call.
-                call.tell(new Answer(callRecord.getSid()), source);
+                boolean confirmCall = true;
+                if (enable200OkDelay && Verbs.dial.equals(verb.name())) {
+                    confirmCall=false;
+                }
+                call.tell(new Answer(callRecord.getSid(),confirmCall), source);
             }
         }
     }
@@ -1673,7 +1707,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                 } else {
                     if (call != null) {
-                        call.tell(new Hangup(), null);
+                        call.tell(new Hangup(outboundCallResponse), null);
                     }
                     final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
@@ -2087,6 +2121,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 record(bridge);
             }
+            if(enable200OkDelay && verb !=null && Verbs.dial.equals(verb.name())){
+                call.tell(message, self());
+            }
         }
     }
 
@@ -2158,7 +2195,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
 
-            if (outboundCall != null) {
+            if (outboundCall != null && !outboundCall.isTerminated()) {
                 try {
                     if(logger.isInfoEnabled()) {
                         logger.info("Trying to get outboundCall Info");
@@ -2326,6 +2363,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if(logger.isInfoEnabled()) {
                     logger.info("Received timeout, will cancel branches, current VoiceIntepreter state: " + state);
                 }
+                if(enable200OkDelay){
+                    outboundCallResponse = SipServletResponse.SC_REQUEST_TIMEOUT;
+                }
                 //The forking timeout reached, we have to cancel all dial branches
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
@@ -2341,7 +2381,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (outboundCall != null) {
                     outboundCall.tell(new Cancel(), source);
-                    call.tell(new Hangup(), self());
+                    call.tell(new Hangup(outboundCallResponse), self());
                 }
                 dialChildren = null;
                 callback();
