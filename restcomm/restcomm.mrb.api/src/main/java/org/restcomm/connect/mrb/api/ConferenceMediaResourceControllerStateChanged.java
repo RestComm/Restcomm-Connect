@@ -36,14 +36,24 @@ public class ConferenceMediaResourceControllerStateChanged {
 
     private final MediaServerControllerState state;
     private final String conferenceState;
+    private final boolean destroyEndpoint;
 
-    public ConferenceMediaResourceControllerStateChanged(MediaServerControllerState state, final String conferenceState) {
+    public ConferenceMediaResourceControllerStateChanged(MediaServerControllerState state, final String conferenceState, final boolean destroyEndpoint) {
         this.state = state;
         this.conferenceState = conferenceState;
+        this.destroyEndpoint = destroyEndpoint;
+    }
+
+    public ConferenceMediaResourceControllerStateChanged(MediaServerControllerState state, final String conferenceState) {
+        this(state, conferenceState, false);
+    }
+
+    public ConferenceMediaResourceControllerStateChanged(MediaServerControllerState state, final boolean destroyEndpoint) {
+        this(state, null, destroyEndpoint);
     }
 
     public ConferenceMediaResourceControllerStateChanged(MediaServerControllerState state) {
-        this(state, null);
+        this(state, null, false);
     }
 
     public MediaServerControllerState state() {
@@ -52,5 +62,9 @@ public class ConferenceMediaResourceControllerStateChanged {
 
     public String conferenceState() {
         return conferenceState;
+    }
+
+    public boolean destroyEndpoint (){
+        return destroyEndpoint;
     }
 }

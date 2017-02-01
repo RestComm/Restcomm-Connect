@@ -93,7 +93,10 @@ CREATE TABLE "restcomm_incoming_phone_numbers" (
 "ussd_method" VARCHAR(4),
 "ussd_fallback_url" MEDIUMTEXT,
 "ussd_fallback_method" VARCHAR(4),
-"ussd_application_sid" VARCHAR(34)
+"ussd_application_sid" VARCHAR(34),
+"refer_url" LONGVARCHAR,
+"refer_method" VARCHAR(4),
+"refer_application_sid" VARCHAR(34)
 );
 
 CREATE TABLE "restcomm_applications" (

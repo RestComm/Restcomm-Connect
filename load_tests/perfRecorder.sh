@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-## Descript+ion: Restcomm performance test script to collect PerfRecorder metrics. From the work of jaime.casero@telestax.com
+## Description: Restcomm performance test script to collect PerfRecorder metrics. From the work of jaime.casero@telestax.com
 ## Author     : George Vagenas
 #
 
@@ -17,12 +17,16 @@ echo "TOOLS_DIR $TOOLS_DIR"
 echo "GOALS_FILE $GOALS_FILE"
 
 cp $RESULTS_DIR/$TEST_NAME*.csv $TOOLS_DIR/target/data/periodic/sip/sipp.csv
-cp $RESULTS_DIR/$TEST_NAME*_rtt.csv $TOOLS_DIR/target/data/periodic/sip/sipp_rtt.csv
+# NOTE: PerfCorder no longer uses RTT file
+#cp $RESULTS_DIR/$TEST_NAME*_rtt.csv $TOOLS_DIR/target/data/periodic/sip/sipp_rtt.csv
 cd $TOOLS_DIR
 rm -f *.zip
 ./pc_stop_collect.sh -s 360
 cp -f $TOOLS_DIR/perf*.zip $PR_RESULTS_FOLDER
 ### Check for performance regression
-./pc_analyse.sh $TOOLS_DIR/perf*.zip 1 > $PR_RESULTS_FOLDER/PerfCorderAnalysis.xml 2> $PR_RESULTS_FOLDER/analysis.log
+./pc_analyse.sh $TOOLS_DIR/perf*.zip 10 > $PR_RESULTS_FOLDER/PerfCorderAnalysis.xml 2> $PR_RESULTS_FOLDER/analysis.log
 cat $PR_RESULTS_FOLDER/PerfCorderAnalysis.xml | ./pc_test.sh  $GOALS_FILE > $PR_RESULTS_FOLDER/TEST-PerfCorderAnalysisTest.xml 2> $PR_RESULTS_FOLDER/test.log
+### Create HTML graphs
+echo "Creating PerfCorder HTML ... "
+cat $RESULTS_DIR/PerfCorderAnalysis.xml | $TOOLS_DIR/pc_html_gen.sh > $PR_RESULTS_FOLDER/PerfCorderAnalysis.html 2> $RESULTS_DIR/htmlgen.log
 cd $CURRENT_FOLDER
