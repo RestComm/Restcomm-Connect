@@ -121,7 +121,12 @@ import java.util.regex.Pattern;
 
 import static akka.pattern.Patterns.ask;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.*;
+import static javax.servlet.sip.SipServletResponse.SC_ACCEPTED;
+import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_SERVER_INTERNAL_ERROR;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -721,10 +726,6 @@ public final class CallManager extends UntypedActor {
             return;
         }
 
-        servletResponse = request.createResponse(SC_ACCEPTED);
-        servletResponse.setHeader("Event", "refer");
-        servletResponse.send();
-
         // Get first transferor leg observers
         Future<Object> future = (Future<Object>) ask(transferor, new GetCallObservers(), expires);
         CallResponse<List<ActorRef>> response = (CallResponse<List<ActorRef>>) Await.result(future,
@@ -740,7 +741,23 @@ public final class CallManager extends UntypedActor {
 
         //Transferee will be transfered to the transfer target
         ActorRef transferee = null;
-        transferee = (ActorRef) answer;
+        if (answer instanceof ActorRef) {
+            transferee = (ActorRef) answer;
+        } else {
+            if (logger.isInfoEnabled()) {
+                logger.info("Transferee is not a Call actor, probably call is on conference");
+            }
+            servletResponse = request.createResponse(SC_NOT_FOUND);
+            servletResponse.setHeader("Reason", "SIP Refer failed. Transferee is not a Call actor, probably this is a conference");
+            servletResponse.setHeader("Event", "refer");
+            servletResponse.send();
+            transferor.tell(new Hangup(), null);
+            return;
+        }
+
+        servletResponse = request.createResponse(SC_ACCEPTED);
+        servletResponse.setHeader("Event", "refer");
+        servletResponse.send();
 
         if(logger.isInfoEnabled()) {
             logger.info("About to start Call Transfer");
