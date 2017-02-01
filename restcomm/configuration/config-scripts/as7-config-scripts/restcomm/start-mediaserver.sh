@@ -10,6 +10,7 @@ startMediaServer() {
 
     chmod +x $ms_home/*.sh
     chmod +x $ms_home/.autoconfig/autoconfig.d/*.sh
+    chmod +x $ms_home/bin/*.sh
 
     $ms_home/start-mediaserver.sh $ms_conf
 }
