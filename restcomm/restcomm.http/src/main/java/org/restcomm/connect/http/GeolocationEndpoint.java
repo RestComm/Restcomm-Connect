@@ -30,6 +30,7 @@ import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
@@ -44,6 +45,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 // import org.apache.http.auth.AuthScope;
 // import org.apache.http.auth.Credentials;
@@ -245,70 +247,79 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
             request.addHeader("User-Agent", gmlcUser);
             request.addHeader("User-Password", gmlcPassword);
             HttpResponse response = client.execute(request);
-            BufferedReader br = new BufferedReader(
-                new InputStreamReader(response.getEntity().getContent()));
-            String gmlcResponse = null;
-            while (null != (gmlcResponse = br.readLine())) {
-                List<String> items = Arrays.asList(gmlcResponse.split("\\s*,\\s*"));
-                if (logger.isInfoEnabled()) {
-                    logger.info("Data retrieved from GMLC: " + items.toString());
-                }
-                for (String item : items) {
-                    for (int i = 0; i < items.size(); i++) {
-                        if (item.contains("mcc")) {
-                            String token = item.substring(item.lastIndexOf("=") + 1);
-                            data.putSingle("MobileCountryCode", token);
+            final HttpEntity entity = response.getEntity();
+            if (entity != null) {
+                InputStream stream = entity.getContent();
+                try {
+                    BufferedReader br = new BufferedReader(
+                        new InputStreamReader(stream));
+                    String gmlcResponse = null;
+                    while (null != (gmlcResponse = br.readLine())) {
+                        List<String> items = Arrays.asList(gmlcResponse.split("\\s*,\\s*"));
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Data retrieved from GMLC: " + items.toString());
                         }
-                        if (item.contains("mnc")) {
-                            String token = item.substring(item.lastIndexOf("=") + 1);
-                            data.putSingle("MobileNetworkCode", token);
+                        for (String item : items) {
+                            for (int i = 0; i < items.size(); i++) {
+                                if (item.contains("mcc")) {
+                                    String token = item.substring(item.lastIndexOf("=") + 1);
+                                    data.putSingle("MobileCountryCode", token);
+                                }
+                                if (item.contains("mnc")) {
+                                    String token = item.substring(item.lastIndexOf("=") + 1);
+                                    data.putSingle("MobileNetworkCode", token);
+                                }
+                                if (item.contains("lac")) {
+                                    String token = item.substring(item.lastIndexOf("=") + 1);
+                                    data.putSingle("LocationAreaCode", token);
+                                }
+                                if (item.contains("cellid")) {
+                                    String token = item.substring(item.lastIndexOf("=") + 1);
+                                    data.putSingle("CellId", token);
+                                }
+                                if (item.contains("aol")) {
+                                    String token = item.substring(item.lastIndexOf("=") + 1);
+                                    data.putSingle("LocationAge", token);
+                                }
+                                if (item.contains("vlrNumber")) {
+                                    String token = item.substring(item.lastIndexOf("=") + 1);
+                                    data.putSingle("NetworkEntityAddress", token);
+                                }
+                                if (item.contains("latitude")) {
+                                    String token = item.substring(item.lastIndexOf("=") + 1);
+                                    data.putSingle("DeviceLatitude", token);
+                                }
+                                if (item.contains("longitude")) {
+                                    String token = item.substring(item.lastIndexOf("=") + 1);
+                                    data.putSingle("DeviceLongitude", token);
+                                }
+                                if (item.contains("civicAddress")) {
+                                    String token = item.substring(item.lastIndexOf("=") + 1);
+                                    data.putSingle("FormattedAddress", token);
+                                }
+                            }
                         }
-                        if (item.contains("lac")) {
-                            String token = item.substring(item.lastIndexOf("=") + 1);
-                            data.putSingle("LocationAreaCode", token);
-                        }
-                        if (item.contains("cellid")) {
-                            String token = item.substring(item.lastIndexOf("=") + 1);
-                            data.putSingle("CellId", token);
-                        }
-                        if (item.contains("aol")) {
-                            String token = item.substring(item.lastIndexOf("=") + 1);
-                            data.putSingle("LocationAge", token);
-                        }
-                        if (item.contains("vlrNumber")) {
-                            String token = item.substring(item.lastIndexOf("=") + 1);
-                            data.putSingle("NetworkEntityAddress", token);
-                        }
-                        if (item.contains("latitude")) {
-                            String token = item.substring(item.lastIndexOf("=") + 1);
-                            data.putSingle("DeviceLatitude", token);
-                        }
-                        if (item.contains("longitude")) {
-                            String token = item.substring(item.lastIndexOf("=") + 1);
-                            data.putSingle("DeviceLongitude", token);
-                        }
-                        if (item.contains("civicAddress")) {
-                            String token = item.substring(item.lastIndexOf("=") + 1);
-                            data.putSingle("FormattedAddress", token);
+                        if (gmlcURI != null && gmlcResponse != null) {
+                            // For debugging/logging purposes only
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Geolocation data of " + targetMSISDN + " retrieved from GMCL at: " + gmlcURI);
+                                logger.debug("MCC (Mobile Country Code) = " + getInteger("MobileCountryCode", data));
+                                logger.debug("MNC (Mobile Network Code) = " + data.getFirst("MobileNetworkCode"));
+                                logger.debug("LAC (Location Area Code) = " + data.getFirst("LocationAreaCode"));
+                                logger.debug("CI (Cell ID) = " + data.getFirst("CellId"));
+                                logger.debug("AOL (Age of Location) = " + getInteger("LocationAge", data));
+                                logger.debug("NNN (Network Node Number/Address) = " + +getLong("NetworkEntityAddress", data));
+                                logger.debug("Devide Latitude = " + data.getFirst("DeviceLatitude"));
+                                logger.debug("Devide Longitude = " + data.getFirst("DeviceLongitude"));
+                                logger.debug("Civic Address = " + data.getFirst("FormattedAddress"));
+                            }
                         }
                     }
-                }
-                if (gmlcURI != null && gmlcResponse != null) {
-                    // For debugging/logging purposes only
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Geolocation data of " + targetMSISDN + " retrieved from GMCL at: " + gmlcURI);
-                        logger.debug("MCC (Mobile Country Code) = " + getInteger("MobileCountryCode", data));
-                        logger.debug("MNC (Mobile Network Code) = " + data.getFirst("MobileNetworkCode"));
-                        logger.debug("LAC (Location Area Code) = " + data.getFirst("LocationAreaCode"));
-                        logger.debug("CI (Cell ID) = " + data.getFirst("CellId"));
-                        logger.debug("AOL (Age of Location) = " + getInteger("LocationAge", data));
-                        logger.debug("NNN (Network Node Number/Address) = " + +getLong("NetworkEntityAddress", data));
-                        logger.debug("Devide Latitude = " + data.getFirst("DeviceLatitude"));
-                        logger.debug("Devide Longitude = " + data.getFirst("DeviceLongitude"));
-                        logger.debug("Civic Address = " + data.getFirst("FormattedAddress"));
-                    }
+                } finally {
+                    stream.close();
                 }
             }
+
         } catch (Exception ex) {
             if (logger.isInfoEnabled()) {
                 logger.info("Problem while trying to retrieve data from GMLC");
