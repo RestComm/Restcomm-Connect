@@ -26,37 +26,37 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import com.thoughtworks.xstream.XStream;
-
-import java.net.URI;
-import java.util.List;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.MediaType;
-
-import static javax.ws.rs.core.MediaType.*;
-
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
-
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.http.converter.OutgoingCallerIdConverter;
-import org.restcomm.connect.http.converter.OutgoingCallerIdListConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.OutgoingCallerIdsDao;
+import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.OutgoingCallerId;
 import org.restcomm.connect.dao.entities.OutgoingCallerIdList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.commons.util.StringUtils;
+import org.restcomm.connect.http.converter.OutgoingCallerIdConverter;
+import org.restcomm.connect.http.converter.OutgoingCallerIdListConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import java.net.URI;
+import java.util.List;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -106,10 +106,8 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
         if (data.containsKey("FriendlyName")) {
             friendlyName = data.getFirst("FriendlyName");
         }
-        String rootUri = configuration.getString("root-uri");
-        rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
-        buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(accountSid.toString())
+        buffer.append("/").append(getApiVersion(null)).append("/Accounts/").append(accountSid.toString())
                 .append("/OutgoingCallerIds/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
         return new OutgoingCallerId(sid, now, now, friendlyName, accountSid, phoneNumberUtil.format(phoneNumber,
