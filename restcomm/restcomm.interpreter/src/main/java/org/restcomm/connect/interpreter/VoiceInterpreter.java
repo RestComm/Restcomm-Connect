@@ -24,6 +24,7 @@ import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.pattern.AskTimeoutException;
 import akka.util.Timeout;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
@@ -2208,8 +2209,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final long dialRingDuration = new Interval(this.outboundCallInfo.dateCreated(), this.outboundCallInfo.dateConUpdated()).toDuration()
                             .getStandardSeconds();
                     parameters.add(new BasicNameValuePair("DialRingDuration", String.valueOf(dialRingDuration)));
+                } catch (AskTimeoutException ate){ 
+                    logger.warning("Akka ask Timeout waiting for outbound call info.");
                 } catch (Exception e) {
-                    logger.error("Timeout waiting for outbound call info: \n" + e);
+                    logger.error("Exception while waiting for outbound call info: \n" + e);
                 }
             }
 
