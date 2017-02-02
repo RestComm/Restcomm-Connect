@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.restcomm.connect.rvd.model.steps.control.ControlStep.Condition.variableScopes;
 
@@ -43,7 +44,7 @@ public class ControlStep extends Step {
 
     public static class Condition {
         public static List<String> unaryOperator = Arrays.asList("isTrue","isFalse");
-        public static List<String> binaryOperator = Arrays.asList("equals","greater","less");
+        public static List<String> binaryOperator = Arrays.asList("equals","greater","greaterEqual","less","lessEqual","matches");
         public static List<String> variableScopes = Arrays.asList("mod","app");
 
         String name;
@@ -58,6 +59,7 @@ public class ControlStep extends Step {
         String param1;
         String param2;
         String param3; // this holds the variable-scope property
+        String param4;
     }
 
     private List<Condition> conditions;
@@ -103,13 +105,14 @@ public class ControlStep extends Step {
         if (result) {
             if (actions != null && actions.size() > 0) {
                 for (Action action : actions) {
-                    executeAction(action, interpreter);
+                    String next = executeAction(action, interpreter);
+                    // redirect to next module if a non-null value is returned
+                    if (next != null) {
+                        return next;
+                    }
                 }
             }
         }
-
-
-
         return null;
     }
 
@@ -126,14 +129,29 @@ public class ControlStep extends Step {
     boolean evaluateCondition(Condition condition, Interpreter interpreter) {
         String operand1Expanded = interpreter.populateVariables(condition.operand1);
         if (Condition.binaryOperator.contains(condition.operator)) {
-            String operand2Expanded = interpreter.populateVariables(condition.operand2);
-            switch (condition.operator) {
-                case "equals":
-                    return operand1Expanded.equals(operand2Expanded);
-                case "greater":
-                    return Float.parseFloat(operand1Expanded) > Float.parseFloat(operand2Expanded);
-                case "less":
-                    return Float.parseFloat(operand1Expanded) < Float.parseFloat(operand2Expanded);
+            if (condition.operator.equals("matches")) {
+                // regex expressions don't support RVD variables
+                Pattern pattern = Pattern.compile(condition.operand2);
+                return pattern.matcher(condition.operand1).matches();
+            } else {
+                String operand2Expanded = interpreter.populateVariables(condition.operand2);
+                switch (condition.operator) {
+                    case "equals":
+                        return operand1Expanded.equals(operand2Expanded);
+                    case "greater":
+                        return Float.parseFloat(operand1Expanded) > Float.parseFloat(operand2Expanded);
+                    case "greaterEqual":
+                        return Float.parseFloat(operand1Expanded) >= Float.parseFloat(operand2Expanded);
+                    case "less":
+                        return Float.parseFloat(operand1Expanded) < Float.parseFloat(operand2Expanded);
+                    case "lessEqual":
+                        return Float.parseFloat(operand1Expanded) <= Float.parseFloat(operand2Expanded);
+                    // TODO
+//
+//                    case "matches":
+//                    Pattern.compile()
+//                    break;
+                }
             }
         }
         throw new NotImplementedException();
@@ -153,9 +171,24 @@ public class ControlStep extends Step {
                     interpreter.putStickyVariable(action.param2, expandedSource);
 
                 break;
+            case "capture":
+                String data = action.param1;
+                String regex = action.param2;
+                String variable = action.param3;
+                String variableScope = action.param4;
+                executeCaptureAction(data, regex, variable, variableScope, interpreter);
             // TODO handle other cases with not-implemented exception
         }
         return null;
+    }
+
+    private void executeCaptureAction(String data, String regex, String variable, String variableScope, Interpreter interpreter) {
+        Pattern pattern = Pattern.compile(regex);
+        String captured = pattern.matcher(data).group(1); // by convention get group 1 i.e. first pair of parenthesis
+        if ("mod".equals(variableScope))
+            interpreter.putModuleVariable(variable, captured);
+        else
+            interpreter.putStickyVariable(variable, captured);
     }
 
     /**
@@ -205,6 +238,13 @@ public class ControlStep extends Step {
                         if (!variableScopes.contains(action.param3))
                             errorItems.add(new ValidationErrorItem("error","Invalid variable scope: " + action.param3,stepPath));
                     }
+                } else
+                if (action.kind.equals("capture")) {
+                    if (RvdUtils.isEmpty(action.param3))
+                        errorItems.add(new ValidationErrorItem("error","Missing capture action variable",stepPath));
+                    if (!RvdUtils.isEmpty(action.param4))
+                        if (!variableScopes.contains(action.param4))
+                            errorItems.add(new ValidationErrorItem("error","Invalid variable scope: " + action.param4,stepPath));
                 }
             }
         }
