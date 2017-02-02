@@ -198,15 +198,42 @@ public class GeolocationEndpointTest {
         RestcommGeolocationsTool.getInstance().deleteImmediateGeolocation(deploymentUrl.toString(), adminUsername,
             adminAuthToken, adminAccountSid, geolocationSid.toString());
 
+    }
+
+    @Test
+    public void testCreateNotApiCompliantImmediateGeolocation()
+        throws ParseException, IllegalArgumentException, ClientProtocolException, IOException {
+
+        String msisdn = "5989738292";
+
+        //This is for POST requests
+        stubFor(post(urlPathEqualTo("/restcomm/gmlc/rest"))
+            .withQueryParam("msisdn", equalTo(msisdn))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/xml")
+                .withBody(gmlcResponse)));
+
+        //This is for GET requests - REMOVE if not needed
+        stubFor(get(urlPathEqualTo("/restcomm/gmlc/rest"))
+            .withQueryParam("msisdn", equalTo(msisdn))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/xml")
+                .withBody(gmlcResponse)));
+
+        // Define Immediate Geolocation attributes for this method
+        String deviceIdentifier;
+
         // Test create Immediate type of Geolocation via POST with one missing mandatory parameter
         // Parameter values Assignment, StatusCallback missing
-        MultivaluedMap<String, String> geolocationNewParams = new MultivaluedMapImpl();
-        geolocationNewParams.add("DeviceIdentifier", deviceIdentifier = "TstDevId4RejImm");
+        MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
+        geolocationParams.add("DeviceIdentifier", deviceIdentifier = msisdn);
         Sid rejectedGeolocationSid = null;
         // HTTP POST Geolocation creation with given parameters values
         try {
             JsonObject missingParamGeolocationJson = RestcommGeolocationsTool.getInstance().createImmediateGeolocation(
-                deploymentUrl.toString(), adminAccountSid, adminUsername, adminAuthToken, geolocationNewParams);
+                deploymentUrl.toString(), adminAccountSid, adminUsername, adminAuthToken, geolocationParams);
             rejectedGeolocationSid = new Sid(missingParamGeolocationJson.get("sid").getAsString());
             JsonObject rejectedGeolocationJson = RestcommGeolocationsTool.getInstance().getImmediateGeolocation(
                 deploymentUrl.toString(), adminUsername, adminAuthToken, adminAccountSid,
@@ -227,7 +254,7 @@ public class GeolocationEndpointTest {
         // HTTP POST Geolocation creation with given parameters values
         try {
             JsonObject prohibitedParamGeolocationJson = RestcommGeolocationsTool.getInstance().createImmediateGeolocation(
-                deploymentUrl.toString(), adminAccountSid, adminUsername, adminAuthToken, geolocationNewParams);
+                deploymentUrl.toString(), adminAccountSid, adminUsername, adminAuthToken, geolocationParams);
             rejectedGeolocationSid = new Sid(prohibitedParamGeolocationJson.get("sid").getAsString());
             JsonObject rejectedGeolocationJson = RestcommGeolocationsTool.getInstance().getImmediateGeolocation(
                 deploymentUrl.toString(), adminUsername, adminAuthToken, adminAccountSid,
@@ -423,8 +450,56 @@ public class GeolocationEndpointTest {
         assertTrue(geolocationJson.get("cause") == null);
         assertTrue(geolocationJson.get("api_version").getAsString().equals("2012-04-24"));
 
+        // Remove created & updated Geolocation via HTTP DELETE
+        RestcommGeolocationsTool.getInstance().deleteImmediateGeolocation(deploymentUrl.toString(), adminUsername,
+            adminAuthToken, adminAccountSid, geolocationSid.toString());
+
+    }
+
+    @Test
+    public void testNotApiCompliantUpdateImmediateGeolocation()
+        throws ParseException, IllegalArgumentException, ClientProtocolException, IOException {
+
+        String msisdn = "5989738292";
+
+        //This is for POST requests
+        stubFor(post(urlPathEqualTo("/restcomm/gmlc/rest"))
+            .withQueryParam("msisdn", equalTo(msisdn))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/xml")
+                .withBody(gmlcResponse)));
+
+        //This is for GET requests - REMOVE if not needed
+        stubFor(get(urlPathEqualTo("/restcomm/gmlc/rest"))
+            .withQueryParam("msisdn", equalTo(msisdn))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/xml")
+                .withBody(gmlcResponse)));
+
+        // Define Geolocation attributes
+        String deviceIdentifier, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+            networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, internetAddress,
+            physicalAddress, formattedAddress, locationTimestamp = "2016-04-17T20:28:40.690-03:00", geolocationPositioningType, lastGeolocationResponse;
+
+        // Create Immediate type of Geolocation via POST
+        // Parameter values Assignment
+        MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
+        geolocationParams.add("DeviceIdentifier", deviceIdentifier = msisdn);
+        geolocationParams.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
+        // HTTP POST Geolocation creation with given parameters values and those returned via GMLC stub
+        JsonObject geolocationJson = RestcommGeolocationsTool.getInstance().createImmediateGeolocation(deploymentUrl.toString(),
+            adminAccountSid, adminUsername, adminAuthToken, geolocationParams);
+        Sid geolocationSid = new Sid(geolocationJson.get("sid").getAsString());
+
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        DateTime dateTime = dtf.parseDateTime(locationTimestamp);
+        SimpleDateFormat df = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US);
+        locationTimestamp = df.format(dateTime.toDate());
+
         // Define malformed values for the Geolocation attributes (PUT test to fail)
-        geolocationParamsUpdate = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> geolocationParamsUpdate = new MultivaluedMapImpl();
         geolocationParamsUpdate.add("DeviceLatitude", deviceLatitude = "North 72.908134"); // WGS84 not compliant
         geolocationParamsUpdate.add("DeviceLongitude", deviceLongitude = "170.908134");
         // Update failed Geolocation via PUT
@@ -707,6 +782,33 @@ public class GeolocationEndpointTest {
         RestcommGeolocationsTool.getInstance().deleteNotificationGeolocation(deploymentUrl.toString(), adminUsername,
             adminAuthToken, adminAccountSid, geolocationSid.toString());
 
+    }
+
+    @Test
+    public void testCreateNotApiCompliantNotificationGeolocation()
+        throws ParseException, IllegalArgumentException, ClientProtocolException, IOException {
+
+        String msisdn = "5989738292";
+
+        //This is for POST requests
+        stubFor(post(urlPathEqualTo("/restcomm/gmlc/rest"))
+            .withQueryParam("msisdn", equalTo(msisdn))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/xml")
+                .withBody(gmlcResponse)));
+
+        //This is for GET requests - REMOVE if not needed
+        stubFor(get(urlPathEqualTo("/restcomm/gmlc/rest"))
+            .withQueryParam("msisdn", equalTo(msisdn))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/xml")
+                .withBody(gmlcResponse)));
+
+        // Define Geolocation attributes for this test method
+        String deviceIdentifier, eventGeofenceLatitude, eventGeofenceLongitude;
+
         // Test create Notification type of Geolocation via POST with one missing mandatory parameter
         // Parameter values Assignment, GeofenceEvent missing
         MultivaluedMap<String, String> geolocationNewParams = new MultivaluedMapImpl();
@@ -933,8 +1035,62 @@ public class GeolocationEndpointTest {
         assertTrue(geolocationJson.get("cause") == null);
         assertTrue(geolocationJson.get("api_version").getAsString().equals("2012-04-24"));
 
+        // Remove created & updated Geolocation via HTTP DELETE
+        RestcommGeolocationsTool.getInstance().deleteNotificationGeolocation(deploymentUrl.toString(), adminUsername,
+            adminAuthToken, adminAccountSid, geolocationSid.toString());
+
+    }
+
+    @Test
+    public void testNotApiCompliantUpdateNotificationGeolocation()
+        throws ParseException, IllegalArgumentException, ClientProtocolException, IOException {
+
+        String msisdn = "5989738292";
+
+        //This is for POST requests
+        stubFor(post(urlPathEqualTo("/restcomm/gmlc/rest"))
+            .withQueryParam("msisdn", equalTo(msisdn))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/xml")
+                .withBody(gmlcResponse)));
+
+        //This is for GET requests - REMOVE if not needed
+        stubFor(get(urlPathEqualTo("/restcomm/gmlc/rest"))
+            .withQueryParam("msisdn", equalTo(msisdn))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/xml")
+                .withBody(gmlcResponse)));
+
+        // Define Notification Geolocation attributes
+        String deviceIdentifier, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+            networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, internetAddress,
+            physicalAddress, formattedAddress, locationTimestamp = "2016-04-17T20:28:40.690-03:00", eventGeofenceLatitude,
+            eventGeofenceLongitude, radius, geolocationPositioningType, lastGeolocationResponse;
+
+        // Create Notification type of Geolocation via POST
+        // Parameter values Assignment
+        MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
+        geolocationParams.add("DeviceIdentifier", deviceIdentifier = msisdn);
+        geolocationParams.add("EventGeofenceLatitude", "-33.426280");
+        geolocationParams.add("EventGeofenceLongitude", "-70.566560");
+        geolocationParams.add("GeofenceRange", "300");
+        geolocationParams.add("GeofenceEvent", "in");
+        geolocationParams.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
+        // HTTP POST Geolocation creation with given parameters values and those returned via GMLC stub
+        JsonObject geolocationJson = RestcommGeolocationsTool.getInstance().createNotificationGeolocation(
+            deploymentUrl.toString(), adminAccountSid, adminUsername, adminAuthToken, geolocationParams);
+        Sid geolocationSid = new Sid(geolocationJson.get("sid").getAsString());
+
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        DateTime dateTime = dtf.parseDateTime(locationTimestamp);
+        SimpleDateFormat df = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US);
+        locationTimestamp = df.format(dateTime.toDate());
+
+
         // Define malformed values for the Geolocation attributes (PUT test to fail)
-        geolocationParamsUpdate = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> geolocationParamsUpdate = new MultivaluedMapImpl();
         geolocationParamsUpdate.add("DeviceLatitude", deviceLatitude = "72.908134");
         geolocationParamsUpdate.add("DeviceLongitude", deviceLongitude = "South 170.908134"); // WGS84 not compliant
         // Update failed Geolocation via PUT
