@@ -116,7 +116,7 @@ The output of the command will be similar to the one below
     <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
     <ApiVersion>2012-04-24</ApiVersion>
     <VoiceCallerIdLookup>false</VoiceCallerIdLookup>
-    <Uri>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/APdc46145309d14e97b62230cd3f269ed4</Uri>
+    <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/APdc46145309d14e97b62230cd3f269ed4</Uri>
     <RcmlUrl>http://127.0.0.1:8080/restcomm-rvd/services/apps/foobar/controller</RcmlUrl>
     <Kind>voice</Kind>
   </Application>
@@ -142,7 +142,7 @@ The output of the command will be similar to the one below
     <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
     <ApiVersion>2012-04-24</ApiVersion>
     <VoiceCallerIdLookup>false</VoiceCallerIdLookup>
-    <Uri>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/APdc46145309d14e97b62230cd3f269ed4</Uri>
+    <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/APdc46145309d14e97b62230cd3f269ed4</Uri>
     <RcmlUrl>http://127.0.0.1:8080/restcomm-rvd/services/apps/foobar/controller</RcmlUrl>
     <Kind>voice</Kind>
   </Application>
