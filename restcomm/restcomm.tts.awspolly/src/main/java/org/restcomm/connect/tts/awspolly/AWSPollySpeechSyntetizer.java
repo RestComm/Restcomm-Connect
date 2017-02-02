@@ -210,14 +210,18 @@ public class AWSPollySpeechSyntetizer extends UntypedActor {
             if (speaker == null || speaker.isEmpty()) {
                 speaker = men.get(language);
             }
-        } else if ("man".equalsIgnoreCase(gender)) {
+        } else {
             speaker = men.get(language);
             if (speaker == null || speaker.isEmpty()) {
                 speaker = women.get(language);
             }
-        } else {
-            return null;
         }
+
+        //if speaker not found, set default speaker to en-US woman
+        if (speaker == null) {
+            speaker = "Joanna";
+        }
+
         return speaker;
     }
 }
