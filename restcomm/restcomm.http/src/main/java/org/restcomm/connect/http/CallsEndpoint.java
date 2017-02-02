@@ -260,7 +260,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         listConverter.setCount(total);
         listConverter.setPage(Integer.parseInt(page));
         listConverter.setPageSize(Integer.parseInt(pageSize));
-        listConverter.setPathUri(info.getRequestUri().getPath());
+        listConverter.setPathUri("/"+getApiVersion(null)+"/"+info.getPath());
 
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new CallDetailRecordList(cdrs));
