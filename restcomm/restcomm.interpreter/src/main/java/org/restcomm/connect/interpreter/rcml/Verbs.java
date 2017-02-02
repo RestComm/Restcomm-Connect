@@ -45,6 +45,8 @@ public final class Verbs {
     public static final String ussdLanguage = "Language";
     public static final String ussdMessage = "UssdMessage";
     public static final String ussdCollect = "UssdCollect";
+    // Geolocation
+    public static final String geolocation = "Geolocation";
 
     public Verbs() {
         super();
@@ -83,6 +85,8 @@ public final class Verbs {
         if (ussdMessage.equals(name))
             return true;
         if (ussdCollect.equals(name))
+            return true;
+        if (geolocation.equals(name))
             return true;
         return email.equals(name);
     }
