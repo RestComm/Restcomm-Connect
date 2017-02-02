@@ -83,16 +83,16 @@ The above commands will print an output similar to the one below:
     <AuthToken>77f8c12cc7b8f8423e5c38b035249166</AuthToken>
     <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf</Uri>
     <SubresourceUris>
-      <AvailablePhoneNumbers>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/AvailablePhoneNumbers</AvailablePhoneNumbers>
-      <Calls>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls</Calls>
-      <Conferences>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Conferences</Conferences>
-      <IncomingPhoneNumbers>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers</IncomingPhoneNumbers>
-      <Notifications>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications</Notifications>
-      <OutgoingCallerIds>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/OutgoingCallerIds</OutgoingCallerIds>
-      <Recordings>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings</Recordings>
-      <Sandbox>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Sandbox</Sandbox>
-      <SMSMessages>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages</SMSMessages>
-      <Transcriptions>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions</Transcriptions>
+      <AvailablePhoneNumbers>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/AvailablePhoneNumbers</AvailablePhoneNumbers>
+      <Calls>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls</Calls>
+      <Conferences>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Conferences</Conferences>
+      <IncomingPhoneNumbers>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers</IncomingPhoneNumbers>
+      <Notifications>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications</Notifications>
+      <OutgoingCallerIds>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/OutgoingCallerIds</OutgoingCallerIds>
+      <Recordings>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings</Recordings>
+      <Sandbox>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Sandbox</Sandbox>
+      <SMSMessages>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages</SMSMessages>
+      <Transcriptions>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions</Transcriptions>
     </SubresourceUris>
   </Account>
 ----
@@ -158,18 +158,18 @@ NOTE: the **SID**, Email and the *AuthToken* (see output below) of the sub-accou
     <DateCreated>2013-10-16T09:22:28.708-06:00</DateCreated>
     <DateUpdated>2013-10-16T09:22:28.712-06:00</DateUpdated>
     <AuthToken>53134d7a9914e2b47c8435ebdb50ded3</AuthToken>
-    <Uri>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d</Uri>
+    <Uri>/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d</Uri>
     <SubresourceUris>
-      <AvailablePhoneNumbers>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/AvailablePhoneNumbers</AvailablePhoneNumbers>
-      <Calls>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Calls</Calls>
-      <Conferences>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Conferences</Conferences>
-      <IncomingPhoneNumbers>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/IncomingPhoneNumbers</IncomingPhoneNumbers>
-      <Notifications>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Notifications</Notifications>
-      <OutgoingCallerIds>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/OutgoingCallerIds</OutgoingCallerIds>
-      <Recordings>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Recordings</Recordings>
-      <Sandbox>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Sandbox</Sandbox>
-      <SMSMessages>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/SMS/Messages</SMSMessages>
-      <Transcriptions>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Transcriptions</Transcriptions>
+      <AvailablePhoneNumbers>/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/AvailablePhoneNumbers</AvailablePhoneNumbers>
+      <Calls>/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Calls</Calls>
+      <Conferences>/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Conferences</Conferences>
+      <IncomingPhoneNumbers>/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/IncomingPhoneNumbers</IncomingPhoneNumbers>
+      <Notifications>/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Notifications</Notifications>
+      <OutgoingCallerIds>/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/OutgoingCallerIds</OutgoingCallerIds>
+      <Recordings>/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Recordings</Recordings>
+      <Sandbox>/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Sandbox</Sandbox>
+      <SMSMessages>/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/SMS/Messages</SMSMessages>
+      <Transcriptions>/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Transcriptions</Transcriptions>
     </SubresourceUris>
   </Account>
 ----
