@@ -129,9 +129,12 @@ label {
 .control-step .condition, .control-step .action{
     margin-bottom: 10px;
 }
+
+/*
 .control-step .condition .operand {
     width: 37%;
 }
+
 .control-step .condition .operator {
     width: 20%;
 }
@@ -144,16 +147,13 @@ label {
 .control-step .action .action-kind {
     width: 36%;
 }
-.control-step .action-continue-to .action-param {
-    width:61%;
-}
 .control-step .action-capture .action-param-data, .control-step .action-capture .action-param-variable {
     width: 44%;
 }
 .control-step .action-capture .action-arrow {
     width: 7%;
 }
-
+*/
 
 /* variable definition */
 
