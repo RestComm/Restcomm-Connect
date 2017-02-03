@@ -37,12 +37,14 @@
                     <h5 class="col-md-10" ng-show="editingFriendlyName == pn.phone_number"><input type="text" class="form-control input-sm" onkeyup="if(event.keyCode == 13) {this.blur()}" ng-model="pn.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(pn)" autofocus /></h5>
                 </td>
                 <td style="font-size: 14px;">
-                    <span ng-show="{{ pn.voice_url.length > 0 || pn.voice_application_sid.length > 0 }}"><i class="fa fa-microphone available-feature"></i> <small title='{{ pn.voice_url }}{{ pn.voice_application_sid }}'> {{ pn.voice_url }} {{ pn.voice_application_name }} </small></span>
-                    <span class="opacity30" ng-hide="{{ pn.voice_url.length > 0 || pn.voice_application_sid.length > 0 }}"><i class="fa fa-microphone-slash unavailable-feature"></i> <small> http://www.restcomm.org/demo/voice/</small></span>
-                    <br>
-                    <span ng-show="{{ pn.sms_url.length > 0 || pn.sms_application_sid.length > 0  }}"><i class="fa fa-comment available-feature"></i> <small title='{{pn.sms_url}}{{pn.sms_application_sid}}'> {{ pn.sms_url  }} {{ pn.sms_application_name }}</small></span>
-                    <span class="opacity30" ng-hide="{{ pn.sms_url.length > 0 || pn.sms_application_sid.length > 0 }}"><i class="fa fa-comment-o unavailable-feature"></i> <small> http://www.restcomm.org/demo/sms/</small></span>
-                    <br>
+                    <div ng-show="{{ pn.voice_url.length > 0 || pn.voice_application_sid.length > 0 }}"><i class="fa fa-microphone available-feature"></i> <small title='{{ pn.voice_url }}{{ pn.voice_application_sid }}'> {{ pn.voice_url }} {{ pn.voice_application_name }} </small></div>
+                    <!-- <span class="opacity30" ng-hide="{{ pn.voice_url.length > 0 || pn.voice_application_sid.length > 0 }}"><i class="fa fa-microphone-slash unavailable-feature"></i> <small> http://www.restcomm.org/demo/voice/</small></span> -->
+                    <div ng-show="{{ pn.sms_url.length > 0 || pn.sms_application_sid.length > 0  }}"><i class="fa fa-comment available-feature"></i> <small title='{{pn.sms_url}}{{pn.sms_application_sid}}'> {{ pn.sms_url  }} {{ pn.sms_application_name }}</small></div>
+                    <!-- <span class="opacity30" ng-hide="{{ pn.sms_url.length > 0 || pn.sms_application_sid.length > 0 }}"><i class="fa fa-comment-o unavailable-feature"></i> <small> http://www.restcomm.org/demo/sms/</small></span> -->
+                    <div ng-show="{{ pn.ussd_url.length > 0 || pn.ussd_application_sid.length > 0  }}"><i class="fa fa-sitemap available-feature"></i> <small title='{{pn.ussd_url}}{{pn.ussd_application_sid}}'> {{ pn.ussd_url  }} {{ pn.ussd_application_name }}</small></div>
+                    <!-- <span class="opacity30" ng-hide="{{ pn.ussd_url.length > 0 || pn.ussd_application_sid.length > 0 }}"><i class="fa fa-sitemap unavailable-feature"></i> <small> http://www.restcomm.org/demo/ussd/</small></span> -->
+                    <div ng-show="{{ pn.refer_url.length > 0 || pn.refer_application_sid.length > 0  }}"><i class="fa fa-retweet available-feature"></i> <small title='{{pn.refer_url}}{{pn.refer_application_sid}}'> {{ pn.refer_url  }} {{ pn.refer_application_name }}</small></div>
+                    <!-- <span class="opacity30" ng-hide="{{ pn.refer_url.length > 0 || pn.refer_application_sid.length > 0 }}"><i class="fa fa-retweet unavailable-feature"></i> <small> http://www.restcomm.org/demo/refer/</small></span> -->
                     <!--
                     <span ng-show="{{ $index % 4 == 1  }}"><span class="available-feature"><strong>#</strong></span> <small> {{ pn.voice_url.substring(0, pn.voice_url.indexOf("demos/") + 6) }}ussd/ussd-menu.xml </small></span>
                     <span class="opacity30" ng-hide="{{ $index % 4 == 1  }}"><span class="unavailable-feature"><strong>#</strong></span> <small> http://www.restcomm.org/demo/ussd/</small></span>

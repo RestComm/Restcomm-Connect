@@ -37,5 +37,6 @@
     <mapper resource="gateways.xml"/>
     <mapper resource="announcements.xml"/>
     <mapper resource="extensions-configuration.xml"/>
+    <mapper resource="geolocation.xml"/>
   </mappers>
 </configuration>

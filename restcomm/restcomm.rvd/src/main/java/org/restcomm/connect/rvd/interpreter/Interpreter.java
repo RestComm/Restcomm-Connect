@@ -380,6 +380,9 @@ public class Interpreter {
     }
 
 
+    /* TODO all errors caused by conflict between the extractor directive and the response returned
+       (missing properties, different structure in JSON document etc.) should throw BadExternalServiceResponse.
+    */
     public String evaluateExtractorExpression(ValueExtractor extractor, JsonElement response_element) throws InvalidAccessOperationAction, BadExternalServiceResponse {
         String value = "";
 
