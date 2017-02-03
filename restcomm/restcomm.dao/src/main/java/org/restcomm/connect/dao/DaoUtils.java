@@ -20,6 +20,7 @@
 package org.restcomm.connect.dao;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URI;
 import java.util.Currency;
 import java.util.Date;
@@ -28,6 +29,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
+import org.restcomm.connect.dao.entities.Geolocation;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
@@ -95,6 +97,14 @@ public final class DaoUtils {
         }
     }
 
+    public static BigInteger readBigInteger(final Object object) {
+        if (object != null) {
+            return (BigInteger) object;
+        } else {
+            return null;
+        }
+    }
+
     public static Long readLong(final Object object) {
         if (object != null) {
             return (Long) object;
@@ -138,6 +148,14 @@ public final class DaoUtils {
     public static Application.Kind readApplicationKind(final Object object) {
         if (object != null) {
             return Application.Kind.getValueOf((String) object);
+        } else {
+            return null;
+        }
+    }
+
+    public static Geolocation.GeolocationType readGeolocationType(final Object object) {
+        if (object != null) {
+            return Geolocation.GeolocationType.getValueOf((String) object);
         } else {
             return null;
         }
