@@ -373,6 +373,9 @@ angular.module('Rvd')
 	}	
 	EsValueExtractor.prototype.setLastOperationKind = function (kind) {
 		this.lastOperation = angular.copy(accessOperationProtos[kind]);
+		// if the operation is 'value' auto 'press Done' automatically
+		if (this.lastOperation.kind == 'value')
+		    this.doneAddingOperations();
 	}
 	return EsValueExtractor;
 }])
