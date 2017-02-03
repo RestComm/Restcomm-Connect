@@ -99,10 +99,16 @@ public class SdpUtils {
         if (origin != null) {
             if (Connection.IN.equals(origin.getNetworkType())) {
                 if (Connection.IP4.equals(origin.getAddressType())) {
-                    final InetAddress address = InetAddress.getByName(origin.getAddress());
-                    final String ip = address.getHostAddress();
-                    if (!IPUtils.isRoutableAddress(ip)) {
-                        origin.setAddress(externalIp);
+                    final InetAddress address;
+                    try {
+                        address = InetAddress.getByName(origin.getAddress());
+                        final String ip = address.getHostAddress();
+                        if (!IPUtils.isRoutableAddress(ip)) {
+                            origin.setAddress(externalIp);
+                        }
+                    } catch (UnknownHostException e) {
+                        // TODO do nothing cause domain name is unknown
+                        // origin.setAddress(externalIp); to remove
                     }
                 }
             }
