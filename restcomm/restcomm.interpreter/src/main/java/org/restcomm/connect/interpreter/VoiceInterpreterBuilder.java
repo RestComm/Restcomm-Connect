@@ -78,8 +78,7 @@ public final class VoiceInterpreterBuilder {
             @Override
             public UntypedActor create() throws Exception {
                 return new VoiceInterpreter(configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod,
-                        statusCallback, statusCallbackMethod, referTarget, emailAddress, calls, conferences, bridges, sms, storage, monitoring, rcml);
-                        statusCallback, statusCallbackMethod, emailAddress, calls, conferences, bridges, sms, storage, monitoring, rcml,
+                        statusCallback, statusCallbackMethod, referTarget, emailAddress, calls, conferences, bridges, sms, storage, monitoring, rcml,
                         asImsUa, imsUaLogin, imsUaPassword);
             }
         }));
