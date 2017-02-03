@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- This is free software; you can redistribute it and/or modify it under 
-	the terms of the GNU Lesser General Public License as published by the Free 
-	Software Foundation; either version 2.1 of the License, or (at your option) 
-	any later version. This software is distributed in the hope that it will 
-	be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General 
-	Public License for more details. You should have received a copy of the GNU 
-	Lesser General Public License along with this software; if not, write to 
-	the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, 
+<!-- This is free software; you can redistribute it and/or modify it under
+	the terms of the GNU Lesser General Public License as published by the Free
+	Software Foundation; either version 2.1 of the License, or (at your option)
+	any later version. This software is distributed in the hope that it will
+	be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
+	Public License for more details. You should have received a copy of the GNU
+	Lesser General Public License along with this software; if not, write to
+	the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
 	MA 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
 <restcomm>
 	<runtime-settings>
 		<!-- The API version that will be used. -->
 		<api-version>2012-04-24</api-version>
-		
+
 		<!-- Try to run RVD workspace projects migration to apply new naming
 			convention and synchronization with database entities. This execution
-			will occurs max one time per Restcomm version. To force a new run, 
+			will occurs max one time per Restcomm version. To force a new run,
 			remove the file .version inside RVD workspace. -->
 		<rvd-workspace-migration-enabled>false</rvd-workspace-migration-enabled>
 
@@ -34,37 +34,37 @@
 		<!-- The URL to the errors dictionary. -->
 		<error-dictionary-uri>/restcomm/errors</error-dictionary-uri>
 
-		<!-- The IP to use for out-bound SIP REGISTER requests. This is useful 
+		<!-- The IP to use for out-bound SIP REGISTER requests. This is useful
 			when you want to report a different IP than the one RestComm picked by default. -->
 		<external-ip></external-ip>
 
-		<!-- If set to true RestComm will use the To header to determine the destination. 
+		<!-- If set to true RestComm will use the To header to determine the destination.
 			If set to false RestComm will use the Request URI to determine the destination. -->
 		<use-to>true</use-to>
 
-		<!-- If set to true Restcomm will use the Local Address (or external address 
-			if available) in the host part of the From header for calls to the outbound 
-			proxy. Default is False, which means that Restcomm will use outbound proxy 
+		<!-- If set to true Restcomm will use the Local Address (or external address
+			if available) in the host part of the From header for calls to the outbound
+			proxy. Default is False, which means that Restcomm will use outbound proxy
 			for the host part of From header -->
 		<use-local-address>false</use-local-address>
 
-		<!-- If set to true Restcomm will authenticate users and incoming messages 
+		<!-- If set to true Restcomm will authenticate users and incoming messages
 			from those users -->
 		<authenticate>true</authenticate>
 
 		<!-- Interval time in seconds that Restcomm will send keepalive messages (OPTIONS) to registered clients -->
 		<ping-interval>60</ping-interval>
 
-		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) 
+		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1)
 			when creating an outbound call -->
 		<normalize-numbers-for-outbound-calls>true</normalize-numbers-for-outbound-calls>
-		<!--If set to TRUE Restcomm will use the From address of initial call to 
-			proxied calls Caller A dials DID XYZ that is bind to RCML that Dials Number 
-			4321. If from-address-to-proxied-calls is TRUE Restcomm will pass callerId 
+		<!--If set to TRUE Restcomm will use the From address of initial call to
+			proxied calls Caller A dials DID XYZ that is bind to RCML that Dials Number
+			4321. If from-address-to-proxied-calls is TRUE Restcomm will pass callerId
 			A to the created call -->
 		<from-address-to-proxied-calls>true</from-address-to-proxied-calls>
 
-		<!-- Control whether Restcomm will try to patch the Request-URI and SDP 
+		<!-- Control whether Restcomm will try to patch the Request-URI and SDP
 			for B2BUA sessions with the discovered external IP Address of the peer -->
 		<!-- Default value: true -->
 		<patch-for-nat-b2bua-sessions>true</patch-for-nat-b2bua-sessions>
@@ -80,19 +80,19 @@
 			<fallback-outbound-proxy-password></fallback-outbound-proxy-password>
 			<fallback-outbound-proxy-uri>127.0.0.1:5090</fallback-outbound-proxy-uri>
 
-			<!-- When set to true, Restcomm will use the username of the outbound 
+			<!-- When set to true, Restcomm will use the username of the outbound
 				proxy when -->
-			<!-- creating the From header, as the userpart of the sip uri. Example: 
+			<!-- creating the From header, as the userpart of the sip uri. Example:
 				From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
 			<outboudproxy-user-at-from-header>true</outboudproxy-user-at-from-header>
-			<!-- When set to true, Restcomm will use the original user for the display 
+			<!-- When set to true, Restcomm will use the original user for the display
 				name of the From header -->
 			<!-- Example: From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
 			<user-at-displayed-name>true</user-at-displayed-name>
 
 			<!-- Allow fallback to backup proxy -->
 			<allow-fallback>true</allow-fallback>
-			<!-- Number of maximum failed calls before switching from primary to the 
+			<!-- Number of maximum failed calls before switching from primary to the
 				fallback outbound proxy -->
 			<max-failed-calls>20</max-failed-calls>
 			<!-- Allow fallback to Primary proxy in case backup proxy fails also -->
@@ -114,7 +114,13 @@
 			<ussd-gateway-password></ussd-gateway-password>
 		</ussd-gateway>
 
-		<!-- Each permission is represented as three columns Domain:Action:Target 
+		<gmlc>
+			<gmlc-uri>http://127.0.0.1:8090/restcomm/gmlc/rest?msisdn=</gmlc-uri> <!-- Change GMLC-IP:port to appropriate value-->
+			<gmlc-user></gmlc-user>
+			<gmlc-password></gmlc-password>
+		</gmlc>
+
+		<!-- Each permission is represented as three columns Domain:Action:Target
 			Possible actions are Create, Read, Modify, Delete. -->
 		<security-roles>
 			<role name="Developer">
@@ -135,6 +141,9 @@
 				<permission>RestComm:Read:SmsMessages</permission>
 				<permission>RestComm:Read:Transcriptions</permission>
 				<permission>RestComm:*:OutboundProxies</permission>
+				<permission>RestComm:*:EmailMessages</permission>
+				<permission>RestComm:*:Usage</permission>
+				<permission>RestComm:*:Geolocation</permission>
 			</role>
 			<role name="Unprivileged">
 				<permission>RestComm:Read:Accounts</permission>
@@ -189,7 +198,7 @@
 		<remove-original-file>true</remove-original-file>
 	</amazon-s3>
 
-	<!-- Defines how RestComm communicates with the Media Server Control layer. 
+	<!-- Defines how RestComm communicates with the Media Server Control layer.
 		Accepted values: XMS (Dialogic XMS using JSR-309 driver) or RMS (RestComm
 		Media Server using MGCP driver) -->
 	<mscontrol>
@@ -202,19 +211,19 @@
 		</media-server>
 	</mscontrol>
 
-	<!-- The media server manager is responsible for managing the media servers 
-		in use by RestComm. The default way to control media servers is using the 
-		MGCP stack. The MGCP stack MUST have a name and the following parameters: 
-		<stack-address> - The local IP address for the MGCP stack. <stack-port> - 
-		The local port for the MGCP stack. <remote-address> - The IP address for 
-		the media server. <remote-port> - The port for the media server. <external-address> 
-		- Sometimes there is interest to use a different address in the SDP than 
-		the IP address the media server is reporting. This parameter if set tells 
-		RestComm to patch the Connection attribute in the SDP on behalf of the media 
-		server to the specified IP address. Note: RestComm will only do NAT resolution 
-		when necessary so if your server already has a routable IP address setting 
-		this parameter will have no effect. <max-response-time> - In milliseconds 
-		the maximum amount of time to wait for a response from the media server before 
+	<!-- The media server manager is responsible for managing the media servers
+		in use by RestComm. The default way to control media servers is using the
+		MGCP stack. The MGCP stack MUST have a name and the following parameters:
+		<stack-address> - The local IP address for the MGCP stack. <stack-port> -
+		The local port for the MGCP stack. <remote-address> - The IP address for
+		the media server. <remote-port> - The port for the media server. <external-address>
+		- Sometimes there is interest to use a different address in the SDP than
+		the IP address the media server is reporting. This parameter if set tells
+		RestComm to patch the Connection attribute in the SDP on behalf of the media
+		server to the specified IP address. Note: RestComm will only do NAT resolution
+		when necessary so if your server already has a routable IP address setting
+		this parameter will have no effect. <max-response-time> - In milliseconds
+		the maximum amount of time to wait for a response from the media server before
 		abandoning the request. This does NOT apply to RQNT/NOTIFY request/response. -->
 	<media-server-manager>
 		<mgcp-server class="org.restcomm.connect.mgcp.MockMediaGateway"
@@ -229,7 +238,7 @@
 		<mrb class="org.restcomm.connect.mrb.MediaResourceBrokerGeneric" name="Community MediaResourceBroker">
 		</mrb>
 	</media-server-manager>
-	
+
 		<!-- Adjust http client behaviour for outgoing requests -->
 	<http-client>
 		<response-timeout>5000</response-timeout>
@@ -244,8 +253,8 @@
 		<hostname></hostname>
 	</http-client>
 
-	<!-- The SMS aggregator is responsible for the handling of SMS messages 
-		inside of RestComm. Refer to the org.mobicents.servlet.sip.restcomm.SmsAggregator 
+	<!-- The SMS aggregator is responsible for the handling of SMS messages
+		inside of RestComm. Refer to the org.mobicents.servlet.sip.restcomm.SmsAggregator
 		interface for more information. -->
 	<sms-aggregator class="org.restcomm.connect.sms.SmsService">
 		<outbound-prefix></outbound-prefix>
@@ -381,13 +390,13 @@
 
 	<!-- AT&T Speech Synthesizer plugin -->
 	<!-- <speech-synthesizer class="org.restcomm.connect.tts.att.AttSpeechSynthesizer">
-		<host>127.0.0.1</host> <port>7000</port> <tts-client-directory></tts-client-directory> 
-		<verbose-output>false</verbose-output> <speakers> <english> <female>crystal8</female> 
-		<male>mike8</male> </english> <english-uk> <female>audrey8</female> <male>charles8</male> 
-		</english-uk> <spanish> <female>rosa8</female> <male>alberto8</male> </spanish> 
-		<french> <female>juliette8</female> <male>alain8</male> </french> <canadian-french> 
-		<male>arnaud8</male> </canadian-french> <german> <female>klara8</female> 
-		<male>reiner8</male> </german> <italian> <female>francesca8</female> <male>giovanni8</male> 
-		</italian> <brazilian-portuguese> <female>marina8</female> <male>tiago8</male> 
+		<host>127.0.0.1</host> <port>7000</port> <tts-client-directory></tts-client-directory>
+		<verbose-output>false</verbose-output> <speakers> <english> <female>crystal8</female>
+		<male>mike8</male> </english> <english-uk> <female>audrey8</female> <male>charles8</male>
+		</english-uk> <spanish> <female>rosa8</female> <male>alberto8</male> </spanish>
+		<french> <female>juliette8</female> <male>alain8</male> </french> <canadian-french>
+		<male>arnaud8</male> </canadian-french> <german> <female>klara8</female>
+		<male>reiner8</male> </german> <italian> <female>francesca8</female> <male>giovanni8</male>
+		</italian> <brazilian-portuguese> <female>marina8</female> <male>tiago8</male>
 		</brazilian-portuguese> </speakers> </speech-synthesizer> -->
 </restcomm>
