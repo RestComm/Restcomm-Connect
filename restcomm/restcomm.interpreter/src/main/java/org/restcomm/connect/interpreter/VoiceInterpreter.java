@@ -215,8 +215,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
                             final String statusCallbackMethod, String referTarget,
                             final String emailAddress, final ActorRef callManager,
-                            final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring, final String rcml) {
-                            final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
                             final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring, final String rcml,
                             final boolean asImsUa, final String imsUaLogin, final String imsUaPassword) {
         super();
