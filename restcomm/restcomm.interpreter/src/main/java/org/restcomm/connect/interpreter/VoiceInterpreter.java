@@ -2209,7 +2209,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final long dialRingDuration = new Interval(this.outboundCallInfo.dateCreated(), this.outboundCallInfo.dateConUpdated()).toDuration()
                             .getStandardSeconds();
                     parameters.add(new BasicNameValuePair("DialRingDuration", String.valueOf(dialRingDuration)));
-                } catch (AskTimeoutException askTimeoutException){ 
+                } catch (AskTimeoutException askTimeoutException){
                     logger.warning("Akka ask Timeout waiting for outbound call info: \n" + askTimeoutException.getMessage());
                 } catch (Exception e) {
                     logger.error("Exception while waiting for outbound call info: \n" + e);
