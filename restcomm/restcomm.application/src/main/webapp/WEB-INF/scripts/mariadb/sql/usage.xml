@@ -99,14 +99,12 @@
 			COUNT(1) as "count",
 			CAST(${usageExprPre}${usageExprCol}${usageExprSuf} AS SIGNED) AS "usage",
 			SUM(CONVERT("price", SIGNED)) AS "price",
-			<!-- select the highest lower bound -->
-			GREATEST(MIN(date_created), #{startDate}) AS "start_date",
-			<!-- select the lowest upper bound -->
-			LEAST(MAX(date_created), #{endDate}) AS "end_date",
+			IFNULL(#{startDate}, MIN(date_created)) AS "start_date",
+			IFNULL(#{endDate}, MAX(date_created)) AS "end_date",
 			CONCAT(#{uri},
 				'?Category=', #{category},
-				'&amp;StartDate=', GREATEST(MIN(date_created), #{startDate}),
-				'&amp;EndDate=', LEAST(MAX(date_created), #{endDate})
+				'&amp;StartDate=', IFNULL(#{startDate}, MIN(date_created)),
+				'&amp;EndDate=', IFNULL(#{endDate}, MAX(date_created))
 				) AS "uri"
 		FROM
 			${tableName}
