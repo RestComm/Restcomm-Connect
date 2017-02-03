@@ -3,112 +3,100 @@
 		<directive-step-heading></directive-step-heading>
 	</div>
 	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
-		<div class="row">
-			<div class="conditions col-lg-6 col-md-6">
-				<h4>Conditions</h4>
-				<div ng-repeat="condition in stepModel.conditions" class="row condition">
-                    <div class="col-md-10 col-lg-10 form-inline">
+		<div>
+            <h4>Conditions</h4>
+            <div ng-repeat="condition in stepModel.conditions" class="row condition">
+                <div class="col-md-3 col-lg-3">
+                    <select ng-model="condition.operator" class="form-control">
+                        <option value="equals">equals</option>
+                        <option value="greater">greater</option>
+                        <option value="greaterEqual">greater or equal</option>
+                        <option value="less">less</option>
+                        <option value="lessEqual">less or equal</option>
+                        <option value="matches">regex match</option>
+                    </select>
+                </div>
+                <div class="col-md-8 col-lg-8">
+                    <div ng-if="condition.operator=='equals' || condition.operator=='greater' || condition.operator=='less' || condition.operator=='greaterEqual' || condition.operator=='lessEqual'" class="form-inline">
                         <div class="form-group operand">
                             <input ng-model="condition.operand1" type="text" class="form-control" placeholder="operand 1">
                         </div>
-                        <div class="form-group operator">
-                            <select ng-model="condition.operator" class="form-control">
-                                <option value="equals">equals</option>
-                                <option value="greater">greater</option>
-                                <option value="greaterEqual">greater or equal</option>
-                                <option value="less">less</option>
-                                <option value="lessEqual">less or equal</option>
-                                <option value="matches">Regex match</option>
-                            </select>
-                        </div>
-                        <div ng-hide="isUnaryOperator(condition.operator)" class="form-group operand">
+                        <div class="form-group operand">
                             <input ng-model="condition.operand2" type="text" class="form-control" placeholder="operand 2">
                         </div>
                     </div>
-                    <div class="col-md-2 col-lg-2">
-                        <button ng-click="removeCondition(condition.name)" class="btn btn-default"><i class="fa fa-trash-o"></i></button>
+                    <div ng-if="condition.operator=='matches'" class="form-inline">
+                        <div class="form-group operand">
+                            <input ng-model="condition.operand1" type="text" class="form-control" placeholder="text">
+                        </div>
+                        <div class="form-group operand">
+                            <input ng-model="condition.operand2" type="text" class="form-control" placeholder="regex">
+                        </div>
                     </div>
-				</div>
-                <div class="form-group">
-                    <button ng-click="addCondition()" class="btn btn-primary"><i class="fa fa-plus"></i></button>
                 </div>
-                <div ng-show="stepModel.conditions.length > 1" class="form-group">
-                    <select ng-model="conditionJoiner" ng-change="rebuildConditionExpression()" class="form-control">
-                        <option value="all">All conditions should stand</option>
-                        <option value="any">Any condition should stand</option>
+                <div class="col-md-1 col-lg-1">
+                    <button ng-click="removeCondition(condition.name)" class="btn btn-default"><i class="fa fa-trash-o"></i></button>
+                </div>
+            </div>
+            <div class="form-group">
+                <button ng-click="addCondition()" class="btn btn-primary"><i class="fa fa-plus"></i></button>
+            </div>
+            <div ng-show="stepModel.conditions.length > 1" class="form-group">
+                <select ng-model="conditionJoiner" ng-change="rebuildConditionExpression()" class="form-control">
+                    <option value="all">All conditions should stand</option>
+                    <option value="any">Any condition should stand</option>
+                </select>
+            </div>
+        </div>
+        <hr>
+        <div>
+            <h4>Actions</h4>
+            <div ng-repeat="action in stepModel.actions" class="row action">
+                <div class="col-md-3 col-lg-3">
+                    <select ng-model="action.kind" ng-change="actionKindChanged(action.kind)" class="form-control">
+                        <option value="continueTo">Continue To</option>
+                        <option value="assign">Assign</option>
+                        <option value="capture">Capture</option>
                     </select>
                 </div>
-			</div>
-			<div class="action col-lg-6 col-md-6">
-				<h4>Actions</h4>
-                <div ng-repeat="action in stepModel.actions" class="row action">
-                    <div ng-switch on="action.kind" class="col-md-10 col-lg-10 form-inline">
-                        <!-- continueTo action -->
-                        <div ng-switch-when="continueTo" class="action-continue-to">
-                            <div class="form-group action-kind">
-                                <select ng-model="action.kind" ng-change="actionKindChanged(action.kind)" class="form-control">
-                                    <option value="continueTo">Continue To</option>
-                                    <option value="assign">Assign</option>
-                                    <option value="capture">Capture</option>
-                                </select>
-                            </div>
-                            <div class="form-group action-param">
-                                <select sync-model ng-model='action.param1' ng-options='target.name as target.label for target in getAllTargets()' class="form-control" required>
-                                    <option value=""></option>
-                                </select>
-                            </div>
+                <div class="col-md-8 col-lg-8">
+                    <div ng-if="action.kind=='assign'" class="form-inline">
+                        <div class="form-group action-param">
+                            <input ng-model="action.param1" type="text" class="form-control">
                         </div>
-                        <!-- assign action -->
-                        <div ng-switch-when="assign" class="action-assign">
-                            <div class="form-group action-kind">
-                                <select ng-model="action.kind" ng-change="actionKindChanged(action)" class="form-control">
-                                    <option value="continueTo">Continue To</option>
-                                    <option value="assign">Assign</option>
-                                    <option value="capture">Capture</option>
-                                </select>
-                            </div>
-                            <div class="form-group action-param">
-                                <input ng-model="action.param1" type="text" class="form-control">
-                            </div>
+                        <i class="fa fa-arrow-right"></i>
+                        <div class="form-group action-param">
+                            <vardef variable="action.param2" variable-scope="action.param3"></vardef>
+                        </div>
+                    </div>
+                    <div ng-if="action.kind=='continueTo'" class="form-inline">
+                        <select sync-model ng-model='action.param1' ng-options='target.name as target.label for target in getAllTargets()' class="form-control" required>
+                            <option value=""></option>
+                        </select>
+                    </div>
+                    <div ng-if="action.kind=='capture'" class="row">
+                        <div class="action-param col-md-4">
+                            <input ng-model="action.param2" type="text" class="form-control" placeholder="regex">
+                        </div>
+                        <div class="action-param col-md-4">
+                            <input ng-model="action.param1" type="text" class="form-control" placeholder="data">
+                        </div>
+                        <div class="col-md-1">
                             <i class="fa fa-arrow-right"></i>
-                            <div class="form-group action-param">
-                                <vardef variable="action.param2" variable-scope="action.param3"></vardef>
-                            </div>
                         </div>
-                        <div ng-switch-when="capture" class="action-capture">
-                            <div>
-                                <div class="form-group action-kind">
-                                    <select ng-model="action.kind" ng-change="actionKindChanged(action)" class="form-control">
-                                        <option value="continueTo">Continue To</option>
-                                        <option value="assign">Assign</option>
-                                        <option value="capture">Capture</option>
-                                    </select>
-                                </div>
-                                <div class="form-group action-param">
-                                    <input ng-model="action.param2" type="text" class="form-control" placeholder="regex">
-                                </div>
-                            </div>
-                            <div>
-                                <div class="form-group action-param action-param-data">
-                                    <input ng-model="action.param1" type="text" class="form-control" placeholder="data">
-                                </div>
-                                <div class="form-group action-arrow text-center">
-                                    <i class="fa fa-arrow-right"></i>
-                                </div>
-                                <div class="form-group action-param action-param-variable">
-                                    <vardef variable="action.param3" variable-scope="action.param4"></vardef>
-                                </div>
-                            </div>
+                        <div class="action-param col-md-3">
+                            <vardef variable="action.param3" variable-scope="action.param4"></vardef>
                         </div>
                     </div>
-                    <div class="col-md-2 col-lg-2">
-                        <button ng-click="removeAction(action.name)" class="btn btn-default"><i class="fa fa-trash-o"></i></button>
-                    </div>
                 </div>
-                <div class="form-group">
-                    <button ng-click="addAction()" class="btn btn-primary"><i class="fa fa-plus"></i></button>
+
+                <div class="col-md-1 col-lg-1">
+                    <button ng-click="removeAction(action.name)" class="btn btn-default"><i class="fa fa-trash-o"></i></button>
                 </div>
-			</div>
+            </div>
+            <div class="form-group">
+                <button ng-click="addAction()" class="btn btn-primary"><i class="fa fa-plus"></i></button>
+            </div>
 		</div>
 	</div>
 </div>
