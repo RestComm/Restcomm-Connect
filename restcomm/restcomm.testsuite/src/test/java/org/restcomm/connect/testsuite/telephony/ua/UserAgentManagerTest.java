@@ -206,7 +206,7 @@ public final class UserAgentManagerTest {
         Credential c = new Credential("127.0.0.1","bob", "1234");
         phone2.addUpdateCredential(c);
         assertTrue(phone2.register(uri, "bob", "1234", bobContact, 3600, 3600));
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
 
         //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
