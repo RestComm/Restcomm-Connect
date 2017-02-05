@@ -182,8 +182,8 @@
 	</select>
 
   <select id="getInCompleteCallDetailRecordsByInstanceId" parameterType="string" resultType="hashmap">
-    SELECT * FROM "restcomm_call_detail_records" WHERE "instanceid"=#{instanceid} AND (UPPER("status") = ('IN_PROGRESS') OR 
-      UPPER("status") = ('IN-PROGRESS') OR UPPER("status") = ('RINGING') OR UPPER("status") = ('QUEUED'));
+    SELECT * FROM restcomm_call_detail_records WHERE instanceid=#{instanceid} AND (UPPER(status) = ('IN_PROGRESS') OR 
+      UPPER(status) = ('IN-PROGRESS') OR UPPER(status) = ('RINGING') OR UPPER(status) = ('QUEUED'));
   </select>
 
   <select id="getTotalRunningCallDetailRecordsByConferenceSid" parameterType="string" resultType="int">
@@ -208,9 +208,9 @@
   </update>
 
   <update id="updateInCompleteCallDetailRecordsToCompletedByInstanceId" parameterType="string">
-    UPDATE "restcomm_call_detail_records"
-      SET "status"='COMPLETED'
-      WHERE "instanceid"=#{instanceid} AND (UPPER("status") = ('IN_PROGRESS') OR 
-        UPPER("status") = ('IN-PROGRESS') OR UPPER("status") = ('RINGING') OR UPPER("status") = ('QUEUED'));
+    UPDATE restcomm_call_detail_records
+      SET status='COMPLETED'
+      WHERE instanceid=#{instanceid} AND (UPPER(status) = ('IN_PROGRESS') OR 
+        UPPER(status) = ('IN-PROGRESS') OR UPPER(status) = ('RINGING') OR UPPER(status) = ('QUEUED'));
   </update>
 </mapper>
