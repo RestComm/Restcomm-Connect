@@ -27,10 +27,10 @@
                     </div>
                     <div ng-if="condition.operator=='matches'" class="form-inline">
                         <div class="form-group operand">
-                            <input ng-model="condition.operand1" type="text" class="form-control" placeholder="text">
+                            <input ng-model="condition.operand2" type="text" class="form-control" placeholder="regex">
                         </div>
                         <div class="form-group operand">
-                            <input ng-model="condition.operand2" type="text" class="form-control" placeholder="regex">
+                            <input ng-model="condition.operand1" type="text" class="form-control" placeholder="text">
                         </div>
                     </div>
                 </div>
@@ -59,13 +59,14 @@
                         <option value="capture">Capture</option>
                     </select>
                 </div>
-                <div class="col-md-8 col-lg-8">
-                    <div ng-if="action.kind=='assign'" class="form-inline">
-                        <div class="form-group action-param">
-                            <input ng-model="action.param1" type="text" class="form-control">
+                <div class="col-md-8">
+                    <div ng-if="action.kind=='assign'" class="row action-assign">
+                        <div class="col-md-8">
+                            <div class="text-field">
+                                <input ng-model="action.param1" type="text" class="form-control">
+                            </div>
                         </div>
-                        <i class="fa fa-arrow-right"></i>
-                        <div class="form-group action-param">
+                        <div class="col-md-4 ">
                             <vardef variable="action.param2" variable-scope="action.param3"></vardef>
                         </div>
                     </div>
@@ -74,18 +75,19 @@
                             <option value=""></option>
                         </select>
                     </div>
-                    <div ng-if="action.kind=='capture'" class="row">
-                        <div class="action-param col-md-4">
-                            <input ng-model="action.param2" type="text" class="form-control" placeholder="regex">
+                    <div ng-if="action.kind=='capture'" class="row action-capture">
+                        <div class="col-md-8 form-inline">
+                            <div class="form-group regex-field">
+                                <input ng-model="action.param2" type="text" class="form-control" placeholder="regex">
+                            </div>
+                            <div class="form-group data-field">
+                                <input ng-model="action.param1" type="text" class="form-control" placeholder="data">
+                            </div>
                         </div>
-                        <div class="action-param col-md-4">
-                            <input ng-model="action.param1" type="text" class="form-control" placeholder="data">
-                        </div>
-                        <div class="col-md-1">
-                            <i class="fa fa-arrow-right"></i>
-                        </div>
-                        <div class="action-param col-md-3">
-                            <vardef variable="action.param3" variable-scope="action.param4"></vardef>
+                        <div class="col-md-4 form-inline">
+                            <div class="form-group variable">
+                                <vardef variable="action.param3" variable-scope="action.param4"></vardef>
+                            </div>
                         </div>
                     </div>
                 </div>

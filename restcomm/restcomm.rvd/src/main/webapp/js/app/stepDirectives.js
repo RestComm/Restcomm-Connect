@@ -97,7 +97,7 @@ angular.module('Rvd')
             }
             scope.removeAction = function (actionName) {
                 for (var i=0; i<stepModel.actions.length; i++) {
-                    if (stepModel.actions[i].name = actionName) {
+                    if (stepModel.actions[i].name == actionName) {
                         stepModel.actions.splice(i,1);
                         return;
                     }
