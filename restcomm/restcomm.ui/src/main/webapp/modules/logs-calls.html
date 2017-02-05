@@ -28,10 +28,10 @@
             <input type="text" class="logs-search-input" placeholder="To" ng-model="search.to" />
         </div>
         <div class="col-md-2">
-            <input type="date" class="logs-search-input" placeholder="Start Date" ng-model="search.start_time" />
+            <input type="date" class="logs-search-input" placeholder="Start Date" ng-model="search.start_time" ng-model-options="{timezone: 'UTC'}"/>
         </div>
         <div class="col-md-2">
-            <input type="date" class="logs-search-input" placeholder="End Date" ng-model="search.end_time" />
+            <input type="date" class="logs-search-input" placeholder="End Date" ng-model="search.end_time" ng-model-options="{timezone: 'UTC'}"/>
         </div>
         <div class="col-md-2">
             <select class="selectpicker logs-search-select" ng-model="search.status">
