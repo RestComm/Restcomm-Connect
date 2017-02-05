@@ -131,6 +131,9 @@ public final class Call extends UntypedActor {
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
+    // Response Code for Media Server Failure
+    private static final int MEDIA_SERVER_FAILURE_RESPONSE_CODE = 569;
+
     // Define possible directions.
     private static final String INBOUND = "inbound";
     private static final String OUTBOUND_API = "outbound-api";
@@ -1024,10 +1027,10 @@ public final class Call extends UntypedActor {
                         resp.addHeader("Reason", reason);
                 } else {
                     // https://github.com/RestComm/Restcomm-Connect/issues/1663
-                    // We use 503 only if there is a problem to reach RMS as LB can be configured to take out
-                    // nodes that send back 503. This is meant to protect the cluster from nodes where the RMS
+                    // We use 569 only if there is a problem to reach RMS as LB can be configured to take out
+                    // nodes that send back 569. This is meant to protect the cluster from nodes where the RMS
                     // is in bad state and not responding anymore
-                    resp = invite.createResponse(503, "Problem to setup services");
+                    resp = invite.createResponse(MEDIA_SERVER_FAILURE_RESPONSE_CODE, "Problem to setup services");
                 }
                 addCustomHeaders(resp);
                 resp.send();
