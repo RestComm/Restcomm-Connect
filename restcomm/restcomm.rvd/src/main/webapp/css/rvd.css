@@ -126,9 +126,11 @@ label {
     border-right-width: 1px;
     border-right-style: inset;
 }
+
 .control-step .condition, .control-step .action{
     margin-bottom: 10px;
 }
+
 
 /*
 .control-step .condition .operand {
@@ -155,10 +157,37 @@ label {
 }
 */
 
+
+.control-step .action-capture .form-group.regex-field, .control-step .action-capture .form-group.data-field {
+    width: 49%;
+}
+
+/*
+.control-step .action-assign .form-group.text-field {
+    width: 62%;
+}
+*/
+
 /* variable definition */
 
+vardef .vardef {
+    position: relative;
+}
 vardef .dropdown {
     position: absolute;
+    top: 7px;
+    right: 10px;
+}
+
+vardef .vardef-input {
+    padding-right: 50px;
+    padding-left: 25px;
+}
+
+vardef .assign-arrow {
+    position: absolute;
+    top: 11px;
+    left: 8px;
 }
 
 

@@ -1,10 +1,13 @@
-<input ng-model="varExpression" type="text" class="form-control" placeholder="variable">
-<div class="dropdown">
-    <small class="btn-link dropdown-toggle var-scope">scope</small>
-    <small class="text-muted">{{varScope ? ": "+varScope : ""}}</small>
-    <ul class="dropdown-menu">
-        <li><a ng-click="setVarScope('app')">Application</a></li>
-        <li><a ng-click="setVarScope('mod')">Module</a></li>
-    </ul>
+<div class="vardef">
+    <input ng-model="varExpression" type="text" class="form-control vardef-input" placeholder="variable">
+    <i class="text-muted fa fa-arrow-right assign-arrow"></i>
+    <div class="dropdown">
+        <small class="btn-link dropdown-toggle var-scope" title='{{varScope ? varScope + " scope" : ""}}'>scope</small>
+        <!--<small class="text-muted">{{varScope ? varScope : ""}}</small>-->
+        <ul class="dropdown-menu">
+            <li><a ng-click="setVarScope('app')">Application</a></li>
+            <li><a ng-click="setVarScope('mod')">Module</a></li>
+        </ul>
+    </div>
 </div>
 
