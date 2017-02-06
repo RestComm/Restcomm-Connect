@@ -48,9 +48,24 @@ public final class InitializeOutbound {
     private Sid parentCallSid;
     private final boolean webrtc;
 
+    //IMS parameters
+    private boolean outboundToIms;
+    private String imsProxyAddress;
+    private int imsProxyPort;
+
     public InitializeOutbound(final String name, final SipURI from, final SipURI to, final String username,
-            final String password, final long timeout, final boolean isFromApi, final String apiVersion, final Sid accountId,
-            final CreateCall.Type type, final DaoManager daoManager, final boolean webrtc) {
+            final String password, final long timeout, final boolean isFromApi, final String apiVersion,
+            final Sid accountId, final CreateCall.Type type, final DaoManager daoManager, final boolean webrtc,
+            final boolean outboundToIms, final String imsProxyAddress, final int imsProxyPort) {
+        this(name, from, to, username, password, timeout, isFromApi, apiVersion, accountId, type, daoManager, webrtc);
+        this.outboundToIms = outboundToIms;
+        this.imsProxyAddress = imsProxyAddress;
+        this.imsProxyPort = imsProxyPort;
+    }
+
+    public InitializeOutbound(final String name, final SipURI from, final SipURI to, final String username,
+            final String password, final long timeout, final boolean isFromApi, final String apiVersion,
+            final Sid accountId, final CreateCall.Type type, final DaoManager daoManager, final boolean webrtc) {
         super();
         this.name = name;
         this.from = from;
@@ -64,6 +79,7 @@ public final class InitializeOutbound {
         this.type = type;
         this.daoManager = daoManager;
         this.webrtc = webrtc;
+        outboundToIms = false;
     }
 
     public String name() {
@@ -120,6 +136,18 @@ public final class InitializeOutbound {
 
     public boolean isWebrtc() {
         return webrtc;
+    }
+
+    public boolean isOutboundToIms() {
+        return outboundToIms;
+    }
+
+    public String getImsProxyAddress() {
+        return imsProxyAddress;
+    }
+
+    public int getImsProxyPort() {
+        return imsProxyPort;
     }
 
 }
