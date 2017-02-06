@@ -84,7 +84,7 @@ public abstract class UsageEndpoint extends SecuredEndpoint {
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(Usage.class, converter);
     builder.setPrettyPrinting();
-    gson = builder.create();
+    gson = builder.disableHtmlEscaping().create();
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
