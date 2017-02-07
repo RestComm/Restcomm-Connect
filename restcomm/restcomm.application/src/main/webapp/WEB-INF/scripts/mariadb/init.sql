@@ -342,7 +342,7 @@ geolocation_positioning_type VARCHAR(15),
 last_geolocation_response VARCHAR(15),
 cause VARCHAR(150),
 api_version VARCHAR(10) NOT NULL,
-uri LONGVARCHAR NOT NULL);
+uri MEDIUMTEXT NOT NULL);
 
 CREATE TABLE update_scripts (
 script VARCHAR(255) NOT NULL,
