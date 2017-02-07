@@ -17,7 +17,7 @@ terms of API.
 The use cases this API aims covering are:
 
 1. Notify Restcomm the current location of client X or certain
-MSISDN (e.g. iWatch cardio activity alarm â€“2015 TADHack Chicago winner-,
+MSISDN (e.g. iWatch cardio activity alarm 2015 TADHack Chicago winner-,
 E911, friend/family finder, etc.).
 
 2. Notify Restcomm if client X or certain MSISDN enters or exits a
@@ -239,11 +239,11 @@ was gathered (informed as a time stamp);
 
 *_EventGeofenceLatitude:_* refers to the geographic coordinates
 latitude of a specific location. Used to notify when a device is within
-a certain distance (in metres) from that specific location. Some format used as for DeviceLatitude parameter.
+a certain distance (in metres) from that specific location. Same format used as for DeviceLatitude parameter.
 
-*_EventGeofenceLongitude:_* refers to the geographic coordinatesâ€™
+*_EventGeofenceLongitude:_* refers to the geographic coordinates
 longitude of a specific location. Used to notify when a device is within
-a certain distance (in metres) from that specific location. WSome format used as for DeviceLongitude parameter.
+a certain distance (in metres) from that specific location. Same format used as for DeviceLongitude parameter.
 
 *_Radius:_* distance in meters from the Geofence geographic coordinates.
 
@@ -815,7 +815,7 @@ the specified location area.
 - out: reports when the target device has been detected leaving
 the specified location area.
 
-- in-out:Â  reports when the target device has been detected
+- in-out: reports when the target device has been detected
 either entering or leaving the specified location area.
 
 |StatusCallback |A URL that RestComm will use when the Geolocation
@@ -1083,7 +1083,7 @@ several purposes (emergency services, friends and family finder, etc.).
 In this case, the location information is assumed to be retrieved from
 an LTE-Advanced cellular network, where all location data parameters can
 be obtained, including parameters such as civic address
-(â€˜FormattedAddressâ€™ parameter):
+("FormattedAddress" parameter):
 
 ....
 curl -X POST -H "application/json"
