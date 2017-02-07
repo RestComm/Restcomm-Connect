@@ -121,7 +121,7 @@
 		<mobicents.checkstyle.version>1.0.0.FINAL</mobicents.checkstyle.version>
 		<checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
 		<mgcpunit.version>1.0.0-ALPHA2</mgcpunit.version>
-		<aws.sdk.version>1.11.76</aws.sdk.version>
+		<aws.sdk.version>1.11.86</aws.sdk.version>
 		<!-- SMPP Testing -->
 		<ch.smpp.version>5.0.8</ch.smpp.version>
 		<ch-commons-util.version>6.0.2</ch-commons-util.version>
