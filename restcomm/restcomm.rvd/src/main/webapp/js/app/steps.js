@@ -300,19 +300,6 @@ angular.module('Rvd')
 	HungupModel.prototype.contructor = HungupModel;
 	return HungupModel;
 }])
-.factory('controlModel',['rvdModel', function ControlModelFactory(rvdModel) {
-    function ControlModel(name) {
-        if (name)
-            this.name = name;
-        this.kind = 'control';
-        this.label = 'control';
-        this.title = 'control';
-        this.iface = {};
-    }
-    ControlModel.prototype = new rvdModel();
-    ControlModel.prototype.constructor = ControlModel;
-    return ControlModel;
-}])
 .value('accessOperationKinds',['object','array','value'])
 .value('objectActions', ['propertyNamed'])
 .value('arrayActions', ['itemAtPosition'])

@@ -31,36 +31,13 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
-
-import static org.restcomm.connect.rvd.model.steps.control.ControlStep.Condition.variableScopes;
 
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 public class ControlStep extends Step {
-
-    public static class Condition {
-        public static List<String> unaryOperator = Arrays.asList("isTrue","isFalse");
-        public static List<String> binaryOperator = Arrays.asList("equals","greater","greaterEqual","less","lessEqual","matches");
-        public static List<String> variableScopes = Arrays.asList("mod","app");
-
-        String name;
-        String operator;
-        String operand1;
-        String operand2;
-    }
-
-    public static class Action {
-        String name;
-        String kind;
-        String param1;
-        String param2;
-        String param3; // this holds the variable-scope property
-        String param4;
-    }
 
     private List<Condition> conditions;
     private List<Action> actions;
@@ -127,31 +104,30 @@ public class ControlStep extends Step {
     }
 
     boolean evaluateCondition(Condition condition, Interpreter interpreter) {
-        String operand1Expanded = interpreter.populateVariables(condition.operand1);
-        if (Condition.binaryOperator.contains(condition.operator)) {
-            if (condition.operator.equals("matches")) {
-                // regex expressions don't support RVD variables
-                Pattern pattern = Pattern.compile(condition.operand2);
-                return pattern.matcher(condition.operand1).matches();
-            } else {
-                String operand2Expanded = interpreter.populateVariables(condition.operand2);
-                switch (condition.operator) {
-                    case "equals":
-                        return operand1Expanded.equals(operand2Expanded);
-                    case "greater":
-                        return Float.parseFloat(operand1Expanded) > Float.parseFloat(operand2Expanded);
-                    case "greaterEqual":
-                        return Float.parseFloat(operand1Expanded) >= Float.parseFloat(operand2Expanded);
-                    case "less":
-                        return Float.parseFloat(operand1Expanded) < Float.parseFloat(operand2Expanded);
-                    case "lessEqual":
-                        return Float.parseFloat(operand1Expanded) <= Float.parseFloat(operand2Expanded);
-                    // TODO
+        if (condition.operator.equals("matches")) {
+            String textExpanded = interpreter.populateVariables(condition.matcher.text);
+            // regex expressions don't support RVD variables
+            Pattern pattern = Pattern.compile(condition.matcher.regex);
+            return pattern.matcher(textExpanded).matches();
+        } else {
+            String operand1Expanded = interpreter.populateVariables(condition.comparison.operand1);
+            String operand2Expanded = interpreter.populateVariables(condition.comparison.operand2);
+            switch (condition.operator) {
+                case "equals":
+                    return operand1Expanded.equals(operand2Expanded);
+                case "greater":
+                    return Float.parseFloat(operand1Expanded) > Float.parseFloat(operand2Expanded);
+                case "greaterEqual":
+                    return Float.parseFloat(operand1Expanded) >= Float.parseFloat(operand2Expanded);
+                case "less":
+                    return Float.parseFloat(operand1Expanded) < Float.parseFloat(operand2Expanded);
+                case "lessEqual":
+                    return Float.parseFloat(operand1Expanded) <= Float.parseFloat(operand2Expanded);
+                // TODO
 //
 //                    case "matches":
 //                    Pattern.compile()
 //                    break;
-                }
             }
         }
         throw new NotImplementedException();
@@ -159,33 +135,28 @@ public class ControlStep extends Step {
 
     // returns the module to redirect to if applicable
     String executeAction(Action action, Interpreter interpreter ) {
-        switch (action.kind) {
-            case "continueTo":
-                return action.param1;
-            case "assign":
-                String expandedSource = interpreter.populateVariables(action.param1);
-                // TODO think over the module/application variable scope
-                if (RvdUtils.isEmpty(action.param3) || "mod".equals(action.param3))
-                    interpreter.putModuleVariable(action.param2, expandedSource);
-                else
-                    interpreter.putStickyVariable(action.param2, expandedSource);
-
-                break;
-            case "capture":
-                String data = action.param1;
-                String regex = action.param2;
-                String variable = action.param3;
-                String variableScope = action.param4;
-                executeCaptureAction(data, regex, variable, variableScope, interpreter);
-            // TODO handle other cases with not-implemented exception
+        if (action.continueTo != null) {
+            return action.continueTo.target;
+        } else
+        if (action.assign != null) {
+            String expandedSource = interpreter.populateVariables(action.assign.expression);
+            // TODO think over the module/application variable scope
+            if (action.assign.varScope == null || action.assign.varScope.equals(VariableScopes.mod))
+                interpreter.putModuleVariable(action.assign.varName, expandedSource);
+            else
+                interpreter.putStickyVariable(action.assign.varName, expandedSource);
+        } else
+        if (action.capture != null) {
+            executeCaptureAction(action.capture.data, action.capture.regex, action.capture.varName, action.capture.varScope, interpreter);
         }
+        // TODO handle other cases with not-implemented exception
         return null;
     }
 
-    private void executeCaptureAction(String data, String regex, String variable, String variableScope, Interpreter interpreter) {
+    private void executeCaptureAction(String data, String regex, String variable, VariableScopes variableScope, Interpreter interpreter) {
         Pattern pattern = Pattern.compile(regex);
         String captured = pattern.matcher(data).group(1); // by convention get group 1 i.e. first pair of parenthesis
-        if ("mod".equals(variableScope))
+        if (variableScope == null || variableScope.equals(VariableScopes.mod))
             interpreter.putModuleVariable(variable, captured);
         else
             interpreter.putStickyVariable(variable, captured);
@@ -204,50 +175,90 @@ public class ControlStep extends Step {
         List<ValidationErrorItem> errorItems = new ArrayList<ValidationErrorItem>();
         if (conditions != null && conditions.size() > 0) {
             for (Condition condition: conditions) {
-                // if the operator is binary, both operands should exist
-                if (Condition.binaryOperator.contains(condition.operator)) {
-                    if ( RvdUtils.isEmpty(condition.operand1) )
-                        errorItems.add(new ValidationErrorItem("error","operand1 is not specified",stepPath));
-                    if (RvdUtils.isEmpty(condition.operand2 ))
-                        errorItems.add(new ValidationErrorItem("error","operand2 is not specified",stepPath));
-                } else
-                if (Condition.unaryOperator.contains(condition.operator)) {
-                    if ( RvdUtils.isEmpty(condition.operand1 )) {
-                        errorItems.add(new ValidationErrorItem("error","operand1 is not specified",stepPath));
-                    }
+                // either comparison/matcher should be defined
+                if ( condition.comparison == null && condition.matcher == null) {
+                    errorItems.add(new ValidationErrorItem("error","Condition incomplete",stepPath));
                 }
             }
         }
         if (actions != null && actions.size() > 0) {
             for (Action action: actions) {
-                if (action.kind.equals("continueTo")) {
-                    if (RvdUtils.isEmpty(action.param1)) {
+                if (action.continueTo != null) {
+                    if (RvdUtils.isEmpty(action.continueTo.target)) {
                         errorItems.add(new ValidationErrorItem("error","No target module specified",stepPath));
                     } else
-                    if (action.param1.equals(module.getName()))
+                    if (action.continueTo.target.equals(module.getName()))
                         errorItems.add(new ValidationErrorItem("error","Cyclic module execution detected",stepPath));
                 } else
-                if (action.kind.equals("assign")) {
-                    if (RvdUtils.isEmpty(action.param1)) {
-                        errorItems.add(new ValidationErrorItem("error","Assignment misses source",stepPath));
+                if (action.assign != null) {
+                    if (RvdUtils.isEmpty(action.assign.expression)) {
+                        errorItems.add(new ValidationErrorItem("error","Assignment misses left side",stepPath));
                     }
-                    if (RvdUtils.isEmpty(action.param2)) {
+                    if (RvdUtils.isEmpty(action.assign.varName)) {
                         errorItems.add(new ValidationErrorItem("error","Assignment misses destination",stepPath));
                     }
-                    if (!RvdUtils.isEmpty(action.param3)) {
-                        if (!variableScopes.contains(action.param3))
-                            errorItems.add(new ValidationErrorItem("error","Invalid variable scope: " + action.param3,stepPath));
-                    }
                 } else
-                if (action.kind.equals("capture")) {
-                    if (RvdUtils.isEmpty(action.param3))
+                if (action.capture != null) {
+                    if (RvdUtils.isEmpty(action.capture.varName))
                         errorItems.add(new ValidationErrorItem("error","Missing capture action variable",stepPath));
-                    if (!RvdUtils.isEmpty(action.param4))
-                        if (!variableScopes.contains(action.param4))
-                            errorItems.add(new ValidationErrorItem("error","Invalid variable scope: " + action.param4,stepPath));
                 }
             }
         }
         return errorItems;
+    }
+
+    public static class Condition {
+        public enum Operators {
+            equals,
+            greater,
+            greaterEqual,
+            less,
+            lessEqual,
+            matches
+        }
+
+        public static class Comparison {
+            String operand1;
+            String operand2;
+        }
+
+        public static class Matcher {
+            String text;
+            String regex;
+        }
+
+        String name;
+        String operator;
+        Comparison comparison; // one of comparison/matcher is enabled at a time
+        Matcher matcher;
+    }
+
+    public static class Action {
+        String name;
+        AssignParams assign;
+        ContinueToParams continueTo;
+        CaptureParams capture;
+    }
+
+    public enum VariableScopes {
+        mod,
+        app
+    }
+
+    public static class AssignParams {
+        String expression;
+        String varName;
+        VariableScopes varScope;
+    }
+
+    public static class ContinueToParams {
+        String target;
+    }
+
+    public static class CaptureParams {
+        String regex;
+        String data;
+        String varName;
+        VariableScopes varScope;
     }
 }
