@@ -24,8 +24,22 @@
 			"properties": {
 				"name": {"type":"string", "minLength": 1},
 				"operator": {"type":"string", "enum": ["equals","greater","greaterEqual","less","lessEqual","matches"]},
-				"operand1": {"type":"string"},
-				"operand2": {"type":"string"}
+				"comparison": {
+					"type": "object",
+					"properties": {
+						"operand1": {"type":"string","minLength": 1},
+						"operand2": {"type":"string","minLength": 1}
+					},
+					"required": ["operand1","operand2"]
+				},
+				"matcher": {
+					"type":"object",
+					"properties": {
+						"text": {"type":"string","minLength": 1},
+						"regex": {"type":"string","minLength": 1}
+					},
+					"required": ["text","regex"]
+				}
 			},
 			"required": ["name","operator"]
 		},
@@ -33,13 +47,35 @@
 			"type":"object",
 			"properties": {
 				"name": {"type":"string", "minLength": 1},
-				"kind": {"type":"string", "enum": ["continueTo","assign","capture"]},
-				"param1": {"type":"string"},
-				"param2": {"type":"string"},
-				"param3": {"type":"string"}
+				"assign": {
+					"type": "object",
+					"properties": {
+						"expression": {"type":"string","minLength": 1},
+						"varName": {"type":"string","minLength": 1},
+						"varScope": { "$ref": "#/definitions/varScope"}
+					},
+					"required": ["expression","varName"]
+				},
+				"continueTo": {
+					"type": "object",
+					"properties": {
+						"target": {"type":"string","minLength": 1}
+					},
+					"required": ["target"]
+				},
+				"capture": {
+					"type": "object",
+					"properties": {
+						"regex": {"type":"string"},
+						"data": {"type":"string"},
+						"varName": {"type":"string","minLength": 1},
+						"varScope": { "$ref": "#/definitions/varScope"}
+					}
+				}
 			},
-			"required": ["name","kind"]
-		}
+			"required": ["name"]
+		},
+		"varScope": {"enum": ["mod","app"]}
 	}
 }
 

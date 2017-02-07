@@ -37,7 +37,7 @@ angular.module('Rvd')
 		}
 	}
 })
-.directive('controlStep', function (nodeRegistry) {
+.directive('controlStep', function (nodeRegistry, stepRegistry) {
     return {
         restict: 'E',
         templateUrl: "templates/directive/controlStep.html",
@@ -45,73 +45,157 @@ angular.module('Rvd')
             stepModel: '=model'
         },
         link: function (scope) {
-
-            // TODO initialize conditionLastId from existing conditions (set it to the max)
-            // construction for conditions using a locally unique identifier
             var conditionLastId = 0;
-            function newCondition() {
+            var actionLastId = 0;
+            // create UI data structure
+            var step = {
+                iface: {},
+                label: "control",
+            }
+            scope.step = step;
+            var stepModel = scope.stepModel;
+            // new step
+            if (!stepModel.name) {
+                stepModel.name = stepRegistry.name(); // generate a new unique name
+                //stepModel.kind = "control";
+
+                step.conditions = [];
+                step.actions = [];
+                step.conditionJoiner = "all"; // default
+                //step.conditionExpression = undefined;
+            }
+            // existing step
+            else {
+                fromDto(step, stepModel);
+                // initialize conditionLastId, actionLastId
+                for (var i=0; i<step.conditions.length; i++) {
+                    var intName = parseInt(step.conditions[i].name.substring(1));
+                    if (intName > conditionLastId)
+                        conditionLastId = intName;
+                }
+                for (var i=0; i<step.actions.length; i++) {
+                    var intName = parseInt(step.actions[i].name.substring(1));
+                    if (intName > actionLastId)
+                        actionLastId = intName;
+                }
+            }
+
+            // Initialized a control step (UI element) from the dto (stored data received from server)
+            function fromDto(step, dto) {
+                // conditions
+                step.conditions = [];
+                for (var i=0; i<dto.conditions.length; i++) {
+                    var condition = {};
+                    var dtoCondition = dto.conditions[i];
+                    condition.operator = dtoCondition.operator;
+                    if (dtoCondition.matcher) {
+                        condition.operator = "matches"
+                    } else {
+                        // this is a comparison
+                        condition.comparison = dtoCondition.comparison;
+                    }
+                    step.conditions.push(condition);
+                }
+                step.conditionExpression = dto.conditionExpression;
+                if (dto.conditionExpression.indexOf("AND") !== -1)
+                    step.conditionJoiner = "all";
+                else
+                    step.conditionJoiner = "any";
+                // actions
+                step.actions = [];
+                for (i=0; i<dto.actions.length; i++) {
+                    var action = {};
+                    var dtoAction = dto.actions[i];
+                    if (dtoAction.assign) {
+                        action.kind = "assign";
+                        action.assign = dtoAction.assign;
+                    } else
+                    if (dtoAction.continueTo) {
+                        action.kind = "continueTo";
+                        action.continueTo = dtoAction.continueTo;
+                    } else
+                    if (dtoAction.capture) {
+                        action.kind = "capture";
+                        action.capture = dtoAction.capture;
+                    }
+                    step.actions.push(action);
+                }
+            }
+
+            function toDto(dto, step) {
+                // conditions
+                dto.conditions = [];
+                for (var i=0; i<step.conditions.length; i++) {
+                    var dtoCondition = {};
+                    var condition = step.conditions[i];
+                    dtoCondition.name = condition.name;
+                    dtoCondition.operator = condition.operator;
+                    if (dtoCondition.operator == "matches")
+                        dtoCondition.matcher = condition.matcher;
+                    else
+                        dtoCondition.comparison = condition.comparison;
+                    dto.conditions.push(dtoCondition);
+                }
+                dto.conditionExpression = step.conditionExpression;
+                // actions
+                dto.actions = [];
+                for (i=0; i<step.actions.length; i++) {
+                    var dtoAction = {};
+                    var action = step.actions[i];
+                    dtoAction.name = action.name;
+                    dtoAction[action.kind] = action[action.kind];
+                    dtoActions.push(dtoAction);
+                }
+            }
+
+            function newCondition(step) {
                 return {
                    name: "C" + (++conditionLastId),
                    operator : "equals",
-                   operand1 : "",
-                   operand2 : ""
+                   comparison : {},
+                   // matcher: {}
                }
             }
-            scope.conditionJoiner = "all"; // all / any
 
-            var actionLastId = 0;
-            function newAction() {
+            function newAction(kind,step) {
                 return {
                    name: "A" + (++actionLastId),
-                   kind : "continueTo" // continueTo / assign
+                   kind : "continueTo", // continueTo / assign
+                   continueTo: {}
+                   // assign: {},
+                   // capture: {}
                }
             }
 
-            // initialize control step members
-            var stepModel = scope.stepModel;
-            stepModel.conditions = stepModel.conditions || [newCondition()];
-            stepModel.actions = stepModel.actions || [];
-            if (!stepModel.conditionExpression)
-                rebuildConditionExpression();
-
             scope.addCondition = function () {
-                stepModel.conditions.push(newCondition());
-                rebuildConditionExpression();
+                step.conditions.push(newCondition());
+                rebuildConditionExpression(step);
             }
             scope.removeCondition = function (conditionName) {
-                for (var i=0; i<stepModel.conditions.length; i++) {
-                    if (stepModel.conditions[i].name = conditionName) {
-                        stepModel.conditions.splice(i,1);
-                        rebuildConditionExpression();
+                for (var i=0; i<step.conditions.length; i++) {
+                    if (step.conditions[i].name = conditionName) {
+                        step.conditions.splice(i,1);
+                        rebuildConditionExpression(step);
                         return;
                     }
                 }
-            }
-            scope.isUnaryOperator = function (operator) {
-                if (operator == "isTrue" || operator == "isFalse")
-                    return true;
-                return false;
-            }
-            scope.addAction = function () {
-                stepModel.actions.push(newAction());
-            }
-            scope.removeAction = function (actionName) {
-                for (var i=0; i<stepModel.actions.length; i++) {
-                    if (stepModel.actions[i].name == actionName) {
-                        stepModel.actions.splice(i,1);
-                        return;
-                    }
-                }
-            }
-            scope.actionKindChanged = function (action) {
-                delete action.param1;
-                delete action.param2;
-                delete action.param3;
             }
 
-            function rebuildConditionExpression() {
-                var conditions = stepModel.conditions;
-                var joiner = scope.conditionJoiner;
+            scope.addAction = function () {
+                step.actions.push(newAction());
+            }
+            scope.removeAction = function (actionName) {
+                for (var i=0; i<step.actions.length; i++) {
+                    if (step.actions[i].name == actionName) {
+                        step.actions.splice(i,1);
+                        return;
+                    }
+                }
+            }
+
+            function rebuildConditionExpression(step) {
+                var conditions = step.conditions;
+                var joiner = step.conditionJoiner;
                 var expression;
 
                 if (!conditions || conditions.length == 0)
@@ -126,12 +210,18 @@ angular.module('Rvd')
                         expression = names.join(" OR ");
                 }
 
-                stepModel.conditionExpression = expression;
+                return expression;
             }
             scope.rebuildConditionExpression = rebuildConditionExpression;
             scope.removeStep = function (step) {
                 scope.$emit("step-removed", step);
             }
+            scope.$on("clear-step-warnings", function () {
+                step.iface.showWarning = false;
+            })
+            scope.$on("update-dtos", function () {
+                toDto(stepModel, step);
+            });
 
             scope.getAllTargets = nodeRegistry.getNodes;
         }

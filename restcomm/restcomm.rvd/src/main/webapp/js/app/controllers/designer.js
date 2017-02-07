@@ -72,9 +72,12 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $statePar
 	$scope.clearStepWarnings = function () {
 		var nodes = nodeRegistry.getNodes();
 		for ( var i=0; i<nodes.length; i++ ) {
-			for (var j=0; j< nodes[i].steps.length; j++)
-				nodes[i].steps[j].iface.showWarning = false;
+			for (var j=0; j< nodes[i].steps.length; j++) {
+			    if (nodes[i].steps[j].iface)
+					nodes[i].steps[j].iface.showWarning = false;
+			}
 		}
+		$scope.$broadcast("clear-step-warnings");
 	}
 	$scope.editFilteredNodes = function(nodes,token, moduleFilterEnabled) {
 		var filteredNodes = $filter('filterNodesByLabel')(nodes,token, moduleFilterEnabled);
@@ -269,10 +272,14 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $statePar
 		if ( m != null ) {
 			var step;
 			var stepkind = m[1];
-			step = $injector.invoke([stepkind+'Model', function(model){
-				var stepname = stepRegistry.name();
-				return new model(stepname);
-			}]);
+			if (stepkind == "control") {
+                step = {kind: stepkind}
+			} else {
+                step = $injector.invoke([stepkind+'Model', function(model){
+                    var stepname = stepRegistry.name();
+                    return new model(stepname);
+                }]);
+			}
 
 			//console.log("adding step - " + m[1]);
 			$scope.$apply( function ()	{
@@ -298,6 +305,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $statePar
 		var nodes = nodeRegistry.getNodes();
 		$scope.saveSpinnerShown = true;
 		$scope.clearStepWarnings();
+		$scope.$broadcast("update-dtos"); // command all step directives to updated dto model objects.
 		designerService.saveProject($scope.applicationSid, $scope.project)
 		.then( function () { return designerService.buildProject($scope.applicationSid) } )
 		.then(
@@ -738,9 +746,13 @@ angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http',
 			var node = state.nodes[i];
 			for (var j=0; j<node.steps.length; j++) {
 				var step = registry_nodes[i].steps[j];
-				var packedStep;
-				packedStep = step.pack();
-				node.steps[j] = packedStep;
+                var packedStep;
+				if (step.kind == "control") {
+				    packedStep = step; // no packing for 'control' elements. TODO remove packing alltogether after porting all elements to angular directives
+				} else {
+                    packedStep = step.pack();
+				}
+                node.steps[j] = packedStep;
 			}
 		}
 		//state.iface.activeNode = $scope.activeNode;
