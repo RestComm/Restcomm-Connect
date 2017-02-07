@@ -120,7 +120,7 @@ public class BandwidthIncomingPhoneNumbersEndpointTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/xml")
                         .withBody(BandwidthIncomingPhoneNumbersEndpointTestUtils.validOrderResponseXml)));
-        
+
         String disconnectUrl = "/v1.0/accounts/12345/disconnects.*";
         stubFor(post(urlMatching(disconnectUrl))
                 .willReturn(aResponse()

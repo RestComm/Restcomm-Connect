@@ -18,7 +18,7 @@
 			convention and synchronization with database entities. This execution
 			will occurs max one time per Restcomm version. To force a new run,
 			remove the file .version inside RVD workspace. -->
-		<rvd-workspace-migration-enabled>true</rvd-workspace-migration-enabled>
+		<rvd-workspace-migration-enabled>false</rvd-workspace-migration-enabled>
 
 		<!-- The location where the audio prompts are located. -->
 		<prompts-uri>/restcomm/audio</prompts-uri>
@@ -62,6 +62,18 @@
 			from those users -->
 		<authenticate>true</authenticate>
 
+		<!-- If authenticate is set to true Restcomm can work as IMS Client. To enable set act-as-ims-ua to true and
+		 configure IMS domain and IMS Proxy (e.g. P-CSCF or SBC) -->
+		<ims-authentication>
+			<act-as-ims-ua>true</act-as-ims-ua>
+			<domain>neofon.tp.pl</domain>
+			<proxy-address>neofon.tp.pl</proxy-address>
+			<proxy-port>5060</proxy-port>
+			<call-id-prefix>WebRTCGW__1@</call-id-prefix>
+			<user-agent>WebRTCGW/1.0</user-agent>
+			<account>ims</account>
+		</ims-authentication>
+		
 		<!-- Interval time in seconds that Restcomm will send keepalive messages (OPTIONS) to registered clients -->
 		<ping-interval>60</ping-interval>
 
@@ -151,6 +163,13 @@
 			<ussd-gateway-password></ussd-gateway-password>
 		</ussd-gateway>
 
+		<!-- TelScale GMLC -->
+		<gmlc>
+			<gmlc-uri>http://GMLC-IP:port/restcomm/gmlc/rest?msisdn=</gmlc-uri> <!-- Change GMLC-IP:port to appropriate value-->
+			<gmlc-user></gmlc-user>
+			<gmlc-password></gmlc-password>
+		</gmlc>
+
 		<!-- Each permission is represented as three columns Domain:Action:Target
 			Possible actions are Create, Read, Modify, Delete. -->
 		<security-roles>
@@ -174,6 +193,7 @@
 				<permission>RestComm:*:OutboundProxies</permission>
 				<permission>RestComm:*:EmailMessages</permission>
 				<permission>RestComm:*:Usage</permission>
+				<permission>RestComm:*:Geolocation</permission>
 			</role>
 		</security-roles>
 	</runtime-settings>
