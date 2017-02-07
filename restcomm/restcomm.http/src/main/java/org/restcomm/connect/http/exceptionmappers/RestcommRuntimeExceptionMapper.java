@@ -21,7 +21,7 @@
 package org.restcomm.connect.http.exceptionmappers;
 
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.dao.exceptions.AccountHierarchyDepthCrossed;
+import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.NotAuthenticated;
 import org.restcomm.connect.http.exceptions.OperatedAccountMissing;
@@ -45,7 +45,8 @@ public class RestcommRuntimeExceptionMapper implements ExceptionMapper<RestcommR
 
     @Override
     public Response toResponse(RestcommRuntimeException e) {
-        logger.error(e);
+        if (logger.isDebugEnabled())
+            logger.debug("Converting response to a corresponding http status.");
 
         if (e instanceof NotAuthenticated) {
             return Response.status(Response.Status.UNAUTHORIZED).header("WWW-Authenticate","Basic realm=\"Restcomm realm\"").build();

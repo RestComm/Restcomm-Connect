@@ -10,6 +10,7 @@ import org.restcomm.connect.rvd.ApplicationContext;
 import org.restcomm.connect.rvd.ApplicationContextBuilder;
 import org.restcomm.connect.rvd.RvdConfiguration;
 import org.restcomm.connect.rvd.commons.http.CustomHttpClientBuilder;
+import org.restcomm.connect.rvd.concurrency.ProjectRegistry;
 import org.restcomm.connect.rvd.identity.AccountProvider;
 import org.restcomm.connect.rvd.model.ModelMarshaler;
 import org.restcomm.connect.rvd.storage.WorkspaceStorage;
@@ -34,7 +35,8 @@ public class RvdInitializationServlet extends HttpServlet {
         ApplicationContext appContext = new ApplicationContextBuilder()
                 .setConfiguration(rvdConfiguration)
                 .setHttpClientBuilder(httpClientBuilder)
-                .setAccountProvider(accountProvider).build();
+                .setAccountProvider(accountProvider)
+                .setProjectRegistry(new ProjectRegistry()).build();
         servletContext.setAttribute(ApplicationContext.class.getName(), appContext);
 
         WorkspaceBootstrapper workspaceBootstrapper = new WorkspaceBootstrapper(rvdConfiguration.getWorkspaceBasePath());

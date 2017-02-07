@@ -93,7 +93,7 @@
 		<mobicents.mgcp.impl.version>3.0.2.FINAL</mobicents.mgcp.impl.version>
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
-    <sipservletapi.version>3.1.744</sipservletapi.version>
+    <sipservletapi.version>3.1.761</sipservletapi.version>
 		<staxapi.version>1.0.1</staxapi.version>
 		<staximpl.version>1.2.0</staximpl.version>
 		<servlet-api.version>7.0.50</servlet-api.version>
@@ -105,7 +105,7 @@
 		<xstream.version>1.4.2</xstream.version>
 		<mongodb.version>2.7.2</mongodb.version>
 		<mybatis.version>3.2.2</mybatis.version>
-		<jodatime.version>2.0</jodatime.version>
+		<jodatime.version>2.9.7</jodatime.version>
 		<libphonenumber.version>4.3</libphonenumber.version>
 		<junit.version>4.10</junit.version>
 		<scalatest.version>1.9.1</scalatest.version>
@@ -121,7 +121,7 @@
 		<mobicents.checkstyle.version>1.0.0.FINAL</mobicents.checkstyle.version>
 		<checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
 		<mgcpunit.version>1.0.0-ALPHA2</mgcpunit.version>
-		<aws.sdk.version>1.9.24</aws.sdk.version>
+		<aws.sdk.version>1.11.76</aws.sdk.version>
 		<!-- SMPP Testing -->
 		<ch.smpp.version>5.0.8</ch.smpp.version>
 		<ch-commons-util.version>6.0.2</ch-commons-util.version>
