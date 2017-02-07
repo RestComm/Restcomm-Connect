@@ -764,7 +764,7 @@ rcServices.factory('PublicConfig', function ($http) {
     var config = {};
     $http({
         method: 'GET',
-        url: "/public-conf.jsp",
+        url: "/jsp/public-conf.jsp",
     }).then(function (response) {
         angular.merge(config, response.data); // copy information from response to config object
         console.log("received public configuration", response.data);
