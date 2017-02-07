@@ -53,10 +53,9 @@ configRestcomm() {
   		sed -i "s|<hostname>.*<\/hostname>|<hostname>${RESTCOMM_HOSTNAME}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
         if hash host 2>/dev/null; then
-            if ! host ${RESTCOMM_HOSTNAME} > /dev/null
-            then
-                echo "${BIND_ADDRESS}  ${RESTCOMM_HOSTNAME}" >> /etc/hosts
-            fi
+		if ! grep "${BIND_ADDRESS}.*${RESTCOMM_HOSTNAME}" /etc/hosts ; then
+		echo "${BIND_ADDRESS} ${RESTCOMM_HOSTNAME}" >> /etc/hosts
+		fi
         else
             echo "INFO: \"host\" programm does not exist ('dnsutils' package) please make sure that used hostname has a valid DNS resolution."
             echo "INFO:IF not add the necessary hostname Ip resolution at /etc/hosts file: e.g  echo RestC0mm_BIND_IP RESTCOMM_HOSTNAME >> /etc/hosts "
