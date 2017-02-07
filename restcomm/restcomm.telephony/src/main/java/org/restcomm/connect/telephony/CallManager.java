@@ -759,6 +759,9 @@ public final class CallManager extends UntypedActor {
         }
 
         IncomingPhoneNumber number = storage.getIncomingPhoneNumbersDao().getIncomingPhoneNumber(cdr.getTo());
+        if (number == null) {
+            number = storage.getIncomingPhoneNumbersDao().getIncomingPhoneNumber("*");
+        }
 
         if (number == null || (number.getReferUrl() == null && number.getReferApplicationSid() == null)) {
             if (logger.isInfoEnabled()) {
