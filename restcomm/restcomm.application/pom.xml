@@ -272,6 +272,7 @@
 			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 		</dependency>
+
 	</dependencies>
 
 	<profiles>
