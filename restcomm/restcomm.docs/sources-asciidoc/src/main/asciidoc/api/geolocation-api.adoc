@@ -120,7 +120,7 @@ information.
 and processed, but not fulfilled the whole set of geolocation
 information or desired accuracy, e.g.: geographic coordinates were not
 possible to retrieve, but at least other location information such as
-Cell and Location Area identifiers were obtained; location information
+Cell/Service and Location/Service Area identifiers were obtained; location information
 was retrieved, but the age of location estimate denotes it may be
 outdated; location information was retrieved, but informed that
 precision is not reliable due to high error margin.
@@ -154,9 +154,9 @@ obtained by this Geolocation service. The fields of this array are
 described next:
 
 **_CellId_**: an identifier assigned to a specific radio coverage area
-known as cell;
+known as cell or service area;
 
-**_LocationAreaCode_**: an identifier assigned to a group of cells;
+**_LocationAreaCode_**: an identifier assigned to a group of cells or service area;
 
 **_MobileCountryCode_**: code number of the country of the mobile
 network as specified by E.212.
@@ -179,7 +179,7 @@ WGS84 is used, whose formats for Latitude are described next:
 
 Latitude valid formats include:
 
-   N43°38'19.39"
+    N43°38'19.39"
 
    43°38'19.39"N
 
@@ -525,7 +525,7 @@ See the corresponding response below:
 
 See below a curl example for a Geolocation request originated from an
 application called eTop requesting location information of E.164 phone
-number 59897018375.
+number 59897018375. As you can see, the request demands a JSON response.
 
 This case assumes that the Geolocation information is retrieved from a
 cellular network, but in contrast with example 1, with no capabilities
@@ -535,39 +535,36 @@ network identifiers are available (typical of 2G cellular networks):
 
 ....
 curl -X POST -H "application/json"
-http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Geolocation/Immediate -d "DeviceIdentifier=39897018375" -d "StatusCallback=http://192.16.1.19:8080/ACae6e420f425248d6a26948c17a9e2acf"
+http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Geolocation/Immediate.json -d "DeviceIdentifier=39897018375" -d "StatusCallback=http://192.16.1.19:8080/ACae6e420f425248d6a26948c17a9e2acf"
 ....
 
 See the corresponding response below:
 
 ....
-<RestcommResponse>
-   <Geolocation>
-     <Sid>GLfa51b104354440b09213d04752f50273</Sid>
-     <DateCreated>Mon, 25 Jan 2016 16:36:10 +0200</DateCreated>
-     <DateUpdated>Mon, 25 Jan 2016 16:36:11 +0200</DateUpdated>
-     <DateExecuted>Mon, 25 Jan 2016 16:36:10 +0200</DateExecuted>
-     <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-     <DeviceIdentifier>39897018375</DeviceIdentifier>
-     <GeolocationType>immediate</GeolocationType>
-     <ResponseStatus>partially-successful</ResponseStatus>
-     <GeolocationData>
-             <CellId>19012A</CellId>
-             <LocationAreaCode>901</LocationAreaCode>
-             <MobileCountryCode>222</MobileCountryCode>
-             <MobileNetworkCode>48</MobileNetworkCode>
-             <NetworkEntityAddress>3980000101</NetworkEntityAddress>
-             <LocationAge>0</LocationAge>
-             <LocationTimestamp>Mon, 25 Jan 2016 16:36:11 +0200</LocationTimestamp>
-     </GeolocationData>
-     <GeolocationPositioningType>Network</GeolocationPositioningType>
-     <LastGeolocationResponse>true</LastGeolocationResponse>
-     <ApiVersion>2012-04-24</ApiVersion>
-     <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Geolocation/Immediate/GLfa51b104354440b09213d04752f50273</Uri>
-   </Geolocation>
-</RestcommResponse>
+{
+  "sid": "GLfa51b104354440b09213d04752f50273",
+  "date_created": "Mon, 25 Jan 2016 16:36:10 +0200",
+  "date_updated": "Mon, 25 Jan 2016 16:36:11 +0200",
+  "date_executed": "Mon, 25 Jan 2016 16:36:10 +0200",
+  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+  "device_identifier": "39897018375",
+  "geolocation_type": "Immediate",
+  "response_status": "partially-successful",
+  "geolocation_data": {
+    "CellId": "191",
+    "LocationAreaCode": "901",
+    "MobileCountryCode": "222",
+    "MobileNetworkCode": "48",
+    "NetworkEntityAddress": "3980000101",
+    "LocationAge": "0",
+    "location_timestamp": "Mon, 25 Jan 2016 16:36:11 +0200"
+  },
+  "geolocation_positioning_type": "Network",
+  "last_geolocation_response": "true",
+  "api_version": "2012-04-24",
+  "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Geolocation/Immediate/GLfa51b104354440b09213d04752f50273.json"
+}
 ....
-
 
 ==== Example 4.- Geolocation of a specific IP device associated to a user: Failed execution response
 
@@ -651,7 +648,7 @@ See below a curl example of retrieving the information of the Geolocation servic
 curl -X GET http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Geolocation/Immediate/GLfa51b104354440b09213d04752f50274.json
 ....
 
-See the corresponding JSON response below (the XML response would be exactly as shown previously for the POST request):
+See the corresponding response below (the XML response would be exactly as shown previously for the POST request):
 
 ....
 {
@@ -1080,14 +1077,14 @@ expects to be informed about entering a specific location area, within
 several purposes (emergency services, friends and family finder, etc.).
 
 
-In this case, the location information is assumed to be retrieved from
+In this case, the location information is assumed to be retrieved in JSON format from
 an LTE-Advanced cellular network, where all location data parameters can
 be obtained, including parameters such as civic address
 ("FormattedAddress" parameter):
 
 ....
 curl -X POST -H "application/json"
-http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Geolocation/Notification
+http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Geolocation/Notification.json
 -d "Source=59897018375" -d "DeviceIdentifier=59897018375" -d
 "EventGeofenceLatitude=-34.541078" -d
 "EventGeofenceLongitude=-56.061600" -d "GeofenceRange=300" -d
@@ -1095,46 +1092,42 @@ http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0
 "StatusCallback=http://192.16.1.19:8080/ACae6e420f425248d6a26948c17a9e2acf"
 ....
 
-
 See the corresponding response below:
 
-
 ....
-<RestcommResponse>
-   <Geolocation>
-     <Sid>GLfa51b104354440b09213d04752f50279</Sid>
-     <DateCreated>Mon, 25 Jan 2016 16:36:10 -0300</DateCreated>
-     <DateUpdated>Mon, 25 Jan 2016 16:37:18 -0300</DateUpdated>
-     <DateExecuted>Mon, 25 Jan 2016 16:36:10 -0300</DateExecuted>
-     <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-     <DeviceIdentifier>59897018375</DeviceIdentifier>
-     <GeolocationType>notification</GeolocationType>
-     <ResponseStatus>successful</ResponseStatus>
-     <GeolocationData>
-             <CellId>90183B</CellId>
-             <LocationAreaCode>751</LocationAreaCode>
-             <MobileCountryCode>748</MobileCountryCode>
-             <MobileNetworkCode>01</MobileNetworkCode>
-             <NetworkEntityAddress>59800023041</NetworkEntityAddress>
-             <LocationAge>0</LocationAge>
-             <DeviceLatitude>-34.542029</DeviceLatitude>
-             <DeviceLongitude>56.058181</DeviceLongitude>
-             <Accuracy>5</Accuracy>
-             <Radius>115.24</Radius>
-             <PhysicalAddress>00-50-56-C0-00-08</PhysicalAddress>
-             <InternetAddress>167.57.122.14</InternetAddress>
-             <FormattedAddress>Avenida Italia 2643, 11500, Montevideo, Uruguay</FormattedAddress>
-             <LocationTimestamp>Mon, 25 Jan 2016 16:37:17 -0300</LocationTimestamp>
-     </GeolocationData>
-     <GeolocationPositioningType>GPS</GeolocationPositioningType>
-     <LastGeolocationResponse>true</LastGeolocationResponse>
-     <ApiVersion>2012-04-24</ApiVersion>
-     <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Geolocation/Notification/GLfa51b104354440b09213d04752f50279</Uri>
-   </Geolocation>
-</RestcommResponse>
+{
+  "sid": "GLfa51b104354440b09213d04752f50279",
+  "date_created": "Mon, 25 Jan 2016 16:36:10 -0300",
+  "date_updated": "Mon, 25 Jan 2016 16:37:18 -0300",
+  "date_executed": "Mon, 25 Jan 2016 16:36:10 -0300",
+  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+  "device_identifier": "59897018375",
+  "geolocation_type": "Notification",
+  "response_status": "successful",
+  "geolocation_data": {
+    "cell_id": "908",
+    "location_area_code": "751",
+    "mobile_country_code": 748,
+    "mobile_network_code": "1",
+    "network_entity_address": 59800023041,
+    "location_age": 0,
+    "device_latitude": "-34.542029",
+    "device_longitude": "56.058181",
+    "accuracy": 5,
+    "internet_address": "167.57.122.14",
+    "physical_address": "00-50-56-C0-00-08",
+    "formatted_address": "Avenida Italia 2552, 11500, Montevideo, Uruguay",
+    "location_timestamp": "Mon, 25 Jan 2016 16:37:17 -0300",
+    "event_geofence_latitude": "-34.551098",
+    "event_geofence_longitude": "-70.601700",
+    "radius": 115.24
+  },
+  "geolocation_positioning_type": "GPS",
+  "last_geolocation_response": "true",
+  "api_version": "2012-04-24",
+  "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Geolocation/Notification/GLfa51b104354440b09213d04752f50279.json"
+}
 ....
-
-
 
 ==== Example 6.- Update previous GeoLocation request for a specific IP device when it exits a 300m range of a specific Geolocation: Success Answer
 
