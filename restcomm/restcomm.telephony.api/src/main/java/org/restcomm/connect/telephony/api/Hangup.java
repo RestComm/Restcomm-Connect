@@ -27,16 +27,35 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 @Immutable
 public final class Hangup {
     private String message;
+    private Integer sipResponse;
 
     public Hangup() {
         super();
+    }
+
+    public Hangup(final String message, final Integer sipResponse) {
+        this.message = message;
+        this.sipResponse = sipResponse;
     }
 
     public Hangup(final String message) {
         this.message = message;
     }
 
+    public Hangup(final Integer sipResponse) {
+        this.sipResponse = sipResponse;
+    }
+
     public String getMessage() {
         return message;
+    }
+
+    public Integer getSipResponse() {
+        return sipResponse;
+    }
+
+    @Override
+    public String toString() {
+        return "Hangup [message=" + message + ", sipResponse=" + sipResponse + "]";
     }
 }

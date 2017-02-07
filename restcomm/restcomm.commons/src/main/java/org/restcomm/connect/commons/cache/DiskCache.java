@@ -113,7 +113,7 @@ public final class DiskCache extends UntypedActor {
             // return URI.create(matchedFile.getAbsolutePath());
             return URI.create(this.cacheUri + filename);
         } else {
-            throw new FileNotFoundException(filename);
+            throw new FileNotFoundException("File "+filename+" NotFound");
         }
     }
 
@@ -168,7 +168,7 @@ public final class DiskCache extends UntypedActor {
                 response = new DiskCacheResponse(cache((DiskCacheRequest) message));
             } catch (final Exception exception) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Error while caching", exception);
+                    logger.debug("Issue while caching", exception);
                 }
                 response = new DiskCacheResponse(exception);
             }

@@ -22,7 +22,7 @@ import org.apache.log4j.Logger;
 import org.restcomm.connect.rvd.ApplicationContext;
 import org.restcomm.connect.rvd.ProjectAwareRvdContext;
 import org.restcomm.connect.rvd.RvdConfiguration;
-import org.restcomm.connect.rvd.ProjectLogger;
+import org.restcomm.connect.rvd.logging.ProjectLogger;
 import org.restcomm.connect.rvd.exceptions.InterpreterException;
 import org.restcomm.connect.rvd.exceptions.RvdException;
 import org.restcomm.connect.rvd.exceptions.UndefinedTarget;
@@ -380,6 +380,9 @@ public class Interpreter {
     }
 
 
+    /* TODO all errors caused by conflict between the extractor directive and the response returned
+       (missing properties, different structure in JSON document etc.) should throw BadExternalServiceResponse.
+    */
     public String evaluateExtractorExpression(ValueExtractor extractor, JsonElement response_element) throws InvalidAccessOperationAction, BadExternalServiceResponse {
         String value = "";
 

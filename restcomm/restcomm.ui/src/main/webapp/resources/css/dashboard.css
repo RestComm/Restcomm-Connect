@@ -816,6 +816,13 @@ a:link {
     font-size: 19px;
 }
 
+.voice-video-refer-request {
+    color: #4a4a4b;
+    padding-top: 10px;
+    font-weight: 300;
+    font-size: 19px;
+}
+
 .number-advanced-label {
     color: #4a4a4b;
     padding-top: 12px;
