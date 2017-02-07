@@ -760,7 +760,7 @@ public final class CallManager extends UntypedActor {
 
         IncomingPhoneNumber number = storage.getIncomingPhoneNumbersDao().getIncomingPhoneNumber(cdr.getTo());
 
-        if (number.getReferUrl() == null && number.getReferApplicationSid() == null) {
+        if (number == null || (number.getReferUrl() == null && number.getReferApplicationSid() == null)) {
             if (logger.isInfoEnabled()) {
                 logger.info("Refer URL or Refer Applicatio for incoming phone number is null, cannot proceed with SIP Refer");
             }
