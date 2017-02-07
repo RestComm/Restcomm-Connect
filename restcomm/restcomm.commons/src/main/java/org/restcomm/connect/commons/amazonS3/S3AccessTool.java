@@ -41,6 +41,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -106,11 +108,18 @@ public class S3AccessTool {
             Date date = new Date();
             Calendar cal = Calendar.getInstance();
             cal.setTime(date);
+            DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS");
+            final String now = format.format(cal.getTime());
             if (daysToRetainPublicUrl > 0) {
                 cal.add(Calendar.DATE, daysToRetainPublicUrl);
             } else {
                 //By default the Public URL will be valid for 180 days
-                cal.add(Calendar.DATE, 180);
+                cal.add(Calendar.DAY_OF_YEAR, 7);
+            }
+            if (logger.isInfoEnabled()) {
+                final String retainUntil = format.format(cal.getTime());
+                final String msg = String.format("Added 7 days more, calendar was -%s- and now -%s-", now, retainUntil);
+                logger.info(msg);
             }
             date = cal.getTime();
             GeneratePresignedUrlRequest generatePresignedUrlRequestGET =
