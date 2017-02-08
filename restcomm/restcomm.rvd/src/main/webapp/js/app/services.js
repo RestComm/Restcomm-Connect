@@ -552,6 +552,8 @@ angular.module('Rvd').service('variableRegistry', [function () {
     registerVariable("core_ForwardedFrom");
     registerVariable("core_InstanceId");
     registerVariable("core_ReferTarget");
+    registerVariable("core_Transferor");
+    registerVariable("core_Transferee");
 	// after collect, record, ussdcollect
 	registerVariable("core_Digits");
 	// after dial
