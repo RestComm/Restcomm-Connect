@@ -23,7 +23,7 @@
 			"type":"object",
 			"properties": {
 				"name": {"type":"string", "minLength": 1},
-				"operator": {"type":"string", "enum": ["equals","greater","greaterEqual","less","lessEqual","matches"]},
+				"operator": {"type":"string", "enum": ["equals","notequal","greater","greaterEqual","less","lessEqual","matches"]},
 				"comparison": {
 					"type": "object",
 					"properties": {

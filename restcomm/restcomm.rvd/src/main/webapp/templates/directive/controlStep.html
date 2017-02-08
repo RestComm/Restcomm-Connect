@@ -4,11 +4,13 @@
 	</div>
 	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 		<div>
+            <!--{{step}} -->
             <h4>Conditions</h4>
             <div ng-repeat="condition in step.conditions" class="row condition">
-                <div class="col-md-3 col-lg-3">
+                <div class="col-md-3">
                     <select ng-model="condition.operator" class="form-control">
-                        <option value="equals">equals</option>
+                        <option value="equals">equal</option>
+                        <option value="notequal">not equal</option>
                         <option value="greater">greater</option>
                         <option value="greaterEqual">greater or equal</option>
                         <option value="less">less</option>
@@ -16,13 +18,16 @@
                         <option value="matches">regex match</option>
                     </select>
                 </div>
-                <div class="col-md-8 col-lg-8">
-                    <div ng-if="condition.operator=='equals' || condition.operator=='greater' || condition.operator=='less' || condition.operator=='greaterEqual' || condition.operator=='lessEqual'" class="form-inline">
+                <div class="col-md-8">
+                    <div ng-if="condition.operator=='equals' || condition.operator=='notequal' || condition.operator=='greater' || condition.operator=='less' || condition.operator=='greaterEqual' || condition.operator=='lessEqual'" class="form-inline">
                         <div class="form-group operand">
                             <input ng-model="condition.comparison.operand1" type="text" class="form-control" placeholder="operand 1">
                         </div>
                         <div class="form-group operand">
                             <input ng-model="condition.comparison.operand2" type="text" class="form-control" placeholder="operand 2">
+                        </div>
+                        <div class="form-group">
+                            <type-chooser model="condition.type"></type-chooser>
                         </div>
                     </div>
                     <div ng-if="condition.operator=='matches'" class="form-inline">
@@ -34,7 +39,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-1 col-lg-1">
+                <div class="col-md-1 trailing-buttons-wrap">
                     <button ng-click="removeCondition(condition.name)" class="btn btn-default"><i class="fa fa-trash-o"></i></button>
                 </div>
             </div>
@@ -42,7 +47,7 @@
                 <button ng-click="addCondition()" class="btn btn-primary"><i class="fa fa-plus"></i></button>
             </div>
             <div ng-show="step.conditions.length > 1" class="form-group">
-                <select ng-model="conditionJoiner" ng-change="rebuildConditionExpression(step)" class="form-control">
+                <select ng-model="step.conditionJoiner" ng-change="rebuildConditionExpression(step)" class="form-control">
                     <option value="all">All conditions should stand</option>
                     <option value="any">Any condition should stand</option>
                 </select>
@@ -51,7 +56,7 @@
         <hr>
         <div>
             <h4>Actions</h4>
-            <div ng-repeat="action in step.actions" class="row action">
+            <div ng-repeat="action in step.actions track by $index" class="row action">
                 <div class="col-md-3 col-lg-3">
                     <select ng-model="action.kind" ng-change="actionKindChanged(action.kind)" class="form-control">
                         <option value="continueTo">Continue To</option>
@@ -59,15 +64,15 @@
                         <option value="capture">Capture</option>
                     </select>
                 </div>
-                <div class="col-md-8">
+                <div class="col-md-7">
                     <div ng-if="action.kind=='assign'" class="row action-assign">
+                        <div class="col-md-4 ">
+                            <vardef variable="action.assign.varName" variable-scope="action.assign.varScope"></vardef>
+                        </div>
                         <div class="col-md-8">
                             <div class="text-field">
                                 <input ng-model="action.assign.expression" type="text" class="form-control">
                             </div>
-                        </div>
-                        <div class="col-md-4 ">
-                            <vardef variable="action.assign.varName" variable-scope="action.assign.varScope"></vardef>
                         </div>
                     </div>
                     <div ng-if="action.kind=='continueTo'" class="form-inline">
@@ -76,6 +81,11 @@
                         </select>
                     </div>
                     <div ng-if="action.kind=='capture'" class="row action-capture">
+                        <div class="col-md-4 form-inline">
+                            <div class="form-group variable">
+                                <vardef variable="action.capture.varName" variable-scope="action.capture.varScope"></vardef>
+                            </div>
+                        </div>
                         <div class="col-md-8 form-inline">
                             <div class="form-group regex-field">
                                 <input ng-model="action.capture.regex" type="text" class="form-control" placeholder="regex">
@@ -84,15 +94,14 @@
                                 <input ng-model="action.capture.data" type="text" class="form-control" placeholder="data">
                             </div>
                         </div>
-                        <div class="col-md-4 form-inline">
-                            <div class="form-group variable">
-                                <vardef variable="action.capture.varName" variable-scope="action.capture.varScope"></vardef>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
-                <div class="col-md-1 col-lg-1">
+                <div class="col-md-2 trailing-buttons-wrap">
+                    <span ng-show="step.actions.length > 1" class="reorder-buttons">
+                        <i ng-click="moveAction($index,-1)" class="fa fa-chevron-up rvd-clickable"></i>
+                        <i ng-click="moveAction($index,1)" class="fa fa-chevron-down rvd-clickable"></i>
+                    </span>
                     <button ng-click="removeAction(action.name)" class="btn btn-default"><i class="fa fa-trash-o"></i></button>
                 </div>
             </div>

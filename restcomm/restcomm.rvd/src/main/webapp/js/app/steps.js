@@ -16,6 +16,8 @@ angular.module('Rvd')
 })
 .service('stepPacker', ['$injector', function($injector) {
 	this.unpack = function(source) {
+		if (source.kind == 'control') // TODO do the same for the rest of the steps once directives are created
+		    return source;
 		var unpacked = $injector.invoke([source.kind+'Model', function(model){
 			var newStep = new model().init(source);
 			return newStep;

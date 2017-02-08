@@ -338,12 +338,26 @@ angular.module('Rvd').directive('vardef', function () {
         },
         templateUrl: "templates/directive/vardef.html",
         link: function (scope) {
-            console.log('in vardef directive link');
-
             scope.setVarScope = function(varscope) {
                 scope.varScope = varscope;
             }
         }
     }
-});
+})
+.directive('typeChooser', function () {
+    return {
+        restroct: "E",
+        scope: {
+            type: '=model'
+        },
+        templateUrl: "templates/directive/typeChooser.html",
+        link: function (scope) {
+            scope.setType = function (newtype) {
+                scope.type = newtype;
+            }
+        }
+    }
+})
+;
+
 

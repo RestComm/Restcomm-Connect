@@ -126,47 +126,22 @@ label {
     border-right-width: 1px;
     border-right-style: inset;
 }
-
 .control-step .condition, .control-step .action{
     margin-bottom: 10px;
 }
-
-
-/*
-.control-step .condition .operand {
-    width: 37%;
+.control-step .action .reorder-buttons {
+    margin-right: 5px;
 }
-
-.control-step .condition .operator {
-    width: 20%;
+.control-step .trailing-buttons-wrap {
+    text-align: right;
 }
-.control-step .action-param, .control-step .action-kind {
-    margin-bottom: 7px;
-}
-.control-step .action-assign .action-param {
-    width: 27%;
-}
-.control-step .action .action-kind {
-    width: 36%;
-}
-.control-step .action-capture .action-param-data, .control-step .action-capture .action-param-variable {
-    width: 44%;
-}
-.control-step .action-capture .action-arrow {
-    width: 7%;
-}
-*/
-
-
 .control-step .action-capture .form-group.regex-field, .control-step .action-capture .form-group.data-field {
     width: 49%;
 }
-
-/*
-.control-step .action-assign .form-group.text-field {
-    width: 62%;
+.control-step .condition .type-chooser {
+    margin-left: 5px;
 }
-*/
+
 
 /* variable definition */
 
@@ -189,6 +164,12 @@ vardef .assign-arrow {
     top: 11px;
     left: 8px;
 }
+
+/* type-chooser */
+.type-chooser .chosen-label {
+    color: #999;
+}
+
 
 
 /* override jquery-ui colors since theme-roller never responded */
