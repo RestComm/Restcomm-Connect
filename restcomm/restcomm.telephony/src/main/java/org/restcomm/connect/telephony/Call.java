@@ -1498,7 +1498,7 @@ public final class Call extends UntypedActor {
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
-        if (is(inProgress) || is(waitingForAnswer)) {
+        if (is(inProgress)) {
             // Forward to media server controller
             this.msController.tell(message, sender);
         }
