@@ -758,9 +758,22 @@ public final class CallManager extends UntypedActor {
             return;
         }
 
-        IncomingPhoneNumber number = storage.getIncomingPhoneNumbersDao().getIncomingPhoneNumber(cdr.getTo());
+        final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
+        String phone = cdr.getTo();
+        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
+        if(number == null){
+            if (phone.startsWith("+")) {
+                //remove the (+) and check if exists
+                phone= phone.replaceFirst("\\+","");
+                number = numbers.getIncomingPhoneNumber(phone);
+            } else {
+                //Add "+" add check if number exists
+                phone = "+".concat(phone);
+                number = numbers.getIncomingPhoneNumber(phone);
+            }
+        }
         if (number == null) {
-            number = storage.getIncomingPhoneNumbersDao().getIncomingPhoneNumber("*");
+            number = numbers.getIncomingPhoneNumber("*");
         }
 
         if (number == null || (number.getReferUrl() == null && number.getReferApplicationSid() == null)) {
