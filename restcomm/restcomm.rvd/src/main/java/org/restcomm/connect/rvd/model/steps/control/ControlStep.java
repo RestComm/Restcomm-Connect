@@ -115,6 +115,8 @@ public class ControlStep extends Step {
             switch (condition.operator) {
                 case "equals":
                     return operand1Expanded.equals(operand2Expanded);
+                case "notequal":
+                    return !operand1Expanded.equals(operand2Expanded);
                 case "greater":
                     return Float.parseFloat(operand1Expanded) > Float.parseFloat(operand2Expanded);
                 case "greaterEqual":

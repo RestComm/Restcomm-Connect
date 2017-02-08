@@ -87,9 +87,10 @@ angular.module('Rvd')
                 for (var i=0; i<dto.conditions.length; i++) {
                     var condition = {};
                     var dtoCondition = dto.conditions[i];
+                    condition.name = dtoCondition.name;
                     condition.operator = dtoCondition.operator;
                     if (dtoCondition.matcher) {
-                        condition.operator = "matches"
+                        condition.matcher = dtoCondition.matcher;
                     } else {
                         // this is a comparison
                         condition.comparison = dtoCondition.comparison;
@@ -97,7 +98,7 @@ angular.module('Rvd')
                     step.conditions.push(condition);
                 }
                 step.conditionExpression = dto.conditionExpression;
-                if (dto.conditionExpression.indexOf("AND") !== -1)
+                if (!step.conditionExpression || (dto.conditionExpression.indexOf("AND") !== -1))
                     step.conditionJoiner = "all";
                 else
                     step.conditionJoiner = "any";
@@ -106,6 +107,7 @@ angular.module('Rvd')
                 for (i=0; i<dto.actions.length; i++) {
                     var action = {};
                     var dtoAction = dto.actions[i];
+                    action.name = dtoAction.name;
                     if (dtoAction.assign) {
                         action.kind = "assign";
                         action.assign = dtoAction.assign;
@@ -144,7 +146,7 @@ angular.module('Rvd')
                     var action = step.actions[i];
                     dtoAction.name = action.name;
                     dtoAction[action.kind] = action[action.kind];
-                    dtoActions.push(dtoAction);
+                    dto.actions.push(dtoAction);
                 }
             }
 
@@ -160,9 +162,10 @@ angular.module('Rvd')
             function newAction(kind,step) {
                 return {
                    name: "A" + (++actionLastId),
-                   kind : "continueTo", // continueTo / assign
-                   continueTo: {}
+                   kind : "assign", // continueTo / assign / capture
+                   assign: {}
                    // assign: {},
+                   // continueTo: {},
                    // capture: {}
                }
             }
@@ -173,14 +176,14 @@ angular.module('Rvd')
             }
             scope.removeCondition = function (conditionName) {
                 for (var i=0; i<step.conditions.length; i++) {
-                    if (step.conditions[i].name = conditionName) {
+                    if (step.conditions[i].name == conditionName) {
                         step.conditions.splice(i,1);
                         rebuildConditionExpression(step);
                         return;
                     }
                 }
             }
-
+            // Actions methods
             scope.addAction = function () {
                 step.actions.push(newAction());
             }
@@ -190,6 +193,13 @@ angular.module('Rvd')
                         step.actions.splice(i,1);
                         return;
                     }
+                }
+            }
+            scope.moveAction = function (index, distance) {
+                if (index + distance >= 0 && index + distance < step.actions.length) {
+                    var tmpAction = step.actions[index+distance];
+                    step.actions[index + distance] = step.actions[index];
+                    step.actions[index] = tmpAction;
                 }
             }
 
@@ -209,8 +219,7 @@ angular.module('Rvd')
                     if (joiner == "any")
                         expression = names.join(" OR ");
                 }
-
-                return expression;
+                step.conditionExpression = expression;
             }
             scope.rebuildConditionExpression = rebuildConditionExpression;
             scope.removeStep = function (step) {
