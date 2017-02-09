@@ -171,7 +171,11 @@
     <touch file="${release.as7.dir}/standalone/deployments/restcomm.war.dodeploy"/>
 
     <!-- Copy Admin UI -->
-    <copy failonerror="true" file="${workspace.restcomm.dir}/restcomm.ui/target/restcomm-management.war" tofile="${release.as7.dir}/standalone/deployments/restcomm-management.war"/>
+    <copy failonerror="true" todir="${release.as7.dir}/standalone/deployments/restcomm-management.war">
+      <fileset dir="${workspace.restcomm.dir}/restcomm.ui/target/restcomm-management">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
     <touch file="${release.as7.dir}/standalone/deployments/restcomm-management.war.dodeploy"/>
 
     <!-- Copy RVD -->
