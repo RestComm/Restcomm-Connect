@@ -4,21 +4,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
     <display-name>RestComm</display-name>
-
-    <servlet>
-        <servlet-name>GetPublicConf</servlet-name>
-        <jsp-file>/jsp/public-conf.jsp</jsp-file>
-        <init-param>
-            <param-name>resetPasswordUrl</param-name>
-            <!-- URL that resets the password. If set it will be displayed in the Dashboard login -->
-            <param-value>https://accounts.restcomm.com/resetPassword.jsp</param-value>
-        </init-param>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>GetPublicConf</servlet-name>
-        <url-pattern>/jsp/public-conf.jsp</url-pattern>
-    </servlet-mapping>
-
+    
     <!--security-constraint>
     <web-resource-collection>
         <web-resource-name>RestComm</web-resource-name>
