@@ -41,7 +41,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -159,7 +158,7 @@ public class S3AccessTool {
         }
     }
 
-    public URL getPublicUrl (StringBuffer bucket, File file) {
+    public URI getPublicUrl (String bucket, String fileName) throws URISyntaxException {
         if (s3client == null) {
             s3client = getS3client();
         }
@@ -168,16 +167,16 @@ public class S3AccessTool {
         cal.setTime(date);
         cal.add(Calendar.MINUTE, 10);
         if (logger.isInfoEnabled()) {
-            final String msg = String.format("Prepared amazon s3 public url valid for 10 minutes for recording: ",file.getName());
+            final String msg = String.format("Prepared amazon s3 public url valid for 10 minutes for recording: ",fileName);
             logger.info(msg);
         }
         date = cal.getTime();
         GeneratePresignedUrlRequest generatePresignedUrlRequestGET =
-                new GeneratePresignedUrlRequest(bucket.toString(), file.getName());
+                new GeneratePresignedUrlRequest(bucket.toString(), fileName);
         generatePresignedUrlRequestGET.setMethod(HttpMethod.GET);
         generatePresignedUrlRequestGET.setExpiration(date);
 
-        return s3client.generatePresignedUrl(generatePresignedUrlRequestGET);
+        return s3client.generatePresignedUrl(generatePresignedUrlRequestGET).toURI();
     }
 
     private void removeLocalFile(final File file) {

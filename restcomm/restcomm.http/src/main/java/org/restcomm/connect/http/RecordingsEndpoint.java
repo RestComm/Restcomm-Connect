@@ -22,32 +22,37 @@ package org.restcomm.connect.http;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
-
-import java.util.List;
-
-import static javax.ws.rs.core.MediaType.*;
+import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.amazonS3.S3AccessTool;
+import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Recording;
+import org.restcomm.connect.dao.entities.RecordingList;
+import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.http.converter.RecordingConverter;
+import org.restcomm.connect.http.converter.RecordingListConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.net.URI;
+import java.util.List;
 
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
-
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.http.converter.RecordingListConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.RecordingsDao;
-import org.restcomm.connect.dao.entities.Recording;
-import org.restcomm.connect.dao.entities.RecordingList;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.http.converter.RecordingConverter;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.temporaryRedirect;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -60,6 +65,8 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
     protected RecordingsDao dao;
     protected Gson gson;
     protected XStream xstream;
+    protected S3AccessTool s3AccessTool;
+    protected String bucketName;
 
     public RecordingsEndpoint() {
         super();
@@ -82,6 +89,24 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new RecordingListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
+        Configuration amazonS3Configuration = configuration.subset("amazon-s3");
+        if(!amazonS3Configuration.isEmpty()) { // Do not fail with NPE is amazonS3Configuration is not present for older install
+            boolean amazonS3Enabled = amazonS3Configuration.getBoolean("enabled");
+            if (amazonS3Enabled) {
+                final String accessKey = amazonS3Configuration.getString("access-key");
+                final String securityKey = amazonS3Configuration.getString("security-key");
+                bucketName = amazonS3Configuration.getString("bucket-name");
+                final String folder = amazonS3Configuration.getString("folder");
+                final boolean reducedRedundancy = amazonS3Configuration.getBoolean("reduced-redundancy");
+                final int daysToRetainPublicUrl = amazonS3Configuration.getInt("days-to-retain-public-url");
+                final boolean removeOriginalFile = amazonS3Configuration.getBoolean("remove-original-file");
+                final String bucketRegion = amazonS3Configuration.getString("bucket-region");
+                final boolean testing = amazonS3Configuration.getBoolean("testing",false);
+                final String testingUrl = amazonS3Configuration.getString("testing-url",null);
+                s3AccessTool = new S3AccessTool(accessKey, securityKey, bucketName, folder, reducedRedundancy, daysToRetainPublicUrl, removeOriginalFile,bucketRegion, testing, testingUrl);
+            }
+        }
+
     }
 
     protected Response getRecording(final String accountSid, final String sid, final MediaType responseType) {
@@ -130,5 +155,31 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
         }
     }
 
+    protected Response getRecordingWav (String accountSid, String sid) {
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
+        Account operatedAccount = accountsDao.getAccount(accountSid);
+
+        final Recording recording = dao.getRecording(new Sid(sid));
+        if (recording == null) {
+            return status(NOT_FOUND).build();
+        } else {
+            secure(operatedAccount, recording.getAccountSid(), SecuredType.SECURED_STANDARD);
+            URI recordingUri = null;
+            try {
+                if (recording.getS3Uri() != null) {
+                    recordingUri = s3AccessTool.getPublicUrl(bucketName, recording.getSid() + ".wav");
+                } else {
+                    String recFile = "/restcomm/recordings/" + recording.getSid() + ".wav";
+                    recordingUri = UriUtils.resolve(new URI(recFile));
+                }
+            } catch (Exception e) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Problem during preparation of Recording wav file link, ",e);
+                }
+            }
+
+            return temporaryRedirect(recordingUri).build();
+        }
+    }
 
 }
