@@ -273,6 +273,15 @@ public class ReferTest {
                 callSid = param.split("=")[1];
             }
         }
+
+        requests = findAll(getRequestedFor(urlPathMatching("/2222")));
+        assertTrue(requests.size() == 1);
+        requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();
+        params = Arrays.asList(requestBody.split("&"));
+        assertTrue(params.contains("Transferor=%2B131313"));
+        assertTrue(params.contains("Transferee=bob"));
+        assertTrue(params.contains("ReferTarget=alice"));
+
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));

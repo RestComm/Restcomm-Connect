@@ -231,6 +231,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     URI referUrl;
     String referMethod;
     String referTarget;
+    String transferor;
+    String transferee;
     URI statusCallback;
     String statusCallbackMethod;
     String emailAddress;
