@@ -62,6 +62,9 @@ public final class RecordingConverter extends AbstractConverter implements JsonS
         writer.startNode("FileUri");
         writer.setValue(recording.getFileUri().toString());
         writer.endNode();
+        writer.startNode("AmazonS3Uri");
+        writer.setValue(recording.getS3Uri().toString());
+        writer.endNode();
         writer.endNode();
     }
 
@@ -76,7 +79,10 @@ public final class RecordingConverter extends AbstractConverter implements JsonS
         writeDuration(recording.getDuration(), object);
         writeApiVersion(recording.getApiVersion(), object);
         writeUri(recording.getUri(), object);
-        object.addProperty("file_uri", recording.getFileUri().toString());
+        if (recording.getFileUri() != null)
+            object.addProperty("file_uri", recording.getFileUri().toString());
+        if (recording.getS3Uri() != null)
+            object.addProperty("s3_uri", recording.getS3Uri().toString());
         return object;
     }
 }
