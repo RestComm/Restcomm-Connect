@@ -571,7 +571,7 @@ public final class UserAgentManager extends UntypedActor {
                         try {
                             request.getApplicationSession().setInvalidateWhenReady(true);
                         } catch (IllegalStateException exception) {
-                            logger.error("Exception while trying to setInvalidateWhenReady(true) for application session, exception: "+exception);
+                            logger.warning("Illegal State: while trying to setInvalidateWhenReady(true) for application session, message: "+exception.getMessage());
                         }
                     }
                 } else {
