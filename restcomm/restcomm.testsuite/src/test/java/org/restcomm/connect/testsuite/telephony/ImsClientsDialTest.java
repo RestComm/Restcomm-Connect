@@ -4,6 +4,7 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 import java.net.URL;
@@ -129,8 +130,8 @@ public class ImsClientsDialTest {
 
     @Before
     public void before() throws Exception {
-    	
-    	imsSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5060", "127.0.0.1:5080");
+        
+        imsSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5060", "127.0.0.1:5080");
 
         augustSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
         augustPhone = augustSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, augustContact);
@@ -145,11 +146,11 @@ public class ImsClientsDialTest {
         pstnPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, pstnContact);
         
         if(isAugustRegistered){
-        	unregisterAugust();
+            unregisterAugust();
         }
         
         if(isJuliusRegistered){
-        	unregisterJulius();
+            unregisterJulius();
         }
 
     }
@@ -167,10 +168,10 @@ public class ImsClientsDialTest {
             imsSipStack.dispose();
         }
         if (imsAugustPhone != null) {
-        	imsAugustPhone.dispose();
+            imsAugustPhone.dispose();
         }
         if (imsJuliusPhone != null) {
-        	imsJuliusPhone.dispose();
+            imsJuliusPhone.dispose();
         }
 
         Thread.sleep(3000);
@@ -180,14 +181,14 @@ public class ImsClientsDialTest {
 
     @Test
     public void testRegisterClients() throws ParseException, InterruptedException, SQLException {
-    	logger.info("testRegisterClients");
+        logger.info("testRegisterClients");
         SipURI uri = augustSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(new Runnable() {
             @Override
             public void run() {
-            	imsAugustPhone.listenRequestMessage();
+                imsAugustPhone.listenRequestMessage();
                 RequestEvent requestEvent = imsAugustPhone.waitRequest(10000);
                 assertNotNull(requestEvent);
                 try {
@@ -224,12 +225,13 @@ public class ImsClientsDialTest {
         isAugustRegistered = true;
         augustPhone.createSipCall().listenForIncomingCall();
 
-        Thread.sleep(1000);
+        Thread.sleep(500);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
 
         executorService.execute(new Runnable() {
             @Override
             public void run() {
-            	imsAugustPhone.listenRequestMessage();
+                imsAugustPhone.listenRequestMessage();
                 RequestEvent requestEvent = imsAugustPhone.waitRequest(10000);
                 assertNotNull(requestEvent);
                 try {
@@ -250,6 +252,135 @@ public class ImsClientsDialTest {
             }
         });
         assertTrue(augustPhone.unregister(augustContact, 0));
+        Thread.sleep(500);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        isAugustRegistered = false;
+    }
+
+    @Test
+    public void testRegisterClientForbidden() throws ParseException, InterruptedException, SQLException {
+        logger.info("testRegisterClients");
+        SipURI uri = augustSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                imsAugustPhone.listenRequestMessage();
+                RequestEvent requestEvent = imsAugustPhone.waitRequest(10000);
+                assertNotNull(requestEvent);
+                try {
+                    Response response = imsSipStack.getMessageFactory().createResponse(401, requestEvent.getRequest());
+                    WWWAuthenticateHeader wwwAuthenticateHeader = imsSipStack.getHeaderFactory().createWWWAuthenticateHeader("Digest realm=\"ims.tp.pl\",\n" +
+                            "   nonce=\"b7c9036dbf357f7683f054aea940e9703dc8f84c1108\",\n" +
+                            "   opaque=\"ALU:QbkRBthOEgEQAkgVEwwHRAIBHgkdHwQCQ1lFRkZWDhMyIXBqLCs0Zj06ZTwhdHpgZmI_\",\n" +
+                            "   algorithm=MD5,\n" +
+                            "   qop=\"auth\"");
+                    response.setHeader(wwwAuthenticateHeader);
+                    ContactHeader contactHeader = augustSipStack.getHeaderFactory().createContactHeader();
+                    contactHeader.setAddress(augustSipStack.getAddressFactory().createAddress(imsContact));
+                    response.addHeader(contactHeader);
+                    imsAugustPhone.sendReply(requestEvent, response);
+                    requestEvent = imsAugustPhone.waitRequest(10000);
+                    response = imsSipStack.getMessageFactory().createResponse(Response.FORBIDDEN, requestEvent.getRequest());
+                    contactHeader = augustSipStack.getHeaderFactory().createContactHeader();
+                    contactHeader.setExpires(600);
+                    contactHeader.setAddress(augustSipStack.getAddressFactory().createAddress(imsContact));
+                    response.addHeader(contactHeader);
+                    imsAugustPhone.sendReply(requestEvent, response);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    fail(e.getMessage());
+                }catch (InvalidArgumentException e) {
+                    e.printStackTrace();
+                    fail(e.getMessage());
+                }
+
+            }
+        });
+
+        assertFalse(augustPhone.register(uri, "august", "1234", augustContact, 3600, 3600));
+
+        Thread.sleep(500);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+       
+    }
+
+    @Test
+    public void testReRegisterClientForbidden() throws ParseException, InterruptedException, SQLException {
+        logger.info("testRegisterClients");
+        SipURI uri = augustSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                imsAugustPhone.listenRequestMessage();
+                RequestEvent requestEvent = imsAugustPhone.waitRequest(10000);
+                assertNotNull(requestEvent);
+                try {
+                    Response response = imsSipStack.getMessageFactory().createResponse(401, requestEvent.getRequest());
+                    WWWAuthenticateHeader wwwAuthenticateHeader = imsSipStack.getHeaderFactory().createWWWAuthenticateHeader("Digest realm=\"ims.tp.pl\",\n" +
+                            "   nonce=\"b7c9036dbf357f7683f054aea940e9703dc8f84c1108\",\n" +
+                            "   opaque=\"ALU:QbkRBthOEgEQAkgVEwwHRAIBHgkdHwQCQ1lFRkZWDhMyIXBqLCs0Zj06ZTwhdHpgZmI_\",\n" +
+                            "   algorithm=MD5,\n" +
+                            "   qop=\"auth\"");
+                    response.setHeader(wwwAuthenticateHeader);
+                    ContactHeader contactHeader = augustSipStack.getHeaderFactory().createContactHeader();
+                    contactHeader.setAddress(augustSipStack.getAddressFactory().createAddress(imsContact));
+                    response.addHeader(contactHeader);
+                    imsAugustPhone.sendReply(requestEvent, response);
+                    requestEvent = imsAugustPhone.waitRequest(10000);
+                    response = imsSipStack.getMessageFactory().createResponse(200, requestEvent.getRequest());
+                    contactHeader = augustSipStack.getHeaderFactory().createContactHeader();
+                    contactHeader.setExpires(600);
+                    contactHeader.setAddress(augustSipStack.getAddressFactory().createAddress(imsContact));
+                    response.addHeader(contactHeader);
+                    imsAugustPhone.sendReply(requestEvent, response);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    fail(e.getMessage());
+                }catch (InvalidArgumentException e) {
+                    e.printStackTrace();
+                    fail(e.getMessage());
+                }
+
+            }
+        });
+
+        assertTrue(augustPhone.register(uri, "august", "1234", augustContact, 3600, 3600));
+        isAugustRegistered = true;
+        augustPhone.createSipCall().listenForIncomingCall();
+
+        Thread.sleep(500);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                imsAugustPhone.listenRequestMessage();
+                RequestEvent requestEvent = imsAugustPhone.waitRequest(10000);
+                assertNotNull(requestEvent);
+                try {
+                    Response response = imsSipStack.getMessageFactory().createResponse(Response.FORBIDDEN, requestEvent.getRequest());
+                    ContactHeader contactHeader = augustSipStack.getHeaderFactory().createContactHeader();
+                    contactHeader.setExpires(0);
+                    contactHeader.setAddress(augustSipStack.getAddressFactory().createAddress(imsContact));
+                    response.addHeader(contactHeader);
+                    imsAugustPhone.sendReply(requestEvent, response);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    fail(e.getMessage());
+                }catch (InvalidArgumentException e) {
+                    e.printStackTrace();
+                    fail(e.getMessage());
+                }
+
+            }
+        });
+        assertFalse(augustPhone.register(uri, "august", "1234", augustContact, 3600, 3600));
+        Thread.sleep(500);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         isAugustRegistered = false;
     }
     
