@@ -156,8 +156,8 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getRecordingWav (String accountSid, String sid) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
         Account operatedAccount = accountsDao.getAccount(accountSid);
+        secure(operatedAccount, "RestComm:Read:Recordings");
 
         final Recording recording = dao.getRecording(new Sid(sid));
         if (recording == null) {
