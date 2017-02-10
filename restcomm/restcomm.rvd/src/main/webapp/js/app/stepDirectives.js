@@ -163,9 +163,7 @@ angular.module('Rvd')
                 return {
                    name: "A" + (++actionLastId),
                    kind : "assign", // continueTo / assign / capture
-                   assign: {
-                      expression: ""
-                   }
+                   assign: {expression: "", varScope:"app"}
                    // assign: {},
                    // continueTo: {},
                    // capture: {}
@@ -185,6 +183,15 @@ angular.module('Rvd')
                     }
                 }
             }
+            scope.conditionOperatorChanged = function (condition, operator) {
+                if (operator == "matches" && !condition.matcher) {
+                    condition.matcher = {regex:"", text:""}
+                } else
+                if (operator != matcher && !condition.comparison) {
+                    condition.comparison = {operand1:"", operand2: "", type: 'text'};
+                }
+            }
+
             // Actions methods
             scope.addAction = function () {
                 step.actions.push(newAction());
@@ -206,13 +213,13 @@ angular.module('Rvd')
             }
             scope.actionKindChanged = function (action, kind) {
                 if (kind == "assign" && !action.assign)
-                    action.assign = { expression: ""};
+                    action.assign = { expression: "", varScope: "app"};
                 else
                 if (kind == "continueTo" && !action.continueTo)
                     action.continueTo = {};
                 else
                 if (kind == "capture" && !action.capture)
-                    action.capture = {regex:"",data:""};
+                    action.capture = {regex:"",data:"", varScope: "app"};
             }
 
             function rebuildConditionExpression(step) {
@@ -238,15 +245,17 @@ angular.module('Rvd')
                 scope.$emit("step-removed", step);
             }
             scope.$on("clear-step-warnings", function () {
-                step.iface.showWarning = false;
+                step.iface.showWarning = false; // TODO remove the 'showWarning' attribute and use 'headWarning' object instead
+                delete step.iface.headWarning;
             })
             scope.$on("update-dtos", function () {
                 toDto(stepModel, step);
             });
             scope.$on("notify-step", function (event, args) {
-                if (args.name == stepModel.name) { // does the event refer to this step
-                    if (args.type == "show-warning") {
+                if (args.target == stepModel.name) { // does the event refer to this step
+                    if (args.type == "validation-error") {
                         step.iface.showWarning = true;
+                        step.iface.headWarning = { type: "warning", title: args.data.summary};
                     }
                 }
             });

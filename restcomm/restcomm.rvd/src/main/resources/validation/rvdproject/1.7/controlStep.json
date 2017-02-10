@@ -36,8 +36,8 @@
 				"matcher": {
 					"type":"object",
 					"properties": {
-						"text": {"type":"string","minLength": 1},
-						"regex": {"type":"string","minLength": 1}
+						"text": {"type":"string"},
+						"regex": {"type":"string"}
 					},
 					"required": ["text","regex"]
 				}

@@ -64,10 +64,10 @@ public class ControlStep extends Step {
                     if (previousOperation == null)
                         result = evaluateCondition(getConditionByName(part), interpreter);
                     else
-                    if (previousOperation == "AND")
+                    if ("AND".equals(previousOperation))
                         result = result && evaluateCondition(getConditionByName(part), interpreter);
                     else
-                    if (previousOperation == "OR")
+                    if ("OR".equals(previousOperation))
                         result = result || evaluateCondition(getConditionByName(part), interpreter);
                     else
                         // TODO return a proper error here
@@ -169,7 +169,8 @@ public class ControlStep extends Step {
                 interpreter.putStickyVariable(action.assign.varName, expandedSource);
         } else
         if (action.capture != null) {
-            executeCaptureAction(action.capture.data, action.capture.regex, action.capture.varName, action.capture.varScope, interpreter);
+            String expandedData = interpreter.populateVariables(action.capture.data);
+            executeCaptureAction(expandedData, action.capture.regex, action.capture.varName, action.capture.varScope, interpreter);
         }
         // TODO handle other cases with not-implemented exception
         return null;
