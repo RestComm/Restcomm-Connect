@@ -66,7 +66,6 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
     protected Gson gson;
     protected XStream xstream;
     protected S3AccessTool s3AccessTool;
-    protected String bucketName;
 
     public RecordingsEndpoint() {
         super();
@@ -76,6 +75,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
     public void init() {
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+        Configuration amazonS3Configuration = configuration.subset("amazon-s3");
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getRecordingsDao();
@@ -89,21 +89,20 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new RecordingListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
-        Configuration amazonS3Configuration = configuration.subset("amazon-s3");
         if(!amazonS3Configuration.isEmpty()) { // Do not fail with NPE is amazonS3Configuration is not present for older install
             boolean amazonS3Enabled = amazonS3Configuration.getBoolean("enabled");
             if (amazonS3Enabled) {
                 final String accessKey = amazonS3Configuration.getString("access-key");
                 final String securityKey = amazonS3Configuration.getString("security-key");
-                bucketName = amazonS3Configuration.getString("bucket-name");
-                final String folder = amazonS3Configuration.getString("folder");
+                final String bucketName = amazonS3Configuration.getString("bucket-name");
+                final String bucketFolder = amazonS3Configuration.getString("folder");
                 final boolean reducedRedundancy = amazonS3Configuration.getBoolean("reduced-redundancy");
-                final int daysToRetainPublicUrl = amazonS3Configuration.getInt("days-to-retain-public-url");
+                final int minutesToRetainPublicUrl = amazonS3Configuration.getInt("minutes-to-retain-public-url", 10);
                 final boolean removeOriginalFile = amazonS3Configuration.getBoolean("remove-original-file");
                 final String bucketRegion = amazonS3Configuration.getString("bucket-region");
                 final boolean testing = amazonS3Configuration.getBoolean("testing",false);
                 final String testingUrl = amazonS3Configuration.getString("testing-url",null);
-                s3AccessTool = new S3AccessTool(accessKey, securityKey, bucketName, folder, reducedRedundancy, daysToRetainPublicUrl, removeOriginalFile,bucketRegion, testing, testingUrl);
+                s3AccessTool = new S3AccessTool(accessKey, securityKey, bucketName, bucketFolder, reducedRedundancy, minutesToRetainPublicUrl, removeOriginalFile,bucketRegion, testing, testingUrl);
             }
         }
 
@@ -157,17 +156,17 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
 
     protected Response getRecordingWav (String accountSid, String sid) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Read:Recordings");
+//        secure(operatedAccount, "RestComm:Read:Recordings");
 
         final Recording recording = dao.getRecording(new Sid(sid));
         if (recording == null) {
             return status(NOT_FOUND).build();
         } else {
-            secure(operatedAccount, recording.getAccountSid(), SecuredType.SECURED_STANDARD);
+//            secure(operatedAccount, recording.getAccountSid(), SecuredType.SECURED_STANDARD);
             URI recordingUri = null;
             try {
                 if (recording.getS3Uri() != null) {
-                    recordingUri = s3AccessTool.getPublicUrl(bucketName, recording.getSid() + ".wav");
+                    recordingUri = s3AccessTool.getPublicUrl(recording.getSid() + ".wav");
                 } else {
                     String recFile = "/restcomm/recordings/" + recording.getSid() + ".wav";
                     recordingUri = UriUtils.resolve(new URI(recFile));

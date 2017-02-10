@@ -58,21 +58,21 @@ public class S3AccessTool {
     private String folder;
     private String bucketRegion;
     private boolean reducedRedundancy;
-    private int daysToRetainPublicUrl;
+    private int minutesToRetainPublicUrl;
     private boolean removeOriginalFile;
     private boolean testing;
     private String testingUrl;
     private AmazonS3 s3client;
 
     public S3AccessTool(final String accessKey, final String securityKey, final String bucketName, final String folder,
-            final boolean reducedRedundancy, final int daysToRetainPublicUrl, final boolean removeOriginalFile,
+            final boolean reducedRedundancy, final int minutesToRetainPublicUrl, final boolean removeOriginalFile,
                         final String bucketRegion, final boolean testing, final String testingUrl) {
         this.accessKey = accessKey;
         this.securityKey = securityKey;
         this.bucketName = bucketName;
         this.folder = folder;
         this.reducedRedundancy = reducedRedundancy;
-        this.daysToRetainPublicUrl = daysToRetainPublicUrl;
+        this.minutesToRetainPublicUrl = minutesToRetainPublicUrl;
         this.removeOriginalFile = removeOriginalFile;
         this.bucketRegion = bucketRegion;
         this.testing = testing;
@@ -158,21 +158,25 @@ public class S3AccessTool {
         }
     }
 
-    public URI getPublicUrl (String bucket, String fileName) throws URISyntaxException {
+    public URI getPublicUrl (String fileName) throws URISyntaxException {
         if (s3client == null) {
             s3client = getS3client();
         }
         Date date = new Date();
         Calendar cal = Calendar.getInstance();
         cal.setTime(date);
-        cal.add(Calendar.MINUTE, 10);
+        cal.add(Calendar.MINUTE, minutesToRetainPublicUrl);
         if (logger.isInfoEnabled()) {
-            final String msg = String.format("Prepared amazon s3 public url valid for 10 minutes for recording: ",fileName);
+            final String msg = String.format("Prepared amazon s3 public url valid for %d minutes for recording: ",fileName, minutesToRetainPublicUrl);
             logger.info(msg);
         }
         date = cal.getTime();
+        String bucket = bucketName;
+        if (folder != null && !folder.isEmpty()) {
+            bucket = bucket.concat("/").concat(folder);
+        }
         GeneratePresignedUrlRequest generatePresignedUrlRequestGET =
-                new GeneratePresignedUrlRequest(bucket.toString(), fileName);
+                new GeneratePresignedUrlRequest(bucket, fileName);
         generatePresignedUrlRequestGET.setMethod(HttpMethod.GET);
         generatePresignedUrlRequestGET.setExpiration(date);
 
