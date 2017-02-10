@@ -293,7 +293,7 @@
 		<access-key></access-key>
 		<security-key></security-key>
 		<reduced-redundancy>false</reduced-redundancy>
-		<days-to-retain-public-url>7</days-to-retain-public-url>
+		<minutes-to-retain-public-url>10</minutes-to-retain-public-url>
 		<remove-original-file>true</remove-original-file>
 		<bucket-region>us-east-1</bucket-region>
 		<testing>false</testing>

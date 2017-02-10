@@ -41,9 +41,10 @@ public final class Recording {
     private final String apiVersion;
     private URI uri;
     private URI fileUri;
+    private URI s3Uri;
 
     public Recording(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
-            final Sid callSid, final Double duration, final String apiVersion, final URI uri, final URI fileUri) {
+            final Sid callSid, final Double duration, final String apiVersion, final URI uri, final URI fileUri, final URI s3Uri) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -54,6 +55,7 @@ public final class Recording {
         this.apiVersion = apiVersion;
         this.uri = uri;
         this.fileUri = fileUri;
+        this.s3Uri = s3Uri;
     }
 
     public static Builder builder() {
@@ -106,6 +108,15 @@ public final class Recording {
         return this;
     }
 
+    public Recording setS3Uri(URI s3Uri) {
+        this.s3Uri = s3Uri;
+        return this;
+    }
+
+    public URI getS3Uri() {
+        return s3Uri;
+    }
+
     @NotThreadSafe
     public static final class Builder {
         private Sid sid;
@@ -115,6 +126,7 @@ public final class Recording {
         private String apiVersion;
         private URI uri;
         private URI fileUri;
+        private URI s3Uri;
 
         private Builder() {
             super();
@@ -122,7 +134,7 @@ public final class Recording {
 
         public Recording build() {
             final DateTime now = DateTime.now();
-            return new Recording(sid, now, now, accountSid, callSid, duration, apiVersion, uri, fileUri);
+            return new Recording(sid, now, now, accountSid, callSid, duration, apiVersion, uri, fileUri, s3Uri);
         }
 
         public void setSid(final Sid sid) {
@@ -152,5 +164,7 @@ public final class Recording {
         public void setFileUri(final URI uri) {
             this.fileUri = fileUri;
         }
+
+        public void setS3Uri(final URI s3Uri) { this.s3Uri = s3Uri; }
     }
 }

@@ -247,7 +247,8 @@ call_sid VARCHAR(34) NOT NULL,
 duration DOUBLE NOT NULL,
 api_version VARCHAR(10) NOT NULL,
 uri MEDIUMTEXT NOT NULL,
-file_uri MEDIUMTEXT
+file_uri MEDIUMTEXT,
+s3_uri MEDIUMTEXT
 );
 
 CREATE TABLE restcomm_transcriptions (
