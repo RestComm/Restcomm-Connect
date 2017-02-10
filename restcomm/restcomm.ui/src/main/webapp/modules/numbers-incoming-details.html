@@ -42,7 +42,7 @@
 <h4 class="voice-sms-ussd">SMS</h4>
 <div class="row number-infos-border">
     <div class="col-md-2">
-        <h4 class="voice-video-ussd-request">Voice Request</h4>
+        <h4 class="voice-video-ussd-request">SMS Request</h4>
     </div>
     <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="numberDetails.sms_application_sid" url-only-var="false" method-var="numberDetails.sms_method" url-var="numberDetails.sms_url" apps="localSmsApps"></rc-endpoint-url>
 </div>
@@ -88,7 +88,13 @@
         <a href="" class="number-advanced-toggle" ng-click="showUssdAdvanced = !showUssdAdvanced"><span ng-show="showUssdAdvanced">hide </span>advanced</a>
     </div>
 </div>
-
+<h4 class="voice-sms-ussd">Refer</h4>
+<div class="row number-infos-border">
+    <div class="col-md-2" style="padding-right: 0;">
+        <h4 class="voice-video-refer-request">Refer Request</h4>
+    </div>
+    <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="numberDetails.refer_application_sid" url-only-var="false" method-var="numberDetails.refer_method" url-var="numberDetails.refer_url" apps="localVoiceApps"></rc-endpoint-url>
+</div>
 
 <!--
 <div class="well well-sm">

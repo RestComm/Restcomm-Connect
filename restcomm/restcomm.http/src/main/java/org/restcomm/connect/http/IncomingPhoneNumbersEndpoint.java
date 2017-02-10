@@ -32,7 +32,6 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.loader.ObjectInstantiationException;
-import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Account;
@@ -189,11 +188,13 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         builder.setUssdFallbackMethod(getMethod("UssdFallbackMethod",data));
         builder.setUssdApplicationSid(getSid("UssdApplicationSid",data));
 
+        builder.setReferUrl(getUrl("ReferUrl", data));
+        builder.setReferMethod(getMethod("ReferMethod", data));
+        builder.setReferApplicationSid(getSid("ReferApplicationSid",data));
+
         final Configuration configuration = this.configuration.subset("runtime-settings");
-        String rootUri = configuration.getString("root-uri");
-        rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
-        buffer.append(rootUri).append(apiVersion).append("/Accounts/").append(accountSid.toString())
+        buffer.append("/").append(apiVersion).append("/Accounts/").append(accountSid.toString())
         .append("/IncomingPhoneNumbers/").append(sid.toString());
         builder.setUri(URI.create(buffer.toString()));
         return builder.build();
@@ -428,6 +429,26 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             else
                 incomingPhoneNumber.setSmsApplicationSid(getSid("SmsApplicationSid", data));
 
+        }
+
+        if (data.containsKey("ReferUrl")) {
+            URI uri = getUrl("ReferUrl", data);
+            incomingPhoneNumber.setReferUrl( isEmpty(uri.toString()) ? null : uri );
+        }
+
+        if (data.containsKey("ReferMethod")) {
+            incomingPhoneNumber.setReferMethod(getMethod("ReferMethod", data));
+        }
+
+        if (data.containsKey("ReferApplicationSid")) {
+            if ( org.apache.commons.lang.StringUtils.isEmpty( data.getFirst("ReferApplicationSid") ) )
+                incomingPhoneNumber.setReferApplicationSid(null);
+            else
+                incomingPhoneNumber.setReferApplicationSid(getSid("ReferApplicationSid", data));
+        }
+
+        if (data.containsKey("VoiceCapable")) {
+            incomingPhoneNumber.setVoiceCapable(Boolean.parseBoolean(data.getFirst("VoiceCapable")));
         }
 
         if (data.containsKey("VoiceCapable")) {
