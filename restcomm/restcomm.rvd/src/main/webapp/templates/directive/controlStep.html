@@ -4,7 +4,7 @@
 	</div>
 	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 		<div>
-            <!--{{step}} -->
+            {{step}}
             <h4>Conditions</h4>
             <div ng-repeat="condition in step.conditions" class="row condition">
                 <div class="col-md-3">
@@ -27,12 +27,12 @@
                             <input ng-model="condition.comparison.operand2" type="text" class="form-control" placeholder="operand 2">
                         </div>
                         <div class="form-group">
-                            <type-chooser model="condition.type"></type-chooser>
+                            <type-chooser model="condition.comparison.type"></type-chooser>
                         </div>
                     </div>
                     <div ng-if="condition.operator=='matches'" class="form-inline">
                         <div class="form-group operand">
-                            <input ng-model="condition.matcher.regex" type="text" class="form-control" placeholder="regex">
+                            <input ng-model="condition.matcher.regex" type="text" class="form-control" placeholder="pattern" title="Regular expression pattern e.g. ^[0-9]{10}$">
                         </div>
                         <div class="form-group operand">
                             <input ng-model="condition.matcher.text" type="text" class="form-control" placeholder="text">
@@ -58,7 +58,7 @@
             <h4>Actions</h4>
             <div ng-repeat="action in step.actions track by $index" class="row action">
                 <div class="col-md-3 col-lg-3">
-                    <select ng-model="action.kind" ng-change="actionKindChanged(action.kind)" class="form-control">
+                    <select ng-model="action.kind" ng-change="actionKindChanged(action, action.kind)" class="form-control">
                         <option value="continueTo">Continue To</option>
                         <option value="assign">Assign</option>
                         <option value="capture">Capture</option>
@@ -88,10 +88,10 @@
                         </div>
                         <div class="col-md-8 form-inline">
                             <div class="form-group regex-field">
-                                <input ng-model="action.capture.regex" type="text" class="form-control" placeholder="regex">
+                                <input ng-model="action.capture.regex" type="text" class="form-control" placeholder="pattern" title="Capture pattern in parenthesis e.g. '$([a-zA-Z]+) [a-zA-Z]+'">
                             </div>
                             <div class="form-group data-field">
-                                <input ng-model="action.capture.data" type="text" class="form-control" placeholder="data">
+                                <input ng-model="action.capture.data" type="text" class="form-control" title="Text to capture part of" placeholder="text">
                             </div>
                         </div>
                     </div>

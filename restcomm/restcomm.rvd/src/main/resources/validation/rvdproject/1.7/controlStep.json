@@ -27,10 +27,11 @@
 				"comparison": {
 					"type": "object",
 					"properties": {
-						"operand1": {"type":"string","minLength": 1},
-						"operand2": {"type":"string","minLength": 1}
+						"operand1": {"type":"string"},
+						"operand2": {"type":"string"},
+						"type": {"type":"string","enum": ["text","numeric"]}
 					},
-					"required": ["operand1","operand2"]
+					"required": ["operand1","operand2","type"]
 				},
 				"matcher": {
 					"type":"object",
@@ -50,8 +51,8 @@
 				"assign": {
 					"type": "object",
 					"properties": {
-						"expression": {"type":"string","minLength": 1},
-						"varName": {"type":"string","minLength": 1},
+						"expression": {"type":"string"},
+						"varName": { "$ref": "rvdproject-schema.json#/variableName" },
 						"varScope": { "$ref": "#/definitions/varScope"}
 					},
 					"required": ["expression","varName"]
@@ -68,7 +69,7 @@
 					"properties": {
 						"regex": {"type":"string"},
 						"data": {"type":"string"},
-						"varName": {"type":"string","minLength": 1},
+						"varName": { "$ref": "rvdproject-schema.json#/variableName" },
 						"varScope": { "$ref": "#/definitions/varScope"}
 					}
 				}

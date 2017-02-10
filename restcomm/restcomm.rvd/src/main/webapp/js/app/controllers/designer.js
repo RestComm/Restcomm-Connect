@@ -328,7 +328,11 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $statePar
 						m = r.exec( errorItems[i].failurePath );
 						if ( m != null ) {
 							console.log("warning in module " + nodes[ m[1] ].name + " step " + nodes[ m[1] ].steps[m[2]].name);
-							nodes[ m[1] ].steps[m[2]].iface.showWarning = true;
+							var step = nodes[ m[1] ].steps[m[2]];
+							if (step.kind == 'control') {
+							    $scope.$broadcast('notify-step', {name: step.name, type: 'show-warning'}); // TODO at some point when all steps use directives use the messaging mechanism for them too
+							} else
+							    nodes[ m[1] ].steps[m[2]].iface.showWarning = true;
 						}
 					}
 				} else
