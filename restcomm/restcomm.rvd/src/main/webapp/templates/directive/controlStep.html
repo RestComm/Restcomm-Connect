@@ -4,11 +4,10 @@
 	</div>
 	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 		<div>
-            {{step}}
             <h4>Conditions</h4>
             <div ng-repeat="condition in step.conditions" class="row condition">
                 <div class="col-md-3">
-                    <select ng-model="condition.operator" class="form-control">
+                    <select ng-model="condition.operator" ng-change="conditionOperatorChanged(condition, condition.operator)" class="form-control">
                         <option value="equals">equal</option>
                         <option value="notequal">not equal</option>
                         <option value="greater">greater</option>

@@ -330,7 +330,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $statePar
 							console.log("warning in module " + nodes[ m[1] ].name + " step " + nodes[ m[1] ].steps[m[2]].name);
 							var step = nodes[ m[1] ].steps[m[2]];
 							if (step.kind == 'control') {
-							    $scope.$broadcast('notify-step', {name: step.name, type: 'show-warning'}); // TODO at some point when all steps use directives use the messaging mechanism for them too
+							    $scope.$broadcast('notify-step', {target: step.name, type: 'validation-error', data: errorItems[i]}); // TODO at some point when all steps use directives use the messaging mechanism for them too
 							} else
 							    nodes[ m[1] ].steps[m[2]].iface.showWarning = true;
 						}
