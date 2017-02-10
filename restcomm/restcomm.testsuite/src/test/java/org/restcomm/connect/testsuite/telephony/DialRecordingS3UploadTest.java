@@ -307,9 +307,8 @@ public class DialRecordingS3UploadTest {
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
 		assertTrue(duration==3.0);
-
+		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 		//Verify S3 Upload
-		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://127.0.0.1:8090/s3"));
 		List<LoggedRequest> requests = findAll(putRequestedFor(urlMatching("/s3/.*")));
 		assertEquals(1, requests.size());
 		verify(1, putRequestedFor(urlMatching("/s3/.*")));
