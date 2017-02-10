@@ -32,6 +32,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -103,7 +104,7 @@ public class ControlStep extends Step {
         return null;
     }
 
-    boolean evaluateCondition(Condition condition, Interpreter interpreter) {
+    boolean evaluateCondition(Condition condition, Interpreter interpreter) throws InterpreterException {
         if (condition.operator.equals("matches")) {
             String textExpanded = interpreter.populateVariables(condition.matcher.text);
             // regex expressions don't support RVD variables
@@ -112,24 +113,43 @@ public class ControlStep extends Step {
         } else {
             String operand1Expanded = interpreter.populateVariables(condition.comparison.operand1);
             String operand2Expanded = interpreter.populateVariables(condition.comparison.operand2);
-            switch (condition.operator) {
-                case "equals":
-                    return operand1Expanded.equals(operand2Expanded);
-                case "notequal":
-                    return !operand1Expanded.equals(operand2Expanded);
-                case "greater":
-                    return Float.parseFloat(operand1Expanded) > Float.parseFloat(operand2Expanded);
-                case "greaterEqual":
-                    return Float.parseFloat(operand1Expanded) >= Float.parseFloat(operand2Expanded);
-                case "less":
-                    return Float.parseFloat(operand1Expanded) < Float.parseFloat(operand2Expanded);
-                case "lessEqual":
-                    return Float.parseFloat(operand1Expanded) <= Float.parseFloat(operand2Expanded);
-                // TODO
-//
-//                    case "matches":
-//                    Pattern.compile()
-//                    break;
+            if (condition.comparison.type == Condition.Comparison.ComparisonType.text || condition.comparison.type == null) { // if no type is defined compare as strings
+                switch (condition.operator) {
+                    case "equals":
+                        return operand1Expanded.equals(operand2Expanded);
+                    case "notequal":
+                        return !operand1Expanded.equals(operand2Expanded);
+                    case "greater":
+                        return (operand1Expanded.compareTo(operand2Expanded) > 0);
+                    case "greaterEqual":
+                        return (operand1Expanded.compareTo(operand2Expanded) >= 0);
+                    case "less":
+                        return (operand1Expanded.compareTo(operand2Expanded) < 0);
+                    case "lessEqual":
+                        return (operand1Expanded.compareTo(operand2Expanded) >= 0);
+                }
+            } else
+            if (condition.comparison.type == Condition.Comparison.ComparisonType.numeric) {
+                try {
+                    Float operand1Float = Float.parseFloat(operand1Expanded);
+                    Float operand2Float = Float.parseFloat(operand2Expanded);
+                    switch (condition.operator) {
+                        case "equals":
+                            return operand1Float.equals(operand2Float);
+                        case "notequal":
+                            return !operand1Float.equals(operand2Float);
+                        case "greater":
+                            return operand1Float > operand2Float;
+                        case "greaterEqual":
+                            return operand1Float >= operand2Float;
+                        case "less":
+                            return operand1Float < operand2Float;
+                        case "lessEqual":
+                            return operand1Float <= operand2Float;
+                    }
+                } catch (NumberFormatException e) {
+                    throw new InterpreterException("Cannot parse numeric comparison operands. Operand1: " + operand1Expanded + " . Operand2: " + operand2Expanded);
+                }
             }
         }
         throw new NotImplementedException();
@@ -157,11 +177,14 @@ public class ControlStep extends Step {
 
     private void executeCaptureAction(String data, String regex, String variable, VariableScopes variableScope, Interpreter interpreter) {
         Pattern pattern = Pattern.compile(regex);
-        String captured = pattern.matcher(data).group(1); // by convention get group 1 i.e. first pair of parenthesis
-        if (variableScope == null || variableScope.equals(VariableScopes.mod))
-            interpreter.putModuleVariable(variable, captured);
-        else
-            interpreter.putStickyVariable(variable, captured);
+        Matcher matcher = pattern.matcher(data);
+        if (matcher.matches()) {
+            String captured = matcher.group(1); // by convention get group 1 i.e. first pair of parenthesis
+            if (variableScope == null || variableScope.equals(VariableScopes.mod))
+                interpreter.putModuleVariable(variable, captured);
+            else
+                interpreter.putStickyVariable(variable, captured);
+        }
     }
 
     /**
@@ -193,9 +216,6 @@ public class ControlStep extends Step {
                         errorItems.add(new ValidationErrorItem("error","Cyclic module execution detected",stepPath));
                 } else
                 if (action.assign != null) {
-                    if (RvdUtils.isEmpty(action.assign.expression)) {
-                        errorItems.add(new ValidationErrorItem("error","Assignment misses left side",stepPath));
-                    }
                     if (RvdUtils.isEmpty(action.assign.varName)) {
                         errorItems.add(new ValidationErrorItem("error","Assignment misses destination",stepPath));
                     }
@@ -210,6 +230,12 @@ public class ControlStep extends Step {
     }
 
     public static class Condition {
+
+        String name;
+        String operator;
+        Comparison comparison; // one of comparison/matcher is enabled at a time
+        Matcher matcher;
+
         public enum Operators {
             equals,
             greater,
@@ -217,22 +243,23 @@ public class ControlStep extends Step {
             less,
             lessEqual,
             matches
-        }
 
+        }
         public static class Comparison {
             String operand1;
             String operand2;
-        }
+            ComparisonType type;
 
+            public enum ComparisonType {
+                text, numeric
+            }
+
+        }
         public static class Matcher {
             String text;
             String regex;
-        }
 
-        String name;
-        String operator;
-        Comparison comparison; // one of comparison/matcher is enabled at a time
-        Matcher matcher;
+        }
     }
 
     public static class Action {

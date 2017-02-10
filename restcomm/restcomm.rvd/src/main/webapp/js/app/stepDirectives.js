@@ -154,7 +154,7 @@ angular.module('Rvd')
                 return {
                    name: "C" + (++conditionLastId),
                    operator : "equals",
-                   comparison : {},
+                   comparison : {operand1:"", operand2: "", type: 'text'}
                    // matcher: {}
                }
             }
@@ -163,7 +163,9 @@ angular.module('Rvd')
                 return {
                    name: "A" + (++actionLastId),
                    kind : "assign", // continueTo / assign / capture
-                   assign: {}
+                   assign: {
+                      expression: ""
+                   }
                    // assign: {},
                    // continueTo: {},
                    // capture: {}
@@ -202,6 +204,16 @@ angular.module('Rvd')
                     step.actions[index] = tmpAction;
                 }
             }
+            scope.actionKindChanged = function (action, kind) {
+                if (kind == "assign" && !action.assign)
+                    action.assign = { expression: ""};
+                else
+                if (kind == "continueTo" && !action.continueTo)
+                    action.continueTo = {};
+                else
+                if (kind == "capture" && !action.capture)
+                    action.capture = {regex:"",data:""};
+            }
 
             function rebuildConditionExpression(step) {
                 var conditions = step.conditions;
@@ -231,6 +243,14 @@ angular.module('Rvd')
             scope.$on("update-dtos", function () {
                 toDto(stepModel, step);
             });
+            scope.$on("notify-step", function (event, args) {
+                if (args.name == stepModel.name) { // does the event refer to this step
+                    if (args.type == "show-warning") {
+                        step.iface.showWarning = true;
+                    }
+                }
+            });
+
 
             scope.getAllTargets = nodeRegistry.getNodes;
         }
