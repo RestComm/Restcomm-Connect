@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
@@ -45,6 +46,7 @@ import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumbersDao {
     private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao.";
     private final SqlSessionFactory sessions;
+    private final Logger logger = Logger.getLogger(MybatisIncomingPhoneNumbersDao.class.getName());
 
     public MybatisIncomingPhoneNumbersDao(final SqlSessionFactory sessions) {
         super();
@@ -74,44 +76,59 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
 
    private IncomingPhoneNumber getIncomingPhoneNumber(final String selector, Object parameter) {
         final SqlSession session = sessions.openSession();
-        
-        // check for exact match, if result is null, check for regex match
-         try {
+        String inboundPhoneNumber = null;
+          try {
+            //if(parameter.toString().contains("*")){}{
+            //perform direct check
             final Map<String, Object> result = session.selectOne(namespace + selector, parameter);
-            if (result != null) {
+            if (result != null ) {
                 return toIncomingPhoneNumber(result);
-           } else if (  !(parameter instanceof Sid)) {
+            }//}
+            //check if there is a Regex match only if parameter is a String aka phone Number
+            if(!(parameter instanceof Sid)){
+               inboundPhoneNumber = parameter.toString().replace("+1", "");
+               logger.warn(" Inbound phoneNumber : " + inboundPhoneNumber );
+              return checkIncomingPhoneNumberRegexMatch(selector, inboundPhoneNumber);
+               }
 
-           final List<IncomingPhoneNumber> incomingPhoneNumbers = getAllIncomingPhoneNumbers();
-            //phoneNumber dialed by caller
-        CharSequence phoneNumberDialed = (CharSequence) parameter;
-        String restcommHostedPhoneNumber = "";
-        for( int i = 0; i< incomingPhoneNumbers.size(); i++){
-            //remove prepended + sign to avoid Regex conflict
-         restcommHostedPhoneNumber = incomingPhoneNumbers.get(i).getPhoneNumber().replace("+", "");
-         //check if number is USSD
-         //add "/" to deal with "*" that prepends ussd short code needed to handle regex
-         String ussdNumber = incomingPhoneNumbers.get(i).getPhoneNumber().replace("+", "");
-         if (ussdNumber.startsWith("*") && ussdNumber.endsWith("#")){
-             restcommHostedPhoneNumber = "/" + restcommHostedPhoneNumber ;
+        }finally {
+                     session.close();
          }
-        //compare dialed number with restcomm hosted number regex
-         Pattern p = Pattern.compile(restcommHostedPhoneNumber);
-        Matcher m = p.matcher(phoneNumberDialed);
-         if (m.find() ) {
-       final Map<String, Object> resultRestcommRegexHostedNumber = session.selectOne(namespace + selector, restcommHostedPhoneNumber);
-        if (resultRestcommRegexHostedNumber != null) {
-                return toIncomingPhoneNumber(resultRestcommRegexHostedNumber);
-            }
-            }
-            }
-            }
-                return null;
+          return null;
 
-         }finally {
-            session.close();
-         }
 }
+
+   public IncomingPhoneNumber checkIncomingPhoneNumberRegexMatch ( String selector, String inBoundPhoneNumber){
+               final SqlSession session = sessions.openSession();
+               String phoneRegexPattern = null;
+               try {
+                    List<IncomingPhoneNumber> listPhones = getAllIncomingPhoneNumbers();
+                   for (IncomingPhoneNumber listPhone : listPhones){
+                       if (listPhone.getPhoneNumber().startsWith("+")){
+                            phoneRegexPattern = listPhone.getPhoneNumber().replace("+", "/+");
+                        }else if (listPhone.getPhoneNumber().startsWith("*")){
+                            phoneRegexPattern = listPhone.getPhoneNumber().replace("*", "/*");
+                        }else{
+                            phoneRegexPattern = listPhone.getPhoneNumber();
+                        }
+                        Pattern p = Pattern.compile(phoneRegexPattern);
+                        Matcher m = p.matcher(inBoundPhoneNumber);
+                        if (m.find()) {
+                            final Map<String, Object> resultRestcommRegexHostedNumber = session.selectOne(namespace + selector, phoneRegexPattern);
+                            if (resultRestcommRegexHostedNumber != null) {
+                                return toIncomingPhoneNumber(resultRestcommRegexHostedNumber);
+                            }else{
+                                logger.error("Error, Regex check returns a  null value "  );
+                            }
+                        }
+                    }
+                        logger.warn("No matching phone number found, make sure your Restcomm Regex phone number is correctly defined");
+               }finally {
+            session.close();
+        }
+       return null;
+
+   }
 
     @Override
     public List<IncomingPhoneNumber> getIncomingPhoneNumbers(final Sid accountSid) {
