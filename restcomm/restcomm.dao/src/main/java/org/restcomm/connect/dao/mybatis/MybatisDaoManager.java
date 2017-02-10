@@ -245,12 +245,12 @@ public final class MybatisDaoManager implements DaoManager {
                 final String bucketName = amazonS3Configuration.getString("bucket-name");
                 final String folder = amazonS3Configuration.getString("folder");
                 final boolean reducedRedundancy = amazonS3Configuration.getBoolean("reduced-redundancy");
-                final int daysToRetainPublicUrl = amazonS3Configuration.getInt("days-to-retain-public-url");
+                final int minutesToRetainPublicUrl = amazonS3Configuration.getInt("minutes-to-retain-public-url", 10);
                 final boolean removeOriginalFile = amazonS3Configuration.getBoolean("remove-original-file");
                 final String bucketRegion = amazonS3Configuration.getString("bucket-region");
                 final boolean testing = amazonS3Configuration.getBoolean("testing",false);
                 final String testingUrl = amazonS3Configuration.getString("testing-url",null);
-                s3AccessTool = new S3AccessTool(accessKey, securityKey, bucketName, folder, reducedRedundancy, daysToRetainPublicUrl, removeOriginalFile,bucketRegion, testing, testingUrl);
+                s3AccessTool = new S3AccessTool(accessKey, securityKey, bucketName, folder, reducedRedundancy, minutesToRetainPublicUrl, removeOriginalFile,bucketRegion, testing, testingUrl);
             }
         }
         start(sessions);

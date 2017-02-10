@@ -54,7 +54,7 @@ public class RvdConfiguration {
     // the names of the parameters supplied by restcomm request when starting an application
     public static final HashSet<String> builtinRestcommParameters = new HashSet<String>(Arrays.asList(new String[]
             {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName",
-                    "CallTimestamp", "ForwardedFrom", "SmsSid", "SmsStatus", "InstanceId","ReferTarget"}));
+                    "CallTimestamp", "ForwardedFrom", "SmsSid", "SmsStatus", "InstanceId","ReferTarget","Transferor","Transferee"}));
     public static final String RESTCOMM_HEADER_PREFIX = "SipHeader_"; // the prefix added to HTTP headers from Restcomm
     public static final String RESTCOMM_HEADER_PREFIX_DIAL = "DialSipHeader_"; // another prefix
 
