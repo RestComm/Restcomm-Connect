@@ -87,6 +87,8 @@ public class TestDialVerbPartThreeAnswerDelay {
 
     private String dialRestcomm = "sip:1111@127.0.0.1:5080";
 
+    private String dialRestcomm_httpError = "sip:6666@127.0.0.1:5080";
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("DialTest3Tool1");
@@ -521,6 +523,90 @@ public class TestDialVerbPartThreeAnswerDelay {
         aliceCall.listenForDisconnect();
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
         assertTrue(aliceCall.respondToDisconnect());
+    }
+
+    private String playRcml = "<Play>/restcomm/audio/demo-prompt.wav</Play>";
+    //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
+    @Test
+    public synchronized void testDialWithCustomHeaders() throws InterruptedException, ParseException {
+        //Received request: GET /rcml?CallSid=CA154c8c93d7eb439989a6ea42915b6c1b&AccountSid=ACae6e420f425248d6a26948c17a9e2acf&From=bob&To=%2B17778&
+        //CallStatus=ringing&ApiVersion=2012-04-24&Direction=inbound&CallerName&ForwardedFrom&SipHeader_X-MyCustom-Header1=Value1&SipHeader_X-MyCustom-Header2=Value2 HTTP/1.1
+        stubFor(get(urlPathEqualTo("/1111"))
+                .withQueryParam("SipHeader_X-MyCustom-Header1", containing("Value1"))
+                .withQueryParam("SipHeader_X-MyCustom-Header2", containing("Value2"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(playRcml)));
+
+        ArrayList<String> additionalHeaders = new ArrayList<String>();
+        additionalHeaders.add(bobPhone.getParent().getHeaderFactory().createHeader("X-MyCustom-Header1", "Value1").toString());
+        additionalHeaders.add(bobPhone.getParent().getHeaderFactory().createHeader("X-MyCustom-Header2", "Value2").toString());
+
+        // Initiate a call using Bob
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", additionalHeaders, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        bobCall.listenForDisconnect();
+
+        Thread.sleep(1000);
+
+        assertTrue(bobCall.waitForDisconnect(5 * 1000));
+        assertTrue(bobCall.respondToDisconnect());
+    }
+    
+    //issue-1759 regression test
+    @Test
+    public synchronized void testDialWithCustomHeadersHttpError() throws InterruptedException, ParseException {
+        //Received request: GET /rcml?CallSid=CA154c8c93d7eb439989a6ea42915b6c1b&AccountSid=ACae6e420f425248d6a26948c17a9e2acf&From=bob&To=%2B17778&
+        //CallStatus=ringing&ApiVersion=2012-04-24&Direction=inbound&CallerName&ForwardedFrom&SipHeader_X-MyCustom-Header1=Value1&SipHeader_X-MyCustom-Header2=Value2 HTTP/1.1
+        /*stubFor(get(urlPathEqualTo("/1111"))
+                .withQueryParam("SipHeader_X-MyCustom-Header1", containing("Value1"))
+                .withQueryParam("SipHeader_X-MyCustom-Header2", containing("Value2"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(playRcml)));*/
+
+        ArrayList<String> additionalHeaders = new ArrayList<String>();
+        additionalHeaders.add(bobPhone.getParent().getHeaderFactory().createHeader("X-MyCustom-Header1", "Value1").toString());
+        additionalHeaders.add(bobPhone.getParent().getHeaderFactory().createHeader("X-MyCustom-Header2", "Value2").toString());
+
+        // Initiate a call using Bob
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm_httpError, null, body, "application", "sdp", additionalHeaders, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.SERVER_INTERNAL_ERROR, bobCall.getLastReceivedResponse().getStatusCode());
+
+        Thread.sleep(1000);
     }
     
     @Deployment(name = "TestDialVerbPartThreeAnswerDelay", managed = true, testable = false)

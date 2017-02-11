@@ -19,17 +19,15 @@
  */
 package org.restcomm.connect.http;
 
-import java.io.File;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 import javax.ws.rs.GET;
-import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
 
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -50,14 +48,7 @@ public final class RecordingsXmlEndpoint extends RecordingsEndpoint {
     @Path("/{sid}.wav")
     @GET
     public Response getRecordingAsWav(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        final StringBuilder buffer = new StringBuilder();
-        buffer.append(baseRecordingsPath).append(sid).append(".wav");
-        final File file = new File(buffer.toString());
-        if (!file.exists()) {
-            return status(NOT_FOUND).build();
-        } else {
-            return ok(file, "audio/wav").build();
-        }
+        return getRecordingWav(accountSid, sid);
     }
 
     @Path("/{sid}")
