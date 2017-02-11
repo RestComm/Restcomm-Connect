@@ -28,7 +28,7 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 public final class CallStateChanged {
     public static enum State {
         QUEUED("queued"), RINGING("ringing"), CANCELED("canceled"), BUSY("busy"), NOT_FOUND("not-found"), FAILED("failed"), NO_ANSWER(
-                "no-answer"), IN_PROGRESS("in-progress"), COMPLETED("completed");
+                "no-answer"), WAIT_FOR_ANSWER("wait-for-answer"), IN_PROGRESS("in-progress"), COMPLETED("completed");
 
         private final String text;
 
@@ -43,13 +43,30 @@ public final class CallStateChanged {
     };
 
     private final State state;
+    private final Integer sipResponse;
 
     public CallStateChanged(final State state) {
         super();
         this.state = state;
+        this.sipResponse = null;
+    }
+
+    public CallStateChanged(final State state, final Integer sipResponse) {
+        super();
+        this.state = state;
+        this.sipResponse = sipResponse;
     }
 
     public State state() {
         return state;
+    }
+
+    public Integer sipResponse() {
+        return sipResponse;
+    }
+
+    @Override
+    public String toString() {
+        return "CallStateChanged [state=" + state + ", sipResponse=" + sipResponse + "]";
     }
 }

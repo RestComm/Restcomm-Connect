@@ -19,20 +19,21 @@
  */
 package org.restcomm.connect.http.converter;
 
-import java.lang.reflect.Type;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
-
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.commons.util.StringUtils;
+
+import javax.ws.rs.core.MediaType;
+import java.lang.reflect.Type;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -40,12 +41,10 @@ import org.restcomm.connect.commons.util.StringUtils;
 @ThreadSafe
 public final class AccountConverter extends AbstractConverter implements JsonSerializer<Account> {
     private final String apiVersion;
-    private final String rootUri;
 
     public AccountConverter(final Configuration configuration) {
         super(configuration);
         this.apiVersion = configuration.getString("api-version");
-        rootUri = StringUtils.addSuffixIfNotPresent(configuration.getString("root-uri"), "/");
     }
 
     @SuppressWarnings("rawtypes")
@@ -84,14 +83,26 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         writeDateCreated(account.getDateCreated(), object);
         writeDateUpdated(account.getDateUpdated(), object);
         writeAuthToken(account, object);
-        writeUri(account.getUri(), object);
+        writeUri(account, object);
         writeSubResourceUris(account, object);
         return object;
     }
 
+    protected void writeUri(final Account account, final JsonObject object) {
+        object.addProperty("uri", prefix(account, APPLICATION_JSON_TYPE));
+    }
+
     private String prefix(final Account account) {
+        return prefix(account, APPLICATION_XML_TYPE);
+    }
+
+    private String prefix(final Account account, MediaType responseType) {
         final StringBuilder buffer = new StringBuilder();
-        buffer.append(rootUri).append(apiVersion).append("/Accounts/").append(account.getSid().toString());
+        buffer.append("/").append(apiVersion).append("/Accounts");
+        if(responseType == APPLICATION_JSON_TYPE) {
+            buffer.append(".json");
+        }
+        buffer.append("/"+account.getSid().toString());
         return buffer.toString();
     }
 
