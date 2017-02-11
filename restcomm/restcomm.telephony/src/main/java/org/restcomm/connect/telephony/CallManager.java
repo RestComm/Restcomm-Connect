@@ -43,6 +43,7 @@ import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
+import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
@@ -50,6 +51,7 @@ import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Notification;
@@ -65,6 +67,7 @@ import org.restcomm.connect.interpreter.StopInterpreter;
 import org.restcomm.connect.interpreter.VoiceInterpreterBuilder;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
+import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
@@ -73,6 +76,7 @@ import org.restcomm.connect.telephony.api.DestroyCall;
 import org.restcomm.connect.telephony.api.ExecuteCallScript;
 import org.restcomm.connect.telephony.api.GetActiveProxy;
 import org.restcomm.connect.telephony.api.GetCall;
+import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.GetCallObservers;
 import org.restcomm.connect.telephony.api.GetProxies;
 import org.restcomm.connect.telephony.api.GetRelatedCall;
@@ -98,6 +102,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import javax.servlet.sip.TelURL;
 import javax.sip.header.RouteHeader;
 import javax.sip.message.Response;
 import java.io.IOException;
@@ -117,10 +122,12 @@ import java.util.regex.Pattern;
 
 import static akka.pattern.Patterns.ask;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_ACCEPTED;
 import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
 import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_SERVER_INTERNAL_ERROR;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -135,6 +142,7 @@ public final class CallManager extends UntypedActor {
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
     static final String EMAIL_SENDER = "restcomm@restcomm.org";
     static final String EMAIL_SUBJECT = "RestComm Error Notification - Attention Required";
+    static final int DEFAUL_IMS_PROXY_PORT = -1;
 
     private final ActorSystem system;
     private final Configuration configuration;
@@ -177,6 +185,13 @@ public final class CallManager extends UntypedActor {
 
     //List of extensions for CallManager
     List<RestcommExtensionGeneric> extensions;
+
+    // IMS authentication
+    private boolean actAsImsUa;
+    private String imsProxyAddress;
+    private int imsProxyPort;
+    private String imsDomain;
+    private String imsAccount;
 
     // used for sending warning and error logs to notification engine and to the console
     private void sendNotification(String errMessage, int errCode, String errType, boolean createNotification) {
@@ -281,6 +296,26 @@ public final class CallManager extends UntypedActor {
         if (logger.isInfoEnabled()) {
             logger.info("CallManager extensions: "+(extensions != null ? extensions.size() : "0"));
         }
+
+        if(!runtime.subset("ims-authentication").isEmpty()){
+            final Configuration imsAuthentication = runtime.subset("ims-authentication");
+            this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
+            if (actAsImsUa) {
+                this.imsProxyAddress = imsAuthentication.getString("proxy-address");
+                this.imsProxyPort = imsAuthentication.getInt("proxy-port");
+                if (imsProxyPort == 0) {
+                    imsProxyPort = DEFAUL_IMS_PROXY_PORT;
+                }
+                this.imsDomain = imsAuthentication.getString("domain");
+                this.imsAccount = imsAuthentication.getString("account");
+                if (actAsImsUa && (imsProxyAddress == null || imsProxyAddress.isEmpty()
+                        || imsDomain == null || imsDomain.isEmpty())) {
+                    logger.warning("ims proxy-address or domain is not configured");
+                }
+                this.actAsImsUa = actAsImsUa && imsProxyAddress != null && !imsProxyAddress.isEmpty()
+                        && imsDomain != null && !imsDomain.isEmpty();
+            }
+        }
     }
 
     private ActorRef call() {
@@ -340,6 +375,22 @@ public final class CallManager extends UntypedActor {
             final SipServletResponse okay = request.createResponse(SC_OK);
             okay.send();
             return;
+        }
+        if (actAsImsUa) {
+            boolean isFromIms = isFromIms(request);
+            if (!isFromIms) {
+                //This is a WebRTC client that dials out to IMS
+                String user = request.getHeader("X-RestComm-Ims-User");
+                String pass = request.getHeader("X-RestComm-Ims-Password");
+                request.removeHeader("X-RestComm-Ims-User");
+                request.removeHeader("X-RestComm-Ims-Password");
+                imsProxyThroughMediaServer(request, null, request.getTo().getURI(), user, pass, isFromIms);
+                return;
+            } else {
+                //This is a IMS that dials out to WebRTC client
+                imsProxyThroughMediaServer(request, null, request.getTo().getURI(), "", "", isFromIms);
+                return;
+            }
         }
         //Run proInboundAction Extensions here
         // If it's a new invite lets try to handle it.
@@ -649,6 +700,200 @@ public final class CallManager extends UntypedActor {
         }
     }
 
+    private void transfer(SipServletRequest request) throws Exception {
+        //Transferor is the one that initates the transfer
+        String transferor = ((SipURI)request.getAddressHeader("Contact").getURI()).getUser();
+        //Transferee is the one that gets transfered
+        String transferee = ((SipURI)request.getAddressHeader("To").getURI()).getUser();
+        //Trasnfer target, where the transferee will be transfered
+        String transferTarget = ((SipURI)request.getAddressHeader("Refer-To").getURI()).getUser();
+
+        CallDetailRecord cdr = null;
+        CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
+
+        SipServletResponse servletResponse = null;
+
+        final SipApplicationSession appSession = request.getApplicationSession();
+        //Initates the transfer
+        ActorRef transferorActor = (ActorRef) appSession.getAttribute(Call.class.getName());
+        if (transferorActor == null) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Transferor Call Actor is null, cannot proceed with SIP Refer");
+            }
+            servletResponse = request.createResponse(SC_NOT_FOUND);
+            servletResponse.setHeader("Reason", "SIP REFER should be sent in dialog");
+            servletResponse.setHeader("Event", "refer");
+            servletResponse.send();
+            return;
+        }
+
+        final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+
+        Future<Object> infoFuture = (Future<Object>) ask(transferorActor, new GetCallInfo(), expires);
+        CallResponse<CallInfo> infoResponse = (CallResponse<CallInfo>) Await.result(infoFuture,
+                Duration.create(10, TimeUnit.SECONDS));
+        CallInfo callInfo = infoResponse.get();
+
+        //Call must be in-progress to accept Sip Refer
+        if (callInfo != null && callInfo.state().equals(CallStateChanged.State.IN_PROGRESS)) {
+            try {
+                if (callInfo.direction().equalsIgnoreCase("inbound")) {
+                    //Transferror is the inbound leg of the call
+                    cdr = dao.getCallDetailRecord(callInfo.sid());
+                } else {
+                    //Transferor is the outbound leg of the call
+                    cdr = dao.getCallDetailRecord(dao.getCallDetailRecord(callInfo.sid()).getParentCallSid());
+                }
+            } catch (Exception e) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Problem while trying to get the CDR of the call");
+                }
+                servletResponse = request.createResponse(SC_SERVER_INTERNAL_ERROR);
+                servletResponse.setHeader("Reason", "SIP Refer problem during execution");
+                servletResponse.setHeader("Event", "refer");
+                servletResponse.send();
+                return;
+            }
+        } else {
+            if (logger.isInfoEnabled()) {
+                logger.info("CallInfo is null or call state not in-progress. Cannot proceed to call transfer");
+            }
+            servletResponse = request.createResponse(SC_NOT_FOUND);
+            servletResponse.setHeader("Reason", "SIP Refer pre-conditions failed, call info is null or call not in progress");
+            servletResponse.setHeader("Event", "refer");
+            servletResponse.send();
+            return;
+        }
+
+        final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
+        String phone = cdr.getTo();
+        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
+        if(number == null){
+            if (phone.startsWith("+")) {
+                //remove the (+) and check if exists
+                phone= phone.replaceFirst("\\+","");
+                number = numbers.getIncomingPhoneNumber(phone);
+            } else {
+                //Add "+" add check if number exists
+                phone = "+".concat(phone);
+                number = numbers.getIncomingPhoneNumber(phone);
+            }
+        }
+        if (number == null) {
+            number = numbers.getIncomingPhoneNumber("*");
+        }
+
+        if (number == null || (number.getReferUrl() == null && number.getReferApplicationSid() == null)) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Refer URL or Refer Applicatio for incoming phone number is null, cannot proceed with SIP Refer");
+            }
+            servletResponse = request.createResponse(SC_NOT_FOUND);
+            servletResponse.setHeader("Reason", "SIP Refer failed. Set Refer URL or Refer application for incoming phone number");
+            servletResponse.setHeader("Event", "refer");
+            servletResponse.send();
+            return;
+        }
+
+        // Get first transferorActor leg observers
+        Future<Object> future = (Future<Object>) ask(transferorActor, new GetCallObservers(), expires);
+        CallResponse<List<ActorRef>> response = (CallResponse<List<ActorRef>>) Await.result(future,
+                Duration.create(10, TimeUnit.SECONDS));
+        List<ActorRef> callObservers = response.get();
+
+        // Get the Voice Interpreter currently handling the transferorActor
+        ActorRef existingInterpreter = callObservers.iterator().next();
+
+        // Get the outbound leg of this transferorActor
+        future = (Future<Object>) ask(existingInterpreter, new GetRelatedCall(transferorActor), expires);
+        Object answer = (Object) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+
+        //Transferee will be transfered to the transfer target
+        ActorRef transfereeActor = null;
+        if (answer instanceof ActorRef) {
+            transfereeActor = (ActorRef) answer;
+        } else {
+            if (logger.isInfoEnabled()) {
+                logger.info("Transferee is not a Call actor, probably call is on conference");
+            }
+            servletResponse = request.createResponse(SC_NOT_FOUND);
+            servletResponse.setHeader("Reason", "SIP Refer failed. Transferee is not a Call actor, probably this is a conference");
+            servletResponse.setHeader("Event", "refer");
+            servletResponse.send();
+            transferorActor.tell(new Hangup(), null);
+            return;
+        }
+
+        servletResponse = request.createResponse(SC_ACCEPTED);
+        servletResponse.setHeader("Event", "refer");
+        servletResponse.send();
+
+        if(logger.isInfoEnabled()) {
+            logger.info("About to start Call Transfer");
+            logger.info("Transferor Call path: " + transferorActor.path());
+            if (transfereeActor != null) {
+                logger.info("Transferee Call path: " + transfereeActor.path());
+            }
+            // Cleanup all observers from both transferorActor legs
+            logger.info("Will tell Call actors to stop observing existing Interpreters");
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("Call Transfer account: "+ cdr.getAccountSid() +", new RCML url: "+ number.getReferUrl());
+        }
+        transferorActor.tell(new StopObserving(), self());
+        if (transfereeActor != null) {
+            transfereeActor.tell(new StopObserving(), self());
+        }
+        if(logger.isInfoEnabled()) {
+            logger.info("Existing observers removed from Calls actors");
+
+            // Cleanup existing Interpreter
+            logger.info("Existing Interpreter path: " + existingInterpreter.path() + " will be stopped");
+        }
+        existingInterpreter.tell(new StopInterpreter(true), null);
+
+        // Build a new VoiceInterpreter
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        builder.setConfiguration(configuration);
+        builder.setStorage(storage);
+        builder.setCallManager(self());
+        builder.setConferenceManager(conferences);
+        builder.setBridgeManager(bridges);
+        builder.setSmsService(sms);
+        builder.setAccount(cdr.getAccountSid());
+        builder.setVersion(cdr.getApiVersion());
+
+        if (number.getReferApplicationSid() != null) {
+            Application application = storage.getApplicationsDao().getApplication(number.getReferApplicationSid());
+            builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
+        } else {
+            builder.setUrl(UriUtils.resolve(number.getReferUrl()));
+        }
+
+        builder.setMethod((number.getReferMethod() != null && number.getReferMethod().length() > 0) ? number.getReferMethod() : "POST");
+        builder.setReferTarget(transferTarget);
+        builder.setTransferor(transferor);
+        builder.setTransferee(transferee);
+
+        builder.setFallbackUrl(null);
+        builder.setFallbackMethod("POST");
+        builder.setStatusCallback(null);
+        builder.setStatusCallbackMethod("POST");
+        builder.setMonitoring(monitoring);
+
+        // Ask first transferorActor leg to execute with the new Interpreter
+        final ActorRef interpreter = builder.build();
+        system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), interpreter,
+                new StartInterpreter(transfereeActor), system.dispatcher());
+        if(logger.isInfoEnabled()) {
+            logger.info("New Intepreter for transfereeActor call leg: " + interpreter.path() + " started");
+        }
+
+        if(logger.isInfoEnabled()) {
+            logger.info("will hangup transferorActor: "+transferorActor.path());
+        }
+        transferorActor.tell(new Hangup(), null);
+    }
+
     /**
      * Try to locate a hosted voice app corresponding to the callee/To address. If one is found, begin execution, otherwise
      * return false;
@@ -833,6 +1078,8 @@ public final class CallManager extends UntypedActor {
                 bye(request);
             } else if ("INFO".equals(method)) {
                 info(request);
+            } else if ("REFER".equals(method)) {
+                transfer(request);
             }
         } else if (CreateCall.class.equals(klass)) {
             this.createCallRequest = (CreateCall) message;
@@ -1059,6 +1306,8 @@ public final class CallManager extends UntypedActor {
         List<ActorRef> callObservers = response.get();
 
         // Get the Voice Interpreter currently handling the call
+        //TODO possible bug here. Since we have more than one call observer, later there might be the case that the first one is not the VI
+        //TODO set the VI using specific message, also get the VI using specific message. The VI will still be in the observers list but it will set/get using specific method
         ActorRef existingInterpreter = callObservers.iterator().next();
 
         // Get the outbound leg of this call
@@ -1066,8 +1315,11 @@ public final class CallManager extends UntypedActor {
         Object answer = (Object) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
 
         ActorRef relatedCall = null;
+        List<ActorRef> listOfRelatedCalls = null;
         if (answer instanceof ActorRef) {
             relatedCall = (ActorRef) answer;
+        } else if (answer instanceof List) {
+            listOfRelatedCalls = (List<ActorRef>) answer;
         }
 
         if(logger.isInfoEnabled()) {
@@ -1075,6 +1327,9 @@ public final class CallManager extends UntypedActor {
             logger.info("Initial Call path: " + call.path());
             if (relatedCall != null) {
                 logger.info("Related Call path: " + relatedCall.path());
+            }
+            if (listOfRelatedCalls != null) {
+                logger.info("List of related calls received, size of the list: "+listOfRelatedCalls.size());
             }
             // Cleanup all observers from both call legs
             logger.info("Will tell Call actors to stop observing existing Interpreters");
@@ -1085,6 +1340,11 @@ public final class CallManager extends UntypedActor {
         call.tell(new StopObserving(), self());
         if (relatedCall != null) {
             relatedCall.tell(new StopObserving(), self());
+        }
+        if (listOfRelatedCalls != null) {
+            for(ActorRef branch: listOfRelatedCalls) {
+                branch.tell(new StopObserving(), self());
+            }
         }
         if(logger.isInfoEnabled()) {
             logger.info("Existing observers removed from Calls actors");
@@ -1122,7 +1382,7 @@ public final class CallManager extends UntypedActor {
         }
 
         // Check what to do with the second/outbound call leg of the call
-        if (relatedCall != null) {
+        if (relatedCall != null && listOfRelatedCalls == null) {
             if (moveConnectedCallLeg) {
                 final ActorRef relatedInterpreter = builder.build();
                 if(logger.isInfoEnabled()) {
@@ -1141,6 +1401,15 @@ public final class CallManager extends UntypedActor {
                 }
                 relatedCall.tell(new Hangup(), null);
 //                getContext().stop(relatedCall);
+            }
+        }
+        if (listOfRelatedCalls != null) {
+            for (ActorRef branch: listOfRelatedCalls) {
+                branch.tell(new Hangup(), null);
+            }
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("LiveCallModification request while dial forking, terminated %d calls", listOfRelatedCalls.size());
+                logger.info(msg);
             }
         }
     }
@@ -1174,7 +1443,10 @@ public final class CallManager extends UntypedActor {
                 break;
             }
             case SIP: {
-                if (executePreOutboundAction(callRequest)) {
+                if (actAsImsUa) {
+                    outboundToIms(request, sender);
+                }
+                else if (executePreOutboundAction(callRequest)) {
                     outboundToSip(request, sender);
                 }  else {
                     //Extensions didn't allowed this call
@@ -1634,7 +1906,22 @@ public final class CallManager extends UntypedActor {
         final ActorContext context = getContext();
 
         // TODO: The context.actorFor has been depreciated for actorSelection at the latest Akka release.
-        return context.actorFor(callPath);
+        ActorRef call = null;
+        if (callPath != null) {
+            try {
+                call = context.actorFor(callPath);
+            } catch (Exception e) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Problem during call lookup, callPath: "+callPath);
+                }
+                return null;
+            }
+        } else {
+            if (logger.isInfoEnabled()) {
+                logger.info("CallPath is null, call lookup cannot be executed");
+            }
+        }
+        return call;
     }
 
     public void timeout(final Object message) {
@@ -1773,5 +2060,152 @@ public final class CallManager extends UntypedActor {
             }
         }
         return result;
+    }
+
+    private boolean isFromIms(final SipServletRequest request) throws ServletParseException {
+        SipURI uri = (SipURI)request.getRequestURI();
+        return uri.getUser() == null;
+    }
+
+    private Registration findRegistration(javax.servlet.sip.URI regUri){
+        if(regUri == null){
+            return null;
+        }
+        String formattedNumber = null;
+        if (regUri.isSipURI()) {
+            formattedNumber = ((SipURI)regUri).getUser().replaceFirst("\\+","");
+        } else {
+            formattedNumber = ((TelURL)regUri).getPhoneNumber().replaceFirst("\\+","");
+        }
+        if(logger.isInfoEnabled()) {
+            logger.info("looking for registrations for number: " + formattedNumber);
+        }
+        final RegistrationsDao registrationsDao = storage.getRegistrationsDao();
+        List<Registration> registrations = registrationsDao.getRegistrations(formattedNumber);
+
+        if(registrations == null || registrations.size() ==0){
+            return null;
+        }
+        else{
+            return registrations.get(0);
+        }
+    }
+
+    private void imsProxyThroughMediaServer(final SipServletRequest request, final Client client,
+            final javax.servlet.sip.URI destUri, final String user, final String password, boolean isFromIms)
+                    throws IOException {
+        javax.servlet.sip.URI srcUri = request.getFrom().getURI();
+        if(logger.isInfoEnabled()) {
+            logger.info("imsProxyThroughMediaServer, isFromIms: " + isFromIms +
+                    ", destUri: " + destUri + ", srcUri: " + srcUri);
+        }
+        final Configuration runtime = configuration.subset("runtime-settings");
+        String destNumber = destUri.toString();
+        String rcml = "<Response><Dial>" + destNumber + "</Dial></Response>";
+
+        javax.servlet.sip.URI regUri = null;
+        if (isFromIms) {
+            regUri = destUri;
+        } else {
+            regUri = srcUri;
+        }
+        // Lookup of registration is based on srcUri (if call is toward IMS),
+        // or is based on destUri (if call is from IMS)
+        Registration reg = findRegistration(regUri);
+        if (reg == null) {
+            if(logger.isInfoEnabled()) {
+                logger.info("registrations not found");
+            }
+            final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
+            response.send();
+            // We didn't find anyway to handle the call.
+            String errMsg = "Call cannot be processed because the registration: " + regUri.toString()
+                    + "cannot be found";
+            sendNotification(errMsg, 11005, "error", true);
+            return;
+        } else {
+            if (isFromIms) {
+                rcml = "<Response><Dial><Client>" + reg.getUserName() + "</Client></Dial></Response>";
+            }
+
+            if(logger.isInfoEnabled()) {
+                logger.info("rcml: " + rcml);
+            }
+
+            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+            builder.setConfiguration(configuration);
+            builder.setStorage(storage);
+            builder.setCallManager(self());
+            builder.setConferenceManager(conferences);
+            builder.setBridgeManager(bridges);
+            builder.setSmsService(sms);
+            builder.setAccount(Sid.generate(Sid.Type.ACCOUNT,imsAccount));
+            builder.setVersion(runtime.getString("api-version"));
+            builder.setRcml(rcml);
+            builder.setMonitoring(monitoring);
+            builder.setAsImsUa(actAsImsUa);
+            if (actAsImsUa) {
+                builder.setImsUaLogin(user);
+                builder.setImsUaPassword(password);
+            }
+            final ActorRef interpreter = builder.build();
+            final ActorRef call = call();
+            final SipApplicationSession application = request.getApplicationSession();
+            application.setAttribute(Call.class.getName(), call);
+            call.tell(request, self());
+            interpreter.tell(new StartInterpreter(call), self());
+        }
+    }
+
+    private void outboundToIms(final CreateCall request, final ActorRef sender) throws ServletParseException {
+        if (logger.isInfoEnabled()) {
+            logger.info("outboundToIms: "+request);
+        }
+        SipURI from;
+        SipURI to;
+
+        to = (SipURI) sipFactory.createURI(request.to());
+        if (request.from() == null) {
+            from = sipFactory.createSipURI(null, imsDomain);
+        } else {
+            if (request.from() != null && request.from().contains("@")) {
+                // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we
+                // allow to use it directly
+                from = (SipURI) sipFactory.createURI(request.from());
+            } else {
+                from = sipFactory.createSipURI(request.from(), imsDomain);
+            }
+        }
+        if (from == null || to == null) {
+            //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
+            final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: "+request.to();
+            logger.error(errMsg);
+            sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+        } else {
+            final ActorRef call = call();
+            final ActorRef self = self();
+            final Configuration runtime = configuration.subset("runtime-settings");
+            if (logger.isInfoEnabled()) {
+                logger.info("outboundToIms: from: "+from +", to: " + to);
+            }
+            final String proxyUsername = (request.username() != null) ? request.username() : activeProxyUsername;
+            final String proxyPassword = (request.password() != null) ? request.password() : activeProxyPassword;
+            boolean isToWebRTC = false;
+            Registration toReg = findRegistration(to);
+            if(toReg !=null){
+                isToWebRTC = toReg.isWebRTC();
+            }
+            if (logger.isInfoEnabled()) {
+                logger.info("outboundToIms: isToWebRTC: "+isToWebRTC);
+            }
+            InitializeOutbound init = new InitializeOutbound(request.from(), from, to, proxyUsername, proxyPassword, request.timeout(),
+                    request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage, isToWebRTC,
+                    true, imsProxyAddress, imsProxyPort);
+            if (request.parentCallSid() != null) {
+                init.setParentCallSid(request.parentCallSid());
+            }
+            call.tell(init, self);
+            sender.tell(new CallManagerResponse<ActorRef>(call), self());
+        }
     }
 }

@@ -53,9 +53,17 @@ public final class VoiceInterpreterBuilder {
     private String fallbackMethod;
     private URI statusCallback;
     private String statusCallbackMethod;
+    private String referTarget;
     private String emailAddress;
     private ActorRef monitoring;
     private String rcml;
+
+    // IMS authentication
+    private boolean asImsUa;
+    private String imsUaLogin;
+    private String imsUaPassword;
+    private String transferor;
+    private String transferee;
 
     /**
      * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -72,7 +80,8 @@ public final class VoiceInterpreterBuilder {
             @Override
             public UntypedActor create() throws Exception {
                 return new VoiceInterpreter(configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod,
-                        statusCallback, statusCallbackMethod, emailAddress, calls, conferences, bridges, sms, storage, monitoring, rcml);
+                        statusCallback, statusCallbackMethod, referTarget, transferor, transferee, emailAddress, calls, conferences, bridges, sms, storage, monitoring, rcml,
+                        asImsUa, imsUaLogin, imsUaPassword);
             }
         }));
     }
@@ -133,6 +142,10 @@ public final class VoiceInterpreterBuilder {
         this.statusCallbackMethod = statusCallbackMethod;
     }
 
+    public void setReferTarget(final String referTarget) {
+        this.referTarget = referTarget;
+    }
+
     public void setEmailAddress(final String emailAddress) {
         this.emailAddress = emailAddress;
     }
@@ -146,4 +159,24 @@ public final class VoiceInterpreterBuilder {
     }
 
     public void setRcml(final String rcml) { this.rcml = rcml; }
+
+    public void setAsImsUa(boolean asImsUa) {
+        this.asImsUa = asImsUa;
+    }
+
+    public void setImsUaLogin(String imsUaLogin) {
+        this.imsUaLogin = imsUaLogin;
+    }
+
+    public void setImsUaPassword(String imsUaPassword) {
+        this.imsUaPassword = imsUaPassword;
+    }
+
+    public void setTransferor (String transferor) {
+        this.transferor = transferor;
+    }
+
+    public void setTransferee (String transferee) {
+        this.transferee = transferee;
+    }
 }

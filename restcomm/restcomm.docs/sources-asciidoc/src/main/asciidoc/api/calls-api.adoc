@@ -99,6 +99,8 @@ If the system hasn't received any calls, you will see the the output below
 == Modifying Live Calls
 Real time call modification allows you to interrupt an in-progress call and terminate it or have it begin processing *RCML* from a new URL. This is useful for any application where you want to asynchronously change the behavior of a running call. For example: hold music, call queues, transferring calls, forcing hangup, etc.
 
+*Live Call Modification API is supported only for calls created with Dial verb using a RCML application*
+
 *HTTP POST* to a Call
 
 To redirect or terminate a live call, you make an *HTTP POST* request to an in­-progress Call instance resource URI:
@@ -381,8 +383,8 @@ The result will be similar to the one below
       <CallerName/>
       <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAc0fb839632cf444f9066876d5de741e0</Uri>
       <SubresourceUris>
-        <Notifications>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAc0fb839632cf444f9066876d5de741e0/Notifications</Notifications>
-        <Recordings>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAc0fb839632cf444f9066876d5de741e0/Recordings</Recordings>
+        <Notifications>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAc0fb839632cf444f9066876d5de741e0/Notifications</Notifications>
+        <Recordings>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAc0fb839632cf444f9066876d5de741e0/Recordings</Recordings>
       </SubresourceUris>
     </Call>
   </Calls>
@@ -442,8 +444,8 @@ The result of the *PageSize* parameter
       <CallerName/>
       <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA4049cf008d6b4277b92ab863fd4ec7c8</Uri>
       <SubresourceUris>
-        <Notifications>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA4049cf008d6b4277b92ab863fd4ec7c8/Notifications</Notifications>
-        <Recordings>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA4049cf008d6b4277b92ab863fd4ec7c8/Recordings</Recordings>
+        <Notifications>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA4049cf008d6b4277b92ab863fd4ec7c8/Notifications</Notifications>
+        <Recordings>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA4049cf008d6b4277b92ab863fd4ec7c8/Recordings</Recordings>
       </SubresourceUris>
     </Call>
   </Calls>

@@ -125,6 +125,8 @@ public final class SmsInterpreter extends UntypedActor {
     private final ActorRef downloader;
     // The storage engine.
     private final DaoManager storage;
+    //Email configuration
+    private final Configuration emailconfiguration;
     //Runtime configuration
     private final Configuration runtime;
     // User specific configuration.
@@ -210,6 +212,7 @@ public final class SmsInterpreter extends UntypedActor {
         this.service = service;
         this.downloader = downloader();
         this.storage = storage;
+        this.emailconfiguration = configuration.subset("smtp-service");
         this.runtime = configuration.subset("runtime-settings");
         this.configuration = configuration.subset("sms-aggregator");
         this.accountId = accountId;
@@ -953,7 +956,7 @@ public final class SmsInterpreter extends UntypedActor {
             // Send the email.
             final Mail emailMsg = new Mail(from, to, subject, verb.text(),cc,bcc);
             if (mailerService == null){
-                mailerService = mailer(configuration.subset("smtp-service"));
+                mailerService = mailer(emailconfiguration);
             }
             mailerService.tell(new EmailRequest(emailMsg), self());
         }
