@@ -34,6 +34,8 @@ public final class Nouns {
     public static final String uri = "Uri";
     // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     public static final String SIP = "Sip";
+    public static final String immediate = "Immediate";
+    public static final String eventNotification = "Notification";
 
     public Nouns() {
         super();
@@ -51,6 +53,10 @@ public final class Nouns {
         if (uri.equals(name))
             return true;
         if (SIP.equals(name))
+            return true;
+        if (immediate.equals(name))
+            return true;
+        if (eventNotification.equals(name))
             return true;
         return false;
     }

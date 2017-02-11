@@ -69,6 +69,8 @@ import org.restcomm.connect.rvd.model.steps.ussdlanguage.UssdLanguageConverter;
 import org.restcomm.connect.rvd.model.steps.ussdlanguage.UssdLanguageRcml;
 import org.restcomm.connect.rvd.model.steps.ussdsay.UssdSayRcml;
 import org.restcomm.connect.rvd.model.steps.ussdsay.UssdSayStepConverter;
+import org.restcomm.connect.rvd.model.steps.geolocation.RcmlGeolocationStep;
+import org.restcomm.connect.rvd.model.steps.geolocation.GeolocationStepConverter;
 import org.restcomm.connect.rvd.storage.FsProjectStorage;
 import org.restcomm.connect.rvd.storage.WorkspaceStorage;
 import org.restcomm.connect.rvd.storage.exceptions.StorageException;
@@ -162,7 +164,9 @@ public class Interpreter {
         xstream.registerConverter(new SipuriNounConverter());
         xstream.registerConverter(new UssdSayStepConverter());
         xstream.registerConverter(new UssdLanguageConverter());
+        xstream.registerConverter(new GeolocationStepConverter());
         xstream.addImplicitCollection(RcmlDialStep.class, "nouns");
+        xstream.addImplicitCollection(RcmlGeolocationStep.class, "geolocationNouns");
         xstream.alias("Response", RcmlResponse.class);
         xstream.addImplicitCollection(RcmlResponse.class, "steps");
         xstream.alias("Say", RcmlSayStep.class);
@@ -184,6 +188,7 @@ public class Interpreter {
         xstream.alias("UssdMessage", UssdSayRcml.class);
         xstream.alias("UssdCollect", UssdCollectRcml.class);
         xstream.alias("Language", UssdLanguageRcml.class);
+        xstream.alias("Geolocation", RcmlGeolocationStep.class);
         xstream.addImplicitCollection(RcmlGatherStep.class, "steps");
         xstream.addImplicitCollection(UssdCollectRcml.class, "messages");
         xstream.useAttributeFor(UssdCollectRcml.class, "action");
@@ -212,10 +217,16 @@ public class Interpreter {
         xstream.useAttributeFor(RcmlDialStep.class, "timeLimit");
         xstream.useAttributeFor(RcmlDialStep.class, "callerId");
         xstream.useAttributeFor(RcmlDialStep.class, "record");
+        xstream.useAttributeFor(RcmlGeolocationStep.class, "deviceIdentifier");
+        xstream.useAttributeFor(RcmlGeolocationStep.class, "action");
+        xstream.useAttributeFor(RcmlGeolocationStep.class, "method");
+        xstream.useAttributeFor(RcmlGeolocationStep.class, "statusCallback");
         xstream.aliasField("Number", RcmlDialStep.class, "number");
         xstream.aliasField("Client", RcmlDialStep.class, "client");
         xstream.aliasField("Conference", RcmlDialStep.class, "conference");
         xstream.aliasField("Uri", RcmlDialStep.class, "sipuri");
+        xstream.aliasField("Notification", RcmlGeolocationStep.class, "notification");
+        xstream.aliasField("Immediate", RcmlGeolocationStep.class, "immediate");
 
         // xstream.aliasField(alias, definedIn, fieldName);
         gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonDeserializer()).create();

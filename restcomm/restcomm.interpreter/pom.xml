@@ -172,5 +172,12 @@
 			<scope>test</scope>
 		</dependency>
 
+        <dependency>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.geolocation.api</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
 	</dependencies>
 </project>

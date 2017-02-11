@@ -93,7 +93,7 @@
 		<mobicents.mgcp.impl.version>3.0.2.FINAL</mobicents.mgcp.impl.version>
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
-    <sipservletapi.version>3.1.761</sipservletapi.version>
+    	<sipservletapi.version>3.1.761</sipservletapi.version>
 		<staxapi.version>1.0.1</staxapi.version>
 		<staximpl.version>1.2.0</staximpl.version>
 		<servlet-api.version>7.0.50</servlet-api.version>
@@ -110,7 +110,7 @@
 		<junit.version>4.10</junit.version>
 		<scalatest.version>1.9.1</scalatest.version>
 		<hsqldb.version>2.3.2</hsqldb.version>
-    <sip-ri.version>1.2.293</sip-ri.version>
+    	<sip-ri.version>1.2.293</sip-ri.version>
 		<arquillian.version>1.0.3.Final</arquillian.version>
 		<mss.arquillian.version>1.0.1</mss.arquillian.version>
 		<mss.shrinkwrap.version>1.0.2</mss.shrinkwrap.version>
@@ -139,9 +139,9 @@
 		<module>restcomm.tts.acapela</module>
 		<module>restcomm.mgcp</module>
 		<module>restcomm.fax</module>
-               <module>restcomm.mscontrol.api</module>
-               <module>restcomm.mscontrol.mms</module>
-               <module>restcomm.mscontrol.jsr309</module>
+        <module>restcomm.mscontrol.api</module>
+		<module>restcomm.mscontrol.mms</module>
+		<module>restcomm.mscontrol.jsr309</module>
 		<module>restcomm.sms.api</module>
 		<module>restcomm.telephony.api</module>
 		<module>restcomm.interpreter</module>
@@ -168,8 +168,10 @@
 		<module>restcomm.extension.controller</module>
 		<module>restcomm.identity</module>
 		<module>restcomm.mrb</module>
-                <module>restcomm.mrb.api</module>
-                <module>restcomm.monitoring.service</module>
+		<module>restcomm.mrb.api</module>
+		<module>restcomm.monitoring.service</module>
+		<module>restcomm.geolocation</module>
+		<module>restcomm.geolocation.api</module>
   </modules>
 
 	<dependencyManagement>
