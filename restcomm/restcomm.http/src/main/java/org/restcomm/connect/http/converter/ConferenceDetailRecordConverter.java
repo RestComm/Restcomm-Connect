@@ -88,7 +88,7 @@ public final class ConferenceDetailRecordConverter extends AbstractConverter imp
 
     private void writeSubResources(final ConferenceDetailRecord cdr, final JsonObject object) {
         final JsonObject other = new JsonObject();
-        writeParticipants(cdr, object);
+        writeParticipants(cdr, other);
         object.add("subresource_uris", other);
     }
 
