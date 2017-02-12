@@ -99,7 +99,7 @@ public final class ConferenceDetailRecordConverter extends AbstractConverter imp
     }
 
     private void writeParticipants(final ConferenceDetailRecord cdr, final JsonObject object) {
-        object.addProperty("participants", prefix(cdr) + "/Participants");
+        object.addProperty("participants", prefix(cdr) + "/Participants.json");
     }
 
     private String prefix(final ConferenceDetailRecord cdr) {
