@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.restcomm</groupId>
 		<artifactId>restcomm-connect</artifactId>
-		<version>8.1.0-SNAPSHOT</version>
+		<version>8.1.0.1149</version>
 	</parent>
 
 	<artifactId>restcomm-connect.telephony</artifactId>
@@ -139,12 +139,12 @@
         <dependency>
             <groupId>org.restcomm</groupId>
             <artifactId>restcomm-connect.extension.controller</artifactId>
-            <version>8.1.0-SNAPSHOT</version>
+            <version>8.1.0.1149</version>
         </dependency>
 		<dependency>
 			<groupId>org.restcomm</groupId>
 			<artifactId>restcomm-connect.extension.controller</artifactId>
-			<version>8.1.0-SNAPSHOT</version>
+			<version>8.1.0.1149</version>
 		</dependency>
 
 	</dependencies>
