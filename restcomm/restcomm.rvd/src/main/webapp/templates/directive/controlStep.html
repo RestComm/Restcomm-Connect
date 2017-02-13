@@ -4,17 +4,17 @@
 	</div>
 	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 		<div>
-            <h4>Conditions</h4>
+            <h4>{{"text_Conditions" | translate}}</h4>
             <div ng-repeat="condition in step.conditions" class="row condition">
                 <div class="col-md-3">
                     <select ng-model="condition.operator" ng-change="conditionOperatorChanged(condition, condition.operator)" class="form-control">
-                        <option value="equals">equal</option>
-                        <option value="notequal">not equal</option>
-                        <option value="greater">greater</option>
-                        <option value="greaterEqual">greater or equal</option>
-                        <option value="less">less</option>
-                        <option value="lessEqual">less or equal</option>
-                        <option value="matches">regex match</option>
+                        <option value="equals">{{"textEqual"|translate}}</option>
+                        <option value="notequal">{{"textNotEqual" | translate }}</option>
+                        <option value="greater">{{"textGreater" | translate }}</option>
+                        <option value="greaterEqual">{{"textGreaterEqual" | translate}}</option>
+                        <option value="less">{{"textLess" | translate }}</option>
+                        <option value="lessEqual">{{"textLessEqual" | translate}}</option>
+                        <option value="matches">{{"textRegexMatch" | translate}}</option>
                     </select>
                 </div>
                 <div class="col-md-8">
@@ -47,20 +47,20 @@
             </div>
             <div ng-show="step.conditions.length > 1" class="form-group">
                 <select ng-model="step.conditionJoiner" ng-change="rebuildConditionExpression(step)" class="form-control">
-                    <option value="all">All conditions should stand</option>
-                    <option value="any">Any condition should stand</option>
+                    <option value="all">{{'textAllConditionsStand' | translate}}</option>
+                    <option value="any">{{'textAnyConditionStands' | translate}}</option>
                 </select>
             </div>
         </div>
         <hr>
         <div>
-            <h4>Actions</h4>
+            <h4>{{"text_Actions"| translate}}</h4>
             <div ng-repeat="action in step.actions track by $index" class="row action">
                 <div class="col-md-3 col-lg-3">
                     <select ng-model="action.kind" ng-change="actionKindChanged(action, action.kind)" class="form-control">
-                        <option value="continueTo">Continue To</option>
-                        <option value="assign">Assign</option>
-                        <option value="capture">Capture</option>
+                        <option value="continueTo">{{"textContinueTo" | translate}}</option>
+                        <option value="assign">{{"textAssign" | translate}}</option>
+                        <option value="capture">{{"textCapture" | translate}}</option>
                     </select>
                 </div>
                 <div class="col-md-7">
