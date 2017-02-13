@@ -169,7 +169,8 @@ master_ivr_endpoint_session_id VARCHAR(200),
 master_bridge_endpoint_id VARCHAR(20),
 master_bridge_endpoint_session_id VARCHAR(200),
 master_bridge_conn_id VARCHAR(200),
-master_ivr_conn_id VARCHAR(200)
+master_ivr_conn_id VARCHAR(200),
+moderator_present BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE restcomm_clients (
