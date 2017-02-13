@@ -169,7 +169,8 @@ master_ivr_endpoint_session_id VARCHAR(200),
 master_bridge_endpoint_id VARCHAR(20),
 master_bridge_endpoint_session_id VARCHAR(200),
 master_bridge_conn_id VARCHAR(200),
-master_ivr_conn_id VARCHAR(200)
+master_ivr_conn_id VARCHAR(200),
+moderator_present BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE restcomm_clients (
@@ -246,7 +247,8 @@ call_sid VARCHAR(34) NOT NULL,
 duration DOUBLE NOT NULL,
 api_version VARCHAR(10) NOT NULL,
 uri MEDIUMTEXT NOT NULL,
-file_uri MEDIUMTEXT
+file_uri MEDIUMTEXT,
+s3_uri MEDIUMTEXT
 );
 
 CREATE TABLE restcomm_transcriptions (

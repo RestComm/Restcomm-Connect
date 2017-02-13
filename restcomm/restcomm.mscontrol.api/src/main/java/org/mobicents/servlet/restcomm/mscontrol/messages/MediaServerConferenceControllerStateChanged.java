@@ -35,23 +35,29 @@ public final class MediaServerConferenceControllerStateChanged extends MediaServ
 
     private final Sid conferenceSid;
     private final String conferenceState;
+    private final boolean moderatorPresent;
 
-    public MediaServerConferenceControllerStateChanged(final MediaServerControllerState state, MediaSessionInfo mediaSession, final Sid conferenceSid, final String conferenceState) {
+    public MediaServerConferenceControllerStateChanged(final MediaServerControllerState state, MediaSessionInfo mediaSession, final Sid conferenceSid, final String conferenceState, final boolean moderatorPresent) {
         super(state, mediaSession);
         this.conferenceSid = conferenceSid;
         this.conferenceState = conferenceState;
+        this.moderatorPresent = moderatorPresent;
     }
 
     public MediaServerConferenceControllerStateChanged(final MediaServerControllerState state, MediaSessionInfo mediaSession, final Sid conferenceSid) {
-        this(state, mediaSession, conferenceSid, null);
+        this(state, mediaSession, conferenceSid, null, false);
     }
 
     public MediaServerConferenceControllerStateChanged(final MediaServerControllerState state, final Sid conferenceSid, final String conferenceState) {
-        this(state, null, conferenceSid, conferenceState);
+        this(state, null, conferenceSid, conferenceState, false);
+    }
+
+    public MediaServerConferenceControllerStateChanged(final MediaServerControllerState state, final Sid conferenceSid, final String conferenceState, final boolean moderatorPresent) {
+        this(state, null, conferenceSid, conferenceState, moderatorPresent);
     }
 
     public MediaServerConferenceControllerStateChanged(final MediaServerControllerState state, final Sid conferenceSid) {
-        this(state, null, conferenceSid, null);
+        this(state, null, conferenceSid, null, false);
     }
 
     public Sid conferenceSid() {
@@ -60,5 +66,9 @@ public final class MediaServerConferenceControllerStateChanged extends MediaServ
 
     public String conferenceState() {
         return conferenceState;
+    }
+
+    public boolean moderatorPresent (){
+        return moderatorPresent;
     }
 }
