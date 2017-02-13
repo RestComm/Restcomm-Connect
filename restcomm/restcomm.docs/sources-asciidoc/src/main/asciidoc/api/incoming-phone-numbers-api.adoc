@@ -47,15 +47,15 @@ Provisioning a phone number is a two-step process. First, you must find an avail
 |SmsFallbackMethod |The HTTP method Restcomm will use when requesting the above URL. Either GET or POST.
 |SmsApplicationSid |The 34 character sid of the application Restcomm should use to handle SMSs sent to this number. If a SmsApplicationSid is present, Restcomm will ignore all of the SMS urls above and use those set on the application.
 |SmsApplicationName |The application name.
-|UssdUrl |The URL Restcomm will request when receiving an incoming SMS message to this number.
-|UssdMethod |The HTTP method Restcomm will use when making requests to the SmsUrl. Either GET or POST.
-|UssdFallbackUrl |The URL that Restcomm will request if an error occurs retrieving or executing the RCML from SmsUrl.
+|UssdUrl |The URL Restcomm will request when receiving an incoming USSD request to this number.
+|UssdMethod |The HTTP method Restcomm will use when making requests to the UssdUrl. Either GET or POST.
+|UssdFallbackUrl |The URL that Restcomm will request if an error occurs retrieving or executing the RCML from UssdUrl.
 |UssdFallbackMethod |The HTTP method Restcomm will use when requesting the above URL. Either GET or POST.
-|UssdApplicationSid |The 34 character sid of the application Restcomm should use to handle SMSs sent to this number. If a SmsApplicationSid is present, Restcomm will ignore all of the SMS urls above and use those set on the application.
+|UssdApplicationSid |The 34 character sid of the application Restcomm should use to handle USSD requests to this number. If a UssdApplicationSid is present, Restcomm will ignore all of the Ussd urls above and use those set on the application.
 |UssdApplicationName |The application name.
-|ReferUrl |The URL Restcomm will request when receiving an incoming SMS message to this number.
-|ReferMethod |The HTTP method Restcomm will use when making requests to the SmsUrl. Either GET or POST.
-|ReferApplicationSid |The 34 character sid of the application Restcomm should use to handle SMSs sent to this number. If a SmsApplicationSid is present, Restcomm will ignore all of the SMS urls above and use those set on the application.
+|ReferUrl |The URL Restcomm will request when receiving a SIP Refer request to this number.
+|ReferMethod |The HTTP method Restcomm will use when making requests to the ReferUrl. Either GET or POST.
+|ReferApplicationSid |The 34 character sid of the application Restcomm should use to handle SIP Refer requests to this number. If a ReferApplicationSid is present, Restcomm will ignore all of the Refer urls above and use those set on the application.
 |ReferApplicationName |The application name.
 |Capabilities |This is a set of boolean properties that indicate whether a phone number can receive calls or messages. Possible capabilities are Voice, SMS, and MMS with each having a value of either true or false.
 |Uri |The URI for this resource, relative to https://api.Restcomm.com.
