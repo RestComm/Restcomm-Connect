@@ -23,6 +23,7 @@ import static java.lang.Integer.parseInt;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
 import static javax.servlet.sip.SipServletResponse.SC_OK;
 import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
+import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
 import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
 
 import java.io.IOException;
@@ -295,7 +296,7 @@ public final class UserAgentManager extends UntypedActor {
         } else if (message instanceof SipServletResponse) {
             SipServletResponse response = (SipServletResponse) message;
             if (response.getStatus()>400 && response.getMethod().equalsIgnoreCase("OPTIONS")) {
-                removeRegistration(response);
+                removeRegistration(response, false);
             } else if (actAsImsUa && response.getMethod().equalsIgnoreCase(REGISTER)) {
                 proxyResponseFromIms(message, response);
             } else {
@@ -306,11 +307,12 @@ public final class UserAgentManager extends UntypedActor {
         }
     }
 
-    private void removeRegistration(final SipServletMessage sipServletMessage) {
+    private void removeRegistration(final SipServletMessage sipServletMessage, boolean ignoreOptionsTimeout) {
         String user = ((SipURI)sipServletMessage.getTo().getURI()).getUser();
         String location = ((SipURI)sipServletMessage.getTo().getURI()).toString();
         if(logger.isDebugEnabled()) {
             logger.debug("Error response for the OPTIONS to: "+location+" will remove registration");
+            logger.debug("ignoring options timeout: "+ignoreOptionsTimeout);
         }
         final RegistrationsDao regDao = storage.getRegistrationsDao();
         List<Registration> registrations = regDao.getRegistrations(user);
@@ -324,7 +326,8 @@ public final class UserAgentManager extends UntypedActor {
                 } catch (ServletParseException e) {}
 
                 Long pingIntervalMillis = new Long(pingInterval * 1000 * 3);
-                boolean optionsTimeout = ((DateTime.now().getMillis() - reg.getDateUpdated().getMillis()) > pingIntervalMillis);
+                boolean optionsTimeout = ignoreOptionsTimeout ? true :
+                    ((DateTime.now().getMillis() - reg.getDateUpdated().getMillis()) > pingIntervalMillis);
 
                 if(logger.isDebugEnabled()) {
                     logger.debug("regLocation: " + regLocation + " reg.getAddressOfRecord(): "+reg.getAddressOfRecord() +
@@ -418,7 +421,7 @@ public final class UserAgentManager extends UntypedActor {
             if (logger.isInfoEnabled()) {
                 logger.info("There was a problem while trying to ping client: "+to+" , will remove registration. " + e.getMessage());
             }
-            removeRegistration(ping);
+            removeRegistration(ping, false);
         }
     }
 
@@ -568,7 +571,7 @@ public final class UserAgentManager extends UntypedActor {
                         try {
                             request.getApplicationSession().setInvalidateWhenReady(true);
                         } catch (IllegalStateException exception) {
-                            logger.error("Exception while trying to setInvalidateWhenReady(true) for application session, exception: "+exception);
+                            logger.warning("Illegal State: while trying to setInvalidateWhenReady(true) for application session, message: "+exception.getMessage());
                         }
                     }
                 } else {
@@ -684,8 +687,8 @@ public final class UserAgentManager extends UntypedActor {
             logger.info("incoming leg state: "+incomingLegResposne.getSession().getState());
 
         }
-        if (response.getStatus()>400) {
-            removeRegistration(response);
+        if (response.getStatus()>=400 && (response.getStatus() != SC_UNAUTHORIZED || response.getStatus() != SC_PROXY_AUTHENTICATION_REQUIRED)) {
+            removeRegistration(response, true);
         } else if (response.getStatus()==200) {
             String transport = (uri.getTransportParam()==null?incomingRequest.getParameter("transport"):uri.getTransportParam()); //Issue #935, take transport of initial request-uri if contact-uri has no transport parameter
             if (transport == null && !incomingRequest.getInitialTransport().equalsIgnoreCase("udp")) {

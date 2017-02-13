@@ -95,5 +95,11 @@
         	SET master_present=#{master_present}, date_updated=#{date_updated}
         	WHERE sid=#{sid};
     </update>
+    <update id="updateModeratorPresent" parameterType="map">
+            UPDATE 
+        	restcomm_conference_detail_records 
+        	SET moderator_present=#{moderator_present}, date_updated=#{date_updated}
+        	WHERE sid=#{sid};
+    </update>
 
 </mapper>

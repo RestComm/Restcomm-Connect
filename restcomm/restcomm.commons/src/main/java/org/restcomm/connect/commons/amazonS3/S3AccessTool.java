@@ -22,12 +22,13 @@ package org.restcomm.connect.commons.amazonS3;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.HttpMethod;
-import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
@@ -40,9 +41,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -60,36 +58,52 @@ public class S3AccessTool {
     private String folder;
     private String bucketRegion;
     private boolean reducedRedundancy;
-    private int daysToRetainPublicUrl;
+    private int minutesToRetainPublicUrl;
     private boolean removeOriginalFile;
     private boolean testing;
     private String testingUrl;
+    private AmazonS3 s3client;
 
     public S3AccessTool(final String accessKey, final String securityKey, final String bucketName, final String folder,
-            final boolean reducedRedundancy, final int daysToRetainPublicUrl, final boolean removeOriginalFile,
+            final boolean reducedRedundancy, final int minutesToRetainPublicUrl, final boolean removeOriginalFile,
                         final String bucketRegion, final boolean testing, final String testingUrl) {
         this.accessKey = accessKey;
         this.securityKey = securityKey;
         this.bucketName = bucketName;
         this.folder = folder;
         this.reducedRedundancy = reducedRedundancy;
-        this.daysToRetainPublicUrl = daysToRetainPublicUrl;
+        this.minutesToRetainPublicUrl = minutesToRetainPublicUrl;
         this.removeOriginalFile = removeOriginalFile;
         this.bucketRegion = bucketRegion;
         this.testing = testing;
         this.testingUrl = testingUrl;
     }
 
+    public AmazonS3 getS3client() {
+        BasicAWSCredentials awsCreds = new BasicAWSCredentials(accessKey, securityKey);
+
+        if (testing && (!testingUrl.isEmpty() || !testingUrl.equals(""))) {
+            s3client = new AmazonS3Client(awsCreds);
+            s3client.setRegion(Region.getRegion(Regions.fromName(bucketRegion)));
+            s3client.setEndpoint(testingUrl);
+        } else {
+            s3client = AmazonS3ClientBuilder.standard().withRegion(Regions.fromName(bucketRegion))
+                    .withCredentials(new AWSStaticCredentialsProvider(awsCreds)).build();
+        }
+
+        return s3client;
+    }
+
     public URI uploadFile(final String fileToUpload) {
-        AWSCredentials credentials =new BasicAWSCredentials(accessKey, securityKey);
-        AmazonS3 s3client = new AmazonS3Client(credentials);
-        s3client.setRegion(Region.getRegion(Regions.fromName(bucketRegion)));
+        if (s3client == null) {
+            s3client = getS3client();
+        }
         if(logger.isInfoEnabled()){
             logger.info("S3 Region: "+bucketRegion.toString());
         }
         try {
             if (testing && (!testingUrl.isEmpty() || !testingUrl.equals(""))) {
-                s3client.setEndpoint(testingUrl);
+//                s3client.setEndpoint(testingUrl);
 //                s3client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
                 FileUtils.touch(new File(URI.create(fileToUpload)));
             }
@@ -98,39 +112,11 @@ public class S3AccessTool {
             if (folder != null && !folder.isEmpty())
                 bucket.append("/").append(folder);
             URI fileUri = URI.create(fileToUpload);
-            if(logger.isInfoEnabled()){
-                logger.info("File to upload to S3: "+fileUri.toString());
-            }
-             File file = new File(fileUri);
-//            while (!file.exists()){}
-//            logger.info("File exist: "+file.exists());
-            //First generate the Presigned URL, buy some time for the file to be written on the disk
-            Date date = new Date();
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(date);
-            DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS");
-            final String now = format.format(cal.getTime());
-            if (daysToRetainPublicUrl > 0) {
-                cal.add(Calendar.DATE, daysToRetainPublicUrl);
-            } else {
-                //By default the Public URL will be valid for 180 days
-                cal.add(Calendar.DAY_OF_YEAR, 7);
-            }
             if (logger.isInfoEnabled()) {
-                final String retainUntil = format.format(cal.getTime());
-                final String msg = String.format("Added 7 days more, calendar was -%s- and now -%s-", now, retainUntil);
-                logger.info(msg);
+                logger.info("File to upload to S3: " + fileUri.toString());
             }
-            date = cal.getTime();
-            GeneratePresignedUrlRequest generatePresignedUrlRequestGET =
-                    new GeneratePresignedUrlRequest(bucket.toString(), file.getName());
-            generatePresignedUrlRequestGET.setMethod(HttpMethod.GET);
-            generatePresignedUrlRequestGET.setExpiration(date);
+            File file = new File(fileUri);
 
-            URL downloadUrl = s3client.generatePresignedUrl(generatePresignedUrlRequestGET);
-
-            //Second upload the file to S3
-//            while (!file.exists()){}
             while (!FileUtils.waitFor(file, 30)){}
             if (file.exists()) {
                 PutObjectRequest putRequest = new PutObjectRequest(bucket.toString(), file.getName(), file);
@@ -144,7 +130,9 @@ public class S3AccessTool {
                 if (removeOriginalFile) {
                     removeLocalFile(file);
                 }
-                return downloadUrl.toURI();
+                URI recordingS3Uri = s3client.getUrl(bucket.toString(), file.getName()).toURI();
+                return recordingS3Uri;
+//                return downloadUrl.toURI();
             } else {
                 logger.error("Timeout waiting for the recording file: "+file.getAbsolutePath());
                 return null;
@@ -168,6 +156,31 @@ public class S3AccessTool {
             logger.error("Problem while trying to touch recording file for testing", e);
             return null;
         }
+    }
+
+    public URI getPublicUrl (String fileName) throws URISyntaxException {
+        if (s3client == null) {
+            s3client = getS3client();
+        }
+        Date date = new Date();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.add(Calendar.MINUTE, minutesToRetainPublicUrl);
+        if (logger.isInfoEnabled()) {
+            final String msg = String.format("Prepared amazon s3 public url valid for %d minutes for recording: ",fileName, minutesToRetainPublicUrl);
+            logger.info(msg);
+        }
+        date = cal.getTime();
+        String bucket = bucketName;
+        if (folder != null && !folder.isEmpty()) {
+            bucket = bucket.concat("/").concat(folder);
+        }
+        GeneratePresignedUrlRequest generatePresignedUrlRequestGET =
+                new GeneratePresignedUrlRequest(bucket, fileName);
+        generatePresignedUrlRequestGET.setMethod(HttpMethod.GET);
+        generatePresignedUrlRequestGET.setExpiration(date);
+
+        return s3client.generatePresignedUrl(generatePresignedUrlRequestGET).toURI();
     }
 
     private void removeLocalFile(final File file) {
