@@ -7,6 +7,7 @@ The following articles will guide you through using RVD quickly and efficiently 
 * <<Restcomm - RVD Quick Video Tutorial.adoc#video,Restcomm RVD Quick Video Tutorials>>
 * <<Restcomm - Making HTTP requests with External Service client.adoc#http,Making HTTP requests with External Service client>>
 * <<Restcomm - Understanding RVD Variables.adoc#rvd-variables,Restcomm RVD Variables>>
+* <<Restcomm RVD - Control Element.adoc,Making decisions - Control element>>
 * <<Restcomm - External Services Arrays Strings and Objects.adoc#external-services,Restcomm - External Services Arrays Strings and Objects>>
 * <<Accessing custom SIP headers from an RCML or RVD application.adoc#custom-sip-headers,Accessing custom SIP headers from an RCML or RVD application>>
 * <<Restcomm RVD - Using Web Trigger.adoc#web-trigger,Restcomm RVD Web Trigger>>
