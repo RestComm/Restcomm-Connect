@@ -551,7 +551,7 @@ public final class MmsConferenceController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             ConferenceMediaResourceControllerStateChanged msg = (ConferenceMediaResourceControllerStateChanged)message;
-            broadcast(new MediaServerConferenceControllerStateChanged(MediaServerControllerState.ACTIVE, conferenceSid, msg.conferenceState()));
+            broadcast(new MediaServerConferenceControllerStateChanged(MediaServerControllerState.ACTIVE, conferenceSid, msg.conferenceState(), msg.moderatorPresent()));
         }
     }
 
