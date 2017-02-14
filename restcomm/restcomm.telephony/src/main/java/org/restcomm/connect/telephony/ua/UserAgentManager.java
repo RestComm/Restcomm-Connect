@@ -429,7 +429,7 @@ public final class UserAgentManager extends UntypedActor {
         final SipServletResponse response = (SipServletResponse) message;
         if (response.getApplicationSession().isValid()) {
             try {
-                response.getApplicationSession().invalidate();
+                response.getApplicationSession().setInvalidateWhenReady(true);
             } catch (IllegalStateException ise) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("The session was already invalidated, nothing to do");
@@ -571,7 +571,7 @@ public final class UserAgentManager extends UntypedActor {
                         try {
                             request.getApplicationSession().setInvalidateWhenReady(true);
                         } catch (IllegalStateException exception) {
-                            logger.error("Exception while trying to setInvalidateWhenReady(true) for application session, exception: "+exception);
+                            logger.warning("Illegal State: while trying to setInvalidateWhenReady(true) for application session, message: "+exception.getMessage());
                         }
                     }
                 } else {
@@ -782,4 +782,21 @@ public final class UserAgentManager extends UntypedActor {
         sipURI.setHost(outgoingRequest.getLocalAddr());
     }
 
+    @Override
+    public void postStop() {
+        try {
+            if (logger.isInfoEnabled()) {
+                logger.info("UserAgentManager actor at postStop, path: "+self().path()+", isTerminated: "+self().isTerminated()+", sender: "+sender());
+
+                if (storage != null){
+                    logger.info("Number of current Registrations:" + storage.getRegistrationsDao().getRegistrations().size());
+                }
+            }
+        } catch (Exception exception) {
+            if(logger.isInfoEnabled()) {
+                logger.info("Exception during UserAgentManager postStop");
+            }
+        }
+        super.postStop();
+    }
 }

@@ -3,11 +3,13 @@
 [[IncomingPhoneNumbers]]
 == IncomingPhoneNumbers
 
-An IncomingPhoneNumber instance resource represents a Restcomm phone number 
+An IncomingPhoneNumber instance resource represents a Restcomm phone number
 
-The IncomingPhoneNumbers list resource represents an account's Restcomm phone numbers. You can POST to the list resource to provision a new Restcomm number. To find a new number to provision use the subresources of the AvailablePhoneNumbers resource. 
+The IncomingPhoneNumbers list resource represents an account's Restcomm phone numbers. You can POST to the list resource to provision a new Restcomm number. To find a new number to provision use the subresources of the AvailablePhoneNumbers resource.
 
-You can transfer phone numbers between two Restcomm accounts if you're using subaccounts. For details, see Exchanging Numbers Between Subaccounts. Provisioning a phone number is a two-step process. First, you must find an available phone number to provision using the subresources of the AvailablePhoneNumbers resource. Second, you must POST to the IncomingPhoneNumbers list resource, documented below.
+You can move phone numbers between two Restcomm accounts if you're using subaccounts. For details, see Exchanging Numbers Between Subaccounts.
+
+Provisioning a phone number is a two-step process. First, you must find an available phone number to provision using the subresources of the AvailablePhoneNumbers resource. Second, you must POST to the IncomingPhoneNumbers list resource, documented below.
 
 [[incomingphonenumber-instance-resource]]
 === IncomingPhoneNumber Instance Resource
@@ -38,30 +40,27 @@ You can transfer phone numbers between two Restcomm accounts if you're using sub
 |StatusCallback |The URL that Restcomm will request to pass status parameters (such as call ended) to your application.
 |StatusCallbackMethod |The HTTP method Restcomm will use to make requests to the StatusCallback URL. Either GET or POST.
 |VoiceApplicationSid |The 34 character sid of the application Restcomm should use to handle phone calls to this number. If a VoiceApplicationSid is present, Restcomm will ignore all of the voice urls above and use those set on the application.
+|VoiceApplicationName |The application name.
 |SmsUrl |The URL Restcomm will request when receiving an incoming SMS message to this number.
 |SmsMethod |The HTTP method Restcomm will use when making requests to the SmsUrl. Either GET or POST.
 |SmsFallbackUrl |The URL that Restcomm will request if an error occurs retrieving or executing the RCML from SmsUrl.
 |SmsFallbackMethod |The HTTP method Restcomm will use when requesting the above URL. Either GET or POST.
 |SmsApplicationSid |The 34 character sid of the application Restcomm should use to handle SMSs sent to this number. If a SmsApplicationSid is present, Restcomm will ignore all of the SMS urls above and use those set on the application.
+|SmsApplicationName |The application name.
+|UssdUrl |The URL Restcomm will request when receiving an incoming USSD request to this number.
+|UssdMethod |The HTTP method Restcomm will use when making requests to the UssdUrl. Either GET or POST.
+|UssdFallbackUrl |The URL that Restcomm will request if an error occurs retrieving or executing the RCML from UssdUrl.
+|UssdFallbackMethod |The HTTP method Restcomm will use when requesting the above URL. Either GET or POST.
+|UssdApplicationSid |The 34 character sid of the application Restcomm should use to handle USSD requests to this number. If a UssdApplicationSid is present, Restcomm will ignore all of the Ussd urls above and use those set on the application.
+|UssdApplicationName |The application name.
+|ReferUrl |The URL Restcomm will request when receiving a SIP Refer request to this number.
+|ReferMethod |The HTTP method Restcomm will use when making requests to the ReferUrl. Either GET or POST.
+|ReferApplicationSid |The 34 character sid of the application Restcomm should use to handle SIP Refer requests to this number. If a ReferApplicationSid is present, Restcomm will ignore all of the Refer urls above and use those set on the application.
+|ReferApplicationName |The application name.
 |Capabilities |This is a set of boolean properties that indicate whether a phone number can receive calls or messages. Possible capabilities are Voice, SMS, and MMS with each having a value of either true or false.
-|AddressRequirements |This indicates whether the phone number requires you or your customer to have an Address registered with Restcomm. Possible values are none, any, local, or foreign.
-|Beta |Phone numbers new to the Restcomm platform are marked as beta. Possible values are either true or false.
 |Uri |The URI for this resource, relative to https://api.Restcomm.com.
 |==================================================================================================================================================================================================================================================
 
-[[address-requirement-values]]
-==== Address Requirement Values
-
-The following are the possible values for the address_required property.
-
-[cols=",",]
-|==============================================================================
-|*Status* |*Description*
-|none |An Address is not required for this phone number.
-|any |Your account must have an Address, but it can be anywhere in the world.
-|local |Your account must have an Address within the phone number's country.
-|foreign |Your account must have an Address outside the phone number's country.
-|==============================================================================
 
 [[http-methods]]
 ==== HTTP Methods

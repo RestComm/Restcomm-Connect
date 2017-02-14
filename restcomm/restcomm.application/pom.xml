@@ -195,7 +195,7 @@
 			<version>${project.version}</version>
 		</dependency>
 
-		<dependency>
+                <dependency>
 			<groupId>org.restcomm</groupId>
 			<artifactId>restcomm-connect.tts.api</artifactId>
 			<version>${project.version}</version>
