@@ -10,10 +10,14 @@ echo "ulimit -n: " `ulimit -n`
 # BRANCH_NAME the branch to use, this will be used to run the load tests and build the binary
 # TELSCALE whether to use Telscale Restcomm Connect or Restcomm-Connect
 
-PERFRECORDER_VERSION=34
+PERFRECORDER_VERSION=41
 export LOCAL_RESTCOMM_ADDRESS='192.168.1.151'
-export LOCAL_VOICERSS='5aa416d17f5d40fa990194cd9b3df41d'
+RESTCOMM_NETWORK='192.168.1.0'
+RESTCOMM_SUBNET='255.255.255.0'
+export LOCAL_VOICERSS=''
 LOCAL_INTERFACE_TMP='wlan0'
+
+
 
 export CURRENT_DIR=`pwd`
 
@@ -38,8 +42,8 @@ read -p 'Workspace folder [/tmp/workspace]: ' WORKSPACE
 WORKSPACE=${WORKSPACE:-/tmp/workspace}
 echo "...Workspace \"$WORKSPACE\""
 
-read -p 'Restcomm Major Version number [8.0.0]: ' MAJOR_VERSION_NUMBER
-MAJOR_VERSION_NUMBER=${MAJOR_VERSION_NUMBER:-8.0.0}
+read -p 'Restcomm Major Version number [8.1.0]: ' MAJOR_VERSION_NUMBER
+MAJOR_VERSION_NUMBER=${MAJOR_VERSION_NUMBER:-8.1.0}
 echo "...Major version number \"$MAJOR_VERSION_NUMBER\""
 
 read -p "Restcomm ip address [$LOCAL_RESTCOMM_ADDRESS]: " RESTCOMM_ADDRESS
@@ -236,7 +240,7 @@ echo "*******************************************************************"
 
 cd $GITHUB_RESTCOMM_HOME/load_tests/
 echo "Current dir: $(pwd)"
-./run.sh $RESTCOMM_ADDRESS $LOCAL_ADDRESS $SIMULTANEOUS_CALLS $MAXIMUM_CALLS $CALL_RATE $TEST_NAME
+./run.sh $RESTCOMM_ADDRESS $RESTCOMM_NETWORK $RESTCOMM_SUBNET $LOCAL_ADDRESS $SIMULTANEOUS_CALLS $MAXIMUM_CALLS $CALL_RATE $TEST_NAME
 echo "Creating PerfCorder HTML ... "
 cat $RESULTS_DIR/PerfCorderAnalysis.xml | $TOOLS_DIR/pc_html_gen.sh > $RESULTS_DIR/PerfCorderAnalysis.html 2> $RESULTS_DIR/htmlgen.log
 #prepare logs to be archived
