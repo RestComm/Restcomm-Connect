@@ -525,6 +525,22 @@
 	"webTriggerModalFallbackParamHelp16": "o",
 	"webTriggerModalFallbackParamHelp17": "sip:+12839283849@server.com",
 	"webTriggerModalSaveButton": "Guardar",
-	"webTriggerModalCancelButton": "Cancelar"
+	"webTriggerModalCancelButton": "Cancelar",
+
+	"text_Control": "Control",
+	"text_Conditions": "Conditions",
+	"text_Actions": "Actions",
+	"textEqual": "equal",
+	"textNotEqual": "not equal",
+	"textGreater": "greater",
+	"textGreaterEqual": "greater or equal",
+	"textLess":"less",
+	"textLessEqual": "less or equal",
+	"textRegexMatch": "regex match",
+	"textAllConditionsStand": "All conditions should stand",
+	"textAnyConditionStands": " Any condition should stand",
+	"textContinueTo": "Continue to",
+	"textAssign": "Assign",
+	"textCapture": "Capture"
 
 }
