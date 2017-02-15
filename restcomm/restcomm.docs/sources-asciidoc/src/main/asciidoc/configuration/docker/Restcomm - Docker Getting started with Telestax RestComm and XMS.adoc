@@ -108,7 +108,7 @@ Starting RestComm container:
 
 1. Start the docker container:
 [source]
-docker run  -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/restcomm/ -v /mnt/nfs/home/recordings/:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/recordings/ -e STATIC_ADDRESS="192.168.1.50" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh" -e MS_COMPATIBILITY_MODE="xms" -e MS_ADDRESS="192.168.1.105" -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+docker run  -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/restcomm/ -v /mnt/nfs/home/recordings/:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/recordings/ -e RCBCONF_STATIC_ADDRESS="192.168.1.50" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh" -e RMSCONF_MS_COMPATIBILITY_MODE="xms" -e RMSCONF_MS_ADDRESS="192.168.1.105" -p 80:80 -p 443:443 -p 9990:9990 -p 5080:5080 -p 5081:5081 -p 5082:5082 -p 5083:5083 -p 5080:5080/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
 
 ... Notes:
 - Replace *192.168.1.50* with the IP address of your RestComm server.
