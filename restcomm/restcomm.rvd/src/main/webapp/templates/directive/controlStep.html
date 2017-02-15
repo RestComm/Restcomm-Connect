@@ -1,0 +1,112 @@
+<div class="step control-step panel panel-rvdstep">
+	<div class="panel-heading">
+		<directive-step-heading></directive-step-heading>
+	</div>
+	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
+		<div>
+            <h4>{{"text_Conditions" | translate}}</h4>
+            <div ng-repeat="condition in step.conditions" class="row condition">
+                <div class="col-md-3">
+                    <select ng-model="condition.operator" ng-change="conditionOperatorChanged(condition, condition.operator)" class="form-control">
+                        <option value="equals">{{"textEqual"|translate}}</option>
+                        <option value="notequal">{{"textNotEqual" | translate }}</option>
+                        <option value="greater">{{"textGreater" | translate }}</option>
+                        <option value="greaterEqual">{{"textGreaterEqual" | translate}}</option>
+                        <option value="less">{{"textLess" | translate }}</option>
+                        <option value="lessEqual">{{"textLessEqual" | translate}}</option>
+                        <option value="matches">{{"textRegexMatch" | translate}}</option>
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <div ng-if="condition.operator=='equals' || condition.operator=='notequal' || condition.operator=='greater' || condition.operator=='less' || condition.operator=='greaterEqual' || condition.operator=='lessEqual'" class="form-inline">
+                        <div class="form-group operand">
+                            <input ng-model="condition.comparison.operand1" type="text" class="form-control" placeholder="operand 1">
+                        </div>
+                        <div class="form-group operand">
+                            <input ng-model="condition.comparison.operand2" type="text" class="form-control" placeholder="operand 2">
+                        </div>
+                        <div class="form-group">
+                            <type-chooser model="condition.comparison.type"></type-chooser>
+                        </div>
+                    </div>
+                    <div ng-if="condition.operator=='matches'" class="form-inline">
+                        <div class="form-group operand">
+                            <input ng-model="condition.matcher.regex" type="text" class="form-control" placeholder="pattern" title="Regular expression pattern e.g. ^[0-9]{10}$">
+                        </div>
+                        <div class="form-group operand">
+                            <input ng-model="condition.matcher.text" type="text" class="form-control" placeholder="text">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-1 trailing-buttons-wrap">
+                    <button ng-click="removeCondition(condition.name)" class="btn btn-default"><i class="fa fa-trash-o"></i></button>
+                </div>
+            </div>
+            <div class="form-group">
+                <button ng-click="addCondition()" class="btn btn-primary"><i class="fa fa-plus"></i></button>
+            </div>
+            <div ng-show="step.conditions.length > 1" class="form-group">
+                <select ng-model="step.conditionJoiner" ng-change="rebuildConditionExpression(step)" class="form-control">
+                    <option value="all">{{'textAllConditionsStand' | translate}}</option>
+                    <option value="any">{{'textAnyConditionStands' | translate}}</option>
+                </select>
+            </div>
+        </div>
+        <hr>
+        <div>
+            <h4>{{"text_Actions"| translate}}</h4>
+            <div ng-repeat="action in step.actions track by $index" class="row action">
+                <div class="col-md-3 col-lg-3">
+                    <select ng-model="action.kind" ng-change="actionKindChanged(action, action.kind)" class="form-control">
+                        <option value="continueTo">{{"textContinueTo" | translate}}</option>
+                        <option value="assign">{{"textAssign" | translate}}</option>
+                        <option value="capture">{{"textCapture" | translate}}</option>
+                    </select>
+                </div>
+                <div class="col-md-7">
+                    <div ng-if="action.kind=='assign'" class="row action-assign">
+                        <div class="col-md-4 ">
+                            <vardef variable="action.assign.varName" variable-scope="action.assign.varScope"></vardef>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="text-field">
+                                <input ng-model="action.assign.expression" type="text" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="action.kind=='continueTo'" class="form-inline">
+                        <select sync-model ng-model='action.continueTo.target' ng-options='target.name as target.label for target in getAllTargets()' class="form-control" required>
+                            <option value=""></option>
+                        </select>
+                    </div>
+                    <div ng-if="action.kind=='capture'" class="row action-capture">
+                        <div class="col-md-4 form-inline">
+                            <div class="form-group variable">
+                                <vardef variable="action.capture.varName" variable-scope="action.capture.varScope"></vardef>
+                            </div>
+                        </div>
+                        <div class="col-md-8 form-inline">
+                            <div class="form-group regex-field">
+                                <input ng-model="action.capture.regex" type="text" class="form-control" placeholder="pattern" title="Capture pattern in parenthesis e.g. '$([a-zA-Z]+) [a-zA-Z]+'">
+                            </div>
+                            <div class="form-group data-field">
+                                <input ng-model="action.capture.data" type="text" class="form-control" title="Text to capture part of" placeholder="text">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 trailing-buttons-wrap">
+                    <span ng-show="step.actions.length > 1" class="reorder-buttons">
+                        <i ng-click="moveAction($index,-1)" class="fa fa-chevron-up rvd-clickable"></i>
+                        <i ng-click="moveAction($index,1)" class="fa fa-chevron-down rvd-clickable"></i>
+                    </span>
+                    <button ng-click="removeAction(action.name)" class="btn btn-default"><i class="fa fa-trash-o"></i></button>
+                </div>
+            </div>
+            <div class="form-group">
+                <button ng-click="addAction()" class="btn btn-primary"><i class="fa fa-plus"></i></button>
+            </div>
+		</div>
+	</div>
+</div>

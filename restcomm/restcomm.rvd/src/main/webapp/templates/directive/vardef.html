@@ -1,0 +1,16 @@
+<div class="vardef">
+    <input ng-model="varExpression" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" required type="text" class="form-control vardef-input" placeholder="variable">
+    <i class="text-muted fa fa-arrow-right assign-arrow"></i>
+    <div class="dropdown">
+        <small ng-show="!varScope" class="btn-link dropdown-toggle var-scope" title='{{varScope ? varScope + " scope" : ""}}'>scope</small>
+        <small ng-show="varScope=='app'" class="btn-link dropdown-toggle var-scope" title="Application scope">{{varScope}}</small>
+        <small ng-show="varScope=='mod'" class="btn-link dropdown-toggle var-scope" title="Module scope">{{varScope}}</small>
+        <!--<small class="text-muted">{{varScope ? varScope : ""}}</small>-->
+        <ul class="dropdown-menu">
+            <li><a ng-click="setVarScope()" class="rvd-clickable-text"><span class="text-muted">Default</span></a></li>
+            <li><a ng-click="setVarScope('mod')" class="rvd-clickable-text">Module</a></li>
+            <li><a ng-click="setVarScope('app')" class="rvd-clickable-text">Application</a></li>
+        </ul>
+    </div>
+</div>
+

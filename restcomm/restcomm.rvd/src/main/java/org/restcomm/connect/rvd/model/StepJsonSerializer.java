@@ -3,6 +3,7 @@ package org.restcomm.connect.rvd.model;
 import java.lang.reflect.Type;
 
 import org.restcomm.connect.rvd.model.client.Step;
+import org.restcomm.connect.rvd.model.steps.control.ControlStep;
 import org.restcomm.connect.rvd.model.steps.dial.DialStep;
 import org.restcomm.connect.rvd.model.steps.email.EmailStep;
 import org.restcomm.connect.rvd.model.steps.es.ExternalServiceStep;
@@ -40,6 +41,8 @@ public class StepJsonSerializer implements JsonSerializer<Step> {
             resultElement = gson.toJsonTree((PlayStep) step);
         } else if (step.getClass().equals(GatherStep.class)) {
             resultElement = gson.toJsonTree((GatherStep) step);
+        } else if (step.getClass().equals(ControlStep.class)) {
+            resultElement = gson.toJsonTree((ControlStep) step);
         } else if (step.getClass().equals(ExternalServiceStep.class)) {
             resultElement = gson.toJsonTree((ExternalServiceStep) step);
         } else if (step.getClass().equals(LogStep.class)) {
