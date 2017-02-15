@@ -17,7 +17,7 @@
   <property name="restcomm-sipservlets-as7.version" value="3.1.${sipservlets-build}"/>
   <!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
   <property name="restcomm-media.version" value="6.0.0"/>
-  <property name="restcomm-media.build" value="8"/>
+  <property name="restcomm-media.build" value="10"/>
   <!--property name="mobicents-diameter.version" value="6.1.2.GA" /-->
 
   <!-- mobicents SIP Servlets 7.x on JBoss AS7-->
