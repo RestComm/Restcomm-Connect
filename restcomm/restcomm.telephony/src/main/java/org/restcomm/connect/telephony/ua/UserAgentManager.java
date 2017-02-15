@@ -296,7 +296,7 @@ public final class UserAgentManager extends UntypedActor {
         } else if (message instanceof SipServletResponse) {
             SipServletResponse response = (SipServletResponse) message;
             if (response.getStatus()>400 && response.getMethod().equalsIgnoreCase("OPTIONS")) {
-                removeRegistration(response, false);
+                removeRegistration(response);
             } else if (actAsImsUa && response.getMethod().equalsIgnoreCase(REGISTER)) {
                 proxyResponseFromIms(message, response);
             } else {
@@ -307,9 +307,14 @@ public final class UserAgentManager extends UntypedActor {
         }
     }
 
-    private void removeRegistration(final SipServletMessage sipServletMessage, boolean ignoreOptionsTimeout) {
+    private void removeRegistration(final SipServletMessage sipServletMessage) throws ServletParseException {
+        removeRegistration(sipServletMessage, false, false);
+    }
+
+    private void removeRegistration(final SipServletMessage sipServletMessage, boolean ignoreOptionsTimeout, boolean locationInContact) throws ServletParseException{
         String user = ((SipURI)sipServletMessage.getTo().getURI()).getUser();
-        String location = ((SipURI)sipServletMessage.getTo().getURI()).toString();
+        String location = locationInContact ? ((SipURI)sipServletMessage.getAddressHeader("Contact").getURI()).toString() :
+            ((SipURI)sipServletMessage.getTo().getURI()).toString();
         if(logger.isDebugEnabled()) {
             logger.debug("Error response for the OPTIONS to: "+location+" will remove registration");
             logger.debug("ignoring options timeout: "+ignoreOptionsTimeout);
@@ -421,7 +426,7 @@ public final class UserAgentManager extends UntypedActor {
             if (logger.isInfoEnabled()) {
                 logger.info("There was a problem while trying to ping client: "+to+" , will remove registration. " + e.getMessage());
             }
-            removeRegistration(ping, false);
+            removeRegistration(ping);
         }
     }
 
@@ -687,8 +692,8 @@ public final class UserAgentManager extends UntypedActor {
             logger.info("incoming leg state: "+incomingLegResposne.getSession().getState());
 
         }
-        if (response.getStatus()>=400 && (response.getStatus() != SC_UNAUTHORIZED || response.getStatus() != SC_PROXY_AUTHENTICATION_REQUIRED)) {
-            removeRegistration(response, true);
+        if (response.getStatus()>=400 && response.getStatus() != SC_UNAUTHORIZED && response.getStatus() != SC_PROXY_AUTHENTICATION_REQUIRED) {
+            removeRegistration(incomingRequest, true, true);
         } else if (response.getStatus()==200) {
             String transport = (uri.getTransportParam()==null?incomingRequest.getParameter("transport"):uri.getTransportParam()); //Issue #935, take transport of initial request-uri if contact-uri has no transport parameter
             if (transport == null && !incomingRequest.getInitialTransport().equalsIgnoreCase("udp")) {
