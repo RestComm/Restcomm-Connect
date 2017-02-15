@@ -375,6 +375,9 @@ angular.module('Rvd')
 	}	
 	EsValueExtractor.prototype.setLastOperationKind = function (kind) {
 		this.lastOperation = angular.copy(accessOperationProtos[kind]);
+		// if the operation is 'value' auto 'press Done' automatically
+		if (this.lastOperation.kind == 'value')
+		    this.doneAddingOperations();
 	}
 	return EsValueExtractor;
 }])
@@ -540,8 +543,12 @@ angular.module('Rvd')
 }])
 .factory('recordModel', ['rvdModel', function RecordModelFactory(rvdModel) {
 	function RecordModel(name) {
-		if (name)
+		if (name) {
 			this.name = name;
+			this.maxLength = 20;
+		} else {
+		    this.maxLength = undefined;
+		}
 		this.kind = 'record';
 		this.label = 'record';
 		this.title = 'record';
@@ -549,7 +556,7 @@ angular.module('Rvd')
 		this.method = 'GET';
 		this.timeout = undefined;
 		this.finishOnKey = undefined;
-		this.maxLength = undefined;
+		//this.maxLength = undefined;
 		this.transcribe = undefined;
 		this.transcribeCallback = undefined;
 		this.playBeep = undefined;

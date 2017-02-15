@@ -228,6 +228,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     String method;
     URI fallbackUrl;
     String fallbackMethod;
+    URI referUrl;
+    String referMethod;
+    String referTarget;
+    String transferor;
+    String transferee;
     URI statusCallback;
     String statusCallbackMethod;
     String emailAddress;
@@ -392,6 +397,15 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         return asrService;
     }
 
+    private boolean checkAsrService() {
+        boolean AsrActive=false;
+        Configuration Asrconfiguration=configuration.subset("speech-recognizer");
+        if (Asrconfiguration.getString("api-key") != null && !Asrconfiguration.getString("api-key").isEmpty()){
+            AsrActive=true;
+        }
+        return AsrActive;
+    }
+
     ActorRef asr(final Configuration configuration) {
         final UntypedActorContext context = getContext();
         return context.actorOf(new Props(new UntypedActorFactory() {
@@ -412,7 +426,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             Transcription transcription = (Transcription) response.attributes().get("transcription");
             if (response.succeeded()) {
                 transcription = transcription.setStatus(Transcription.Status.COMPLETED);
-                transcription = transcription.setTranscriptionText(response.get());
+                if (response.get() != null ) {
+                    transcription = transcription.setTranscriptionText(response.get());
+                }
             } else {
                 transcription = transcription.setStatus(Transcription.Status.FAILED);
             }
@@ -1807,13 +1823,14 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     }
                 }
             }
-            if (transcribe) {
+            if (transcribe && checkAsrService()) {
                 final Sid sid = Sid.generate(Sid.Type.TRANSCRIPTION);
                 final Transcription.Builder otherBuilder = Transcription.builder();
                 otherBuilder.setSid(sid);
                 otherBuilder.setAccountSid(accountId);
                 otherBuilder.setStatus(Transcription.Status.IN_PROGRESS);
                 otherBuilder.setRecordingSid(recordingSid);
+                otherBuilder.setTranscriptionText("Transcription Text not available");
                 otherBuilder.setDuration(duration);
                 otherBuilder.setPrice(new BigDecimal("0.00"));
                 buffer = new StringBuilder();
@@ -1833,7 +1850,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 } catch (final Exception exception) {
                     logger.error(exception.getMessage(), exception);
                 }
-            }
+            } else if(logger.isInfoEnabled()){
+                logger.info("AsrService activated but not properly configured. Please set api-key for AsrService");
+        }
+
             // If action is present redirect to the action URI.
             String action = null;
             attribute = verb.attribute("action");

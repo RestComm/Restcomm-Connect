@@ -71,10 +71,10 @@ public class VoxboneAvailablePhoneNumbersEndpointTest {
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     private String baseURL = "2012-04-24/Accounts/" + adminAccountSid + "/AvailablePhoneNumbers/";
-    
+
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
-    
+
     /*
      * https://www.twilio.com/docs/api/rest/available-phone-numbers#local-get-basic-example-1
      * available local phone numbers in the United States in the 510 area code.
@@ -99,7 +99,7 @@ public class VoxboneAvailablePhoneNumbersEndpointTest {
         WebResource webResource = jerseyClient.resource(provisioningURL);
 
         ClientResponse clientResponse = webResource.
-                queryParam("areaCode","501").
+                queryParam("AreaCode","501").
                 accept("application/json")
                 .get(ClientResponse.class);
         Assert.assertEquals(200, clientResponse.getStatus());
@@ -108,14 +108,14 @@ public class VoxboneAvailablePhoneNumbersEndpointTest {
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse);
-        
+
         assertTrue(jsonResponse.size() == 15);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(VoxboneAvailablePhoneNumbersEndpointTestUtils.firstJSonResult501AreaCode));
     }
-    
+
     /*
      * Testing https://docs.nexmo.com/index.php/developer-api/number-search Example 1
      */
@@ -145,14 +145,14 @@ public class VoxboneAvailablePhoneNumbersEndpointTest {
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse);
-        
+
         assertTrue(jsonResponse.size() == 48);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(VoxboneAvailablePhoneNumbersEndpointTestUtils.jsonResultES700));
     }
-    
+
     /*
      * Testing https://docs.nexmo.com/index.php/developer-api/number-search Example 2
      */
@@ -183,14 +183,14 @@ public class VoxboneAvailablePhoneNumbersEndpointTest {
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse);
-        
+
         assertTrue(jsonResponse.size() == 5);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(VoxboneAvailablePhoneNumbersEndpointTestUtils.jsonResultUSRange));
     }
-  
+
     @Deployment(name = "VoxboneAvailablePhoneNumbersEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");

@@ -4,7 +4,7 @@
 [[connect-tutorials]]
 == Restcomm Connect Application Tutorials
 
-The Restcomm Connect Application Tutorials will help you in creating sample applications that cover common use cases in a variety of languages using the Restcomm API, RCML or Visual Designer. Download, test, and tweak for yourself. 
+The Restcomm Connect Application Tutorials will help you in creating sample applications that cover common use cases in a variety of languages using the Restcomm API, RCML or Visual Designer. Download, test, and tweak for yourself.
 
 * <<how-to-use-olympus-with-restcomm.adoc#olympus,How to use Olympus on Restcomm Connect>>
 * <<Restcomm - Sending email via Restcomm Email verb.adoc#email,Sending email via Restcomm Email verb>>
@@ -33,3 +33,4 @@ The Restcomm Connect Advanced Tutorials will show you how to integrate multiple 
 * <<Restcomm - Sending SMS through SMPP to SMSC Gateway.adoc#smpp,Sending SMS through SMPP to SMSC Gateway>>
 * <<Restcomm - Load Testing - Part 1.adoc#load-1,Load Testing - Part 1>>
 * <<Restcomm - Load Testing - Part 2.adoc#load-2,Load Testing - Part 2>>
+* <<Restcomm_SIP_Refer_Support.adoc#sip_refer_support,Restcomm SIP Refer support>>

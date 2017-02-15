@@ -34,6 +34,7 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.restcomm.connect.commons.cache.DiskCache;
 import org.restcomm.connect.commons.cache.DiskCacheRequest;
@@ -149,7 +150,7 @@ public final class VoiceRSSSpeechSynthesizerTest {
     }
 
     @SuppressWarnings("unchecked")
-    @Test
+    @Test @Ignore //Needs API key
     public void testSynthesisMan() {
         new JavaTestKit(system) {
             {
@@ -186,7 +187,7 @@ public final class VoiceRSSSpeechSynthesizerTest {
     }
 
     @SuppressWarnings("unchecked")
-    @Test
+    @Test @Ignore //Needs API key
     public void testSynthesisWoman() {
         new JavaTestKit(system) {
             {

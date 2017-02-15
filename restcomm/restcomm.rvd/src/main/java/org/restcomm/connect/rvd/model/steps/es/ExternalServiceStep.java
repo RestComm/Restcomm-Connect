@@ -30,6 +30,7 @@ import org.restcomm.connect.rvd.exceptions.InterpreterException;
 import org.restcomm.connect.rvd.interpreter.Interpreter;
 import org.restcomm.connect.rvd.interpreter.exceptions.BadExternalServiceResponse;
 import org.restcomm.connect.rvd.interpreter.exceptions.ErrorParsingExternalServiceUrl;
+import org.restcomm.connect.rvd.interpreter.exceptions.ESProcessFailed;
 import org.restcomm.connect.rvd.interpreter.exceptions.RemoteServiceError;
 import org.restcomm.connect.rvd.model.client.Step;
 import org.restcomm.connect.rvd.model.client.UrlParam;
@@ -240,8 +241,10 @@ public class ExternalServiceStep extends Step {
                         request.setEntity(new UrlEncodedFormEntity(values));
                     } else {
                         request.addHeader("Content-Type","application/x-www-form-urlencoded");
-                        StringEntity stringBody = new StringEntity(body,"UTF-8");
-                        request.setEntity(stringBody);
+                        if (body == null)
+                            request.setEntity(null);
+                        else
+                            request.setEntity( new StringEntity(body,"UTF-8") );
                     }
                 } else
                 if ( getContentType().equals(CONTENT_TYPE_JSON) ) {
@@ -308,7 +311,10 @@ public class ExternalServiceStep extends Step {
                 } else if (logger.isDebugEnabled()) {
                     logger.debug("ES: No parsing will be done to the response");
                 }
-            } finally {
+            } catch (JsonSyntaxException e) {
+                throw new BadExternalServiceResponse("External Service request received a malformed JSON response" );
+
+            }finally {
                 if (response != null) {
                     response.close();
                     HttpClientUtils.closeQuietly(client);
@@ -360,8 +366,7 @@ public class ExternalServiceStep extends Step {
                             try {
                                 value = interpreter.evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
                             } catch ( BadExternalServiceResponse e ) {
-                                logger.error("Could not parse variable "  + assignment.getDestVariable() + ". Variable not found in response");
-                                throw e;
+                                throw new ESProcessFailed("Could not parse variable "  + assignment.getDestVariable() + ". Variable not found in response" + " - " + (e.getMessage() != null ? " - " + e.getMessage() : ""));
                             }
 
                             if ( "application".equals(assignment.getScope()) )
@@ -383,8 +388,7 @@ public class ExternalServiceStep extends Step {
                         try {
                             value = interpreter.evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
                         } catch ( BadExternalServiceResponse e ) {
-                            logger.error("Could not parse variable "  + assignment.getDestVariable() + ". Variable not found in response");
-                            throw e;
+                            throw new ESProcessFailed("Could not parse variable "  + assignment.getDestVariable() + ". Variable not found in response" + (e.getMessage() != null ? " - " + e.getMessage() : ""));
                         }
 
                         if ( "application".equals(assignment.getScope()) )
