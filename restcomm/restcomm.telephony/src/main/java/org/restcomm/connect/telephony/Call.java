@@ -1117,7 +1117,12 @@ public final class Call extends UntypedActor {
 
             // Notify the observers.
             external = CallStateChanged.State.FAILED;
-            final CallStateChanged event = new CallStateChanged(external, lastResponse.getStatus());
+            CallStateChanged event = null;
+            if (lastResponse != null) {
+                event = new CallStateChanged(external, lastResponse.getStatus());
+            } else {
+                event = new CallStateChanged(external);
+            }
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
