@@ -64,11 +64,11 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         if (s3AccessTool != null) {
             URI s3Uri = s3AccessTool.uploadFile(recordingPath+"/"+recording.getSid().toString()+".wav");
             if (s3Uri != null) {
-                recording = recording.updateFileUri(s3Uri);
+                recording = recording.setS3Uri(s3Uri);
             }
-        } else {
-            recording = recording.updateFileUri(generateLocalFileUri("/restcomm/recordings/" + recording.getSid()));
         }
+        String fileUrl = String.format("/restcomm/%s/Accounts/%s/Recordings/%s",recording.getApiVersion(),recording.getAccountSid(),recording.getSid());
+        recording = recording.updateFileUri(generateLocalFileUri(fileUrl));
         final SqlSession session = sessions.openSession();
         try {
             session.insert(namespace + "addRecording", toMap(recording));
@@ -176,6 +176,11 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         map.put("api_version", recording.getApiVersion());
         map.put("uri", DaoUtils.writeUri(recording.getUri()));
         map.put("file_uri", DaoUtils.writeUri(recording.getFileUri()));
+        if (recording.getS3Uri() != null) {
+            map.put("s3_uri", DaoUtils.writeUri(recording.getS3Uri()));
+        } else {
+            map.put("s3_uri", null);
+        }
         return map;
     }
 
@@ -192,8 +197,10 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         //to create the file_uri on the fly
         String fileUri = (String) map.get("file_uri");
         if (fileUri == null || fileUri.isEmpty()) {
-            fileUri = generateLocalFileUri("/restcomm/recordings/" + sid).toString();
+            String file = String.format("/restcomm/%s/Accounts/%s/Recordings/%s",apiVersion,accountSid,sid);
+            fileUri = generateLocalFileUri(file).toString();
         }
-        return new Recording(sid, dateCreated, dateUpdated, accountSid, callSid, duration, apiVersion, uri, DaoUtils.readUri(fileUri));
+        String s3Uri = (String) map.get("s3_uri");
+        return new Recording(sid, dateCreated, dateUpdated, accountSid, callSid, duration, apiVersion, uri, DaoUtils.readUri(fileUri), DaoUtils.readUri(s3Uri));
     }
 }

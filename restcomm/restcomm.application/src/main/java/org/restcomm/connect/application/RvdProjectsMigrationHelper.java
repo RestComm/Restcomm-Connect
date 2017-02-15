@@ -345,7 +345,9 @@ public class RvdProjectsMigrationHelper {
                                     did.getStatusCallback(), did.getStatusCallbackMethod(), did.getVoiceApplicationSid(), null,
                                     did.getSmsMethod(), did.getSmsFallbackUrl(), did.getSmsFallbackMethod(), smsApplicationSid,
                                     did.getUri(), did.getUssdUrl(), did.getUssdMethod(), did.getUssdFallbackUrl(),
-                                    did.getUssdFallbackMethod(), did.getUssdApplicationSid(), did.isVoiceCapable(),
+                                    did.getUssdFallbackMethod(), did.getUssdApplicationSid(),
+                                    did.getReferUrl(), did.getReferMethod(), did.getReferApplicationSid(),
+                                    did.isVoiceCapable(),
                                     did.isSmsCapable(), did.isMmsCapable(), did.isFaxCapable(), did.isPureSip());
                             didsDao.updateIncomingPhoneNumber(updateSmsDid);
                             dids.set(i, updateSmsDid);
@@ -366,6 +368,7 @@ public class RvdProjectsMigrationHelper {
                                     did.getSmsUrl(), did.getSmsMethod(), did.getSmsFallbackUrl(), did.getSmsFallbackMethod(),
                                     did.getSmsApplicationSid(), did.getUri(), null, did.getUssdMethod(),
                                     did.getUssdFallbackUrl(), did.getUssdFallbackMethod(), ussdApplicationSid,
+                                    did.getReferUrl(), did.getReferMethod(), did.getReferApplicationSid(),
                                     did.isVoiceCapable(), did.isSmsCapable(), did.isMmsCapable(), did.isFaxCapable(),
                                     did.isPureSip());
                             didsDao.updateIncomingPhoneNumber(updateUssdDid);
@@ -387,6 +390,7 @@ public class RvdProjectsMigrationHelper {
                                     did.getSmsUrl(), did.getSmsMethod(), did.getSmsFallbackUrl(), did.getSmsFallbackMethod(),
                                     did.getSmsApplicationSid(), did.getUri(), did.getUssdUrl(), did.getUssdMethod(),
                                     did.getUssdFallbackUrl(), did.getUssdFallbackMethod(), did.getUssdApplicationSid(),
+                                    did.getReferUrl(), did.getReferMethod(), did.getReferApplicationSid(),
                                     did.isVoiceCapable(), did.isSmsCapable(), did.isMmsCapable(), did.isFaxCapable(),
                                     did.isPureSip());
                             didsDao.updateIncomingPhoneNumber(updateVoiceDid);
