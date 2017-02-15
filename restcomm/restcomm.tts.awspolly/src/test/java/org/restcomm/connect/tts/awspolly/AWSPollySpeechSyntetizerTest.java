@@ -118,29 +118,29 @@ public final class AWSPollySpeechSyntetizerTest {
                         FiniteDuration.create(30, TimeUnit.SECONDS), SpeechSynthesizerResponse.class);
                 assertTrue(response.succeeded());
                 final Set<String> languages = response.get().languages();
-                assertTrue(languages.contains("ja-JP"));
-                assertTrue(languages.contains("tr-TR"));
-                assertTrue(languages.contains("ru-RU"));
-                assertTrue(languages.contains("ro-RO"));
-                assertTrue(languages.contains("pt-PT"));
-                assertTrue(languages.contains("pt-BR"));
-                assertTrue(languages.contains("pl-PL"));
-                assertTrue(languages.contains("nl-NL"));
-                assertTrue(languages.contains("nb-NO"));
-                assertTrue(languages.contains("it-IT"));
-                assertTrue(languages.contains("is-IS"));
-                assertTrue(languages.contains("fr-FR"));
-                assertTrue(languages.contains("fr-CA"));
-                assertTrue(languages.contains("es-US"));
-                assertTrue(languages.contains("es-ES"));
-                assertTrue(languages.contains("en-GB-WLS"));
-                assertTrue(languages.contains("cy-GB"));
-                assertTrue(languages.contains("en-US"));
-                assertTrue(languages.contains("en-IN"));
-                assertTrue(languages.contains("en-GB"));
-                assertTrue(languages.contains("en-AU"));
-                assertTrue(languages.contains("de-DE"));
-                assertTrue(languages.contains("da-DK"));
+                assertTrue(languages.contains("ja"));
+                assertTrue(languages.contains("tr-tr"));
+                assertTrue(languages.contains("ru"));
+                assertTrue(languages.contains("ro"));
+                assertTrue(languages.contains("bp"));
+                assertTrue(languages.contains("pt"));
+                assertTrue(languages.contains("pl"));
+                assertTrue(languages.contains("nl"));
+                assertTrue(languages.contains("nb"));
+                assertTrue(languages.contains("it"));
+                assertTrue(languages.contains("is"));
+                assertTrue(languages.contains("fr"));
+                assertTrue(languages.contains("fr-ca"));
+                assertTrue(languages.contains("es-mx"));
+                assertTrue(languages.contains("es"));
+                assertTrue(languages.contains("en-gb"));
+                assertTrue(languages.contains("cy-gb"));
+                assertTrue(languages.contains("en"));
+                assertTrue(languages.contains("en-in"));
+                assertTrue(languages.contains("en-gb"));
+                assertTrue(languages.contains("en-au"));
+                assertTrue(languages.contains("de"));
+                assertTrue(languages.contains("da"));
             }
         };
     }
@@ -153,7 +153,7 @@ public final class AWSPollySpeechSyntetizerTest {
                 final ActorRef observer = getRef();
                 String gender = "man";
                 String woman = "woman";
-                String language = "pt-BR";
+                String language = "bp";
                 String message = "Bem vindo à plataforma Restcomm Connect!";
 
                 String hash = HashGenerator.hashMessage(gender, language, message);
@@ -189,7 +189,7 @@ public final class AWSPollySpeechSyntetizerTest {
             {
                 final ActorRef observer = getRef();
                 String gender = "woman";
-                String language = "pt-BR";
+                String language = "bp";
                 String message = "Bem vindo à plataforma Restcomm Connect!";
 
                 String hash = HashGenerator.hashMessage(gender, language, message);
