@@ -12,115 +12,179 @@ the following tutorial will show how to get started with Restcomm and Mysql._
 * Install Restcomm using our <<How to build Restcomm-Connect from source.adoc#requirements,previous guide>>.
 * Install link:http://dev.mysql.com/doc/refman/5.7/en/installing.html[MySQL]
 
-== Configuring the mybatis.xml file to use Mysql
-* Go to the *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/* directory.
- Open the *mybatis.xml*. $RESTCOMM_HOME is conventional name for unzipped *Restcomm-JBoss-AS7-7.X.X.XXX* directory.
-* Change the
+
+== Step 1 - Download Mysql Java Connector and Configure Java Connector
+* Download mysql java connector as explained link:http://mvnrepository.com/artifact/mysql/mysql-connector-java[HERE]
+* Create the following folder stucture mkdir -p $RESTCOMM_HOME/modules/org/mariadb/jdbc/main
+* Download the myqls jar file into the main directory, cp mysql-connector-java-5.1.40.jar $RESTCOMM_HOME/modules/org/mariadb/jdbc/main
+* create a the file module.xml  *vi $RESTCOMM_HOME/modules/org/mariadb/jdbc/main/module.xml* make sure the content of the module.xml looks like the one below with the appropriate mysql connector jar file name. 
+[source,bash]
+----
+<?xml version="1.0" encoding="UTF-8" ?>
+<module xmlns="urn:jboss:module:1.1" name="org.mysql.jdbc">
+        <resources>
+        <resource-root path="mysql-connector-java-5.1.40.jar"/>
+        </resources>
+        <dependencies>
+                <module name="javax.api"/>
+                <module name="javax.transaction.api"/>
+        </dependencies>
+</module>
+
+----
+
+== Step 2 : Configure the standalone-sip.xml to use the Mysql Connector
+* Edit the file $RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
+* Edit the datasource and make sure it looks like the section below
+* Note that the IP *192.168.1:3306* is the IP where mysql is listening for traffic
+
 
 [source,bash]
 ----
-<environments default="production">
+           <datasources>
+         <datasource jndi-name="java:/MysqlDS" pool-name="MysqlDS" enabled="true">
+                    <connection-url>jdbc:mysql://192.168.1.3:3306/restcomm</connection-url>
+                    <driver>mysqlDriver</driver>
+                    <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
+                    <pool>
+                        <min-pool-size>100</min-pool-size>
+                        <max-pool-size>200</max-pool-size>
+                    </pool>
+                    <security>
+                        <user-name>root</user-name>
+                        <password>YourMysqlDBPwd</password>
+                    </security>
+                    <statement>
+                        <prepared-statement-cache-size>100</prepared-statement-cache-size>
+                        <share-prepared-statements/>
+                    </statement>
+                </datasource>
+
+            <datasource jndi-name="java:jboss/datasources/ExampleDS" pool-name="ExampleDS" enabled="false" use-java-context="true">
+                    <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</connection-url>
+                    <driver>h2</driver>
+                    <security>
+                        <user-name>sa</user-name>
+                        <password>sa</password>
+                    </security>
+                </datasource>
+                <drivers>
+                <driver name="mysqlDriver" module="org.mysql.jdbc">
+                        <driver-class>com.mysql.jdbc.Driver</driver-class>
+                    </driver>
+                    <driver name="h2" module="com.h2database.h2">
+                        <xa-datasource-class>org.h2.jdbcx.JdbcDataSource</xa-datasource-class>
+                    </driver>
+                </drivers>
+            </datasources>
 ----
-to
-[source,bash]
-----
-<environments default="mariadb">
-----
-* Add the MariaDB configuration environment tag as shown below.
-Make sure that you have indicated the correct MySQL username, password
-and IP of the computer where the database is located (it is 172.21.0.107 in the example).
 
-[source,bash]
-----
-<environment id="mariadb">
-<transactionManager type="JDBC"/>
-<dataSource type="POOLED">
-<property name="driver" value="com.mysql.jdbc.Driver"/>
-<property name="url" value="jdbc:mysql://172.21.0.107:3306/restcomm"/>
-<property name="username" value="MySQL_Username"/>
-<property name="password" value="MySQL_Password"/>
-</dataSource>
-</environment>
-----
-* Save and exit the mybatis.xml file.
-
-== Run Mysql and Create the Restcomm database
-
-To use MySQL you can either install the MySQL binary for your platform or run it using Docker.
-
-=== Run MySQL using Docker
-
-* Install Docker for your platform, follow instructions from http://www.docker.com/
-
-* Run MySQL docker image using:
-[source,bash]
-----
-docker run --name mysql_restcomm -e MYSQL_ROOT_PASSWORD=my-secret-pw -p 3306:3306 -d mysql:5.6
-----
-
-The above command will download MySQL Docker image, will create a new container from this image with name "mysql_restcomm", will set root
-password to "my-secret-pw", and finally will run MySQL and listen to 3306 port of your host ip address.
-
-
-=== Run MySQL using binary
-
-Visit https://www.mysql.com/ and download the appropriate MySQL for your platform. Follow the instruction for how to install.
-
-* Start Mysql by running the command
+== Step 3 : Create restcomm database in mysql and grant DB privileges
+* Create restcomm database in mysql as follows
 
 [source,bash]
 ----
-sudo /etc/init.d/mysql start
+ mysql -u root < $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/scripts/mariadb/init.sql
 ----
-
-Or use link:http://dev.mysql.com/doc/refman/5.7/en/windows-start-command-line.html[MySQL guide].
-
-=== Create the Restcomm database
-
-* Go to the *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/scripts/mariadb* directory. There will be the *init.sql* file and *sql* directory:
-
-image::images/13.png[]
-
-* Create the Restcomm database running the following command:
-
+* The command above will create a restcomm database inside mysql
+* log into mysql to make sure the database is created. 
 [source,bash]
 ----
-mysql -u root -p < init.sql
-----
-* Log into Mysql and make sure the Restcomm database was created by running the command:
+mysql -u root -p
 
-[source,bash]
-----
 show databases;
+use restcomm;
+show tables;
+
 ----
-If the process was successful you will see the following:
-
-image::images/14.png[]
-== Edit the restcomm.xml file to point the DAO to MySQL
-
-* Go to the *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/*.
-Open the *dao-manager.xml* file.
-* Find the dao-manager tag and change the sql-files path to mariadb as shown below:
-
+* Grant the appropriate DB privileges to the user, in the example, root
 [source,bash]
 ----
-<dao-manager class="org.restcomm.connect.dao.mybatis.MybatisDaoManager">
-  <configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml</configuration-file>
-  <data-files></data-files>
-  <sql-files>${restcomm:home}/WEB-INF/scripts/mariadb/sql</sql-files>
-</dao-manager>
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'192.168.1.%' IDENTIFIED BY 'YourMysqlDBPwd' WITH GRANT OPTION;
+
+then save the changes as follows
+
+GRANT ALL PRIVILEGES;
+
+The above command will allow your use to be able to access the DB on 192.168.1.x subnet
+The is important if you have multiple Restcomm instances in the same subnet and they will need to Replicate DB on a MASTER-MASTER format
+
+WARNING: If you need to change an existing GRANT, you can use the ALTER command as follows
+
+ALTER USER PRIVILEGES ON *.* TO 'root'@'192.168.1.%' IDENTIFIED BY 'V!rg1nMySql' WITH GRANT OPTION;
 ----
-== Download Mysql Java Client Driver
+* Restart mysql service
+[source,bash]
+----
+sudo service mysql restart
 
-* Download the latest *MySQL Java Connector* from http://mvnrepository.com/artifact/mysql/mysql-connector-java.
-* Put the jar file in
-*$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/lib/*.
+or like this
 
+sudo /etc/init.d/mysql restart
+----
+WARNING: If you are unable to access your mysql server on the IP on which Restcomm is installed, please make sure you checking the following.
+[source,bash]
+----
+Edit the file /etc/mysql/my.cnf and make sure bind to 127.0.0.1 is disabled or commented out like this
+#bind-address  = 127.0.0.1
+
+Run the following command to make sure mysql is not bound to the loopback (127.0.0.1) address (below it is listening to all IP)
+
+netstat -lnp | grep mysql
+tcp        0      0 0.0.0.0:3306            0.0.0.0:*               LISTEN      7657/mysqld     
+unix  2      [ ACC ]     STREAM     LISTENING     77682    7657/mysqld         /var/run/mysqld/mysqld.sock
+----
+
+== Step 4 : UPdate mybatis.xml file to use Mysql
+
+* Edit *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/mybatis.xml* 
+* The environment tag should look like the example below:
+[source,bash]
+----
+<environments default="mysql">
+    <environment id="mysql">
+                <transactionManager type="JDBC" />
+                <dataSource type="JNDI">
+                  <property name="data_source" value="java:/MysqlDS" />
+                </dataSource>
+        </environment>
+<!--    <environment id="production">
+      <transactionManager type="JDBC"/>
+      <dataSource type="POOLED">
+        <property name="driver" value="org.hsqldb.jdbcDriver"/>
+        <property name="url" value="jdbc:hsqldb:file://${data}/restcomm;ifexists=true;hsqldb.write_delay=false;shutdown=true"/>
+        <property name="username" value="sa"/>
+        <property name="password" value=""/>
+      </dataSource>
+    </environment>-->
+  </environments>
+
+----
+
+== Step 5 - Update the dao-manager in the dao-manager.xml file
+* It should disable the default hsql and use mariadb sql which is the same as the one for mariadb
+[source,bash]
+----
+<restcomm>
+   <!-- <dao-manager class="org.restcomm.connect.dao.mybatis.MybatisDaoManager">
+        <configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml</configuration-file>
+        <data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
+        <sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
+    </dao-manager>-->
+    <dao-manager class="org.restcomm.connect.dao.mybatis.MybatisDaoManager">
+        <configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml</configuration-file>
+        <data-files></data-files>
+        <sql-files>${restcomm:home}/WEB-INF/scripts/mariadb/sql</sql-files>
+    </dao-manager>
+</restcomm>
+----
+
+
+
+
+== Start Restcomm
 * Go to the $RESTCOMM_HOME/bin/restcomm/ directory.
-
-== Verify the setup was successful
-
-* In order to verify the setup was correctly done, first you have to start Restcomm and media server running the following command:
+ command:
 
 [source,bash]
 ----
