@@ -90,6 +90,7 @@ fi
 }
 
 startRestcomm(){
+  echo "About to start Restcomm using $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh"
   $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
   if [ "$COLLECT_JMAP" == "true"  ] || [ "$COLLECT_JMAP" == "TRUE"  ]; then
       sleep 30
@@ -169,7 +170,7 @@ case "$TEST_NAME" in
   cp -aR $CURRENT_FOLDER/tests/dialclient/DialClientApp.xml $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/
   sed -i "s/SIPP_SERVER_IP_HERE/$LOCAL_ADDRESS/g" $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/DialClientApp.xml
   startRestcomm
-  echo $'\n********** Restcomm started\n'
+  echo $"\n********** Restcomm started at $RESTCOMM_HOME\n"
   sleep 45
   echo $'\nChange default administrator password\n'
   curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf -d "Password=$RESTCOMM_NEW_PASSWORD"
