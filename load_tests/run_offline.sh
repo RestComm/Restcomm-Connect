@@ -205,6 +205,8 @@ else
     rm -rf $RELEASE
     unzip $WORKSPACE/Restcomm-JBoss-AS7.zip -d $RELEASE
     mv $RELEASE/Restcomm-JBoss-AS7-*/ $RELEASE/TelScale-Restcomm-JBoss-AS7/
+    export GITHUB_RESTCOMM_HOME=$WORKSPACE/github-restcomm
+    export RESULTS_DIR=$GITHUB_RESTCOMM_HOME/load_tests/results
 fi
 export RESTCOMM_HOME=$RELEASE/TelScale-Restcomm-JBoss-AS7
 #gvagenas@telestax.com VOICERSS key
