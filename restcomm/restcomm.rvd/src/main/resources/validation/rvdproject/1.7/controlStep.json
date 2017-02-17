@@ -1,0 +1,82 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+	"title": "Say step",
+	"type": "object",
+	"properties": {
+		"name":{"type": "string"},
+		"kind": {"enum": ["control"]},
+		"label": {"type": "string"},
+		"title": {"type": "string"},
+		"conditions":{
+			"type": "array",
+			"items": { "$ref": "#/definitions/condition"}
+		},
+		"actions":{
+			"type":"array",
+			"items": { "$ref": "#/definitions/action"}
+		},
+		"conditionExpression":{"type":"string"}
+	},
+	"required": ["name","kind"],
+	"definitions": {
+		"condition": {
+			"type":"object",
+			"properties": {
+				"name": {"type":"string", "minLength": 1},
+				"operator": {"type":"string", "enum": ["equals","notequal","greater","greaterEqual","less","lessEqual","matches"]},
+				"comparison": {
+					"type": "object",
+					"properties": {
+						"operand1": {"type":"string"},
+						"operand2": {"type":"string"},
+						"type": {"type":"string","enum": ["text","numeric"]}
+					},
+					"required": ["operand1","operand2","type"]
+				},
+				"matcher": {
+					"type":"object",
+					"properties": {
+						"text": {"type":"string"},
+						"regex": {"type":"string"}
+					},
+					"required": ["text","regex"]
+				}
+			},
+			"required": ["name","operator"]
+		},
+		"action": {
+			"type":"object",
+			"properties": {
+				"name": {"type":"string", "minLength": 1},
+				"assign": {
+					"type": "object",
+					"properties": {
+						"expression": {"type":"string"},
+						"varName": { "$ref": "rvdproject-schema.json#/variableName" },
+						"varScope": { "$ref": "#/definitions/varScope"}
+					},
+					"required": ["expression","varName"]
+				},
+				"continueTo": {
+					"type": "object",
+					"properties": {
+						"target": {"type":"string","minLength": 1}
+					},
+					"required": ["target"]
+				},
+				"capture": {
+					"type": "object",
+					"properties": {
+						"regex": {"type":"string"},
+						"data": {"type":"string"},
+						"varName": { "$ref": "rvdproject-schema.json#/variableName" },
+						"varScope": { "$ref": "#/definitions/varScope"}
+					}
+				}
+			},
+			"required": ["name"]
+		},
+		"varScope": {"enum": ["mod","app"]}
+	}
+}
+

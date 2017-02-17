@@ -84,7 +84,7 @@ the following tutorial will show how to get started with Restcomm and Mysql._
 
 [source,bash]
 ----
- mysql -u root < $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/scripts/mariadb/init.sql
+ mysql -u root -p < $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/scripts/mariadb/init.sql
 ----
 * The command above will create a restcomm database inside mysql
 * log into mysql to make sure the database is created. 
@@ -111,7 +111,7 @@ The is important if you have multiple Restcomm instances in the same subnet and 
 
 WARNING: If you need to change an existing GRANT, you can use the ALTER command as follows
 
-ALTER USER PRIVILEGES ON *.* TO 'root'@'192.168.1.%' IDENTIFIED BY 'V!rg1nMySql' WITH GRANT OPTION;
+ALTER USER PRIVILEGES ON *.* TO 'root'@'192.168.1.%' IDENTIFIED BY 'YourMysqlDBPwd' WITH GRANT OPTION;
 ----
 * Restart mysql service
 [source,bash]

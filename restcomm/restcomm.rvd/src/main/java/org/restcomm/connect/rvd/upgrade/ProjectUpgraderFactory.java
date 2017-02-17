@@ -26,6 +26,9 @@ public class ProjectUpgraderFactory {
         if  ("1.5".equals(version)) {
             return new ProjectUpgrader15to16();
         } else
+        if  ("1.6".equals(version)) {
+            return new ProjectUpgrader16to17();
+        } else
             throw new NoUpgraderException("No project upgrader found for project with version " + version);
     }
 }

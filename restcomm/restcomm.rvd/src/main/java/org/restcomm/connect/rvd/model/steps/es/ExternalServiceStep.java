@@ -169,9 +169,6 @@ public class ExternalServiceStep extends Step {
         return null;
     }
 
-    /**
-     * @returns String - The module name to continue rendering with. null, to continue processing the existing module
-     */
     @Override
     public String process(Interpreter interpreter, HttpServletRequest httpRequest ) throws InterpreterException {
 
