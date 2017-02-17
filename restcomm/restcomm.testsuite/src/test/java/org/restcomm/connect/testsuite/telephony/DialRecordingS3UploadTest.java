@@ -172,6 +172,16 @@ public class DialRecordingS3UploadTest {
 						.withHeader("Content-Type", "text/xml")
 						.withBody(dialClientRcml)));
 
+		stubFor(put(urlPathEqualTo("/s3"))
+				.willReturn(aResponse()
+								.withStatus(200)
+								.withHeader("x-amz-id-2","LriYPLdmOdAiIfgSm/F1YsViT1LW94/xUQxMsF7xiEb1a0wiIOIxl+zbwZ163pt7")
+								.withHeader("x-amz-request-id","0A49CE4060975EAC")
+								.withHeader("Date", DateTime.now().toString())
+								.withHeader("x-amz-expiration", "expiry-date="+DateTime.now().plusDays(3).toString()+"\", rule-id=\"1\"")
+								.withHeader("Server", "AmazonS3")
+				));
+
 		stubFor(get(urlPathEqualTo("/s3"))
 				.willReturn(aResponse()
 							.withStatus(200)
@@ -230,10 +240,12 @@ public class DialRecordingS3UploadTest {
 		assertTrue(duration==3.0);
 		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
-		URL url = new URL(recording.get(0).getAsJsonObject().get("file_uri").getAsString().replaceFirst("locahost", "127.0.0.1"));
+		URL url = new URL(recording.get(0).getAsJsonObject().get("file_uri").getAsString());
 		HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 		connection.setRequestMethod("GET");
 		connection.connect();
+
+		Thread.sleep(1000);
 
 		assertEquals(200, connection.getResponseCode());
 
