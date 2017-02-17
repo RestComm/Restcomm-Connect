@@ -72,9 +72,12 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $statePar
 	$scope.clearStepWarnings = function () {
 		var nodes = nodeRegistry.getNodes();
 		for ( var i=0; i<nodes.length; i++ ) {
-			for (var j=0; j< nodes[i].steps.length; j++)
-				nodes[i].steps[j].iface.showWarning = false;
+			for (var j=0; j< nodes[i].steps.length; j++) {
+			    if (nodes[i].steps[j].iface)
+					nodes[i].steps[j].iface.showWarning = false;
+			}
 		}
+		$scope.$broadcast("clear-step-warnings");
 	}
 	$scope.editFilteredNodes = function(nodes,token, moduleFilterEnabled) {
 		var filteredNodes = $filter('filterNodesByLabel')(nodes,token, moduleFilterEnabled);
@@ -269,12 +272,16 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $statePar
 		if ( m != null ) {
 			var step;
 			var stepkind = m[1];
-			step = $injector.invoke([stepkind+'Model', function(model){
-				var stepname = stepRegistry.name();
-				return new model(stepname);
-			}]);
+			if (stepkind == "control") {
+                step = {kind: stepkind}
+			} else {
+                step = $injector.invoke([stepkind+'Model', function(model){
+                    var stepname = stepRegistry.name();
+                    return new model(stepname);
+                }]);
+			}
 
-			console.log("adding step - " + m[1]);
+			//console.log("adding step - " + m[1]);
 			$scope.$apply( function ()	{
 				listmodel.splice(pos,0, step);
 			});
@@ -298,6 +305,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $statePar
 		var nodes = nodeRegistry.getNodes();
 		$scope.saveSpinnerShown = true;
 		$scope.clearStepWarnings();
+		$scope.$broadcast("update-dtos"); // command all step directives to updated dto model objects.
 		designerService.saveProject($scope.applicationSid, $scope.project)
 		.then( function () { return designerService.buildProject($scope.applicationSid) } )
 		.then(
@@ -320,7 +328,11 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $statePar
 						m = r.exec( errorItems[i].failurePath );
 						if ( m != null ) {
 							console.log("warning in module " + nodes[ m[1] ].name + " step " + nodes[ m[1] ].steps[m[2]].name);
-							nodes[ m[1] ].steps[m[2]].iface.showWarning = true;
+							var step = nodes[ m[1] ].steps[m[2]];
+							if (step.kind == 'control') {
+							    $scope.$broadcast('notify-step', {target: step.name, type: 'validation-error', data: errorItems[i]}); // TODO at some point when all steps use directives use the messaging mechanism for them too
+							} else
+							    nodes[ m[1] ].steps[m[2]].iface.showWarning = true;
 						}
 					}
 				} else
@@ -738,9 +750,13 @@ angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http',
 			var node = state.nodes[i];
 			for (var j=0; j<node.steps.length; j++) {
 				var step = registry_nodes[i].steps[j];
-				var packedStep;
-				packedStep = step.pack();
-				node.steps[j] = packedStep;
+                var packedStep;
+				if (step.kind == "control") {
+				    packedStep = step; // no packing for 'control' elements. TODO remove packing alltogether after porting all elements to angular directives
+				} else {
+                    packedStep = step.pack();
+				}
+                node.steps[j] = packedStep;
 			}
 		}
 		//state.iface.activeNode = $scope.activeNode;
@@ -821,8 +837,16 @@ angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http',
 
 }]);
 
+/*
+    Contains step management operations for a specific module
+*/
 angular.module('Rvd').controller("nodeController",["$scope", "nodeRegistry", function ($scope, nodeRegistry) {
 		$scope.node = nodeRegistry.getNode($scope.nodeSummary.name);
+		// handle step removel notifications from individual steps (only control-step supports it for now)
+		$scope.$on("step-removed", function (event, step) {
+		    var steps = event.currentScope.node.steps;
+            steps.splice( steps.indexOf(step), 1);
+		});
 }]);
 
 angular.module('Rvd').controller("nodeTabController",["$scope", "nodeRegistry", function ($scope, nodeRegistry) {
