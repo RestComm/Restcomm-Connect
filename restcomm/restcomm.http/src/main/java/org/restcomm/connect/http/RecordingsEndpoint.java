@@ -160,6 +160,9 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
 
         final Recording recording = dao.getRecording(new Sid(sid));
         if (recording == null) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Recording with SID: "+sid+", was not found");
+            }
             return status(NOT_FOUND).build();
         } else {
 //            secure(operatedAccount, recording.getAccountSid(), SecuredType.SECURED_STANDARD);
