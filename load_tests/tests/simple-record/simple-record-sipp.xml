@@ -60,17 +60,18 @@ Content-Length: 0
 
 <!-- Simulate waiting for a beep -->
 <!--
-<pause milliseconds="1000"/>
+<pause milliseconds="2000"/>
 -->
 <!-- Simulate leaving a recording. -->
+<!-- Simulate sending RTP traffic for one minute -->
 <nop>
 <action>
-<exec play_pcap_audio="../../resources/pcap/message.pcap"/>
+<exec rtp_stream="./resources/pcap/demo-prompt.wav"/>
 </action>
 </nop>
 
-<!-- Pause 6 seconds, which is approximately the duration of the PCAP file -->
-<pause milliseconds="6000"/>
+<!-- Pause 60 seconds, which is approximately the duration of the PCAP file -->
+<pause milliseconds="60000"/>
 
 <!-- receive BYE -->
 <recv request="BYE" />
