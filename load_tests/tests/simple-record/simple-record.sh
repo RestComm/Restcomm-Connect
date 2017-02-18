@@ -1,11 +1,8 @@
 #!/bin/bash
 ##
-## Descript+ion: Restcomm performance test script for Simple Recording application.
+## Description: Restcomm performance test script for Simple Recording application.
 ## Author      : Henrique Rosa
 #
-RESTCOMM_ADDRESS=127.0.0.1
-LOCAL_ADDRESS=127.0.0.1
-
 SIMULTANEOUS_CALLS_WARMUP=20
 MAXIMUM_CALLS_WARMUP=100
 CALL_RATE_WARMUP=10
