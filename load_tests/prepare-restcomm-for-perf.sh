@@ -52,9 +52,9 @@ mv $FILE.bak $FILE
 sed -e "s/LOG_LEVEL_COMPONENT_RESTCOMM=.*/LOG_LEVEL_COMPONENT_RESTCOMM=$LOG_LEVEL/" $FILE > $FILE.bak
 mv $FILE.bak $FILE
 
-FILE=$RESTCOMM_HOME/bin/standalone.conf
-sed -e "s/$JAVA_OPTS -Djboss.server.default.config=standalone-sip.xml/$JAVA_OPTS -Djboss.server.default.config=standalone-sip.xml -Djboss.boot.thread.stack.size=1/" $FILE > $FILE.bak
-mv $FILE.bak $FILE
+# FILE=$RESTCOMM_HOME/bin/standalone.conf
+# sed -e "s/$JAVA_OPTS -Djboss.server.default.config=standalone-sip.xml/$JAVA_OPTS -Djboss.server.default.config=standalone-sip.xml -Djboss.boot.thread.stack.size=1/" $FILE > $FILE.bak
+# mv $FILE.bak $FILE
 
 # MEDIA SERVER
 sed -e "s|BIND_ADDRESS=.*|BIND_ADDRESS=$RESTCOMM_ADDRESS|" \

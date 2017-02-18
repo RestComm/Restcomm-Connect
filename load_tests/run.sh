@@ -94,6 +94,7 @@ fi
 }
 
 startRestcomm(){
+  echo "About to start Restcomm using $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh"
   $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
   if [ "$COLLECT_JMAP" == "true"  ] || [ "$COLLECT_JMAP" == "TRUE"  ]; then
       sleep 30
@@ -163,6 +164,25 @@ case "$TEST_NAME" in
     sleep 15
     $CURRENT_FOLDER/tests/hello-play-one-minute/helloplay-one-minute.sh
     ;;
+"createcall")
+  echo "Testing Create Call REST API"
+  prepareRestcomm
+  #In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm
+  $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+  sleep 5
+  echo "Testing Create Call REST API"
+  cp -aR $CURRENT_FOLDER/resources/audio/demo-prompt-one-minute.wav $RESTCOMM_HOME/standalone/deployments/restcomm.war/audio/demo-prompt.wav
+  rm -rf $RESTCOMM_HOME/standalone/deployments/restcomm.war/cache/AC*
+  startRestcomm
+  echo $"\n********** Restcomm started at $RESTCOMM_HOME\n"
+  sleep 45
+  echo $'\nChange default administrator password\n'
+  curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf -d "Password=$RESTCOMM_NEW_PASSWORD"
+  #First run the server script that is the client that will listen for Restcomm calls
+  screen -dmS 'createcall-server' $CURRENT_FOLDER/tests/createcall/createcall-server.sh
+  #Next run the client script that will initiate callls to Restcomm
+  $CURRENT_FOLDER/tests/createcall/createcall.sh $RESTCOMM_NEW_PASSWORD $RESTCOMM_ADDRESS sip:1999@$LOCAL_ADDRESS $MAXIMUM_CALLS $CALL_RATE
+  ;;
 "dialclient")
   echo "Testing DialClient"
   prepareRestcomm
@@ -173,7 +193,7 @@ case "$TEST_NAME" in
   cp -aR $CURRENT_FOLDER/tests/dialclient/DialClientApp.xml $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/
   sed -i "s/SIPP_SERVER_IP_HERE/$LOCAL_ADDRESS/g" $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/DialClientApp.xml
   startRestcomm
-  echo $'\n********** Restcomm started\n'
+  echo $"\n********** Restcomm started at $RESTCOMM_HOME\n"
   sleep 45
   echo $'\nChange default administrator password\n'
   curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf -d "Password=$RESTCOMM_NEW_PASSWORD"
@@ -201,6 +221,22 @@ case "$TEST_NAME" in
     echo ""
     sleep 15
     $CURRENT_FOLDER/tests/gather/gather.sh
+    ;;
+"record")
+    echo "Testing Record"
+    prepareRestcomm
+    #In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm
+    $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+    sleep 5
+    echo "Testing Record Application"
+    startRestcomm
+    echo $"\n********** Restcomm started at $RESTCOMM_HOME\n"
+    sleep 45
+    echo $'\nChange default administrator password\n'
+    curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf -d "Password=$RESTCOMM_NEW_PASSWORD"
+    echo ""
+    sleep 15
+    $CURRENT_FOLDER/tests/simple-record/simple-record.sh
     ;;
 *) echo "Not known test: $TEST_NAME"
     exit 1;

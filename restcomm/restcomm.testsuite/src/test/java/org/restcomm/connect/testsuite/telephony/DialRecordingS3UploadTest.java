@@ -27,7 +27,11 @@ import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.text.ParseException;
 import java.util.List;
 
@@ -161,7 +165,7 @@ public class DialRecordingS3UploadTest {
 	private String dialClientRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\" record=\"true\"><Client>alice</Client></Dial></Response>";
 
 	@Test
-	public synchronized void testDialClientAlice_BobDisconnects() throws InterruptedException, ParseException {
+	public synchronized void testDialClientAlice_BobDisconnects() throws InterruptedException, ParseException, IOException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
 						.withStatus(200)
@@ -170,13 +174,18 @@ public class DialRecordingS3UploadTest {
 
 		stubFor(put(urlPathEqualTo("/s3"))
 				.willReturn(aResponse()
+								.withStatus(200)
+								.withHeader("x-amz-id-2","LriYPLdmOdAiIfgSm/F1YsViT1LW94/xUQxMsF7xiEb1a0wiIOIxl+zbwZ163pt7")
+								.withHeader("x-amz-request-id","0A49CE4060975EAC")
+								.withHeader("Date", DateTime.now().toString())
+								.withHeader("x-amz-expiration", "expiry-date="+DateTime.now().plusDays(3).toString()+"\", rule-id=\"1\"")
+								.withHeader("Server", "AmazonS3")
+				));
+
+		stubFor(get(urlPathEqualTo("/s3"))
+				.willReturn(aResponse()
 							.withStatus(200)
-							.withHeader("x-amz-id-2","LriYPLdmOdAiIfgSm/F1YsViT1LW94/xUQxMsF7xiEb1a0wiIOIxl+zbwZ163pt7")
-							.withHeader("x-amz-request-id","0A49CE4060975EAC")
-							.withHeader("Date", DateTime.now().toString())
-							.withHeader("x-amz-expiration", "expiry-date="+DateTime.now().plusDays(3).toString()+"\", rule-id=\"1\"")
-//							.withHeader("ETag", "1b2cf535f27731c974343645a3985328")
-							.withHeader("Server", "AmazonS3")
+							.withHeader("X-Amz-Algorithm", "AWS4-HMAC-SHA256")
 				));
 
 		// Phone2 register as alice
@@ -230,6 +239,15 @@ public class DialRecordingS3UploadTest {
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
 		assertTrue(duration==3.0);
 		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
+
+		URL url = new URL(recording.get(0).getAsJsonObject().get("file_uri").getAsString());
+		HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+		connection.setRequestMethod("GET");
+		connection.connect();
+
+		Thread.sleep(1000);
+
+		assertEquals(200, connection.getResponseCode());
 
 		//Verify S3 Upload
 		List<LoggedRequest> requests = findAll(putRequestedFor(urlMatching("/s3/.*")));
