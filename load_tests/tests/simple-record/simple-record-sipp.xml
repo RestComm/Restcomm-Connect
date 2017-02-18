@@ -71,7 +71,7 @@ Content-Length: 0
 </nop>
 
 <!-- Pause 60 seconds, which is approximately the duration of the PCAP file -->
-<pause milliseconds="60000"/>
+<pause milliseconds="55000"/>
 
 <!-- receive BYE -->
 <recv request="BYE" />

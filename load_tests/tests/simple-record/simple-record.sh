@@ -55,9 +55,3 @@ sleep 3
 $SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/simple-record/simple-record-sipp.xml -s +1233 $RESTCOMM_ADDRESS:5080 -p 5090 -mi $LOCAL_ADDRESS:5090 -l $SIMULTANEOUS_CALLS -m $MAXIMUM_CALLS -r $CALL_RATE -recv_timeout 10000 -t un -nr -fd 1 -trace_stat -stf $RESULTS_DIR/simple-record-$DATE.csv -trace_screen -screen_file $RESULTS_DIR/simple-record-$DATE-screens.log
 echo $?
 
-
-
-
-
-sipp -sf ./record-sipp.xml -s +1235 $RESTCOMM_ADDRESS:5080 -p 5090 -mi $LOCAL_ADDRESS:5090 -l 50 -m 30000 -r 10 -trace_screen -recv_timeout 10000 -t un -nr
-
