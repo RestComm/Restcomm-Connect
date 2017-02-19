@@ -23,7 +23,7 @@ o=user1 53655765 2353687637 IN IP[local_ip_type] [local_ip]
 s=-
 c=IN IP[local_ip_type] [local_ip]
 t=0 0
-m=audio [media_port] RTP/AVP 8 101
+m=audio [auto_media_port] RTP/AVP 8 101
 a=rtpmap:8 PCMA/8000
 a=rtpmap:101 telephone-event/8000
 a=fmtp:101 0-11,16
@@ -60,18 +60,65 @@ Content-Length: 0
 
 <!-- Simulate waiting for a beep -->
 <!--
-<pause milliseconds="2000"/>
+<pause milliseconds="4000"/>
 -->
 <!-- Simulate leaving a recording. -->
 <!-- Simulate sending RTP traffic for one minute -->
 <nop>
 <action>
-<exec rtp_stream="./resources/audio/demo-prompt-one-minute.wav"/>
+<exec play_pcap_audio="./resources/pcap/message.pcap"/>
 </action>
 </nop>
+<pause milliseconds="7000"/>
 
-<!-- Pause 60 seconds, which is approximately the duration of the PCAP file -->
-<pause milliseconds="60000"/>
+<nop>
+<action>
+<exec play_pcap_audio="./resources/pcap/message.pcap"/>
+</action>
+</nop>
+<pause milliseconds="7000"/>
+
+<nop>
+<action>
+<exec play_pcap_audio="./resources/pcap/message.pcap"/>
+</action>
+</nop>
+<pause milliseconds="7000"/>
+
+<nop>
+<action>
+<exec play_pcap_audio="./resources/pcap/message.pcap"/>
+</action>
+</nop>
+<pause milliseconds="7000"/>
+
+<nop>
+<action>
+<exec play_pcap_audio="./resources/pcap/message.pcap"/>
+</action>
+</nop>
+<pause milliseconds="7000"/>
+
+<nop>
+<action>
+<exec play_pcap_audio="./resources/pcap/message.pcap"/>
+</action>
+</nop>
+<pause milliseconds="7000"/>
+
+<nop>
+<action>
+<exec play_pcap_audio="./resources/pcap/message.pcap"/>
+</action>
+</nop>
+<pause milliseconds="7000"/>
+
+<nop>
+<action>
+<exec play_pcap_audio="./resources/pcap/message.pcap"/>
+</action>
+</nop>
+<pause milliseconds="7000"/>
 
 <!-- Pause 5 seconds, which is approximately the duration of the recording timeout -->
 <pause milliseconds="5000"/>
