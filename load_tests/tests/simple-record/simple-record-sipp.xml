@@ -66,7 +66,7 @@ Content-Length: 0
 <!-- Simulate sending RTP traffic for one minute -->
 <nop>
 <action>
-<exec rtp_stream="./resources/pcap/demo-prompt-one-minute.wav"/>
+<exec rtp_stream="./resources/audio/demo-prompt-one-minute.wav"/>
 </action>
 </nop>
 
