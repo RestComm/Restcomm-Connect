@@ -74,7 +74,7 @@ Content-Length: 0
 <pause milliseconds="60000"/>
 
 <!-- Pause 5 seconds, which is approximately the duration of the recording timeout -->
-<pause milliseconds="60000"/>
+<pause milliseconds="5000"/>
 
 <!-- receive BYE -->
 <recv request="BYE" />
