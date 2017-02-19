@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
 	<Say>Leave a message after the beep</Say>
-	<Record timeout="10" maxLength="120" finishOnKey="*" playBeep="true"/>
+	<Record timeout="5" maxLength="100" finishOnKey="*" playBeep="true"/>
 </Response>
