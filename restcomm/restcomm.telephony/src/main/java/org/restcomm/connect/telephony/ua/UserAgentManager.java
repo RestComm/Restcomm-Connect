@@ -23,6 +23,7 @@ import static java.lang.Integer.parseInt;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
 import static javax.servlet.sip.SipServletResponse.SC_OK;
 import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
+import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
 import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
 
 import java.io.IOException;
@@ -306,11 +307,17 @@ public final class UserAgentManager extends UntypedActor {
         }
     }
 
-    private void removeRegistration(final SipServletMessage sipServletMessage) {
+    private void removeRegistration(final SipServletMessage sipServletMessage) throws ServletParseException {
+        removeRegistration(sipServletMessage, false, false);
+    }
+
+    private void removeRegistration(final SipServletMessage sipServletMessage, boolean ignoreOptionsTimeout, boolean locationInContact) throws ServletParseException{
         String user = ((SipURI)sipServletMessage.getTo().getURI()).getUser();
-        String location = ((SipURI)sipServletMessage.getTo().getURI()).toString();
+        String location = locationInContact ? ((SipURI)sipServletMessage.getAddressHeader("Contact").getURI()).toString() :
+            ((SipURI)sipServletMessage.getTo().getURI()).toString();
         if(logger.isDebugEnabled()) {
             logger.debug("Error response for the OPTIONS to: "+location+" will remove registration");
+            logger.debug("ignoring options timeout: "+ignoreOptionsTimeout);
         }
         final RegistrationsDao regDao = storage.getRegistrationsDao();
         List<Registration> registrations = regDao.getRegistrations(user);
@@ -324,7 +331,8 @@ public final class UserAgentManager extends UntypedActor {
                 } catch (ServletParseException e) {}
 
                 Long pingIntervalMillis = new Long(pingInterval * 1000 * 3);
-                boolean optionsTimeout = ((DateTime.now().getMillis() - reg.getDateUpdated().getMillis()) > pingIntervalMillis);
+                boolean optionsTimeout = ignoreOptionsTimeout ? true :
+                    ((DateTime.now().getMillis() - reg.getDateUpdated().getMillis()) > pingIntervalMillis);
 
                 if(logger.isDebugEnabled()) {
                     logger.debug("regLocation: " + regLocation + " reg.getAddressOfRecord(): "+reg.getAddressOfRecord() +
@@ -426,7 +434,7 @@ public final class UserAgentManager extends UntypedActor {
         final SipServletResponse response = (SipServletResponse) message;
         if (response.getApplicationSession().isValid()) {
             try {
-                response.getApplicationSession().invalidate();
+                response.getApplicationSession().setInvalidateWhenReady(true);
             } catch (IllegalStateException ise) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("The session was already invalidated, nothing to do");
@@ -568,7 +576,7 @@ public final class UserAgentManager extends UntypedActor {
                         try {
                             request.getApplicationSession().setInvalidateWhenReady(true);
                         } catch (IllegalStateException exception) {
-                            logger.error("Exception while trying to setInvalidateWhenReady(true) for application session, exception: "+exception);
+                            logger.warning("Illegal State: while trying to setInvalidateWhenReady(true) for application session, message: "+exception.getMessage());
                         }
                     }
                 } else {
@@ -684,8 +692,8 @@ public final class UserAgentManager extends UntypedActor {
             logger.info("incoming leg state: "+incomingLegResposne.getSession().getState());
 
         }
-        if (response.getStatus()>400) {
-            removeRegistration(response);
+        if (response.getStatus()>=400 && response.getStatus() != SC_UNAUTHORIZED && response.getStatus() != SC_PROXY_AUTHENTICATION_REQUIRED) {
+            removeRegistration(incomingRequest, true, true);
         } else if (response.getStatus()==200) {
             String transport = (uri.getTransportParam()==null?incomingRequest.getParameter("transport"):uri.getTransportParam()); //Issue #935, take transport of initial request-uri if contact-uri has no transport parameter
             if (transport == null && !incomingRequest.getInitialTransport().equalsIgnoreCase("udp")) {
@@ -779,4 +787,21 @@ public final class UserAgentManager extends UntypedActor {
         sipURI.setHost(outgoingRequest.getLocalAddr());
     }
 
+    @Override
+    public void postStop() {
+        try {
+            if (logger.isInfoEnabled()) {
+                logger.info("UserAgentManager actor at postStop, path: "+self().path()+", isTerminated: "+self().isTerminated()+", sender: "+sender());
+
+                if (storage != null){
+                    logger.info("Number of current Registrations:" + storage.getRegistrationsDao().getRegistrations().size());
+                }
+            }
+        } catch (Exception exception) {
+            if(logger.isInfoEnabled()) {
+                logger.info("Exception during UserAgentManager postStop");
+            }
+        }
+        super.postStop();
+    }
 }

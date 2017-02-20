@@ -26,7 +26,9 @@ public class UpgradeService {
         UPGRADABLE, NOT_NEEDED, NOT_SUPPORTED
     }
 
-    static final String[] versionPath = new String[] {"rvd714","1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6"};
+    // valid project versions. If a version is not here it can either considered 'future' version or garbage.
+    static final String[] versionPath = new String[] {"rvd714","1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7"};
+    // project versions where the project state .json file should be upgraded
     static final List<String> upgradesPath = Arrays.asList(new String [] {"1.0","1.6"});
 
     private WorkspaceStorage workspaceStorage;
@@ -43,6 +45,11 @@ public class UpgradeService {
      * @throws InvalidProjectVersion
      */
     public static boolean checkBackwardCompatible(String checkedProjectVesion, String referenceProjectVersion) throws InvalidProjectVersion {
+        if ( "1.7".equals(referenceProjectVersion)) {
+            if ( "1.7".equals(checkedProjectVesion) || "1.6".equals(checkedProjectVesion) )
+                return true;
+            return false;
+        } else
         if ( "1.6".equals(referenceProjectVersion)) {
             if ( "1.6".equals(checkedProjectVesion) )
                 return true;
@@ -142,7 +149,7 @@ public class UpgradeService {
         if ( startVersion.equals(RvdConfiguration.getRvdProjectVersion()) )
             return null;
         if ( checkBackwardCompatible(startVersion, RvdConfiguration.getRvdProjectVersion()) ) {
-            //logger.warn("Project '" + projectName + "' is old but compatible. No need to upgrade.");
+            // if current binary is compatible with old project no need to batch upgrade
             return null;
         }
 
@@ -224,7 +231,7 @@ public class UpgradeService {
             }
         if ( projectNames.size() > 0 && failedCount == 0)
             if(logger.isInfoEnabled()) {
-                logger.info("--- All RVD projects are up to date");
+                logger.info("--- All RVD projects are up to date (or don't need upgrade)");
             }
         //if ( upgradedCount  0 && projectNames.size() > 0 )
           //  logger.info("All RVD projects are up-to-date" );
