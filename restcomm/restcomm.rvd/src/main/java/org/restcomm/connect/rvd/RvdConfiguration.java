@@ -38,7 +38,7 @@ public class RvdConfiguration {
     public static final String USERS_DIRECTORY_NAME = "@users";
 
     public static final String WAVS_DIRECTORY_NAME = "wavs";
-    private static final String RVD_PROJECT_VERSION = "1.6"; // version for rvd project syntax
+    private static final String RVD_PROJECT_VERSION = "1.7"; // version for rvd project syntax
     private static final String PACKAGING_VERSION = "1.0";
     private static final String RAS_APPLICATION_VERSION = "2"; // version of the RAS application specification
     public static final String STICKY_PREFIX = "sticky_"; // a  prefix for rvd sticky variable names
@@ -54,7 +54,7 @@ public class RvdConfiguration {
     // the names of the parameters supplied by restcomm request when starting an application
     public static final HashSet<String> builtinRestcommParameters = new HashSet<String>(Arrays.asList(new String[]
             {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName",
-                    "CallTimestamp", "ForwardedFrom", "SmsSid", "SmsStatus", "InstanceId","ReferTarget"}));
+                    "CallTimestamp", "ForwardedFrom", "SmsSid", "SmsStatus", "InstanceId","ReferTarget","Transferor","Transferee"}));
     public static final String RESTCOMM_HEADER_PREFIX = "SipHeader_"; // the prefix added to HTTP headers from Restcomm
     public static final String RESTCOMM_HEADER_PREFIX_DIAL = "DialSipHeader_"; // another prefix
 

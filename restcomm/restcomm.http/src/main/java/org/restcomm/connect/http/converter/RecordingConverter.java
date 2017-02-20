@@ -76,7 +76,8 @@ public final class RecordingConverter extends AbstractConverter implements JsonS
         writeDuration(recording.getDuration(), object);
         writeApiVersion(recording.getApiVersion(), object);
         writeUri(recording.getUri(), object);
-        object.addProperty("file_uri", recording.getFileUri().toString());
+        if (recording.getFileUri() != null)
+            object.addProperty("file_uri", recording.getFileUri().toString());
         return object;
     }
 }

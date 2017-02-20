@@ -2,7 +2,7 @@
 
 The Restcomm Administration Interface allows you to interact visually instead of using the following REST APIs below. 
 Please read <<Restcomm - Overview Admin User Interface.adoc#adminUI,Restcomm Admin User Interface Overview>> for understanding how to interact with the Restcomm platform
-
+////
 * <<account-api.adoc#account,Restcomm API – Account>>
 * <<Restcomm - Multi-tenancy and Managing Sub-Accounts.adoc#restcomm-rest-api,Multi-tenancy and Managing Sub-Accounts>>
 * <<applications-api.adoc#applications,Restcomm API – Applications>>
@@ -12,3 +12,4 @@ Please read <<Restcomm - Overview Admin User Interface.adoc#adminUI,Restcomm Adm
 * <<recordings-api.adoc#recordings,Restcomm API – Recordings>>
 * <<transcriptions-api.adoc#transcriptions,Restcomm API – Transcriptions>>
 * <<usage-records-api.adoc#records,Restcomm API – Usage Records>>
+////

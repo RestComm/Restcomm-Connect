@@ -62,6 +62,8 @@ public final class VoiceInterpreterBuilder {
     private boolean asImsUa;
     private String imsUaLogin;
     private String imsUaPassword;
+    private String transferor;
+    private String transferee;
 
     /**
      * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -78,7 +80,7 @@ public final class VoiceInterpreterBuilder {
             @Override
             public UntypedActor create() throws Exception {
                 return new VoiceInterpreter(configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod,
-                        statusCallback, statusCallbackMethod, referTarget, emailAddress, calls, conferences, bridges, sms, storage, monitoring, rcml,
+                        statusCallback, statusCallbackMethod, referTarget, transferor, transferee, emailAddress, calls, conferences, bridges, sms, storage, monitoring, rcml,
                         asImsUa, imsUaLogin, imsUaPassword);
             }
         }));
@@ -168,5 +170,13 @@ public final class VoiceInterpreterBuilder {
 
     public void setImsUaPassword(String imsUaPassword) {
         this.imsUaPassword = imsUaPassword;
+    }
+
+    public void setTransferor (String transferor) {
+        this.transferor = transferor;
+    }
+
+    public void setTransferee (String transferee) {
+        this.transferee = transferee;
     }
 }

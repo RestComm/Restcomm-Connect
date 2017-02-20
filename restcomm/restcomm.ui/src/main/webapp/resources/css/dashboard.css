@@ -830,10 +830,15 @@ a:link {
     font-size: 16px;
 }
 
-
-.in-box-separator {
+/* vertical separator lines  in number-details */
+.main-request-area .in-box-separator {
     border-left: 2px solid #d5d5d5;
     margin-top: 5px;
+}
+/* hide separators (same color with background) with the url is in 'advanced' area */
+.advanced-settings-area .in-box-separator {
+    border-left: 2px solid  #faeee6;
+        margin-top: 5px;
 }
 
 #in-box-border-2 {

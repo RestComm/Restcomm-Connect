@@ -6,8 +6,11 @@ import org.restcomm.connect.rvd.exceptions.InterpreterException;
 import org.restcomm.connect.rvd.interpreter.Interpreter;
 import org.restcomm.connect.rvd.interpreter.Target;
 import org.restcomm.connect.rvd.interpreter.exceptions.RVDUnsupportedHandlerVerb;
+import org.restcomm.connect.rvd.jsonvalidation.ValidationErrorItem;
 import org.restcomm.connect.rvd.model.rcml.RcmlStep;
 import org.restcomm.connect.rvd.storage.exceptions.StorageException;
+
+import java.util.List;
 
 public abstract class Step {
 
@@ -54,8 +57,15 @@ public abstract class Step {
         throw new RVDUnsupportedHandlerVerb();
     }
 
-    // a placeholder function for steps that don't have an actual imlpementation
+    /**
+     * @returns String - The module name to continue rendering with. null, to continue processing the existing module
+     */
     public String process(Interpreter interpreter, HttpServletRequest httpRequest) throws InterpreterException {
+        // a placeholder implementation for steps that don't have an actual imlpementation
         return null;
+    }
+
+    public List<ValidationErrorItem> validate(String stepPath, Node parentModule) {
+        return null; // assume valid unless overriden
     }
 }

@@ -1,0 +1,11 @@
+<div class="type-chooser">
+    <div class="dropdown">
+        <span ng-show="!type" class="chosen-label dropdown-toggle text-muted btn-link" title="No comparison type selected">Type</span>
+        <span ng-show="type == 'text'" class="chosen-label dropdown-toggle text-muted btn-link" title="Compare as text">ABCD...</span>
+        <span ng-show="type == 'numeric'" class="chosen-label dropdown-toggle text-muted btn-link" title="Compare as numbers">123...</span>
+        <ul class="dropdown-menu">
+            <li><a ng-click="setType('text')" class="rvd-clickable-text">Compare as text</a></li>
+            <li><a ng-click="setType('numeric')" class="rvd-clickable-text">Compare as numbers</a></li>
+        </ul>
+    </div>
+</div>

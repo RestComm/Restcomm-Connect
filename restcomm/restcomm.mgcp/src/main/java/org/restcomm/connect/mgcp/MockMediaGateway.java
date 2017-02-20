@@ -53,7 +53,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class MockMediaGateway extends UntypedActor {
+public class MockMediaGateway extends UntypedActor {
     // Session description for the mock media gateway.
     private static final String sdp = "v=0\n" + "o=- 1362546170756 1 IN IP4 192.168.1.100\n" + "s=Mobicents Media Server\n"
             + "c=IN IP4 192.168.1.100\n" + "t=0 0\n" + "m=audio 63044 RTP/AVP 97 8 0 101\n" + "a=rtpmap:97 l16/8000\n"
@@ -367,7 +367,7 @@ public final class MockMediaGateway extends UntypedActor {
         sender.tell(response, self);
     }
 
-    private void notificationResponse(final Object message, final ActorRef sender) {
+    protected void notificationResponse(final Object message, final ActorRef sender) {
         final ActorRef self = self();
         final NotificationRequest rqnt = (NotificationRequest) message;
         EventName[] events = rqnt.getSignalRequests();

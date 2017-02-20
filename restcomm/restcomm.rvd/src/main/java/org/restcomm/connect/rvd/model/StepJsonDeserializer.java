@@ -5,6 +5,7 @@ import java.lang.reflect.Type;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.rvd.BuildService;
 import org.restcomm.connect.rvd.model.client.Step;
+import org.restcomm.connect.rvd.model.steps.control.ControlStep;
 import org.restcomm.connect.rvd.model.steps.dial.DialNoun;
 import org.restcomm.connect.rvd.model.steps.dial.DialNounJsonDeserializer;
 import org.restcomm.connect.rvd.model.steps.dial.DialStep;
@@ -58,6 +59,8 @@ public class StepJsonDeserializer implements JsonDeserializer<Step> {
             step = gson.fromJson(step_object, HungupStep.class);
         else if ("play".equals(kind))
             step = gson.fromJson(step_object, PlayStep.class);
+        else if ("control".equals(kind))
+            step = gson.fromJson(step_object, ControlStep.class);
         else if ("externalService".equals(kind))
             step = gson.fromJson(step_object, ExternalServiceStep.class);
         else if ("log".equals(kind))

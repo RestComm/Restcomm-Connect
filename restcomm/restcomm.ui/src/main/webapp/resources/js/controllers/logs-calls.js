@@ -10,7 +10,7 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $uibModa
 
   // default search values
   $scope.search = {
-    local_only: true,
+    //local_only: true,
     sub_accounts: false
   }
 
