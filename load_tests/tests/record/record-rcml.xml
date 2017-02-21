@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Record timeout="10" maxLength="60" finishOnKey="*" playBeep="false"/>
+</Response>
