@@ -223,6 +223,30 @@ case "$TEST_NAME" in
     sleep 15
     $CURRENT_FOLDER/tests/gather/gather.sh
     ;;
+"record")
+    echo "Testing Record"
+    prepareRestcomm
+    #In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm
+    $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+    sleep 5
+
+    echo "Testing Record Application"
+    mkdir -p $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/record
+    cp -aR $CURRENT_FOLDER/tests/record/record-rcml.xml $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/record
+    startRestcomm
+    echo "********** Restcomm started **********"
+    sleep 45
+
+    echo $'\nChange default administrator password\n'
+    curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf -d "Password=$RESTCOMM_NEW_PASSWORD"
+
+    echo $'\nAdd new IncomingPhoneNumber 5555 for Record application\n'
+    curl -X POST  http://administrator%40company.com:$RESTCOMM_NEW_PASSWORD@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=5555" -d "VoiceUrl=/restcomm/demos/record/record-rcml.xml" -d "isSIP=true"
+
+    echo ""
+    sleep 15
+    $CURRENT_FOLDER/tests/record/record.sh
+    ;;
 *) echo "Not known test: $TEST_NAME"
     exit 1;
    ;;
