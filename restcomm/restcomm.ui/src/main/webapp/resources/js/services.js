@@ -760,6 +760,18 @@ rcServices.factory('Applications', function () {
     }
 });
 
+rcServices.factory('PublicConfig', function ($http) {
+    var config = {};
+    $http({
+        method: 'GET',
+        url: "/conf/dashboard.json",
+    }).then(function (response) {
+        angular.merge(config, response.data); // copy information from response to config object
+    });
+
+    return config;
+});
+
 /*
  * RAS Services
  */
