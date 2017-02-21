@@ -31,6 +31,7 @@ import org.apache.log4j.Logger;
 import org.restcomm.connect.rvd.ProjectAwareRvdContext;
 import org.restcomm.connect.rvd.RvdConfiguration;
 import org.restcomm.connect.rvd.exceptions.AccessApiException;
+import org.restcomm.connect.rvd.exceptions.ESRequestException;
 import org.restcomm.connect.rvd.exceptions.ProjectDoesNotExist;
 import org.restcomm.connect.rvd.exceptions.callcontrol.CallControlBadRequestException;
 import org.restcomm.connect.rvd.exceptions.callcontrol.CallControlException;
@@ -119,7 +120,7 @@ public class RvdController extends SecuredRestService {
                 interpreter.getProjectLogger().log( rcmlResponse, false).tag("app", appname).tag("RCML").done();
             }
 
-        } catch (RemoteServiceError | ESProcessFailed | BadExternalServiceResponse e){
+        } catch (RemoteServiceError | ESProcessFailed | BadExternalServiceResponse |ESRequestException e){
             logger.warn(e.getMessage());
             if (rvdContext.getProjectSettings().getLogging())
                 rvdContext.getProjectLogger().log(e.getMessage()).tag("app", appname).tag("EXCEPTION").done();

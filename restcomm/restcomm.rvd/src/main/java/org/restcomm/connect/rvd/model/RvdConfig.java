@@ -5,6 +5,7 @@ public class RvdConfig {
     private String workspaceBackupLocation;
     private String sslMode;
     private String restcommBaseUrl;
+    private String externalServiceTimeout;
 
     public RvdConfig() {
     }
@@ -30,5 +31,9 @@ public class RvdConfig {
 
     public String getRestcommBaseUrl() {
         return restcommBaseUrl;
+    }
+
+    public String getExternalServiceTimeout() {
+        return externalServiceTimeout;
     }
 }
