@@ -207,7 +207,7 @@ public class ExternalServiceStep extends Step {
 
             // *** Make the request and get a status code and a response. Build a JsonElement from the response  ***
 
-            CloseableHttpClient client = interpreter.getApplicationContext().getHttpClientBuilder().buildHttpClient();
+            CloseableHttpClient client = interpreter.getApplicationContext().getHttpClientBuilder().buildHttpClient(interpreter.getRvdContext().getSettings().getExternalServiceTimeout());
             CloseableHttpResponse response;
             int statusCode;
             JsonElement response_element = null;
@@ -407,7 +407,7 @@ public class ExternalServiceStep extends Step {
             }
 
         } catch (IOException e) {
-            throw new ESRequestException("Error processing ExternalService step " + getName(), e);
+            throw new ESRequestException("Error processing ExternalService step " + getName() + (e.getMessage() != null ? (" - " + e.getMessage()) : ""), e);
         }
         return next;
     }

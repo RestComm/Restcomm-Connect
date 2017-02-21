@@ -30,4 +30,7 @@
 	-->
 	<restcommBaseUrl></restcommBaseUrl>
 
+	<!-- Timeout for external service requests in milliseconds. Defaults to 5000 if not given -->
+	<externalServiceTimeout></externalServiceTimeout>
+
 </rvd>
