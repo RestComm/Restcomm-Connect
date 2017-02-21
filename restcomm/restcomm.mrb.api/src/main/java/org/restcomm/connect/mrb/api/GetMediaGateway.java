@@ -36,7 +36,7 @@ public final class GetMediaGateway {
     /**
      * @param callSid - restcomm callSid - if MediaGateway is required for a call
      * @param conferenceName - friendly name of conference - if MediaGateway is required for a conference
-     * @param msId - mediaserver id - provide in case we need MediaGateway of a specific mediaserver in cluster. 
+     * @param msId - mediaserver id - provide in case we need MediaGateway of a specific mediaserver in cluster.
      */
     public GetMediaGateway(final Sid callSid, final String conferenceName, final String msId) {
         super();
@@ -71,4 +71,8 @@ public final class GetMediaGateway {
         return msId;
     }
 
+    @Override
+    public String toString() {
+        return "GetMediaGateway [callSid=" + callSid + ", conferenceName=" + conferenceName + ", msId=" + msId + "]";
+    }
 }
