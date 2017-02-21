@@ -62,7 +62,7 @@ Content-Length: 0
 <!-- Simulate leaving a recording. -->
 <nop>
 <action>
-<exec play_pcap_audio="g711a-bond.pcap"/>
+<exec play_pcap_audio="./resources/pcap/g711a-bond.pcap"/>
 </action>
 </nop>
 
