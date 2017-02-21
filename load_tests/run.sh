@@ -174,10 +174,15 @@ case "$TEST_NAME" in
   sleep 45
   echo $'\nChange default administrator password\n'
   curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf -d "Password=$RESTCOMM_NEW_PASSWORD"
-  #First run the server script that is the client that will listen for Restcomm calls
-  screen -dmS 'createcall-server' $CURRENT_FOLDER/tests/createcall/createcall-server.sh
+
   #Next run the client script that will initiate callls to Restcomm
-  $CURRENT_FOLDER/tests/createcall/createcall.sh $RESTCOMM_NEW_PASSWORD $RESTCOMM_ADDRESS sip:1999@$LOCAL_ADDRESS $MAXIMUM_CALLS $CALL_RATE
+  echo "About to run createcall script that using CURL will create requests. Password: $RESTCOMM_NEW_PASSWORD Restcom Address: $RESTCOMM_ADDRESS SIPP client: sip:1999@$LOCAL_ADDRESS Max calls: $MAXIMUM_CALLS CPS: $CALL_RATE "
+  screen -dmS 'createcall' $CURRENT_FOLDER/tests/createcall/createcall.sh $RESTCOMM_NEW_PASSWORD $RESTCOMM_ADDRESS $LOCAL_ADDRESS $MAXIMUM_CALLS $CALL_RATE
+
+  #First run the server script that is the client that will listen for Restcomm calls
+  echo "About to start createcall server part that will listen for SIP INVITE requests"
+  # screen -dmS 'createcall-server' $CURRENT_FOLDER/tests/createcall/createcall-server.sh
+  $CURRENT_FOLDER/tests/createcall/createcall-server.sh
   ;;
 "dialclient")
   echo "Testing DialClient"
