@@ -207,12 +207,6 @@
 									</div>
 								</div>
 								 -->
-								<div class="row form-group">
-									<div class="input-group col-md-12">
-										<span class="input-group-addon help-tooltip" title="{{'externalServiceStepRemoteErrorTitle' | translate}}">{{'externalServiceStepRemoteErrorLabel' | translate}}</span>
-										<module-picker ng-model='step.exceptionNext'></module-picker>
-									</div>
-								</div>																
 							</div>
 													
 						</div>
@@ -228,10 +222,25 @@
                             </form>
                         </div>
 					</div>
-					<div class='row'>
+					<h4>Errors & Timeouts</h4>
+					<div class="row">
+						<div class="form-group col-md-6">
+							<div class="input-group ">
+								<span class="input-group-addon help-tooltip" title="{{'externalServiceStepRemoteErrorTitle' | translate}}">{{'externalServiceStepRemoteErrorLabel' | translate}}</span>
+								<module-picker ng-model='step.exceptionNext'></module-picker>
+							</div>
+						</div>
+
+						<div class="form-group col-md-6">
+							<div class="input-group">
+								<span class="input-group-addon help-tooltip" tooltip="{{'esTimeoutTooltip' | translate}}" tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>{{'esTimeoutLabel' | translate}}</span>
+								<module-picker ng-model='step.onTimeout' auto-clear></module-picker>
+							</div>
+						</div>
+
 					</div>
-					
-				
+
+
 				</div>
 			</div>
 					
