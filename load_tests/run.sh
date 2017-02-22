@@ -246,6 +246,16 @@ case "$TEST_NAME" in
     echo ""
     sleep 15
     $CURRENT_FOLDER/tests/record/record.sh
+
+    echo "Collecting data of all generated recordings"
+    mkdir -p $CURRENT_FOLDER/recordings
+    ls -lt $RESTCOMM_HOME/standalone/deployments/restcomm.war/recordings > $CURRENT_FOLDER/recordings/recordings.txt
+
+    echo "Collecting 50 most recent recordings"
+    find $RESTCOMM_HOME/standalone/deployments/restcomm.war/recordings -maxdepth 1 -type f -name "*.wav" -print0 | xargs -0 stat -f"%N" | sort -rn | head -50 | xargs cp -t $CURRENT_FOLDER/recordings
+
+    echo "Compressing recordings"
+    zip -r $CURRENT_FOLDER/recordings.zip $CURRENT_FOLDER/recordings
     ;;
 *) echo "Not known test: $TEST_NAME"
     exit 1;
