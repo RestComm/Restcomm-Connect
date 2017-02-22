@@ -1,6 +1,7 @@
 package org.restcomm.connect.rvd.model.steps.es;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -65,6 +66,7 @@ public class ExternalServiceStep extends Step {
     private List<RouteMapping> routeMappings;
     //private String defaultNext;
     private String exceptionNext;
+    private String onTimeout;
 
 
     public ValueExtractor getNextValueExtractor() {
@@ -161,6 +163,10 @@ public class ExternalServiceStep extends Step {
 
     public void setExceptionNext(String exceptionNext) {
         this.exceptionNext = exceptionNext;
+    }
+
+    public String getOnTimeout() {
+        return onTimeout;
     }
 
     @Override
@@ -407,7 +413,11 @@ public class ExternalServiceStep extends Step {
             }
 
         } catch (IOException e) {
-            throw new ESRequestException("Error processing ExternalService step " + getName() + (e.getMessage() != null ? (" - " + e.getMessage()) : ""), e);
+            // it this is a timeout error invoke onTimeout handler
+            if (e instanceof SocketTimeoutException && !RvdUtils.isEmpty(this.onTimeout)) {
+                next = this.onTimeout;
+            } else
+                throw new ESRequestException("Error processing ExternalService step " + getName() + (e.getMessage() != null ? (" - " + e.getMessage()) : ""), e);
         }
         return next;
     }
