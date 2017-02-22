@@ -255,7 +255,7 @@ case "$TEST_NAME" in
     ls -t $RESTCOMM_HOME/standalone/deployments/restcomm.war/recordings | head -50 | xargs cp -t $CURRENT_FOLDER/recordings
 
     echo "Compressing recordings"
-    zip -r $CURRENT_FOLDER/recordings.zip $CURRENT_FOLDER/recordings
+    zip -jr $CURRENT_FOLDER/recordings.zip $CURRENT_FOLDER/recordings
     ;;
 *) echo "Not known test: $TEST_NAME"
     exit 1;
