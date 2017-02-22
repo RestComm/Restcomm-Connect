@@ -252,7 +252,7 @@ case "$TEST_NAME" in
     ls -lt $RESTCOMM_HOME/standalone/deployments/restcomm.war/recordings > $CURRENT_FOLDER/recordings/recordings.txt
 
     echo "Collecting 50 most recent recordings"
-    cat $CURRENT_FOLDER/recordings/recordings.txt | head -50 | xargs cp -t $CURRENT_FOLDER/recordings
+    ls -t $RESTCOMM_HOME/standalone/deployments/restcomm.war/recordings | head -50 | xargs cp -t $CURRENT_FOLDER/recordings
 
     echo "Compressing recordings"
     zip -r $CURRENT_FOLDER/recordings.zip $CURRENT_FOLDER/recordings
