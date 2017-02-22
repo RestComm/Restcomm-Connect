@@ -205,14 +205,6 @@ public class SequentialDialingAnswerDelayTest {
 		SipTransaction daveCancelTransaction = daveCall.waitForCancel(5000);
 		assertNotNull(daveCancelTransaction);
 		daveCall.respondToCancel(daveCancelTransaction, 200, "OK-2-Cancel-Dave", 3600);
-
-//		Thread.sleep(1000);
-//
-//		bobCall.disconnect();
-
-//		SipTransaction bobCancelTransaction = bobCall.waitForCancel(5000);
-//		assertNotNull(bobCancelTransaction);
-//		bobCall.respondToCancel(bobCancelTransaction, 200, "OK-2-Cancel-Bob", 3600);
 	}
 
 
