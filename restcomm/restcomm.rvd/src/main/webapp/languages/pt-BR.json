@@ -511,6 +511,9 @@
 	"textAnyConditionStands": " Any condition should stand",
 	"textContinueTo": "Continue to",
 	"textAssign": "Assign",
-	"textCapture": "Capture"
+	"textCapture": "Capture",
+
+	"esTimeoutTooltip":"Divert application flow to the specified module in case the service takes too long to respond (optional)",
+	"esTimeoutLabel":"On Timeout"
 
 }
