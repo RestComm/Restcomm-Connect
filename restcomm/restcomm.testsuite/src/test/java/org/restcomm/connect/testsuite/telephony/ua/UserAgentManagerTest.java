@@ -19,6 +19,7 @@
  */
 package org.restcomm.connect.testsuite.telephony.ua;
 
+import gov.nist.javax.sip.address.SipUri;
 import gov.nist.javax.sip.message.SIPResponse;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipPhone;
@@ -35,6 +36,7 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
@@ -179,6 +181,32 @@ public final class UserAgentManagerTest {
     }
 
     @Test
+    public void registerUserAgentWithExtraParamsAndOptionsPing() throws ParseException, InterruptedException {
+//        deployer.deploy("UserAgentTest");
+        // Register the phone so we can get OPTIONS pings from RestComm.
+        SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        Credential c = new Credential("127.0.0.1","alice", "1234");
+        phone.addUpdateCredential(c);
+        assertTrue(phone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5070;transport=udp;rc-id=7616", 3600, 3600));
+        Thread.sleep(500);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        // This is necessary for SipUnit to accept unsolicited requests.
+//        phone.setLoopback(true);
+        phone.listenRequestMessage();
+        RequestEvent requestEvent = phone.waitRequest(75000);
+        assertNotNull(requestEvent);
+        assertTrue(requestEvent.getRequest().getMethod().equals(SipRequest.OPTIONS));
+        String extraParam = ((SipUri)requestEvent.getRequest().getRequestURI()).getParameter("rc-id");
+        assertNotNull(extraParam);
+        logger.info("RequestEvent :"+requestEvent.getRequest().toString());
+        Response response = sipStack.getMessageFactory().createResponse(SIPResponse.OK, requestEvent.getRequest());
+        phone.sendReply(requestEvent, response);
+        Thread.sleep(1000);
+        // Clean up (Unregister).
+        assertTrue(phone.unregister("sip:127.0.0.1:5070;transport=udp", 0));
+    }
+
+    @Test
     public void registerUserAgentWithExceptionOnOptionsPing() throws ParseException, InterruptedException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
@@ -198,7 +226,7 @@ public final class UserAgentManagerTest {
 //        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
-    @Test
+    @Test @Ignore
     public void registerUserAgentWithExceptionOnOptionsPingForGeorge() throws ParseException, InterruptedException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
