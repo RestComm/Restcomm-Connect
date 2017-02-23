@@ -88,6 +88,11 @@ public class RestcommSupervisor extends UntypedActor {
 
     @Override
     public SupervisorStrategy supervisorStrategy() {
+        ActorRef sender = getSender();
+        if (liveActors!= null && liveActors.containsKey(sender.path())) {
+            logger.info("Will remove actor");
+            liveActors.remove(sender.path());
+        }
         return strategy;
     }
 }

@@ -38,6 +38,7 @@ public class ActorFaultToleranceTest {
 
 	@BeforeClass
 	public static void setup () {
+		ActorSystem.
 		system = ActorSystem.create();
 	}
 
