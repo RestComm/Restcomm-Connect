@@ -186,6 +186,68 @@ public class TestDialVerbPartThree {
         assertTrue(aliceCall.respondToDisconnect());
     }
 
+    private String recordWithActionRcmNullFinishOnKey = "<Response><Record action=\"http://127.0.0.1:8090/recordAction\" method=\"GET\" finishOnKey=\"-1\" maxLength=\"10\" playBeep=\"true\"/></Response>";
+    //Non regression test for https://github.com/Mobicents/RestComm/issues/612
+    @Test
+    public synchronized void testRecord_ExecuteRCML_ReturnedFromActionURLWithNullFinishOnKey() throws InterruptedException, ParseException {
+
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(recordWithActionRcmNullFinishOnKey)));
+
+        stubFor(get(urlPathEqualTo("/recordAction"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(actionUrlRcml)));
+
+        //Prepare Fotini phone to receive a call
+        final SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Initiate a call using Bob
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        //At this point bob leaves a voicemail
+
+        //Now Fotini should receive a call
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(100, "Trying-Fotini", 600));
+        assertTrue(aliceCall.sendIncomingCallResponse(180, "Ringing-Fotini", 600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Fotini", 3600, receivedBody, "application", "sdp", null, null));
+        assertTrue(aliceCall.waitForAck(5000));
+        aliceCall.listenForDisconnect();
+
+        Thread.sleep(2000);
+
+        // hangup.
+
+        assertTrue(bobCall.disconnect());
+
+        assertTrue(aliceCall.waitForDisconnect(50 * 1000));
+        assertTrue(aliceCall.respondToDisconnect());
+    }
+
     private String playRcml = "<Play>/restcomm/audio/demo-prompt.wav</Play>";
     //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
     @Test
