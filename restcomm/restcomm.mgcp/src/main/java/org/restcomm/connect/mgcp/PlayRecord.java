@@ -117,7 +117,7 @@ public final class PlayRecord {
         if (recordingLength > 0) {
             if (buffer.length() > 0)
                 buffer.append(" ");
-            buffer.append("rlt=").append(recordingLength * 1000);
+            buffer.append("rlt=").append(recordingLength * 10);
         }
         if (endInputKey != null) {
             if (buffer.length() > 0)
