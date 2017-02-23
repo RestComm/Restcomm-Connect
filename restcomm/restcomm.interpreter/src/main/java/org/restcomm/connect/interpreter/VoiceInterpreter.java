@@ -857,6 +857,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, initializingCall);
             }
         } else if (Verbs.dial.equals(verb.name())) {
+            Attribute action = verb.attribute("action");
+            if (action != null && dialActionExecuted) {
+                //We have a new Dial verb that contains Dial Action URL again.
+                //We set dialActionExecuted to false in order to execute Dial Action again
+                dialActionExecuted = false;
+            }
             dialRecordAttribute = verb.attribute("record");
             fsm.transition(message, startDialing);
         } else if (Verbs.fax.equals(verb.name())) {
