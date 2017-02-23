@@ -103,6 +103,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.telephony.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.mobicents.media</groupId>
 			<artifactId>concurrent</artifactId>
 			<version>${mobicents.mgcp.impl.version}</version>
