@@ -69,39 +69,39 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     // Finite State Machine
-    private final FiniteStateMachine fsm;
-    private final State uninitialized;
-    private final State acquiringConferenceInfo;
-    private final State creatingMediaGroup;
+    protected final FiniteStateMachine fsm;
+    protected final State uninitialized;
+    protected final State acquiringConferenceInfo;
+    protected final State creatingMediaGroup;
 
-    private final State preActive;
-    private final State active;
-    private final State stopping;
-    private final State inactive;
-    private final State failed;
+    protected final State preActive;
+    protected final State active;
+    protected final State stopping;
+    protected final State inactive;
+    protected final State failed;
 
-    private final ActorRef localMediaGateway;
-    private ActorRef mediaGroup;
-    private String masterIVREndpointIdName;
-    private MediaSession localMediaSession;
-    private ActorRef localConfernceEndpoint;
-    private ActorRef connectionWithLocalMS;
-    private ActorRef connectionWithMasterMS;
+    protected final ActorRef localMediaGateway;
+    protected ActorRef mediaGroup;
+    protected String masterIVREndpointIdName;
+    protected MediaSession localMediaSession;
+    protected ActorRef localConfernceEndpoint;
+    protected ActorRef connectionWithLocalMS;
+    protected ActorRef connectionWithMasterMS;
 
-    private final DaoManager storage;
-    private final Configuration configuration;
-    private ConferenceDetailRecord cdr;
-    private Sid conferenceSid;
+    protected final DaoManager storage;
+    protected final Configuration configuration;
+    protected ConferenceDetailRecord cdr;
+    protected Sid conferenceSid;
 
     // Runtime media operations
-    private Boolean playing;
-    private Boolean fail;
-    private Boolean recording;
-    private DateTime recordStarted;
+    protected Boolean playing;
+    protected Boolean fail;
+    protected Boolean recording;
+    protected DateTime recordStarted;
 
     // Observer pattern
-    private final List<ActorRef> observers;
-    private final ActorRef mrb;
+    protected final List<ActorRef> observers;
+    protected final ActorRef mrb;
 
     public ConferenceMediaResourceControllerGeneric(final String localMsId, ActorRef localMediaGateway, final Configuration configuration, final DaoManager storage, final ActorRef mrb){
     //public ConferenceMediaResourceController(final String localMsId, final Map<String, ActorRef> gateways, final Configuration configuration, final DaoManager storage){
@@ -147,11 +147,11 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         this.observers = new ArrayList<ActorRef>(1);
     }
 
-    private boolean is(State state) {
+    protected boolean is(State state) {
         return this.fsm.state().equals(state);
     }
 
-    private void broadcast(Object message) {
+    protected void broadcast(Object message) {
         if (!this.observers.isEmpty()) {
             final ActorRef self = self();
             synchronized (this.observers) {
@@ -199,7 +199,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         }
     }
 
-    private void onObserve(Observe message, ActorRef self, ActorRef sender) {
+    protected void onObserve(Observe message, ActorRef self, ActorRef sender) {
         final ActorRef observer = message.observer();
         if (observer != null) {
             synchronized (this.observers) {
@@ -209,24 +209,24 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         }
     }
 
-    private void onStopObserving(StopObserving message, ActorRef self, ActorRef sender) {
+    protected void onStopObserving(StopObserving message, ActorRef self, ActorRef sender) {
         final ActorRef observer = message.observer();
         if (observer != null) {
             this.observers.remove(observer);
         }
     }
 
-    private void onStartConferenceMediaResourceController(StartConferenceMediaResourceController message, ActorRef self, ActorRef sender) throws Exception{
+    protected void onStartConferenceMediaResourceController(StartConferenceMediaResourceController message, ActorRef self, ActorRef sender) throws Exception{
         if (is(uninitialized)) {
-            if(logger.isInfoEnabled())
-                logger.info("onStartConferenceMediaResourceController: conferenceSid: "+message.conferenceSid()+" cnfEndpoint: "+message.cnfEndpoint());
+            if(logger.isDebugEnabled())
+                logger.debug("onStartConferenceMediaResourceController: conferenceSid: "+message.conferenceSid()+" cnfEndpoint: "+message.cnfEndpoint());
             this.localConfernceEndpoint = message.cnfEndpoint();
             this.conferenceSid = message.conferenceSid();
             fsm.transition(message, acquiringConferenceInfo);
         }
     }
 
-    private void onMediaGatewayResponse(MediaGatewayResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
+    protected void onMediaGatewayResponse(MediaGatewayResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
         logger.info("inside onMediaGatewayResponse: state = "+fsm.state());
         if (is(acquiringConferenceInfo)){
             this.localMediaSession = (MediaSession) message.get();
@@ -234,16 +234,14 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         }
     }
 
-    private void onStopConferenceMediaResourceController(StopConferenceMediaResourceController message, ActorRef self,
+    protected void onStopConferenceMediaResourceController(StopConferenceMediaResourceController message, ActorRef self,
             ActorRef sender) throws Exception {
-        if(logger.isDebugEnabled())
-            logger.debug("onStopConferenceMediaResourceController");
         fsm.transition(message, stopping);
     }
 
-    private void onMediaGroupStateChanged(MediaGroupStateChanged message, ActorRef self, ActorRef sender) throws Exception {
-        if(logger.isInfoEnabled())
-            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGroupStateChanged - received STATE is: "+message.state()+" current fsm STATE is: "+fsm.state()+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+    protected void onMediaGroupStateChanged(MediaGroupStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+        if(logger.isDebugEnabled())
+            logger.debug("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGroupStateChanged - received STATE is: "+message.state()+" current fsm STATE is: "+fsm.state()+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
         switch (message.state()) {
             case ACTIVE:
                 if (is(creatingMediaGroup)) {
@@ -271,14 +269,14 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         }
     }
 
-    private void onPlay(Play message, ActorRef self, ActorRef sender) {
+    protected void onPlay(Play message, ActorRef self, ActorRef sender) {
         if (!playing) {
             this.playing = Boolean.TRUE;
             this.mediaGroup.tell(message, self);
         }
     }
 
-    private void onStartRecording(StartRecording message, ActorRef self, ActorRef sender) throws Exception {
+    protected void onStartRecording(StartRecording message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active) && !recording) {
             String finishOnKey = "1234567890*#";
             int maxLength = 3600;
@@ -293,20 +291,20 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         }
     }
 
-    private void onStopRecording(StopRecording message, ActorRef self, ActorRef sender) throws Exception {
+    protected void onStopRecording(StopRecording message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active) && recording) {
             this.recording = Boolean.FALSE;
             mediaGroup.tell(new Stop(), null);
         }
     }
 
-    private void onMediaGroupResponse(MediaGroupResponse<String> message, ActorRef self, ActorRef sender) throws Exception {
+    protected void onMediaGroupResponse(MediaGroupResponse<String> message, ActorRef self, ActorRef sender) throws Exception {
         if (this.playing) {
             this.playing = Boolean.FALSE;
         }
     }
 
-    private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) {
+    protected void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) {
         //if (is(active)) {
             // Stop the primary media group
             this.mediaGroup.tell(new Stop(), self);
@@ -328,7 +326,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         }
     }
 
-    private final class AcquiringConferenceInfo extends AbstractAction {
+    protected final class AcquiringConferenceInfo extends AbstractAction {
 
         public AcquiringConferenceInfo(final ActorRef source) {
             super(source);
@@ -336,7 +334,8 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
         @Override
         public void execute(final Object msg) throws Exception {
-            logger.info("current state is: "+fsm.state());
+            if(logger.isDebugEnabled())
+                logger.debug("current state is: "+fsm.state());
             //check master MS info from DB
             final ConferenceDetailRecordsDao conferenceDetailRecordsDao = storage.getConferenceDetailRecordsDao();
             cdr = conferenceDetailRecordsDao.getConferenceDetailRecord(conferenceSid);
@@ -344,8 +343,8 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
                 logger.error("there is no information available in DB to proceed with this CMRC");
                 fsm.transition(msg, failed);
             }else{
-                if(logger.isInfoEnabled()){
-                    logger.info("first participant Joined on master MS and sent message to CMRC");
+                if(logger.isDebugEnabled()){
+                    logger.debug("first participant Joined on master MS and sent message to CMRC");
                 }
                 localMediaGateway.tell(new org.restcomm.connect.mgcp.CreateMediaSession(), source);
             }
@@ -353,15 +352,15 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
     }
 
-    private final class CreatingMediaGroup extends AbstractAction {
+    protected final class CreatingMediaGroup extends AbstractAction {
 
         public CreatingMediaGroup(ActorRef source) {
             super(source);
         }
 
-        private ActorRef createMediaGroup(final Object message) {
+        protected ActorRef createMediaGroup(final Object message) {
             return getContext().actorOf(new Props(new UntypedActorFactory() {
-                private static final long serialVersionUID = 1L;
+                protected static final long serialVersionUID = 1L;
 
                 @Override
                 public UntypedActor create() throws Exception {
@@ -378,7 +377,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         }
     }
 
-    private final class PreActive extends AbstractAction {
+    protected final class PreActive extends AbstractAction {
 
         public PreActive(final ActorRef source) {
             super(source);
@@ -386,8 +385,8 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
         @Override
         public void execute(final Object message) throws Exception {
-            if(logger.isInfoEnabled())
-                logger.info("CMRC is in pre ACTIVE NOW...");
+            if(logger.isDebugEnabled())
+                logger.debug("CMRC is in pre ACTIVE NOW...");
             // later Conference will update the status as per informed by VI as per RCML
             updateConferenceStatus("RUNNING_MODERATOR_ABSENT");
             broadcast(new ConferenceMediaResourceControllerStateChanged(ConferenceMediaResourceControllerStateChanged.MediaServerControllerState.ACTIVE, cdr.getStatus()));
@@ -395,7 +394,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         }
     }
 
-    private final class Active extends AbstractAction {
+    protected final class Active extends AbstractAction {
 
         public Active(final ActorRef source) {
             super(source);
@@ -408,7 +407,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         }
     }
 
-    private class Stopping extends AbstractAction {
+    protected class Stopping extends AbstractAction {
 
         public Stopping(ActorRef source) {
             super(source);
@@ -424,9 +423,9 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         }
     }
 
-    private abstract class FinalState extends AbstractAction {
+    protected abstract class FinalState extends AbstractAction {
 
-        private final ConferenceMediaResourceControllerStateChanged.MediaServerControllerState state;
+        protected final ConferenceMediaResourceControllerStateChanged.MediaServerControllerState state;
 
         public FinalState(ActorRef source, final ConferenceMediaResourceControllerStateChanged.MediaServerControllerState state) {
             super(source);
@@ -441,7 +440,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
     }
 
-    private final class Inactive extends FinalState {
+    protected final class Inactive extends FinalState {
 
         public Inactive(final ActorRef source) {
             super(source, ConferenceMediaResourceControllerStateChanged.MediaServerControllerState.INACTIVE);
@@ -449,7 +448,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
     }
 
-    private final class Failed extends FinalState {
+    protected final class Failed extends FinalState {
 
         public Failed(final ActorRef source) {
             super(source, ConferenceMediaResourceControllerStateChanged.MediaServerControllerState.FAILED);
@@ -459,6 +458,8 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
     @Override
     public void postStop() {
+        if(logger.isDebugEnabled())
+            logger.debug("postStop called for: "+self());
         // Cleanup resources
         cleanup();
 
@@ -485,7 +486,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
      *
      */
 
-    private void updateConferenceStatus(String status){
+    protected void updateConferenceStatus(String status){
         if(cdr != null){
             final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
             cdr = dao.getConferenceDetailRecord(conferenceSid);

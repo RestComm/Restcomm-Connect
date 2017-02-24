@@ -81,6 +81,9 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
 
     public MediaResourceBrokerGeneric(){
         super();
+        if (logger.isInfoEnabled()) {
+            logger.info(" ********** Community MediaResourceBroker Constructed");
+        }
     }
 
     @Override
@@ -185,7 +188,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
     }
 
     /**
-     * @return
+     * @return ConferenceMediaResourceController Community version actor
      */
     protected ActorRef getConferenceMediaResourceController() {
         return getContext().system().actorOf(new Props(new UntypedActorFactory() {
