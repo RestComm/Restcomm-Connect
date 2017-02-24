@@ -27,6 +27,7 @@ import java.text.ParseException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
@@ -209,6 +210,84 @@ public class SequentialDialingTest {
 		bobCall.disconnect();
 	}
 
+	private String sequentialDialingRcml1 = "<Response><Dial action=\"http://127.0.0.1:8090/action1\" timeout=\"3\"><Uri>" + aliceContact + "</Uri></Dial></Response>";
+	private String action1 = "<Response><Dial action=\"http://127.0.0.1:8090/action2\" timeout=\"3\"><Uri>" + carolContact + "</Uri></Dial></Response>";
+	private String action2 = "<Response><Dial timeout=\"3\"><Uri>" + daveContact + "</Uri></Dial></Response>";
+	@Test
+	public void testSequentialDialingWithDialAction() throws ParseException, InterruptedException {
+		stubFor(get(urlPathEqualTo("/1111"))
+				.willReturn(aResponse()
+						.withStatus(200)
+						.withHeader("Content-Type", "text/xml")
+						.withBody(sequentialDialingRcml1)));
+
+		stubFor(post(urlPathEqualTo("/action1"))
+				.willReturn(aResponse()
+						.withStatus(200)
+						.withHeader("Content-Type", "text/xml")
+						.withBody(action1)));
+
+		stubFor(post(urlPathEqualTo("/action2"))
+				.willReturn(aResponse()
+						.withStatus(200)
+						.withHeader("Content-Type", "text/xml")
+						.withBody(action2)));
+
+		final SipCall aliceCall = alicePhone.createSipCall();
+		aliceCall.listenForIncomingCall();
+
+		final SipCall bobCall = bobPhone.createSipCall();
+
+		final SipCall carolCall = carolPhone.createSipCall();
+		carolCall.listenForIncomingCall();
+
+		final SipCall daveCall = davePhone.createSipCall();
+		daveCall.listenForIncomingCall();
+
+		bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+		assertLastOperationSuccess(bobCall);
+		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+		final int response = bobCall.getLastReceivedResponse().getStatusCode();
+		assertTrue(response == Response.TRYING || response == Response.RINGING);
+		if (response == Response.TRYING) {
+			assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+			assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+		}
+
+		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+		bobCall.sendInviteOkAck();
+		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+		assertTrue(aliceCall.waitForIncomingCall(5000));
+		assertTrue(aliceCall.sendIncomingCallResponse(100, "Trying-Alice", 600));
+		assertTrue(aliceCall.sendIncomingCallResponse(180, "Ringing-Alice", 600));
+		aliceCall.listenForCancel();
+		SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(5000);
+		assertNotNull(aliceCancelTransaction);
+		aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK-2-Cancel-Alice", 3600);
+
+		assertTrue(carolCall.waitForIncomingCall(5000));
+		assertTrue(carolCall.sendIncomingCallResponse(100, "Trying-Carol", 600));
+		assertTrue(carolCall.sendIncomingCallResponse(180, "Ringing-Carol", 600));
+		carolCall.listenForCancel();
+		SipTransaction carolCancelTransaction = carolCall.waitForCancel(5000);
+		assertNotNull(carolCancelTransaction);
+		carolCall.respondToCancel(carolCancelTransaction, 200, "OK-2-Cancel-Carol", 3600);
+
+		assertTrue(daveCall.waitForIncomingCall(5000));
+		assertTrue(daveCall.sendIncomingCallResponse(100, "Trying-Dave", 600));
+		assertTrue(daveCall.sendIncomingCallResponse(180, "Ringing-Dave", 600));
+		daveCall.listenForCancel();
+		SipTransaction daveCancelTransaction = daveCall.waitForCancel(5000);
+		assertNotNull(daveCancelTransaction);
+		daveCall.respondToCancel(daveCancelTransaction, 200, "OK-2-Cancel-Dave", 3600);
+
+		Thread.sleep(1000);
+
+		bobCall.disconnect();
+	}
 
 	@Deployment(name = "SequentialDialingTest", managed = true, testable = false)
 	public static WebArchive createWebArchiveNoGw() {
