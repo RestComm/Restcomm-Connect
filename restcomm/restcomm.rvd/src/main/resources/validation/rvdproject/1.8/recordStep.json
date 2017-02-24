@@ -10,7 +10,7 @@
 		"next": { "$ref": "rvdproject-schema.json#/nullOrString" },
 		"method":{"enum": ["GET","POST"]},
 		"timeout":{"type":"integer"},
-		"finishOnKey":{	"type": "string", "pattern": "($^)|(^[0-9*#]$)" },
+		"finishOnKey":{	"type": "string", "pattern": "($^)|(^[0-9*#]+$)|(^-1$)" },
 		"maxLength": {"type": "integer", "minimum":1},
 		"transcribe": { "type": "boolean" },
 		"transcribeCallback": {"type": "string"},
