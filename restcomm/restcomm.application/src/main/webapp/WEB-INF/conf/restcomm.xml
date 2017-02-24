@@ -65,15 +65,15 @@
 		<!-- If authenticate is set to true Restcomm can work as IMS Client. To enable set act-as-ims-ua to true and
 		 configure IMS domain and IMS Proxy (e.g. P-CSCF or SBC) -->
 		<ims-authentication>
-			<act-as-ims-ua>true</act-as-ims-ua>
-			<domain>neofon.tp.pl</domain>
-			<proxy-address>neofon.tp.pl</proxy-address>
+			<act-as-ims-ua>false</act-as-ims-ua>
+			<domain></domain>
+			<proxy-address></proxy-address>
 			<proxy-port>5060</proxy-port>
 			<call-id-prefix>WebRTCGW__1@</call-id-prefix>
 			<user-agent>WebRTCGW/1.0</user-agent>
-			<account>ims</account>
+			<account></account>
 		</ims-authentication>
-		
+
 		<!-- Interval time in seconds that Restcomm will send keepalive messages (OPTIONS) to registered clients -->
 		<ping-interval>60</ping-interval>
 
@@ -293,7 +293,7 @@
 		<access-key></access-key>
 		<security-key></security-key>
 		<reduced-redundancy>false</reduced-redundancy>
-		<days-to-retain-public-url>180</days-to-retain-public-url>
+		<minutes-to-retain-public-url>10</minutes-to-retain-public-url>
 		<remove-original-file>true</remove-original-file>
 		<bucket-region>us-east-1</bucket-region>
 		<testing>false</testing>
@@ -341,7 +341,7 @@
 	</media-server-manager>
 	<!-- Adjust http client behaviour for outgoing requests -->
 	<http-client>
-		<response-timeout>5000</response-timeout>
+		<response-timeout>6000</response-timeout>
 		<!-- Control peer certificate verification for https connections. Two modes are supported:
 			'allowall' : Disables peer certificate verification. Use it when testing.
 			'strict' : Fails requests if peer certificate is not trusted. Use it in production. -->

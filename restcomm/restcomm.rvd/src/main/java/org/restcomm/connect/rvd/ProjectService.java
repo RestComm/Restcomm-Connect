@@ -16,13 +16,16 @@ import org.restcomm.connect.rvd.exceptions.RvdException;
 import org.restcomm.connect.rvd.exceptions.project.ProjectException;
 import org.restcomm.connect.rvd.exceptions.project.UnsupportedProjectVersion;
 import org.restcomm.connect.rvd.jsonvalidation.ProjectValidator;
+import org.restcomm.connect.rvd.jsonvalidation.ValidationErrorItem;
 import org.restcomm.connect.rvd.jsonvalidation.ValidationResult;
 import org.restcomm.connect.rvd.jsonvalidation.exceptions.ValidationException;
 import org.restcomm.connect.rvd.jsonvalidation.exceptions.ValidationFrameworkException;
 import org.restcomm.connect.rvd.model.ModelMarshaler;
+import org.restcomm.connect.rvd.model.client.Node;
 import org.restcomm.connect.rvd.model.client.ProjectItem;
 import org.restcomm.connect.rvd.model.client.ProjectState;
 import org.restcomm.connect.rvd.model.client.StateHeader;
+import org.restcomm.connect.rvd.model.client.Step;
 import org.restcomm.connect.rvd.model.client.WavItem;
 import org.restcomm.connect.rvd.model.project.RvdProject;
 import org.restcomm.connect.rvd.storage.FsProjectStorage;
@@ -284,6 +287,31 @@ public class ProjectService {
         }
     }
 
+    /**
+     * Validates a project semantically.  All validation errors/info found are populated inside
+     * the ValidationResult object.
+     *
+     * Use it after json-schema based validation is done with {@link:validateProject()}.
+     *
+     * @param project
+     * @param result validation status object
+     */
+    public void validateSemantic(ProjectState project, ValidationResult result) {
+        int i = 0;
+        int j = 0;
+        for (Node node: project.getNodes()) {
+            for (Step step: node.getSteps()) {
+                String stepPath = new StringBuffer("/nodes/").append(i).append("/steps/").append(j).toString();
+                List<ValidationErrorItem> errors = step.validate(stepPath, node);
+                if (errors != null && errors.size() > 0)
+                    for (ValidationErrorItem error: errors)
+                        result.appendError(error);
+                j ++;
+            }
+            i ++;
+        }
+    }
+
     public void updateProject(HttpServletRequest request, String projectName, ProjectState existingProject) throws RvdException {
         String stateData = null;
         try {
@@ -292,9 +320,11 @@ public class ProjectService {
             throw new RvdException("Internal error while retrieving raw project",e);
         }
 
+        // json-schema based validation
         ValidationResult validationResult = validateProject(stateData);
-        // then save
         ProjectState state = marshaler.toModel(stateData, ProjectState.class);
+        // semantic validation
+        validateSemantic(state,validationResult);
         // Make sure the current RVD project version is set
         state.getHeader().setVersion(configuration.getRvdProjectVersion());
         // preserve project owner

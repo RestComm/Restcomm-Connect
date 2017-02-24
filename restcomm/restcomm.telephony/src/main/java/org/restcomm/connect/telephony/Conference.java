@@ -267,6 +267,7 @@ public final class Conference extends UntypedActor {
 
             //this is to cover the scenario where initial state is not moderatorAbsent and maybe moderator is present on another node.
             waitingState = ConferenceStateChanged.translateState(stateStr, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT);
+            moderatorPresent = mediaServerConferenceControllerStateChanged.moderatorPresent();
             if(logger.isInfoEnabled()) {
                 logger.info("################################## Conference " + name + " has sid: "+sid +" stateStr: "+stateStr+" initial state: "+waitingState);
             }

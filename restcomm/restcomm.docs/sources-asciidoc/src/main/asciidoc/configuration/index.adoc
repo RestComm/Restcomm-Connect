@@ -58,6 +58,7 @@ There is two different ways to install Restcomm Connect. Either through Docker o
 === Security
 
 * <<Restcomm - Enable HTTPS secure connector on JBoss AS 7 or EAP 6.adoc#secure,Enable HTTPS secure connector on JBoss AS 7 or EAP 6>>
+* <<Restcomm - Enable password reset URL.adoc,Enable password reset URL on Dashboard login>>
 
 === SMS
 

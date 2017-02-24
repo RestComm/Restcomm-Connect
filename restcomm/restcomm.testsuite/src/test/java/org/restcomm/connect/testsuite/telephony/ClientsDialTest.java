@@ -3,6 +3,7 @@ package org.restcomm.connect.testsuite.telephony;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import gov.nist.javax.sip.address.SipUri;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -52,7 +53,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Test for clients with or without VoiceURL (Bitbucket issue 115). Clients without VoiceURL can dial anything.
- * 
+ *
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
@@ -187,7 +188,7 @@ public class ClientsDialTest {
     private String pstnNumber = "+151261006100";
 
     private String clientPassword = "qwerty1234RT";
-    
+
     // Maria is a Restcomm Client **without** VoiceURL. This Restcomm Client can dial anything.
     private SipStack mariaSipStack;
     private SipPhone mariaPhone;
@@ -412,7 +413,7 @@ public class ClientsDialTest {
         assertTrue(!(mariaCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         assertTrue(dimitriCall.waitForAck(3000));
-        
+
         //Talk time ~ 3sec
         Thread.sleep(3000);
         dimitriCall.listenForDisconnect();
@@ -421,11 +422,11 @@ public class ClientsDialTest {
         assertTrue(dimitriCall.waitForDisconnect(5 * 1000));
         assertTrue(dimitriCall.respondToDisconnect());
         long endTime   = System.currentTimeMillis();
-        
+
         double totalTime = (endTime - startTime)/1000.0;
         assertTrue(3.0 <= totalTime);
         assertTrue(totalTime <= 4.0);
-        
+
         Thread.sleep(3000);
 
         //Check CDR
@@ -711,7 +712,7 @@ public class ClientsDialTest {
     public void testClientDialToInvalidNumber() throws ParseException, InterruptedException, InvalidArgumentException, SipException {
         String invalidNumber = "+123456789";
         SipPhone outboundProxy = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:"+invalidNumber+"@127.0.0.1:5070");
-        
+
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(dimitriRestcommClientSid);
 
@@ -732,7 +733,7 @@ public class ClientsDialTest {
 
         final SipCall georgeCall = outboundProxy.createSipCall();
         georgeCall.listenForIncomingCall();
-        
+
         georgeCall.waitForIncomingCall(5 * 1000);
         georgeCall.sendIncomingCallResponse(Response.NOT_FOUND, "Not-Found George", 3600);
 
@@ -750,7 +751,7 @@ public class ClientsDialTest {
 
         outboundProxy.dispose();
     }
-    
+
     @Test
     public void testClientDialOutPstnCancelBefore200() throws ParseException, InterruptedException {
 
@@ -859,6 +860,68 @@ public class ClientsDialTest {
         assertTrue(aliceCall.respondToDisconnect());
     }
 
+    @Test
+    public synchronized void testDialClientAliceWithExtraParamsAtContactHeader() throws InterruptedException, ParseException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialClientRcml)));
+
+        String extraParamName1 = "rc-id";
+        String extraParamValue1 = "7616";
+        String extraParamName2 = "my-param";
+        String extraParamValue2 = "test";
+        aliceContact = aliceContact+";"+extraParamName1+"="+extraParamValue1+";"+extraParamName2+"="+extraParamValue2;
+        // Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.initiateOutgoingCall(georgeContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(georgeCall);
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = georgeCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, georgeCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, georgeCall.getLastReceivedResponse().getStatusCode());
+
+        georgeCall.sendInviteOkAck();
+        assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+
+        SipUri ruri = (SipUri) aliceCall.getLastReceivedRequest().getRequestEvent().getRequest().getRequestURI();
+
+        assertEquals(extraParamValue1, ruri.getParameter(extraParamName1));
+        assertEquals(extraParamValue2, ruri.getParameter(extraParamName2));
+
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(3000);
+
+        // hangup.
+        georgeCall.disconnect();
+
+        aliceCall.listenForDisconnect();
+        assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        assertTrue(aliceCall.respondToDisconnect());
+    }
 
     private String dialWebRTCClientRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client>bob</Client></Dial></Response>";
     @Test

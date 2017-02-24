@@ -120,6 +120,55 @@ label {
 	color: orange;
 }
 
+/* control-step styling */
+
+.step.control-step .conditions {
+    border-right-width: 1px;
+    border-right-style: inset;
+}
+.control-step .condition, .control-step .action{
+    margin-bottom: 10px;
+}
+.control-step .action .reorder-buttons {
+    margin-right: 5px;
+}
+.control-step .trailing-buttons-wrap {
+    text-align: right;
+}
+.control-step .action-capture .form-group.regex-field, .control-step .action-capture .form-group.data-field {
+    width: 49%;
+}
+.control-step .condition .type-chooser {
+    margin-left: 5px;
+}
+
+
+/* variable definition */
+
+vardef .vardef {
+    position: relative;
+}
+vardef .dropdown {
+    position: absolute;
+    top: 7px;
+    right: 10px;
+}
+
+vardef .vardef-input {
+    padding-right: 50px;
+    padding-left: 25px;
+}
+
+vardef .assign-arrow {
+    position: absolute;
+    top: 11px;
+    left: 8px;
+}
+
+/* type-chooser */
+.type-chooser .chosen-label {
+    color: #999;
+}
 
 
 

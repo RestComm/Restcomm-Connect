@@ -1,0 +1,14 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+	"title": "Reject step",
+	"type": "object",
+	"properties": {
+		"name":{"type": "string"},
+		"kind": {"enum": ["reject"]},
+		"label": {"type": "string"},
+		"title": {"type": "string"},
+		"reason": {"enum": ["busy","rejected"]}
+	},
+	"required": ["name","kind","label","title"]
+}
+

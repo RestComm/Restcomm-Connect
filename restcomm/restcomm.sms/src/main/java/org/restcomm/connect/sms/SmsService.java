@@ -320,7 +320,7 @@ public final class SmsService extends UntypedActor {
             }
         } catch (Exception e) {
             String errMsg = "There is no valid Restcomm SMS Request URL configured for this number : " + phone;
-            sendNotification(errMsg, 12003, "error", true);
+            sendNotification(errMsg, 12003, "warning", true);
         }
         return isFoundHostedApp;
     }

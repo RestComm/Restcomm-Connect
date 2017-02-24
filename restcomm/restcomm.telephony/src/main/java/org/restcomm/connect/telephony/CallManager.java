@@ -701,6 +701,13 @@ public final class CallManager extends UntypedActor {
     }
 
     private void transfer(SipServletRequest request) throws Exception {
+        //Transferor is the one that initates the transfer
+        String transferor = ((SipURI)request.getAddressHeader("Contact").getURI()).getUser();
+        //Transferee is the one that gets transfered
+        String transferee = ((SipURI)request.getAddressHeader("To").getURI()).getUser();
+        //Trasnfer target, where the transferee will be transfered
+        String transferTarget = ((SipURI)request.getAddressHeader("Refer-To").getURI()).getUser();
+
         CallDetailRecord cdr = null;
         CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
 
@@ -708,8 +715,8 @@ public final class CallManager extends UntypedActor {
 
         final SipApplicationSession appSession = request.getApplicationSession();
         //Initates the transfer
-        ActorRef transferor = (ActorRef) appSession.getAttribute(Call.class.getName());
-        if (transferor == null) {
+        ActorRef transferorActor = (ActorRef) appSession.getAttribute(Call.class.getName());
+        if (transferorActor == null) {
             if (logger.isInfoEnabled()) {
                 logger.info("Transferor Call Actor is null, cannot proceed with SIP Refer");
             }
@@ -722,7 +729,7 @@ public final class CallManager extends UntypedActor {
 
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
 
-        Future<Object> infoFuture = (Future<Object>) ask(transferor, new GetCallInfo(), expires);
+        Future<Object> infoFuture = (Future<Object>) ask(transferorActor, new GetCallInfo(), expires);
         CallResponse<CallInfo> infoResponse = (CallResponse<CallInfo>) Await.result(infoFuture,
                 Duration.create(10, TimeUnit.SECONDS));
         CallInfo callInfo = infoResponse.get();
@@ -758,9 +765,25 @@ public final class CallManager extends UntypedActor {
             return;
         }
 
-        IncomingPhoneNumber number = storage.getIncomingPhoneNumbersDao().getIncomingPhoneNumber(cdr.getTo());
+        final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
+        String phone = cdr.getTo();
+        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
+        if(number == null){
+            if (phone.startsWith("+")) {
+                //remove the (+) and check if exists
+                phone= phone.replaceFirst("\\+","");
+                number = numbers.getIncomingPhoneNumber(phone);
+            } else {
+                //Add "+" add check if number exists
+                phone = "+".concat(phone);
+                number = numbers.getIncomingPhoneNumber(phone);
+            }
+        }
+        if (number == null) {
+            number = numbers.getIncomingPhoneNumber("*");
+        }
 
-        if (number.getReferUrl() == null && number.getReferApplicationSid() == null) {
+        if (number == null || (number.getReferUrl() == null && number.getReferApplicationSid() == null)) {
             if (logger.isInfoEnabled()) {
                 logger.info("Refer URL or Refer Applicatio for incoming phone number is null, cannot proceed with SIP Refer");
             }
@@ -771,23 +794,23 @@ public final class CallManager extends UntypedActor {
             return;
         }
 
-        // Get first transferor leg observers
-        Future<Object> future = (Future<Object>) ask(transferor, new GetCallObservers(), expires);
+        // Get first transferorActor leg observers
+        Future<Object> future = (Future<Object>) ask(transferorActor, new GetCallObservers(), expires);
         CallResponse<List<ActorRef>> response = (CallResponse<List<ActorRef>>) Await.result(future,
                 Duration.create(10, TimeUnit.SECONDS));
         List<ActorRef> callObservers = response.get();
 
-        // Get the Voice Interpreter currently handling the transferor
+        // Get the Voice Interpreter currently handling the transferorActor
         ActorRef existingInterpreter = callObservers.iterator().next();
 
-        // Get the outbound leg of this transferor
-        future = (Future<Object>) ask(existingInterpreter, new GetRelatedCall(transferor), expires);
+        // Get the outbound leg of this transferorActor
+        future = (Future<Object>) ask(existingInterpreter, new GetRelatedCall(transferorActor), expires);
         Object answer = (Object) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
 
         //Transferee will be transfered to the transfer target
-        ActorRef transferee = null;
+        ActorRef transfereeActor = null;
         if (answer instanceof ActorRef) {
-            transferee = (ActorRef) answer;
+            transfereeActor = (ActorRef) answer;
         } else {
             if (logger.isInfoEnabled()) {
                 logger.info("Transferee is not a Call actor, probably call is on conference");
@@ -796,7 +819,7 @@ public final class CallManager extends UntypedActor {
             servletResponse.setHeader("Reason", "SIP Refer failed. Transferee is not a Call actor, probably this is a conference");
             servletResponse.setHeader("Event", "refer");
             servletResponse.send();
-            transferor.tell(new Hangup(), null);
+            transferorActor.tell(new Hangup(), null);
             return;
         }
 
@@ -806,19 +829,19 @@ public final class CallManager extends UntypedActor {
 
         if(logger.isInfoEnabled()) {
             logger.info("About to start Call Transfer");
-            logger.info("Transferor Call path: " + transferor.path());
-            if (transferee != null) {
-                logger.info("Transferee Call path: " + transferee.path());
+            logger.info("Transferor Call path: " + transferorActor.path());
+            if (transfereeActor != null) {
+                logger.info("Transferee Call path: " + transfereeActor.path());
             }
-            // Cleanup all observers from both transferor legs
+            // Cleanup all observers from both transferorActor legs
             logger.info("Will tell Call actors to stop observing existing Interpreters");
         }
         if (logger.isDebugEnabled()) {
             logger.debug("Call Transfer account: "+ cdr.getAccountSid() +", new RCML url: "+ number.getReferUrl());
         }
-        transferor.tell(new StopObserving(), self());
-        if (transferee != null) {
-            transferee.tell(new StopObserving(), self());
+        transferorActor.tell(new StopObserving(), self());
+        if (transfereeActor != null) {
+            transfereeActor.tell(new StopObserving(), self());
         }
         if(logger.isInfoEnabled()) {
             logger.info("Existing observers removed from Calls actors");
@@ -847,7 +870,9 @@ public final class CallManager extends UntypedActor {
         }
 
         builder.setMethod((number.getReferMethod() != null && number.getReferMethod().length() > 0) ? number.getReferMethod() : "POST");
-        builder.setReferTarget(((SipURI)request.getAddressHeader("Refer-To").getURI()).getUser());
+        builder.setReferTarget(transferTarget);
+        builder.setTransferor(transferor);
+        builder.setTransferee(transferee);
 
         builder.setFallbackUrl(null);
         builder.setFallbackMethod("POST");
@@ -855,18 +880,18 @@ public final class CallManager extends UntypedActor {
         builder.setStatusCallbackMethod("POST");
         builder.setMonitoring(monitoring);
 
-        // Ask first transferor leg to execute with the new Interpreter
+        // Ask first transferorActor leg to execute with the new Interpreter
         final ActorRef interpreter = builder.build();
         system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), interpreter,
-                new StartInterpreter(transferee), system.dispatcher());
+                new StartInterpreter(transfereeActor), system.dispatcher());
         if(logger.isInfoEnabled()) {
-            logger.info("New Intepreter for transferee call leg: " + interpreter.path() + " started");
+            logger.info("New Intepreter for transfereeActor call leg: " + interpreter.path() + " started");
         }
 
         if(logger.isInfoEnabled()) {
-            logger.info("will hangup transferor: "+transferor.path());
+            logger.info("will hangup transferorActor: "+transferorActor.path());
         }
-        transferor.tell(new Hangup(), null);
+        transferorActor.tell(new Hangup(), null);
     }
 
     /**

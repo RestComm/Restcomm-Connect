@@ -16,6 +16,8 @@ angular.module('Rvd')
 })
 .service('stepPacker', ['$injector', function($injector) {
 	this.unpack = function(source) {
+		if (source.kind == 'control') // TODO do the same for the rest of the steps once directives are created
+		    return source;
 		var unpacked = $injector.invoke([source.kind+'Model', function(model){
 			var newStep = new model().init(source);
 			return newStep;
@@ -541,8 +543,12 @@ angular.module('Rvd')
 }])
 .factory('recordModel', ['rvdModel', function RecordModelFactory(rvdModel) {
 	function RecordModel(name) {
-		if (name)
+		if (name) {
 			this.name = name;
+			this.maxLength = 20;
+		} else {
+		    this.maxLength = undefined;
+		}
 		this.kind = 'record';
 		this.label = 'record';
 		this.title = 'record';
@@ -550,7 +556,7 @@ angular.module('Rvd')
 		this.method = 'GET';
 		this.timeout = undefined;
 		this.finishOnKey = undefined;
-		this.maxLength = undefined;
+		//this.maxLength = undefined;
 		this.transcribe = undefined;
 		this.transcribeCallback = undefined;
 		this.playBeep = undefined;

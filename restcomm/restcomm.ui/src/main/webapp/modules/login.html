@@ -12,8 +12,8 @@
                         <label id="rc-password-label" class="login-field" for="rc-password">Password</label>
                         <input type="password" id="rc-password" name="password" placeholder="Enter your password" class="form-control input-lg" ng-model="credentials.token" required />
                     </div>
-                    <section>
-                        <a id="forgot-password" href="">Forgot password?</a>
+                    <section ng-show="!!PublicConfig.resetPasswordUrl">
+                        <a id="forgot-password" target="_blank" href="{{PublicConfig.resetPasswordUrl}}">Forgot password?</a>
                     </section>
                 </div>
                 <button class="sign-in-btn" type="submit" name="go" class="btn btn-lg btn-block btn-success">Sign in</button>

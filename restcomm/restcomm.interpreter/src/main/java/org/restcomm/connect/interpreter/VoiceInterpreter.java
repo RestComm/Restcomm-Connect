@@ -213,7 +213,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
-                            final String statusCallbackMethod, String referTarget,
+                            final String statusCallbackMethod, final String referTarget, final String transferor, final String transferee,
                             final String emailAddress, final ActorRef callManager,
                             final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring, final String rcml,
                             final boolean asImsUa, final String imsUaLogin, final String imsUaPassword) {
@@ -409,6 +409,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.statusCallback = statusCallback;
         this.statusCallbackMethod = statusCallbackMethod;
         this.referTarget = referTarget;
+        this.transferor = transferor;
+        this.transferee = transferee;
         this.emailAddress = emailAddress;
         this.configuration = configuration;
         this.callManager = callManager;
@@ -855,6 +857,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, initializingCall);
             }
         } else if (Verbs.dial.equals(verb.name())) {
+            Attribute action = verb.attribute("action");
+            if (action != null && dialActionExecuted) {
+                //We have a new Dial verb that contains Dial Action URL again.
+                //We set dialActionExecuted to false in order to execute Dial Action again
+                dialActionExecuted = false;
+            }
             dialRecordAttribute = verb.attribute("record");
             fsm.transition(message, startDialing);
         } else if (Verbs.fax.equals(verb.name())) {
@@ -1432,6 +1440,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         parameters.add(new BasicNameValuePair("CallTimestamp", callInfo.dateCreated().toString()));
         if (referTarget != null) {
             parameters.add(new BasicNameValuePair("ReferTarget", referTarget));
+        }
+        if (transferor != null) {
+            parameters.add(new BasicNameValuePair("Transferor", transferor));
+        }
+        if (transferee != null) {
+            parameters.add(new BasicNameValuePair("Transferee", transferee));
         }
         // logger.info("Type " + callInfo.type());
         SipServletResponse lastResponse = callInfo.lastResponse();

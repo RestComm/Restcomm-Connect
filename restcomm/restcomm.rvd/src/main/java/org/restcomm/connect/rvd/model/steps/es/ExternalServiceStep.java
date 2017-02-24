@@ -1,6 +1,7 @@
 package org.restcomm.connect.rvd.model.steps.es;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -65,6 +66,7 @@ public class ExternalServiceStep extends Step {
     private List<RouteMapping> routeMappings;
     //private String defaultNext;
     private String exceptionNext;
+    private String onTimeout;
 
 
     public ValueExtractor getNextValueExtractor() {
@@ -163,15 +165,16 @@ public class ExternalServiceStep extends Step {
         this.exceptionNext = exceptionNext;
     }
 
+    public String getOnTimeout() {
+        return onTimeout;
+    }
+
     @Override
     public RcmlStep render(Interpreter interpreter) throws InterpreterException {
         // TODO Auto-generated method stub
         return null;
     }
 
-    /**
-     * @returns String - The module name to continue rendering with. null, to continue processing the existing module
-     */
     @Override
     public String process(Interpreter interpreter, HttpServletRequest httpRequest ) throws InterpreterException {
 
@@ -210,7 +213,7 @@ public class ExternalServiceStep extends Step {
 
             // *** Make the request and get a status code and a response. Build a JsonElement from the response  ***
 
-            CloseableHttpClient client = interpreter.getApplicationContext().getHttpClientBuilder().buildHttpClient();
+            CloseableHttpClient client = interpreter.getApplicationContext().getHttpClientBuilder().buildHttpClient(interpreter.getRvdContext().getSettings().getExternalServiceTimeout());
             CloseableHttpResponse response;
             int statusCode;
             JsonElement response_element = null;
@@ -410,7 +413,11 @@ public class ExternalServiceStep extends Step {
             }
 
         } catch (IOException e) {
-            throw new ESRequestException("Error processing ExternalService step " + getName(), e);
+            // it this is a timeout error invoke onTimeout handler
+            if (e instanceof SocketTimeoutException && !RvdUtils.isEmpty(this.onTimeout)) {
+                next = this.onTimeout;
+            } else
+                throw new ESRequestException("Error processing ExternalService step " + getName() + (e.getMessage() != null ? (" - " + e.getMessage()) : ""), e);
         }
         return next;
     }

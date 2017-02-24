@@ -28,6 +28,15 @@ configS3Bucket() {
             sed -e "s|<bucket-region>.*</bucket-region>|<bucket-region>${S3_BUCKET_REGION}</bucket-region>|" $FILE > $FILE.bak;
             mv $FILE.bak $FILE
         fi
+    else
+      sed -e "/<amazon-s3>/ {
+            N; s|<enabled>.*</enabled>|<enabled>false</enabled>|
+            N; s|<bucket-name>.*</bucket-name>|<bucket-name></bucket-name>|
+            N; s|<folder>.*</folder>|<folder>logs</folder>|
+            N; s|<access-key>.*</access-key>|<access-key></access-key>|
+            N; s|<security-key>.*</security-key>|<security-key></security-key>|
+        }" $FILE > $FILE.bak;
+        mv $FILE.bak $FILE
     fi
 }
 

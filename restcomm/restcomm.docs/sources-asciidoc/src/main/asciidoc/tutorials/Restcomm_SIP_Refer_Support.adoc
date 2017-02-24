@@ -1,0 +1,40 @@
+[[sip_refer_support]]
+= Restcomm SIP Refer support
+
+Restcomm now supports RFC5589 flow 6.1 SIP Refer that allows clients to transfer calls .
+
+This new feature enables usage of blind transfer capabilities in desk phones and other SIP clients such as Linphone.
+
+The feature is supported for calls that were created using the Dial verb and was tested with Yealink SIP-T21P E2, Cisco SPA525G and Polycom SoundPoint IP 335 deskphones.
+
+Currently call transfer is not supported on peer to peer calls.
+
+
+== Example
+
+Let’s start with the simple scenario involving three parties: Alice, Bob and Carol. Alice calls Bob and Bob wants to connect Alice to Carol. Bob presses the Blind Transfer button on his desk phone and types Carol’s number. His phone hungs up and Alice should be connected to Carol. There is also a possibility that Carol will not answer timely or will be busy talking with somebody else. In that case, it’s needed to connect Alice to Bob again, and this is easy to implement with existing RestComm features as we’ll see later.
+
+For the described scenario, we will need two incoming phone numbers:
+
+* Number A which is the number that Alice will call to connect to Bob. This number points to RVD application that dials Bob. For this Number we need to set the refer url application
+* Number B will be used by Bob as a transfer target during the call transfer. This Number points to an RVD application that dials Carol.
+
+The number A has additional property called Refer URL which could be either RVD application name or any other URL and is used to point to the refer application that will be executed during the call transfer. So configuration for number A should look like this:
+
+image::images/Restcomm_SIP_Refer.png[Incoming Phone Number SIP Refer URL]
+
+During call transfer, Restcomm will check the SIP Refer request in order to extract the call transfer details and will create the following new parameters:
+
+* Transferor. Transferor is the one that initates the transfer
+* Transferee. Transferee is the one that gets transfered
+* ReferTarget. Is the transfer target
+
+The above new parameters will be part of the HTTP request that Restcomm will do download the RCML and so at RVD you can use the following new core variables:
+
+* $core_Transferor
+* $core_Transferee
+* $core_ReferTarget
+
+For example, the RVD application for number B that will be executed after call transfer can use `<Dial><Number>$core_ReferTarget</Number></Dial>` so what ever Bob dialed during the call transfered it will be in the Dial verb of the Refer application.
+
+Call flow exceptions such as no answer, failed etc, should be handled the usual way, by using Dial Action or verbs after Dial.
