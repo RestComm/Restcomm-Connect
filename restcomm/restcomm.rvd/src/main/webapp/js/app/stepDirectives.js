@@ -266,7 +266,32 @@ angular.module('Rvd')
     }
 
 })
+.directive('recordStep', function () {
+    return {
+        restict: 'E',
+                templateUrl: "templates/directive/recordStep.html",
+        scope: {
+            step: '='
+        },
+        link: function (scope, element, attrs) {
+            var step = scope.step;
+            var stepUi = {}
+            scope.stepUi = stepUi;
+            if ( ! step.finishOnKey )
+                stepUi.fokMode = "anykey";
+            else
+            if (step.finishOnKey == "-1")
+                stepUi.fokMode = "disabled";
+            else
+            // step.finishOnKey != -1 && !!step.finishOnKey
+                stepUi.fokMode = "typekeys";
+
+        }
+    }
+})
 ;
+
+
 
 angular.module('Rvd').directive('conferenceDialNoun', function (RvdConfiguration) {
     return {
