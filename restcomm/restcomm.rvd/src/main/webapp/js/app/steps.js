@@ -552,7 +552,7 @@ angular.module('Rvd')
 		this.kind = 'record';
 		this.label = 'record';
 		this.title = 'record';
-		this.next = null;
+		//this.next = null;
 		this.method = 'GET';
 		this.timeout = undefined;
 		this.finishOnKey = undefined;

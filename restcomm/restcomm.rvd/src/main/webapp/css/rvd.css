@@ -145,7 +145,7 @@ label {
 /* record-step styling */
 
 /* 'fok stands for finish-on-key */
-.fok.row {
+.fok .form-group {
     margin-bottom: 15px;
 }
 .fok .fok-mode.form-group {

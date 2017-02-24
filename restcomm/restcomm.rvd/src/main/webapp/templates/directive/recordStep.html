@@ -1,30 +1,18 @@
-<!--
-  ~ TeleStax, Open Source Cloud Communications
-  ~ Copyright 2011-2014, Telestax Inc and individual contributors
-  ~ by the @authors tag.
-  ~
-  ~ This program is free software: you can redistribute it and/or modify
-  ~ under the terms of the GNU Affero General Public License as
-  ~ published by the Free Software Foundation; either version 3 of
-  ~ the License, or (at your option) any later version.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  ~ GNU Affero General Public License for more details.
-  ~
-  ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>
-  ~
-  -->
-
 <div class="step record-step panel panel-rvdstep">
 	<div class="panel-heading">
-			<step-heading></step-heading>
+		<h4 class="panel-title">
+			<i ng-click='step.iface.isCollapsed = !step.iface.isCollapsed' class="fa rvd-clickable pull-left" ng-class="{'fa-caret-right': step.iface.isCollapsed, 'fa-caret-down': !step.iface.isCollapsed}"></i>
+			<i ng-click='removeStep(step)' class='fa fa-trash-o pull-right rvd-clickable'></i>
+			<div class="rvd-handle">
+				&nbsp;
+				<span  title='{{step.name}}'>{{step.label}}</span>
+				<span ng-show="step.iface.isCollapsed" ng-transclude></span>
+				<i ng-show='step.iface.headWarning' ng-click="step.iface.headWarning = undefined" class="fa fa-warning step-warning-icon rvd-clickable-text" title="{{step.iface.headWarning.title}}"></i>
+			</div>
+		</h4>
 	</div>
 
 	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
-		stepUi: {{stepUi}}
 		<form name='form' novalidate>
 			<div class='row form-group'>
 				<div class='col-md-4'>
@@ -63,7 +51,7 @@
 	
 			<i class="fa fa-cog rvd-clickable" ng-class="{'rvd-active': step.iface.optionsVisible }" ng-click="step.iface.optionsVisible = !step.iface.optionsVisible"></i>
 			<div ng-show='step.iface.optionsVisible'>
-				<div class='row form-group'>
+				<div class='row'>
 					<br/>
 					<div class='col-md-3'>
 						<div class="input-group input-group-sm">
@@ -77,14 +65,12 @@
 							<input ng-model='step.maxLength' auto-clear type='number' class='form-control'/>
 						</div>
 					</div>
-				</div>
-				<div class="row fok">
-					<div class='col-md-9'>
+					<div class='col-md-6 fok'>
 						<div class="form-inline">
 							<div class="form-group fok-mode">
 								<div class="input-group input-group-sm">
 									<span class='input-group-addon help-tooltip ' tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="{{'recordStepFinishTooltip' | translate}}">{{'recordStepFinishLabel' | translate}}</span>
-									<select ng-model="stepUi.fokMode" class="form-control">
+									<select ng-model="stepUi.fokMode" ng-change="fokModeChanged(stepUi.fokMode)" class="form-control">
 										<option value="typekeys">Type some keys...</option>
 										<option value="anykey">Any key</option>
 										<option value="disabled">DISABLED</option>
@@ -95,7 +81,6 @@
 								<input ng-model='step.finishOnKey' auto-clear ng-pattern='/^[0-9\#\*]*$/' type='text' class='form-control input-sm' ng-hide="stepUi.fokMode!='typekeys'" placeholder="#*123..." />
 							</div>
 						</div>
-
 					</div>
 				</div>
 				<div class='row form-group'>
