@@ -19,33 +19,11 @@
  */
 package org.restcomm.connect.telephony.ua;
 
-import static java.lang.Integer.parseInt;
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
-import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
-
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.sip.Address;
-import javax.servlet.sip.Parameterable;
-import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletMessage;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
-
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
@@ -61,11 +39,32 @@ import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.UserRegistration;
 
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.Parameterable;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static java.lang.Integer.parseInt;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
+import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
+import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -306,11 +305,17 @@ public final class UserAgentManager extends UntypedActor {
         }
     }
 
-    private void removeRegistration(final SipServletMessage sipServletMessage) {
+    private void removeRegistration(final SipServletMessage sipServletMessage) throws ServletParseException {
+        removeRegistration(sipServletMessage, false, false);
+    }
+
+    private void removeRegistration(final SipServletMessage sipServletMessage, boolean ignoreOptionsTimeout, boolean locationInContact) throws ServletParseException{
         String user = ((SipURI)sipServletMessage.getTo().getURI()).getUser();
-        String location = ((SipURI)sipServletMessage.getTo().getURI()).toString();
+        String location = locationInContact ? ((SipURI)sipServletMessage.getAddressHeader("Contact").getURI()).toString() :
+            ((SipURI)sipServletMessage.getTo().getURI()).toString();
         if(logger.isDebugEnabled()) {
             logger.debug("Error response for the OPTIONS to: "+location+" will remove registration");
+            logger.debug("ignoring options timeout: "+ignoreOptionsTimeout);
         }
         final RegistrationsDao regDao = storage.getRegistrationsDao();
         List<Registration> registrations = regDao.getRegistrations(user);
@@ -324,7 +329,8 @@ public final class UserAgentManager extends UntypedActor {
                 } catch (ServletParseException e) {}
 
                 Long pingIntervalMillis = new Long(pingInterval * 1000 * 3);
-                boolean optionsTimeout = ((DateTime.now().getMillis() - reg.getDateUpdated().getMillis()) > pingIntervalMillis);
+                boolean optionsTimeout = ignoreOptionsTimeout ? true :
+                    ((DateTime.now().getMillis() - reg.getDateUpdated().getMillis()) > pingIntervalMillis);
 
                 if(logger.isDebugEnabled()) {
                     logger.debug("regLocation: " + regLocation + " reg.getAddressOfRecord(): "+reg.getAddressOfRecord() +
@@ -426,7 +432,7 @@ public final class UserAgentManager extends UntypedActor {
         final SipServletResponse response = (SipServletResponse) message;
         if (response.getApplicationSession().isValid()) {
             try {
-                response.getApplicationSession().invalidate();
+                response.getApplicationSession().setInvalidateWhenReady(true);
             } catch (IllegalStateException ise) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("The session was already invalidated, nothing to do");
@@ -482,11 +488,13 @@ public final class UserAgentManager extends UntypedActor {
         final SipURI uri = (SipURI) contact.getURI();
         final String ip = request.getInitialRemoteAddr();
         final int port = request.getInitialRemotePort();
+
         String transport = (uri.getTransportParam()==null?request.getParameter("transport"):uri.getTransportParam()); //Issue #935, take transport of initial request-uri if contact-uri has no transport parameter
         if (transport == null && !request.getInitialTransport().equalsIgnoreCase("udp")) {
             //Issue1068, if Contact header or RURI doesn't specify transport, check InitialTransport from
             transport = request.getInitialTransport();
         }
+
         boolean isLBPresent = false;
         //Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
         final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
@@ -510,6 +518,17 @@ public final class UserAgentManager extends UntypedActor {
         if (transport != null) {
             buffer.append(";transport=").append(transport);
         }
+
+        Iterator<String> extraParameterNames = uri.getParameterNames();
+        while (extraParameterNames.hasNext()) {
+            String paramName = extraParameterNames.next();
+            String paramValue = uri.getParameter(paramName);
+            buffer.append(";");
+            buffer.append(paramName);
+            buffer.append("=");
+            buffer.append(paramValue);
+        }
+
         final String address = buffer.toString();
         // Prepare the response.
         final SipServletResponse response = request.createResponse(SC_OK);
@@ -568,7 +587,7 @@ public final class UserAgentManager extends UntypedActor {
                         try {
                             request.getApplicationSession().setInvalidateWhenReady(true);
                         } catch (IllegalStateException exception) {
-                            logger.error("Exception while trying to setInvalidateWhenReady(true) for application session, exception: "+exception);
+                            logger.warning("Illegal State: while trying to setInvalidateWhenReady(true) for application session, message: "+exception.getMessage());
                         }
                     }
                 } else {
@@ -684,8 +703,8 @@ public final class UserAgentManager extends UntypedActor {
             logger.info("incoming leg state: "+incomingLegResposne.getSession().getState());
 
         }
-        if (response.getStatus()>400) {
-            removeRegistration(response);
+        if (response.getStatus()>=400 && response.getStatus() != SC_UNAUTHORIZED && response.getStatus() != SC_PROXY_AUTHENTICATION_REQUIRED) {
+            removeRegistration(incomingRequest, true, true);
         } else if (response.getStatus()==200) {
             String transport = (uri.getTransportParam()==null?incomingRequest.getParameter("transport"):uri.getTransportParam()); //Issue #935, take transport of initial request-uri if contact-uri has no transport parameter
             if (transport == null && !incomingRequest.getInitialTransport().equalsIgnoreCase("udp")) {
@@ -779,4 +798,21 @@ public final class UserAgentManager extends UntypedActor {
         sipURI.setHost(outgoingRequest.getLocalAddr());
     }
 
+    @Override
+    public void postStop() {
+        try {
+            if (logger.isInfoEnabled()) {
+                logger.info("UserAgentManager actor at postStop, path: "+self().path()+", isTerminated: "+self().isTerminated()+", sender: "+sender());
+
+                if (storage != null){
+                    logger.info("Number of current Registrations:" + storage.getRegistrationsDao().getRegistrations().size());
+                }
+            }
+        } catch (Exception exception) {
+            if(logger.isInfoEnabled()) {
+                logger.info("Exception during UserAgentManager postStop");
+            }
+        }
+        super.postStop();
+    }
 }

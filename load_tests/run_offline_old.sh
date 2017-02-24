@@ -30,7 +30,7 @@ export CALL_RATE=$5
 
 export TEST_NAME=$6
 
-export VOICERSS=c58e134224704b0182f2e2eaef59f8d8
+export VOICERSS=
 #export VOICERSS=
 export RESTCOMM_NEW_PASSWORD='NewPassword'
 

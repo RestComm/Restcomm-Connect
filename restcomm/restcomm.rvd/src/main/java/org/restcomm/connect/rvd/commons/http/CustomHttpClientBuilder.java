@@ -6,6 +6,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 
 
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
@@ -32,42 +33,48 @@ public class CustomHttpClientBuilder {
     }
 
     // returns an apache http client
+    public CloseableHttpClient buildHttpClient(Integer timeout) {
+        if ( sslMode == SslMode.strict ) {
+            return buildStrictClient(timeout);
+        }
+        else
+            return buildAllowallClient(timeout);
+    }
+
     public CloseableHttpClient buildHttpClient() {
-        if ( sslMode == SslMode.strict ) {
-            return buildStrictClient();
-        }
-        else
-            return buildAllowallClient();
+        return buildHttpClient(null);
     }
 
-    // returns a jersey client - experimental
-    /*
-    public static Client buildJerseyHttpClient() {
-        SslMode sslMode = RvdConfiguration.getInstance().getSslMode();
-        if ( sslMode == SslMode.strict ) {
-            return buildStrictJerseyClient();
+    private CloseableHttpClient buildStrictClient(Integer timeout) {
+        // set the timeout
+        RequestConfig.Builder configBuilder = RequestConfig.custom();
+        if (timeout != null) {
+            configBuilder.setConnectTimeout(timeout).setConnectionRequestTimeout(timeout).setSocketTimeout(timeout);
         }
-        else
-            return buildAllowallJerseyClient();
-    }
-    */
 
-    private CloseableHttpClient buildStrictClient() {
         String[] protocols = getSSLPrototocolsFromSystemProperties();
-        if (protocols == null)
-            return HttpClients.createDefault();
+        if (protocols == null) {
+            return HttpClients.custom().setDefaultRequestConfig(configBuilder.build()).build();
+        }
 
+        // ssl properties
         SSLContext sslcontext = SSLContexts.createDefault();
         // Allow TLSv1 protocol only
         SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext, protocols, null, new DefaultHostnameVerifier());
-        CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
 
+        CloseableHttpClient httpclient = HttpClients.custom().setDefaultRequestConfig(configBuilder.build()).setSSLSocketFactory(sslsf).build();
         return httpclient;
     }
 
-    private CloseableHttpClient buildAllowallClient() {
+    private CloseableHttpClient buildAllowallClient(Integer timeout) {
         String[] protocols = getSSLPrototocolsFromSystemProperties();
-        //SSLContext sslcontext = SSLContexts.createDefault();
+
+        // set the timeout
+        RequestConfig.Builder configBuilder = RequestConfig.custom();
+        if (timeout != null) {
+            configBuilder.setConnectTimeout(timeout).setConnectionRequestTimeout(timeout).setSocketTimeout(timeout);
+        }
+        // ssl properties
         SSLContext sslcontext;
         try {
             sslcontext = SSLContexts.custom().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build();
@@ -76,8 +83,8 @@ public class CustomHttpClientBuilder {
         }
         // Allow TLSv1 protocol only
         SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext, protocols, null, new NoopHostnameVerifier());
-        CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
 
+        CloseableHttpClient httpclient = HttpClients.custom().setDefaultRequestConfig(configBuilder.build()).setSSLSocketFactory(sslsf).build();
         return httpclient;
     }
 

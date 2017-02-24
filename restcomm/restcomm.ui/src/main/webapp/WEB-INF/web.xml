@@ -4,13 +4,14 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
     <display-name>RestComm</display-name>
-<!--security-constraint>
-<web-resource-collection>
-    <web-resource-name>RestComm</web-resource-name>
-    <url-pattern>/*</url-pattern>
-</web-resource-collection>
-<user-data-constraint>
-    <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-</user-data-constraint>
-</security-constraint-->
+    
+    <!--security-constraint>
+    <web-resource-collection>
+        <web-resource-name>RestComm</web-resource-name>
+        <url-pattern>/*</url-pattern>
+    </web-resource-collection>
+    <user-data-constraint>
+        <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+    </user-data-constraint>
+    </security-constraint-->
 </web-app>

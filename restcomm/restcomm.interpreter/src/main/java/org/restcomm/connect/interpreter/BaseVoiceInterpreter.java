@@ -231,6 +231,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     URI referUrl;
     String referMethod;
     String referTarget;
+    String transferor;
+    String transferee;
     URI statusCallback;
     String statusCallbackMethod;
     String emailAddress;
@@ -1652,11 +1654,13 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (attribute != null) {
                 finishOnKey = attribute.value();
                 if (finishOnKey != null && !finishOnKey.isEmpty()) {
-                    if (!PATTERN.matcher(finishOnKey).matches()) {
-                        final Notification notification = notification(WARNING_NOTIFICATION, 13613, finishOnKey
-                                + " is not a valid finishOnKey value");
-                        notifications.addNotification(notification);
-                        finishOnKey = "1234567890*#";
+                    if (!finishOnKey.equals("-1")) {
+                        if (!PATTERN.matcher(finishOnKey).matches()) {
+                            final Notification notification = notification(WARNING_NOTIFICATION, 13613, finishOnKey
+                                    + " is not a valid finishOnKey value");
+                            notifications.addNotification(notification);
+                            finishOnKey = "1234567890*#";
+                        }
                     }
                 } else {
                     finishOnKey = "1234567890*#";

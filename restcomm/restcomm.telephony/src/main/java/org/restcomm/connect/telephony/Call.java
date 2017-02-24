@@ -1117,7 +1117,12 @@ public final class Call extends UntypedActor {
 
             // Notify the observers.
             external = CallStateChanged.State.FAILED;
-            final CallStateChanged event = new CallStateChanged(external, lastResponse.getStatus());
+            CallStateChanged event = null;
+            if (lastResponse != null) {
+                event = new CallStateChanged(external, lastResponse.getStatus());
+            } else {
+                event = new CallStateChanged(external);
+            }
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
@@ -1498,7 +1503,7 @@ public final class Call extends UntypedActor {
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
-        if (is(inProgress) || is(waitingForAnswer)) {
+        if (is(inProgress)) {
             // Forward to media server controller
             this.msController.tell(message, sender);
         }

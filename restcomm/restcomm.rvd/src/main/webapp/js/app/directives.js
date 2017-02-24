@@ -7,6 +7,14 @@ angular.module('Rvd').directive('stepHeading', function () {
 	}
 });
 
+angular.module('Rvd').directive('directiveStepHeading', function () {
+	return {
+		restrict: 'E',
+		transclude:true,
+		templateUrl: 'templates/steps/directiveStepHeading.html'
+	}
+});
+
 /*
  * Usage:
  * 
@@ -320,4 +328,36 @@ angular.module('Rvd').directive('rvdDropdown', function() {
 		}
 	}
 });
+
+angular.module('Rvd').directive('vardef', function () {
+    return {
+        restrict: "E",
+        scope: {
+            varExpression: '=variable',
+            varScope: '=variableScope'
+        },
+        templateUrl: "templates/directive/vardef.html",
+        link: function (scope) {
+            scope.setVarScope = function(varscope) {
+                scope.varScope = varscope;
+            }
+        }
+    }
+})
+.directive('typeChooser', function () {
+    return {
+        restroct: "E",
+        scope: {
+            type: '=model'
+        },
+        templateUrl: "templates/directive/typeChooser.html",
+        link: function (scope) {
+            scope.setType = function (newtype) {
+                scope.type = newtype;
+            }
+        }
+    }
+})
+;
+
 
