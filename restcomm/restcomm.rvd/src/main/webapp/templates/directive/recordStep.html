@@ -1,0 +1,126 @@
+<!--
+  ~ TeleStax, Open Source Cloud Communications
+  ~ Copyright 2011-2014, Telestax Inc and individual contributors
+  ~ by the @authors tag.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation; either version 3 of
+  ~ the License, or (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>
+  ~
+  -->
+
+<div class="step record-step panel panel-rvdstep">
+	<div class="panel-heading">
+			<step-heading></step-heading>
+	</div>
+
+	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
+		stepUi: {{stepUi}}
+		<form name='form' novalidate>
+			<div class='row form-group'>
+				<div class='col-md-4'>
+					<div class="input-group">
+						<span class="input-group-addon help-tooltip"  tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="{{'recordStepContinueToTooltip' | translate}}">{{'recordStepContinueToLabel' | translate}}</span>
+						<select sync-model name='next' ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control" required>
+							<option value=""></option>
+						</select>
+						<!-- 
+						<span class='input-group-addon'>method</span>
+						<select name="method" ng-model='step.method'  class="form-control">
+							<option value=""></option>
+							<option value="GET">GET</option>
+							<option value="POST">POST</option>
+						</select>
+						 -->
+					</div>
+					<div class="validation-error" ng-show="form.next.$invalid">{{'recordStepChooseTargetLabel' | translate}}</div>
+				</div>
+				<div class='col-md-3'>
+					<div class="input-group">
+						<span class="input-group-addon">{{'recordStepPlayBeepLabel' | translate}}</span>
+						<!-- 
+			            <span class="input-group-addon">
+							<input ng-model='step.playBeep' type="checkbox">
+						</span>
+						 -->
+						<select ng-model='step.playBeep' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
+								<option value=''></option>
+						</select>
+					</div>
+					
+					
+				</div>
+			</div>
+	
+			<i class="fa fa-cog rvd-clickable" ng-class="{'rvd-active': step.iface.optionsVisible }" ng-click="step.iface.optionsVisible = !step.iface.optionsVisible"></i>
+			<div ng-show='step.iface.optionsVisible'>
+				<div class='row form-group'>
+					<br/>
+					<div class='col-md-3'>
+						<div class="input-group input-group-sm">
+							<span class='input-group-addon help-tooltip' tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="{{'recordStepTimeoutTooltip' | translate}}">{{'recordStepTimeoutLabel' | translate}}</span>
+							<input ng-model='step.timeout' auto-clear type='number' class='form-control'/>
+						</div>
+					</div>
+					<div class='col-md-3'>
+						<div class="input-group input-group-sm">
+							<span class='input-group-addon help-tooltip' tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="{{'recordStepMaxTooltip' | translate}}">{{'recordStepMaxLabel' | translate}}</span>
+							<input ng-model='step.maxLength' auto-clear type='number' class='form-control'/>
+						</div>
+					</div>
+				</div>
+				<div class="row fok">
+					<div class='col-md-9'>
+						<div class="form-inline">
+							<div class="form-group fok-mode">
+								<div class="input-group input-group-sm">
+									<span class='input-group-addon help-tooltip ' tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="{{'recordStepFinishTooltip' | translate}}">{{'recordStepFinishLabel' | translate}}</span>
+									<select ng-model="stepUi.fokMode" class="form-control">
+										<option value="typekeys">Type some keys...</option>
+										<option value="anykey">Any key</option>
+										<option value="disabled">DISABLED</option>
+									</select>
+								</div>
+							</div>
+							<div class="form-group">
+								<input ng-model='step.finishOnKey' auto-clear ng-pattern='/^[0-9\#\*]*$/' type='text' class='form-control input-sm' ng-hide="stepUi.fokMode!='typekeys'" placeholder="#*123..." />
+							</div>
+						</div>
+
+					</div>
+				</div>
+				<div class='row form-group'>
+					<div class='col-md-3'>
+						<div class="input-group input-group-sm">
+							<span class="input-group-addon" tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="{{'recordStepTranscribeTooltip' | translate}}">{{'recordStepTranscribeLabel' | translate}}</span>
+				            <select ng-model='step.transcribe' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
+								<option value=''></option>
+							</select>
+							<!-- 
+				            <span class="input-group-addon">
+								<input ng-model='step.transcribe' auto-clear type="checkbox">
+								
+							</span>
+							-->
+						</div>				
+					</div>
+					<div class='col-md-6'>
+						<div class="input-group input-group-sm">
+							<span class='input-group-addon' tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="{{'recordStepTranscribeCallbackTooltip' | translate}}">{{'recordStepTranscribeCallbackLabel' | translate}}</span>
+							<input ng-model='step.transcribeCallback' type='text' auto-clear class='form-control' placeholder="{{'recordStepTranscribeCallbackInputPlaceholder' | translate}}"/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
