@@ -142,6 +142,16 @@ label {
     margin-left: 5px;
 }
 
+/* record-step styling */
+
+/* 'fok stands for finish-on-key */
+.fok .form-group {
+    margin-bottom: 15px;
+}
+.fok .fok-mode.form-group {
+    width: 50%;
+}
+
 
 /* variable definition */
 
