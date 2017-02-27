@@ -69,7 +69,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     // Finite State Machine
-    protected final FiniteStateMachine fsm;
+    private final FiniteStateMachine fsm;
     protected final State uninitialized;
     protected final State acquiringConferenceInfo;
     protected final State creatingMediaGroup;
@@ -82,11 +82,8 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
     protected final ActorRef localMediaGateway;
     protected ActorRef mediaGroup;
-    protected String masterIVREndpointIdName;
     protected MediaSession localMediaSession;
     protected ActorRef localConfernceEndpoint;
-    protected ActorRef connectionWithLocalMS;
-    protected ActorRef connectionWithMasterMS;
 
     protected final DaoManager storage;
     protected final Configuration configuration;
@@ -103,8 +100,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
     protected final List<ActorRef> observers;
     protected final ActorRef mrb;
 
-    public ConferenceMediaResourceControllerGeneric(final String localMsId, ActorRef localMediaGateway, final Configuration configuration, final DaoManager storage, final ActorRef mrb){
-    //public ConferenceMediaResourceController(final String localMsId, final Map<String, ActorRef> gateways, final Configuration configuration, final DaoManager storage){
+    public ConferenceMediaResourceControllerGeneric(ActorRef localMediaGateway, final Configuration configuration, final DaoManager storage, final ActorRef mrb){
         super();
         final ActorRef source = self();
         // Initialize the states for the FSM.
@@ -132,9 +128,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
         this.storage = storage;
         this.configuration = configuration;
-        logger.info("localMsId: "+localMsId);
         this.localMediaGateway = localMediaGateway;
-        masterIVREndpointIdName = null;
 
         // Runtime media operations
         this.playing = Boolean.FALSE;
@@ -364,7 +358,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
                 @Override
                 public UntypedActor create() throws Exception {
-                    return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint, masterIVREndpointIdName);
+                    return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint);
                 }
             }));
         }
@@ -471,15 +465,6 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
     }
 
     protected void cleanup() {
-        if (connectionWithLocalMS != null) {
-            context().stop(connectionWithLocalMS);
-            connectionWithLocalMS = null;
-        }
-
-        if (connectionWithMasterMS != null) {
-            context().stop(connectionWithMasterMS);
-            connectionWithMasterMS = null;
-        }
     }
     /*
      * Database Utility Functions
