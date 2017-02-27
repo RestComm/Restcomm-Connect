@@ -474,7 +474,9 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         observers.clear();
 
         // Terminate actor
-        getContext().stop(self());
+        if(self() != null && !self().isTerminated()){
+            getContext().stop(self());
+        }
     }
 
     protected void cleanup() {
