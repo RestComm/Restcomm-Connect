@@ -196,7 +196,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
 
             @Override
             public UntypedActor create() throws Exception {
-                return new ConferenceMediaResourceControllerGeneric(localMsId, localMediaGateway, configuration, storage, self());
+                return new ConferenceMediaResourceControllerGeneric(localMediaGateway, configuration, storage, self());
             }
         }));
     }
