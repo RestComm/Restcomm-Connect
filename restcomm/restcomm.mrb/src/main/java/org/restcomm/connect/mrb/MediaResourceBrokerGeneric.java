@@ -281,7 +281,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
                         logger.info("A conference with same name is running. According to database record. given SID is: "+sid);
                 }else{
                     // this is first record of this conference on all instances of
-                	addNewConferenceRecord(accountSid, callRecord, friendlyName);
+                    addNewConferenceRecord(accountSid, callRecord, friendlyName);
 
                     //getting CDR again as it is a conditional insert(select if exists or insert) to handle concurrency (incase another participant joins on another instance at very same time)
                     cdr = dao.getConferenceDetailRecords(filter).get(0);
@@ -299,12 +299,12 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
 
     /**
      * addNewConferenceRecord
-     * @param accountSid 
-     * @param callRecord 
-     * @param friendlyName 
+     * @param accountSid
+     * @param callRecord
+     * @param friendlyName
      */
     protected void addNewConferenceRecord(String accountSid, CallDetailRecord callRecord, String friendlyName){
-    	final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
+        final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
         Sid sid = Sid.generate(Sid.Type.CONFERENCE);
         conferenceBuilder.setSid(sid);
         conferenceBuilder.setDateCreated(DateTime.now());
