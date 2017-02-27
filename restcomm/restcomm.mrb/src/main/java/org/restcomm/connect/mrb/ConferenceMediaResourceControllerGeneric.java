@@ -32,6 +32,7 @@ import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.fsm.TransitionNotFoundException;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
@@ -168,28 +169,40 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
             logger.info(" ********** ConferenceMediaResourceController " + self().path() + " Current State: \"" + state.toString());
         }
 
-        if (Observe.class.equals(klass)) {
-            onObserve((Observe) message, self, sender);
-        } else if (StopObserving.class.equals(klass)) {
-            onStopObserving((StopObserving) message, self, sender);
-        } else if (StartConferenceMediaResourceController.class.equals(klass)){
-            onStartConferenceMediaResourceController((StartConferenceMediaResourceController) message, self, sender);
-        } else if (MediaGatewayResponse.class.equals(klass)) {
-            onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
-        } else if (MediaGroupStateChanged.class.equals(klass)) {
-            onMediaGroupStateChanged((MediaGroupStateChanged) message, self, sender);
-        } else if (StopMediaGroup.class.equals(klass)) {
-            onStopMediaGroup((StopMediaGroup) message, self, sender);
-        } else if (Play.class.equals(klass)) {
-            onPlay((Play) message, self, sender);
-        } else if(MediaGroupResponse.class.equals(klass)) {
-            onMediaGroupResponse((MediaGroupResponse<String>) message, self, sender);
-        } else if (StartRecording.class.equals(klass)) {
-            onStartRecording((StartRecording) message, self, sender);
-        } else if (StopRecording.class.equals(klass)) {
-            onStopRecording((StopRecording) message, self, sender);
-        } else if (StopConferenceMediaResourceController.class.equals(klass)) {
-            onStopConferenceMediaResourceController((StopConferenceMediaResourceController) message, self, sender);
+        try{
+            if (Observe.class.equals(klass)) {
+                onObserve((Observe) message, self, sender);
+            } else if (StopObserving.class.equals(klass)) {
+                onStopObserving((StopObserving) message, self, sender);
+            } else if (StartConferenceMediaResourceController.class.equals(klass)){
+                onStartConferenceMediaResourceController((StartConferenceMediaResourceController) message, self, sender);
+            } else if (MediaGatewayResponse.class.equals(klass)) {
+                onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
+            } else if (MediaGroupStateChanged.class.equals(klass)) {
+                onMediaGroupStateChanged((MediaGroupStateChanged) message, self, sender);
+            } else if (StopMediaGroup.class.equals(klass)) {
+                onStopMediaGroup((StopMediaGroup) message, self, sender);
+            } else if (Play.class.equals(klass)) {
+                onPlay((Play) message, self, sender);
+            } else if(MediaGroupResponse.class.equals(klass)) {
+                onMediaGroupResponse((MediaGroupResponse<String>) message, self, sender);
+            } else if (StartRecording.class.equals(klass)) {
+                onStartRecording((StartRecording) message, self, sender);
+            } else if (StopRecording.class.equals(klass)) {
+                onStopRecording((StopRecording) message, self, sender);
+            } else if (StopConferenceMediaResourceController.class.equals(klass)) {
+                onStopConferenceMediaResourceController((StopConferenceMediaResourceController) message, self, sender);
+            }
+        }catch(Exception e){
+            logger.error("Exception in onReceive of CMRC: {}", e);
+            try{
+                fsm.transition(message, failed);
+            }catch(TransitionNotFoundException tfe){
+                /* some state might not allow direct transition to failed state:
+                 * in that case catch the TransitionFailedException and print error.
+                 */
+                logger.error("CMRC failed at a state which does not allow direct transition to FAILED state. Current state is: " + state.toString());
+            }
         }
     }
 
