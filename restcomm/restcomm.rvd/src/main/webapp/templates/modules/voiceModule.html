@@ -1,4 +1,4 @@
-<div rvd-module>	
+<div rvd-module>
 	<div basic-sortable list-model="node.steps"  class='steps step-list' item-added='addStep'>
 		<div class='step' ng-repeat='step in node.steps'>
 			<ng-include src="'templates/steps/' + step.kind + 'Step.html'"></ng-include>
