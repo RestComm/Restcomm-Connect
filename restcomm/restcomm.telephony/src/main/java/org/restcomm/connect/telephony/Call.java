@@ -383,16 +383,22 @@ public final class Call extends UntypedActor {
     }
 
     private CallResponse<CallInfo> info() {
-        final String from = this.from.getUser();
-        String to = null;
-        if(this.to.isSipURI()){
-            to =  ((SipURI)this.to).getUser();
+        try {
+            final String from = this.from.getUser();
+            String to = null;
+            if (this.to.isSipURI()) {
+                to = ((SipURI) this.to).getUser();
+            } else {
+                to = ((TelURL) this.to).getPhoneNumber();
+            }
+            final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime);
+            return new CallResponse<CallInfo>(info);
+        } catch (Exception e) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Problem during preparing call info, exception {}",e);
+            }
         }
-        else{
-            to =  ((TelURL)this.to).getPhoneNumber();
-        }
-        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime);
-        return new CallResponse<CallInfo>(info);
+        return null;
     }
 
     private void forwarding(final Object message) {
@@ -1794,7 +1800,8 @@ public final class Call extends UntypedActor {
 //                } else {
 //                    fsm.transition(message, failingBusy);
 //                }
-                fsm.transition(message, failingBusy);
+                if (!is(failingNoAnswer))
+                    fsm.transition(message, failingBusy);
                 break;
             }
             case SipServletResponse.SC_UNAUTHORIZED:
