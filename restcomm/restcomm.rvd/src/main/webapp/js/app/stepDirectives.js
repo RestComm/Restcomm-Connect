@@ -266,7 +266,61 @@ angular.module('Rvd')
     }
 
 })
+.directive('recordStep', function (nodeRegistry) {
+    return {
+        restict: 'E',
+                templateUrl: "templates/directive/recordStep.html",
+        scope: {
+            step: '='
+        },
+        link: function (scope, element, attrs) {
+            var step = scope.step;
+            var stepUi = {}
+            scope.stepUi = stepUi;
+            if ( ! step.finishOnKey )
+                stepUi.fokMode = "anykey";
+            else
+            if (step.finishOnKey == "-1")
+                stepUi.fokMode = "disabled";
+            else
+            // step.finishOnKey != -1 && !!step.finishOnKey
+                stepUi.fokMode = "typekeys";
+
+            scope.fokModeChanged = function(fokMode) {
+                console.log("fokModeChanged");
+                if (fokMode == "anykey")
+                    delete step.finishOnKey;
+                else
+                if (fokMode == "disabled")
+                    step.finishOnKey = "-1";
+                else
+                if (fokMode == "typekeys")
+                    delete step.finishOnKey;
+            }
+
+            scope.removeStep = function (step) {
+                scope.$emit("step-removed", step);
+            }
+            scope.$on("clear-step-warnings", function () {
+                step.iface.showWarning = false; // TODO remove the 'showWarning' attribute and use 'headWarning' object instead
+                delete step.iface.headWarning;
+            })
+            scope.$on("notify-step", function (event, args) {
+                if (args.target == step.name) { // does the event refer to this step
+                    if (args.type == "validation-error") {
+                        step.iface.showWarning = true;
+                        step.iface.headWarning = { type: "warning", title: args.data.summary};
+                    }
+                }
+            });
+
+            scope.getAllTargets = nodeRegistry.getNodes;
+        }
+    }
+})
 ;
+
+
 
 angular.module('Rvd').directive('conferenceDialNoun', function (RvdConfiguration) {
     return {
