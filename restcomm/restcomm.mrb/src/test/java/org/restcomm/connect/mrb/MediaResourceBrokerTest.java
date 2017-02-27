@@ -4,6 +4,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
+import java.util.UUID;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.log4j.Logger;
@@ -30,6 +31,8 @@ public class MediaResourceBrokerTest extends MediaResourceBrokerTestUtil{
 
 	private static final String EXISTING_CALL_SID="CA01a09068a1f348269b6670ef599a6e57";
 	private static final String NON_EXISTING_CALL_SID="CA00000000000000000000000000000000";
+	
+	private static final String RANDOM_CONFERENCE_NAME = UUID.randomUUID().toString().replace("-", "");
 	@Before
     public void before() throws UnknownHostException, ConfigurationException, MalformedURLException {
     	if(logger.isDebugEnabled())
@@ -111,7 +114,7 @@ public class MediaResourceBrokerTest extends MediaResourceBrokerTestUtil{
                 final ActorRef tester = getRef();
             	if(logger.isDebugEnabled())
             		logger.debug("testGetMediaGatewayForAConference");
-            	mediaResourceBrokerNode1.tell(new GetMediaGateway(new Sid(EXISTING_CALL_SID), CONFERENCE_FRIENDLY_NAME_1, null), tester);
+            	mediaResourceBrokerNode1.tell(new GetMediaGateway(new Sid(EXISTING_CALL_SID), ACCOUNT_SID_1+":"+RANDOM_CONFERENCE_NAME, null), tester);
             	MediaResourceBrokerResponse<MediaGatewayForConference> mrbResponse = expectMsgClass(MediaResourceBrokerResponse.class);
             	assertTrue(mrbResponse != null);
             	MediaGatewayForConference mgfc = mrbResponse.get();
@@ -124,10 +127,14 @@ public class MediaResourceBrokerTest extends MediaResourceBrokerTestUtil{
             	assertTrue(mgfc.conferenceSid() != null && !mgfc.isThisMaster());
 
             	ConferenceDetailRecord cdr = daoManager.getConferenceDetailRecordsDao().getConferenceDetailRecord(mgfc.conferenceSid());
+            	if(logger.isDebugEnabled())
+            		logger.debug("Conference cdr: "+cdr.getFriendlyName());
             	//mrb must generate a conference cdr
             	assertTrue(cdr != null);
             	// check status
             	assertTrue(cdr.getStatus().equals(ConferenceStateChanged.State.RUNNING_INITIALIZING+""));
+            	// check friendly name
+            	assertTrue(cdr.getFriendlyName().equals(RANDOM_CONFERENCE_NAME));
             }};
 	}
 }
