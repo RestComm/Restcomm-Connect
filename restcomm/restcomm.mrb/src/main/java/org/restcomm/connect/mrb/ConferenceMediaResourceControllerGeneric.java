@@ -54,6 +54,7 @@ import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StopRecording;
 import org.restcomm.connect.mscontrol.mms.MgcpMediaGroup;
+import org.restcomm.connect.telephony.api.ConferenceStateChanged;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -395,7 +396,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
             if(logger.isDebugEnabled())
                 logger.debug("CMRC is in pre ACTIVE NOW...");
             // later Conference will update the status as per informed by VI as per RCML
-            updateConferenceStatus("RUNNING_MODERATOR_ABSENT");
+            updateConferenceStatus(ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT+"");
             broadcast(new ConferenceMediaResourceControllerStateChanged(ConferenceMediaResourceControllerStateChanged.MediaServerControllerState.ACTIVE, cdr.getStatus()));
             fsm.transition(message, active);
         }
@@ -424,7 +425,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         public void execute(Object message) throws Exception {
             if(logger.isInfoEnabled())
                 logger.info("CMRC is STOPPING NOW...");
-            updateConferenceStatus("COMPLETED");
+            updateConferenceStatus(ConferenceStateChanged.State.COMPLETED+"");
             // Destroy Media Group
             mediaGroup.tell(new StopMediaGroup(), super.source);
         }
