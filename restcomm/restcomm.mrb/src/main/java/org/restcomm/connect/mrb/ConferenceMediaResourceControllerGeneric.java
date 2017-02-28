@@ -489,12 +489,10 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
     protected void updateConferenceStatus(String status){
         if(cdr != null){
-        	logger.info("updateConferenceStatus before in");
             final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
             cdr = dao.getConferenceDetailRecord(conferenceSid);
             cdr = cdr.setStatus(status);
             dao.updateConferenceDetailRecordStatus(cdr);
-        	logger.info("updateConferenceStatus after in");
         }
     }
 }
