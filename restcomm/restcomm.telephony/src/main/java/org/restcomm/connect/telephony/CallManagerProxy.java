@@ -19,7 +19,20 @@
  */
 package org.restcomm.connect.telephony;
 
-import java.io.IOException;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
+import org.restcomm.connect.commons.faulttolerance.RestcommSupervisor;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
+import org.restcomm.connect.sms.SmsService;
+import org.restcomm.connect.ussd.telephony.UssdCallManager;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -35,19 +48,10 @@ import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.log4j.Logger;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
-import org.restcomm.connect.sms.SmsService;
-import org.restcomm.connect.ussd.telephony.UssdCallManager;
-
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
+import static akka.pattern.Patterns.ask;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -61,6 +65,7 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
     private boolean sendTryingForInitalRequests = false;
 
     private ActorSystem system;
+    private ActorRef supervisor;
     private ActorRef manager;
     private ActorRef ussdManager;
     private ServletContext context;
@@ -120,48 +125,74 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
     private ActorRef manager(final Configuration configuration, final ServletContext context,
             final MediaServerControllerFactory msControllerfactory, final ActorRef conferences, final ActorRef bridges,
             final ActorRef sms, final SipFactory factory, final DaoManager storage) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
-                return new CallManager(configuration, context, system, msControllerfactory, conferences, bridges, sms, factory, storage);
+                return new CallManager(configuration, context, system, supervisor, msControllerfactory, conferences, bridges, sms, factory, storage);
             }
-        }));
+        });
+        ActorRef manager = null;
+        try {
+            manager = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
+        return manager;
     }
 
     private ActorRef ussdManager(final Configuration configuration, final ServletContext context, final ActorRef conferences,
             final ActorRef bridges, final ActorRef sms, final SipFactory factory, final DaoManager storage) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
 
+        final Props props = new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
             @Override
             public UntypedActor create() throws Exception {
                 return new UssdCallManager(configuration, context, system, conferences, sms, factory, storage);
             }
-        }));
+        });
+        ActorRef ussdManager = null;
+        try {
+            ussdManager = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
+        return ussdManager;
     }
 
     private ActorRef conferences(final MediaServerControllerFactory factory, final DaoManager storage) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
 
+        final Props props = new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
             @Override
             public UntypedActor create() throws Exception {
                 return new ConferenceCenter(factory, storage);
             }
-        }));
+        });
+        ActorRef conferenceCenter = null;
+        try {
+            conferenceCenter = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
+        return conferenceCenter;
     }
 
     private ActorRef bridges(final MediaServerControllerFactory factory) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
                 return new BridgeManager(factory);
             }
-        }));
+        });
+        ActorRef bridges = null;
+        try {
+            bridges = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
+        return bridges;
     }
 
     private boolean isUssdMessage(SipServletMessage message) {
@@ -191,6 +222,7 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
             configuration = (Configuration) context.getAttribute(Configuration.class.getName());
             sendTryingForInitalRequests = Boolean.parseBoolean(configuration.subset("runtime-settings").getString("send-trying-for-initial-requests", "false"));
             system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+            supervisor = (ActorRef) context.getAttribute(RestcommSupervisor.class.getName());
             final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
             final MediaServerControllerFactory mscontrolFactory = (MediaServerControllerFactory) context
                     .getAttribute(MediaServerControllerFactory.class.getName());

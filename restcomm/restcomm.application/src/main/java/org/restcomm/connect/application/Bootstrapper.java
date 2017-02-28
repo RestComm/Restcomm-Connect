@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import javax.media.mscontrol.MsControlException;
 import javax.media.mscontrol.MsControlFactory;
@@ -25,6 +26,7 @@ import org.mobicents.servlet.sip.SipConnector;
 import org.restcomm.connect.application.config.ConfigurationStringLookup;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.faulttolerance.RestcommSupervisor;
 import org.restcomm.connect.commons.loader.ObjectFactory;
 import org.restcomm.connect.commons.loader.ObjectInstantiationException;
 import org.restcomm.connect.dao.DaoManager;
@@ -47,6 +49,10 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
+
+import static akka.pattern.Patterns.ask;
 
 /**
  *
@@ -59,6 +65,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     private static final Logger logger = Logger.getLogger(Bootstrapper.class);
 
     private ActorSystem system;
+    private ActorRef supervisor;
 
     public Bootstrapper() {
         super();
@@ -81,7 +88,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 try {
                     settings = configuration.subset("media-server-manager");
                     ActorRef mrb = mediaResourceBroker(settings, storage, loader);
-                    factory = new MmsControllerFactory(this.system, mrb);
+                    factory = new MmsControllerFactory(supervisor, mrb);
                 } catch (UnknownHostException e) {
                     throw new ServletException(e);
                 }
@@ -101,7 +108,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                     // Create JSR 309 factory
                     MsControlFactory msControlFactory = driver.getFactory(properties);
                     MediaServerInfo mediaServerInfo = mediaServerInfo(settings);
-                    factory = new Jsr309ControllerFactory(system, mediaServerInfo, msControlFactory);
+                    factory = new Jsr309ControllerFactory(supervisor, mediaServerInfo, msControlFactory);
                 } catch (UnknownHostException | MsControlException e) {
                     throw new ServletException(e);
                 }
@@ -192,7 +199,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     }
 
     private ActorRef mediaResourceBroker(final Configuration configuration, final DaoManager storage, final ClassLoader loader) throws UnknownHostException{
-        ActorRef mrb = system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -200,7 +207,13 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 final String classpath = configuration.getString("mrb[@class]");
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
-        }));
+        });
+        ActorRef mrb = null;
+        try {
+            mrb = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
         mrb.tell(new StartMediaResourceBroker(configuration, storage, loader), null);
         return mrb;
     }
@@ -223,14 +236,20 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     }
 
     private ActorRef monitoringService(final Configuration configuration, final DaoManager daoManager, final ClassLoader loader) {
-        final ActorRef monitoring = system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new MonitoringService(daoManager);
             }
-        }));
+        });
+        ActorRef monitoring = null;
+        try {
+            monitoring = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
         return monitoring;
 
     }
@@ -286,8 +305,10 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Create the actor system.
             final Config settings = ConfigFactory.load();
             system = ActorSystem.create("RestComm", settings, loader);
+            supervisor = system.actorOf(new Props(RestcommSupervisor.class), "supervisor");
             // Share the actor system with other servlets.
             context.setAttribute(ActorSystem.class.getName(), system);
+            context.setAttribute(RestcommSupervisor.class.getName(), supervisor);
             // Create the storage system.
             DaoManager storage = null;
             try {

@@ -21,13 +21,17 @@
 
 package org.restcomm.connect.mscontrol.mms;
 
-import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
-
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActorFactory;
+import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
+
+import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
 
 /**
  * Provides controllers for Mobicents Media Server.
@@ -37,15 +41,15 @@ import akka.actor.UntypedActorFactory;
  */
 public class MmsControllerFactory implements MediaServerControllerFactory {
 
-    private final ActorSystem system;
+    private final ActorRef supervisor;
     private final CallControllerFactory callControllerFactory;
     private final ConferenceControllerFactory conferenceControllerFactory;
     private final BridgeControllerFactory bridgeControllerFactory;
     private final ActorRef mrb;
 
-    public MmsControllerFactory(ActorSystem system, ActorRef mrb) {
+    public MmsControllerFactory(ActorRef supervisor, ActorRef mrb) {
         super();
-        this.system = system;
+        this.supervisor = supervisor;
         this.callControllerFactory = new CallControllerFactory();
         this.conferenceControllerFactory = new ConferenceControllerFactory();
         this.bridgeControllerFactory = new BridgeControllerFactory();
@@ -54,17 +58,38 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
     @Override
     public ActorRef provideCallController() {
-        return system.actorOf(new Props(this.callControllerFactory));
+        final Props props = new Props(this.callControllerFactory);
+        ActorRef callController = null;
+        try {
+            callController = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
+        return callController;
     }
 
     @Override
     public ActorRef provideConferenceController() {
-        return system.actorOf(new Props(this.conferenceControllerFactory));
+        final Props props = new Props(this.conferenceControllerFactory);
+        ActorRef conferenceController = null;
+        try {
+            conferenceController = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
+        return conferenceController;
     }
 
     @Override
     public ActorRef provideBridgeController() {
-        return system.actorOf(new Props(this.bridgeControllerFactory));
+        final Props props = new Props(this.bridgeControllerFactory);
+        ActorRef bridgeController = null;
+        try {
+            bridgeController = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
+        return bridgeController;
     }
 
     private final class CallControllerFactory implements UntypedActorFactory {
