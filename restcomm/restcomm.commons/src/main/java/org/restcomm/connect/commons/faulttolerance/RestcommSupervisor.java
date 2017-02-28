@@ -6,13 +6,14 @@ import akka.actor.ActorRef;
 import akka.actor.ChildRestartStats;
 import akka.actor.OneForOneStrategy;
 import akka.actor.Props;
-import akka.actor.StopChild;
 import akka.actor.SupervisorStrategy;
 import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Function;
+import org.restcomm.connect.commons.fsm.TransitionFailedException;
+import org.restcomm.connect.commons.fsm.TransitionNotFoundException;
 import scala.collection.Iterable;
 import scala.concurrent.duration.Duration;
 
@@ -51,13 +52,14 @@ public class RestcommSupervisor extends UntypedActor {
         final ActorRef sender = getSender();
 
         logger.info(" ********** RestcommSupervisor " + self().path() + " Processing Message: " + klass.getName());
+
         if (msg instanceof Props) {
             final ActorRef actor = getContext().actorOf((Props) msg);
             getContext().watch(actor);
             logger.info("Created and watching actor: "+actor.path().toString());
             liveActors.put(actor.path(), actor);
             sender.tell(actor, getSelf());
-        } else if (msg instanceof Terminated || msg instanceof StopChild) {
+        } else if (msg instanceof Terminated) {
             logger.info("Received Terminated message");
             final Terminated t = (Terminated) msg;
             final ActorRef actor = t.actor();
@@ -76,13 +78,8 @@ public class RestcommSupervisor extends UntypedActor {
         }
     }
 
-    @Override
+    @Override // - 1st the actor will try to get the supervisor strategy
     public SupervisorStrategy supervisorStrategy() {
-//        ActorRef sender = getSender();
-//        if (liveActors!= null && liveActors.containsKey(sender.path())) {
-//            logger.info("Will remove actor");
-//            liveActors.remove(sender.path());
-//        }
         ActorRef sender = getSender();
         return defaultStrategy;
     }
@@ -93,7 +90,7 @@ public class RestcommSupervisor extends UntypedActor {
             super(maxNrOfRetries, withinTimeRange, function);
         }
 
-        @Override
+        @Override // - 3rd the Supervisor Strategy will execute processFailure() method. Useful for cleanup or logging
         public void processFailure(ActorContext context, boolean restart, ActorRef child, Throwable cause, ChildRestartStats stats, Iterable<ChildRestartStats> children) {
             String msg = String.format("Restart %s, actor path %s, cause %s,",restart, child.path().toString(), cause );
             logger.info(msg);
@@ -104,7 +101,7 @@ public class RestcommSupervisor extends UntypedActor {
 
     private class RestcommFaultToleranceDecider implements Function<Throwable, SupervisorStrategy.Directive> {
 
-        @Override
+        @Override // - 2nd the Supervisor strategy will execute the Decider apply() to check what to do with the exception
         public SupervisorStrategy.Directive apply(Throwable t) throws Exception {
             if (t instanceof ServletParseException) {
                 logger.info("ServletParseException, will resume actor");
@@ -115,6 +112,9 @@ public class RestcommSupervisor extends UntypedActor {
             } else if (t instanceof IllegalArgumentException) {
                 logger.info("IllegalArgumentException, will stop actor");
                 return stop();
+            } else if (t instanceof TransitionFailedException || t instanceof TransitionNotFoundException) {
+                logger.info("FSM Transition exception, will resume");
+                return resume();
             } else {
                 logger.info("Will escalate");
                 return escalate();

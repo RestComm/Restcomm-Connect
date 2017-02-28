@@ -145,6 +145,7 @@ public final class CallManager extends UntypedActor {
     static final int DEFAUL_IMS_PROXY_PORT = -1;
 
     private final ActorSystem system;
+    private final ActorRef supervisor;
     private final Configuration configuration;
     private final ServletContext context;
     private final MediaServerControllerFactory msControllerFactory;
@@ -225,11 +226,12 @@ public final class CallManager extends UntypedActor {
 
     }
 
-    public CallManager(final Configuration configuration, final ServletContext context, final ActorSystem system,
+    public CallManager(final Configuration configuration, final ServletContext context, final ActorSystem system, final ActorRef supervisor,
                        final MediaServerControllerFactory msControllerFactory, final ActorRef conferences, final ActorRef bridges,
                        final ActorRef sms, final SipFactory factory, final DaoManager storage) {
         super();
         this.system = system;
+        this.supervisor = supervisor;
         this.configuration = configuration;
         this.context = context;
         this.msControllerFactory = msControllerFactory;
@@ -319,14 +321,21 @@ public final class CallManager extends UntypedActor {
     }
 
     private ActorRef call() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new Call(sipFactory, msControllerFactory.provideCallController(), configuration);
             }
-        }));
+        });
+        ActorRef call = null;
+        try {
+            call = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
+        return call;
     }
 
     private void check(final Object message) throws IOException {

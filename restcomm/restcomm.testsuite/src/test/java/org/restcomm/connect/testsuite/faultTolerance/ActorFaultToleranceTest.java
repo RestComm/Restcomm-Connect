@@ -96,8 +96,7 @@ public class ActorFaultToleranceTest {
 		new JavaTestKit(system) {{
 			LoggingAdapter logger = Logging.getLogger(system, this);
 
-			Props superprops = new Props(RestcommSupervisor.class);
-			ActorRef supervisor = system.actorOf(superprops, "supervisor");
+			ActorRef supervisor = system.actorOf(new Props(RestcommSupervisor.class), "supervisor2");
 
 			final ActorRef subject = (ActorRef) Await.result(ask(supervisor,
 					new Props(TestActor.class), 5000), Duration.create(10, TimeUnit.SECONDS));
@@ -113,38 +112,40 @@ public class ActorFaultToleranceTest {
 					subjectPath, 5000), Duration.create(10, TimeUnit.SECONDS));
 
 			assertTrue(actorRestarted);
-//			logger.info("Subject original path: "+subjectPath+", new subject path: "+subject.path().toString());
+		}};
+	}
+
+	@Test
+	public void testExceptionOnAchildActor () throws Exception {
+		new JavaTestKit(system) {{
+			LoggingAdapter logger = Logging.getLogger(system, this);
+
+			ActorRef supervisor = system.actorOf(new Props(RestcommSupervisor.class), "supervisor");
+
+			final ActorRef subject = (ActorRef) Await.result(ask(supervisor,
+					new Props(TestActor.class), 5000), Duration.create(10, TimeUnit.SECONDS));
+
+//			ActorRef childActor = (ActorRef) Await.result(ask(subject, "CreateChild", 5000), Duration.create(10, TimeUnit.SECONDS));
+
+			final ActorRef childActor = (ActorRef) Await.result(ask(supervisor,
+					new Props(TestActor2.class), 5000), Duration.create(10, TimeUnit.SECONDS));
+
+			childActor.tell("exception", getRef());
+			ActorPath subjectPath = childActor.path();
+			expectMsgEquals(duration("1 second"), "Me the TestActor2, I don't stop on exceptions");
+			Thread.sleep(5000);
+
+			boolean actorRestarted = (boolean) Await.result(ask(supervisor,
+					subjectPath, 5000), Duration.create(10, TimeUnit.SECONDS));
+
+			assertTrue(actorRestarted);
 		}};
 	}
 
 	public static class TestActor extends UntypedActor {
 
-		public SupervisorStrategy strategy;
-		ActorRef target = null;
 		private LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
-
-		public TestActor() {
-			logger.info("At constructor, will create strategy.");
-			strategy = new OneForOneStrategy(10, Duration.create("1 minute"),
-					new Function<Throwable, SupervisorStrategy.Directive>() {
-						@Override
-						public akka.actor.SupervisorStrategy.Directive apply(Throwable t) {
-							if (t instanceof ArithmeticException) {
-								logger.info("ArithmeticExceptio, will resume actor");
-								return resume();
-							} else if (t instanceof NullPointerException) {
-								logger.info("NullPointerException");
-								return resume();
-							} else if (t instanceof IllegalArgumentException) {
-								logger.info("IllegalArgumentException, will stop actor");
-								return stop();
-							} else {
-								logger.info("Will escalate");
-								return escalate();
-							}
-						}
-					});
-		}
+		ActorRef target = null;
 
 		public void onReceive (Object msg) {
 			final Class<?> klass = msg.getClass();
@@ -158,16 +159,14 @@ public class ActorFaultToleranceTest {
 				getSender().tell("I don't stop on exceptions", getSelf());
 				String s = null;
 				s.equalsIgnoreCase("blabla");
+			} else if (msg.equals("CreateChild")) {
+				final Props props = new Props(TestActor2.class);
+				final ActorRef actor2 = system.actorOf(props);
+				getSender().tell(actor2, self());
 			} else if (msg instanceof ActorRef) {
 				target = (ActorRef) msg;
 				getSender().tell("done", getSelf());
 			}
-		}
-
-		@Override
-		public SupervisorStrategy supervisorStrategy() {
-			logger.info("Will return strategy");
-			return strategy;
 		}
 
 		@Override
@@ -179,6 +178,35 @@ public class ActorFaultToleranceTest {
 		@Override
 		public void postRestart (Throwable reason) {
 			logger.info("At postRestart method");
+			super.postRestart(reason);
+		}
+	}
+
+	public static class TestActor2 extends UntypedActor {
+
+		private LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+		ActorRef target = null;
+
+		public void onReceive (Object msg) {
+			final Class<?> klass = msg.getClass();
+			logger.info(" ********** TestActor2 " + self().path() + " Processing Message: " + klass.getName());
+
+			if (msg.equals("exception")) {
+				getSender().tell("Me the TestActor2, I don't stop on exceptions", getSelf());
+				String s = null;
+				s.equalsIgnoreCase("blabla");
+			}
+		}
+
+		@Override
+		public void postStop () {
+			logger.info("TestActor2, at postStop method");
+			super.postStop();
+		}
+
+		@Override
+		public void postRestart (Throwable reason) {
+			logger.info("TestActor2, at postRestart method");
 			super.postRestart(reason);
 		}
 	}
