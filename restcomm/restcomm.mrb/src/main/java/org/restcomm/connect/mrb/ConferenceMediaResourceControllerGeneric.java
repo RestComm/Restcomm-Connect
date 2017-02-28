@@ -72,23 +72,23 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
     // Finite State Machine
     private final FiniteStateMachine fsm;
-    protected final State uninitialized;
-    protected final State acquiringConferenceInfo;
-    protected final State creatingMediaGroup;
+    protected State uninitialized;
+    protected State acquiringConferenceInfo;
+    protected State creatingMediaGroup;
 
-    protected final State preActive;
-    protected final State active;
-    protected final State stopping;
-    protected final State inactive;
-    protected final State failed;
+    protected State preActive;
+    protected State active;
+    protected State stopping;
+    protected State inactive;
+    protected State failed;
 
-    protected final ActorRef localMediaGateway;
+    protected ActorRef localMediaGateway;
     protected ActorRef mediaGroup;
     protected MediaSession localMediaSession;
     protected ActorRef localConfernceEndpoint;
 
-    protected final DaoManager storage;
-    protected final Configuration configuration;
+    protected DaoManager storage;
+    protected Configuration configuration;
     protected ConferenceDetailRecord cdr;
     protected Sid conferenceSid;
 
@@ -100,7 +100,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
     // Observer pattern
     protected final List<ActorRef> observers;
-    protected final ActorRef mrb;
+    protected ActorRef mrb;
 
     public ConferenceMediaResourceControllerGeneric(ActorRef localMediaGateway, final Configuration configuration, final DaoManager storage, final ActorRef mrb){
         super();
@@ -489,10 +489,12 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
 
     protected void updateConferenceStatus(String status){
         if(cdr != null){
+        	logger.info("updateConferenceStatus before in");
             final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
             cdr = dao.getConferenceDetailRecord(conferenceSid);
             cdr = cdr.setStatus(status);
             dao.updateConferenceDetailRecordStatus(cdr);
+        	logger.info("updateConferenceStatus after in");
         }
     }
 }
