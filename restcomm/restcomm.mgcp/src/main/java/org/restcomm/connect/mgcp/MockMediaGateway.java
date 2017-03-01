@@ -140,14 +140,27 @@ public class MockMediaGateway extends UntypedActor {
         final ActorRef gateway = self();
         final CreateConferenceEndpoint request = (CreateConferenceEndpoint) message;
         final MediaSession session = request.session();
-        ActorRef conferenceEndpoint = getContext().actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
+        ActorRef conferenceEndpoint;
+        final String endpointName = request.endpointName();
+        if(endpointName == null){
+            conferenceEndpoint = getContext().actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
 
-            @Override
-            public UntypedActor create() throws Exception {
-                return new ConferenceEndpoint(gateway, session, agent, domain, timeout);
-            }
-        }));
+                @Override
+                public UntypedActor create() throws Exception {
+                    return new ConferenceEndpoint(gateway, session, agent, domain, timeout);
+                }
+            }));
+        }else{
+        	conferenceEndpoint = getContext().actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public UntypedActor create() throws Exception {
+                    return new ConferenceEndpoint(gateway, session, agent, domain, timeout, endpointName);
+                }
+            }));
+        }
         endpoints.put(session, conferenceEndpoint);
         return conferenceEndpoint;
     }
