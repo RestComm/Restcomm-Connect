@@ -152,7 +152,7 @@ public class MockMediaGateway extends UntypedActor {
                 }
             }));
         }else{
-        	conferenceEndpoint = getContext().actorOf(new Props(new UntypedActorFactory() {
+            conferenceEndpoint = getContext().actorOf(new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
                 @Override
