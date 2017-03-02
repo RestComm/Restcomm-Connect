@@ -19,23 +19,26 @@
  */
 package org.restcomm.connect.interpreter;
 
-import java.net.URI;
-
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.commons.dao.Sid;
-
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.DaoManager;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
+
+import java.net.URI;
+import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class SmsInterpreterBuilder {
-    private final ActorSystem system;
+    private final ActorRef supervisor;
     private Configuration configuration;
     private ActorRef service;
     private DaoManager storage;
@@ -46,21 +49,28 @@ public final class SmsInterpreterBuilder {
     private URI fallbackUrl;
     private String fallbackMethod;
 
-    public SmsInterpreterBuilder(final ActorSystem system) {
+    public SmsInterpreterBuilder(final ActorRef supervisor) {
         super();
-        this.system = system;
+        this.supervisor = supervisor;
     }
 
     public ActorRef build() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new SmsInterpreter(service, configuration, storage, accountId, version, url, method, fallbackUrl,
+                return new SmsInterpreter(supervisor, service, configuration, storage, accountId, version, url, method, fallbackUrl,
                         fallbackMethod);
             }
-        }));
+        });
+        ActorRef smsInterpreter = null;
+        try {
+            smsInterpreter = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
+        return smsInterpreter;
     }
 
     public void setConfiguration(final Configuration configuration) {

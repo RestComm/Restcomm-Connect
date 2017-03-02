@@ -21,16 +21,21 @@
 
 package org.restcomm.connect.telephony;
 
-import org.restcomm.connect.telephony.api.BridgeManagerResponse;
-import org.restcomm.connect.telephony.api.BridgeStateChanged;
-import org.restcomm.connect.telephony.api.CreateBridge;
-import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
-import org.restcomm.connect.commons.patterns.Observe;
-
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
+import org.restcomm.connect.telephony.api.BridgeManagerResponse;
+import org.restcomm.connect.telephony.api.BridgeStateChanged;
+import org.restcomm.connect.telephony.api.CreateBridge;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
+
+import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -39,21 +44,30 @@ import akka.actor.UntypedActorFactory;
 public class BridgeManager extends UntypedActor {
 
     private final MediaServerControllerFactory factory;
+    private final ActorRef supervisor;
 
-    public BridgeManager(final MediaServerControllerFactory factory) {
+    public BridgeManager(final ActorRef supervisor, final MediaServerControllerFactory factory) {
         super();
         this.factory = factory;
+        this.supervisor = supervisor;
     }
 
     private ActorRef createBridge() {
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new Bridge(factory.provideBridgeController());
             }
-        }));
+        });
+        ActorRef bridge = null;
+        try {
+            bridge = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
+        return bridge;
     }
 
     /*

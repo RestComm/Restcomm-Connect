@@ -19,24 +19,15 @@
  */
 package org.restcomm.connect.ussd.telephony;
 
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.regex.Pattern;
-
-import javax.servlet.ServletContext;
-import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipURI;
-
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -44,7 +35,6 @@ import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CreateCall;
@@ -53,15 +43,26 @@ import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreter;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreterBuilder;
-import org.restcomm.connect.commons.util.UriUtils;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipURI;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
+
+import static akka.pattern.Patterns.ask;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -72,7 +73,7 @@ public class UssdCallManager extends UntypedActor {
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
 
-    private final ActorSystem system;
+    private final ActorRef supervisor;
     private final Configuration configuration;
     private final ServletContext context;
     private final SipFactory sipFactory;
@@ -91,17 +92,16 @@ public class UssdCallManager extends UntypedActor {
     /**
      * @param configuration
      * @param context
-     * @param system
-     * @param gateway
+     * @param supervisor
      * @param conferences
      * @param sms
      * @param factory
      * @param storage
      */
-    public UssdCallManager(Configuration configuration, ServletContext context, ActorSystem system,
+    public UssdCallManager(Configuration configuration, ServletContext context, ActorRef supervisor,
             ActorRef conferences, ActorRef sms, SipFactory factory, DaoManager storage) {
         super();
-        this.system = system;
+        this.supervisor = supervisor;
         this.configuration = configuration;
         this.context = context;
         this.sipFactory = factory;
@@ -114,14 +114,20 @@ public class UssdCallManager extends UntypedActor {
     }
 
     private ActorRef ussdCall() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
                 return new UssdCall(sipFactory);
             }
-        }));
+        });
+        ActorRef ussdCall = null;
+        try {
+            ussdCall = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
+        return ussdCall;
     }
 
     private void check(final Object message) throws IOException {
@@ -215,7 +221,7 @@ public class UssdCallManager extends UntypedActor {
             // This is a USSD Invite
             number = numbersDao.getIncomingPhoneNumber(id);
             if (number != null) {
-                final UssdInterpreterBuilder builder = new UssdInterpreterBuilder(system);
+                final UssdInterpreterBuilder builder = new UssdInterpreterBuilder(supervisor);
                 builder.setConfiguration(configuration);
                 builder.setStorage(storage);
                 builder.setCallManager(self);
@@ -308,7 +314,7 @@ public class UssdCallManager extends UntypedActor {
     private void execute(final Object message) {
         final ExecuteCallScript request = (ExecuteCallScript) message;
         final ActorRef self = self();
-        final UssdInterpreterBuilder builder = new UssdInterpreterBuilder(system);
+        final UssdInterpreterBuilder builder = new UssdInterpreterBuilder(supervisor);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self);

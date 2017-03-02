@@ -214,7 +214,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         } catch (Exception e) {
 
         }
-        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader), null);
+        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader, supervisor), null);
         return mrb;
     }
 

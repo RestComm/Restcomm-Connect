@@ -24,6 +24,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
+import akka.actor.StopChild;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
@@ -356,7 +357,7 @@ public final class CallManager extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("About to destroy call: "+request.call().path()+", call isTerminated(): "+sender().isTerminated()+", sender: "+sender());
             }
-            context.stop(call);
+            supervisor.tell(new StopChild(call), null);
         }
     }
 
@@ -632,7 +633,7 @@ public final class CallManager extends UntypedActor {
 
     private void proxyThroughMediaServer(final SipServletRequest request, final Client client, final String destNumber) {
         String rcml = "<Response><Dial>"+destNumber+"</Dial></Response>";
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self());
@@ -861,7 +862,7 @@ public final class CallManager extends UntypedActor {
         existingInterpreter.tell(new StopInterpreter(true), null);
 
         // Build a new VoiceInterpreter
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self());
@@ -947,7 +948,7 @@ public final class CallManager extends UntypedActor {
                 number = numbers.getIncomingPhoneNumber("*");
             }
             if (number != null) {
-                final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+                final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
                 builder.setConfiguration(configuration);
                 builder.setStorage(storage);
                 builder.setCallManager(self);
@@ -1025,7 +1026,7 @@ public final class CallManager extends UntypedActor {
         boolean isClientManaged =( (applicationSid != null && !applicationSid.toString().isEmpty() && !applicationSid.toString().equals("")) ||
                 (clientAppVoiceUrl != null && !clientAppVoiceUrl.toString().isEmpty() &&  !clientAppVoiceUrl.toString().equals("")));
         if (isClientManaged) {
-            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
             builder.setConfiguration(configuration);
             builder.setStorage(storage);
             builder.setCallManager(self);
@@ -1280,7 +1281,7 @@ public final class CallManager extends UntypedActor {
     private void execute(final Object message) {
         final ExecuteCallScript request = (ExecuteCallScript) message;
         final ActorRef self = self();
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self);
@@ -1364,7 +1365,7 @@ public final class CallManager extends UntypedActor {
         existingInterpreter.tell(new StopInterpreter(true), null);
 
         // Build a new VoiceInterpreter
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self);
@@ -2141,7 +2142,7 @@ public final class CallManager extends UntypedActor {
                 logger.info("rcml: " + rcml);
             }
 
-            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
             builder.setConfiguration(configuration);
             builder.setStorage(storage);
             builder.setCallManager(self());

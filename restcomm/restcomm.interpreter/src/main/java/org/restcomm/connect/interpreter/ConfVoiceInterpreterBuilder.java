@@ -1,21 +1,24 @@
 package org.restcomm.connect.interpreter;
 
-import java.net.URI;
-
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.telephony.api.CallInfo;
-
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.telephony.api.CallInfo;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
+
+import java.net.URI;
+import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
 
 public class ConfVoiceInterpreterBuilder {
 
-    private ActorSystem system;
+    private ActorRef supervisor;
     private Configuration configuration;
     private Sid account;
     private String version;
@@ -26,21 +29,27 @@ public class ConfVoiceInterpreterBuilder {
     private DaoManager storage;
     private CallInfo callInfo;
 
-    public ConfVoiceInterpreterBuilder(final ActorSystem system) {
+    public ConfVoiceInterpreterBuilder(final ActorRef supervisor) {
         super();
-        this.system = system;
+        this.supervisor = supervisor;
     }
 
     public ActorRef build() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
-                return new ConfVoiceInterpreter(configuration, account, version, url, method, emailAddress, conference,
+                return new ConfVoiceInterpreter(supervisor, configuration, account, version, url, method, emailAddress, conference,
                         storage, callInfo);
             }
-        }));
+        });
+        ActorRef confVoiceInterpreter = null;
+        try {
+            confVoiceInterpreter = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
+        return confVoiceInterpreter;
     }
 
     public void setConfiguration(final Configuration configuration) {
