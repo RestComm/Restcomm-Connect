@@ -38,13 +38,15 @@ public class RvdConfiguration {
     public static final String USERS_DIRECTORY_NAME = "@users";
 
     public static final String WAVS_DIRECTORY_NAME = "wavs";
-    private static final String RVD_PROJECT_VERSION = "1.6"; // version for rvd project syntax
+    private static final String RVD_PROJECT_VERSION = "1.8"; // version for rvd project syntax
     private static final String PACKAGING_VERSION = "1.0";
     private static final String RAS_APPLICATION_VERSION = "2"; // version of the RAS application specification
     public static final String STICKY_PREFIX = "sticky_"; // a  prefix for rvd sticky variable names
     public static final String MODULE_PREFIX = "module_"; // a  prefix for rvd module-scoped variable names
     public static final String CORE_VARIABLE_PREFIX = "core_"; // a prefix for rvd variables that come from Restcomm parameters
     public static final String PACKAGING_DIRECTORY_NAME = "packaging";
+    // http client (ES)
+    public static final int DEFAULT_ES_TIMEOUT = 5000; // milliseconds
     // application logging
     public static final String PROJECT_LOG_FILENAME = "rvdapp"; //will produce rvdapp.log, rvdapp-1.log etc.
     public static final int PROJECT_LOG_BACKLOG_COUNT = 3; // the number of rotated files besides the main log file
@@ -64,6 +66,7 @@ public class RvdConfiguration {
 
     private String contextRootPath;
     private URI restcommBaseUri;
+    private Integer externalServiceTimeout;
 
     // package-private constructor to be used from RvdConfigurationBuilder
     RvdConfiguration() {
@@ -184,6 +187,22 @@ public class RvdConfiguration {
 
     public SslMode getSslMode() {
         return restcommConfig.getSslMode();
+    }
+
+    public Integer getExternalServiceTimeout() {
+        if (externalServiceTimeout != null)
+            return externalServiceTimeout;
+        if (rvdConfig != null && rvdConfig.getExternalServiceTimeout() != null && rvdConfig.getExternalServiceTimeout().trim().length() > 0) {
+            try {
+                this.externalServiceTimeout = Integer.parseInt(rvdConfig.getExternalServiceTimeout());
+            } catch (NumberFormatException e) {
+                logger.warn("Cannot parse RVD ES timeout configuration setting. Will use default: " + DEFAULT_ES_TIMEOUT + (e.getMessage() != null ? " - " + e.getMessage() : ""));
+                this.externalServiceTimeout = DEFAULT_ES_TIMEOUT;
+            }
+        } else {
+            this.externalServiceTimeout = DEFAULT_ES_TIMEOUT;
+        }
+        return this.externalServiceTimeout;
     }
 
     public boolean getUseHostnameToResolveRelativeUrl() {
