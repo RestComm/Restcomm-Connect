@@ -287,7 +287,7 @@ angular.module('Rvd')
                 stepUi.fokMode = "typekeys";
 
             scope.fokModeChanged = function(fokMode) {
-                console.log("fokModeChanged");
+                //console.log("fokModeChanged");
                 if (fokMode == "anykey")
                     delete step.finishOnKey;
                 else
