@@ -274,6 +274,7 @@ angular.module('Rvd')
             step: '='
         },
         link: function (scope, element, attrs) {
+            scope.yesNoBooleanOptions = [{caption:"Yes", value:true}, {caption:"No", value:false}];
             var step = scope.step;
             var stepUi = {}
             scope.stepUi = stepUi;
