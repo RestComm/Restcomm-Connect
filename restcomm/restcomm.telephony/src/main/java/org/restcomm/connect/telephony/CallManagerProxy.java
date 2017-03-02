@@ -148,7 +148,7 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
             private static final long serialVersionUID = 1L;
             @Override
             public UntypedActor create() throws Exception {
-                return new UssdCallManager(configuration, context, system, conferences, sms, factory, storage);
+                return new UssdCallManager(configuration, context, supervisor, conferences, sms, factory, storage);
             }
         });
         ActorRef ussdManager = null;
@@ -166,7 +166,7 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
             private static final long serialVersionUID = 1L;
             @Override
             public UntypedActor create() throws Exception {
-                return new ConferenceCenter(factory, storage);
+                return new ConferenceCenter(supervisor, factory, storage);
             }
         });
         ActorRef conferenceCenter = null;
@@ -183,7 +183,7 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
             private static final long serialVersionUID = 1L;
             @Override
             public UntypedActor create() throws Exception {
-                return new BridgeManager(factory);
+                return new BridgeManager(supervisor, factory);
             }
         });
         ActorRef bridges = null;

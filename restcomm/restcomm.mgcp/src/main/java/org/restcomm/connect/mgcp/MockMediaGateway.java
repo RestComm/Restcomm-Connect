@@ -45,10 +45,15 @@ import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
 import org.restcomm.connect.commons.util.RevolvingCounter;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
 
 import java.net.InetAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -85,6 +90,8 @@ public class MockMediaGateway extends UntypedActor {
     private static Map<MediaSession, ActorRef> links;
     private static Map<MediaSession, ActorRef> connections;
 
+    private ActorRef supervisor;
+
     public MockMediaGateway() {
         super();
         endpoints = new ConcurrentHashMap<MediaSession, ActorRef>();
@@ -108,14 +115,19 @@ public class MockMediaGateway extends UntypedActor {
         final CreateConnection request = (CreateConnection) message;
         final MediaSession session = request.session();
         final ActorRef gateway = self();
-        ActorRef connection = getContext().actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
                 return new Connection(gateway, session, agent, timeout);
             }
-        }));
+        });
+        ActorRef connection = null;
+        try{
+            connection = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
         connections.put(session, connection);
         return connection;
     }
@@ -124,14 +136,20 @@ public class MockMediaGateway extends UntypedActor {
         final CreateBridgeEndpoint request = (CreateBridgeEndpoint) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
-        ActorRef bridgeEndpoint = getContext().actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public Actor create() throws Exception {
                 return new BridgeEndpoint(gateway, session, agent, domain, timeout);
             }
-        }));
+        });
+        ActorRef bridgeEndpoint = null;
+        try {
+            bridgeEndpoint = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
         endpoints.put(session, bridgeEndpoint);
         return bridgeEndpoint;
     }
@@ -140,14 +158,20 @@ public class MockMediaGateway extends UntypedActor {
         final ActorRef gateway = self();
         final CreateConferenceEndpoint request = (CreateConferenceEndpoint) message;
         final MediaSession session = request.session();
-        ActorRef conferenceEndpoint = getContext().actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new ConferenceEndpoint(gateway, session, agent, domain, timeout);
             }
-        }));
+        });
+        ActorRef conferenceEndpoint = null;
+        try {
+            conferenceEndpoint = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
         endpoints.put(session, conferenceEndpoint);
         return conferenceEndpoint;
     }
@@ -160,14 +184,20 @@ public class MockMediaGateway extends UntypedActor {
         final ActorRef gateway = self();
         final CreateIvrEndpoint request = (CreateIvrEndpoint) message;
         final MediaSession session = request.session();
-        ActorRef ivrEndpoint = getContext().actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new IvrEndpoint(gateway, session, agent, domain, timeout);
             }
-        }));
+        });
+        ActorRef ivrEndpoint = null;
+        try {
+            ivrEndpoint = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
         endpoints.put(session, ivrEndpoint);
         return ivrEndpoint;
     }
@@ -176,14 +206,18 @@ public class MockMediaGateway extends UntypedActor {
         final CreateLink request = (CreateLink) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
-        ActorRef link = getContext().actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new Link(gateway, session, agent, timeout);
             }
-        }));
+        });
+        ActorRef link = null;
+        try {
+            link = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {}
         links.put(session, link);
         return link;
     }
@@ -192,14 +226,18 @@ public class MockMediaGateway extends UntypedActor {
         final ActorRef gateway = self();
         final CreatePacketRelayEndpoint request = (CreatePacketRelayEndpoint) message;
         final MediaSession session = request.session();
-        ActorRef packetRelayEndpoint = getContext().actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new PacketRelayEndpoint(gateway, session, agent, domain, timeout);
             }
-        }));
+        });
+        ActorRef packetRelayEndpoint = null;
+        try {
+            packetRelayEndpoint = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {}
         endpoints.put(session, packetRelayEndpoint);
         return packetRelayEndpoint;
     }
@@ -242,6 +280,7 @@ public class MockMediaGateway extends UntypedActor {
         requestIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
         sessionIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
         transactionIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
+        supervisor = request.getSupervisor();
     }
 
     @Override

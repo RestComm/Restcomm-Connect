@@ -20,7 +20,6 @@
 package org.restcomm.connect.sms;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -63,6 +62,8 @@ import org.restcomm.connect.sms.api.SmsSessionRequest;
 import org.restcomm.connect.telephony.api.TextMessage;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -78,7 +79,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Currency;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import static akka.pattern.Patterns.ask;
 import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 
 /**
@@ -88,7 +91,7 @@ import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 public final class SmsService extends UntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final ActorSystem system;
+    private final ActorRef supervisor;
     private final Configuration configuration;
     private boolean authenticateUsers = true;
     private final ServletConfig servletConfig;
@@ -110,10 +113,10 @@ public final class SmsService extends UntypedActor {
     //List of extensions for SmsService
     List<RestcommExtensionGeneric> extensions;
 
-    public SmsService(final ActorSystem system, final Configuration configuration, final SipFactory factory,
+    public SmsService(final ActorRef supervisor, final Configuration configuration, final SipFactory factory,
             final DaoManager storage, final ServletContext servletContext) {
         super();
-        this.system = system;
+        this.supervisor = supervisor;
         this.configuration = configuration;
         final Configuration runtime = configuration.subset("runtime-settings");
         this.authenticateUsers = runtime.getBoolean("authenticate");
@@ -286,7 +289,7 @@ public final class SmsService extends UntypedActor {
                 URI appUri = number.getSmsUrl();
                 ActorRef interpreter = null;
                 if (appUri != null || number.getSmsApplicationSid() != null) {
-                    final SmsInterpreterBuilder builder = new SmsInterpreterBuilder(system);
+                    final SmsInterpreterBuilder builder = new SmsInterpreterBuilder(supervisor);
                     builder.setSmsService(self);
                     builder.setConfiguration(configuration);
                     builder.setStorage(storage);
@@ -419,14 +422,21 @@ public final class SmsService extends UntypedActor {
     }
 
     private ActorRef session() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new SmsSession(configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
             }
-        }));
+        });
+        ActorRef session = null;
+        try {
+            session = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {
+
+        }
+        return session;
     }
 
     // used for sending warning and error logs to notification engine and to the console

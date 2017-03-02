@@ -98,7 +98,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            return new MmsCallController(mrb);
+            return new MmsCallController(mrb, supervisor);
         }
 
     }
@@ -121,7 +121,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            return new MmsBridgeController(mrb);
+            return new MmsBridgeController(mrb, supervisor);
         }
 
     }

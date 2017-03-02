@@ -19,7 +19,17 @@
  */
 package org.restcomm.connect.telephony.proxy;
 
-import java.io.IOException;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
+import org.restcomm.connect.commons.faulttolerance.RestcommSupervisor;
+import org.restcomm.connect.dao.DaoManager;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -30,16 +40,10 @@ import javax.servlet.sip.SipServletContextEvent;
 import javax.servlet.sip.SipServletListener;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.log4j.Logger;
-import org.restcomm.connect.dao.DaoManager;
-
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
+import static akka.pattern.Patterns.ask;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -49,6 +53,7 @@ public final class ProxyManagerProxy extends SipServlet implements SipServletLis
     private static final long serialVersionUID = 1L;
     private static final Logger logger = Logger.getLogger(ProxyManagerProxy.class);
     private ActorSystem system;
+    private ActorRef supervisor;
     private ActorRef manager;
     private ServletContext context;
 
@@ -88,14 +93,19 @@ public final class ProxyManagerProxy extends SipServlet implements SipServletLis
 
     private ActorRef manager(final ServletContext servletContext, final SipFactory factory, final DaoManager storage,
             final String address) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new ProxyManager(servletContext, factory, storage, address);
             }
-        }));
+        });
+        ActorRef manager = null;
+        try {
+            manager = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception e) {}
+        return manager;
     }
 
     @Override
@@ -111,6 +121,7 @@ public final class ProxyManagerProxy extends SipServlet implements SipServletLis
             final String address = configuration.getString("external-ip");
             final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
             system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+            supervisor = (ActorRef) context.getAttribute(RestcommSupervisor.class.getName());
             manager = manager(context, factory, storage, address);
             context.setAttribute(ProxyManager.class.getName(), manager);
         }
