@@ -173,14 +173,27 @@ public class MockMediaGateway extends UntypedActor {
         final ActorRef gateway = self();
         final CreateIvrEndpoint request = (CreateIvrEndpoint) message;
         final MediaSession session = request.session();
-        ActorRef ivrEndpoint = getContext().actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
+        final String endpointName = request.endpointName();
+        ActorRef ivrEndpoint;
+        if(endpointName == null){
+            ivrEndpoint = getContext().actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
 
-            @Override
-            public UntypedActor create() throws Exception {
-                return new IvrEndpoint(gateway, session, agent, domain, timeout);
-            }
-        }));
+                @Override
+                public UntypedActor create() throws Exception {
+                    return new IvrEndpoint(gateway, session, agent, domain, timeout);
+                }
+            }));
+        }else{
+            ivrEndpoint = getContext().actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public UntypedActor create() throws Exception {
+                    return new IvrEndpoint(gateway, session, agent, domain, timeout, endpointName);
+                }
+            }));
+        }
         endpoints.put(session, ivrEndpoint);
         return ivrEndpoint;
     }
