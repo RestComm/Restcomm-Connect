@@ -167,7 +167,7 @@ public class S3AccessTool {
         cal.setTime(date);
         cal.add(Calendar.MINUTE, minutesToRetainPublicUrl);
         if (logger.isInfoEnabled()) {
-            final String msg = String.format("Prepared amazon s3 public url valid for %d minutes for recording: ",fileName, minutesToRetainPublicUrl);
+            final String msg = String.format("Prepared amazon s3 public url valid for %s minutes for recording: %s",minutesToRetainPublicUrl, fileName);
             logger.info(msg);
         }
         date = cal.getTime();
