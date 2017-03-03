@@ -19,8 +19,13 @@
  */
 
 package org.restcomm.connect.testsuite.http;
+
+import static org.junit.Assert.*;
+
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -29,16 +34,13 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.http.RestcommUsageRecordsTool;
 
 import java.net.URL;
-
-//import static org.junit.Assert.assertNotNull;
-//import static org.junit.Assert.assertNull;
-//import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:abdulazizali@acm.org">abdulazizali77</a>
@@ -59,117 +61,213 @@ public class UsageRecordsTest {
 
     @Test(expected = UniformInterfaceException.class)
     public void getUsageRecordsList() {
-        //NB: currently unimplemented
-        JsonElement firstPage = RestcommUsageRecordsTool.getInstance()
-                .getUsageRecords(deploymentUrl.toString(), adminAccountSid, adminAuthToken, "", "", true);
+        // NB: currently unimplemented
+        JsonElement firstPage = RestcommUsageRecordsTool.getInstance().getUsageRecords(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, "", "", true);
         logger.info(firstPage);
     }
 
     @Test(expected = UniformInterfaceException.class)
     public void getUsageRecordsListCategoryCalls() {
-        JsonElement firstPage = RestcommUsageRecordsTool.getInstance()
-                .getUsageRecordsDaily(deploymentUrl.toString(), adminAccountSid, adminAuthToken, "calls", true);
+        JsonElement firstPage = RestcommUsageRecordsTool.getInstance().getUsageRecordsDaily(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, "calls", true);
         logger.info(firstPage);
     }
 
     @Test(expected = UniformInterfaceException.class)
     public void getUsageRecordsListCategorySms() {
-        JsonElement firstPage = RestcommUsageRecordsTool.getInstance()
-                .getUsageRecordsDaily(deploymentUrl.toString(), adminAccountSid, adminAuthToken, "sms", true);
+        JsonElement firstPage = RestcommUsageRecordsTool.getInstance().getUsageRecordsDaily(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, "sms", true);
         logger.info(firstPage);
     }
 
     @Test
     public void getUsageRecordsDaily() {
-        JsonElement firstPage = RestcommUsageRecordsTool.getInstance()
-                .getUsageRecordsDaily(deploymentUrl.toString(), adminAccountSid, adminAuthToken, "", true);
-        logger.info(firstPage);
+        JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsDaily(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, "", true);
+
+        assertNotNull(response);
+        // 12 days
+        assertTrue(response.getAsJsonArray().size() == 12);
+        // TODO: write factory method to arbitrarily compare expectation and output
+        JsonObject firstRecord = response.getAsJsonArray().get(0).getAsJsonObject();
+        String category = firstRecord.get("category").getAsString();
+        String description = firstRecord.get("description").getAsString();
+        String startDate = firstRecord.get("start_date").getAsString();
+        String endDate = firstRecord.get("end_date").getAsString();
+        String count = firstRecord.get("count").getAsString();
+        String usage = firstRecord.get("usage").getAsString();
+        String price = firstRecord.get("price").getAsString();
+        String count_unit = firstRecord.get("count_unit").getAsString();
+        String usage_unit = firstRecord.get("usage_unit").getAsString();
+        String price_unit = firstRecord.get("price_unit").getAsString();
+        String uri = firstRecord.get("uri").getAsString();
+
+        assertTrue(category.equals("calls"));
+        assertTrue(description.equals("Total calls"));
+        assertTrue(startDate.equals("2016-01-01"));
+        assertTrue(endDate.equals("2016-01-01"));
+        assertTrue(count.equals("3"));// 3 calls per day
+        assertTrue(usage.equals("1"));// 20 seconds each
+        assertTrue(price.equals("15.0"));// TODO: check if price per usage or count?
+        assertTrue(count_unit.equals("calls"));
+        assertTrue(usage_unit.equals("minutes"));
+        assertTrue(price_unit.equals("USD"));
+        //TODO: potential problem with order of query params
+        assertTrue(uri.equals("/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Usage/Records/Daily.json?Category=Calls&EndDate=2016-01-01&StartDate=2016-01-01"));
+
+        //TODO: test other categories
     }
 
     @Test
     public void getUsageRecordsMonthly() {
-        JsonElement firstPage = RestcommUsageRecordsTool.getInstance()
-                .getUsageRecordsMonthly(deploymentUrl.toString(), adminAccountSid, adminAuthToken, "", true);
-        logger.info(firstPage);
+        JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsMonthly(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, "", true);
+        // 4 months
+        assertTrue(response.getAsJsonArray().size() == 4);
+        // TODO: write factory method to arbitrarily compare expectation and output
+        JsonObject firstRecord = response.getAsJsonArray().get(0).getAsJsonObject();
+        String category = firstRecord.get("category").getAsString();
+        String description = firstRecord.get("description").getAsString();
+        String startDate = firstRecord.get("start_date").getAsString();
+        String endDate = firstRecord.get("end_date").getAsString();
+        String count = firstRecord.get("count").getAsString();
+        String usage = firstRecord.get("usage").getAsString();
+        String price = firstRecord.get("price").getAsString();
+        String count_unit = firstRecord.get("count_unit").getAsString();
+        String usage_unit = firstRecord.get("usage_unit").getAsString();
+        String price_unit = firstRecord.get("price_unit").getAsString();
+        String uri = firstRecord.get("uri").getAsString();
+
+        assertTrue(category.equals("calls"));
+        assertTrue(description.equals("Total Calls"));
+        assertTrue(startDate.equals("2016-01-01"));
+        assertTrue(endDate.equals("2016-01-31"));
+        assertTrue(count.equals("9"));
+        assertTrue(usage.equals("3"));// 3minutes
+        assertTrue(price.equals("45.0"));
+        assertTrue(count_unit.equals("calls"));
+        assertTrue(usage_unit.equals("minutes"));
+        assertTrue(price_unit.equals("USD"));
+        assertTrue(uri.equals("/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Usage/Records/Monthly.json?Category=Calls&EndDate=2016-01-01&StartDate=2016-01-31"));
+
+        //TODO: test other categories
     }
 
     @Test
     public void getUsageRecordsYearly() {
-        JsonElement firstPage = RestcommUsageRecordsTool.getInstance()
-                .getUsageRecordsYearly(deploymentUrl.toString(), adminAccountSid, adminAuthToken, "", true);
-        logger.info(firstPage);
+        JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsYearly(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, "", true);
+        // 2 years
+        assertTrue(response.getAsJsonArray().size() == 2);
+
+        JsonObject firstRecord = response.getAsJsonArray().get(0).getAsJsonObject();
+        String category = firstRecord.get("category").getAsString();
+        String description = firstRecord.get("description").getAsString();
+        String startDate = firstRecord.get("start_date").getAsString();
+        String endDate = firstRecord.get("end_date").getAsString();
+        String count = firstRecord.get("count").getAsString();
+        String usage = firstRecord.get("usage").getAsString();
+        String price = firstRecord.get("price").getAsString();
+        String count_unit = firstRecord.get("count_unit").getAsString();
+        String usage_unit = firstRecord.get("usage_unit").getAsString();
+        String price_unit = firstRecord.get("price_unit").getAsString();
+        String uri = firstRecord.get("uri").getAsString();
+
+        assertTrue(category.equals("calls"));
+        assertTrue(description.equals("Total Calls"));
+        assertTrue(startDate.equals("2016-01-01"));
+        assertTrue(endDate.equals("2016-12-31"));
+        assertTrue(count.equals("18"));
+        assertTrue(usage.equals("6"));// 6 minutes
+        assertTrue(price.equals("90.0"));
+        assertTrue(count_unit.equals("calls"));
+        assertTrue(usage_unit.equals("minutes"));
+        assertTrue(price_unit.equals("USD"));
+        assertTrue(uri.equals("/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Usage/Records/Yearly.json?Category=Calls&EndDate=2016-01-01&StartDate=2016-12-31"));
+        
+        //TODO: test other categories
     }
 
     @Test
     public void getUsageRecordsAlltime() {
-        JsonElement firstPage = RestcommUsageRecordsTool.getInstance()
-                .getUsageRecordsAllTime(deploymentUrl.toString(), adminAccountSid, adminAuthToken, "", true);
-        logger.info(firstPage);
+        JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsAllTime(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, "", true);
+
+        assertTrue(response.getAsJsonArray().size() == 1);
+
+        JsonObject firstRecord = response.getAsJsonArray().get(0).getAsJsonObject();
+        String category = firstRecord.get("category").getAsString();
+        String description = firstRecord.get("description").getAsString();
+        String startDate = firstRecord.get("start_date").getAsString();
+        String endDate = firstRecord.get("end_date").getAsString();
+        String count = firstRecord.get("count").getAsString();
+        String usage = firstRecord.get("usage").getAsString();
+        String price = firstRecord.get("price").getAsString();
+        String count_unit = firstRecord.get("count_unit").getAsString();
+        String usage_unit = firstRecord.get("usage_unit").getAsString();
+        String price_unit = firstRecord.get("price_unit").getAsString();
+        String uri = firstRecord.get("uri").getAsString();
+
+        assertTrue(category.equals("calls"));
+        assertTrue(description.equals("Total Calls"));
+        assertTrue(startDate.equals("2016-01-01"));
+        assertTrue(endDate.equals("2017-12-31"));
+        assertTrue(count.equals("36"));
+        assertTrue(usage.equals("360"));
+        assertTrue(price.equals("180.0"));
+        assertTrue(count_unit.equals("calls"));
+        assertTrue(usage_unit.equals("minutes"));
+        assertTrue(price_unit.equals("USD"));
+        //FIXME:start date should be start of epoch?
+        assertTrue(uri.equals("/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Usage/Records/AllTime.json?Category=Calls&EndDate=2017-02-03&StartDate=2016-01-01"));
+
+        //TODO: test other categories
     }
 
     @Test
     public void getUsageRecordsToday() {
-        JsonElement firstPage = RestcommUsageRecordsTool.getInstance()
-                .getUsageRecordsToday(deploymentUrl.toString(), adminAccountSid, adminAuthToken, "", true);
+        JsonElement firstPage = RestcommUsageRecordsTool.getInstance().getUsageRecordsToday(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, "", true);
         logger.info(firstPage);
     }
 
     @Test
     public void getUsageRecordsYesterday() {
-        JsonElement firstPage = RestcommUsageRecordsTool.getInstance()
-                .getUsageRecordsYesterday(deploymentUrl.toString(), adminAccountSid, adminAuthToken, "", true);
+        JsonElement firstPage = RestcommUsageRecordsTool.getInstance().getUsageRecordsYesterday(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, "", true);
         logger.info(firstPage);
     }
 
     @Test
     public void getUsageRecordsThisMonth() {
-        JsonElement firstPage = RestcommUsageRecordsTool.getInstance()
-                .getUsageRecordsThisMonth(deploymentUrl.toString(), adminAccountSid, adminAuthToken, "", true);
+        JsonElement firstPage = RestcommUsageRecordsTool.getInstance().getUsageRecordsThisMonth(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, "", true);
         logger.info(firstPage);
     }
 
     @Test
     public void getUsageRecordsLastMonth() {
-        JsonElement firstPage = RestcommUsageRecordsTool.getInstance()
-                .getUsageRecordsLastMonth(deploymentUrl.toString(), adminAccountSid, adminAuthToken, "", true);
+        JsonElement firstPage = RestcommUsageRecordsTool.getInstance().getUsageRecordsLastMonth(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, "", true);
         logger.info(firstPage);
     }
 
-//    // Regression tests
-//    @Test
-//    public void getUsageRecordsUri() {
-//
-//    }
-//
-//    @Test
-//    public void getUsageRecordsSubresourceUris() {
-//
-//    }
-//
-//    @Test
-//    public void getUsageRecordsUsageCountPrice() {
-//
-//    }
-
     @Deployment(name = "UsageRecordsTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
-        WebArchive archive = ShrinkWrap
-                .create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven
-                .resolver()
-                .resolve(
-                        "org.restcomm:restcomm-connect.application:war:"
-                                + version).withoutTransitivity()
+        WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
+        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+                .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
+        // archive.delete("/WEB-INF/data/hsql/restcomm.properties");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-        //TODO: add new data script with additional records
-        archive.addAsWebInfResource("restcomm_with_Data.script",
-                "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("restcomm_with_Data_UsageRecords.script", "data/hsql/restcomm.script");
+        // archive.addAsWebInfResource("restcomm.properties", "data/hsql/restcomm.properties");
         return archive;
     }
 }
