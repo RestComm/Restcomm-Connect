@@ -501,7 +501,39 @@
 		</languages>
 	</voicerss>
 
-	<!-- AT&T Speech Synthesizer plugin -->
+	<!-- AWS Polly Speech Synthesizer plugin -->
+	<awspolly class="org.restcomm.connect.tts.awspolly.AWSPollySpeechSyntetizer">
+            <aws-access-key></aws-access-key>
+            <aws-secret-key></aws-secret-key>
+            <aws-region></aws-region>
+            <speakers>
+                <ja-JP><female>Mizuki</female><male></male></ja-JP>
+                <tr-TR><female>Filiz</female><male></male></tr-TR>
+                <ru-RU><female>Tatyana</female><male>Maxim</male></ru-RU>
+                <ro-RO><female>Carmen</female><male>Maxim</male></ro-RO>
+                <pt-PT><female>Ines</female><male>Cristiano</male></pt-PT>
+                <pt-BR><female>Vitoria</female><male>Ricardo</male></pt-BR>
+                <pl-PL><female>Maja</female><male>Jan</male></pl-PL>
+                <nl-NL><female>Lotte</female><male>Ruben</male></nl-NL>
+                <nb-NO><female>Liv</female><male></male></nb-NO>
+                <it-IT><female>Carla</female><male>Giorgio</male></it-IT>
+                <is-IS><female>Dora</female><male>Karl</male></is-IS>
+                <fr-FR><female>Celine</female><male>Mathieu</male></fr-FR>
+                <fr-CA><female>Chantal</female><male></male></fr-CA>
+                <es-US><female>Penelope</female><male>Miguel</male></es-US>
+                <es-ES><female>Conchita</female><male>Enrique</male></es-ES>
+                <en-GB-WLS><female></female><male>Geraint</male></en-GB-WLS>
+                <cy-GB><female>Gwyneth</female><male></male></cy-GB>
+                <en-US><female>Joanna</female><male>Joey</male></en-US>
+                <en-IN><female>Raveena</female><male></male></en-IN>
+                <en-GB><female>Emma</female><male>Brian</male></en-GB>
+                <en-AU><female>Nicole</female><male>Russell</male></en-AU>
+                <de-DE><female>Marlene</female><male>Hans</male></de-DE>
+                <da-DK><female>Naja</female><male>Mads</male></da-DK>
+            </speakers>
+	</awspolly>
+
+        <!-- AT&T Speech Synthesizer plugin -->
 	<!-- <speech-synthesizer class="org.restcomm.connect.tts.att.AttSpeechSynthesizer">
 		<host>127.0.0.1</host> <port>7000</port> <tts-client-directory></tts-client-directory>
 		<verbose-output>false</verbose-output> <speakers> <english> <female>crystal8</female>

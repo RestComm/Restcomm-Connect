@@ -274,6 +274,7 @@ angular.module('Rvd')
             step: '='
         },
         link: function (scope, element, attrs) {
+            scope.yesNoBooleanOptions = [{caption:"Yes", value:true}, {caption:"No", value:false}];
             var step = scope.step;
             var stepUi = {}
             scope.stepUi = stepUi;
@@ -287,7 +288,7 @@ angular.module('Rvd')
                 stepUi.fokMode = "typekeys";
 
             scope.fokModeChanged = function(fokMode) {
-                console.log("fokModeChanged");
+                //console.log("fokModeChanged");
                 if (fokMode == "anykey")
                     delete step.finishOnKey;
                 else
