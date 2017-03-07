@@ -27,6 +27,7 @@ import static akka.actor.SupervisorStrategy.resume;
 import static akka.actor.SupervisorStrategy.stop;
 import static akka.pattern.Patterns.ask;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -111,7 +112,7 @@ public class ActorFaultToleranceTest {
 			boolean actorRestarted = (boolean) Await.result(ask(supervisor,
 					subjectPath, 5000), Duration.create(10, TimeUnit.SECONDS));
 
-			assertTrue(actorRestarted);
+			assertFalse(actorRestarted);
 		}};
 	}
 
@@ -138,7 +139,7 @@ public class ActorFaultToleranceTest {
 			boolean actorRestarted = (boolean) Await.result(ask(supervisor,
 					subjectPath, 5000), Duration.create(10, TimeUnit.SECONDS));
 
-			assertTrue(actorRestarted);
+			assertFalse(actorRestarted);
 		}};
 	}
 

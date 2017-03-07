@@ -567,7 +567,7 @@ public class RvdProjectsMigrationHelper {
         });
         ActorRef mailer = null;
         try {
-            mailer = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            mailer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {}
         return mailer;
     }

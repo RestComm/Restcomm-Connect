@@ -210,9 +210,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         });
         ActorRef mrb = null;
         try {
-            mrb = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            mrb = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         mrb.tell(new StartMediaResourceBroker(configuration, storage, loader, supervisor), null);
         return mrb;
@@ -246,9 +246,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         });
         ActorRef monitoring = null;
         try {
-            monitoring = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            monitoring = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return monitoring;
 

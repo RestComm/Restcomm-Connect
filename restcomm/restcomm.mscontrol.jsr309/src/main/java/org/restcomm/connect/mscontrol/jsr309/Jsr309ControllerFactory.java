@@ -23,6 +23,7 @@ package org.restcomm.connect.mscontrol.jsr309;
 
 import javax.media.mscontrol.MsControlFactory;
 
+import org.apache.log4j.Logger;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.MediaServerInfo;
 
@@ -43,6 +44,7 @@ import static akka.pattern.Patterns.ask;
  */
 public class Jsr309ControllerFactory implements MediaServerControllerFactory {
 
+    private static Logger logger = Logger.getLogger(Jsr309ControllerFactory.class);
     // Actor supervisor
     private final ActorRef supervisor;
 
@@ -76,9 +78,9 @@ public class Jsr309ControllerFactory implements MediaServerControllerFactory {
         final Props props = new Props(this.callControllerFactory);
         ActorRef callController = null;
         try {
-            callController = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            callController = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return callController;
     }
@@ -88,9 +90,9 @@ public class Jsr309ControllerFactory implements MediaServerControllerFactory {
         final Props props = new Props(this.conferenceControllerFactory);
         ActorRef conferenceController = null;
         try {
-            conferenceController = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            conferenceController = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return conferenceController;
     }
@@ -100,9 +102,9 @@ public class Jsr309ControllerFactory implements MediaServerControllerFactory {
         final Props props = new Props(this.bridgeControllerFactory);
         ActorRef bridgeController = null;
         try {
-            bridgeController = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            bridgeController = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return bridgeController;
     }

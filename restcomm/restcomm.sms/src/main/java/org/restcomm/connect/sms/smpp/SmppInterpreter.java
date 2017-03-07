@@ -222,9 +222,9 @@ public class SmppInterpreter extends UntypedActor  {
         });
         ActorRef downloader = null;
         try {
-            downloader = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            downloader = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return downloader;
     }
@@ -239,9 +239,9 @@ public class SmppInterpreter extends UntypedActor  {
         });
         ActorRef mailer = null;
         try {
-            mailer = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            mailer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return mailer;
     }
@@ -439,9 +439,9 @@ public class SmppInterpreter extends UntypedActor  {
         });
         ActorRef parser = null;
         try {
-            parser = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            parser = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return parser;
     }

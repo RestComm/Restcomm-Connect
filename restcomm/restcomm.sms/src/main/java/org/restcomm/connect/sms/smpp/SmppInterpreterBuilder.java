@@ -5,6 +5,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
 import scala.concurrent.Await;
@@ -17,6 +18,7 @@ import static akka.pattern.Patterns.ask;
 
 public class SmppInterpreterBuilder {
 
+    private static Logger logger = Logger.getLogger(SmppInterpreterBuilder.class);
     private final ActorRef supervisor;
     private Configuration configuration;
     private ActorRef service;
@@ -45,9 +47,9 @@ public class SmppInterpreterBuilder {
         });
         ActorRef smppInterpreter = null;
         try {
-            smppInterpreter = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            smppInterpreter = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return smppInterpreter;
     }

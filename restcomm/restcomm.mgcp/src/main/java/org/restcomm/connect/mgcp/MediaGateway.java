@@ -104,9 +104,9 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         });
         ActorRef connection = null;
         try {
-            connection = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            connection = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return connection;
     }
@@ -138,8 +138,10 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         }
         ActorRef bridgeEndpoint = null;
         try {
-            bridgeEndpoint = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
-        } catch (Exception e) {}
+            bridgeEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
         return bridgeEndpoint;
     }
 
@@ -170,9 +172,9 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         }
         ActorRef confEndpoint = null;
         try {
-            confEndpoint = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            confEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return confEndpoint;
     }
@@ -208,9 +210,9 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         }
         ActorRef ivrEndpoint = null;
         try {
-            ivrEndpoint = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            ivrEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return ivrEndpoint;
     }
@@ -230,9 +232,9 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         });
         ActorRef link = null;
         try {
-            link = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            link = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return link;
     }
@@ -251,9 +253,9 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         });
         ActorRef packetRelayEndpoint = null;
         try {
-            packetRelayEndpoint = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            packetRelayEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return packetRelayEndpoint;
     }

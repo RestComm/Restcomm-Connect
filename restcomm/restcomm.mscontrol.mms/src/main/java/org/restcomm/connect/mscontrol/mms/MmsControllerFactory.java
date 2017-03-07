@@ -25,6 +25,7 @@ import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActorFactory;
+import org.apache.log4j.Logger;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
@@ -41,6 +42,7 @@ import static akka.pattern.Patterns.ask;
  */
 public class MmsControllerFactory implements MediaServerControllerFactory {
 
+    private static Logger logger = Logger.getLogger(MmsControllerFactory.class);
     private final ActorRef supervisor;
     private final CallControllerFactory callControllerFactory;
     private final ConferenceControllerFactory conferenceControllerFactory;
@@ -61,9 +63,9 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
         final Props props = new Props(this.callControllerFactory);
         ActorRef callController = null;
         try {
-            callController = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            callController = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return callController;
     }
@@ -73,9 +75,9 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
         final Props props = new Props(this.conferenceControllerFactory);
         ActorRef conferenceController = null;
         try {
-            conferenceController = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            conferenceController = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return conferenceController;
     }
@@ -85,9 +87,9 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
         final Props props = new Props(this.bridgeControllerFactory);
         ActorRef bridgeController = null;
         try {
-            bridgeController = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            bridgeController = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return bridgeController;
     }

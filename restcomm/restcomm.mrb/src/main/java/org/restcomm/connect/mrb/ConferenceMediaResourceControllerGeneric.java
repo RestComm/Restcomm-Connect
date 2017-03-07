@@ -377,8 +377,10 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
             });
             ActorRef mediaGroup = null;
             try {
-                mediaGroup = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
-            } catch (Exception e) {}
+                mediaGroup = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+            } catch (Exception e) {
+                logger.error("Problem during creation of actor: "+e);
+            }
             return  mediaGroup;
         }
 
