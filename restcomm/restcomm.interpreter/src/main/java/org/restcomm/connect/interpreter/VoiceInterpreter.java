@@ -210,6 +210,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private boolean asImsUa;
     private String imsUaLogin;
     private String imsUaPassword;
+    private String forwardedFrom;
 
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
@@ -1503,7 +1504,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 parameters.add(new BasicNameValuePair(prefix + headerName, sipDiversionHeader));
 
                 try {
-                    final String forwardedFrom = sipDiversionHeader.substring(sipDiversionHeader.indexOf("sip:") + 4,
+                    forwardedFrom = sipDiversionHeader.substring(sipDiversionHeader.indexOf("sip:") + 4,
                             sipDiversionHeader.indexOf("@"));
 
                     for(int i=0; i < parameters.size(); i++) {
@@ -1722,6 +1723,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     callRecord = records.getCallDetailRecord(callRecord.getSid());
                     callRecord = callRecord.setStatus(callState.toString());
                     callRecord = callRecord.setStartTime(DateTime.now());
+                    final List<NameValuePair> parameters = parameters();
+                    callRecord = callRecord.setForwardedFrom(forwardedFrom);
                     records.updateCallDetailRecord(callRecord);
                 }
 
