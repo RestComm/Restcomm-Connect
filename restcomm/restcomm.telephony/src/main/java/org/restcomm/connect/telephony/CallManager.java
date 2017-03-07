@@ -296,7 +296,6 @@ public final class CallManager extends UntypedActor {
         if (logger.isInfoEnabled()) {
             logger.info("CallManager extensions: "+(extensions != null ? extensions.size() : "0"));
         }
-
         if(!runtime.subset("ims-authentication").isEmpty()){
             final Configuration imsAuthentication = runtime.subset("ims-authentication");
             this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
@@ -315,6 +314,20 @@ public final class CallManager extends UntypedActor {
                 this.actAsImsUa = actAsImsUa && imsProxyAddress != null && !imsProxyAddress.isEmpty()
                         && imsDomain != null && !imsDomain.isEmpty();
             }
+        }
+        firstTimeCleanup();
+    }
+
+    private void firstTimeCleanup() {
+        if (logger.isInfoEnabled())
+            logger.info("Initial CallManager cleanup. Will check running state calls in DB and update state of the calls.");
+        String instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
+        Sid sid = new Sid(instanceId);
+        final CallDetailRecordsDao callDetailRecordsDao = storage.getCallDetailRecordsDao();
+        callDetailRecordsDao.updateInCompleteCallDetailRecordsToCompletedByInstanceId(sid);
+        List<CallDetailRecord> results = callDetailRecordsDao.getInCompleteCallDetailRecordsByInstanceId(sid);
+        if (logger.isInfoEnabled()) {
+            logger.info("There are: " + results.size() + " calls in progress after cleanup.");
         }
     }
 
