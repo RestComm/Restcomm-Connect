@@ -20,7 +20,7 @@ echo "RUN TESTSUITE: $RUN_TESTSUITE"
 
 export DEPENDENCIES_HOME=$WORKSPACE/dependencies
 mkdir $DEPENDENCIES_HOME
-export RESTCOMM_HOME=$WORKSPACE/Restcomm-Connect
+export RESTCOMM_HOME=../
 mkdir $RESTCOMM_HOME/restcomm
 export RELEASE=$RESTCOMM_HOME/release
 cd $RESTCOMM_HOME/restcomm
