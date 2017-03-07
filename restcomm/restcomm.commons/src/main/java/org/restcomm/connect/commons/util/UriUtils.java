@@ -169,7 +169,12 @@ public final class UriUtils {
 
     public static HttpConnectorList getHttpConnectorList() {
         if (httpConnectorList == null) {
-            getHttpConnectorList();
+            try{
+                getHttpConnectors();
+            }catch(Exception e){
+                //TODO: handle exceptions properly
+                logger.error(e.toString());
+            }
         }
         return httpConnectorList;
     }
