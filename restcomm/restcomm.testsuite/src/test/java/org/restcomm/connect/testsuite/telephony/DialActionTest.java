@@ -756,6 +756,97 @@ public class DialActionTest {
         Iterator iter = Arrays.asList(params).iterator();
     }
 
+    /**
+     * This test verifies: if Diversion header is present in INVITE, we update ForwardedFrom in cdr.
+     * 
+     * @throws ParseException
+     * @throws InterruptedException
+     */
+    @Test
+    public void testSipInviteDiversionHeader() throws ParseException, InterruptedException {
+
+        stubFor(post(urlPathMatching("/DialAction.*"))
+                .willReturn(aResponse()
+                    .withStatus(200)));
+
+        // Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        ArrayList<String> additionalHeaders = new ArrayList<String>();
+        Header diversionHeader = aliceSipStack.getHeaderFactory().createHeader("Diversion", "<sip:11223344x@xyz.com>;counter=1;reason=UNKNOWN");
+        additionalHeaders.add(diversionHeader.toString());
+
+        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", additionalHeaders, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+
+        // Add custom headers to the SIP INVITE
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null, null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(3000);
+
+        // hangup.
+        aliceCall.disconnect();
+
+        bobCall.listenForDisconnect();
+            assertTrue(bobCall.waitForDisconnect(30 * 1000));
+        assertTrue(bobCall.respondToDisconnect());
+        try {
+            Thread.sleep(50 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+
+        logger.info("About to check the DialAction Requests");
+        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
+        assertEquals(1, requests.size());
+        String requestBody = requests.get(0).getBodyAsString();
+        String[] params = requestBody.split("&");
+        assertTrue(requestBody.contains("SipHeader_X-My-Custom-Header=My+Custom+Value"));
+        assertTrue(requestBody.contains("SipHeader_X-OtherHeader=Other+Value"));
+        assertTrue(requestBody.contains("SipHeader_X-another-header=another+value"));
+        Iterator iter = Arrays.asList(params).iterator();
+        String dialCallSid = null;
+        while (iter.hasNext()) {
+            String param = (String) iter.next();
+            if (param.startsWith("DialCallSid")) {
+                dialCallSid = param.split("=")[1];
+                break;
+            }
+        }
+        assertNotNull(dialCallSid);
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
+        assertNotNull(cdr);
+        
+        String forwardedFrom = cdr.get("forwarded_from").getAsString();
+        assertNotNull(forwardedFrom);
+    }
+
     @Test
     public void testSipInviteCustomHeaders() throws ParseException, InterruptedException {
 
