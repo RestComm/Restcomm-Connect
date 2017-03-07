@@ -259,6 +259,7 @@ public final class UserAgentManager extends UntypedActor {
         final ActorRef sender = sender();
         if (logger.isInfoEnabled()) {
             logger.info("UserAgentManager Processing Message: \"" + klass.getName() + " sender : "+ sender.getClass()+" self is terminated: "+self().isTerminated());
+            logger.info("UserAgentManager received this message: "+message);
         }
         if (message instanceof ReceiveTimeout) {
             if (logger.isDebugEnabled()) {
@@ -293,6 +294,11 @@ public final class UserAgentManager extends UntypedActor {
             }
         } else if (message instanceof SipServletResponse) {
             SipServletResponse response = (SipServletResponse) message;
+            if(logger.isInfoEnabled()) {
+                logger.info("SipServletResponse whole response is: "+response);
+                logger.info("SipServletResponse Status is: "+response.getStatus());
+                logger.info("SipServletResponse Method is: "+response.getMethod());
+            }
             if (response.getStatus()>400 && response.getMethod().equalsIgnoreCase("OPTIONS")) {
                 removeRegistration(response);
             } else if (actAsImsUa && response.getMethod().equalsIgnoreCase(REGISTER)) {

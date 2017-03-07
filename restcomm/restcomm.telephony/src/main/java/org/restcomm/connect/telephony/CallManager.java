@@ -315,7 +315,7 @@ public final class CallManager extends UntypedActor {
                         && imsDomain != null && !imsDomain.isEmpty();
             }
         }
-        firstTimeCleanup();
+        //firstTimeCleanup();
     }
 
     private void firstTimeCleanup() {
