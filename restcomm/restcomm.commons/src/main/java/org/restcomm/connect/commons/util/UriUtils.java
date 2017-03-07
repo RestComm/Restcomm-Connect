@@ -105,8 +105,6 @@ public final class UriUtils {
 
     /**
      * Resolves a relative URI.
-     * @param address The IP address of the base URI .
-     * @param port The port of the base URI.
      * @param uri The relative URI
      * @return The absolute URI
      */
@@ -173,7 +171,7 @@ public final class UriUtils {
                 getHttpConnectors();
             }catch(Exception e){
                 //TODO: handle exceptions properly
-                logger.error(e.toString());
+                logger.error("Problem during the retrieval of HTTP Connectors "+e);
             }
         }
         return httpConnectorList;
