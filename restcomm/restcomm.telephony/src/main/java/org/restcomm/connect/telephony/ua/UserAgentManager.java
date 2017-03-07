@@ -269,6 +269,10 @@ public final class UserAgentManager extends UntypedActor {
             keepAlive();
         } else if (message instanceof SipServletRequest) {
             final SipServletRequest request = (SipServletRequest) message;
+            if(logger.isInfoEnabled()) {
+                logger.info("SipServletRequest whole request is: "+request);
+                logger.info("SipServletRequest Method is: "+request.getMethod());
+            }
             final String method = request.getMethod();
             if ("REGISTER".equalsIgnoreCase(method)) {
                 if (logger.isDebugEnabled()) {
