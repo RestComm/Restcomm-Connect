@@ -5,6 +5,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.telephony.api.CallInfo;
@@ -18,6 +19,7 @@ import static akka.pattern.Patterns.ask;
 
 public class ConfVoiceInterpreterBuilder {
 
+    private Logger logger = Logger.getLogger(ConfVoiceInterpreterBuilder.class);
     private ActorRef supervisor;
     private Configuration configuration;
     private Sid account;
@@ -45,9 +47,9 @@ public class ConfVoiceInterpreterBuilder {
         });
         ActorRef confVoiceInterpreter = null;
         try {
-            confVoiceInterpreter = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            confVoiceInterpreter = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return confVoiceInterpreter;
     }

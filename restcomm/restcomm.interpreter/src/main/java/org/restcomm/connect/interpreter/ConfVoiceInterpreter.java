@@ -275,8 +275,10 @@ public class ConfVoiceInterpreter extends UntypedActor {
         });
         ActorRef cache = null;
         try {
-            cache = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
-        } catch (Exception e) {}
+            cache = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
         return cache;
     }
 
@@ -291,8 +293,10 @@ public class ConfVoiceInterpreter extends UntypedActor {
         });
         ActorRef downloader = null;
         try {
-            downloader = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
-        } catch (Exception e) {}
+            downloader = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
         return downloader;
     }
 
@@ -324,8 +328,10 @@ public class ConfVoiceInterpreter extends UntypedActor {
         });
         ActorRef mailer = null;
         try {
-            mailer = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
-        } catch (Exception e) {}
+            mailer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
         return mailer;
     }
 
@@ -527,8 +533,10 @@ public class ConfVoiceInterpreter extends UntypedActor {
         });
         ActorRef parser = null;
         try {
-            parser = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
-        } catch (Exception e) {}
+            parser = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
         return parser;
     }
 
@@ -605,8 +613,10 @@ public class ConfVoiceInterpreter extends UntypedActor {
         });
         ActorRef tts = null;
         try {
-            tts = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
-        } catch (Exception e) {}
+            tts = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
         return tts;
     }
 

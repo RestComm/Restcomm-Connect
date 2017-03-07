@@ -134,9 +134,9 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
         });
         ActorRef manager = null;
         try {
-            manager = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            manager = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return manager;
     }
@@ -153,9 +153,9 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
         });
         ActorRef ussdManager = null;
         try {
-            ussdManager = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            ussdManager = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return ussdManager;
     }
@@ -171,9 +171,9 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
         });
         ActorRef conferenceCenter = null;
         try {
-            conferenceCenter = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            conferenceCenter = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return conferenceCenter;
     }
@@ -188,9 +188,9 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
         });
         ActorRef bridges = null;
         try {
-            bridges = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            bridges = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return bridges;
     }

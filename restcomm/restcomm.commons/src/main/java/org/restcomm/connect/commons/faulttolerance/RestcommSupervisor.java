@@ -13,18 +13,12 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Function;
-import org.restcomm.connect.commons.fsm.TransitionFailedException;
-import org.restcomm.connect.commons.fsm.TransitionNotFoundException;
 import scala.collection.Iterable;
 import scala.concurrent.duration.Duration;
 
-import javax.servlet.sip.ServletParseException;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static akka.actor.SupervisorStrategy.escalate;
-import static akka.actor.SupervisorStrategy.restart;
 import static akka.actor.SupervisorStrategy.resume;
-import static akka.actor.SupervisorStrategy.stop;
 
 /**
  * Created by gvagenas on 22/02/2017.
@@ -106,22 +100,11 @@ public class RestcommSupervisor extends UntypedActor {
         @Override
         // - 2nd the Supervisor strategy will execute the Decider apply() to check what to do with the exception
         public SupervisorStrategy.Directive apply(Throwable t) throws Exception {
-            if (t instanceof ServletParseException) {
-                logger.info("ServletParseException, will resume actor");
-                return resume();
-            } else if (t instanceof NullPointerException) {
-                logger.info("NullPointerException, will restart actor");
-                return restart();
-            } else if (t instanceof IllegalArgumentException) {
-                logger.info("IllegalArgumentException, will stop actor");
-                return stop();
-            } else if (t instanceof TransitionFailedException || t instanceof TransitionNotFoundException) {
-                logger.info("FSM Transition exception, will resume");
-                return resume();
-            } else {
-                logger.info("Will escalate");
-                return escalate();
-            }
+            logger.error("Handling exception {} will resume", t.getClass().getName());
+            return resume();
+//            return restart();
+//            return stop();
+//            return escalate();
         }
     }
 

@@ -200,9 +200,9 @@ public class SmppMessageHandler extends UntypedActor  {
         });
         ActorRef session = null;
         try {
-            session = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            session = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return session;
     }

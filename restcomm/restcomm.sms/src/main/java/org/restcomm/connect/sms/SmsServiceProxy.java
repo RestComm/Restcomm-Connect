@@ -88,9 +88,9 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
         });
         ActorRef service = null;
         try {
-            service = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            service = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return service;
     }
@@ -106,9 +106,9 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
         });
         ActorRef smppService = null;
         try {
-            smppService = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            smppService = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return smppService;
     }
@@ -123,9 +123,9 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
         });
         ActorRef smppMessageHandler = null;
         try {
-            smppMessageHandler = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            smppMessageHandler = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return smppMessageHandler;
     }

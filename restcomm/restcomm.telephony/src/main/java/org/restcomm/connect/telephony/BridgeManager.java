@@ -25,6 +25,8 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.telephony.api.BridgeManagerResponse;
@@ -42,6 +44,8 @@ import static akka.pattern.Patterns.ask;
  *
  */
 public class BridgeManager extends UntypedActor {
+
+    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     private final MediaServerControllerFactory factory;
     private final ActorRef supervisor;
@@ -63,9 +67,9 @@ public class BridgeManager extends UntypedActor {
         });
         ActorRef bridge = null;
         try {
-            bridge = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            bridge = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return bridge;
     }

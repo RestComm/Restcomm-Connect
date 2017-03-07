@@ -24,6 +24,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
 import scala.concurrent.Await;
@@ -38,6 +39,7 @@ import static akka.pattern.Patterns.ask;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class SmsInterpreterBuilder {
+    private static Logger logger = Logger.getLogger(SmsInterpreterBuilder.class);
     private final ActorRef supervisor;
     private Configuration configuration;
     private ActorRef service;
@@ -66,9 +68,9 @@ public final class SmsInterpreterBuilder {
         });
         ActorRef smsInterpreter = null;
         try {
-            smsInterpreter = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            smsInterpreter = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         return smsInterpreter;
     }

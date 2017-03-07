@@ -169,8 +169,10 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
         });
         ActorRef tts = null;
         try {
-            tts = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
-        } catch (Exception e) {}
+            tts = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
         return tts;
     }
 
@@ -185,8 +187,10 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
         });
         ActorRef cache = null;
         try {
-            cache = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
-        } catch (Exception e) {}
+            cache = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
         return cache;
     }
 

@@ -25,6 +25,8 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.JainMgcpCommandEvent;
 import jain.protocol.ip.mgcp.JainMgcpResponseEvent;
 import jain.protocol.ip.mgcp.message.CreateConnectionResponse;
@@ -59,6 +61,7 @@ import static akka.pattern.Patterns.ask;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public class MockMediaGateway extends UntypedActor {
+    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // Session description for the mock media gateway.
     private static final String sdp = "v=0\n" + "o=- 1362546170756 1 IN IP4 192.168.1.100\n" + "s=Mobicents Media Server\n"
             + "c=IN IP4 192.168.1.100\n" + "t=0 0\n" + "m=audio 63044 RTP/AVP 97 8 0 101\n" + "a=rtpmap:97 l16/8000\n"
@@ -124,9 +127,9 @@ public class MockMediaGateway extends UntypedActor {
         });
         ActorRef connection = null;
         try{
-            connection = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            connection = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         connections.put(session, connection);
         return connection;
@@ -146,9 +149,9 @@ public class MockMediaGateway extends UntypedActor {
         });
         ActorRef bridgeEndpoint = null;
         try {
-            bridgeEndpoint = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            bridgeEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         endpoints.put(session, bridgeEndpoint);
         return bridgeEndpoint;
@@ -168,9 +171,9 @@ public class MockMediaGateway extends UntypedActor {
         });
         ActorRef conferenceEndpoint = null;
         try {
-            conferenceEndpoint = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            conferenceEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         endpoints.put(session, conferenceEndpoint);
         return conferenceEndpoint;
@@ -194,9 +197,9 @@ public class MockMediaGateway extends UntypedActor {
         });
         ActorRef ivrEndpoint = null;
         try {
-            ivrEndpoint = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
+            ivrEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
         } catch (Exception e) {
-
+            logger.error("Problem during creation of actor: "+e);
         }
         endpoints.put(session, ivrEndpoint);
         return ivrEndpoint;
@@ -216,8 +219,10 @@ public class MockMediaGateway extends UntypedActor {
         });
         ActorRef link = null;
         try {
-            link = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
-        } catch (Exception e) {}
+            link = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
         links.put(session, link);
         return link;
     }
@@ -236,8 +241,10 @@ public class MockMediaGateway extends UntypedActor {
         });
         ActorRef packetRelayEndpoint = null;
         try {
-            packetRelayEndpoint = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
-        } catch (Exception e) {}
+            packetRelayEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
         endpoints.put(session, packetRelayEndpoint);
         return packetRelayEndpoint;
     }

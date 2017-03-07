@@ -80,8 +80,10 @@ public final class ConferenceCenter extends UntypedActor {
         });
         ActorRef conference = null;
         try {
-            conference = (ActorRef) Await.result(ask(supervisor, props, 5000), Duration.create(10, TimeUnit.SECONDS));
-        } catch (Exception e) {}
+            conference = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
         return conference;
     }
 
