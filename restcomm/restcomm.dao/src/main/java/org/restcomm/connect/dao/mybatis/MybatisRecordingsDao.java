@@ -31,6 +31,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.entities.MediaType;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.amazonS3.S3AccessTool;
@@ -60,15 +61,16 @@ public final class MybatisRecordingsDao implements RecordingsDao {
     }
 
     @Override
-    public void addRecording(Recording recording) {
+    public void addRecording(Recording recording, MediaType mediaType) {
+        String fileExtension = mediaType.equals(MediaType.AUDIO_ONLY) ? ".wav" : ".mp4";
         if (s3AccessTool != null) {
-            URI s3Uri = s3AccessTool.uploadFile(recordingPath+"/"+recording.getSid().toString()+".wav");
+            URI s3Uri = s3AccessTool.uploadFile(recordingPath+"/"+recording.getSid().toString()+fileExtension);
             if (s3Uri != null) {
                 recording = recording.setS3Uri(s3Uri);
             }
         }
         String fileUrl = String.format("/restcomm/%s/Accounts/%s/Recordings/%s",recording.getApiVersion(),recording.getAccountSid(),recording.getSid());
-        recording = recording.updateFileUri(generateLocalFileUri(fileUrl));
+        recording = recording.updateFileUri(generateLocalFileUri(fileUrl, fileExtension));
         final SqlSession session = sessions.openSession();
         try {
             session.insert(namespace + "addRecording", toMap(recording));
@@ -78,11 +80,11 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         }
     }
 
-    public URI generateLocalFileUri(String recordingRelativeUri) {
+    public URI generateLocalFileUri(String recordingRelativeUri, String fileExtension) {
         URI uriToResolve = null;
         try {
-            //For local stored recordings, add .wav suffix to the URI
-            uriToResolve = new URI(recordingRelativeUri+".wav");
+            //For local stored recordings, add .wav/.mp4 suffix to the URI
+            uriToResolve = new URI(recordingRelativeUri+fileExtension);
         } catch (URISyntaxException e) {}
         return UriUtils.resolve(uriToResolve);
     }
@@ -198,7 +200,7 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         String fileUri = (String) map.get("file_uri");
         if (fileUri == null || fileUri.isEmpty()) {
             String file = String.format("/restcomm/%s/Accounts/%s/Recordings/%s",apiVersion,accountSid,sid);
-            fileUri = generateLocalFileUri(file).toString();
+            fileUri = generateLocalFileUri(file, ".wav").toString();
         }
         String s3Uri = (String) map.get("s3_uri");
         return new Recording(sid, dateCreated, dateUpdated, accountSid, callSid, duration, apiVersion, uri, DaoUtils.readUri(fileUri), DaoUtils.readUri(s3Uri));

@@ -59,6 +59,7 @@ import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.MediaType;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Direction;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;
@@ -219,6 +220,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     Sid recordingSid = null;
     URI recordingUri = null;
     URI publicRecordingUri = null;
+    MediaType recordingMediaType = null;
     // Information to reach the application that will be executed
     // by this interpreter.
     Sid accountId;
@@ -1702,6 +1704,20 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     }
                 }
             }
+            recordingMediaType = MediaType.AUDIO_ONLY;
+            attribute = verb.attribute("media");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    try {
+                        recordingMediaType = MediaType.getValueOf(value);
+                    } catch (final IllegalArgumentException exception) {
+                        final Notification notification = notification(WARNING_NOTIFICATION, 13612, value
+                                + " is not a valid media value");
+                        notifications.addNotification(notification);
+                    }
+                }
+            }
             // Start recording.
             recordingSid = Sid.generate(Sid.Type.RECORDING);
             String path = configuration.subset("runtime-settings").getString("recordings-path");
@@ -1712,8 +1728,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (!httpRecordingUri.endsWith("/")) {
                 httpRecordingUri += "/";
             }
-            path += recordingSid.toString() + ".wav";
-            httpRecordingUri += recordingSid.toString() + ".wav";
+            String fileExtension = recordingMediaType.equals(MediaType.AUDIO_ONLY) ? ".wav" : ".mp4";
+            path += recordingSid.toString() + fileExtension;
+            httpRecordingUri += recordingSid.toString() + fileExtension;
             recordingUri = URI.create(path);
             try {
                 publicRecordingUri = UriUtils.resolve(new URI(httpRecordingUri));
@@ -1738,9 +1755,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     source.tell(stop, source);
                     return;
                 }
-                record = new Record(recordingUri, prompts, timeout, maxLength, finishOnKey);
+                record = new Record(recordingUri, prompts, timeout, maxLength, finishOnKey, recordingMediaType);
             } else {
-                record = new Record(recordingUri, timeout, maxLength, finishOnKey);
+                record = new Record(recordingUri, timeout, maxLength, finishOnKey, recordingMediaType);
             }
 
             call.tell(record, source);
@@ -1793,7 +1810,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             builder.setUri(URI.create(buffer.toString()));
             final Recording recording = builder.build();
             final RecordingsDao recordings = storage.getRecordingsDao();
-            recordings.addRecording(recording);
+            recordings.addRecording(recording, recordingMediaType);
             // Start transcription.
             URI transcribeCallback = null;
             Attribute attribute = verb.attribute("transcribeCallback");
@@ -1904,7 +1921,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         if (!httpRecordingUri.endsWith("/")) {
                             httpRecordingUri += "/";
                         }
-                        httpRecordingUri += recordingSid.toString() + ".wav";
+                        String fileExtension = recordingMediaType.equals(MediaType.AUDIO_ONLY) ? ".wav" : ".mp4";
+                        httpRecordingUri += recordingSid.toString() + fileExtension;
                         URI publicRecordingUri = UriUtils.resolve(new URI(httpRecordingUri));
                         parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
                         parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUri.toString()));
@@ -1921,6 +1939,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         // A little clean up.
                         recordingSid = null;
                         recordingUri = null;
+                        recordingMediaType = null;
                         return;
                     } else if (CallStateChanged.class.equals(klass)) {
                         parameters.add(new BasicNameValuePair("Digits", "hangup"));
@@ -1932,6 +1951,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         // A little clean up.
                         recordingSid = null;
                         recordingUri = null;
+                        recordingMediaType = null;
                     }
 //                    final StopInterpreter stop = new StopInterpreter();
 //                    source.tell(stop, source);
@@ -1949,6 +1969,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             // A little clean up.
             recordingSid = null;
             recordingUri = null;
+            recordingMediaType = null;
         }
     }
 

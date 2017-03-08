@@ -61,6 +61,7 @@ import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.entities.MediaType;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -122,7 +123,7 @@ public class Jsr309CallController extends MediaServerController {
     private final State failed;
 
     // JSR-309 runtime stuff
-    private static final String[] CODEC_POLICY_AUDIO = new String[] { "audio" };
+    private static final String[] CODEC_POLICY_AUDIO = new String[] { "audio", "video" };
 
     private final MsControlFactory msControlFactory;
     private final MediaServerInfo mediaServerInfo;
@@ -157,6 +158,7 @@ public class Jsr309CallController extends MediaServerController {
     private Boolean collecting;
     private DateTime recordStarted;
     private DaoManager daoManager;
+    private MediaType recordingMediaType;
 
     // Runtime Setting
     private Configuration runtimeSettings;
@@ -218,6 +220,7 @@ public class Jsr309CallController extends MediaServerController {
         this.recording = Boolean.FALSE;
         this.playing = Boolean.FALSE;
         this.collecting = Boolean.FALSE;
+        this.recordingMediaType = null;
     }
 
     private boolean is(State state) {
@@ -577,7 +580,7 @@ public class Jsr309CallController extends MediaServerController {
             this.recordStarted = DateTime.now();
 
             // Tell media group to start recording
-            final Record record = new Record(recordingUri, 5, 3600, "1234567890*#");
+            final Record record = new Record(recordingUri, 5, 3600, "1234567890*#", MediaType.AUDIO_ONLY);
             onRecord(record, self, sender);
         }
     }
@@ -713,6 +716,7 @@ public class Jsr309CallController extends MediaServerController {
                 this.recorderListener.setEndOnKey(message.endInputKey());
                 this.recorderListener.setRemote(sender);
                 this.mediaGroup.getRecorder().record(message.destination(), rtcs, params);
+                this.recordingMediaType = message.media();
                 this.recording = Boolean.TRUE;
             } catch (MsControlException e) {
                 logger.error("Recording failed: " + e.getMessage());
@@ -801,7 +805,7 @@ public class Jsr309CallController extends MediaServerController {
                     builder.setUri(URI.create(buffer.toString()));
                     final Recording recording = builder.build();
                     RecordingsDao recordsDao = daoManager.getRecordingsDao();
-                    recordsDao.addRecording(recording);
+                    recordsDao.addRecording(recording, recordingMediaType);
                 }
             }
 
