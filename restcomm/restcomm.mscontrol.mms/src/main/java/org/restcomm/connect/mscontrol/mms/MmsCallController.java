@@ -43,6 +43,7 @@ import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.commons.util.WavUtils;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.entities.MediaType;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.mgcp.CloseConnection;
 import org.restcomm.connect.mgcp.CloseLink;
@@ -328,7 +329,7 @@ public class MmsCallController extends MediaServerController {
         this.recording = true;
 
         // Tell media group to start recording
-        Record record = new Record(recordingUri, timeout, maxLength, finishOnKey);
+        Record record = new Record(recordingUri, timeout, maxLength, finishOnKey, MediaType.AUDIO_ONLY);
         this.mediaGroup.tell(record, null);
     }
 
@@ -384,7 +385,7 @@ public class MmsCallController extends MediaServerController {
                 builder.setUri(URI.create(buffer.toString()));
                 final Recording recording = builder.build();
                 RecordingsDao recordsDao = daoManager.getRecordingsDao();
-                recordsDao.addRecording(recording);
+                recordsDao.addRecording(recording, MediaType.AUDIO_ONLY);
             }
         } else if(logger.isInfoEnabled()) {
              logger.info("Tried to stop recording but group was null.");
