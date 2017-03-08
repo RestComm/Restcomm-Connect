@@ -780,7 +780,7 @@ public class DialActionTest {
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
         ArrayList<String> additionalHeaders = new ArrayList<String>();
-        Header diversionHeader = aliceSipStack.getHeaderFactory().createHeader("Diversion", "<sip:11223344x@xyz.com>;counter=1;reason=UNKNOWN");
+        Header diversionHeader = aliceSipStack.getHeaderFactory().createHeader("Diversion", "<sip:11223344@xyz.com>;counter=1;reason=UNKNOWN");
         additionalHeaders.add(diversionHeader.toString());
 
         bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", additionalHeaders, null);
@@ -827,14 +827,15 @@ public class DialActionTest {
         assertEquals(1, requests.size());
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("SipHeader_X-My-Custom-Header=My+Custom+Value"));
-        assertTrue(requestBody.contains("SipHeader_X-OtherHeader=Other+Value"));
-        assertTrue(requestBody.contains("SipHeader_X-another-header=another+value"));
+        logger.info("requestBody = "+requestBody);
+        logger.debug("requestBody = "+requestBody);
+        System.out.println("requestBody = "+requestBody);
+        assertTrue(requestBody.contains("SipHeader_Diversion=%3Csip%3A11223344%40xyz.com%3E%3Bcounter%3D1%3Breason%3DUNKNOWN"));
         Iterator iter = Arrays.asList(params).iterator();
         String dialCallSid = null;
         while (iter.hasNext()) {
             String param = (String) iter.next();
-            if (param.startsWith("DialCallSid")) {
+            if (param.startsWith("CallSid")) {
                 dialCallSid = param.split("=")[1];
                 break;
             }
