@@ -105,6 +105,7 @@ public class SupervisorEndpoint extends SecuredEndpoint{
 
     protected Response pong(final String accountSid, final MediaType responseType) {
         secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
+        allowOnlySuperAdmin();
         CallDetailRecordFilter filterForTotal;
         try {
             filterForTotal = new CallDetailRecordFilter("", null, null, null, null, null,null,
@@ -125,6 +126,7 @@ public class SupervisorEndpoint extends SecuredEndpoint{
 
     protected Response getMetrics(final String accountSid, MediaType responseType) {
         secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
+        allowOnlySuperAdmin();
         //Get the list of live calls from Monitoring Service
         MonitoringServiceResponse monitoringServiceResponse;
         try {
@@ -156,6 +158,7 @@ public class SupervisorEndpoint extends SecuredEndpoint{
     //Register a remote location where Restcomm will send monitoring updates
     protected Response registerForUpdates(final String accountSid, final MultivaluedMap<String, String> data, MediaType responseType) {
         secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
+        allowOnlySuperAdmin();
         //Get the list of live calls from Monitoring Service
         MonitoringServiceResponse liveCalls;
         try {
@@ -184,7 +187,7 @@ public class SupervisorEndpoint extends SecuredEndpoint{
     //Register a remote location where Restcomm will send monitoring updates for a specific Call
     protected Response registerForCallUpdates(final String accountSid, final String callSid, final MultivaluedMap<String, String> data, MediaType responseType) {
         secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
-
+        allowOnlySuperAdmin();
         final String url = data.getFirst("Url");
         final String refresh = data.getFirst("Refresh");
         //Get the list of live calls from Monitoring Service
