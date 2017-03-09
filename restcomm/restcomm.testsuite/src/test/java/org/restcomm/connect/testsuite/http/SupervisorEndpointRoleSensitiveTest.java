@@ -57,12 +57,25 @@ public class SupervisorEndpointRoleSensitiveTest extends EndpointTest {
     static String developerUsername = "developer@company.com";
     static String developerAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
+    private String superAdmin2AccountSid = "AC00000000000000000000000000000000";
+    private String superAdmin2AuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+
     /**
      * Super Admin should be able to access supervisor metrics
      */
     @Test
     public void testSuperAdminPermissionTest() {
     	JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken);
+        Assert.assertNotNull(metrics);
+    }
+
+
+    /**
+     *  Super Admins (but not ancestors) SHOULD be able to access supervisor metrics
+     */
+    @Test
+    public void testSuperAdmin2PermissionTest() {
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), superAdmin2AccountSid, superAdmin2AuthToken);
         Assert.assertNotNull(metrics);
     }
 
