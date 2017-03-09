@@ -38,13 +38,13 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
 /**
- * SupervisorEndpointRoleSensitiveTest Supervisor metrices should be accessible to only Super Admin role.
+ * SupervisorEndpointAccessControlTest Supervisor metrices should be accessible to only Super Admin role.
  *
  * @author Maria Farooq <dam dam nak nak>
  */
 @RunWith(Arquillian.class)
-public class SupervisorEndpointRoleSensitiveTest extends EndpointTest {
-    protected final static Logger logger = Logger.getLogger(SupervisorEndpointRoleSensitiveTest.class);
+public class SupervisorEndpointAccessControlTest extends EndpointTest {
+    protected final static Logger logger = Logger.getLogger(SupervisorEndpointAccessControlTest.class);
 
     private String superAdminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String superAdminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
