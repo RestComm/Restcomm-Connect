@@ -102,6 +102,8 @@ public class ActorFaultToleranceTest {
 			final ActorRef subject = (ActorRef) Await.result(ask(supervisor,
 					new Props(TestActor.class), 5000), Duration.create(10, TimeUnit.SECONDS));
 
+			subject.tell("exceptionMsgReceived", getRef());
+			expectMsgEquals(duration("1 second"), false);
 
 			ActorPath subjectPath = subject.path();
 			int subjectHashCode = subject.hashCode();
@@ -109,10 +111,13 @@ public class ActorFaultToleranceTest {
 			expectMsgEquals(duration("1 second"), "I don't stop on exceptions");
 			Thread.sleep(5000);
 
-			boolean actorRestarted = (boolean) Await.result(ask(supervisor,
-					subjectPath, 5000), Duration.create(10, TimeUnit.SECONDS));
+			//Verify Actor didn't restarted, if exceptionMsgReceived is TRUE that means the actor DID NOT restarted
+			subject.tell("exceptionMsgReceived", getRef());
+			expectMsgEquals(duration("1 second"), true);
 
-			assertFalse(actorRestarted);
+			system.stop(subject);
+			Thread.sleep(500);
+			assertTrue(subject.isTerminated());
 		}};
 	}
 
@@ -126,20 +131,20 @@ public class ActorFaultToleranceTest {
 			final ActorRef subject = (ActorRef) Await.result(ask(supervisor,
 					new Props(TestActor.class), 5000), Duration.create(10, TimeUnit.SECONDS));
 
-//			ActorRef childActor = (ActorRef) Await.result(ask(subject, "CreateChild", 5000), Duration.create(10, TimeUnit.SECONDS));
-
 			final ActorRef childActor = (ActorRef) Await.result(ask(supervisor,
 					new Props(TestActor2.class), 5000), Duration.create(10, TimeUnit.SECONDS));
+
+			childActor.tell("exceptionMsgReceived", getRef());
+			expectMsgEquals(duration("1 second"), false);
 
 			childActor.tell("exception", getRef());
 			ActorPath subjectPath = childActor.path();
 			expectMsgEquals(duration("1 second"), "Me the TestActor2, I don't stop on exceptions");
+
+			//Verify Actor didn't restarted, if exceptionMsgReceived is TRUE that means the actor DID NOT restarted
 			Thread.sleep(5000);
-
-			boolean actorRestarted = (boolean) Await.result(ask(supervisor,
-					subjectPath, 5000), Duration.create(10, TimeUnit.SECONDS));
-
-			assertFalse(actorRestarted);
+			childActor.tell("exceptionMsgReceived", getRef());
+			expectMsgEquals(duration("1 second"), true);
 		}};
 	}
 
@@ -147,6 +152,7 @@ public class ActorFaultToleranceTest {
 
 		private LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 		ActorRef target = null;
+		boolean exceptionMsgReceived = false;
 
 		public void onReceive (Object msg) {
 			final Class<?> klass = msg.getClass();
@@ -157,9 +163,12 @@ public class ActorFaultToleranceTest {
 				if (target != null) target.forward(msg, getContext());
 
 			} else if (msg.equals("exception")) {
+				exceptionMsgReceived = true;
 				getSender().tell("I don't stop on exceptions", getSelf());
 				String s = null;
 				s.equalsIgnoreCase("blabla");
+			} else if (msg.equals("exceptionMsgReceived")) {
+				sender().tell(exceptionMsgReceived, self());
 			} else if (msg.equals("CreateChild")) {
 				final Props props = new Props(TestActor2.class);
 				final ActorRef actor2 = system.actorOf(props);
@@ -187,15 +196,19 @@ public class ActorFaultToleranceTest {
 
 		private LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 		ActorRef target = null;
+		boolean exceptionMsgReceived = false;
 
 		public void onReceive (Object msg) {
 			final Class<?> klass = msg.getClass();
 			logger.info(" ********** TestActor2 " + self().path() + " Processing Message: " + klass.getName());
 
 			if (msg.equals("exception")) {
+				exceptionMsgReceived = true;
 				getSender().tell("Me the TestActor2, I don't stop on exceptions", getSelf());
 				String s = null;
 				s.equalsIgnoreCase("blabla");
+			} else if (msg.equals("exceptionMsgReceived")) {
+				sender().tell(exceptionMsgReceived, self());
 			}
 		}
 
