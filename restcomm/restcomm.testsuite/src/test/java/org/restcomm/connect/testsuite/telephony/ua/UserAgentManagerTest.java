@@ -42,13 +42,18 @@ import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
+import javax.sip.InvalidArgumentException;
 import javax.sip.RequestEvent;
+import javax.sip.address.Address;
 import javax.sip.address.SipURI;
+import javax.sip.header.Header;
 import javax.sip.message.Response;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 //import org.restcomm.connect.telephony.Version;
@@ -81,6 +86,11 @@ public final class UserAgentManagerTest {
     private SipPhone phone2;
     private String bobContact = "sip:bob@127.0.0.1:5090";
 
+    private static SipStackTool tool3;
+    private SipStack sipStack3;
+    private SipPhone phone3;
+    private String aliceContact3 = "sip:alice@127.0.0.1:5071;transport=udp;rc-id=7616";
+
     public UserAgentManagerTest() {
         super();
     }
@@ -89,6 +99,7 @@ public final class UserAgentManagerTest {
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("UserAgentTest1");
         tool2 = new SipStackTool("UserAgentTest2");
+        tool3 = new SipStackTool("UserAgentTest3");
     }
 
     @Before
@@ -98,6 +109,9 @@ public final class UserAgentManagerTest {
 
         sipStack2 = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
         phone2 = sipStack2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
+
+        sipStack3 = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5071", "127.0.0.1:5080");
+        phone3 = sipStack3.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact3);
     }
 
     @After
@@ -107,6 +121,18 @@ public final class UserAgentManagerTest {
         }
         if (sipStack != null) {
             sipStack.dispose();
+        }
+        if (phone2 != null) {
+            phone2.dispose();
+        }
+        if (sipStack2 != null) {
+            sipStack2.dispose();
+        }
+        if (phone3 != null) {
+            phone3.dispose();
+        }
+        if (sipStack3 != null) {
+            sipStack3.dispose();
         }
 //        deployer.undeploy("UserAgentTest");
     }
@@ -222,12 +248,12 @@ public final class UserAgentManagerTest {
         phone = null;
         sipStack = null;
 
-//        Thread.sleep(100000);
-//        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        Thread.sleep(100000);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
-    @Test @Ignore
-    public void registerUserAgentWithExceptionOnOptionsPingForGeorge() throws ParseException, InterruptedException {
+    @Test
+    public void registerUserAgentWith503ErrorResponse() throws ParseException, InterruptedException, InvalidArgumentException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
         SipURI uri = sipStack2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -237,12 +263,125 @@ public final class UserAgentManagerTest {
         Thread.sleep(2000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
 
+        phone2.listenRequestMessage();
+        RequestEvent request = phone2.waitRequest(10000);
+        assertEquals(request.getRequest().getMethod(), SipRequest.OPTIONS);
+
+        ArrayList<Header> additionalHeader = new ArrayList<Header>();
+        Header reason = sipStack2.getHeaderFactory().createReasonHeader("udp", 503, "Destination not available");
+        additionalHeader.add(reason);
+        phone2.sendReply(request, 503, "Service unavailable", null, null, 3600, additionalHeader, null, null);
+
         //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
         sipStack2.dispose();
         phone2 = null;
         sipStack2 = null;
 
-        Thread.sleep(100000);
+        Thread.sleep(1000);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+    }
+
+    @Test
+    public void registerUserAgentWithExtraParamsAnd503ToOptionsPing() throws ParseException, InterruptedException, InvalidArgumentException {
+//        deployer.deploy("UserAgentTest");
+        // Register the phone so we can get OPTIONS pings from RestComm.
+        SipURI uri = sipStack3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        Credential c = new Credential("127.0.0.1","alice", "1234");
+        phone3.addUpdateCredential(c);
+
+        assertTrue(phone3.register(uri, "alice", "1234", aliceContact3, 3600, 3600));
+        Thread.sleep(500);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+
+        phone3.listenRequestMessage();
+        RequestEvent requestEvent = phone3.waitRequest(10000);
+        assertNotNull(requestEvent);
+        assertTrue(requestEvent.getRequest().getMethod().equals(SipRequest.OPTIONS));
+        String extraParam = ((SipUri)requestEvent.getRequest().getRequestURI()).getParameter("rc-id");
+        assertNotNull(extraParam);
+        logger.info("RequestEvent :"+requestEvent.getRequest().toString());
+
+        ArrayList<Header> additionalHeader = new ArrayList<Header>();
+        Header reason = sipStack3.getHeaderFactory().createReasonHeader("udp", 503, "Destination not available");
+        additionalHeader.add(reason);
+        ArrayList<Header> replaceHeaders = new ArrayList<Header>();
+        Header toHeader = sipStack3.getHeaderFactory().createToHeader(sipStack3.getAddressFactory().createAddress(aliceContact3), null);
+        replaceHeaders.add(toHeader);
+        phone3.sendReply(requestEvent, 503, "Service unavailable", null, null, 3600, additionalHeader, replaceHeaders, null);
+
+        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
+        sipStack3.dispose();
+        phone3 = null;
+        sipStack3 = null;
+
+        Thread.sleep(1000);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+    }
+
+    @Test
+    public void registerUserAgentWithExtraParamsAnd408ToOptionsPing() throws ParseException, InterruptedException, InvalidArgumentException {
+//        deployer.deploy("UserAgentTest");
+        // Register the phone so we can get OPTIONS pings from RestComm.
+        SipURI uri = sipStack3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        Credential c = new Credential("127.0.0.1","alice", "1234");
+        phone3.addUpdateCredential(c);
+
+        assertTrue(phone3.register(uri, "alice", "1234", aliceContact3, 3600, 3600));
+        Thread.sleep(500);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+
+        phone3.listenRequestMessage();
+        RequestEvent requestEvent = phone3.waitRequest(10000);
+        assertNotNull(requestEvent);
+        assertTrue(requestEvent.getRequest().getMethod().equals(SipRequest.OPTIONS));
+        String extraParam = ((SipUri)requestEvent.getRequest().getRequestURI()).getParameter("rc-id");
+        assertNotNull(extraParam);
+        logger.info("RequestEvent :"+requestEvent.getRequest().toString());
+
+        ArrayList<Header> additionalHeader = new ArrayList<Header>();
+        Header reason = sipStack3.getHeaderFactory().createReasonHeader("udp", 503, "Destination not available");
+        additionalHeader.add(reason);
+        ArrayList<Header> replaceHeaders = new ArrayList<Header>();
+        Header toHeader = sipStack3.getHeaderFactory().createToHeader(sipStack3.getAddressFactory().createAddress(aliceContact3), null);
+        replaceHeaders.add(toHeader);
+        phone3.sendReply(requestEvent, 408, "Request Timeout", null, null, 3600, additionalHeader, replaceHeaders, null);
+
+        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
+        sipStack3.dispose();
+        phone3 = null;
+        sipStack3 = null;
+
+        Thread.sleep(1000);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+    }
+
+    @Test
+    public void registerUserAgentWith408ErrorResponse() throws ParseException, InterruptedException, InvalidArgumentException {
+//        deployer.deploy("UserAgentTest");
+        // Register the phone so we can get OPTIONS pings from RestComm.
+        SipURI uri = sipStack2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        Credential c = new Credential("127.0.0.1","bob", "1234");
+        phone2.addUpdateCredential(c);
+        assertTrue(phone2.register(uri, "bob", "1234", bobContact, 3600, 3600));
+        Thread.sleep(2000);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+
+        phone2.listenRequestMessage();
+        RequestEvent request = phone2.waitRequest(10000);
+        assertEquals(request.getRequest().getMethod(), SipRequest.OPTIONS);
+
+        ArrayList<Header> additionalHeader = new ArrayList<Header>();
+        Header reason = sipStack2.getHeaderFactory().createReasonHeader("udp", 503, "Destination not available");
+        additionalHeader.add(reason);
+
+        phone2.sendReply(request, 408, "Request timeout", null, null, 3600);
+
+        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
+        sipStack2.dispose();
+        phone2 = null;
+        sipStack2 = null;
+
+        Thread.sleep(1000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -256,9 +395,11 @@ public final class UserAgentManagerTest {
         archive.delete("/WEB-INF/sip.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
+        archive.delete("/WEB-INF/classes/application.conf");
         archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
+        archive.addAsWebInfResource("restcomm_UserAgentManagerTest.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_UserAgentTest", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
         return archive;
     }
 }
