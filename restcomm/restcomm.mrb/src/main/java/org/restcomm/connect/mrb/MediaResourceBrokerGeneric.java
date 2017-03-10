@@ -20,10 +20,13 @@
  */
 package org.restcomm.connect.mrb;
 
+import static akka.pattern.Patterns.ask;
+
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -42,11 +45,13 @@ import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
 import org.restcomm.connect.dao.entities.MediaServerEntity;
 import org.restcomm.connect.mgcp.MediaResourceBrokerResponse;
+import org.restcomm.connect.mgcp.PowerOffMediaGateway;
 import org.restcomm.connect.mgcp.PowerOnMediaGateway;
 import org.restcomm.connect.mrb.api.GetConferenceMediaResourceController;
 import org.restcomm.connect.mrb.api.GetMediaGateway;
 import org.restcomm.connect.mrb.api.MediaGatewayForConference;
 import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
+import org.restcomm.connect.telephony.api.ConferenceStateChanged;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -60,28 +65,31 @@ import jain.protocol.ip.mgcp.JainMgcpStack;
 import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
 
-import static akka.pattern.Patterns.ask;
-
+/**
+ * @author maria.farooq@telestax.com (Maria Farooq)
+ */
 public class MediaResourceBrokerGeneric extends UntypedActor{
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private Configuration configuration;
-    private DaoManager storage;
-    private ClassLoader loader;
-    private ActorRef localMediaGateway;
-    private String localMsId;
-    private Map<String, ActorRef> mediaGatewayMap;
+    protected Configuration configuration;
+    protected DaoManager storage;
+    protected ClassLoader loader;
+    protected ActorRef localMediaGateway;
+    protected String localMsId;
+    protected Map<String, ActorRef> mediaGatewayMap;
 
-    private ActorRef supervisor;
+    protected ActorRef supervisor;
+    protected JainMgcpStack mgcpStack;
+    protected JainMgcpProvider mgcpProvider;
 
-    private JainMgcpStack mgcpStack;
-    private JainMgcpProvider mgcpProvider;
-
-    private MediaServerEntity localMediaServerEntity;
+    protected MediaServerEntity localMediaServerEntity;
 
     public MediaResourceBrokerGeneric(){
         super();
+        if (logger.isInfoEnabled()) {
+            logger.info(" ********** Community MediaResourceBroker Constructed");
+        }
     }
 
     @Override
@@ -102,7 +110,13 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
         }
     }
 
-    private void onStartMediaResourceBroker(StartMediaResourceBroker message, ActorRef self, ActorRef sender) throws UnknownHostException{
+    /**
+     * @param message
+     * @param self
+     * @param sender
+     * @throws UnknownHostException
+     */
+    protected void onStartMediaResourceBroker(StartMediaResourceBroker message, ActorRef self, ActorRef sender) throws UnknownHostException{
         this.configuration = message.configuration();
         this.storage = message.storage();
         this.loader = message.loader();
@@ -115,7 +129,12 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
         mediaGatewayMap.put(localMediaServerEntity.getMsId()+"", localMediaGateway);
     }
 
-    private void bindMGCPStack(String ip, int port) throws UnknownHostException {
+    /**
+     * @param ip
+     * @param port
+     * @throws UnknownHostException
+     */
+    protected void bindMGCPStack(String ip, int port) throws UnknownHostException {
         mgcpStack = new JainMgcpStackImpl(InetAddress.getByName(ip), port);
         try {
             mgcpProvider = mgcpStack.createProvider();
@@ -143,7 +162,12 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
         return gateway;
     }
 
-    private ActorRef turnOnMediaGateway(MediaServerEntity mediaServerEntity) throws UnknownHostException {
+    /**
+     * @param mediaServerEntity
+     * @return
+     * @throws UnknownHostException
+     */
+    protected ActorRef turnOnMediaGateway(MediaServerEntity mediaServerEntity) throws UnknownHostException {
 
         if (logger.isDebugEnabled()) {
             String mgcpServer = configuration.getString("mgcp-server[@class]");
@@ -182,12 +206,15 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
         return gateway;
     }
 
-    private ActorRef getConferenceMediaResourceController() {
+    /**
+     * @return ConferenceMediaResourceController Community version actor
+     */
+    protected ActorRef getConferenceMediaResourceController() {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
             @Override
             public UntypedActor create() throws Exception {
-                return new ConferenceMediaResourceControllerGeneric(supervisor, localMsId, localMediaGateway, configuration, storage, self());
+                return new ConferenceMediaResourceControllerGeneric(supervisor, localMediaGateway, configuration, storage, self());
             }
         });
         ActorRef confMRC = null;
@@ -199,7 +226,19 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
         return confMRC;
     }
 
-    private void onGetMediaGateway(GetMediaGateway message, ActorRef self, ActorRef sender) throws Exception {
+    /**
+     * @param message     -    GetMediaGateway
+     *     -    (callSid: if MediaGateway is required for a call
+     *     -    conferenceName: if MediaGateway is required for a conference
+     *     -    msId: or if MediaGateway is required for a specific MediaServer in cluster)
+     * @param self
+     * @param sender
+     * @throws Exception
+     */
+    protected void onGetMediaGateway(GetMediaGateway message, ActorRef self, ActorRef sender) throws Exception {
+        if(logger.isDebugEnabled()){
+            logger.debug(""+message.toString());
+        }
         final String conferenceName = message.conferenceName();
         final Sid callSid = message.callSid();
 
@@ -208,12 +247,17 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
             updateMSIdinCallDetailRecord(localMsId, callSid);
             sender.tell(new MediaResourceBrokerResponse<ActorRef>(localMediaGateway), self);
         }else{
-            final Sid conferenceSid = addConferenceDetailRecord(conferenceName, callSid);
-            sender.tell(new MediaResourceBrokerResponse<MediaGatewayForConference>(new MediaGatewayForConference(conferenceSid, localMediaGateway, null, false)), self);
+            final MediaGatewayForConference mgfc = addConferenceDetailRecord(conferenceName, callSid);
+            sender.tell(new MediaResourceBrokerResponse<MediaGatewayForConference>(mgfc), self);
         }
     }
 
-    private void updateMSIdinCallDetailRecord(final String msId, final Sid callSid){
+    /**
+     * @param msId
+     * @param callSid
+     *
+     */
+    protected void updateMSIdinCallDetailRecord(final String msId, final Sid callSid){
         if(callSid == null){
             if(logger.isDebugEnabled())
                 logger.debug("Call Id is not specisfied, it can be an outbound call.");
@@ -224,14 +268,21 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
                 cdr = cdr.setMsId(msId);
                 dao.updateCallDetailRecord(cdr);
             }else{
-                logger.warning("provided call id did not found");
+                logger.error("provided call id did not found");
             }
         }
 
     }
 
-    private Sid addConferenceDetailRecord(final String conferenceName, final Sid callSid) throws Exception {
+    /**
+     * @param conferenceName
+     * @param callSid
+     * @return
+     * @throws Exception
+     */
+    protected MediaGatewayForConference addConferenceDetailRecord(final String conferenceName, final Sid callSid) throws Exception {
        Sid sid = null;
+       MediaGatewayForConference mgc = null;
         if(conferenceName == null ){
             logger.error("provided conference name is null, this can lead to problems in future of this call");
         }else{
@@ -247,32 +298,15 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
 
                 ConferenceDetailRecordFilter filter = new ConferenceDetailRecordFilter(accountSid, "RUNNING%", null, null, friendlyName, 1, 0);
                 List<ConferenceDetailRecord> records = dao.getConferenceDetailRecords(filter);
-
+                ConferenceDetailRecord cdr;
                 if(records != null && records.size()>0){
-                    final ConferenceDetailRecord cdr = records.get(0);
+                    cdr = records.get(0);
                     sid = cdr.getSid();
                     if(logger.isInfoEnabled())
                         logger.info("A conference with same name is running. According to database record. given SID is: "+sid);
                 }else{
                     // this is first record of this conference on all instances of
-                    final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
-                    sid = Sid.generate(Sid.Type.CONFERENCE);
-                    conferenceBuilder.setSid(sid);
-                    conferenceBuilder.setDateCreated(DateTime.now());
-
-                    conferenceBuilder.setAccountSid(new Sid(accountSid));
-                    conferenceBuilder.setStatus("RUNNING_INITIALIZING");
-                    conferenceBuilder.setApiVersion(callRecord.getApiVersion());
-                    final StringBuilder UriBuffer = new StringBuilder();
-                    UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountSid).append("/Conferences/");
-                    UriBuffer.append(sid);
-                    final URI uri = URI.create(UriBuffer.toString());
-                    conferenceBuilder.setUri(uri);
-                    conferenceBuilder.setFriendlyName(friendlyName);
-                    conferenceBuilder.setMasterMsId(localMsId);
-
-                    ConferenceDetailRecord cdr = conferenceBuilder.build();
-                    dao.addConferenceDetailRecord(cdr);
+                    addNewConferenceRecord(accountSid, callRecord, friendlyName);
 
                     //getting CDR again as it is a conditional insert(select if exists or insert) to handle concurrency (incase another participant joins on another instance at very same time)
                     cdr = dao.getConferenceDetailRecords(filter).get(0);
@@ -280,14 +314,45 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
                     if(logger.isInfoEnabled())
                         logger.info("addConferenceDetailRecord: SID: "+sid+" NAME: "+conferenceName);
                 }
+                mgc = new MediaGatewayForConference(sid, localMediaGateway, null, false);
             }else{
                 logger.error("call record is null");
             }
         }
-        return sid;
+        return mgc;
     }
 
-    private MediaServerEntity uploadLocalMediaServersInDataBase() {
+    /**
+     * addNewConferenceRecord
+     * @param accountSid
+     * @param callRecord
+     * @param friendlyName
+     */
+    protected void addNewConferenceRecord(String accountSid, CallDetailRecord callRecord, String friendlyName){
+        final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
+        Sid sid = Sid.generate(Sid.Type.CONFERENCE);
+        conferenceBuilder.setSid(sid);
+        conferenceBuilder.setDateCreated(DateTime.now());
+
+        conferenceBuilder.setAccountSid(new Sid(accountSid));
+        conferenceBuilder.setStatus(ConferenceStateChanged.State.RUNNING_INITIALIZING+"");
+        conferenceBuilder.setApiVersion(callRecord.getApiVersion());
+        final StringBuilder UriBuffer = new StringBuilder();
+        UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountSid).append("/Conferences/");
+        UriBuffer.append(sid);
+        final URI uri = URI.create(UriBuffer.toString());
+        conferenceBuilder.setUri(uri);
+        conferenceBuilder.setFriendlyName(friendlyName);
+        conferenceBuilder.setMasterMsId(localMsId);
+
+        ConferenceDetailRecord cdr = conferenceBuilder.build();
+        storage.getConferenceDetailRecordsDao().addConferenceDetailRecord(cdr);
+    }
+
+    /**
+     * @return
+     */
+    protected MediaServerEntity uploadLocalMediaServersInDataBase() {
         String localIpAdressForMediaGateway = configuration.getString("mgcp-server.local-address");
         int localPortAdressForMediaGateway = Integer.parseInt(configuration.getString("mgcp-server.local-port"));
         String remoteIpAddress = configuration.getString("mgcp-server.remote-address");
@@ -323,6 +388,8 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
 
     @Override
     public void postStop() {
+        if(logger.isInfoEnabled())
+            logger.info("MRB on post stop");
         // Cleanup resources
         cleanup();
 
@@ -330,5 +397,22 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
         getContext().stop(self());
     }
 
-    protected void cleanup() {}
+    protected void cleanup() {
+        try {
+            if(mediaGatewayMap != null){
+                Iterator<String> gatewayKeys = mediaGatewayMap.keySet().iterator();
+                while (gatewayKeys.hasNext()){
+                    ActorRef mg = mediaGatewayMap.get(gatewayKeys.next());
+                    mg.tell(new PowerOffMediaGateway(), self());
+                }
+            }
+            if (mgcpStack != null){
+                mgcpStack.deleteProvider(mgcpProvider);
+                mgcpStack = null;
+            }
+            mediaGatewayMap = null;
+        } catch (Exception e) {
+            logger.error("Exception is cleanup: ", e);
+        }
+    }
 }
