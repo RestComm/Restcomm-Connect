@@ -1,1 +1,0 @@
-{"method":"GET","numDigits":1,"steps":[{"phrase":"Welcome to Telestax, forsales, press 1, for technical support press 2","kind":"say","label":"say","title":"say","name":"step5"}],"menu":{"mappings":[{"digits":"1","next":"module1"},{"digits":"2","next":"module2"}]},"gatherType":"menu","kind":"gather","label":"gather","title":"collect","name":"step4"}
