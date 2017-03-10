@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommSupervisor;
 import org.restcomm.connect.commons.loader.ObjectFactory;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -33,6 +34,7 @@ import akka.actor.UntypedActorFactory;
 public class MediaResourceBrokerTestUtil {
 	private final static Logger logger = Logger.getLogger(MediaResourceBrokerTestUtil.class.getName());
     protected static ActorSystem system;
+    protected static ActorRef supervisor = null;
     protected static Configuration configurationNode1;
     protected static Configuration configurationNode2;
     protected XMLConfiguration daoManagerConf = null;
@@ -54,6 +56,7 @@ public class MediaResourceBrokerTestUtil {
     @BeforeClass
     public static void beforeClass() throws Exception {
         system = ActorSystem.create();
+        supervisor = system.actorOf(new Props(RestcommSupervisor.class), "supervisor");
     }
 
     @AfterClass
@@ -91,7 +94,7 @@ public class MediaResourceBrokerTestUtil {
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
         }));
-        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader), null);
+        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader, supervisor), null);
         return mrb;
     
     }

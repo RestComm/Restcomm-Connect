@@ -20,12 +20,14 @@
  */
 package org.restcomm.connect.mrb;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import static akka.pattern.Patterns.ask;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
@@ -55,20 +57,16 @@ import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StopRecording;
 import org.restcomm.connect.mscontrol.mms.MgcpMediaGroup;
-<<<<<<< HEAD
 import org.restcomm.connect.telephony.api.ConferenceStateChanged;
-=======
+
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
->>>>>>> master
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -108,15 +106,9 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
     // Observer pattern
     protected final List<ActorRef> observers;
     protected ActorRef mrb;
+    protected ActorRef supervisor;
 
-<<<<<<< HEAD
-    public ConferenceMediaResourceControllerGeneric(ActorRef localMediaGateway, final Configuration configuration, final DaoManager storage, final ActorRef mrb){
-=======
-    private ActorRef supervisor;
-
-    public ConferenceMediaResourceControllerGeneric(final ActorRef supervisor, final String localMsId, ActorRef localMediaGateway, final Configuration configuration, final DaoManager storage, final ActorRef mrb){
-    //public ConferenceMediaResourceController(final String localMsId, final Map<String, ActorRef> gateways, final Configuration configuration, final DaoManager storage){
->>>>>>> master
+    public ConferenceMediaResourceControllerGeneric(final ActorRef supervisor, ActorRef localMediaGateway, final Configuration configuration, final DaoManager storage, final ActorRef mrb){
         super();
         final ActorRef source = self();
         this.supervisor = supervisor;
@@ -380,16 +372,9 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         public CreatingMediaGroup(ActorRef source) {
             super(source);
         }
-
-<<<<<<< HEAD
         protected ActorRef createMediaGroup(final Object message) {
-            return getContext().actorOf(new Props(new UntypedActorFactory() {
-                protected static final long serialVersionUID = 1L;
-=======
-        private ActorRef createMediaGroup(final Object message) {
             final Props props = new Props(new UntypedActorFactory() {
-                private static final long serialVersionUID = 1L;
->>>>>>> master
+                protected static final long serialVersionUID = 1L;
 
                 @Override
                 public UntypedActor create() throws Exception {
