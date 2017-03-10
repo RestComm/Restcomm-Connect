@@ -1724,7 +1724,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     callRecord = records.getCallDetailRecord(callRecord.getSid());
                     callRecord = callRecord.setStatus(callState.toString());
                     callRecord = callRecord.setStartTime(DateTime.now());
-                    final List<NameValuePair> parameters = parameters();
                     callRecord = callRecord.setForwardedFrom(forwardedFrom);
                     records.updateCallDetailRecord(callRecord);
                 }
