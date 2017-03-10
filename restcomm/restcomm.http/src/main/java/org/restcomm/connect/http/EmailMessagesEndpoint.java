@@ -2,13 +2,31 @@ package org.restcomm.connect.http;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
+import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.faulttolerance.RestcommSupervisor;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.dao.AccountsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.email.EmailService;
+import org.restcomm.connect.email.api.EmailRequest;
+import org.restcomm.connect.email.api.EmailResponse;
+import org.restcomm.connect.email.api.Mail;
+import org.restcomm.connect.http.converter.EmailMessageConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -16,27 +34,17 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import java.util.concurrent.TimeUnit;
 
-import static javax.ws.rs.core.MediaType.*;
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
-
-import com.thoughtworks.xstream.XStream;
-import org.apache.commons.configuration.Configuration;
-import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import org.restcomm.connect.http.converter.EmailMessageConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.dao.AccountsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.email.api.EmailRequest;
-import org.restcomm.connect.email.api.EmailResponse;
-import org.restcomm.connect.email.api.Mail;
-import org.restcomm.connect.email.EmailService;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
+import static akka.pattern.Patterns.ask;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 
 /**
@@ -46,7 +54,7 @@ public class EmailMessagesEndpoint extends SecuredEndpoint {
     private static Logger logger = Logger.getLogger(EmailMessagesEndpoint.class);
     @Context
     protected ServletContext context;
-    protected ActorSystem system;
+    protected ActorRef supervisor;
     protected Configuration configuration;
     protected Configuration confemail;
     protected Gson gson;
@@ -68,7 +76,7 @@ public class EmailMessagesEndpoint extends SecuredEndpoint {
         confemail=configuration.subset("smtp-service");
         configuration = configuration.subset("runtime-settings");
         accountsDao = storage.getAccountsDao();
-        system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+        supervisor = (ActorRef) context.getAttribute(RestcommSupervisor.class.getName());
         super.init(configuration);
         final EmailMessageConverter converter = new EmailMessageConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
@@ -215,25 +223,38 @@ public class EmailMessagesEndpoint extends SecuredEndpoint {
 
 
     private ActorRef session(final Configuration configuration) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public Actor create() throws Exception {
                 return new EmailService(configuration);
             }
-        }));
+        });
+        ActorRef session = null;
+        try {
+            session = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return session;
     }
 
     private ActorRef observer() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new EmailSessionObserver();
             }
-        }));
+        });
+        ActorRef observer = null;
+        try {
+            observer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return observer;
     }
 
     private final class EmailSessionObserver extends UntypedActor {

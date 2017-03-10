@@ -20,11 +20,12 @@
  */
 package org.restcomm.connect.mrb;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
@@ -53,13 +54,16 @@ import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StopRecording;
 import org.restcomm.connect.mscontrol.mms.MgcpMediaGroup;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -103,10 +107,13 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
     private final List<ActorRef> observers;
     private final ActorRef mrb;
 
-    public ConferenceMediaResourceControllerGeneric(final String localMsId, ActorRef localMediaGateway, final Configuration configuration, final DaoManager storage, final ActorRef mrb){
+    private ActorRef supervisor;
+
+    public ConferenceMediaResourceControllerGeneric(final ActorRef supervisor, final String localMsId, ActorRef localMediaGateway, final Configuration configuration, final DaoManager storage, final ActorRef mrb){
     //public ConferenceMediaResourceController(final String localMsId, final Map<String, ActorRef> gateways, final Configuration configuration, final DaoManager storage){
         super();
         final ActorRef source = self();
+        this.supervisor = supervisor;
         // Initialize the states for the FSM.
         this.uninitialized = new State("uninitialized", null, null);
         this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(source), null);
@@ -360,14 +367,21 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
         }
 
         private ActorRef createMediaGroup(final Object message) {
-            return getContext().actorOf(new Props(new UntypedActorFactory() {
+            final Props props = new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public UntypedActor create() throws Exception {
                     return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint, masterIVREndpointIdName);
                 }
-            }));
+            });
+            ActorRef mediaGroup = null;
+            try {
+                mediaGroup = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+            } catch (Exception e) {
+                logger.error("Problem during creation of actor: "+e);
+            }
+            return  mediaGroup;
         }
 
         @Override

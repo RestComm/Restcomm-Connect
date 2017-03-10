@@ -20,6 +20,7 @@
 
 package org.restcomm.connect.ussd.interpreter;
 
+import static akka.pattern.Patterns.ask;
 import static org.restcomm.connect.interpreter.rcml.Verbs.ussdCollect;
 import static org.restcomm.connect.interpreter.rcml.Verbs.ussdLanguage;
 import static org.restcomm.connect.interpreter.rcml.Verbs.ussdMessage;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import javax.servlet.sip.SipServletRequest;
@@ -93,6 +95,8 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -102,6 +106,7 @@ public class UssdInterpreter extends UntypedActor {
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
+    private final ActorRef supervisor;
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
@@ -171,12 +176,13 @@ public class UssdInterpreter extends UntypedActor {
     private final State ready;
     private final State notFound;
 
-    public UssdInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
+    public UssdInterpreter(final ActorRef supervisor, final Configuration configuration, final Sid account, final Sid phone, final String version,
             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
             final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
             final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage) {
         super();
         final ActorRef source = self();
+        this.supervisor = supervisor;
 
         uninitialized = new State("uninitialized", null, null);
         observeCall = new State("observe call", new ObserveCall(source), null);
@@ -288,39 +294,56 @@ public class UssdInterpreter extends UntypedActor {
     }
 
     ActorRef mailer(final Configuration configuration) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public Actor create() throws Exception {
                 return new EmailService(configuration);
             }
-        }));
+        });
+        ActorRef mailer = null;
+        try {
+            mailer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return mailer;
     }
 
     ActorRef downloader() {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
                 return new Downloader();
             }
-        }));
+        });
+        ActorRef downloader = null;
+        try {
+            downloader = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return downloader;
     }
 
     ActorRef parser(final String xml) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new Parser(xml, self());
             }
-        }));
+        });
+        ActorRef parser = null;
+        try {
+            parser = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return parser;
     }
 
     void invalidVerb(final Tag verb) {
