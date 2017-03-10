@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -91,7 +92,8 @@ public final class Sid {
                 return new Sid("AN" + uuid);
             }
             case CALL: {
-                return new Sid("CA" + uuid);
+                //https://github.com/RestComm/Restcomm-Connect/issues/1907
+                return new Sid("CA" + uuid + RestcommConfiguration.getInstance().getMain().getInstanceId());
             }
             case CLIENT: {
                 return new Sid("CL" + uuid);
