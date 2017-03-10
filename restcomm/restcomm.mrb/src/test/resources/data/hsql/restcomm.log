@@ -2,14 +2,8 @@
 DELETE FROM "restcomm_media_servers" WHERE "ms_id"=2 AND "local_ip"='127.0.0.1' AND "local_port"=2727 AND "remote_ip"='127.0.0.1' AND "remote_port"=2427 AND "compatibility" IS NULL AND "response_timeout"='1500' AND "external_address" IS NULL
 INSERT INTO "restcomm_media_servers" VALUES(2,'127.0.0.1',2727,'127.0.0.1',2427,NULL,'1500',NULL)
 COMMIT
-DELETE FROM "restcomm_call_detail_records" WHERE "sid"='CA01a09068a1f348269b6670ef599a6e57'
-INSERT INTO "restcomm_call_detail_records" VALUES('CA01a09068a1f348269b6670ef599a6e57',NULL,'2013-08-23 14:30:07.820000','2017-02-27 16:28:12.341000','ACae6e420f425248d6a26948c17a9e2acf','Anonymous','+15126002188',NULL,'in-progress','2013-08-23 14:30:08.081000',NULL,NULL,'0.00','inbound',NULL,'2012-04-24',NULL,NULL,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA01a09068a1f348269b6670ef599a6e57',NULL,NULL,'IN1',NULL,NULL,NULL,NULL,NULL,'2')
+INSERT INTO "restcomm_conference_detail_records" VALUES('CF346de973f7b448bda3fe1a236951e9a1','2017-03-10 14:05:53.672000','2017-03-10 14:05:53.673000','ACae6e420f425248d6a26948c17a9e2acf','RUNNING_INITIALIZING','2a86616dfbfd4e5aa5577445b38f11e4','2012-04-24','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Conferences/CF346de973f7b448bda3fe1a236951e9a1','2',NULL,TRUE,NULL,NULL,NULL,NULL,NULL,NULL)
 COMMIT
-/*C6*/SET SCHEMA PUBLIC
-DELETE FROM "restcomm_media_servers" WHERE "ms_id"=2 AND "local_ip"='127.0.0.1' AND "local_port"=2727 AND "remote_ip"='127.0.0.1' AND "remote_port"=2427 AND "compatibility" IS NULL AND "response_timeout"='1500' AND "external_address" IS NULL
-INSERT INTO "restcomm_media_servers" VALUES(2,'127.0.0.1',2727,'127.0.0.1',2427,NULL,'1500',NULL)
-COMMIT
-/*C7*/SET SCHEMA PUBLIC
-DELETE FROM "restcomm_media_servers" WHERE "ms_id"=2 AND "local_ip"='127.0.0.1' AND "local_port"=2727 AND "remote_ip"='127.0.0.1' AND "remote_port"=2427 AND "compatibility" IS NULL AND "response_timeout"='1500' AND "external_address" IS NULL
-INSERT INTO "restcomm_media_servers" VALUES(2,'127.0.0.1',2727,'127.0.0.1',2427,NULL,'1500',NULL)
+DELETE FROM "restcomm_conference_detail_records" WHERE "sid"='CF346de973f7b448bda3fe1a236951e9a1'
+INSERT INTO "restcomm_conference_detail_records" VALUES('CF346de973f7b448bda3fe1a236951e9a1','2017-03-10 14:05:53.672000','2017-03-10 14:05:53.788000','ACae6e420f425248d6a26948c17a9e2acf','RUNNING_MODERATOR_ABSENT','2a86616dfbfd4e5aa5577445b38f11e4','2012-04-24','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Conferences/CF346de973f7b448bda3fe1a236951e9a1','2',NULL,TRUE,NULL,NULL,NULL,NULL,NULL,NULL)
 COMMIT
