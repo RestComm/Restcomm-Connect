@@ -355,6 +355,11 @@ public final class UserAgentManager extends UntypedActor {
                     regDao.removeRegistration(reg);
                     monitoringService.tell(new UserRegistration(reg.getUserName(), reg.getLocation(), false), self());
                     monitoringService.tell(new GetCall(reg.getLocation()), self());
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        String msg = String.format("Registration DID NOT removed. SIP Message location: %s, registration location (in DB) %s.", location, reg.getLocation());
+                        logger.debug(msg);
+                    }
                 }
             }
         }
@@ -517,11 +522,13 @@ public final class UserAgentManager extends UntypedActor {
         Iterator<String> extraParameterNames = uri.getParameterNames();
         while (extraParameterNames.hasNext()) {
             String paramName = extraParameterNames.next();
-            String paramValue = uri.getParameter(paramName);
-            buffer.append(";");
-            buffer.append(paramName);
-            buffer.append("=");
-            buffer.append(paramValue);
+            if (!paramName.equalsIgnoreCase("transport")) {
+                String paramValue = uri.getParameter(paramName);
+                buffer.append(";");
+                buffer.append(paramName);
+                buffer.append("=");
+                buffer.append(paramValue);
+            }
         }
 
         final String address = buffer.toString();

@@ -6,14 +6,22 @@
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao">
   <insert id="addCallDetailRecord" parameterType="map">
     INSERT INTO "restcomm_call_detail_records" ("sid", "instanceid", "parent_call_sid", "date_created", "date_updated", "account_sid", "recipient", "sender", "phone_number_sid", "status",
-    "start_time", "end_time", "duration", "price", "direction", "answered_by", "api_version", "forwarded_from", "caller_name", "uri", "call_path", "ring_duration", "conference_sid", "muted", "start_conference_on_enter", "end_conference_on_exit", "on_hold")
+    "start_time", "end_time", "duration", "price", "direction", "answered_by", "api_version", "forwarded_from", "caller_name", "uri", "call_path", "ring_duration", "conference_sid", "muted", "start_conference_on_enter", "end_conference_on_exit", "on_hold", "ms_id")
     VALUES (#{sid}, #{instanceid}, #{parent_call_sid}, #{date_created},
     #{date_updated}, #{account_sid}, #{to}, #{from}, #{phone_number_sid}, #{status}, #{start_time}, #{end_time}, #{duration}, #{price}, #{direction},
-    #{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path}, #{ring_duration}, #{conference_sid}, #{muted}, #{start_conference_on_enter}, #{end_conference_on_exit}, #{on_hold});
+    #{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path}, #{ring_duration}, #{conference_sid}, #{muted}, #{start_conference_on_enter}, #{end_conference_on_exit}, #{on_hold}, #{ms_id});
   </insert>
 
   <select id="getCallDetailRecord" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_call_detail_records" WHERE "sid"=#{sid};
+  </select>
+
+  <select id="getInProgressCallsByClientName" parameterType="string" resultType="int">
+    SELECT COUNT(*) FROM "restcomm_call_detail_records" WHERE (UPPER("status") = ('IN_PROGRESS') OR UPPER("status") = ('IN-PROGRESS')) AND "sender"=#{sender};
+  </select>
+
+  <select id="getInProgressCallsByAccountSid" parameterType="string" resultType="int">
+    SELECT COUNT(*) FROM "restcomm_call_detail_records" WHERE (UPPER("status") = ('IN_PROGRESS') OR UPPER("status") = ('IN-PROGRESS')) AND "account_sid"=#{accountSid};
   </select>
 
   <!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
@@ -121,7 +129,7 @@
 
     <!-- select AVG(duration) from restcomm_call_detail_records where instanceid like ('ID1979e298e5194cc78191b03ea64c5466') AND start_time >= '2016-06-24' AND end_time <= DATE_ADD('2016-06-24', INTERVAL 1 DAY); -->
     AND "start_time" &gt;= #{startTime}
-    AND "end_time" &lt;= DATE_ADD(#{startTime},INTERVAL 1 DAY);
+    AND "end_time" &lt;= (#{startTime} + INTERVAL '1' DAY);
   </select>
 
   <!-- Issue 1215: https://github.com/RestComm/Restcomm-Connect/issues/1215 -->
@@ -130,7 +138,7 @@
 
     <!-- select AVG(duration) from restcomm_call_detail_records where instanceid like ('ID1979e298e5194cc78191b03ea64c5466') AND start_time >= '2016-06-24 11:00:00' AND end_time <= DATE_ADD('2016-06-24 11:00:00', INTERVAL 1 HOUR); -->
     AND "start_time" &gt;= #{startTime}
-    AND "end_time" &lt;= DATE_ADD(#{startTime},INTERVAL 1 HOUR);
+    AND "end_time" &lt;= (#{startTime} + INTERVAL '1' HOUR);
   </select>
 
   <select id="getCallDetailRecords" parameterType="string" resultType="hashmap">
@@ -165,13 +173,16 @@
     SELECT * FROM "restcomm_call_detail_records" WHERE "instanceid"=#{instanceid};
   </select>
 
-  <select id="getInCompleteCallDetailRecordsByInstanceId" parameterType="string" resultType="hashmap">
-    SELECT * FROM "restcomm_call_detail_records" WHERE "instanceid"=#{instanceid} AND (UPPER("status") = ('IN_PROGRESS') OR 
-      UPPER("status") = ('IN-PROGRESS') OR UPPER("status") = ('RINGING') OR UPPER("status") = ('QUEUED'));
-  </select>
-
   <select id="getCallDetailRecordsByConferenceSid" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_call_detail_records" WHERE "conference_sid"=#{conference_sid};
+  </select>
+
+  <select id="getCallDetailRecordsByMsId" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_call_detail_records" WHERE "ms_id"=#{ms_id};
+  </select>
+
+  <select id="getTotalRunningCallDetailRecordsByConferenceSid" parameterType="string" resultType="int">
+    SELECT COUNT(*) FROM "restcomm_call_detail_records" WHERE "conference_sid"=#{conference_sid} and "status" ='in-progress';
   </select>
 
   <delete id="removeCallDetailRecord" parameterType="string">
@@ -183,14 +194,10 @@
   </delete>
 
   <update id="updateCallDetailRecord" parameterType="map">
-    UPDATE "restcomm_call_detail_records" SET "date_updated"=#{date_updated}, "status"=#{status}, "start_time"=#{start_time}, "end_time"=#{end_time}, "duration"=#{duration},
-    "price"=#{price}, "answered_by"=#{answered_by}, "forwarded_from"=#{forwarded_from},  "ring_duration"=#{ring_duration}, "conference_sid"=#{conference_sid}, "muted"=#{muted}, "start_conference_on_enter"=#{start_conference_on_enter}, "end_conference_on_exit"=#{end_conference_on_exit}, "on_hold"=#{on_hold} WHERE "sid"=#{sid};
-  </update>
-
-  <update id="updateInCompleteCallDetailRecordsToCompletedByInstanceId" parameterType="string">
     UPDATE "restcomm_call_detail_records"
-      SET "status"='COMPLETED'
-      WHERE "instanceid"=#{instanceid} AND (UPPER("status") = ('IN_PROGRESS') OR 
-        UPPER("status") = ('IN-PROGRESS') OR UPPER("status") = ('RINGING') OR UPPER("status") = ('QUEUED'));
+    SET "date_updated"=#{date_updated}, "status"=#{status}, "start_time"=#{start_time}, "end_time"=#{end_time}, "duration"=#{duration},
+    "price"=#{price}, "answered_by"=#{answered_by}, "ring_duration"=#{ring_duration}, "conference_sid"=#{conference_sid}, "muted"=#{muted}, "start_conference_on_enter"=#{start_conference_on_enter},
+    "end_conference_on_exit"=#{end_conference_on_exit}, "on_hold"=#{on_hold}, "ms_id"=#{ms_id}
+    WHERE "sid"=#{sid};
   </update>
 </mapper>
