@@ -19,13 +19,6 @@
  */
 package org.restcomm.connect.mgcp;
 
-import java.net.InetAddress;
-import java.util.Map;
-import java.util.TooManyListenersException;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.restcomm.connect.commons.util.RevolvingCounter;
-
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -46,6 +39,17 @@ import jain.protocol.ip.mgcp.message.NotificationRequest;
 import jain.protocol.ip.mgcp.message.Notify;
 import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
+import org.restcomm.connect.commons.util.RevolvingCounter;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
+
+import java.net.InetAddress;
+import java.util.Map;
+import java.util.TooManyListenersException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -77,6 +81,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
     private RevolvingCounter requestIdPool;
     private RevolvingCounter sessionIdPool;
     private RevolvingCounter transactionIdPool;
+    private ActorRef supervisor;
 
     public MediaGateway() {
         super();
@@ -88,14 +93,22 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         final CreateConnection request = (CreateConnection) message;
         final MediaSession session = request.session();
         final ActorRef gateway = self();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new Connection(gateway, session, agent, timeout);
             }
-        }));
+        });
+        ActorRef connection = null;
+        try {
+            connection = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return connection;
     }
 
     private ActorRef getBridgeEndpoint(final Object message) {
@@ -103,26 +116,33 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         final ActorRef gateway = self();
         final MediaSession session = request.session();
         final String endpointName = request.endpointName();
+        Props props = null;
         if(endpointName == null){
-            return getContext().actorOf(new Props(new UntypedActorFactory() {
+            props = new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public Actor create() throws Exception {
                     return new BridgeEndpoint(gateway, session, agent, domain, timeout);
                 }
-            }));
+            });
         }else{
-            return getContext().actorOf(new Props(new UntypedActorFactory() {
+            props = new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public Actor create() throws Exception {
                     return new BridgeEndpoint(gateway, session, agent, domain, timeout, endpointName);
                 }
-            }));
+            });
         }
-
+        ActorRef bridgeEndpoint = null;
+        try {
+            bridgeEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return bridgeEndpoint;
     }
 
     private ActorRef getConferenceEndpoint(final Object message) {
@@ -130,25 +150,33 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         final CreateConferenceEndpoint request = (CreateConferenceEndpoint) message;
         final MediaSession session = request.session();
         final String endpointName = request.endpointName();
+        Props props = null;
         if(endpointName == null){
-            return getContext().actorOf(new Props(new UntypedActorFactory() {
+            props = new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public UntypedActor create() throws Exception {
                     return new ConferenceEndpoint(gateway, session, agent, domain, timeout);
                 }
-            }));
+            });
         } else {
-            return getContext().actorOf(new Props(new UntypedActorFactory() {
+            props = new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public UntypedActor create() throws Exception {
                     return new ConferenceEndpoint(gateway, session, agent, domain, timeout, endpointName);
                 }
-            }));
+            });
         }
+        ActorRef confEndpoint = null;
+        try {
+            confEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return confEndpoint;
     }
 
     private MediaGatewayInfo getInfo(final Object message) {
@@ -160,25 +188,33 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         final CreateIvrEndpoint request = (CreateIvrEndpoint) message;
         final MediaSession session = request.session();
         final String endpointName = request.endpointName();
+        Props props = null;
         if(endpointName == null){
-            return getContext().actorOf(new Props(new UntypedActorFactory() {
+            props = new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public UntypedActor create() throws Exception {
                     return new IvrEndpoint(gateway, session, agent, domain, timeout);
                 }
-            }));
+            });
         }else{
-            return getContext().actorOf(new Props(new UntypedActorFactory() {
+            props = new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public UntypedActor create() throws Exception {
                     return new IvrEndpoint(gateway, session, agent, domain, timeout, endpointName);
                 }
-            }));
+            });
         }
+        ActorRef ivrEndpoint = null;
+        try {
+            ivrEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return ivrEndpoint;
     }
 
     private ActorRef getLink(final Object message) {
@@ -186,28 +222,42 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         final ActorRef gateway = self();
         final MediaSession session = request.session();
         final ConnectionIdentifier connectionIdentifier = request.connectionIdentifier();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new Link(gateway, session, agent, timeout, connectionIdentifier);
             }
-        }));
+        });
+        ActorRef link = null;
+        try {
+            link = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return link;
     }
 
     private ActorRef getPacketRelayEndpoint(final Object message) {
         final ActorRef gateway = self();
         final CreatePacketRelayEndpoint request = (CreatePacketRelayEndpoint) message;
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new PacketRelayEndpoint(gateway, session, agent, domain, timeout);
             }
-        }));
+        });
+        ActorRef packetRelayEndpoint = null;
+        try {
+            packetRelayEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return packetRelayEndpoint;
     }
 
     private MediaSession getSession() {
@@ -275,6 +325,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         requestIdPool = new RevolvingCounter(1, Long.MAX_VALUE);
         sessionIdPool = new RevolvingCounter(1, Long.MAX_VALUE);
         transactionIdPool = new RevolvingCounter(1, Long.MAX_VALUE);
+        supervisor = request.getSupervisor();
     }
 
     @Override

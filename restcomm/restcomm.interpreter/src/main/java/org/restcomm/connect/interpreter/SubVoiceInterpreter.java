@@ -91,20 +91,20 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
     private Boolean hangupOnEnd = false;
     private ActorRef originalInterpreter;
 
-    public SubVoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
+    public SubVoiceInterpreter(final ActorRef supervisor, final Configuration configuration, final Sid account, final Sid phone, final String version,
             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
             final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
             final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage) {
 
-        this(configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod, statusCallback,
+        this(supervisor, configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod, statusCallback,
                 statusCallbackMethod, emailAddress, callManager, conferenceManager, sms, storage, false);
     }
 
-    public SubVoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
+    public SubVoiceInterpreter(final ActorRef supervisor, final Configuration configuration, final Sid account, final Sid phone, final String version,
             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
             final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
             final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage, final Boolean hangupOnEnd) {
-        super();
+        super(supervisor);
         source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
         ready = new State("ready", new Ready(source), null);
