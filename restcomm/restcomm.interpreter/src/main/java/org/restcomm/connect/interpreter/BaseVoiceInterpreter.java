@@ -140,6 +140,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
     static String EMAIL_SENDER = "restcomm@restcomm.org";
 
+    protected final ActorRef supervisor;
+
     // States for the FSM.
     // ==========================
     final State uninitialized;
@@ -254,9 +256,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     final Set<Transition> transitions = new HashSet<Transition>();
 
-    public BaseVoiceInterpreter() {
+    public BaseVoiceInterpreter(final ActorRef supervisor) {
         super();
         final ActorRef source = self();
+        this.supervisor = supervisor;
         // 20 States in common
         uninitialized = new State("uninitialized", null, null);
         acquiringAsrInfo = new State("acquiring asr info", new AcquiringAsrInfo(source), null);
@@ -407,15 +410,20 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     }
 
     ActorRef asr(final Configuration configuration) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public Actor create() throws Exception {
                 return new ISpeechAsr(configuration);
             }
-        }));
+        });
+        ActorRef asr = null;
+        try {
+            asr = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return asr;
     }
 
     @SuppressWarnings("unchecked")
@@ -457,15 +465,20 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     }
 
     ActorRef fax(final Configuration configuration) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public Actor create() throws Exception {
                 return new InterfaxService(configuration);
             }
-        }));
+        });
+        ActorRef fax = null;
+        try {
+            fax = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return fax;
     }
 
     //Callback using the Akka ask pattern (http://doc.akka.io/docs/akka/2.2.5/java/untyped-actors.html#Ask__Send-And-Receive-Future) will force VoiceInterpter to wait until
@@ -527,27 +540,38 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     }
 
     ActorRef cache(final String path, final String uri) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
                 return new DiskCacheFactory(configuration).getDiskCache(path, uri);
             }
-        }));
+        });
+        ActorRef cache = null;
+        try {
+            cache = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return cache;
     }
 
     ActorRef downloader() {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new Downloader();
             }
-        }));
+        });
+        ActorRef downloader = null;
+        try {
+            downloader = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return downloader;
     }
 
     String e164(final String number) {
@@ -572,15 +596,21 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     }
 
     ActorRef mailer(final Configuration configuration) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public Actor create() throws Exception {
                 return new EmailService(configuration);
             }
-        }));
+        });
+        ActorRef mailer = null;
+        try {
+            mailer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return mailer;
     }
 
     private Notification notification(final int log, final int error, final String message) {
@@ -637,15 +667,21 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     }
 
     ActorRef parser(final String xml) {
-        final UntypedActorContext context = getContext();
-            return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public UntypedActor create() throws IOException {
                     return new Parser(xml, self());
                 }
-            }));
+            });
+        ActorRef parser = null;
+        try {
+            parser = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return parser;
     }
 
     void postCleanup() {
@@ -804,15 +840,21 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     ActorRef tts(final Configuration ttsConf) {
         final String classpath = ttsConf.getString("[@class]");
 
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public Actor create() throws Exception {
                 return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(ttsConf);
             }
-        }));
+        });
+        ActorRef tts = null;
+        try {
+            tts = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return tts;
     }
 
     abstract class AbstractAction implements Action {

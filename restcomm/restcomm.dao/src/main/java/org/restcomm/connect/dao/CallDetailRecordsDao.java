@@ -57,6 +57,8 @@ public interface CallDetailRecordsDao {
 
     List<CallDetailRecord> getCallDetailRecordsByInstanceId(Sid instanceId);
 
+    List<CallDetailRecord> getInCompleteCallDetailRecordsByInstanceId(Sid instanceId);
+
     List<CallDetailRecord> getCallDetailRecordsByMsId(String msId);
 
     Double getAverageCallDurationLast24Hours(Sid instanceId) throws ParseException;
@@ -68,6 +70,8 @@ public interface CallDetailRecordsDao {
     void removeCallDetailRecords(Sid accountSid);
 
     void updateCallDetailRecord(CallDetailRecord cdr);
+
+    void updateInCompleteCallDetailRecordsToCompletedByInstanceId(Sid instanceId);
 
     // Support for filtering of calls list result, Issue 153
     List<CallDetailRecord> getCallDetailRecords(CallDetailRecordFilter filter);

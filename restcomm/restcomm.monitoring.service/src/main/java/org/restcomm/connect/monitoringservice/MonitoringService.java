@@ -232,6 +232,15 @@ public class MonitoringService extends UntypedActor{
         } else {
             if (registeredUsers.containsKey(userRegistration.getUser())) {
                 registeredUsers.remove(userRegistration.getUser());
+                if (logger.isDebugEnabled()) {
+                    String msg = String.format("User %s removed from registered users", userRegistration.getUser());
+                    logger.debug(msg);
+                }
+            } else {
+                if (logger.isDebugEnabled()) {
+                    String msg = String.format("User %s was not removed  because is not in the registered users", userRegistration.getUser());
+                    logger.debug(msg);
+                }
             }
         }
     }

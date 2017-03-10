@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
@@ -59,6 +60,10 @@ import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.CreateProviderException;
 import jain.protocol.ip.mgcp.JainMgcpProvider;
 import jain.protocol.ip.mgcp.JainMgcpStack;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
+
+import static akka.pattern.Patterns.ask;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -74,8 +79,15 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
     protected String localMsId;
     protected Map<String, ActorRef> mediaGatewayMap;
 
+<<<<<<< HEAD
     protected JainMgcpStack mgcpStack;
     protected JainMgcpProvider mgcpProvider;
+=======
+    private ActorRef supervisor;
+
+    private JainMgcpStack mgcpStack;
+    private JainMgcpProvider mgcpProvider;
+>>>>>>> master
 
     protected MediaServerEntity localMediaServerEntity;
 
@@ -114,6 +126,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
         this.configuration = message.configuration();
         this.storage = message.storage();
         this.loader = message.loader();
+        this.supervisor = message.supervisor();
 
         localMediaServerEntity = uploadLocalMediaServersInDataBase();
         bindMGCPStack(localMediaServerEntity.getLocalIpAddress(), localMediaServerEntity.getLocalPort());
@@ -136,6 +149,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
         }
     }
 
+<<<<<<< HEAD
     /**
      * @param mediaServerEntity
      * @return
@@ -147,16 +161,35 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
             String mgcpServer = configuration.getString("mgcp-server[@class]");
             logger.debug("Will switch on media gateway: "+mgcpServer);
         }
+=======
+>>>>>>> master
 
-        final ActorRef gateway = getContext().system().actorOf(new Props(new UntypedActorFactory() {
+    private ActorRef gateway() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
                 final String classpath = configuration.getString("mgcp-server[@class]");
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
-        }));
+        });
+        ActorRef gateway = null;
+        try {
+            gateway = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return gateway;
+    }
+
+    private ActorRef turnOnMediaGateway(MediaServerEntity mediaServerEntity) throws UnknownHostException {
+
+        if (logger.isDebugEnabled()) {
+            String mgcpServer = configuration.getString("mgcp-server[@class]");
+            logger.debug("Will switch on media gateway: "+mgcpServer);
+        }
+
+        ActorRef gateway = gateway();
 
         final PowerOnMediaGateway.Builder builder = PowerOnMediaGateway.builder();
         builder.setName(configuration.getString("mgcp-server[@name]"));
@@ -180,6 +213,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
         builder.setTimeout(Long.parseLong(mediaServerEntity.getResponseTimeout()));
         builder.setStack(mgcpStack);
         builder.setProvider(mgcpProvider);
+        builder.setSupervisor(supervisor);
 
         final PowerOnMediaGateway powerOn = builder.build();
         gateway.tell(powerOn, null);
@@ -187,18 +221,33 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
         return gateway;
     }
 
+<<<<<<< HEAD
     /**
      * @return ConferenceMediaResourceController Community version actor
      */
     protected ActorRef getConferenceMediaResourceController() {
         return getContext().system().actorOf(new Props(new UntypedActorFactory() {
+=======
+    private ActorRef getConferenceMediaResourceController() {
+        final Props props = new Props(new UntypedActorFactory() {
+>>>>>>> master
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
+<<<<<<< HEAD
                 return new ConferenceMediaResourceControllerGeneric(localMediaGateway, configuration, storage, self());
+=======
+                return new ConferenceMediaResourceControllerGeneric(supervisor, localMsId, localMediaGateway, configuration, storage, self());
+>>>>>>> master
             }
-        }));
+        });
+        ActorRef confMRC = null;
+        try {
+            confMRC = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return confMRC;
     }
 
     /**

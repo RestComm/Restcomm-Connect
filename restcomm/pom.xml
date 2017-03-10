@@ -170,6 +170,7 @@
 		<module>restcomm.mrb</module>
                 <module>restcomm.mrb.api</module>
                 <module>restcomm.monitoring.service</module>
+                <module>restcomm.tts.awspolly</module>
   </modules>
 
 	<dependencyManagement>
