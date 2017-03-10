@@ -266,4 +266,18 @@ public final class ConferenceDetailRecord {
             this.masterIVREndpointId = masterIVREndpointId;
         }
     }
+
+    @Override
+    public String toString() {
+        return "ConferenceDetailRecord [sid=" + sid + ", dateCreated=" + dateCreated + ", dateUpdated=" + dateUpdated
+                + ", accountSid=" + accountSid + ", status=" + status + ", friendlyName=" + friendlyName
+                + ", apiVersion=" + apiVersion + ", uri=" + uri + ", masterMsId=" + masterMsId + ", masterPresent="
+                + masterPresent + ", masterConfernceEndpointId=" + masterConfernceEndpointId + ", masterIVREndpointId="
+                + masterIVREndpointId + ", masterIVREndpointSessionId=" + masterIVREndpointSessionId
+                + ", masterBridgeEndpointId=" + masterBridgeEndpointId + ", masterBridgeEndpointSessionId="
+                + masterBridgeEndpointSessionId + ", masterBridgeConnectionIdentifier="
+                + masterBridgeConnectionIdentifier + ", masterIVRConnectionIdentifier=" + masterIVRConnectionIdentifier
+                + ", moderatorPresent=" + moderatorPresent + "]";
+    }
+
 }
