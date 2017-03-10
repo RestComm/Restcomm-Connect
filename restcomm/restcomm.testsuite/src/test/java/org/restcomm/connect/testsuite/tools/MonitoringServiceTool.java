@@ -28,7 +28,7 @@ public class MonitoringServiceTool {
         return instance;
     }
 
-    private String getAccountsUrl(String deploymentUrl, String username) {
+    public String getAccountsUrl(String deploymentUrl, String username) {
 
         if (deploymentUrl.endsWith("/")) {
             deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);

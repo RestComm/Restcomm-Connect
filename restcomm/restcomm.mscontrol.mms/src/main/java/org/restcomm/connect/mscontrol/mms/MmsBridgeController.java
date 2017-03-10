@@ -21,16 +21,12 @@
 
 package org.restcomm.connect.mscontrol.mms;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.sound.sampled.UnsupportedAudioFileException;
-
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
@@ -65,13 +61,20 @@ import org.restcomm.connect.mscontrol.api.messages.StartMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StartRecording;
 import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -82,6 +85,7 @@ public class MmsBridgeController extends MediaServerController {
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
+    private final ActorRef supervisor;
     // Finite State Machine
     private final FiniteStateMachine fsm;
     private final State uninitialized;
@@ -115,8 +119,9 @@ public class MmsBridgeController extends MediaServerController {
 
     private Sid callSid;
 
-    public MmsBridgeController(final ActorRef mrb) {
+    public MmsBridgeController(final ActorRef mrb, final ActorRef supervisor) {
         final ActorRef self = self();
+        this.supervisor = supervisor;
 
         // Finite states
         this.uninitialized = new State("uninitialized", null, null);
@@ -433,14 +438,21 @@ public class MmsBridgeController extends MediaServerController {
         }
 
         private ActorRef createMediaGroup(final Object message) {
-            return getContext().actorOf(new Props(new UntypedActorFactory() {
+            final Props props = new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public UntypedActor create() throws Exception {
                     return new MgcpMediaGroup(mediaGateway, mediaSession, endpoint);
                 }
-            }));
+            });
+            ActorRef mediaGroup = null;
+            try {
+                mediaGroup = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+            } catch (Exception e) {
+                logger.error("Problem during creation of actor: "+e);
+            }
+            return mediaGroup;
         }
 
         @Override

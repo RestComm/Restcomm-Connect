@@ -58,8 +58,8 @@ user-select:none}
 
  .picker__box{padding:0 1em}
  .picker__header{text-align:center;
- position:relative;margin-top:.75em}.
- picker__month,.picker__year{
+ position:relative;margin-top:.75em}
+ .picker__month,.picker__year{
  font-weight:500;
  display:inline-block;
  margin-left:.25em;margin-right:.25em}
