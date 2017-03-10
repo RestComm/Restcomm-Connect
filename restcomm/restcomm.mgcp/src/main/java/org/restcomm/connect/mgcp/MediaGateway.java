@@ -150,26 +150,14 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         final CreateConferenceEndpoint request = (CreateConferenceEndpoint) message;
         final MediaSession session = request.session();
         final String endpointName = request.endpointName();
-        Props props = null;
-        if(endpointName == null){
-            props = new Props(new UntypedActorFactory() {
-                private static final long serialVersionUID = 1L;
+        Props props = new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
 
-                @Override
-                public UntypedActor create() throws Exception {
-                    return new ConferenceEndpoint(gateway, session, agent, domain, timeout);
-                }
-            });
-        } else {
-            props = new Props(new UntypedActorFactory() {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public UntypedActor create() throws Exception {
-                    return new ConferenceEndpoint(gateway, session, agent, domain, timeout, endpointName);
-                }
-            });
-        }
+            @Override
+            public UntypedActor create() throws Exception {
+                return new ConferenceEndpoint(gateway, session, agent, domain, timeout, endpointName);
+            }
+        });
         ActorRef confEndpoint = null;
         try {
             confEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
@@ -188,18 +176,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         final CreateIvrEndpoint request = (CreateIvrEndpoint) message;
         final MediaSession session = request.session();
         final String endpointName = request.endpointName();
-        Props props = null;
-        if(endpointName == null){
-            props = new Props(new UntypedActorFactory() {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public UntypedActor create() throws Exception {
-                    return new IvrEndpoint(gateway, session, agent, domain, timeout);
-                }
-            });
-        }else{
-            props = new Props(new UntypedActorFactory() {
+        Props props = new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
                 @Override
@@ -207,7 +184,6 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
                     return new IvrEndpoint(gateway, session, agent, domain, timeout, endpointName);
                 }
             });
-        }
         ActorRef ivrEndpoint = null;
         try {
             ivrEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
