@@ -31,7 +31,7 @@ import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 @Immutable
 public final class Sid {
     public static final Pattern pattern = Pattern.compile("[a-zA-Z0-9]{34}");
-    public static final Pattern callSidPattern = Pattern.compile("[a-zA-Z0-9]{68}");
+    public static final Pattern callSidPattern = Pattern.compile("CA[a-zA-Z0-9]{66}");
     private final String id;
 
     public enum Type {
@@ -43,9 +43,7 @@ public final class Sid {
     public Sid(final String id) throws IllegalArgumentException {
         super();
         //https://github.com/RestComm/Restcomm-Connect/issues/1907
-        if (id.startsWith("CA") && callSidPattern.matcher(id).matches()) {
-            this.id = id;
-        } else if (pattern.matcher(id).matches()) {
+        if (callSidPattern.matcher(id).matches() || pattern.matcher(id).matches()) {
             this.id = id;
         } else {
             throw new IllegalArgumentException(id + " is an INVALID_SID sid value.");
