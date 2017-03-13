@@ -114,7 +114,7 @@ CREATE TABLE "restcomm_applications" (
 
 CREATE TABLE "restcomm_call_detail_records" (
 "sid" VARCHAR(1000) NOT NULL PRIMARY KEY,
-"parent_call_sid" VARCHAR(34),
+"parent_call_sid" VARCHAR(1000),
 "date_created" DATETIME NOT NULL,
 "date_updated" DATETIME NOT NULL,
 "account_sid" VARCHAR(34) NOT NULL,
