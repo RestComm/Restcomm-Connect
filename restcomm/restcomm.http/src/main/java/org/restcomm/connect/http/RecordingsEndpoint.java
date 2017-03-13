@@ -25,16 +25,16 @@ import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.amazonS3.S3AccessTool;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Recording;
+import org.restcomm.connect.dao.entities.RecordingFilter;
 import org.restcomm.connect.dao.entities.RecordingList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.http.converter.RecordingConverter;
 import org.restcomm.connect.http.converter.RecordingListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
@@ -44,13 +44,17 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.net.URI;
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
@@ -136,7 +140,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response getRecordings(final String accountSid, UriInfo info,final MediaType responseType) {
+    protected Response getRecordings(final String accountSid, UriInfo info, final MediaType responseType) {
         secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
 
         boolean localInstanceOnly = true;
@@ -198,7 +202,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
         final int total = dao.getTotalRecording(filterForTotal);
 
         if (Integer.parseInt(page) > (total / limit)) {
-            return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
+            return status(BAD_REQUEST).build();
         }
 
         RecordingFilter filter;
