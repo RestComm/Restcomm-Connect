@@ -828,7 +828,6 @@ public class DialActionTest {
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
         logger.info("requestBody = "+requestBody);
-        logger.debug("requestBody = "+requestBody);
         System.out.println("requestBody = "+requestBody);
         assertTrue(requestBody.contains("SipHeader_Diversion=%3Csip%3A11223344%40xyz.com%3E%3Bcounter%3D1%3Breason%3DUNKNOWN"));
         Iterator iter = Arrays.asList(params).iterator();
@@ -842,6 +841,7 @@ public class DialActionTest {
         }
         assertNotNull(dialCallSid);
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
+        logger.info("cdr = "+cdr);
         assertNotNull(cdr);
         
         String forwardedFrom = cdr.get("forwarded_from").getAsString();
