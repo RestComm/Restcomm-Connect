@@ -37,6 +37,8 @@ public class SidTest {
 
 	/**
 	 * testOldCallSid: it should be supported
+	 * because from call api we can check older cdrs where sid was in old format
+	 * and sid conversion should work
 	 */
 	@Test
 	public void testOldCallSid() {
