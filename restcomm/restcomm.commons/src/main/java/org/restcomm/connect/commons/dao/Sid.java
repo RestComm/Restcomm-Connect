@@ -31,7 +31,7 @@ import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 @Immutable
 public final class Sid {
     public static final Pattern pattern = Pattern.compile("[a-zA-Z0-9]{34}");
-    public static final Pattern callSidPattern = Pattern.compile("CA[a-zA-Z0-9]{32}-ID[a-zA-Z0-9]{32}");
+    public static final Pattern callSidPattern = Pattern.compile("ID[a-zA-Z0-9]{32}-CA[a-zA-Z0-9]{32}");
     private final String id;
 
     public enum Type {
