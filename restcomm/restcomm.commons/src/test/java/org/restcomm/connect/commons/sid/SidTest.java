@@ -26,7 +26,7 @@ public class SidTest {
 	 */
 	@Test
 	public void testNewCallSid() {
-		String sidString = "CA6dcfdfd531e44ae4ac30e8f97e071ab2-ID6dcfdfd531e44ae4ac30e8f97e071122";
+		String sidString = "ID6dcfdfd531e44ae4ac30e8f97e071122-CA6dcfdfd531e44ae4ac30e8f97e071ab2";
 		try{
 			Sid sid = new Sid(sidString);
 			assertTrue(sid != null);
