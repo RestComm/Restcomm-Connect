@@ -633,7 +633,9 @@ public class LiveCallModificationTest {
         System.out.println("\n ******************** \nAbout to redirect the call\n ********************\n");
         rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
 
-        String invalidCallSid = Sid.generate(Sid.Type.CALL).toString();
+        //String invalidCallSid = Sid.generate(Sid.Type.CALL).toString();
+        // restcomm-connect/1907
+        String invalidCallSid = "IDaaaaaaaaaaabbbbbbbbbbbcccccccddd-CAaaaaaabbbbbcccccdddddeeeeeffffgg";
 
         callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
                 invalidCallSid, null, rcmlUrl);
