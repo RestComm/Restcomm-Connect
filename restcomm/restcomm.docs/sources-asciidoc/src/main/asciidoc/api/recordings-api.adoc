@@ -47,21 +47,6 @@ NOTE: Unlike the Recording instance resource described above, the list of record
 
 Returns the list representation of all the Recording resources for this Account, including the properties above.
 
-Returns a list of Recording resource representations, each representing a recording generated during the course of a phone call. The list includes paging information.
-
-[[list-get-filters]]
-===== List Filters
-
-The following GET query string parameters allow you to limit the list returned. Note, parameters are case-sensitive:
-
-[cols=",",options="header",]
-|=====================================================================================================================================================================================================================================================================================================================
-|Parameter |Description
-|CallSid |Show only recordings made during the call given by this sid.
-|DateCreated |Only show recordings created on the given date. Should be formatted as `YYYY-MM-DD`. You can also specify inequality, such as `DateCreated<=YYYY-MM-DD` for recordings generated at or before midnight on a date, and `DateCreated>=YYYY-MM-DD` for recordings generated at or after midnight on a date.
-|=====================================================================================================================================================================================================================================================================================================================
-
-
 == How to Record a Message
 
 Go to the RCML section to learn how to record a message.
@@ -73,24 +58,29 @@ The list of recorded *wav* files can be found in the directory *$RESTCOMM_HOME/s
 From the bash terminal, you can run the command below:
 
 ....
-curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings
+curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json
 ....
 
 The response will be similar to the one below.
 
-[source,lang:xml,decode:true]
+[source,decode:true]
 ----
-<RestcommResponse>
-<Recording>
-      <Sid>REb4c03af76cdc4a27aad0d9d759e119bc</Sid>
-      <DateCreated>2014-08-11T10:53:25.000-04:00</DateCreated>
-      <DateUpdated>2014-08-11T10:53:25.000-04:00</DateUpdated>
-      <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-      <CallSid>CA2647e1424239420087d75ff4083e9f2b</CallSid>
-      <Duration>13.0</Duration>
-      <ApiVersion>2012-04-24</ApiVersion>
-      <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/REb4c03af76cdc4a27aad0d9d759e119bc</Uri>
-    </Recording>
+{"page":0,"num_pages":0,"page_size":50,"total":34,"start":"0","end":"34","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?Page=0&PageSize=50","previous_page_uri":"null","next_page_uri":"null","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?Page=0&PageSize=50","recordings":
+    [
+        {
+            "sid":"RF50675909d9c94acda36f0e119b6cb431",
+            "date_created":"Mon, 6 Jan 2014 08:51:07 +0900",
+            "date_updated":"Mon, 6 Jan 2014 08:51:07 +0900",
+            "account_sid":"ACae6e420f425248d6a26948c17a9e2acf",
+            "call_sid":"CAfe9ce46f104f4beeb10c83a5ddd2be66",
+            "duration":"14.70275",
+            "api_version":"2012-04-24",
+            "uri":"/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/RE50675909d9c94acda36f0e119b6cb431.json",
+            "file_uri":"http://instance1.restcomm.com:8080/restcomm/recordings/RE50675909d9c94acda36f0e119b6cb431.wav"
+        },
+        ...
+    ]
+}
 ----
 
 NOTE: *<Sid>* holds the file name of the recorded message. The recording Sid.**wav** is available in the file system only. 
@@ -99,3 +89,116 @@ If you want to return the recording url you will need to parse the *<Uri>/2012-0
 
 The *<Uri>* holds the http URI that can be used for playback or to download the recorded message. 
 Here is how to access the file using http *https://IP_ADDRESS/restcomm/recordings/REb4c03af76cdc4a27aad0d9d759e119bc.wav*
+ 
+
+== List Filter
+
+**HTTP GET**. The following GET query string parameters allow you to limit the list returned. Note, parameters are case-sensitive:
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|===========================================================================================================================================================================================================================================================================
+|Parameter |Description
+|StartTime |Only show recordings that started on this date, given as YYYY-MM-DD. Also supports inequalities, such as StartTime=YYYY-MM-DD for recordings that started at or before midnight on a date, and StartTime=YYYY-MM-DD for recordings that started at or after midnight on a date.
+|EndTime |Only show recordings that ended on this date, given as YYYY-MM-DD. Also supports inequalities, such as StartTime=YYYY-MM-DD for recordings that started at or before midnight on a date, and StartTime=YYYY-MM-DD for recordings that started at or after midnight on a date.
+|CallSid |Only show recordings that have been started from this CallSid
+|===========================================================================================================================================================================================================================================================================
+
+ 
+
+=== Filter using the CallSid parameter.
+
+The example below will only return Recordings that has been started from this CallSid
+
+....
+ curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?CallSid=CAfe9ce46f104f5beeb10c83a5dad2be66
+....
+
+The result will be similar to the one below
+
+[source,lang:xml,decode:true]
+----
+{"page":0,"num_pages":0,"page_size":50,"total":17,"start":"0","end":"17","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?Page=0&PageSize=50","previous_page_uri":"null","next_page_uri":"null","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?Page=0&PageSize=50","recordings":
+    [
+        {
+            "sid":"RF50675909d9c94acda36f0e119b6cb431",
+            "date_created":"Mon, 6 Jan 2014 08:51:07 +0900",
+            "date_updated":"Mon, 6 Jan 2014 08:51:07 +0900",
+            "account_sid":"ACae6e420f425248d6a26948c17a9e2acf",
+            "call_sid":"CAfe9ce46f104f5beeb10c83a5dad2be66",
+            "duration":"14.70275",
+            "api_version":"2012-04-24",
+            "uri":"/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/RE50675909d9c94acda36f0e119b6cb431.json",
+            "file_uri":"http://instance1.restcomm.com:8080/restcomm/recordings/RE50675909d9c94acda36f0e119b6cb431.wav"
+        },
+        ...
+    ]
+}
+----
+
+== Paging Information
+
+*HTTP GET.* The following GET query string parameters allow you to limit the list returned. Note, parameters are case-sensitive:
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|=======================================================================
+|PParameter |Description
+|Page |The current page number. Zero-indexed, so the first page is 0.
+|NumPages |The total number of pages.
+|PageSize |How many items are in each page
+|Total |The total number of items in the list.
+|Start |The position in the overall list of the first item in this page.
+|End |The position in the overall list of the last item in this page.
+|=======================================================================
+
+ 
+
+=== Example. 
+
+The command below will return a single item from the list of recordings using the PageSize parameter
+
+....
+curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?PageSize=1
+....
+
+The result of the *PageSize* parameter
+
+[source,lang:xml,decode:true]
+----
+{"page":0,"num_pages":34,"page_size":1,"total":34,"start":"0","end":"0","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?Page=0&PageSize=1","previous_page_uri":"null","next_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?Page=1&PageSize=1&AfterSid=RF50675909d9c94acda36f0e119b6cb431","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?Page=34&PageSize=1","recordings":
+    [
+        {
+            "sid":"RF50675909d9c94acda36f0e119b6cb431",
+            "date_created":"Mon, 6 Jan 2014 08:51:07 +0900",
+            "date_updated":"Mon, 6 Jan 2014 08:51:07 +0900",
+            "account_sid":"ACae6e420f425248d6a26948c17a9e2acf",
+            "call_sid":"CAfe9ce46f104f5beeb10c83a5dad2be66",
+            "duration":"14.70275",
+            "api_version":"2012-04-24",
+            "uri":"/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/RE50675909d9c94acda36f0e119b6cb431.json",
+            "file_uri":"http://instance1.restcomm.com:8080/restcomm/recordings/RE50675909d9c94acda36f0e119b6cb431.wav"
+        }
+    ]
+}
+----
+
+ 
+
+== Additional Paging Information.
+
+The API returns URIs to the next, previous, first and last pages of the returned list as shown in the table below:
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|============================================================
+|Parameter |Description
+|Uri |The URI of the current page.
+|Firstpageuri |The URI for the first page of this list.
+|Nextpageuri |The URI for the next page of this list.
+|Previouspageuri |The URI for the previous page of this list.
+|Lastpageuri |The URI for the last page of this list.
+|============================================================
