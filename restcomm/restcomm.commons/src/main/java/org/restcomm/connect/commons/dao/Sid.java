@@ -95,7 +95,7 @@ public final class Sid {
             }
             case CALL: {
                 //https://github.com/RestComm/Restcomm-Connect/issues/1907
-                return new Sid("CA" + uuid + RestcommConfiguration.getInstance().getMain().getInstanceId());
+                return new Sid(RestcommConfiguration.getInstance().getMain().getInstanceId() + "-CA" + uuid);
             }
             case CLIENT: {
                 return new Sid("CL" + uuid);
