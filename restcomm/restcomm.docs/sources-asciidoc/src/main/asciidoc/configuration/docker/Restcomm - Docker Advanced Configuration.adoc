@@ -6,7 +6,7 @@ Run bigger range of RTP ports
 
 [source,lang:default,decode:true]
 ----
-docker run  --net  host -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/restcomm/ -e STATIC_ADDRESS="YOUR_ETHERNET_IP" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/scripts/restcomm_env_locally.sh" restcomm/restcomm:latest
+docker run  --net  host -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/restcomm/ -e RCBCONF_STATIC_ADDRESS="YOUR_ETHERNET_IP" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/scripts/restcomm_env_locally.sh" restcomm/restcomm:latest
 ----
 
 [[get-basic-environment-configuration-file-from-restcomm-docker-repository]]
@@ -35,7 +35,7 @@ Automatically restart the container in case of a failure or host restart
 
 [source,lang:default,decode:true]
 ----
-docker run  -i -d- --net host --name=restcomm --restart=always  -e STATIC_ADDRESS="YOUR_ETHERNET_IP" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/scripts/restcomm_env_locally.sh" restcomm/restcomm:latest
+docker run  -i -d- --net host --name=restcomm --restart=always  -e RCBCONF_STATIC_ADDRESS="YOUR_ETHERNET_IP" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/scripts/restcomm_env_locally.sh" restcomm/restcomm:latest
 ----
 
 [[to-run-a-specific-logger-Docker-Driver]]

@@ -21,16 +21,15 @@
 
 package org.restcomm.connect.mscontrol.mms;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.sound.sampled.UnsupportedAudioFileException;
-
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
@@ -91,16 +90,20 @@ import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StopRecording;
 import org.restcomm.connect.mscontrol.api.messages.Unmute;
 import org.restcomm.connect.mscontrol.api.messages.UpdateMediaSession;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
-import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -155,6 +158,7 @@ public class MmsCallController extends MediaServerController {
     // TODO rename following variable to 'mediaGateway'
     private ActorRef mediaGateway;
     private final ActorRef mrb;
+    private final ActorRef supervisor;
     private MediaGatewayInfo gatewayInfo;
     private MediaSession session;
     private ActorRef bridgeEndpoint;
@@ -181,9 +185,10 @@ public class MmsCallController extends MediaServerController {
     private ConnectionIdentifier connectionIdentifier;
 
     //public MmsCallController(final List<ActorRef> mediaGateways, final Configuration configuration) {
-    public MmsCallController(final ActorRef mrb) {
+    public MmsCallController(final ActorRef mrb, final ActorRef supervisor) {
         super();
         final ActorRef source = self();
+        this.supervisor = supervisor;
 
         // Initialize the states for the FSM.
         this.uninitialized = new State("uninitialized", null, null);
@@ -307,14 +312,20 @@ public class MmsCallController extends MediaServerController {
             return this.mediaGroup;
         }
 
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
                 return new MgcpMediaGroup(mediaGateway, session, bridgeEndpoint);
             }
-        }));
+        });
+        ActorRef mediaGroup = null;
+        try {
+            mediaGroup = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return mediaGroup;
     }
 
     private void startRecordingCall() throws Exception {

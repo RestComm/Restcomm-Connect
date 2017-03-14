@@ -157,8 +157,6 @@
 		<module>restcomm.tts.voicerss</module>
 		<module>restcomm.testsuite</module>
 		<module>restcomm.ui</module>
-		<module>restcomm.rvd</module>
-		<module>restcomm.rvd.testsuite</module>
 		<module>restcomm.tts.att</module>
 		<module>restcomm.ussd</module>
 		<module>restcomm.routing</module>

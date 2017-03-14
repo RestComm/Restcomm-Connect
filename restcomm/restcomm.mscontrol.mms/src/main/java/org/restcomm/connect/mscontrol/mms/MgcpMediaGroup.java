@@ -95,7 +95,7 @@ public class MgcpMediaGroup extends MediaGroup {
     protected final State updatingInternalLink;
 
     // FSM.
-    private final FiniteStateMachine fsm;
+    protected FiniteStateMachine fsm;
 
     // MGCP runtime stuff.
     protected final ActorRef gateway;
