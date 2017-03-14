@@ -86,7 +86,7 @@ import com.thoughtworks.xstream.XStream;
  * @author maria-farooq@live.com (Maria Farooq)
  */
 @NotThreadSafe
-public abstract class ParticipantsEndpoint extends SecuredEndpoint {
+public abstract class ParticipantsEndpoint extends CallsEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
@@ -283,15 +283,12 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
             return status(BAD_REQUEST).build();
         }
 
-        final String mutedStr = data.getFirst("Muted");
+        Boolean mute = Boolean.valueOf(data.getFirst("Mute"));
         // Mute/UnMute call
-        if (mutedStr != null) {
-
-            boolean muted = Boolean.parseBoolean(mutedStr);
+        if (mute != null) {
             String callPath = null;
             final ActorRef call;
             final CallInfo callInfo;
-
             try {
                 callPath = cdr.getCallPath();
                 Future<Object> future = (Future<Object>) ask(callManager, new GetCall(callPath), expires);
@@ -301,22 +298,16 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
                 CallResponse<CallInfo> response = (CallResponse<CallInfo>) Await.result(future,
                         Duration.create(100000, TimeUnit.SECONDS));
                 callInfo = response.get();
-
             } catch (Exception exception) {
                 return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
             }
-            if (callInfo.state().name().equalsIgnoreCase("IN_PROGRESS")){
-                if (muted) {
-                    if (call != null) {
-                        call.tell(new Mute(), call);
-                    }
-                } else {
-                    if (call != null) {
-                        call.tell(new Unmute(), call);
-                    }
+
+            if(call != null){
+                try{
+                    muteUnmuteCall(mute, callInfo, call, cdr, dao);
+                } catch (Exception exception) {
+                    return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
                 }
-                cdr = cdr.setMuted(muted);
-                dao.updateCallDetailRecord(cdr);
             }
         }
         if (APPLICATION_JSON_TYPE == responseType) {
