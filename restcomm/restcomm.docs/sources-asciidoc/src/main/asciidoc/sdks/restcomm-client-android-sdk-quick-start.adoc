@@ -22,12 +22,12 @@ Here you have three alternativess:
 
 Once you have installed the  Restcomm platform (or you are using RaaS) you are ready to start taking advantage of Restcomm's features from your Android Applications. Here's what you need to do:
 
-* Grab the latest Restcomm Client Android SDK release from GitHub: https://github.com/RestComm/restcomm-android-sdk/releases/tag/v1.0.0-BETA4. At the time of this writing it is v1.0.0-beta4 and the bundle you need to download is restcomm-android-sdk-1.0.0-beta4.tar.bz2
+* Grab the latest Restcomm Client Android SDK release from GitHub: https://github.com/RestComm/restcomm-android-sdk/releases/tag/v1.0.0-BETA4. At the time of this writing it is v1.0.0-beta5 and the bundle you need to download is restcomm-android-sdk-1.0.0-beta5.tar.bz2
 * Extract it:
 +
 [source,theme:github,toolbar:2,lang:default,decode:true]
 ----
-$ tar -jxvf restcomm-android-sdk-1.0.0-beta4.tar.bz2
+$ tar -jxvf restcomm-android-sdk-1.0.0-beta5.tar.bz2
 ----
 
 [[use-the-existing-sample-androidapp-helloworld]]
