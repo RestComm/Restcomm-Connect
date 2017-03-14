@@ -24,6 +24,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
+import akka.actor.StopChild;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
@@ -145,6 +146,7 @@ public final class CallManager extends UntypedActor {
     static final int DEFAUL_IMS_PROXY_PORT = -1;
 
     private final ActorSystem system;
+    private final ActorRef supervisor;
     private final Configuration configuration;
     private final ServletContext context;
     private final MediaServerControllerFactory msControllerFactory;
@@ -225,11 +227,12 @@ public final class CallManager extends UntypedActor {
 
     }
 
-    public CallManager(final Configuration configuration, final ServletContext context, final ActorSystem system,
+    public CallManager(final Configuration configuration, final ServletContext context, final ActorSystem system, final ActorRef supervisor,
                        final MediaServerControllerFactory msControllerFactory, final ActorRef conferences, final ActorRef bridges,
                        final ActorRef sms, final SipFactory factory, final DaoManager storage) {
         super();
         this.system = system;
+        this.supervisor = supervisor;
         this.configuration = configuration;
         this.context = context;
         this.msControllerFactory = msControllerFactory;
@@ -332,14 +335,21 @@ public final class CallManager extends UntypedActor {
     }
 
     private ActorRef call() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new Call(sipFactory, msControllerFactory.provideCallController(), configuration);
             }
-        }));
+        });
+        ActorRef call = null;
+        try {
+            call = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return call;
     }
 
     private void check(final Object message) throws IOException {
@@ -360,7 +370,7 @@ public final class CallManager extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("About to destroy call: "+request.call().path()+", call isTerminated(): "+sender().isTerminated()+", sender: "+sender());
             }
-            context.stop(call);
+            supervisor.tell(new StopChild(call), null);
         }
     }
 
@@ -636,7 +646,7 @@ public final class CallManager extends UntypedActor {
 
     private void proxyThroughMediaServer(final SipServletRequest request, final Client client, final String destNumber) {
         String rcml = "<Response><Dial>"+destNumber+"</Dial></Response>";
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self());
@@ -865,7 +875,7 @@ public final class CallManager extends UntypedActor {
         existingInterpreter.tell(new StopInterpreter(true), null);
 
         // Build a new VoiceInterpreter
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self());
@@ -951,7 +961,7 @@ public final class CallManager extends UntypedActor {
                 number = numbers.getIncomingPhoneNumber("*");
             }
             if (number != null) {
-                final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+                final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
                 builder.setConfiguration(configuration);
                 builder.setStorage(storage);
                 builder.setCallManager(self);
@@ -1029,7 +1039,7 @@ public final class CallManager extends UntypedActor {
         boolean isClientManaged =( (applicationSid != null && !applicationSid.toString().isEmpty() && !applicationSid.toString().equals("")) ||
                 (clientAppVoiceUrl != null && !clientAppVoiceUrl.toString().isEmpty() &&  !clientAppVoiceUrl.toString().equals("")));
         if (isClientManaged) {
-            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
             builder.setConfiguration(configuration);
             builder.setStorage(storage);
             builder.setCallManager(self);
@@ -1284,7 +1294,7 @@ public final class CallManager extends UntypedActor {
     private void execute(final Object message) {
         final ExecuteCallScript request = (ExecuteCallScript) message;
         final ActorRef self = self();
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self);
@@ -1368,7 +1378,7 @@ public final class CallManager extends UntypedActor {
         existingInterpreter.tell(new StopInterpreter(true), null);
 
         // Build a new VoiceInterpreter
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self);
@@ -2145,7 +2155,7 @@ public final class CallManager extends UntypedActor {
                 logger.info("rcml: " + rcml);
             }
 
-            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
             builder.setConfiguration(configuration);
             builder.setStorage(storage);
             builder.setCallManager(self());
