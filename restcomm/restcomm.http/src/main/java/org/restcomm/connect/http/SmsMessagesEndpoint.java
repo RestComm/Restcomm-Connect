@@ -20,7 +20,6 @@
 package org.restcomm.connect.http;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -36,6 +35,7 @@ import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommSupervisor;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.SmsMessagesDao;
@@ -89,7 +89,7 @@ import static javax.ws.rs.core.Response.status;
 public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
-    protected ActorSystem system;
+    protected ActorRef supervisor;
     protected Configuration configuration;
     protected ActorRef aggregator;
     protected SmsMessagesDao dao;
@@ -109,7 +109,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         configuration = configuration.subset("runtime-settings");
         dao = storage.getSmsMessagesDao();
         aggregator = (ActorRef) context.getAttribute("org.restcomm.connect.sms.SmsService");
-        system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+        supervisor = (ActorRef) context.getAttribute(RestcommSupervisor.class.getName());
         super.init(configuration);
         final SmsMessageConverter converter = new SmsMessageConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
@@ -282,14 +282,21 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     }
 
     private ActorRef observer() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new SmsSessionObserver();
             }
-        }));
+        });
+        ActorRef observer = null;
+        try {
+            observer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return observer;
     }
 
     private final class SmsSessionObserver extends UntypedActor {

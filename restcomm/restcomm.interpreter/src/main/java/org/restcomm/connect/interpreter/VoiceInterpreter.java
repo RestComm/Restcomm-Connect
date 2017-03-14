@@ -140,6 +140,7 @@ import static akka.pattern.Patterns.ask;
 public final class VoiceInterpreter extends BaseVoiceInterpreter {
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+
     // States for the FSM.
     private final State startDialing;
     private final State processingDialChildren;
@@ -210,14 +211,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private boolean asImsUa;
     private String imsUaLogin;
     private String imsUaPassword;
+    private String forwardedFrom;
 
-    public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
+    public VoiceInterpreter(final ActorRef supervisor, final Configuration configuration, final Sid account, final Sid phone, final String version,
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
                             final String statusCallbackMethod, final String referTarget, final String transferor, final String transferee,
                             final String emailAddress, final ActorRef callManager,
                             final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring, final String rcml,
                             final boolean asImsUa, final String imsUaLogin, final String imsUaPassword) {
-        super();
+        super(supervisor);
         final ActorRef source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
         downloadingFallbackRcml = new State("downloading fallback rcml", new DownloadingFallbackRcml(source), null);
@@ -1503,7 +1505,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 parameters.add(new BasicNameValuePair(prefix + headerName, sipDiversionHeader));
 
                 try {
-                    final String forwardedFrom = sipDiversionHeader.substring(sipDiversionHeader.indexOf("sip:") + 4,
+                    forwardedFrom = sipDiversionHeader.substring(sipDiversionHeader.indexOf("sip:") + 4,
                             sipDiversionHeader.indexOf("@"));
 
                     for(int i=0; i < parameters.size(); i++) {
@@ -1722,6 +1724,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     callRecord = records.getCallDetailRecord(callRecord.getSid());
                     callRecord = callRecord.setStatus(callState.toString());
                     callRecord = callRecord.setStartTime(DateTime.now());
+                    callRecord = callRecord.setForwardedFrom(forwardedFrom);
                     records.updateCallDetailRecord(callRecord);
                 }
 
@@ -3120,7 +3123,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 method = "POST";
             }
 
-            final SubVoiceInterpreterBuilder builder = new SubVoiceInterpreterBuilder(getContext().system());
+            final SubVoiceInterpreterBuilder builder = new SubVoiceInterpreterBuilder(supervisor);
             builder.setConfiguration(configuration);
             builder.setStorage(storage);
             builder.setCallManager(super.source);
