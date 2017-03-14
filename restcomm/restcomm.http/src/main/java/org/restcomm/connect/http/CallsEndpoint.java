@@ -68,6 +68,8 @@ import org.restcomm.connect.http.converter.CallDetailRecordListConverter;
 import org.restcomm.connect.http.converter.RecordingConverter;
 import org.restcomm.connect.http.converter.RecordingListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.mscontrol.api.messages.Mute;
+import org.restcomm.connect.mscontrol.api.messages.Unmute;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CallResponse;
@@ -440,6 +442,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         String statusCallbackMethod = data.getFirst("StatusCallbackMethod");
         //Restcomm-  Move connected call leg (if exists) to the new URL
         Boolean moveConnectedCallLeg = Boolean.valueOf(data.getFirst("MoveConnectedCallLeg"));
+        Boolean mute = Boolean.valueOf(data.getFirst("Mute"));
 
         String callPath = null;
         final ActorRef call;
@@ -461,9 +464,9 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         if (method == null)
             method = "POST";
 
-        if (url != null && status != null) {
+        if ((url != null && status != null) || (url != null && mute != null) || (mute != null && status != null)) {
             // Throw exception. We can either redirect a running call using Url or change the state of a Call with Status
-            final String errorMessage = "You can either redirect a running call using \"Url\" or change the state of a Call with \"Status\"";
+            final String errorMessage = "You can either redirect a running call using \"Url\" or change the state of a Call with \"Status\" or put a call on mute/unMute";
             return status(javax.ws.rs.core.Response.Status.CONFLICT).entity(errorMessage).build();
         }
 
@@ -490,6 +493,32 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
                 if (call != null) {
                     call.tell(new Hangup(SipServletResponse.SC_REQUEST_TERMINATED), null);
                 }
+            }
+        }
+
+        if(mute != null && call != null){
+            try{
+            	if(callInfo.state().name().equalsIgnoreCase("IN_PROGRESS") || callInfo.state().name().equalsIgnoreCase("in-progress")){
+                    if(mute){
+                    	if(!callInfo.isMuted()){
+                            call.tell(new Mute(), null);
+                    	}else{
+                    		if(logger.isInfoEnabled())
+                    			logger.info("Call is already muted.");
+                    	}
+                    }else{
+                    	if(callInfo.isMuted()){
+                            call.tell(new Unmute(), null);
+                    	}else{
+                    		if(logger.isInfoEnabled())
+                    			logger.info("Call is not muted.");
+                    	}
+                    }
+            	}else{
+                    // Do Nothing. We can only mute/unMute in progress calls
+            	}
+            } catch (Exception exception) {
+                return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
             }
         }
 
