@@ -1,5 +1,6 @@
 package org.restcomm.connect.sms.smpp;
 
+import static akka.pattern.Patterns.ask;
 import static org.restcomm.connect.interpreter.rcml.Verbs.email;
 import static org.restcomm.connect.interpreter.rcml.Verbs.redirect;
 import static org.restcomm.connect.interpreter.rcml.Verbs.sms;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.Header;
@@ -73,6 +75,8 @@ import org.restcomm.connect.sms.api.SmsSessionAttribute;
 import org.restcomm.connect.sms.api.SmsSessionInfo;
 import org.restcomm.connect.sms.api.SmsSessionRequest;
 import org.restcomm.connect.sms.api.SmsSessionResponse;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
 
 public class SmppInterpreter extends UntypedActor  {
 
@@ -84,6 +88,8 @@ public class SmppInterpreter extends UntypedActor  {
     private static final Logger logger = Logger.getLogger(SmppInterpreter.class);
     // private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // States for the FSM.
+
+    private final ActorRef supervisor;
     private final State uninitialized;
     private final State acquiringLastSmsRequest;
     private final State downloadingRcml;
@@ -130,11 +136,12 @@ public class SmppInterpreter extends UntypedActor  {
     private ConcurrentHashMap<String, String> customHttpHeaderMap = new ConcurrentHashMap<String, String>();
     private ConcurrentHashMap<String, String> customRequestHeaderMap;
 
-    public SmppInterpreter(final ActorRef smppMessageHandler, final Configuration configuration, final DaoManager storage,
+    public SmppInterpreter(final ActorRef supervisor, final ActorRef smppMessageHandler, final Configuration configuration, final DaoManager storage,
             final Sid accountId, final String version, final URI url, final String method, final URI fallbackUrl,
             final String fallbackMethod) {
         super();
         final ActorRef source = self();
+        this.supervisor = supervisor;
         uninitialized = new State("uninitialized", null, null);
         acquiringLastSmsRequest = new State("acquiring last sms event", new AcquiringLastSmsEvent(source), null);
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
@@ -206,27 +213,37 @@ public class SmppInterpreter extends UntypedActor  {
     }
 
     private ActorRef downloader() {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
                 return new Downloader();
             }
-        }));
+        });
+        ActorRef downloader = null;
+        try {
+            downloader = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return downloader;
     }
 
     ActorRef mailer(final Configuration configuration) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public Actor create() throws Exception {
                 return new EmailService(configuration);
             }
-        }));
+        });
+        ActorRef mailer = null;
+        try {
+            mailer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return mailer;
     }
 
     protected String format(final String number) {
@@ -412,15 +429,21 @@ public class SmppInterpreter extends UntypedActor  {
     }
 
     private ActorRef parser(final String xml) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new Parser(xml, self());
             }
-        }));
+        });
+        ActorRef parser = null;
+        try {
+            parser = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return parser;
     }
 
     private void response(final Object message) {

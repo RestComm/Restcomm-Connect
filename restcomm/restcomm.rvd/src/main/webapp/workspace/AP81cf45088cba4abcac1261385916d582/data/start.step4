@@ -1,1 +1,0 @@
-{"method":"GET","finishOnKey":"*","steps":[{"phrase":"Welcome to Telestax, enter your customer ID and press star","kind":"say","label":"say","title":"say","name":"step6"}],"collectdigits":{"next":"module1","collectVariable":"customerId","scope":"module"},"gatherType":"collectdigits","kind":"gather","label":"gather","title":"collect","name":"step4"}

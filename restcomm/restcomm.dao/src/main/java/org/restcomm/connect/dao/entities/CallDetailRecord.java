@@ -298,6 +298,11 @@ public final class CallDetailRecord {
                 callerName, uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit, onHold, msId);
     }
 
+    public CallDetailRecord setForwardedFrom(final String forwardedFrom){
+        return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+                status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
+                callerName, uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit, onHold, msId);
+    }
     @Override
     public String toString() {
         return "CDR SID: "+getSid()+" | InstanceId: "+getInstanceId()+" | ParentCallSid: "+getParentCallSid()+" | ConferenceSid: "+getConferenceSid()+" | DateCreated: "+getDateCreated()+" | DateUpdated: "+getDateUpdated()+" | AccountSid: "+getAccountSid()+" | To: "+getTo()+" | From: "+getFrom()
