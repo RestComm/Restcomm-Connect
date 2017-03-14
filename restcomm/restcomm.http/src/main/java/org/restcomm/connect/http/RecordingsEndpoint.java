@@ -154,7 +154,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response getRecordingWav (String accountSid, String sid) {
+    protected Response getRecordingFile (String accountSid, String sid) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
 //        secure(operatedAccount, "RestComm:Read:Recordings");
 
@@ -169,14 +169,16 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
             URI recordingUri = null;
             try {
                 if (recording.getS3Uri() != null) {
-                    recordingUri = s3AccessTool.getPublicUrl(recording.getSid() + ".wav");
+                    String fileExtension = recording.getS3Uri().toString().endsWith("wav") ? ".wav" : ".mp4";
+                    recordingUri = s3AccessTool.getPublicUrl(recording.getSid() + fileExtension);
                 } else {
-                    String recFile = "/restcomm/recordings/" + recording.getSid() + ".wav";
+                    String fileExtension = recording.getFileUri().toString().endsWith("wav") ? ".wav" : ".mp4";
+                    String recFile = "/restcomm/recordings/" + recording.getSid() + fileExtension;
                     recordingUri = UriUtils.resolve(new URI(recFile));
                 }
             } catch (Exception e) {
                 if (logger.isInfoEnabled()) {
-                    logger.info("Problem during preparation of Recording wav file link, ",e);
+                    logger.info("Problem during preparation of Recording file link, ", e);
                 }
             }
 

@@ -48,7 +48,13 @@ public final class RecordingsXmlEndpoint extends RecordingsEndpoint {
     @Path("/{sid}.wav")
     @GET
     public Response getRecordingAsWav(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getRecordingWav(accountSid, sid);
+        return getRecordingFile(accountSid, sid);
+    }
+
+    @Path("/{sid}.mp4")
+    @GET
+    public Response getRecordingAsMp4(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getRecordingFile(accountSid, sid);
     }
 
     @Path("/{sid}")
