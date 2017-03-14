@@ -41,6 +41,7 @@ import javax.media.mscontrol.MsControlFactory;
 import javax.media.mscontrol.Parameter;
 import javax.media.mscontrol.Parameters;
 import javax.media.mscontrol.join.Joinable.Direction;
+import javax.media.mscontrol.mediagroup.CodecConstants;
 import javax.media.mscontrol.mediagroup.MediaGroup;
 import javax.media.mscontrol.mediagroup.Player;
 import javax.media.mscontrol.mediagroup.PlayerEvent;
@@ -712,6 +713,21 @@ public class Jsr309CallController extends MediaServerController {
                 params.put(Recorder.APPEND, Boolean.FALSE);
                 // TODO set as definitive media group parameter - handled by RestComm
                 params.put(Recorder.START_BEEP, Boolean.FALSE);
+
+                // Video parameters
+                if (MediaType.AUDIO_VIDEO.equals(message.media()) || MediaType.VIDEO_ONLY.equals(message.media())) {
+                    params.put(Recorder.VIDEO_CODEC, CodecConstants.H264);
+                    String sVideoFMTP = "profile=" + "66";
+                    sVideoFMTP += ";level=" + "3.1";
+                    sVideoFMTP += ";width=" + "1280";
+                    sVideoFMTP += ";height=" + "720";
+                    sVideoFMTP += ";framerate=" + "15";
+                    params.put(Recorder.VIDEO_FMTP, sVideoFMTP);
+                    params.put(Recorder.VIDEO_MAX_BITRATE, 2000);
+                    if (MediaType.AUDIO_VIDEO.equals(message.media())) {
+                        params.put(Recorder.AUDIO_CODEC, CodecConstants.AMR);
+                    }
+                }
 
                 this.recorderListener.setEndOnKey(message.endInputKey());
                 this.recorderListener.setRemote(sender);
