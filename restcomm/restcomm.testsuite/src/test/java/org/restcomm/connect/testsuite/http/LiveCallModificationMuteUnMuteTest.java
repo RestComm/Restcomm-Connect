@@ -52,20 +52,38 @@ public class LiveCallModificationMuteUnMuteTest {
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     private static SipStackTool tool1;
+    private static SipStackTool tool2;
+    private static SipStackTool tool3;
 
     private SipStack mariaSipStack;
     private SipPhone mariaPhone;
     private String mariaContact = "sip:maria@127.0.0.1:5090";
 
+    private SipStack buttSipStack;
+    private SipPhone buttPhone;
+    private String buttContact = "sip:+131313@127.0.0.1:5070";
+
+    private SipStack aliceSipStack;
+    private SipPhone alicePhone;
+    private String aliceContact = "sip:alice@127.0.0.1:5091";
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("LiveCallModification1");
+        tool2 = new SipStackTool("LiveCallModification2");
+        tool3 = new SipStackTool("LiveCallModification3");
     }
 
     @Before
     public void before() throws Exception {
         mariaSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
         mariaPhone = mariaSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, mariaContact);
+
+        buttSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
+        buttPhone = buttSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, buttContact);
+
+        aliceSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
+        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
     }
 
     @After
@@ -75,6 +93,20 @@ public class LiveCallModificationMuteUnMuteTest {
         }
         if (mariaSipStack != null) {
             mariaSipStack.dispose();
+        }
+
+        if (buttPhone != null) {
+            buttPhone.dispose();
+        }
+        if (buttSipStack != null) {
+            buttSipStack.dispose();
+        }
+
+        if (aliceSipStack != null) {
+            aliceSipStack.dispose();
+        }
+        if (alicePhone != null) {
+            alicePhone.dispose();
         }
         Thread.sleep(1000);
         wireMockRule.resetRequests();
