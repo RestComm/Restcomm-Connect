@@ -23,10 +23,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.amazonS3.RecordingSecurityLevel;
 import org.restcomm.connect.commons.amazonS3.S3AccessTool;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.entities.Account;
@@ -43,6 +43,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
+import java.net.URL;
 import java.util.List;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -66,6 +67,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
     protected Gson gson;
     protected XStream xstream;
     protected S3AccessTool s3AccessTool;
+    protected RecordingSecurityLevel securityLevel = RecordingSecurityLevel.SECURE;
 
     public RecordingsEndpoint() {
         super();
@@ -103,6 +105,9 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
                 final boolean testing = amazonS3Configuration.getBoolean("testing",false);
                 final String testingUrl = amazonS3Configuration.getString("testing-url",null);
                 s3AccessTool = new S3AccessTool(accessKey, securityKey, bucketName, bucketFolder, reducedRedundancy, minutesToRetainPublicUrl, removeOriginalFile,bucketRegion, testing, testingUrl);
+
+                securityLevel = RecordingSecurityLevel.valueOf(amazonS3Configuration.getString("security-level", "secure").toUpperCase());
+                converter.setSecurityLevel(securityLevel);
             }
         }
 
@@ -170,18 +175,30 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
             try {
                 if (recording.getS3Uri() != null) {
                     recordingUri = s3AccessTool.getPublicUrl(recording.getSid() + ".wav");
+                    if (securityLevel.equals(RecordingSecurityLevel.REDIRECT)) {
+                        return temporaryRedirect(recordingUri).build();
+                    } else {
+                        URL recordingUrl = recordingUri.toURL();
+                        String contentType = recordingUri.toURL().openConnection().getContentType();
+                        if (contentType == null || contentType.isEmpty()) {
+                            contentType = "audio/x-wav";
+                        }
+                        //Fetch recording and serve it from here
+                        return ok(recordingUri.toURL().openStream(), recordingUri.toURL().openConnection().getContentType()).build();
+                    }
                 } else {
-                    String recFile = "/restcomm/recordings/" + recording.getSid() + ".wav";
-                    recordingUri = UriUtils.resolve(new URI(recFile));
+//                    String recFile = "/restcomm/recordings/" + recording.getSid() + ".wav";
+//                    recordingUri = UriUtils.resolve(new URI(recFile));
+                    recordingUri = recording.getFileUri();
+                    return ok(recordingUri.toURL().openStream()).build();
                 }
             } catch (Exception e) {
                 if (logger.isInfoEnabled()) {
                     logger.info("Problem during preparation of Recording wav file link, ",e);
                 }
             }
-
-            return temporaryRedirect(recordingUri).build();
         }
+        return status(Response.Status.NOT_FOUND).build();
     }
 
 }
