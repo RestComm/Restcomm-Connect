@@ -121,6 +121,7 @@ The following parameters are available for you to *POST* request when modifying
 |Url |A valid URL that returns RCMLL. Restcomm will immediately redirect the call to the new RCML.
 |Method |The HTTP method Restcomm should use when requesting the above URL. Defaults to POST.
 |Status |Either *canceled* or completed. Specifying canceled will attempt to hangup calls that are queued or ringing but not affect calls already in progress. Specifying completed will attempt to hang up a call even if it's already in progress.
+| Mute | Either *true* or *flase*. Setting value of this parameter to *true* will mute the call. Setting value of this parameter to *false* will unmute the call.
 |===================================================================================================================================================================================================================================================
 
 === Call in-Progress
@@ -329,6 +330,54 @@ The output showing the same Call ID
 ----
 
 Check LiveCallModification test scripts for Hold/Unhold calls at: https://github.com/RestComm/Restcomm-Connect/tree/master/liveCallModification
+
+You can Mute/unMute an inprogress call as shown bellow.
+
+.Mute a Participant
+====
+curl -X POST http://<AccountSid>:<AutheToken>@<Domain>/restcomm/2012-04-24/Accounts/<AccountSid>/Conferences/<ConferenceSid>/Participants/<CallSid> -d "Mute=true"
+====
+
+*Sample Mute Response*
+----
+<RestcommResponse>
+  <Call>
+    <Sid>CA02b649d3ffe24408a1e141be089f347b</Sid>
+    <ConferenceSid>CFcc373b0637114f088eae954fa73f0f57</ConferenceSid>
+    <DateCreated>Wed, 15 Mar 2017 10:10:57 +0000</DateCreated>
+    <DateUpdated>Wed, 15 Mar 2017 10:15:33 +0000</DateUpdated>
+    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+    <Muted>true</Muted>
+    <Hold>false</Hold>
+    <StartConferenceOnEnter>true</StartConferenceOnEnter>
+    <EndConferenceOnEnter>false</EndConferenceOnEnter>
+    <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA02b649d3ffe24408a1e141be089f347b</Uri>
+  </Call>
+</RestcommResponse>
+----
+
+.unMute a Muted Participant
+====
+curl -X POST http://<AccountSid>:<AutheToken>@<Domain>/restcomm/2012-04-24/Accounts/<AccountSid>/Conferences/<ConferenceSid>/Participants/<CallSid> -d "Mute=false"
+====
+
+*Sample unMute Response*
+----
+<RestcommResponse>
+  <Call>
+    <Sid>CA02b649d3ffe24408a1e141be089f347b</Sid>
+    <ConferenceSid>CFcc373b0637114f088eae954fa73f0f57</ConferenceSid>
+    <DateCreated>Wed, 15 Mar 2017 10:10:57 +0000</DateCreated>
+    <DateUpdated>Wed, 15 Mar 2017 10:16:44 +0000</DateUpdated>
+    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+    <Muted>false</Muted>
+    <Hold>false</Hold>
+    <StartConferenceOnEnter>true</StartConferenceOnEnter>
+    <EndConferenceOnEnter>false</EndConferenceOnEnter>
+    <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA02b649d3ffe24408a1e141be089f347b</Uri>
+  </Call>
+</RestcommResponse>
+----
 
 == List Filter
 
