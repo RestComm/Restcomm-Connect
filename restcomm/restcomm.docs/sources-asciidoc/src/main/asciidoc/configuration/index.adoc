@@ -74,6 +74,10 @@ There is two different ways to install Restcomm Connect. Either through Docker o
 
 * <<ims/Restcomm_IMS_GW.adoc#intro,Restcomm as a WebRTC GW to IMS >>
 
+=== Amazon S3 Integration
+
+* <<s3/Restcomm_S3.adoc#intro,Restcomm Amazon S3 Integration>>
+
 == Contributor Resources
 
 * <<How to build Restcomm-Connect from source.adoc#build-from-source,How to build Restcomm-Connect from source>>
