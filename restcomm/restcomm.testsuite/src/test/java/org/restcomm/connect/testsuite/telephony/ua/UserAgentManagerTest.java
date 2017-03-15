@@ -319,6 +319,44 @@ public final class UserAgentManagerTest {
     }
 
     @Test
+    public void registerUserAgentWithExtraParamsAnd503ToOptionsPingNoTransport() throws ParseException, InterruptedException, InvalidArgumentException {
+//        deployer.deploy("UserAgentTest");
+        // Register the phone so we can get OPTIONS pings from RestComm.
+        SipURI uri = sipStack3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        Credential c = new Credential("127.0.0.1","alice", "1234");
+        phone3.addUpdateCredential(c);
+
+        assertTrue(phone3.register(uri, "alice", "1234", aliceContact3, 3600, 3600));
+        Thread.sleep(500);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+
+        phone3.listenRequestMessage();
+        RequestEvent requestEvent = phone3.waitRequest(10000);
+        assertNotNull(requestEvent);
+        assertTrue(requestEvent.getRequest().getMethod().equals(SipRequest.OPTIONS));
+        String extraParam = ((SipUri)requestEvent.getRequest().getRequestURI()).getParameter("rc-id");
+        assertNotNull(extraParam);
+        logger.info("RequestEvent :"+requestEvent.getRequest().toString());
+
+        ArrayList<Header> additionalHeader = new ArrayList<Header>();
+        Header reason = sipStack3.getHeaderFactory().createReasonHeader("udp", 503, "Destination not available");
+        additionalHeader.add(reason);
+        ArrayList<Header> replaceHeaders = new ArrayList<Header>();
+        //The To Header will not contain the transport
+        Header toHeader = sipStack3.getHeaderFactory().createToHeader(sipStack3.getAddressFactory().createAddress("sip:alice@127.0.0.1:5071;rc-id=7616"), null);
+        replaceHeaders.add(toHeader);
+        phone3.sendReply(requestEvent, 503, "Service unavailable", null, null, 3600, additionalHeader, replaceHeaders, null);
+
+        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
+        sipStack3.dispose();
+        phone3 = null;
+        sipStack3 = null;
+
+        Thread.sleep(1000);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+    }
+
+    @Test
     public void registerUserAgentWithExtraParamsAnd408ToOptionsPing() throws ParseException, InterruptedException, InvalidArgumentException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
