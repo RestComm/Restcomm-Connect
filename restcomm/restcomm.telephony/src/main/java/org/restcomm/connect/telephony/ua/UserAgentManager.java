@@ -499,6 +499,10 @@ public final class UserAgentManager extends UntypedActor {
         final int port = request.getInitialRemotePort();
 
         String transport = (uri.getTransportParam()==null?request.getParameter("transport"):uri.getTransportParam()); //Issue #935, take transport of initial request-uri if contact-uri has no transport parameter
+        //If RURI is secure (SIPS) then pick TLS for transport - https://github.com/RestComm/Restcomm-Connect/issues/1956
+        if (((SipURI)request.getRequestURI()).isSecure()) {
+            transport = "tls";
+        }
         if (transport == null && !request.getInitialTransport().equalsIgnoreCase("udp")) {
             //Issue1068, if Contact header or RURI doesn't specify transport, check InitialTransport from
             transport = request.getInitialTransport();
@@ -522,7 +526,12 @@ public final class UserAgentManager extends UntypedActor {
         }
 
         final StringBuffer buffer = new StringBuffer();
-        buffer.append("sip:").append(user).append("@").append(uri.getHost()).append(":").append(uri.getPort());
+        if (((SipURI)request.getRequestURI()).isSecure()) {
+            buffer.append("sips:");
+        } else {
+            buffer.append("sip:");
+        }
+        buffer.append(user).append("@").append(uri.getHost()).append(":").append(uri.getPort());
         // https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than
         if (transport != null) {
             buffer.append(";transport=").append(transport);
