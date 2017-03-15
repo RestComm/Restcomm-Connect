@@ -47,12 +47,8 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.http.converter.CallDetailRecordListConverter;
-import org.restcomm.connect.http.converter.RecordingListConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.converter.ConferenceParticipantConverter;
-import org.restcomm.connect.http.converter.RecordingConverter;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -63,24 +59,26 @@ import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
 import org.restcomm.connect.dao.entities.CallDetailRecordList;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.http.converter.CallDetailRecordListConverter;
+import org.restcomm.connect.http.converter.ConferenceParticipantConverter;
+import org.restcomm.connect.http.converter.RecordingConverter;
+import org.restcomm.connect.http.converter.RecordingListConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
 import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.GetCallInfo;
-import org.restcomm.connect.mscontrol.api.messages.Mute;
-import org.restcomm.connect.mscontrol.api.messages.Unmute;
-
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
-import akka.actor.ActorRef;
-import akka.util.Timeout;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+
+import akka.actor.ActorRef;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author maria-farooq@live.com (Maria Farooq)

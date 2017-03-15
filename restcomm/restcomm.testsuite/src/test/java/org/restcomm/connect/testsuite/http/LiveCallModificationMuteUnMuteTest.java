@@ -1,5 +1,11 @@
 package org.restcomm.connect.testsuite.http;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -29,6 +35,7 @@ import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 /**
@@ -60,7 +67,6 @@ public class LiveCallModificationMuteUnMuteTest {
 
     private static SipStackTool tool1;
     private static SipStackTool tool2;
-    private static SipStackTool tool3;
 
     private SipStack mariaSipStack;
     private SipPhone mariaPhone;
@@ -70,15 +76,21 @@ public class LiveCallModificationMuteUnMuteTest {
     private SipPhone buttPhone;
     private String buttContact = "sip:+131313@127.0.0.1:5070";
 
-    private SipStack aliceSipStack;
-    private SipPhone alicePhone;
-    private String aliceContact = "sip:alice@127.0.0.1:5091";
+    String dialConference = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<Response>\n" +
+            "\t<Dial timeout=\"10\">\n" +
+            "\t  <Conference muted=\"true\" startConferenceOnEnter=\"false\" beep=\"false\">Conf1234</Conference>\n" +
+            "\t</Dial>\n" +
+            "</Response>";
+    private final String confRoom2 = "confRoom2";
+    private String dialConfernceRcml = "<Response><Dial><Conference>"+confRoom2+"</Conference></Dial></Response>";
+
+    private String dialRestcommConference = "sip:1111@127.0.0.1:5080";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("LiveCallModification1");
         tool2 = new SipStackTool("LiveCallModification2");
-        tool3 = new SipStackTool("LiveCallModification3");
     }
 
     @Before
@@ -88,9 +100,6 @@ public class LiveCallModificationMuteUnMuteTest {
 
         buttSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
         buttPhone = buttSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, buttContact);
-
-        aliceSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
-        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
     }
 
     @After
@@ -108,116 +117,97 @@ public class LiveCallModificationMuteUnMuteTest {
         if (buttSipStack != null) {
             buttSipStack.dispose();
         }
-
-        if (aliceSipStack != null) {
-            aliceSipStack.dispose();
-        }
-        if (alicePhone != null) {
-            alicePhone.dispose();
-        }
         Thread.sleep(1000);
         wireMockRule.resetRequests();
         Thread.sleep(4000);
     }
 
     /**
-     * muteInProgressCall
+     * muteUnmuteInProgressConferenceParticipant
+     * this test will:
+     * 1. start a conference with 2 participants
+     * 2. mute one praticipant
+     * 3. unmute it
      * @throws Exception
      */
     @Test
-    public void muteInProgressCall() throws Exception {
+    public void muteUnmuteInProgressConferenceParticipant() throws Exception {
+    	stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialConfernceRcml)));
 
-        SipCall mariaCall = mariaPhone.createSipCall();
-        mariaCall.listenForIncomingCall();
+    	// maria Dials the conference
+        final SipCall mariaCall = mariaPhone.createSipCall();
+        mariaCall.initiateOutgoingCall(mariaContact, dialRestcommConference, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(mariaCall);
+        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+        int responsemaria = mariaCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responsemaria == Response.TRYING || responsemaria == Response.RINGING);
 
-        SipCall buttCall = buttPhone.createSipCall();
-        buttCall.listenForIncomingCall();
+        if (responsemaria == Response.TRYING) {
+            assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, mariaCall.getLastReceivedResponse().getStatusCode());
+        }
 
-        String from = "+15126002188";
-        String to = mariaContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, mariaCall.getLastReceivedResponse().getStatusCode());
+        mariaCall.sendInviteOkAck();
+        assertTrue(!(mariaCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
-                adminAuthToken, from, to, rcmlUrl);
-        assertNotNull(callResult);
-        String callSid = callResult.get("sid").getAsString();
+    	// butt Dials the conference
+        final SipCall buttCall = buttPhone.createSipCall();
+        buttCall.initiateOutgoingCall(buttContact, dialRestcommConference, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(buttCall);
+        assertTrue(buttCall.waitOutgoingCallResponse(5 * 1000));
+        int responsebutt = buttCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responsebutt == Response.TRYING || responsebutt == Response.RINGING);
 
-        assertTrue(mariaCall.waitForIncomingCall(5000));
-        String receivedBody = new String(mariaCall.getLastReceivedRequest().getRawContent());
-        assertTrue(mariaCall.sendIncomingCallResponse(Response.RINGING, "Ringing-maria", 3600));
-        assertTrue(mariaCall
-                .sendIncomingCallResponse(Response.OK, "OK-maria", 3600, receivedBody, "application", "sdp", null, null));
+        if (responsebutt == Response.TRYING) {
+            assertTrue(buttCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, buttCall.getLastReceivedResponse().getStatusCode());
+        }
 
-        // Restcomm now should execute RCML that will create a call to +131313 (butt's phone)
+        assertTrue(buttCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, buttCall.getLastReceivedResponse().getStatusCode());
+        buttCall.sendInviteOkAck();
+        assertTrue(!(buttCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        assertTrue(buttCall.waitForIncomingCall(5000));
-        receivedBody = new String(buttCall.getLastReceivedRequest().getRawContent());
-        assertTrue(buttCall.sendIncomingCallResponse(Response.RINGING, "Ringing-butt", 3600));
-        assertTrue(buttCall.sendIncomingCallResponse(Response.OK, "OK-butt", 3600, receivedBody, "application", "sdp",
-                null, null));
+        Thread.sleep(2000);
 
-        Thread.sleep(1000);
-
-        mariaCall.listenForDisconnect();
-        buttCall.listenForDisconnect();
-
-        //Mute call
-        callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
-                callSid, true);
-        assertTrue(callResult != null);
+        JsonObject confObject = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertNotNull(confObject);
+        JsonArray confArray = confObject.getAsJsonArray("conferences");
+        assertNotNull(confArray);
+        String conferenceSid = confArray.get(0).getAsJsonObject().get("sid").getAsString();
+        assertNotNull(conferenceSid);
+        JsonObject partObject = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid, adminAuthToken, conferenceSid);
+        assertNotNull(partObject);
+        JsonArray callsArray = partObject.getAsJsonArray("calls");
+        int size = callsArray.size();
+        assertEquals(2, size);
         
-        //Mute again
-        callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
-                callSid, true);
+        logger.info("callsArray: "+callsArray);
+        
+        //any call sid
+        String firstCallSid = callsArray.get(0).getAsJsonObject().get("sid").getAsString();
 
-        //TODO: get call from api again an check if mute is true!!! add this functionality in call api
-        buttCall.dispose();
-        mariaCall.dispose();
-    }
-
-    /**
-     * unMuteInProgressCall
-     * @throws Exception
-     */
-    @Ignore@Test
-    public void unMuteInProgressCall() throws Exception {
-    	fail("Not Implemented");
-    }
-
-    /**
-     * unMuteUnMutedCall: we can mute only unmuted call
-     * @throws Exception
-     */
-    @Ignore@Test
-    public void muteMutedCall() throws Exception {
-    	fail("Not Implemented");
-    }
-
-    /**
-     * unMuteUnMutedCall: we can unmute only muted call
-     * @throws Exception
-     */
-    @Ignore@Test
-    public void unMuteUnMutedCall() throws Exception {
-    	fail("Not Implemented");
-    }
-    
-    /**
-     * muteCompletedCall: we can mute/unmute only in progress call
-     * @throws Exception
-     */
-    @Ignore@Test
-    public void muteCompletedCall() throws Exception {
-    	fail("Not Implemented");
-    }
-
-    /**
-     * unMuteCompletedCall: we can mute/unmute only in progress call
-     * @throws Exception
-     */
-    @Ignore@Test
-    public void unMuteCompletedCall() throws Exception {
-    	fail("Not Implemented");
+        //Going to mute : 
+        JsonObject muteResponse = RestcommConferenceParticipantsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, conferenceSid, adminAuthToken, firstCallSid, true);
+        assertNotNull(muteResponse);        
+        JsonObject modifiedParticipant = RestcommConferenceParticipantsTool.getInstance().getParticipant(deploymentUrl.toString(), adminAccountSid, conferenceSid, adminAuthToken, firstCallSid);
+        assertNotNull(modifiedParticipant);
+        Boolean muted = modifiedParticipant.get("muted").getAsBoolean();
+        assertTrue(muted);
+        
+        //Going to unmute : 
+        JsonObject unmuteResponse = RestcommConferenceParticipantsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, conferenceSid, adminAuthToken, firstCallSid, false);
+        assertNotNull(muteResponse);
+        modifiedParticipant = RestcommConferenceParticipantsTool.getInstance().getParticipant(deploymentUrl.toString(), adminAccountSid, conferenceSid, adminAuthToken, firstCallSid);
+        assertNotNull(modifiedParticipant);
+        muted = modifiedParticipant.get("muted").getAsBoolean();
+        assertTrue(!muted);
     }
     
     @Deployment(name = "LiveCallModificationTest", managed = true, testable = false)
