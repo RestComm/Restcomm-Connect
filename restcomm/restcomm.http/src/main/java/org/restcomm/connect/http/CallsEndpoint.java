@@ -417,6 +417,8 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         Account account = daos.getAccountsDao().getAccount(accountSid);
         secure(account, "RestComm:Modify:Calls");
 
+        final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+
         final CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
         CallDetailRecord cdr = null;
         try {
@@ -538,7 +540,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         }
     }
 
-	private Integer getTimeout(final MultivaluedMap<String, String> data) {
+    private Integer getTimeout(final MultivaluedMap<String, String> data) {
         Integer result = 60;
         if (data.containsKey("Timeout")) {
             result = Integer.parseInt(data.getFirst("Timeout"));
