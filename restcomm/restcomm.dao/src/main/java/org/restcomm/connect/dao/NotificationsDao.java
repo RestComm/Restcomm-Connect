@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.NotificationFilter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -47,4 +48,8 @@ public interface NotificationsDao {
     void removeNotifications(Sid accountSid);
 
     void removeNotificationsByCall(Sid callSid);
+
+    // Support for filtering of notification list result, Issue 1395
+    Integer getTotalNotification(NotificationFilter filter);
+    List<Notification> getNotifications(NotificationFilter filter);
 }
