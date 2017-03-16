@@ -24,11 +24,13 @@ To download the audio file just append *.wav* after the *RecordingSid.*
 |Duration |The length of the recording, in seconds.
 |ApiVersion |The API version in use during the recording.
 |Uri |The URI for this account, relative to https://localhost:restcomm.
+|FileUri |The File URI for this recording, relative to https://localhost:restcomm. It can be used to access the WAV file
+|S3Uri |The S3 URI for this recording - Exists ONLY IF Amazon S3 integration is enabled and security level is NONE-
 |==========================================================================
 
 === Supported Operations
 
-*HTTP GET.* Returns the representation of a Recording resource, including the properties above. 
+*HTTP GET.* Returns the representation of a Recording resource, including the properties above.
 **HTTP DELETE**. Removes the recording from the account.
 
 == Recording List Resource
@@ -83,11 +85,11 @@ The response will be similar to the one below.
 }
 ----
 
-NOTE: *<Sid>* holds the file name of the recorded message. The recording Sid.**wav** is available in the file system only. 
+NOTE: *<Sid>* holds the file name of the recorded message. The recording Sid.**wav** is available in the file system only.
 
 If you want to return the recording url you will need to parse the *<Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/REb4c03af76cdc4a27aad0d9d759e119bc</Uri>* response from Restcomm and add the extension .**wav**
 
-The *<Uri>* holds the http URI that can be used for playback or to download the recorded message. 
+The *<Uri>* holds the http URI that can be used for playback or to download the recorded message.
 Here is how to access the file using http *https://IP_ADDRESS/restcomm/recordings/REb4c03af76cdc4a27aad0d9d759e119bc.wav*
  
 

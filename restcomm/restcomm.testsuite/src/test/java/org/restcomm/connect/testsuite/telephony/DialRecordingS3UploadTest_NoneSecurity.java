@@ -29,9 +29,7 @@ import javax.sip.address.SipURI;
 import javax.sip.message.Response;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.text.ParseException;
 import java.util.List;
 
@@ -47,15 +45,16 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
  * Created by gvagenas on 08/01/2017.
  */
 @RunWith(Arquillian.class)
-public class DialRecordingS3UploadTest {
+public class DialRecordingS3UploadTest_NoneSecurity {
 
-	private final static Logger logger = Logger.getLogger(DialRecordingS3UploadTest.class.getName());
+	private final static Logger logger = Logger.getLogger(DialRecordingS3UploadTest_NoneSecurity.class.getName());
 
 	private static final String version = Version.getVersion();
 	private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
@@ -240,6 +239,8 @@ public class DialRecordingS3UploadTest {
 		assertTrue(duration==3.0);
 		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
+		assertTrue(recording.get(0).getAsJsonObject().get("s3_uri").getAsString().startsWith("http://127.0.0.1:8090/s3"));
+
 		URL url = new URL(recording.get(0).getAsJsonObject().get("file_uri").getAsString());
 		HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 		connection.setRequestMethod("GET");
@@ -326,6 +327,10 @@ public class DialRecordingS3UploadTest {
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
 		assertTrue(duration==3.0);
 		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
+
+
+		assertTrue(recording.get(0).getAsJsonObject().get("s3_uri").getAsString().startsWith("http://127.0.0.1:8090/s3"));
+
 		//Verify S3 Upload
 		List<LoggedRequest> requests = findAll(putRequestedFor(urlMatching("/s3/.*")));
 		assertEquals(1, requests.size());
@@ -333,7 +338,7 @@ public class DialRecordingS3UploadTest {
 	}
 
 
-	@Deployment(name = "DialRecordingS3UploadTest", managed = true, testable = false)
+	@Deployment(name = "DialRecordingS3UploadTest_Secure", managed = true, testable = false)
 	public static WebArchive createWebArchiveNoGw() {
 		logger.info("Packaging Test App");
 		WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
@@ -346,7 +351,7 @@ public class DialRecordingS3UploadTest {
 		archive.delete("/WEB-INF/data/hsql/restcomm.script");
 		archive.delete("/WEB-INF/classes/application.conf");
 		archive.addAsWebInfResource("sip.xml");
-		archive.addAsWebInfResource("restcomm_recording_s3_upload.xml", "conf/restcomm.xml");
+		archive.addAsWebInfResource("restcomm_recording_s3_upload_none_security.xml", "conf/restcomm.xml");
 		archive.addAsWebInfResource("restcomm.script_dialTest_new", "data/hsql/restcomm.script");
 		archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
 		logger.info("Packaged Test App");

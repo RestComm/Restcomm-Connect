@@ -49,6 +49,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.amazonS3.RecordingSecurityLevel;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
@@ -111,7 +112,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
     protected AccountsDao accountsDao;
     protected RecordingsDao recordingsDao;
     protected String instanceId;
-
+    protected RecordingSecurityLevel securityLevel = RecordingSecurityLevel.SECURE;
     protected boolean normalizePhoneNumbers;
 
     public CallsEndpoint() {
@@ -121,6 +122,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
     @PostConstruct
     public void init() {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+        Configuration amazonS3Configuration = configuration.subset("amazon-s3");
         configuration = configuration.subset("runtime-settings");
         callManager = (ActorRef) context.getAttribute("org.restcomm.connect.telephony.CallManager");
         daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
@@ -147,6 +149,13 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
 
         normalizePhoneNumbers = configuration.getBoolean("normalize-numbers-for-outbound-calls");
+        if(!amazonS3Configuration.isEmpty()) { // Do not fail with NPE is amazonS3Configuration is not present for older install
+            boolean amazonS3Enabled = amazonS3Configuration.getBoolean("enabled");
+            if (amazonS3Enabled) {
+                securityLevel = RecordingSecurityLevel.valueOf(amazonS3Configuration.getString("security-level", "secure").toUpperCase());
+                recordingConverter.setSecurityLevel(securityLevel);
+            }
+        }
     }
 
     protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
