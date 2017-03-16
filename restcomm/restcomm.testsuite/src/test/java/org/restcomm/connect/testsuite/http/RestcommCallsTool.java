@@ -80,11 +80,11 @@ public class RestcommCallsTool {
         String response = null;
         response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
 //        response = response.replaceAll("\\[", "").replaceAll("]", "").trim();
-        JsonParser parser = new JsonParser();
-
         JsonArray jsonArray = null;
         try {
-            jsonArray = parser.parse(response).getAsJsonArray();
+            JsonParser parser = new JsonParser();
+            JsonObject jsonObject = parser.parse(response).getAsJsonObject();
+            jsonArray = jsonObject.get("recordings").getAsJsonArray();
         } catch (Exception e) {
             logger.info("Exception during getRecordings for url: "+url+" exception: "+e);
             logger.info("Response object: "+response);

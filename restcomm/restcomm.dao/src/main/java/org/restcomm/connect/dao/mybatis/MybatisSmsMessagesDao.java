@@ -26,6 +26,7 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.entities.SmsMessage;
+import org.restcomm.connect.dao.entities.SmsMessageFilter;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -100,6 +101,38 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
                 }
             }
             return smsMessages;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public List<SmsMessage> getSmsMessages(SmsMessageFilter filter) {
+
+        final SqlSession session = sessions.openSession();
+
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getSmsMessagesByUsingFilters",
+                    filter);
+            final List<SmsMessage> cdrs = new ArrayList<SmsMessage>();
+
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toSmsMessage(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public Integer getTotalSmsMessage(SmsMessageFilter filter) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Integer total = session.selectOne(namespace + "getTotalSmsMessageByUsingFilters", filter);
+            return total;
         } finally {
             session.close();
         }
