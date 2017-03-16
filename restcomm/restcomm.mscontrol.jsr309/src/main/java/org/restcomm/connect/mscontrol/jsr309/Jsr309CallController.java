@@ -884,6 +884,9 @@ public class Jsr309CallController extends MediaServerController {
                 Parameters sdpParameters = mediaSession.createParameters();
                 Map<String, String> configurationData = new HashMap<String, String>();
                 configurationData.put("webrtc", webrtc ? "yes" : "no");
+                configurationData.put("Supported", "dlgc-encryption-dtls"); // Enable DTLS
+                configurationData.put("Supported ", "dlgc-ice"); // Enable ICE Lite
+                configurationData.put("Supported ", "dlgc-rtcp-feedback-audiovideo"); // Enable RTCP feedback
                 sdpParameters.put(SdpPortManager.SIP_HEADERS, configurationData);
                 networkConnection.setParameters(sdpParameters);
 
