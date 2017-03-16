@@ -27,6 +27,8 @@ import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
+import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.List;
@@ -43,15 +45,16 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
  * Created by gvagenas on 08/01/2017.
  */
 @RunWith(Arquillian.class)
-public class DialRecordingS3UploadAnswerDelayTest {
+public class DialRecordingS3UploadTest_Secure {
 
-	private final static Logger logger = Logger.getLogger(DialRecordingS3UploadAnswerDelayTest.class.getName());
+	private final static Logger logger = Logger.getLogger(DialRecordingS3UploadTest_Secure.class.getName());
 
 	private static final String version = Version.getVersion();
 	private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
@@ -161,7 +164,7 @@ public class DialRecordingS3UploadAnswerDelayTest {
 	private String dialClientRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\" record=\"true\"><Client>alice</Client></Dial></Response>";
 
 	@Test
-	public synchronized void testDialClientAlice_BobDisconnects() throws InterruptedException, ParseException {
+	public synchronized void testDialClientAlice_BobDisconnects() throws InterruptedException, ParseException, IOException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
 						.withStatus(200)
@@ -170,13 +173,18 @@ public class DialRecordingS3UploadAnswerDelayTest {
 
 		stubFor(put(urlPathEqualTo("/s3"))
 				.willReturn(aResponse()
+								.withStatus(200)
+								.withHeader("x-amz-id-2","LriYPLdmOdAiIfgSm/F1YsViT1LW94/xUQxMsF7xiEb1a0wiIOIxl+zbwZ163pt7")
+								.withHeader("x-amz-request-id","0A49CE4060975EAC")
+								.withHeader("Date", DateTime.now().toString())
+								.withHeader("x-amz-expiration", "expiry-date="+DateTime.now().plusDays(3).toString()+"\", rule-id=\"1\"")
+								.withHeader("Server", "AmazonS3")
+				));
+
+		stubFor(get(urlPathEqualTo("/s3"))
+				.willReturn(aResponse()
 							.withStatus(200)
-							.withHeader("x-amz-id-2","LriYPLdmOdAiIfgSm/F1YsViT1LW94/xUQxMsF7xiEb1a0wiIOIxl+zbwZ163pt7")
-							.withHeader("x-amz-request-id","0A49CE4060975EAC")
-							.withHeader("Date", DateTime.now().toString())
-							.withHeader("x-amz-expiration", "expiry-date="+DateTime.now().plusDays(3).toString()+"\", rule-id=\"1\"")
-//							.withHeader("ETag", "1b2cf535f27731c974343645a3985328")
-							.withHeader("Server", "AmazonS3")
+							.withHeader("X-Amz-Algorithm", "AWS4-HMAC-SHA256")
 				));
 
 		// Phone2 register as alice
@@ -200,6 +208,9 @@ public class DialRecordingS3UploadAnswerDelayTest {
 			assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
 		}
 
+		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
 		bobCall.sendInviteOkAck();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
@@ -210,9 +221,6 @@ public class DialRecordingS3UploadAnswerDelayTest {
 		assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
 				null));
 		assertTrue(aliceCall.waitForAck(50 * 1000));
-
-		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
 
 		Thread.sleep(3000);
 
@@ -230,6 +238,18 @@ public class DialRecordingS3UploadAnswerDelayTest {
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
 		assertTrue(duration==3.0);
 		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
+
+		//Since we are in secure mode the s3_uri shouldn't be here
+		assertNull(recording.get(0).getAsJsonObject().get("s3_uri"));
+
+		URL url = new URL(recording.get(0).getAsJsonObject().get("file_uri").getAsString());
+		HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+		connection.setRequestMethod("GET");
+		connection.connect();
+
+		Thread.sleep(1000);
+
+		assertEquals(200, connection.getResponseCode());
 
 		//Verify S3 Upload
 		List<LoggedRequest> requests = findAll(putRequestedFor(urlMatching("/s3/.*")));
@@ -278,6 +298,9 @@ public class DialRecordingS3UploadAnswerDelayTest {
 			assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
 		}
 
+		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
 		bobCall.sendInviteOkAck();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
@@ -288,9 +311,6 @@ public class DialRecordingS3UploadAnswerDelayTest {
 		assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
 				null));
 		assertTrue(aliceCall.waitForAck(50 * 1000));
-
-		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
 
 		Thread.sleep(3000);
 
@@ -308,6 +328,9 @@ public class DialRecordingS3UploadAnswerDelayTest {
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
 		assertTrue(duration==3.0);
 		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
+
+		//Since we are in secure mode the s3_uri shouldn't be here
+		assertNull(recording.get(0).getAsJsonObject().get("s3_uri"));
 
 		//Verify S3 Upload
 		List<LoggedRequest> requests = findAll(putRequestedFor(urlMatching("/s3/.*")));
@@ -329,7 +352,7 @@ public class DialRecordingS3UploadAnswerDelayTest {
 		archive.delete("/WEB-INF/data/hsql/restcomm.script");
 		archive.delete("/WEB-INF/classes/application.conf");
 		archive.addAsWebInfResource("sip.xml");
-		archive.addAsWebInfResource("restcomm_recording_s3_upload-delay.xml", "conf/restcomm.xml");
+		archive.addAsWebInfResource("restcomm_recording_s3_upload_secure.xml", "conf/restcomm.xml");
 		archive.addAsWebInfResource("restcomm.script_dialTest_new", "data/hsql/restcomm.script");
 		archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
 		logger.info("Packaged Test App");
