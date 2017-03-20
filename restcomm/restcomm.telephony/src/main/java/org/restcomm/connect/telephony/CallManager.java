@@ -354,11 +354,13 @@ public final class CallManager extends UntypedActor {
 
     private void check(final Object message) throws IOException {
         final SipServletRequest request = (SipServletRequest) message;
-        String content = new String(request.getRawContent());
-        if (request.getContentLength() == 0
-                || !("application/sdp".equals(request.getContentType()) || content.contains("application/sdp"))) {
-            final SipServletResponse response = request.createResponse(SC_BAD_REQUEST);
-            response.send();
+        if(request != null){
+            String content = new String(request.getRawContent());
+            if (request.getContentLength() == 0
+                    || !("application/sdp".equals(request.getContentType()) || content.contains("application/sdp"))) {
+                final SipServletResponse response = request.createResponse(SC_BAD_REQUEST);
+                response.send();
+            }
         }
     }
 
@@ -1087,22 +1089,24 @@ public final class CallManager extends UntypedActor {
         }
         if (message instanceof SipServletRequest) {
             final SipServletRequest request = (SipServletRequest) message;
-            final String method = request.getMethod();
-            if ("INVITE".equals(method)) {
-                check(request);
-                invite(request);
-            } else if ("OPTIONS".equals(method)) {
-                pong(request);
-            } else if ("ACK".equals(method)) {
-                ack(request);
-            } else if ("CANCEL".equals(method)) {
-                cancel(request);
-            } else if ("BYE".equals(method)) {
-                bye(request);
-            } else if ("INFO".equals(method)) {
-                info(request);
-            } else if ("REFER".equals(method)) {
-                transfer(request);
+            if(request != null){
+                final String method = request.getMethod();
+                if ("INVITE".equals(method)) {
+                    check(request);
+                    invite(request);
+                } else if ("OPTIONS".equals(method)) {
+                    pong(request);
+                } else if ("ACK".equals(method)) {
+                    ack(request);
+                } else if ("CANCEL".equals(method)) {
+                    cancel(request);
+                } else if ("BYE".equals(method)) {
+                    bye(request);
+                } else if ("INFO".equals(method)) {
+                    info(request);
+                } else if ("REFER".equals(method)) {
+                    transfer(request);
+                }
             }
         } else if (CreateCall.class.equals(klass)) {
             this.createCallRequest = (CreateCall) message;
