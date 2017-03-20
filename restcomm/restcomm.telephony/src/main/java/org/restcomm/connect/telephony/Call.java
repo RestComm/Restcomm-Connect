@@ -26,7 +26,11 @@ import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.mobicents.javax.servlet.sip.SipFactoryExt;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
@@ -223,6 +227,8 @@ public final class Call extends UntypedActor {
     private DaoManager daoManager;
     private boolean liveCallModification;
     private boolean recording;
+    private URI recordingUri;
+    private Sid recordingSid;
     private Sid parentCallSid;
 
     // Runtime Setting
@@ -244,6 +250,7 @@ public final class Call extends UntypedActor {
     private boolean actAsImsUa;
 
     private boolean isOnHold;
+    private int duration;
 
     public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
         super();
@@ -399,6 +406,52 @@ public final class Call extends UntypedActor {
             }
         }
         return null;
+    }
+
+    List<NameValuePair> dialStatusCallbackParameters(final State state) {
+        final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+
+        parameters.add(new BasicNameValuePair("CallSid", id.toString()));
+
+        parameters.add(new BasicNameValuePair("ParentCallSid", parentCallSid.toString()));
+
+        parameters.add(new BasicNameValuePair("CallStatus", state.toString()));
+
+        if (is(completed)) {
+            parameters.add(new BasicNameValuePair("CallDuration", String.valueOf(duration)));
+
+            if (recording) {
+                if (recordingUri != null)
+                    parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
+                if (recordingSid != null)
+                    parameters.add(new BasicNameValuePair("RecordingSid", recordingSid.toString()));
+                if (recordingDuration > -1)
+                    parameters.add(new BasicNameValuePair("RecordingDuration", String.valueOf(recordingDuration)));
+            }
+        }
+
+        //RFC 2822 (example: Mon, 15 Aug 2005 15:52:01 +0000)
+        DateTimeFormatter fmt = DateTimeFormat.forPattern("EEE, dd MMM YYYY HH:mm:ss ZZZZ");
+        final String timestamp = DateTime.now().toString(fmt);
+        parameters.add(new BasicNameValuePair("Timestamp", timestamp));
+
+        parameters.add(new BasicNameValuePair("CallbackSource", "call-progress-events"));
+
+        String sequence = "0";
+        if (is(initializing)) {
+            sequence = "0";
+        } else if (is(ringing)) {
+            sequence = "1";
+        } else if (is(inProgress)) {
+            sequence = "2";
+        } else if (is(completed)) {
+            sequence = "3";
+        }
+
+        parameters.add(new BasicNameValuePair("SequenceNumber", sequence));
+
+        parameters.add(new BasicNameValuePair("InstanceId", RestcommConfiguration.getInstance().getMain().getInstanceId()));
+        return parameters;
     }
 
     private void forwarding(final Object message) {
@@ -1484,13 +1537,13 @@ public final class Call extends UntypedActor {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.toString());
                 final DateTime now = DateTime.now();
                 outgoingCallRecord = outgoingCallRecord.setEndTime(now);
-                final int seconds = (int) ((now.getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
-                outgoingCallRecord = outgoingCallRecord.setDuration(seconds);
+                duration = (int) ((now.getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
+                outgoingCallRecord = outgoingCallRecord.setDuration(duration);
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
                 if(logger.isDebugEnabled()) {
                     logger.debug("Start: " + outgoingCallRecord.getStartTime());
                     logger.debug("End: " + outgoingCallRecord.getEndTime());
-                    logger.debug("Duration: " + seconds);
+                    logger.debug("Duration: " + duration);
                     logger.debug("Just updated CDR for completed call");
                 }
             }
@@ -2298,6 +2351,8 @@ public final class Call extends UntypedActor {
             message.setCallId(this.id);
             this.msController.tell(message, sender);
             this.recording = true;
+            this.recordingUri = message.getRecordingUri();
+            this.recordingSid = message.getRecordingSid();
         }
     }
 
