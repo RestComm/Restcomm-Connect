@@ -42,13 +42,19 @@
 			${usageExprPre}"${usageExprCol}"${usageExprSuf} as "usage",
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
 			<!-- select the highest lower bound -->
-			GREATEST(CONCAT(TO_CHAR("date_created", 'YYYY-MM'), '-01'), #{startDate}) AS "start_date",
+			<!-- GREATEST(CONCAT(TO_CHAR("date_created", 'YYYY-MM'), '-01'), #{startDate}) AS "start_date", -->
+			CONCAT(TO_CHAR("date_created", 'YYYY-MM'), '-01') AS "start_date",
 			<!-- select the lowest upper bound -->
-			LEAST(TO_CHAR(LAST_DAY("date_created"), 'YYYY-MM-DD'), #{endDate}) AS "end_date",
+			<!-- LEAST(TO_CHAR(LAST_DAY("date_created"), 'YYYY-MM-DD'), #{endDate}) AS "end_date", -->
+			TO_CHAR(LAST_DAY("date_created"), 'YYYY-MM-DD') AS "end_date",
 			CONCAT(#{uri},
 				'?Category=', #{category},
+				<!--
 				'&amp;StartDate=', GREATEST(CONCAT(TO_CHAR("date_created", 'YYYY-MM'), '-01'), #{startDate}),
 				'&amp;EndDate=', LEAST(TO_CHAR(LAST_DAY("date_created"), 'YYYY-MM-DD'), #{endDate})
+				 -->
+				'&amp;StartDate=', CONCAT(TO_CHAR("date_created", 'YYYY-MM'), '-01'),
+				'&amp;EndDate=', TO_CHAR(LAST_DAY("date_created"), 'YYYY-MM-DD')
 				) AS "uri"
 		FROM
 			"${tableName}"
@@ -71,13 +77,19 @@
 			${usageExprPre}"${usageExprCol}"${usageExprSuf} as "usage",
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
 			<!-- select the highest lower bound -->
-			GREATEST(CONCAT(YEAR("date_created"), '-01-01'), #{startDate}) AS "start_date",
+			<!-- GREATEST(CONCAT(YEAR("date_created"), '-01-01'), #{startDate}) AS "start_date", -->
+			CONCAT(YEAR("date_created"), '-01-01') AS "start_date",
 			<!-- select the lowest upper bound -->
-			LEAST(CONCAT(YEAR("date_created"), '-12-31'), #{endDate}) AS "end_date",
+			<!-- LEAST(CONCAT(YEAR("date_created"), '-12-31'), #{endDate}) AS "end_date", -->
+			CONCAT(YEAR("date_created"), '-12-31') AS "end_date",
 			CONCAT(#{uri},
 				'?Category=', #{category},
+				<!--
 				'&amp;StartDate=', GREATEST(CONCAT(YEAR("date_created"), '-01-01'), #{startDate}),
 				'&amp;EndDate=', LEAST(CONCAT(YEAR("date_created"), '-12-31'), #{endDate})
+				 -->
+				'&amp;StartDate=', CONCAT(YEAR("date_created"), '-01-01'),
+				'&amp;EndDate=', CONCAT(YEAR("date_created"), '-12-31')
 				) AS "uri"
 		FROM
 			"${tableName}"
@@ -99,14 +111,12 @@
 			COUNT(1) as "count",
 			${usageExprPre}"${usageExprCol}"${usageExprSuf} as "usage",
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
-			<!-- set to first date_created if startDate missing -->
-			IFNULL(#{startDate}, MIN("date_created")) AS "start_date",
-			<!-- set to last date_created if endDate missing -->
-			IFNULL(#{endDate}, MAX("date_created")) AS "end_date",
+			TO_CHAR(#{startDate}, 'YYYY-MM-DD') AS "start_date",
+			TO_CHAR(#{endDate}, 'YYYY-MM-DD') AS "end_date",
 			CONCAT(#{uri},
 				'?Category=', #{category},
-				'&amp;StartDate=', IFNULL(#{startDate}, MIN("date_created")),
-				'&amp;EndDate=', IFNULL(#{endDate}, MAX("date_created"))
+				'&amp;StartDate=', TO_CHAR(#{startDate}, 'YYYY-MM-DD'),
+				'&amp;EndDate=', TO_CHAR(#{endDate}, 'YYYY-MM-DD')
 				) AS "uri"
 		FROM
 			"${tableName}"
