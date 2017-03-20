@@ -326,7 +326,18 @@
 		when necessary so if your server already has a routable IP address setting
 		this parameter will have no effect. <max-response-time> - In milliseconds
 		the maximum amount of time to wait for a response from the media server before
-		abandoning the request. This does NOT apply to RQNT/NOTIFY request/response. -->
+		abandoning the request. This does NOT apply to RQNT/NOTIFY request/response.
+		<rtp-timeout> This indicates rtp timeout, in seconds.
+		<rtp-timeout-timer-start-time> This is used to indicate when the RTP/RTCP timeout
+		timer starts. It can have one of the following values:
+         *  "im" for immediate i.e., the timer starts as soon as the
+            request is received.  This is the default.
+         *  "ra" to indicate that the timer should start only after an
+            RTCP packet has been received from the other end (i.e., the
+            timer will be initiated when the first RTCP packet is
+            received after the request is made).  Note that in the case
+            where the other end does not support RTCP, the timer will
+            never be initiated.-->
 	<media-server-manager>
 		<mgcp-server class="org.restcomm.connect.mgcp.MediaGateway" name="Mobicents Media Server">
             <local-address>127.0.0.1</local-address>
@@ -335,6 +346,8 @@
             <remote-port>2427</remote-port>
             <response-timeout>500</response-timeout>
             <external-address><null/></external-address>
+            <rtp-timeout>60</rtp-timeout>
+            <rtp-timeout-timer-start-time>im</rtp-timeout-timer-start-time>
         </mgcp-server>
 		<mrb class="org.restcomm.connect.mrb.MediaResourceBrokerGeneric" name="Community MediaResourceBroker">
 		</mrb>
