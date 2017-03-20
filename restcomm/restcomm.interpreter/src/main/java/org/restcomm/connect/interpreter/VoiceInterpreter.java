@@ -33,6 +33,8 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.restcomm.connect.asr.AsrResponse;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
@@ -119,7 +121,9 @@ import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Currency;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -1415,6 +1419,63 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
+//    List<NameValuePair> dialStatusCallbackParameters(final CallInfo currentCallInfo) {
+//        final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+//
+//        final String callSid = currentCallInfo.sid().toString();
+//        parameters.add(new BasicNameValuePair("CallSid", callSid));
+//
+//        final String parentCallSid = callInfo.sid().toString();
+//        parameters.add(new BasicNameValuePair("ParentCallSid", parentCallSid));
+//
+//        final String callStatus = currentCallInfo.state().toString();
+//        parameters.add(new BasicNameValuePair("CallStatus", callStatus));
+//
+//        if (currentCallInfo.state().equals(CallStateChanged.State.COMPLETED)) {
+//            final org.joda.time.Duration duration = new org.joda.time.Duration(currentCallInfo.dateCreated(), currentCallInfo.dateConUpdated());
+////            DateTimeFormatter fmt = DateTimeFormat.forPattern("mm:ss:SS");
+//            parameters.add(new BasicNameValuePair("CallDuration", duration.toString()));
+//
+//            if (recordingCall) {
+//                if (recordingUri != null)
+//                    parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
+//                if (recordingSid != null)
+//                    parameters.add(new BasicNameValuePair("RecordingSid", recordingSid.toString()));
+//                if (recordingDuration > -1)
+//                    parameters.add(new BasicNameValuePair("RecordingDuration", String.valueOf(recordingDuration)));
+//            }
+//        }
+//
+//        //RFC 2822 (example: Mon, 15 Aug 2005 15:52:01 +0000)
+//        DateTimeFormatter fmt = DateTimeFormat.forPattern("EEE, dd MMM YYYY HH:mm:ss ZZZZ");
+//        final String timestamp = DateTime.now().toString(fmt);
+//        parameters.add(new BasicNameValuePair("Timestamp", timestamp));
+//
+//        parameters.add(new BasicNameValuePair("CallbackSource", "call-progress-events"));
+//
+//        String sequence = "0";
+//
+//        switch (currentCallInfo.state()) {
+//            case RINGING:
+//                sequence = "1";
+//                break;
+//            case IN_PROGRESS:
+//                sequence = "2";
+//                break;
+//            case COMPLETED:
+//                sequence = "3";
+//                break;
+//            default:
+//                sequence = "0";
+//                break;
+//        }
+//
+//        parameters.add(new BasicNameValuePair("SequenceNumber", sequence));
+//
+//        parameters.add(new BasicNameValuePair("InstanceId", RestcommConfiguration.getInstance().getMain().getInstanceId()));
+//        return parameters;
+//    }
+
     List<NameValuePair> parameters() {
         final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
         final String callSid = callInfo.sid().toString();
@@ -2019,29 +2080,47 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (!dialChildren.isEmpty()) {
                 CreateCall create = null;
                 final Tag child = dialChildren.get(0);
+                URL statusCallback = null;
+                String statusCallbackMethod = "POST";
+                List<String> statusCallbackEvent = new ArrayList<String>();
+                statusCallbackEvent.add("initiated");
+                statusCallbackEvent.add("ringing");
+                statusCallbackEvent.add("answered");
+                statusCallbackEvent.add("completed");
+                if (child.hasAttribute("statusCallback")) {
+                    statusCallback = new URL(child.attribute("statusCallback").value());
+                }
+                if (statusCallback != null) {
+                    if (child.hasAttribute("statusCallbackMethod")) {
+                        statusCallbackMethod = child.attribute("statusCallbackMethod").value();
+                    }
+                    if (child.hasAttribute("statusCallbackEvent")) {
+                        statusCallbackEvent = Arrays.asList(child.attribute("statusCallbackEvent").value().split(","));
+                    }
+                }
                 if (Nouns.client.equals(child.name())) {
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCall.Type.CLIENT, accountId, callInfo.sid());
+                                CreateCall.Type.CLIENT, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                                CreateCall.Type.CLIENT, accountId, null);
+                                CreateCall.Type.CLIENT, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
                     }
                 } else if (Nouns.number.equals(child.name())) {
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCall.Type.PSTN, accountId, callInfo.sid());
+                                CreateCall.Type.PSTN, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                                CreateCall.Type.PSTN, accountId, null);
+                                CreateCall.Type.PSTN, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
                     }
                 } else if (Nouns.uri.equals(child.name())) {
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCall.Type.SIP, accountId, callInfo.sid());
+                                CreateCall.Type.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                                CreateCall.Type.SIP, accountId, null);
+                                CreateCall.Type.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
                     }
                 } else if (Nouns.SIP.equals(child.name())) {
                     // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
@@ -2066,10 +2145,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
-                                CreateCall.Type.SIP, accountId, callInfo.sid());
+                                CreateCall.Type.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
-                                CreateCall.Type.SIP, accountId, null);
+                                CreateCall.Type.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
                     }
                 }
                 callManager.tell(create, source);

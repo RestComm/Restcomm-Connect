@@ -255,6 +255,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     ActorRef monitoring;
 
     final Set<Transition> transitions = new HashSet<Transition>();
+    int recordingDuration = -1;
 
     public BaseVoiceInterpreter(final ActorRef supervisor) {
         super();
@@ -1806,8 +1807,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 callRecord = callRecord.setStatus(callState.toString());
                 final DateTime end = DateTime.now();
                 callRecord = callRecord.setEndTime(end);
-                final int seconds = (int) (end.getMillis() - callRecord.getStartTime().getMillis()) / 1000;
-                callRecord = callRecord.setDuration(seconds);
+                recordingDuration = (int) (end.getMillis() - callRecord.getStartTime().getMillis()) / 1000;
+                callRecord = callRecord.setDuration(recordingDuration);
                 final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                 records.updateCallDetailRecord(callRecord);
                 // Update the application.

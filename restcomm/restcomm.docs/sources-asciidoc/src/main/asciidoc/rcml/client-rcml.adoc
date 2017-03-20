@@ -20,47 +20,45 @@ The `<Client>` noun supports the following attributes that modify its behavior:
 
 ==== url
 
-The 'url' attribute allows you to specify a url for a RCML document that will run on the called party's end, after she answers, but before the parties are connected. You can use this RCML to privately play or say information to the called party, or provide a chance to decline the phone call using <Gather> and <Hangup>. The current caller will continue to hear ringing while the RCML document executes on the other end. RCML documents executed in this manner are not allowed to contain the <Dial> verb. method 
+The 'url' attribute allows you to specify a url for a RCML document that will run on the called party's end, after she answers, but before the parties are connected. You can use this RCML to privately play or say information to the called party, or provide a chance to decline the phone call using <Gather> and <Hangup>. The current caller will continue to hear ringing while the RCML document executes on the other end. RCML documents executed in this manner are not allowed to contain the <Dial> verb. method
 
 ==== method
 
-The 'method' attribute allows you to specify which HTTP method Restcomm should use when requesting the URL in the 'url' attribute. The default is POST. 
+The 'method' attribute allows you to specify which HTTP method Restcomm should use when requesting the URL in the 'url' attribute. The default is POST.
 
 ==== statusCallbackEvent
 
-When dialing out to a Client using <Dial>, an outbound call is initiated. The call transitions from the initiated state to the ringing state when the phone starts ringing. It transitions to the answered state when the call is picked up, and finally to the completed state when the call is over. With **statusCallbackEvent**, you can subscribe to receive webhooks for the different call progress events: initiated, ringing, answered, or completed for a given call. 
+When dialing out to a Client using <Dial>, an outbound call is initiated. The call transitions from the initiated state to the ringing state when the phone starts ringing. It transitions to the answered state when the call is picked up, and finally to the completed state when the call is over. With **statusCallbackEvent**, you can subscribe to receive webhooks for the different call progress events: initiated, ringing, answered, or completed for a given call.
 
-The *statusCallbackEvent* attribute allows you to specify which events Restcomm should webhook on. To specify multiple events separate them with a space: initiated ringing answered completed. If a statusCallback is provided and no status callback events are specified the completed event will be sent by default. 
+The *statusCallbackEvent* attribute allows you to specify which events Restcomm should webhook on. To specify multiple events separate them with a space: initiated ringing answered completed. If a statusCallback is provided and no status callback events are specified the completed event will be sent by default.
 
-The initiated, ringing, and answered events have a cost of $0.0001 per event, which results in $10 for every 100,000 events. The completed event is not charged. 
+As opposed to creating an outbound call via the API, outbound calls created using <Dial> are initiated right away and never queued. The following shows a timeline of possible call events that can be returned and the different call statuses that a <Dial> leg may experience:
 
-As opposed to creating an outbound call via the API, outbound calls created using <Dial> are initiated right away and never queued. The following shows a timeline of possible call events that can be returned and the different call statuses that a <Dial> leg may experience: 
-
-The *<Client>* noun specifies a client identifier to dial. You can use multiple *<Client>* nouns within a *<Dial>* verb to simultaneously attempt a connection with many clients at once. The first client to accept the incoming connection is connected to the call and the other connection attempts are canceled.   
+The *<Client>* noun specifies a client identifier to dial. You can use multiple *<Client>* nouns within a *<Dial>* verb to simultaneously attempt a connection with many clients at once. The first client to accept the incoming connection is connected to the call and the other connection attempts are canceled.  
 
 image::images/status-callback-events-dial.png[Outbound Dial call events diagram]
 
-[cols=",,",options="header",]
+[cols=",",options="header",]
 |==============================================================================================================================================================================================================================================================
-|Event |Description |Cost
-|initiated |The `initiated` event is fired when Restcomm starts dialing the call. |$0.0001 per event
-|ringing |The `ringing` event is fired when the call starts ringing. |$0.0001 per event
-|answered |The `answered` event is fired when the call is answered. |$0.0001 per event
-|completed |The `completed` event is fired when the call is completed regardless of the termination status: `busy`, `canceled`, `completed`, `failed`, or `no-answer`. If no `statusCallbackEvent` is specified, `completed` will be fired by default. |No cost
+|Event |Description
+|initiated |The `initiated` event is fired when Restcomm starts dialing the call.
+|ringing |The `ringing` event is fired when the call starts ringing.
+|answered |The `answered` event is fired when the call is answered.
+|completed |The `completed` event is fired when the call is completed regardless of the termination status: `busy`, `canceled`, `completed`, `failed`, or `no-answer`. If no `statusCallbackEvent` is specified, `completed` will be fired by default.
 |==============================================================================================================================================================================================================================================================
 
 [[attributes-status-callback]]
 ==== statusCallback
 
-The *statusCallback* attribute allows you to specify a URL for Restcomm to send webhook requests to on each event specified in the statusCallbackEvent attribute. 
+The *statusCallback* attribute allows you to specify a URL for Restcomm to send webhook requests to on each event specified in the statusCallbackEvent attribute.
 
 ==== statusCallbackMethod
 
-The *statusCallbackMethod* attribute allows you to specify which HTTP method Restcomm should use when requesting the URL in the statusCallback attribute. The default is POST. 
+The *statusCallbackMethod* attribute allows you to specify which HTTP method Restcomm should use when requesting the URL in the statusCallback attribute. The default is POST.
 
 ==== Status Callback HTTP Parameters
 
-The parameters Restcomm passes to your application in its asynchronous request to the StatusCallback URL include all parameters passed in a synchronous request to retrieve RCML when Restcomm receives a call to one of your Restcomm numbers. The full list of parameters and descriptions of each are in the RCML Voice Request documentation. 
+The parameters Restcomm passes to your application in its asynchronous request to the StatusCallback URL include all parameters passed in a synchronous request to retrieve RCML when Restcomm receives a call to one of your Restcomm numbers. The full list of parameters and descriptions of each are in the RCML Voice Request documentation.
 
 When the call progress events are fired, the Status Callback request also passes these additional parameters:
 

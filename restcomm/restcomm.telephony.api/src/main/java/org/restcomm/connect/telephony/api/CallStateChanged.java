@@ -27,7 +27,7 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 @Immutable
 public final class CallStateChanged {
     public static enum State {
-        QUEUED("queued"), RINGING("ringing"), CANCELED("canceled"), BUSY("busy"), NOT_FOUND("not-found"), FAILED("failed"), NO_ANSWER(
+        QUEUED("queued"), INITIATED("initiated"), RINGING("ringing"), CANCELED("canceled"), BUSY("busy"), NOT_FOUND("not-found"), FAILED("failed"), NO_ANSWER(
                 "no-answer"), WAIT_FOR_ANSWER("wait-for-answer"), IN_PROGRESS("in-progress"), COMPLETED("completed");
 
         private final String text;
