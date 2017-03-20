@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.restcomm</groupId>
 		<artifactId>restcomm-connect-docs</artifactId>
-		<version>8.1.0-SNAPSHOT</version>
+		<version>8.1.0.1186</version>
 	</parent>
 	
 	<artifactId>restcomm-connect-docs-sources</artifactId>
