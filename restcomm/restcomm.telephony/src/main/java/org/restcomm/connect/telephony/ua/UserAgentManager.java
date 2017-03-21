@@ -178,7 +178,12 @@ public final class UserAgentManager extends UntypedActor {
                 //Instead of removing registrations we ping the client one last time to ensure it was not a temporary loss
                 // of connectivity. We don't need to remove the registration here. It will be handled only if the OPTIONS ping
                 // times out and the related calls from the client cleaned up as well
-                ping(result.getLocation());
+                try{
+                    ping(result.getLocation());
+                }catch(ServletParseException spe){
+                    logger.warning("Bad Parameters: "+result.getLocation());
+                    registrations.removeRegistration(result);
+                }
                 //registrations.removeRegistration(result);
                 //monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
             } else {
@@ -238,7 +243,12 @@ public final class UserAgentManager extends UntypedActor {
             }
             for (final Registration result : results) {
                 final String to = result.getLocation();
-                ping(to);
+                try{
+                    ping(to);
+                }catch(ServletParseException spe){
+                    logger.warning("Bad Parameters: "+to);
+                    registrations.removeRegistration(result);
+                }
             }
         } else {
             if (logger.isDebugEnabled()) {
@@ -402,7 +412,7 @@ public final class UserAgentManager extends UntypedActor {
         }
     }
 
-    private void ping(final String to) throws ServletException {
+    private void ping(final String to) throws ServletException{
         final SipApplicationSession application = factory.createApplicationSession();
         String toTransport = ((SipURI) factory.createURI(to)).getTransportParam();
         if (toTransport == null) {
