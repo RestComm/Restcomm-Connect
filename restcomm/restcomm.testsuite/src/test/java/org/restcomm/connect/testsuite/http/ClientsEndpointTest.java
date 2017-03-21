@@ -85,7 +85,7 @@ public class ClientsEndpointTest {
     }
 
     // Issue 109: https://bitbucket.org/telestax/telscale-restcomm/issue/109
-    @Ignore@Test
+    @Test
     public void createClientTest() throws ClientProtocolException, IOException, ParseException, InterruptedException {
 
         SipURI reqUri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -109,7 +109,7 @@ public class ClientsEndpointTest {
         assertTrue(bobPhone.unregister(bobContact, 0));
     }
 
-    @Ignore@Test
+    @Test
     public void createClientTestNoVoiceUrl() throws ClientProtocolException, IOException, ParseException, InterruptedException {
 
         SipURI reqUri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -131,7 +131,7 @@ public class ClientsEndpointTest {
         assertTrue(bobPhone.unregister(bobContact, 0));
     }
 
-    @Ignore@Test
+    @Test
     public void clientRemovalBehaviour() {
         // A developer account should be able to remove his own client
         Client jersey = getClient(developerUsername, developeerAuthToken);
@@ -143,7 +143,7 @@ public class ClientsEndpointTest {
         Assert.assertEquals("Removing a non-existing client did not return 404", 404, response.getStatus());
     }
 
-    @Ignore@Test
+    @Test
     public void createClientWithWeakPasswordShouldFail() throws IOException {
         Client jersey = getClient(developerUsername, developeerAuthToken);
         WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
@@ -155,7 +155,7 @@ public class ClientsEndpointTest {
         Assert.assertTrue("Response should contain 'weak' term", response.getEntity(String.class).toLowerCase().contains("weak"));
     }
 
-    @Ignore@Test
+    @Test
     public void updateClientWithWeakPasswordShouldFail() {
         String updateClientSid = "CL00000000000000000000000000000001";
         Client jersey = getClient(developerUsername, developeerAuthToken);
