@@ -283,6 +283,8 @@ public class UssdCallManager extends UntypedActor {
 
         String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
         //from = outboundInterface(transport);
+        SipURI obi = outboundInterface(transport);
+        from = (obi == null) ? from : obi;
 
         final ActorRef ussdCall = ussdCall();
         final ActorRef self = self();
