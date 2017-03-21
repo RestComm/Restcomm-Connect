@@ -164,7 +164,7 @@ public final class UserAgentManagerTest {
 //        deployer.undeploy("UserAgentTest");
     }
 
-    @Ignore@Test
+    @Test
     public void registerUserAgent() throws Exception {
         SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         Credential c = new Credential("127.0.0.1","alice", "1234");
@@ -177,7 +177,7 @@ public final class UserAgentManagerTest {
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
-    @Ignore@Test
+    @Test
     public void registerUserAgentWithTransport() throws Exception {
         SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         Credential c = new Credential("127.0.0.1","alice", "1234");
@@ -190,7 +190,7 @@ public final class UserAgentManagerTest {
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
-    @Ignore@Test
+    @Test
     public void registerUserAgentWithSecureTransport() throws Exception {
         SipURI uri = sipStack4.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         uri.setSecure(true);
@@ -204,7 +204,7 @@ public final class UserAgentManagerTest {
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
-    @Ignore@Test
+    @Test
     public void registerUserAgentWithReRegister() throws Exception {
 //        deployer.deploy("UserAgentTest");
         SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -221,7 +221,7 @@ public final class UserAgentManagerTest {
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
-    @Ignore@Test
+    @Test
     public void registerUserAgentWithOptionsPing() throws ParseException, InterruptedException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
@@ -245,7 +245,7 @@ public final class UserAgentManagerTest {
         assertTrue(phone.unregister("sip:127.0.0.1:5070;transport=udp", 0));
     }
 
-    @Ignore@Test
+    @Test
     public void registerUserAgentWithExtraParamsAndOptionsPing() throws ParseException, InterruptedException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
@@ -271,7 +271,7 @@ public final class UserAgentManagerTest {
         assertTrue(phone.unregister("sip:127.0.0.1:5070;transport=udp", 0));
     }
 
-    @Ignore@Test
+    @Test
     public void registerUserAgentWithExceptionOnOptionsPing() throws ParseException, InterruptedException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
@@ -291,7 +291,7 @@ public final class UserAgentManagerTest {
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
-    @Ignore@Test
+    @Test
     public void registerUserAgentWith503ErrorResponse() throws ParseException, InterruptedException, InvalidArgumentException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
@@ -320,7 +320,7 @@ public final class UserAgentManagerTest {
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
-    @Ignore@Test
+    @Test
     public void registerUserAgentWithExtraParamsAnd503ToOptionsPing() throws ParseException, InterruptedException, InvalidArgumentException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
@@ -357,7 +357,7 @@ public final class UserAgentManagerTest {
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
-    @Ignore@Test
+    @Test
     public void registerUserAgentWithExtraParamsAnd503ToOptionsPingNoTransport() throws ParseException, InterruptedException, InvalidArgumentException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
@@ -395,7 +395,7 @@ public final class UserAgentManagerTest {
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
-    @Ignore@Test
+    @Test
     public void registerUserAgentWithExtraParamsAnd408ToOptionsPing() throws ParseException, InterruptedException, InvalidArgumentException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
@@ -432,7 +432,7 @@ public final class UserAgentManagerTest {
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
-    @Ignore@Test
+    @Test
     public void registerUserAgentWith408ErrorResponse() throws ParseException, InterruptedException, InvalidArgumentException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
@@ -476,7 +476,14 @@ public final class UserAgentManagerTest {
         phone5.addUpdateCredential(c);
         assertTrue(phone5.register(uri, "maria.test@telestax.com", "1234", mariaContact5, 3600, 3600));
         Thread.sleep(2000);
+
+        //user should be registered successfully
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+
+        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
+        sipStack5.dispose();
+        phone5 = null;
+        sipStack5 = null;
 
         Thread.sleep(100000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
