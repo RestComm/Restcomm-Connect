@@ -464,7 +464,7 @@ public final class UserAgentManagerTest {
 
     /**
      * registerUserAgentWithAtTheRateSignInLogin
-     * we should remove registration
+     * we should be able to register and remove registration on non-response to options
      * @throws ParseException
      * @throws InterruptedException
      * @throws InvalidArgumentException

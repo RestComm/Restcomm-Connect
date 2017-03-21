@@ -417,7 +417,7 @@ public final class UserAgentManager extends UntypedActor {
         }
     }
 
-    private void ping(final String to) throws ServletException{
+    private void ping(final String to) throws ServletException {
         final SipApplicationSession application = factory.createApplicationSession();
         String toTransport = ((SipURI) factory.createURI(to)).getTransportParam();
         if (toTransport == null) {
