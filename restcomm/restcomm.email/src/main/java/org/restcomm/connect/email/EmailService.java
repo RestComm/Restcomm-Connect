@@ -41,6 +41,8 @@ import javax.mail.internet.MimeMessage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import javax.mail.NoSuchProviderException;
+
 
 /**
  * @author liblefty@gmail.com (Lefteris Banos)
@@ -55,39 +57,57 @@ public class EmailService extends UntypedActor  {
     private String port;
     private String user;
     private String password;
-
+    private Transport transport;
+    private final Properties properties = System.getProperties();
+    private boolean isSslEnabled = false;
     public EmailService(final Configuration config) {
         this.observers = new ArrayList<ActorRef>();
         configuration = config;
-        host = configuration.getString("host");
-        port = configuration.getString("port");
-        user = configuration.getString("user");
-        password = configuration.getString("password");
-        final Properties properties = System.getProperties();
+        this.host = configuration.getString("host");
+        this.port = configuration.getString("port");
+        this.user = configuration.getString("user");
+        this.password = configuration.getString("password");
+        if ((user != null && !user.isEmpty()) || (password != null && !password.isEmpty()) ||
+                (port != null && !port.isEmpty()) || (host != null && !host.isEmpty()) ){
+        //allow smtp over ssl if port is set to 465
+        if ("465".equals(port)){
+            this.isSslEnabled = true;
+           useSSLSmtp();
+        }else{
+       //TLS uses port 587
         properties.setProperty("mail.smtp.host", host);
-        if (user != null && !user.isEmpty()) {
-            properties.setProperty("mail.smtp.user", user);
+        properties.setProperty("mail.smtp.user", user);
+        properties.setProperty("mail.smtp.password", password);
+        properties.setProperty("mail.smtp.port", port);
         }
-        if (password != null && !password.isEmpty()) {
-            properties.setProperty("mail.smtp.password", password);
-        }
-        if (port != null && !port.isEmpty()) {
-            properties.setProperty("mail.smtp.port", port);
-        }
-
         properties.setProperty("mail.smtp.starttls.enable", "true");
         properties.setProperty("mail.transport.protocol", "smtps");
         // properties.setProperty("mail.smtp.ssl.enable", "true");
         properties.setProperty("mail.smtp.auth", "true");
-
         session = Session.getInstance(properties,
                 new javax.mail.Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
                         return new PasswordAuthentication(user, password);
                     }
                 });
+        }
     }
 
+    private void useSSLSmtp() {
+            properties.put("mail.transport.protocol", "smtps");
+            properties.put("mail.smtps.ssl.enable", "true");
+            properties.put("mail.smtps.host", host);
+            properties.put("mail.smtps.user", user);
+            properties.put("mail.smtps.password", password);
+            properties.put("mail.smtps.port", port);
+            properties.put("mail.smtps.auth", "true");
+            session = Session.getDefaultInstance(properties);
+            try {
+                this.transport = session.getTransport();
+            } catch (NoSuchProviderException ex) {
+               logger.error(EmailService.class.getName() ,  ex);
+            }
+    }
     private void observe(final Object message) {
         final ActorRef self = self();
         final Observe request = (Observe) message;
@@ -118,7 +138,37 @@ public class EmailService extends UntypedActor  {
             stopObserving(message);
         }else if (EmailRequest.class.equals(klass)) {
             EmailRequest request = (EmailRequest)message;
+            if(isSslEnabled){
+               sender.tell(sendEmailSsL(request.getObject()), self);
+            }else{
             sender.tell(send(request.getObject()), self);
+            }
+        }
+    }
+
+    EmailResponse sendEmailSsL (final Mail mail) {
+        try {
+            InternetAddress from;
+            if (mail.from() != null || !mail.from().equalsIgnoreCase("")) {
+                from = new InternetAddress(mail.from());
+            } else {
+                from = new InternetAddress(user);
+            }
+            final InternetAddress to = new InternetAddress(mail.to());
+            final MimeMessage email = new MimeMessage(session);
+            email.setFrom(from);
+            email.addRecipient(Message.RecipientType.TO, to);
+            email.setSubject(mail.subject());
+            email.setText(mail.body());
+            email.addRecipients(Message.RecipientType.CC, InternetAddress.parse(mail.cc(), false));
+            email.addRecipients(Message.RecipientType.BCC,InternetAddress.parse(mail.bcc(),false));
+            //Transport.send(email);
+            transport.connect (host, Integer.parseInt(port), user, password);
+            transport.sendMessage(email, email.getRecipients(Message.RecipientType.TO));
+            return new EmailResponse(mail);
+        } catch (final MessagingException exception) {
+            logger.error(exception.getMessage(), exception);
+            return new EmailResponse(exception,exception.getMessage());
         }
     }
 
