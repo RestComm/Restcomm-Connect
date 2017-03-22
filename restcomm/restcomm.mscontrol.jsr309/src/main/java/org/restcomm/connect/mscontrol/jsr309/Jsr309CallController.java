@@ -883,10 +883,13 @@ public class Jsr309CallController extends MediaServerController {
                 // Distinguish between WebRTC and SIP calls
                 Parameters sdpParameters = mediaSession.createParameters();
                 Map<String, String> configurationData = new HashMap<String, String>();
-                configurationData.put("webrtc", webrtc ? "yes" : "no");
-                configurationData.put("Supported", "dlgc-encryption-dtls"); // Enable DTLS
-                configurationData.put("Supported ", "dlgc-ice"); // Enable ICE Lite
-                configurationData.put("Supported ", "dlgc-rtcp-feedback-audiovideo"); // Enable RTCP feedback
+                if (webrtc) {
+                    configurationData.put("webrtc", "yes");
+                    // Enable DTLS, ICE Lite and RTCP feedback
+                    configurationData.put("Supported", "dlgc-encryption-dtls, dlgc-ice, dlgc-rtcp-feedback-audiovideo");
+                } else {
+                    configurationData.put("webrtc", "no");
+                }
                 sdpParameters.put(SdpPortManager.SIP_HEADERS, configurationData);
                 networkConnection.setParameters(sdpParameters);
 
