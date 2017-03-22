@@ -513,7 +513,19 @@ public class UssdInterpreter extends UntypedActor {
                 @SuppressWarnings("unchecked")
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
                 // Check from whom is the message (initial call or outbound call) and update info accordingly
-                if (sender == ussdCall) {
+
+                if( response.get().direction().contains("inbound") ){
+                    callInfo = response.get();
+                    ussdCall.tell(new Answer(callInfo.sid()), source);
+                    }
+                else if ("outbound-api".equals(response.get().direction())){
+                         outboundCallInfo = response.get();
+                         fsm.transition(message, downloadingRcml);
+                }else{
+                    logger.debug("direction doesn't match inbound or outbound,  : " + response.get().direction().toString() );
+                }
+
+                /* if (sender == ussdCall) {
                     callInfo = response.get();
                 } else {
                     outboundCallInfo = response.get();
@@ -525,7 +537,7 @@ public class UssdInterpreter extends UntypedActor {
                 } else {
                     fsm.transition(message, downloadingRcml);
                     //                     fsm.transition(message, initializingCall);
-                }
+                }*/
             }
         } else if (DownloaderResponse.class.equals(klass)) {
             final DownloaderResponse response = (DownloaderResponse) message;
