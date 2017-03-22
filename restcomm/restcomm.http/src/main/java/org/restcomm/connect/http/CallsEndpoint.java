@@ -35,6 +35,7 @@ import java.net.URI;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -342,23 +343,50 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         } catch (final RuntimeException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
+
+        URL statusCallback = null;
+        String statusCallbackMethod = "POST";
+        List<String> statusCallbackEvent = new ArrayList<String>();
+        statusCallbackEvent.add("initiated");
+        statusCallbackEvent.add("ringing");
+        statusCallbackEvent.add("answered");
+        statusCallbackEvent.add("completed");
+
         final String from = data.getFirst("From").trim();
         final String to = data.getFirst("To").trim();
         final String username = data.getFirst("Username");
         final String password = data.getFirst("Password");
         final Integer timeout = getTimeout(data);
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+
+        try {
+            if (data.containsKey("statusCallback")) {
+                statusCallback = new URL(data.getFirst("statusCallback").trim());
+            }
+        } catch (Exception e) {
+            //Handle Exception
+        }
+
+        if (statusCallback != null) {
+            if (data.containsKey("statusCallbackMethod")) {
+                statusCallbackMethod = data.getFirst("statusCallbackMethod").trim();
+            }
+            if (data.containsKey("statusCallbackEvent")) {
+                statusCallbackEvent = Arrays.asList(data.getFirst("statusCallbackEvent").trim().split(","));
+            }
+        }
+
         CreateCall create = null;
         try {
             if (to.contains("@")) {
                 create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.SIP,
-                        accountId, null);
+                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
             } else if (to.startsWith("client")) {
                 create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.CLIENT,
-                        accountId, null);
+                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
             } else {
                 create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.PSTN,
-                        accountId, null);
+                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
             }
             create.setCreateCDR(false);
             if (callManager == null)

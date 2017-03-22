@@ -425,8 +425,8 @@ public final class Call extends UntypedActor {
                     parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
                 if (recordingSid != null)
                     parameters.add(new BasicNameValuePair("RecordingSid", recordingSid.toString()));
-                if (recordingDuration > -1)
-                    parameters.add(new BasicNameValuePair("RecordingDuration", String.valueOf(recordingDuration)));
+//                if (recordingDuration > -1)
+//                    parameters.add(new BasicNameValuePair("RecordingDuration", String.valueOf(recordingDuration)));
             }
         }
 
