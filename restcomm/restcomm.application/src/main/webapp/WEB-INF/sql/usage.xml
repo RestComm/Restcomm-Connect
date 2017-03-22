@@ -25,8 +25,7 @@
 		WHERE
 			"account_sid"=#{sid} AND
 			"date_created" &gt;= #{startDate} AND
-			<!--  if we allow startDate and endDate to be the same, we should increase the end bound by 1 day-->
-			"date_created" &lt;= #{endDate}
+			"date_created" &lt; DATE_ADD(#{endDate},INTERVAL 1 DAY)
 		GROUP BY
 			"start_date", "end_date", "account_sid", "api_version"
 		ORDER BY
@@ -61,7 +60,7 @@
 		WHERE
 			"account_sid"=#{sid} AND
 			"date_created" &gt;= #{startDate} AND
-			"date_created" &lt;= #{endDate}
+			"date_created" &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
 		GROUP BY
 			"start_date", "end_date", "account_sid", "api_version"
 		ORDER BY
@@ -96,7 +95,7 @@
 		WHERE
 			"account_sid"=#{sid} AND
 			"date_created" &gt;= #{startDate} AND
-			"date_created" &lt;= #{endDate}
+			"date_created" &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
 		GROUP BY
 			"start_date", "end_date", "account_sid", "api_version"
 		ORDER BY
@@ -123,7 +122,7 @@
 		WHERE
 			"account_sid"=#{sid} AND
 			"date_created" &gt;= #{startDate} AND
-			"date_created" &lt;= #{endDate}
+			"date_created" &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
 		GROUP BY
 			"account_sid", "api_version"
 		ORDER BY
