@@ -495,9 +495,11 @@ public class UssdInterpreter extends UntypedActor {
                     callInfo = response.get();
                     ussdCall.tell(new Answer(callInfo.sid()), source);
                     }
-               if ("outbound-api".equals(response.get().direction())){
+                else if ("outbound-api".equals(response.get().direction())){
                          outboundCallInfo = response.get();
                          fsm.transition(message, downloadingRcml);
+                }else{
+                    logger.debug("direction doesn't match inbound or outbound,  : " + response.get().direction().toString() );
                 }
 
                 /* if (sender == ussdCall) {
