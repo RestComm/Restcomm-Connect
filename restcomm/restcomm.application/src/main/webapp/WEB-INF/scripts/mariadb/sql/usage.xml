@@ -26,7 +26,7 @@
 			account_sid=#{sid} AND
 			date_created &gt;= #{startDate} AND
 			<!--  if we allow startDate and endDate to be the same, we should increase the end bound by 1 day-->
-			date_created &lt;= #{endDate}
+			date_created &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
 		GROUP BY
 			start_date, account_sid, api_version
 		ORDER BY
@@ -42,20 +42,20 @@
 			CAST(${usageExprPre}${usageExprCol}${usageExprSuf} AS SIGNED) AS "usage",
 			SUM(CONVERT("price", SIGNED)) AS "price",
 			<!-- select the highest lower bound -->
-			GREATEST(CONCAT(DATE_FORMAT(date_created,'%Y-%m'),'-01'), #{startDate}) AS "start_date",
+			CONCAT(DATE_FORMAT(date_created,'%Y-%m'),'-01') AS "start_date",
 			<!-- select the lowest upper bound -->
-			LEAST(DATE_FORMAT(LAST_DAY(date_created)), #{endDate}) AS "end_date",
+			DATE_FORMAT(LAST_DAY(date_created)) AS "end_date",
 			CONCAT(#{uri},
 				'?Category=', #{category},
-				'&amp;StartDate=', GREATEST(CONCAT(DATE_FORMAT(date_created,'%Y-%m'),'-01'), #{startDate}),
-				'&amp;EndDate=', LEAST(DATE_FORMAT(LAST_DAY(date_created)), #{endDate})
+				'&amp;StartDate=', CONCAT(DATE_FORMAT(date_created,'%Y-%m'),'-01'),
+				'&amp;EndDate=', DATE_FORMAT(LAST_DAY(date_created))
 				) AS "uri"
 		FROM
 			${tableName}
 		WHERE
 			account_sid=#{sid} AND
 			date_created &gt;= #{startDate} AND
-			date_created &lt; #{endDate}
+			date_created &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
 		GROUP BY
 			start_date, account_sid, api_version
 		ORDER BY
@@ -71,20 +71,20 @@
 			CAST(${usageExprPre}${usageExprCol}${usageExprSuf} AS SIGNED) AS "usage",
 			SUM(CONVERT("price", SIGNED)) AS "price",
 			<!-- select the highest lower bound -->
-			GREATEST(CONCAT(YEAR(date_created), '-01-01'), #{startDate}) AS "start_date",
+			CONCAT(YEAR(date_created), '-01-01') AS "start_date",
 			<!-- select the lowest upper bound -->
-			LEAST(CONCAT(YEAR(date_created), '-12-31'), #{endDate}) AS "end_date",
+			CONCAT(YEAR(date_created), '-12-31') AS "end_date",
 			CONCAT(#{uri},
 				'?Category=', #{category},
-				'&amp;StartDate=', GREATEST(CONCAT(YEAR(date_created), '-01-01'), #{startDate}),
-				'&amp;EndDate=', LEAST(CONCAT(YEAR(date_created), '-12-31'), #{endDate})
+				'&amp;StartDate=', CONCAT(YEAR(date_created), '-01-01'),
+				'&amp;EndDate=', CONCAT(YEAR(date_created), '-12-31')
 				) AS "uri"
 		FROM
 			${tableName}
 		WHERE
 			account_sid=#{sid} AND
 			date_created &gt;= #{startDate} AND
-			date_created &lt;= #{endDate}
+			date_created &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
 		GROUP BY
 			start_date, account_sid, api_version
 		ORDER BY
@@ -111,7 +111,7 @@
 		WHERE
 			account_sid=#{sid} AND
 			date_created &gt;= #{startDate} AND
-			date_created &lt;= #{endDate}
+			date_created &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
 		GROUP BY
 			"account_sid", "api_version"
 		ORDER BY
