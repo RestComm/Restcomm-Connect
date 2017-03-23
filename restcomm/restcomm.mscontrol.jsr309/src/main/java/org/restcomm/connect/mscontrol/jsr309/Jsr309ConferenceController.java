@@ -44,16 +44,12 @@ import javax.media.mscontrol.resource.AllocationEvent;
 import javax.media.mscontrol.resource.AllocationEventListener;
 import javax.media.mscontrol.resource.RTC;
 
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.commons.fsm.TransitionFailedException;
 import org.restcomm.connect.commons.fsm.TransitionNotFoundException;
 import org.restcomm.connect.commons.fsm.TransitionRollbackException;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.mscontrol.api.MediaServerController;
 import org.restcomm.connect.mscontrol.api.MediaServerInfo;
 import org.restcomm.connect.mscontrol.api.exceptions.MediaServerControllerException;
@@ -62,10 +58,14 @@ import org.restcomm.connect.mscontrol.api.messages.JoinCall;
 import org.restcomm.connect.mscontrol.api.messages.JoinConference;
 import org.restcomm.connect.mscontrol.api.messages.MediaGroupResponse;
 import org.restcomm.connect.mscontrol.api.messages.MediaServerControllerError;
+import org.restcomm.connect.mscontrol.api.messages.MediaServerControllerStateChanged;
 import org.restcomm.connect.mscontrol.api.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.restcomm.connect.mscontrol.api.messages.Play;
 import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
 
 import akka.actor.ActorRef;
 import akka.event.Logging;
@@ -410,7 +410,7 @@ public class Jsr309ConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            broadcast(new MediaServerConferenceControllerStateChanged(MediaServerControllerState.ACTIVE, null));
+            broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.ACTIVE));
         }
     }
 
@@ -430,7 +430,7 @@ public class Jsr309ConferenceController extends MediaServerController {
             cleanMediaResources();
 
             // Broadcast state changed
-            broadcast(new MediaServerConferenceControllerStateChanged(MediaServerControllerState.INACTIVE, null));
+            broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.INACTIVE));
 
             // Clear observers
             observers.clear();
@@ -452,7 +452,7 @@ public class Jsr309ConferenceController extends MediaServerController {
             cleanMediaResources();
 
             // Broadcast state changed
-            broadcast(new MediaServerConferenceControllerStateChanged(MediaServerControllerState.FAILED, null));
+            broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.FAILED));
 
             // Clear observers
             observers.clear();
