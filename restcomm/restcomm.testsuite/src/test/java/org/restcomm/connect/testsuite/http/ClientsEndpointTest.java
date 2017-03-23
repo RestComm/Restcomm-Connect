@@ -33,6 +33,7 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
@@ -164,6 +165,26 @@ public class ClientsEndpointTest {
         ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, params);
         Assert.assertEquals(400, response.getStatus());
         Assert.assertTrue("Response should contain 'weak' term", response.getEntity(String.class).toLowerCase().contains("weak"));
+    }
+
+    /**
+     * createClientTestWithInvalidCharacters
+     * https://github.com/RestComm/Restcomm-Connect/issues/1979
+     * @throws ClientProtocolException
+     * @throws IOException
+     * @throws ParseException
+     * @throws InterruptedException
+     */
+    @Test
+    public void createClientTestWithInvalidCharacters() throws ClientProtocolException, IOException, ParseException, InterruptedException {
+    	Client jersey = getClient(developerUsername, developeerAuthToken);
+        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.add("Login","maria.test@telestax.com"); // login contains @ sign
+        params.add("Password","RestComm1234!");
+        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(400, response.getStatus());
+        Assert.assertTrue("Response should contain 'invalid' term", response.getEntity(String.class).toLowerCase().contains("invalid"));
     }
 
     protected String getResourceUrl(String suffix) {

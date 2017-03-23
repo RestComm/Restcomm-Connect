@@ -28,13 +28,9 @@ import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
  */
 public final class ConferenceEndpoint extends GenericEndpoint {
 
-    public ConferenceEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent,
-            final String domain, long timeout) {
-        super(gateway, session, agent, new EndpointIdentifier("mobicents/cnf/$", domain), timeout);
-    }
-
+    protected static String conferenceEndpointName = "mobicents/cnf/$";
     public ConferenceEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent,
             final String domain, long timeout, String endpointName) {
-        super(gateway, session, agent, new EndpointIdentifier(endpointName, domain), timeout);
+        super(gateway, session, agent, new EndpointIdentifier(endpointName==null?conferenceEndpointName:endpointName, domain), timeout);
     }
 }

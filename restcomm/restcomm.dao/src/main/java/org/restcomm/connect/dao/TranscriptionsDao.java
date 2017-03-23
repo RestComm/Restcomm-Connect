@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Transcription;
+import org.restcomm.connect.dao.entities.TranscriptionFilter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -41,4 +42,8 @@ public interface TranscriptionsDao {
     void removeTranscriptions(Sid accountSid);
 
     void updateTranscription(Transcription transcription);
+
+    // Support for filtering of notification list result, Issue 1395
+    Integer getTotalTranscription(TranscriptionFilter filter);
+    List<Transcription> getTranscriptions(TranscriptionFilter filter);
 }

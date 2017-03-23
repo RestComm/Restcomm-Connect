@@ -172,6 +172,11 @@
 	<select id="getCallDetailRecordsByInstanceId" parameterType="string" resultType="hashmap">
 		SELECT * FROM "restcomm_call_detail_records" WHERE "instanceid"=#{instanceid};
 	</select>
+
+  <select id="getInCompleteCallDetailRecordsByInstanceId" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_call_detail_records" WHERE "instanceid"=#{instanceid} AND (UPPER("status") = ('IN_PROGRESS') OR 
+      UPPER("status") = ('IN-PROGRESS') OR UPPER("status") = ('RINGING') OR UPPER("status") = ('QUEUED'));
+  </select>
   
   <select id="getCallDetailRecordsByConferenceSid" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_call_detail_records" WHERE "conference_sid"=#{conference_sid};
@@ -196,8 +201,15 @@
   <update id="updateCallDetailRecord" parameterType="map">
     UPDATE "restcomm_call_detail_records" 
     	SET "date_updated"=#{date_updated}, "status"=#{status}, "start_time"=#{start_time}, "end_time"=#{end_time}, "duration"=#{duration},
-    		"price"=#{price}, "answered_by"=#{answered_by}, "ring_duration"=#{ring_duration}, "conference_sid"=#{conference_sid}, "muted"=#{muted}, "start_conference_on_enter"=#{start_conference_on_enter}, 
+    		"price"=#{price}, "answered_by"=#{answered_by}, "forwarded_from"=#{forwarded_from},  "ring_duration"=#{ring_duration}, "conference_sid"=#{conference_sid}, "muted"=#{muted}, "start_conference_on_enter"=#{start_conference_on_enter}, 
     		"end_conference_on_exit"=#{end_conference_on_exit}, "on_hold"=#{on_hold}, "ms_id"=#{ms_id} 
     WHERE "sid"=#{sid};
+  </update>
+
+  <update id="updateInCompleteCallDetailRecordsToCompletedByInstanceId" parameterType="string">
+    UPDATE "restcomm_call_detail_records"
+      SET "status"='COMPLETED'
+      WHERE "instanceid"=#{instanceid} AND (UPPER("status") = ('IN_PROGRESS') OR 
+        UPPER("status") = ('IN-PROGRESS') OR UPPER("status") = ('RINGING') OR UPPER("status") = ('QUEUED'));
   </update>
 </mapper>
