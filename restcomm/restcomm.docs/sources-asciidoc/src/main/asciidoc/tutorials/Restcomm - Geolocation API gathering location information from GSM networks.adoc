@@ -1,3 +1,6 @@
+[[restcomm-geolocation]]
+= *Restcomm - Geolocation API gathering location information from GSM networks*
+
 In this tutorial, you will learn how to use Restcomm Geolocation API together with Restcomm GMLC for retrieving location information from GSM networks.  
 
 = Requirements

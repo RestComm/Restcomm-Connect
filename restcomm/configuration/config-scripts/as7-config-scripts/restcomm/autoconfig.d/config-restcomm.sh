@@ -52,15 +52,17 @@ configRestcomm() {
   		echo "HOSTNAME $RESTCOMM_HOSTNAME"
   		sed -i "s|<hostname>.*<\/hostname>|<hostname>${RESTCOMM_HOSTNAME}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
+	if ! grep "${BIND_ADDRESS}.*${RESTCOMM_HOSTNAME}" /etc/hosts ; then
         if hash host 2>/dev/null; then
             if ! host ${RESTCOMM_HOSTNAME} > /dev/null
             then
                 echo "${BIND_ADDRESS}  ${RESTCOMM_HOSTNAME}" >> /etc/hosts
             fi
-        else
+       else
             echo "INFO: \"host\" programm does not exist ('dnsutils' package) please make sure that used hostname has a valid DNS resolution."
             echo "INFO:IF not add the necessary hostname Ip resolution at /etc/hosts file: e.g  echo RestC0mm_BIND_IP RESTCOMM_HOSTNAME >> /etc/hosts "
-        fi
+         fi
+fi
 	else
   		sed -i "s|<hostname>.*<\/hostname>|<hostname>${PUBLIC_IP}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
  	fi
@@ -214,6 +216,10 @@ configSpeechRecognizer() {
 configSpeechSynthesizers() {
 	if [[ "$TTSSYSTEM" == "voicerss" ]]; then
 	    configVoiceRSS $VOICERSS_KEY
+
+	elif [[ "$TTSSYSTEM" == "awspolly" ]]; then
+		configAWSPolly $AWS_ACCESS_KEY $AWS_SECRET_KEY $AWS_REGION
+
 	else
 	    configAcapela $ACAPELA_APPLICATION $ACAPELA_LOGIN $ACAPELA_PASSWORD
 	 fi
@@ -260,6 +266,29 @@ configVoiceRSS() {
  	else
  	     echo 'Please set KEY for VoiceRSS TTS'
     fi
+}
+
+## Description: Configures AWS Polly Speech Synthesizer
+## Parameters : 1.AWS Access Key
+## 				2.AWS Secret key
+## 				3.AWS Region
+configAWSPolly() {
+ if [[ -z $AWS_ACCESS_KEY || -z $AWS_SECRET_KEY || -z $AWS_REGION ]]; then
+        echo '!Please make sure that all necessary settings for AWS Polly are set!'
+ else
+         FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+         sed -i 's|<speech-synthesizer active=".*"/>|<speech-synthesizer active="awspolly"/>|' $FILE
+
+	        sed -e "/<awspolly class=\"org.restcomm.connect.tts.awspolly.AWSPollySpeechSyntetizer\">/ {
+		        N
+		        N; s|<aws-access-key>.*</aws-access-key>|<aws-access-key>$1</aws-access-key>|
+		        N; s|<aws-secret-key>.*</aws-secret-key>|<aws-secret-key>$2</aws-secret-key>|
+		        N; s|<aws-region>.*</aws-region>|<aws-region>$3</aws-region>|
+	        }" $FILE > $FILE.bak
+
+        mv $FILE.bak $FILE
+        echo 'Configured AWS Polly Speech Synthesizer'
+ fi
 }
 
 ## Description: Updates RestComm DARS properties for RestComm

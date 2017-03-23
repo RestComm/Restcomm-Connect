@@ -202,6 +202,11 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     }
 
     @Override
+    public List<CallDetailRecord> getInCompleteCallDetailRecordsByInstanceId(Sid instanceId) {
+        return getCallDetailRecords(namespace + "getInCompleteCallDetailRecordsByInstanceId", instanceId.toString());
+    }
+
+    @Override
     public List<CallDetailRecord> getCallDetailRecordsByMsId(String msId) {
         return getCallDetailRecords(namespace + "getCallDetailRecordsByMsId", msId);
     }
@@ -287,6 +292,17 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         final SqlSession session = sessions.openSession();
         try {
             session.update(namespace + "updateCallDetailRecord", toMap(cdr));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void updateInCompleteCallDetailRecordsToCompletedByInstanceId(Sid instanceId) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateInCompleteCallDetailRecordsToCompletedByInstanceId", instanceId.toString());
             session.commit();
         } finally {
             session.close();

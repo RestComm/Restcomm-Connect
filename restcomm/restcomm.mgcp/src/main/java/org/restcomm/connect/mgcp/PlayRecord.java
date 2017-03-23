@@ -123,8 +123,9 @@ public final class PlayRecord {
             if (buffer.length() > 0)
                 buffer.append(" ");
             buffer.append("eik=").append(endInputKey).append(" ");
-            buffer.append("mn=").append(endInputKey.length()).append(" ");
-            buffer.append("mx=").append(endInputKey.length());
+            //https://github.com/RestComm/Restcomm-Connect/issues/1890
+//            buffer.append("mn=").append(endInputKey.length()).append(" ");
+//            buffer.append("mx=").append(endInputKey.length());
         }
         return buffer.toString();
     }

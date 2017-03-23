@@ -27,5 +27,5 @@ The USSD gateway to which Restcomm must send the UssdMessage must be configured 
 See below a curl example for the USSD Push:
 
 ----
-curl -X POST -H "application/json" https://ACae6e420f425248d6a26948c17a9e2acf:YOUR_PWD@RESTCOMM_IP_ADDRESS/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a-d "From=Restcomm" -d "To=123" -d "Url=https://RESTCOMM_IP_ADDRESS/restcomm-rvd/services/apps/YOUR_USSD_APP/controller"
+curl -X POST -H "application/json" https://ACae6e420f425248d6a26948c17a9e2acf:YOUR_PWD@RESTCOMM_IP_ADDRESS/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/UssdPush -d "From=Restcomm" -d "To=123" -d "Url=https://RESTCOMM_IP_ADDRESS/restcomm-rvd/services/apps/YOUR_USSD_APP/controller"
 ----
