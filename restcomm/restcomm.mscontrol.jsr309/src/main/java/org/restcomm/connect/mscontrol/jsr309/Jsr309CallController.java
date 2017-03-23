@@ -496,7 +496,7 @@ public class Jsr309CallController extends MediaServerController {
     }
 
     private void onCloseMediaSession(CloseMediaSession message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active) || is(initializing) || is(updatingMediaSession)) {
+        if (is(active) || is(initializing) || is(updatingMediaSession) || is(pending)) {
             fsm.transition(message, inactive);
         }
     }
