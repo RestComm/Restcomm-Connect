@@ -255,7 +255,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response getRecordingWav (String accountSid, String sid) {
+    protected Response getRecordingFile (String accountSid, String sid) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
 //        secure(operatedAccount, "RestComm:Read:Recordings");
 
@@ -270,14 +270,19 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
             URI recordingUri = null;
             try {
                 if (recording.getS3Uri() != null) {
-                    recordingUri = s3AccessTool.getPublicUrl(recording.getSid() + ".wav");
+                    String fileExtension = recording.getS3Uri().toString().endsWith("wav") ? ".wav" : ".mp4";
+                    recordingUri = s3AccessTool.getPublicUrl(recording.getSid() + fileExtension);
                     if (securityLevel.equals(RecordingSecurityLevel.REDIRECT)) {
                         return temporaryRedirect(recordingUri).build();
                     } else {
                         URL recordingUrl = recordingUri.toURL();
                         String contentType = recordingUri.toURL().openConnection().getContentType();
                         if (contentType == null || contentType.isEmpty()) {
-                            contentType = "audio/x-wav";
+                            if (fileExtension.equals(".wav")) {
+                                contentType = "audio/x-wav";
+                            } else {
+                                contentType = "video/mp4";
+                            }
                         }
                         //Fetch recording and serve it from here
                         return ok(recordingUri.toURL().openStream(), recordingUri.toURL().openConnection().getContentType()).build();
@@ -290,7 +295,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
                 }
             } catch (Exception e) {
                 if (logger.isInfoEnabled()) {
-                    logger.info("Problem during preparation of Recording wav file link, ",e);
+                    logger.info("Problem during preparation of Recording file link, ", e);
                 }
             }
         }
