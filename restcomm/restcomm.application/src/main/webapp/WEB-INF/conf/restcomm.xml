@@ -306,7 +306,7 @@
 		   Restcomm will fetch and serve recording to the user if the FILE_URI of the Recording is used
 		2. REDIRECT: Recordings REST API will NOT contain the S3_URI. Restcomm will
 		   create redirect response and recording will be served by Amazon S3 if the FILE_URI of the Recording is used
-		3. --DEFAULT-- SECURE: Recordings REST API will NOT contain the S3_URI. Restcomm will
+		3. DEFAULT SECURE: Recordings REST API will NOT contain the S3_URI. Restcomm will
 		   fetch and serve recording to the user if the FILE_URI of the Recording is used
 
 		DEFAULT VALUE: SECURE

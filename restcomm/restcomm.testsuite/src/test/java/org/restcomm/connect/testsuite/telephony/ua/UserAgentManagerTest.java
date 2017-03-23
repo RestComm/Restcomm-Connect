@@ -96,6 +96,11 @@ public final class UserAgentManagerTest {
     private SipPhone phone4;
     private String aliceContact4 = "sip:alice@127.0.0.1:5072";
 
+    private static SipStackTool tool5;
+    private SipStack sipStack5;
+    private SipPhone phone5;
+    private String mariaContact5 = "sip:maria.test%40telestax.com@127.0.0.1:5072";
+
     public UserAgentManagerTest() {
         super();
     }
@@ -106,6 +111,7 @@ public final class UserAgentManagerTest {
         tool2 = new SipStackTool("UserAgentTest2");
         tool3 = new SipStackTool("UserAgentTest3");
         tool4 = new SipStackTool("UserAgentTest4");
+        tool5 = new SipStackTool("UserAgentTest5");
     }
 
     @Before
@@ -121,6 +127,9 @@ public final class UserAgentManagerTest {
 
         sipStack4 = tool4.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5072", "127.0.0.1:5080");
         phone4 = sipStack4.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5080, aliceContact4);
+
+        sipStack5 = tool5.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5073", "127.0.0.1:5080");
+        phone5 = sipStack5.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5080, mariaContact5);
     }
 
     @After
@@ -148,6 +157,9 @@ public final class UserAgentManagerTest {
         }
         if (sipStack4 != null) {
             sipStack4.dispose();
+        }
+        if (sipStack5 != null) {
+            sipStack5.dispose();
         }
 //        deployer.undeploy("UserAgentTest");
     }
@@ -447,6 +459,33 @@ public final class UserAgentManagerTest {
         sipStack2 = null;
 
         Thread.sleep(1000);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+    }
+
+    /**
+     * registerUserAgentWithAtTheRateSignInLogin
+     * we should be able to register and remove registration on non-response to options
+     * @throws ParseException
+     * @throws InterruptedException
+     * @throws InvalidArgumentException
+     */
+    @Test
+    public void registerUserAgentWithAtTheRateSignInLogin() throws ParseException, InterruptedException, InvalidArgumentException {
+        SipURI uri = sipStack5.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        Credential c = new Credential("127.0.0.1","maria.test@telestax.com", "1234");
+        phone5.addUpdateCredential(c);
+        assertTrue(phone5.register(uri, "maria.test@telestax.com", "1234", mariaContact5, 3600, 3600));
+        Thread.sleep(2000);
+
+        //user should be registered successfully
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+
+        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
+        sipStack5.dispose();
+        phone5 = null;
+        sipStack5 = null;
+
+        Thread.sleep(100000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 

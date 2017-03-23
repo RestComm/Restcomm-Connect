@@ -949,7 +949,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, processingDialChildren);
             }
         } else {
-            if (dialChildren != null && dialChildren.size() > 1) {
+            if (logger.isDebugEnabled()) {
+                String msg = String.format("CallManager failed to create Call for %s, current state %s, dialChilder.size %s, dialBranches.size %s", response.getCreateCall().to(), fsm.state().toString(), dialChildren.size(), dialBranches.size());
+                logger.debug(msg);
+            }
+            if (dialChildren != null && dialChildren.size() > 0) {
                 fsm.transition(message, processingDialChildren);
             } else {
                 fsm.transition(message, hangingUp);
@@ -2074,10 +2078,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 callManager.tell(create, source);
             } else {
-                // Fork.
-                final Fork fork = Fork.instance();
-                source.tell(fork, source);
-                dialChildren = null;
+                if (dialBranches != null && dialBranches.size() > 0) {
+                    // Fork.
+                    final Fork fork = Fork.instance();
+                    source.tell(fork, source);
+                    dialChildren = null;
+                } else {
+                    fsm.transition(message, hangingUp);
+                }
             }
         }
     }

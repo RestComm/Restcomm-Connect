@@ -513,7 +513,19 @@ public class UssdInterpreter extends UntypedActor {
                 @SuppressWarnings("unchecked")
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
                 // Check from whom is the message (initial call or outbound call) and update info accordingly
-                if (sender == ussdCall) {
+
+                if( response.get().direction().contains("inbound") ){
+                    callInfo = response.get();
+                    ussdCall.tell(new Answer(callInfo.sid()), source);
+                    }
+                else if ("outbound-api".equals(response.get().direction())){
+                         outboundCallInfo = response.get();
+                         fsm.transition(message, downloadingRcml);
+                }else{
+                    logger.debug("direction doesn't match inbound or outbound,  : " + response.get().direction().toString() );
+                }
+
+                /* if (sender == ussdCall) {
                     callInfo = response.get();
                 } else {
                     outboundCallInfo = response.get();
@@ -525,7 +537,7 @@ public class UssdInterpreter extends UntypedActor {
                 } else {
                     fsm.transition(message, downloadingRcml);
                     //                     fsm.transition(message, initializingCall);
-                }
+                }*/
             }
         } else if (DownloaderResponse.class.equals(klass)) {
             final DownloaderResponse response = (DownloaderResponse) message;
@@ -631,18 +643,8 @@ public class UssdInterpreter extends UntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-            if(logger.isInfoEnabled()) {
-                logger.info("Downloading RCML");
-            }
-            final Class<?> klass = message.getClass();
             final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-            if (CallResponse.class.equals(klass)) {
-                final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-                callInfo = response.get();
-                callState = callInfo.state();
-                if (callInfo.direction().equals("inbound")) {
-                    // Create a call detail record for the call.
-                    final CallDetailRecord.Builder builder = CallDetailRecord.builder();
+            final CallDetailRecord.Builder builder = CallDetailRecord.builder();
                     builder.setSid(callInfo.sid());
                     builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
                     builder.setDateCreated(callInfo.dateCreated());
@@ -666,20 +668,17 @@ public class UssdInterpreter extends UntypedActor {
                     buffer.append(callInfo.sid().toString());
                     final URI uri = URI.create(buffer.toString());
                     builder.setUri(uri);
-
                     builder.setCallPath(ussdCall.path().toString());
-
                     callRecord = builder.build();
                     records.addCallDetailRecord(callRecord);
                     // Update the application.
                     callback();
-                }
-            }
             // Ask the downloader to get us the application that will be executed.
             final List<NameValuePair> parameters = parameters();
             request = new HttpRequestDescriptor(url, method, parameters);
             downloader.tell(request, source);
         }
+
     }
 
     private final class DownloadingFallbackRcml extends AbstractAction {
