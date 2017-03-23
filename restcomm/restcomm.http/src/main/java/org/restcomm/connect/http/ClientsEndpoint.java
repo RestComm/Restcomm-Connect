@@ -189,7 +189,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         secure(accountsDao.getAccount(accountSid), "RestComm:Create:Clients");
         try {
             validate(data);
-        } catch (final NullPointerException exception) {
+        } catch (final NullPointerException | IllegalArgumentException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
 
@@ -248,6 +248,10 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             throw new NullPointerException("Login can not be null.");
         } else if (!data.containsKey("Password")) {
             throw new NullPointerException("Password can not be null.");
+        }
+        // https://github.com/RestComm/Restcomm-Connect/issues/1979
+        if (data.getFirst("Login").contains("@")) {
+            throw new IllegalArgumentException("Login contains invalid character: @ "+data.getFirst("Login"));
         }
     }
 

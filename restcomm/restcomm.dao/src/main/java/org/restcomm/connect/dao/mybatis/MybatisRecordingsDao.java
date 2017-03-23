@@ -37,6 +37,7 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.amazonS3.S3AccessTool;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.dao.entities.RecordingFilter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -142,6 +143,38 @@ public final class MybatisRecordingsDao implements RecordingsDao {
                 }
             }
             return recordings;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public List<Recording> getRecordings(RecordingFilter filter) {
+
+        final SqlSession session = sessions.openSession();
+
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getRecordingsByUsingFilters",
+                    filter);
+            final List<Recording> cdrs = new ArrayList<Recording>();
+
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toRecording(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public Integer getTotalRecording(RecordingFilter filter) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Integer total = session.selectOne(namespace + "getTotalRecordingByUsingFilters", filter);
+            return total;
         } finally {
             session.close();
         }
