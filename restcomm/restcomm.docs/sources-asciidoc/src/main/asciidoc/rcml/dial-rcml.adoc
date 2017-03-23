@@ -75,3 +75,30 @@ For examples of how to use the <Dial> verb see below.
     <Dial callerId="1555666777" record="true">1-444-555-666</Dial>
 </Response>
 ----
+
+== Answer Delay with Dial verb
+
+For certain scenarios the 200 OK on the initial call should be delayed when the first verb is Dial, until Restcomm receives the final response from the Dial branch (or branches).
+
+Before this feature, when processing an incoming call for a hosted application, the application immediately created media session and sent SIP 200 OK response to the client no matter if there was a Dial verb in the hosted application or not. The incoming call was established with the application and the 'ringing' sound was transmitted through media channel. At the same time, if the RCML hosted application had Dial verb, the application sent SIP INVITE request to the destination. Depending on the destination response, the incoming call was either updated with the new media session (when the response was 200 OK), or it was disconnected (in case of failure response).
+
+With this new feature, in the above scenario, the application sends SIP 180 Ringing response instead of SIP 200 OK. The SIP 200 OK response is sent to the client only when the outgoing call is established with the destination. When outgoing call is failed, then the failure response is passed to the client.
+
+The feature was implemented as a feature flag. In order to configure this functionality, the following definition must be present in restcomm.xml file:
+
+[source,xml]
+----
+<enable-200-ok-delay>true</enable-200-ok-delay>
+----
+
+=== Call flows
+
+The following sequence flow diagrams illustrate the new way of Restcomm-Connect functionality for RCML <Dial> verb.
+
+1. The following sequence flow diagram illustrate the use of the feature when dialing to a single destination. Here you can see how all the possible states (answered, failed, busy etc) are handled.
+
+image::images/answer_delay_call_flow.png[Answer Delay Call Flow]
+
+1. The next sequence flow diagram illustrate the feature when in Dial Forking.
+
+image::images/answer_delay_dial_forking_call_flow.png[Answer Delay Dial forking Call Flow]

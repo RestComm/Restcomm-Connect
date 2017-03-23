@@ -61,14 +61,10 @@ public final class IvrEndpoint extends GenericEndpoint {
     private static final String DEFAULT_REQUEST_ID = "0";
 
     private final NotifiedEntity agent;
-
-    public IvrEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain, long timeout) {
-        super(gateway, session, agent, new EndpointIdentifier("mobicents/ivr/$", domain), timeout);
-        this.agent = agent;
-    }
+    protected static String ivrEndpointName = "mobicents/ivr/$";
 
     public IvrEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain, long timeout, String endpointName) {
-        super(gateway, session, agent, new EndpointIdentifier(endpointName, domain), timeout);
+        super(gateway, session, agent, new EndpointIdentifier(endpointName==null?ivrEndpointName:endpointName, domain), timeout);
         this.agent = agent;
     }
 

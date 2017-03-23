@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.RecordingFilter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -42,4 +43,8 @@ public interface RecordingsDao {
     void removeRecording(Sid sid);
 
     void removeRecordings(Sid accountSid);
+
+    // Support for filtering of recording list result, Issue 1395
+    Integer getTotalRecording(RecordingFilter filter);
+    List<Recording> getRecordings(RecordingFilter filter);
 }
