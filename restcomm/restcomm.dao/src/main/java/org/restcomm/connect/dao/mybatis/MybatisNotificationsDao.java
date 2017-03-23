@@ -41,6 +41,7 @@ import static org.restcomm.connect.dao.DaoUtils.readUri;
 import static org.restcomm.connect.dao.DaoUtils.writeDateTime;
 import static org.restcomm.connect.dao.DaoUtils.writeSid;
 import static org.restcomm.connect.dao.DaoUtils.writeUri;
+import org.restcomm.connect.dao.entities.NotificationFilter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -84,6 +85,38 @@ public final class MybatisNotificationsDao implements NotificationsDao {
     @Override
     public List<Notification> getNotifications(final Sid accountSid) {
         return getNotifications(namespace + "getNotifications", accountSid.toString());
+    }
+
+    @Override
+    public List<Notification> getNotifications(NotificationFilter filter) {
+
+        final SqlSession session = sessions.openSession();
+
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getNotificationsByUsingFilters",
+                    filter);
+            final List<Notification> cdrs = new ArrayList<Notification>();
+
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    cdrs.add(toNotification(result));
+                }
+            }
+            return cdrs;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public Integer getTotalNotification(NotificationFilter filter) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Integer total = session.selectOne(namespace + "getTotalNotificationByUsingFilters", filter);
+            return total;
+        } finally {
+            session.close();
+        }
     }
 
     @Override

@@ -5,14 +5,14 @@
 -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.RecordingsDao">
   <insert id="addRecording" parameterType="map">
-    INSERT INTO restcomm_recordings (sid, date_created, date_updated, account_sid, call_sid, duration, api_version, uri, file_uri)
-    VALUES (#{sid}, #{date_created}, #{date_updated}, #{account_sid}, #{call_sid}, #{duration}, #{api_version}, #{uri}, #{file_uri});
+    INSERT INTO restcomm_recordings (sid, date_created, date_updated, account_sid, call_sid, duration, api_version, uri, file_uri, s3_uri)
+    VALUES (#{sid}, #{date_created}, #{date_updated}, #{account_sid}, #{call_sid}, #{duration}, #{api_version}, #{uri}, #{file_uri}, #{s3_uri});
   </insert>
-  
+
   <select id="getRecording" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_recordings WHERE sid=#{sid};
   </select>
-  
+
   <select id="getRecordingByCall" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_recordings WHERE call_sid=#{call_sid};
   </select>
@@ -20,16 +20,87 @@
   <select id="getRecordingsByCall" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_recordings WHERE call_sid=#{call_sid};
   </select>
-  
+
   <select id="getRecordings" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_recordings WHERE account_sid=#{account_sid};
   </select>
-  
+
   <delete id="removeRecording" parameterType="string">
     DELETE FROM restcomm_recordings WHERE sid=#{sid};
   </delete>
-  
+
   <delete id="removeRecordings" parameterType="string">
     DELETE FROM restcomm_recordings WHERE account_sid=#{account_sid};
   </delete>
+
+  <select id="getTotalRecordingByUsingFilters" parameterType="org.restcomm.connect.dao.entities.RecordingFilter" resultType="int">
+            SELECT COUNT(*) FROM restcomm_recordings WHERE
+
+            <!-- are we counting cdrs from a single account or from an account set -->
+            <if test="accountSidSet == null">
+                    "account_sid"=#{accountSid}
+            </if>
+            <if test="accountSidSet != null">
+                    <if test="!accountSidSet.isEmpty()">
+                            "account_sid" IN
+                            <foreach item="item" index="index" collection="accountSidSet" open="(" separator="," close=")">
+                                    #{item}
+                            </foreach>
+                    </if>
+                    <if test="accountSidSet.isEmpty()">
+                            "account_sid"=''
+                    </if>
+            </if>
+
+            <if test="instanceid != null">
+                    AND "instanceid" like #{instanceid}
+            </if>
+            <if test="callSid != null">
+                    AND "call_sid" like #{callSid}
+            </if>
+            <!-- select * from "restcomm_sms_messages" where "start_time" >= '2013-08-23' order by "start_time" ; -->
+            <if test="startTime != null">
+                AND "date_created" &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                    AND "date_created" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
+            </if>
+
+    </select>
+
+    <select id="getRecordingsByUsingFilters" parameterType="org.restcomm.connect.dao.entities.RecordingFilter" resultType="hashmap">
+            SELECT * FROM restcomm_recordings AS restcomm_recordings WHERE
+
+            <!-- are we counting cdrs from a single account or from an account set -->
+            <if test="accountSidSet == null">
+                    "account_sid"=#{accountSid}
+            </if>
+            <if test="accountSidSet != null">
+                    <if test="!accountSidSet.isEmpty()">
+                            "account_sid" IN
+                            <foreach item="item" index="index" collection="accountSidSet" open="(" separator="," close=")">
+                                    #{item}
+                            </foreach>
+                    </if>
+                    <if test="accountSidSet.isEmpty()">
+                            "account_sid"=''
+                    </if>
+            </if>
+
+            <if test="instanceid != null">
+                    AND "instanceid" like #{instanceid}
+            </if>
+            <if test="callSid != null">
+                    AND "call_sid" like #{callSid}
+            </if>
+            <!-- select * from "restcomm_sms_messages" where "start_time" >= '2013-08-23' order by "start_time" ; -->
+            <if test="startTime != null">
+                AND "date_created" &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                    AND "date_created" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
+            </if>
+            order by "date_created"
+            LIMIT #{limit} OFFSET #{offset}
+    </select>
 </mapper>

@@ -27,6 +27,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.mobicents.javax.servlet.sip.SipFactoryExt;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
@@ -66,7 +67,9 @@ import org.restcomm.connect.mscontrol.api.messages.StopRecording;
 import org.restcomm.connect.mscontrol.api.messages.Unmute;
 import org.restcomm.connect.mscontrol.api.messages.UpdateMediaSession;
 import org.restcomm.connect.telephony.api.Answer;
+import org.restcomm.connect.telephony.api.BridgeStateChanged;
 import org.restcomm.connect.telephony.api.CallFail;
+import org.restcomm.connect.telephony.api.CallHoldStateChange;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
@@ -95,6 +98,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import javax.servlet.sip.TelURL;
 import javax.sip.header.RecordRouteHeader;
 import javax.sip.header.RouteHeader;
 import javax.sip.message.Response;
@@ -114,6 +118,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -130,15 +135,23 @@ public final class Call extends UntypedActor {
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
+    // Response Code for Media Server Failure
+    private static final int MEDIA_SERVER_FAILURE_RESPONSE_CODE = 569;
+
     // Define possible directions.
     private static final String INBOUND = "inbound";
     private static final String OUTBOUND_API = "outbound-api";
     private static final String OUTBOUND_DIAL = "outbound-dial";
 
+    // Call Hold actions
+    private static final String CALL_ON_HOLD_ACTION = "action=onHold";
+    private static final String CALL_OFF_HOLD_ACTION = "action=offHold";
+
     // Finite State Machine
     private final FiniteStateMachine fsm;
     private final State uninitialized;
     private final State initializing;
+    private final State waitingForAnswer;
     private final State queued;
     private final State failingBusy;
     private final State ringing;
@@ -165,7 +178,7 @@ public final class Call extends UntypedActor {
     private Sid accountId;
     private String name;
     private SipURI from;
-    private SipURI to;
+    private javax.servlet.sip.URI to;
     // custom headers for SIP Out https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     private Map<String, String> headers;
     private String username;
@@ -190,6 +203,7 @@ public final class Call extends UntypedActor {
     private boolean sentBye;
     private boolean muted;
     private boolean webrtc;
+    private boolean initialInviteOkSent;
 
     // Conferencing
     private ActorRef conference;
@@ -217,9 +231,19 @@ public final class Call extends UntypedActor {
     private boolean disableSdpPatchingOnUpdatingMediaSession;
 
     private Sid inboundCallSid;
+    private boolean inboundConfirmCall;
     private int collectTimeout;
     private String collectFinishKey;
     private boolean collectSipInfoDtmf = false;
+
+    private boolean enable200OkDelay;
+
+    private boolean outboundToIms;
+    private String imsProxyAddress;
+    private int imsProxyPort;
+    private boolean actAsImsUa;
+
+    private boolean isOnHold;
 
     public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
         super();
@@ -228,6 +252,7 @@ public final class Call extends UntypedActor {
         // States for the FSM
         this.uninitialized = new State("uninitialized", null, null);
         this.initializing = new State("initializing", new Initializing(source), null);
+        this.waitingForAnswer = new State("waiting for answer", new WaitingForAnswer(source), null);
         this.queued = new State("queued", new Queued(source), null);
         this.ringing = new State("ringing", new Ringing(source), null);
         this.failingBusy = new State("failing busy", new FailingBusy(source), null);
@@ -272,7 +297,13 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.initializing, this.dialing));
         transitions.add(new Transition(this.initializing, this.failed));
         transitions.add(new Transition(this.initializing, this.inProgress));
+        transitions.add(new Transition(this.initializing, this.waitingForAnswer));
         transitions.add(new Transition(this.initializing, this.stopping));
+        transitions.add(new Transition(this.waitingForAnswer, this.inProgress));
+        transitions.add(new Transition(this.waitingForAnswer, this.joining));
+        transitions.add(new Transition(this.waitingForAnswer, this.canceling));
+        transitions.add(new Transition(this.waitingForAnswer, this.completed));
+        transitions.add(new Transition(this.waitingForAnswer, this.stopping));
         transitions.add(new Transition(this.dialing, this.canceling));
         transitions.add(new Transition(this.dialing, this.stopping));
         transitions.add(new Transition(this.dialing, this.failingBusy));
@@ -330,7 +361,13 @@ public final class Call extends UntypedActor {
         this.liveCallModification = false;
         this.recording = false;
         this.configuration = configuration;
-        this.disableSdpPatchingOnUpdatingMediaSession = this.configuration.subset("runtime-settings").getBoolean("disable-sdp-patching-on-updating-mediasession", false);
+        final Configuration runtime = this.configuration.subset("runtime-settings");
+        this.disableSdpPatchingOnUpdatingMediaSession = runtime.getBoolean("disable-sdp-patching-on-updating-mediasession", false);
+        this.enable200OkDelay = runtime.getBoolean("enable-200-ok-delay",false);
+        if(!runtime.subset("ims-authentication").isEmpty()){
+            final Configuration imsAuthentication = runtime.subset("ims-authentication");
+            this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
+        }
     }
 
     private boolean is(State state) {
@@ -346,10 +383,22 @@ public final class Call extends UntypedActor {
     }
 
     private CallResponse<CallInfo> info() {
-        final String from = this.from.getUser();
-        final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime);
-        return new CallResponse<CallInfo>(info);
+        try {
+            final String from = this.from.getUser();
+            String to = null;
+            if (this.to.isSipURI()) {
+                to = ((SipURI) this.to).getUser();
+            } else {
+                to = ((TelURL) this.to).getPhoneNumber();
+            }
+            final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime);
+            return new CallResponse<CallInfo>(info);
+        } catch (Exception e) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Problem during preparing call info, exception {}",e);
+            }
+        }
+        return null;
     }
 
     private void forwarding(final Object message) {
@@ -492,6 +541,10 @@ public final class Call extends UntypedActor {
             onUnmute((Unmute) message, self, sender);
         } else if (ConferenceResponse.class.equals(klass)) {
             onConferenceResponse((ConferenceResponse) message);
+        } else if (BridgeStateChanged.class.equals(klass)) {
+            onBridgeStateChanged((BridgeStateChanged) message, self, sender);
+        } else if (CallHoldStateChange.class.equals(klass)) {
+            onCallHoldStateChange((CallHoldStateChange)message, sender);
         }
     }
 
@@ -501,6 +554,25 @@ public final class Call extends UntypedActor {
         if (logger.isInfoEnabled()) {
             String infoMsg = String.format("Conference response, name %s, state %s, participants %d", ci.name(), ci.state(), ci.globalParticipants());
             logger.info(infoMsg);
+        }
+    }
+
+    private void onCallHoldStateChange(CallHoldStateChange message, ActorRef sender) throws IOException{
+        if (logger.isInfoEnabled()) {
+            logger.info("CallHoldStateChange received, state: " + message.state() + " isOnHold " + isOnHold);
+        }
+        if(is(inProgress)){
+            if (!isOnHold && CallHoldStateChange.State.ONHOLD.equals(message.state())) {
+                final SipServletRequest messageRequest = invite.getSession().createRequest("MESSAGE");
+                messageRequest.setContent(CALL_ON_HOLD_ACTION, "text/plain");
+                messageRequest.send();
+                isOnHold = true;
+            } else if (isOnHold && CallHoldStateChange.State.OFFHOLD.equals(message.state())) {
+                final SipServletRequest messageRequest = invite.getSession().createRequest("MESSAGE");
+                messageRequest.setContent(CALL_OFF_HOLD_ACTION, "text/plain");
+                messageRequest.send();
+                isOnHold = false;
+            }
         }
     }
 
@@ -578,6 +650,9 @@ public final class Call extends UntypedActor {
             parentCallSid = request.getParentCallSid();
             recordsDao = request.getDaoManager().getCallDetailRecordsDao();
             isFromApi = request.isFromApi();
+            outboundToIms = request.isOutboundToIms();
+            imsProxyAddress = request.getImsProxyAddress();
+            imsProxyPort = request.getImsProxyPort();
             String toHeaderString = to.toString();
             if (toHeaderString.indexOf('?') != -1) {
                 // custom headers parsing for SIP Out
@@ -613,7 +688,14 @@ public final class Call extends UntypedActor {
                     builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
                     builder.setDateCreated(created);
                     builder.setAccountSid(accountId);
-                    builder.setTo(to.getUser());
+                    String toUser = null;
+                    if(to.isSipURI()){
+                        toUser =  ((SipURI)to).getUser();
+                    }
+                    else{
+                        toUser =  ((TelURL)to).getPhoneNumber();
+                    }
+                    builder.setTo(toUser);
                     builder.setCallerName(name);
                     builder.setStartTime(new DateTime());
                     String fromString = (from.getUser() != null ? from.getUser() : "CALLS REST API");
@@ -657,28 +739,47 @@ public final class Call extends UntypedActor {
             mediaSessionInfo = response.getMediaSession();
 
             // Create a SIP invite to initiate a new session.
-            final StringBuilder buffer = new StringBuilder();
-            buffer.append(to.getHost());
-            if (to.getPort() > -1) {
-                buffer.append(":").append(to.getPort());
+            final SipURI uri;
+            if (!outboundToIms) {
+                final StringBuilder buffer = new StringBuilder();
+                buffer.append(((SipURI)to).getHost());
+                if (((SipURI)to).getPort() > -1) {
+                    buffer.append(":").append(((SipURI)to).getPort());
+                }
+                String transport = ((SipURI)to).getTransportParam();
+                if (transport != null) {
+                    buffer.append(";transport=").append(((SipURI)to).getTransportParam());
+                }
+                uri = factory.createSipURI(null, buffer.toString());
+            } else {
+                uri = factory.createSipURI(null, imsProxyAddress);
+                uri.setPort(imsProxyPort);
+                uri.setLrParam(true);
             }
-            String transport = to.getTransportParam();
-            if (transport != null) {
-                buffer.append(";transport=").append(to.getTransportParam());
-            }
-            final SipURI uri = factory.createSipURI(null, buffer.toString());
             final SipApplicationSession application = factory.createApplicationSession();
             application.setAttribute(Call.class.getName(), self);
+            String callId = null;
+            String userAgent = null;
+            if(outboundToIms && !configuration.subset("runtime-settings").subset("ims-authentication").isEmpty()){
+                final Configuration imsAuthentication = configuration.subset("runtime-settings").subset("ims-authentication");
+                final String callIdPrefix = imsAuthentication.getString("call-id-prefix");
+                userAgent = imsAuthentication.getString("user-agent");
+                callId = callIdPrefix + UUID.randomUUID().toString();
+            }
             if (name != null && !name.isEmpty()) {
                 // Create the from address using the inital user displayed name
                 // Example: From: "Alice" <sip:userpart@host:port>
                 final Address fromAddress = factory.createAddress(from, name);
                 final Address toAddress = factory.createAddress(to);
-                invite = factory.createRequest(application, "INVITE", fromAddress, toAddress);
+                invite = ((SipFactoryExt)factory).createRequestWithCallID(application, "INVITE", fromAddress, toAddress, callId);
             } else {
-                invite = factory.createRequest(application, "INVITE", from, to);
+                invite = ((SipFactoryExt)factory).createRequestWithCallID(application, "INVITE", from, to, callId);
             }
             invite.pushRoute(uri);
+
+            if(userAgent!=null){
+                invite.setHeader("User-Agent", userAgent);
+            }
 
             if (headers != null) {
                 // adding custom headers for SIP Out
@@ -733,7 +834,7 @@ public final class Call extends UntypedActor {
             if (message instanceof SipServletRequest) {
                 invite = (SipServletRequest) message;
                 from = (SipURI) invite.getFrom().getURI();
-                to = (SipURI) invite.getTo().getURI();
+                to = invite.getTo().getURI();
                 timeout = -1;
                 direction = INBOUND;
                 try {
@@ -913,7 +1014,7 @@ public final class Call extends UntypedActor {
             // invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.BUSY;
-            final CallStateChanged event = new CallStateChanged(external);
+            final CallStateChanged event = new CallStateChanged(external, lastResponse.getStatus());
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
@@ -950,7 +1051,7 @@ public final class Call extends UntypedActor {
 
             // Notify the observers.
             external = CallStateChanged.State.NOT_FOUND;
-            final CallStateChanged event = new CallStateChanged(external);
+            final CallStateChanged event = new CallStateChanged(external, SipServletResponse.SC_NOT_FOUND);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
@@ -978,7 +1079,7 @@ public final class Call extends UntypedActor {
             // invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.NO_ANSWER;
-            final CallStateChanged event = new CallStateChanged(external);
+            final CallStateChanged event = new CallStateChanged(external, SipServletResponse.SC_REQUEST_TIMEOUT);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
@@ -1008,10 +1109,10 @@ public final class Call extends UntypedActor {
                         resp.addHeader("Reason", reason);
                 } else {
                     // https://github.com/RestComm/Restcomm-Connect/issues/1663
-                    // We use 503 only if there is a problem to reach RMS as LB can be configured to take out
-                    // nodes that send back 503. This is meant to protect the cluster from nodes where the RMS
+                    // We use 569 only if there is a problem to reach RMS as LB can be configured to take out
+                    // nodes that send back 569. This is meant to protect the cluster from nodes where the RMS
                     // is in bad state and not responding anymore
-                    resp = invite.createResponse(503, "Problem to setup services");
+                    resp = invite.createResponse(MEDIA_SERVER_FAILURE_RESPONSE_CODE, "Problem to setup services");
                 }
                 addCustomHeaders(resp);
                 resp.send();
@@ -1022,7 +1123,12 @@ public final class Call extends UntypedActor {
 
             // Notify the observers.
             external = CallStateChanged.State.FAILED;
-            final CallStateChanged event = new CallStateChanged(external);
+            CallStateChanged event = null;
+            if (lastResponse != null) {
+                event = new CallStateChanged(external, lastResponse.getStatus());
+            } else {
+                event = new CallStateChanged(external);
+            }
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
@@ -1238,6 +1344,25 @@ public final class Call extends UntypedActor {
         }
     }
 
+    private final class WaitingForAnswer extends AbstractAction {
+
+        public WaitingForAnswer(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            // Notify the observers.
+            if (external != null && !external.equals(CallStateChanged.State.WAIT_FOR_ANSWER)) {
+                external = CallStateChanged.State.WAIT_FOR_ANSWER;
+                final CallStateChanged event = new CallStateChanged(external);
+                for (final ActorRef observer : observers) {
+                    observer.tell(event, source);
+                }
+            }
+        }
+    }
+
     private final class InProgress extends AbstractAction {
 
         public InProgress(final ActorRef source) {
@@ -1257,7 +1382,14 @@ public final class Call extends UntypedActor {
                 // Record call data
                 if (outgoingCallRecord != null && isOutbound() && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
                     outgoingCallRecord = outgoingCallRecord.setStatus(external.toString());
-                    outgoingCallRecord = outgoingCallRecord.setAnsweredBy(to.getUser());
+                    String toUser = null;
+                    if(to.isSipURI()){
+                        toUser =  ((SipURI)to).getUser();
+                    }
+                    else{
+                        toUser =  ((TelURL)to).getPhoneNumber();
+                    }
+                    outgoingCallRecord = outgoingCallRecord.setAnsweredBy(toUser);
 
                     if (conferencing) {
                         outgoingCallRecord = outgoingCallRecord.setConferenceSid(conferenceSid);
@@ -1335,7 +1467,10 @@ public final class Call extends UntypedActor {
                 // Notify the observers.
                 external = CallStateChanged.State.COMPLETED;
             }
-            final CallStateChanged event = new CallStateChanged(external);
+            CallStateChanged event = new CallStateChanged(external);
+            if (external.equals(CallStateChanged.State.CANCELED)) {
+                event = new CallStateChanged(external);
+            }
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
@@ -1390,7 +1525,7 @@ public final class Call extends UntypedActor {
     }
 
     private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) {
-        if (is(inProgress)) {
+        if (is(inProgress) || is(waitingForAnswer)) {
             // Forward to media server controller
             this.msController.tell(message, sender);
             if (conferencing && message.isLiveCallModification()) {
@@ -1475,6 +1610,7 @@ public final class Call extends UntypedActor {
 
     private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
         inboundCallSid = message.callSid();
+        inboundConfirmCall = message.confirmCall();
         if (is(ringing) && !invite.getSession().getState().equals(SipSession.State.TERMINATED)) {
                 fsm.transition(message, initializing);
         } else {
@@ -1560,11 +1696,24 @@ public final class Call extends UntypedActor {
 
                 final UpdateMediaSession update = new UpdateMediaSession(answer);
                 msController.tell(update, self());
+
+                if(isCallOnHoldSdp(answer)){
+                    final CallHoldStateChange.State onHold = CallHoldStateChange.State.ONHOLD;
+                    for (final ActorRef observer : this.observers) {
+                        observer.tell(new CallHoldStateChange(onHold), self());
+                    }
+                }
+                else if(isCallOffHoldSdp(answer)){
+                    final CallHoldStateChange.State offHold = CallHoldStateChange.State.OFFHOLD;
+                    for (final ActorRef observer : this.observers) {
+                        observer.tell(new CallHoldStateChange(offHold), self());
+                    }
+                }
             }
         } else if ("CANCEL".equalsIgnoreCase(method)) {
             if (is(initializing)) {
                 fsm.transition(message, canceling);
-            } else if (is(ringing) && isInbound()) {
+            } else if ((is(ringing) || is(waitingForAnswer)) && isInbound()) {
                 fsm.transition(message, canceling);
             }
             // XXX can receive SIP cancel any other time?
@@ -1604,7 +1753,7 @@ public final class Call extends UntypedActor {
         } else if ("INFO".equalsIgnoreCase(method)) {
             processInfo(message);
         } else if ("ACK".equalsIgnoreCase(method)) {
-            if (isInbound() && is(initializing)) {
+            if (isInbound() && (is(initializing) || is(waitingForAnswer))) {
                 if(logger.isInfoEnabled()) {
                     logger.info("ACK received moving state to inProgress");
                 }
@@ -1651,7 +1800,8 @@ public final class Call extends UntypedActor {
 //                } else {
 //                    fsm.transition(message, failingBusy);
 //                }
-                fsm.transition(message, failingBusy);
+                if (!is(failingNoAnswer))
+                    fsm.transition(message, failingBusy);
                 break;
             }
             case SipServletResponse.SC_UNAUTHORIZED:
@@ -1675,6 +1825,12 @@ public final class Call extends UntypedActor {
                     this.invite = challengeRequest;
                     // https://github.com/Mobicents/RestComm/issues/147 Make sure we send the SDP again
                     this.invite.setContent(message.getRequest().getContent(), "application/sdp");
+                    if (outboundToIms) {
+                        final SipURI uri = factory.createSipURI(null, imsProxyAddress);
+                        uri.setPort(imsProxyPort);
+                        uri.setLrParam(true);
+                        challengeRequest.pushRoute(uri);
+                    }
                     challengeRequest.send();
                 }
                 break;
@@ -1748,7 +1904,7 @@ public final class Call extends UntypedActor {
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
         if(logger.isDebugEnabled()) {
-            logger.debug("Got Hangup for Call, from: "+from+" to: "+to+" state: "+fsm.state()+" conferencing: "+conferencing +" conference: "+conference);
+            logger.debug("Got Hangup: "+message+" for Call, from: "+from+" to: "+to+" state: "+fsm.state()+" conferencing: "+conferencing +" conference: "+conference);
         }
 
         // Stop recording if necessary
@@ -1760,7 +1916,7 @@ public final class Call extends UntypedActor {
             msController.tell(new Stop(true), self);
         }
 
-        if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress) || is(completed)) {
+        if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress) || is(completed) || is(waitingForAnswer)) {
             if (conferencing) {
                 // Tell conference to remove the call from participants list
                 // before moving to a stopping state
@@ -1791,7 +1947,8 @@ public final class Call extends UntypedActor {
             }
         }
         if (sessionState == SipSession.State.INITIAL.name() || (sessionState == SipSession.State.EARLY.name() && isInbound())) {
-            final SipServletResponse resp = invite.createResponse(Response.SERVER_INTERNAL_ERROR);
+            int sipResponse = (enable200OkDelay && hangup.getSipResponse() != null) ? hangup.getSipResponse() : Response.SERVER_INTERNAL_ERROR;
+            final SipServletResponse resp = invite.createResponse(sipResponse);
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
                 resp.addHeader("Reason",hangup.getMessage());
             }
@@ -1935,6 +2092,10 @@ public final class Call extends UntypedActor {
 
     private void onMediaServerControllerStateChanged(MediaServerControllerStateChanged message, ActorRef self, ActorRef sender)
             throws Exception {
+        if(logger.isInfoEnabled()) {
+            logger.info("onMediaServerControllerStateChanged " + message.getState()
+                 + " inboundConfirmCall " + inboundConfirmCall);
+       }
         switch (message.getState()) {
             case PENDING:
                 if (is(initializing)) {
@@ -1945,26 +2106,15 @@ public final class Call extends UntypedActor {
             case ACTIVE:
                 if (is(initializing) || is(updatingMediaSession)) {
                     SipSession.State sessionState = invite.getSession().getState();
-                    boolean waitForAck = false;
                     if (!(SipSession.State.CONFIRMED.equals(sessionState) || SipSession.State.TERMINATED.equals(sessionState))) {
+                        // Issue #1649:
                         mediaSessionInfo = message.getMediaSession();
-                        final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
-                        final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
-                        String answer = null;
-                        if (mediaSessionInfo.usesNat()) {
-                            final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
-                            answer = SdpUtils.patch("application/sdp", sdp, externalIp);
-                        } else {
-                            answer = mediaSessionInfo.getLocalSdp().toString();
+                        if(inboundConfirmCall){
+                            sendInviteOk();
                         }
-                        // Issue #215:
-                        // https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
-                        answer = SdpUtils.endWithNewLine(answer);
-                        okay.setContent(answer, "application/sdp");
-//                        okay.addHeader("X-RestComm-CallSid",id.toString());
-                        addCustomHeaders(okay);
-                        okay.send();
-                        waitForAck = true;
+                        else{
+                            fsm.transition(message, waitingForAnswer);
+                        }
                     } else if (SipSession.State.CONFIRMED.equals(sessionState) && is(inProgress)) {
                         // We have an ongoing call and Restcomm executes new RCML app on that
                         // If the sipSession state is Confirmed, then update SDP with the new SDP from MMS
@@ -1991,11 +2141,13 @@ public final class Call extends UntypedActor {
                     // Make sure the SIP session doesn't end pre-maturely.
                     invite.getApplicationSession().setExpires(0);
 
-                    // Activate call
-                    if (!waitForAck) {
+                    if(isInbound()){
+                        if(logger.isInfoEnabled()) {
+                            logger.info("current state: "+fsm.state()+" , will wait for OK to move to inProgress");
+                        }
+                    }
+                    else{
                         fsm.transition(message, inProgress);
-                    } else  if(logger.isInfoEnabled()) {
-                        logger.info("current state: "+fsm.state()+" , will wait for ACK to move to inProgress");
                     }
 
                 } else if(is(inProgress) && inDialogRequest != null) {
@@ -2046,7 +2198,7 @@ public final class Call extends UntypedActor {
     }
 
     private void onJoinBridge(JoinBridge message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(inProgress)) {
+        if (is(inProgress) || is(waitingForAnswer)) {
             this.bridge = sender;
             this.fsm.transition(message, joining);
         }
@@ -2157,6 +2309,68 @@ public final class Call extends UntypedActor {
         }
     }
 
+    private void onBridgeStateChanged(BridgeStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(inProgress) && isInbound() && enable200OkDelay) {
+            switch (message.getState()) {
+                case BRIDGED:
+                    sendInviteOk();
+                    break;
+                case FAILED:
+                    fsm.transition(message, stopping);
+                default:
+                    break;
+            }
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Received BridgeStateChanged for Call: "+self.path()+", but state is :"+fsm.state().toString());
+            }
+        }
+    }
+
+    private void sendInviteOk() throws Exception{
+        if (logger.isInfoEnabled()) {
+            logger.info("sending initial invite ok,  initialInviteOkSent:"+ initialInviteOkSent);
+        }
+        if(!initialInviteOkSent){
+            final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
+            final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
+            String answer = null;
+            if (mediaSessionInfo.usesNat()) {
+                final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
+                answer = SdpUtils.patch("application/sdp", sdp, externalIp);
+            } else {
+                answer = mediaSessionInfo.getLocalSdp().toString();
+            }
+            // Issue #215:
+            // https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
+            answer = SdpUtils.endWithNewLine(answer);
+            okay.setContent(answer, "application/sdp");
+            addCustomHeaders(okay);
+            okay.send();
+            initialInviteOkSent = true;
+        }
+    }
+
+    private boolean isCallOnHoldSdp(String answer){
+        if(answer.contains("a=inactive")){
+            return true;
+        }
+        if(answer.contains("a=sendonly")){
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isCallOffHoldSdp(String answer){
+        if(answer.contains("a=sendrecv")){
+            return true;
+        }
+        if(!answer.contains("a=inactive")){
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public void postStop() {
         try {
@@ -2169,6 +2383,10 @@ public final class Call extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("Exception during Call postStop while trying to remove observers: "+exception);
             }
+        }
+
+        if(actAsImsUa && outgoingCallRecord!=null){
+            recordsDao.removeCallDetailRecord(outgoingCallRecord.getSid());
         }
         super.postStop();
     }

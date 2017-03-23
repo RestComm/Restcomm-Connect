@@ -20,6 +20,7 @@
 package org.restcomm.connect.sms;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -32,6 +33,7 @@ import javax.servlet.sip.SipServletResponse;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
+import org.restcomm.connect.commons.faulttolerance.RestcommSupervisor;
 import org.restcomm.connect.dao.DaoManager;
 
 import akka.actor.ActorRef;
@@ -41,6 +43,10 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import org.restcomm.connect.sms.smpp.SmppMessageHandler;
 import org.restcomm.connect.sms.smpp.SmppService;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
+
+import static akka.pattern.Patterns.ask;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -51,6 +57,7 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
     private static Logger logger = Logger.getLogger(SmsServiceProxy.class);
 
     private ActorSystem system;
+    private ActorRef supervisor;
     private ActorRef service;
     private ActorRef smppService;
     private ActorRef smppMessageHandler;
@@ -72,37 +79,55 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
 
 
     private ActorRef service(final Configuration configuration, final SipFactory factory, final DaoManager storage) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
-                return new SmsService(system, configuration, factory, storage, context);
+                return new SmsService(supervisor, configuration, factory, storage, context);
             }
-        }));
+        });
+        ActorRef service = null;
+        try {
+            service = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return service;
     }
 
     private ActorRef smppService(final Configuration configuration, final SipFactory factory, final DaoManager storage,
                                  final ServletContext context, final ActorRef smppMessageHandler) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
                 return new SmppService(system, configuration, factory, storage, context, smppMessageHandler);
             }
-        }));
+        });
+        ActorRef smppService = null;
+        try {
+            smppService = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return smppService;
     }
 
     private ActorRef smppMessageHandler () {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
                 return new SmppMessageHandler(context);
             }
-        }));
+        });
+        ActorRef smppMessageHandler = null;
+        try {
+            smppMessageHandler = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return smppMessageHandler;
     }
 
     @Override
@@ -113,6 +138,7 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
             Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
             final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
             system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+            supervisor = (ActorRef) context.getAttribute(RestcommSupervisor.class.getName());
             service = service(configuration, factory, storage);
             context.setAttribute(SmsService.class.getName(), service);
             if (configuration.subset("smpp").getString("[@activateSmppConnection]", "false").equalsIgnoreCase("true")) {

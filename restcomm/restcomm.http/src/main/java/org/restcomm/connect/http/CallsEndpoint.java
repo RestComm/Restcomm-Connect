@@ -19,21 +19,40 @@
  */
 package org.restcomm.connect.http;
 
-import akka.actor.ActorRef;
-import akka.util.Timeout;
+import static akka.pattern.Patterns.ask;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.thoughtworks.xstream.XStream;
+import java.net.URI;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.SipServletResponse;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
 import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.amazonS3.RecordingSecurityLevel;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.http.converter.CallDetailRecordConverter;
-import org.restcomm.connect.http.converter.RecordingListConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -45,9 +64,11 @@ import org.restcomm.connect.dao.entities.CallDetailRecordList;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.dao.entities.RecordingList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.http.converter.CallDetailRecordConverter;
 import org.restcomm.connect.http.converter.CallDetailRecordListConverter;
 import org.restcomm.connect.http.converter.RecordingConverter;
+import org.restcomm.connect.http.converter.RecordingListConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CallResponse;
@@ -57,36 +78,19 @@ import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.UpdateCallScript;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.thoughtworks.xstream.XStream;
+
+import akka.actor.ActorRef;
+import akka.util.Timeout;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import java.net.URI;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
 
 //import org.joda.time.DateTime;
 
@@ -108,7 +112,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
     protected AccountsDao accountsDao;
     protected RecordingsDao recordingsDao;
     protected String instanceId;
-
+    protected RecordingSecurityLevel securityLevel = RecordingSecurityLevel.SECURE;
     protected boolean normalizePhoneNumbers;
 
     public CallsEndpoint() {
@@ -118,6 +122,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
     @PostConstruct
     public void init() {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+        Configuration amazonS3Configuration = configuration.subset("amazon-s3");
         configuration = configuration.subset("runtime-settings");
         callManager = (ActorRef) context.getAttribute("org.restcomm.connect.telephony.CallManager");
         daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
@@ -144,6 +149,13 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
 
         normalizePhoneNumbers = configuration.getBoolean("normalize-numbers-for-outbound-calls");
+        if(!amazonS3Configuration.isEmpty()) { // Do not fail with NPE is amazonS3Configuration is not present for older install
+            boolean amazonS3Enabled = amazonS3Configuration.getBoolean("enabled");
+            if (amazonS3Enabled) {
+                securityLevel = RecordingSecurityLevel.valueOf(amazonS3Configuration.getString("security-level", "secure").toUpperCase());
+                recordingConverter.setSecurityLevel(securityLevel);
+            }
+        }
     }
 
     protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
@@ -195,6 +207,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         String endTime = info.getQueryParameters().getFirst("EndTime");
         String parentCallSid = info.getQueryParameters().getFirst("ParentCallSid");
         String conferenceSid = info.getQueryParameters().getFirst("ConferenceSid");
+        String reverse = info.getQueryParameters().getFirst("Reverse");
 
         if (pageSize == null) {
             pageSize = "50";
@@ -235,6 +248,21 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 
         final int total = dao.getTotalCallDetailRecords(filterForTotal);
 
+        if (reverse != null) {
+            if (reverse.equalsIgnoreCase("true")){
+                if (total > Integer.parseInt(pageSize)){
+                    if (total > Integer.parseInt(pageSize)*(Integer.parseInt(page) + 1)){
+                        offset = total - Integer.parseInt(pageSize)*(Integer.parseInt(page) + 1);
+                        limit = Integer.parseInt(pageSize);
+                    }
+                    else{
+                        offset = 0;
+                        limit = total - Integer.parseInt(pageSize)*Integer.parseInt(page);
+                    }
+                }
+            }
+        }
+
         if (Integer.parseInt(page) > (total / limit)) {
             return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
         }
@@ -257,7 +285,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         listConverter.setCount(total);
         listConverter.setPage(Integer.parseInt(page));
         listConverter.setPageSize(Integer.parseInt(pageSize));
-        listConverter.setPathUri(info.getRequestUri().getPath());
+        listConverter.setPathUri("/"+getApiVersion(null)+"/"+info.getPath());
 
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new CallDetailRecordList(cdrs));
@@ -471,7 +499,13 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
                     if (call != null) {
                         call.tell(new Hangup(), null);
                     }
-                } else {
+                } else if (callInfo.state().name().equalsIgnoreCase("wait_for_answer")){
+                    // We can cancel Wait For Answer calls
+                    if (call != null) {
+                        call.tell(new Hangup(SipServletResponse.SC_REQUEST_TERMINATED), null);
+                    }
+                }
+                else{
                     // Do Nothing. We can only cancel Queued or Ringing calls
                 }
             }
@@ -479,7 +513,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
             if (status.equalsIgnoreCase("completed")) {
                 // Specifying "completed" will attempt to hang up a call even if it's already in progress.
                 if (call != null) {
-                    call.tell(new Hangup(), null);
+                    call.tell(new Hangup(SipServletResponse.SC_REQUEST_TERMINATED), null);
                 }
             }
         }

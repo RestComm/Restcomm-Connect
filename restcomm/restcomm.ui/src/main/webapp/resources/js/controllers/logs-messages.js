@@ -7,6 +7,12 @@ rcMod.controller('LogsMessagesCtrl', function ($scope, $resource, $timeout, $uib
   $scope.Math = window.Math;
 
   $scope.sid = SessionService.get("sid");
+  
+  // default search values
+  $scope.search = {
+    local_only: true,
+    sub_accounts: false
+  }
 
   // pagination support ----------------------------------------------------------------------------------------------
 
@@ -18,7 +24,12 @@ rcMod.controller('LogsMessagesCtrl', function ($scope, $resource, $timeout, $uib
 
   $scope.setEntryLimit = function(limit) {
     $scope.entryLimit = limit;
-    $scope.noOfPages = Math.ceil($scope.filtered.length / $scope.entryLimit);
+    $scope.currentPage = 1;
+    $scope.getMessagesList($scope.currentPage-1);
+  };
+
+  $scope.pageChanged = function() {
+    $scope.getMessagesList($scope.currentPage-1);
   };
 
 /*
@@ -47,12 +58,47 @@ rcMod.controller('LogsMessagesCtrl', function ($scope, $resource, $timeout, $uib
       }
     });
   };
+  
+  $scope.getMessagesList = function(page) {
+    var params = $scope.search ? createSearchParams($scope.search) : {LocalOnly: true};
+    RCommLogsMessages.search($.extend({accountSid: $scope.sid, Page: page, PageSize: $scope.entryLimit}, params), function(data) {
+      $scope.messagesLogsList = data.messages;
+      $scope.totalMessage = data.total;
+      $scope.noOfPages = data.num_pages;
+    });
+  }
+  
+  var createSearchParams = function(search) {
+    var params = {};
 
-  // initialize with a query
-  $scope.messagesLogsList = RCommLogsMessages.query({accountSid: $scope.sid}, function() {
-    $scope.noOfPages = Math.ceil($scope.messagesLogsList.length / $scope.entryLimit);
-  });
+    // Mandatory fields
+    if(search.start_time) {
+      params["StartTime"] = search.start_time;
+    }
+    if(search.end_time) {
+      params["EndTime"] = search.end_time;
+    }
+    if(search.from) {
+      params["From"] = search.from;
+    }
+    if(search.to) {
+      params["To"] = search.to;
+    }
+    if(search.body) {
+      params["Body"] = search.body;
+    }
 
+    return params;
+  }
+  
+//Activate click event for date buttons.
+ $scope.openDate = function(elemDate) {
+   if (elemDate === "startDate") {
+        angular.element('#startpicker').trigger('click');
+   }else{
+        angular.element('#endpicker').trigger('click');
+   }
+};
 
 $scope.sort = function(item) {
         if ($scope.predicate == 'date_created') {
@@ -70,7 +116,8 @@ $scope.sortBy = function(field) {
         }
     };
 
-
+// initialize with a query
+$scope.getMessagesList(0);
 });
 
 rcMod.controller('LogsMessagesDetailsCtrl', function($scope, $stateParams, $resource, $uibModalInstance, SessionService, RCommLogsMessages, messageSid) {

@@ -5,13 +5,13 @@
 <h3>{{ numberDetails.phone_number }}<small>_{{ numberDetails.friendly_name }}</small></h3>
 
 <h4 class="voice-sms-ussd">Voice</h4>
-<div class="row number-infos-border">
+<div class="row number-infos-border main-request-area">
     <div class="col-md-2">
         <h4 class="voice-video-ussd-request">Voice Request</h4>
     </div>
     <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="numberDetails.voice_application_sid" url-only-var="false" method-var="numberDetails.voice_method" url-var="numberDetails.voice_url" apps="localVoiceApps"></rc-endpoint-url>
 </div>
-<div class="row number-infos-border-expand" ng-show="showVoiceAdvanced">
+<div class="row number-infos-border-expand advanced-settings-area" ng-show="showVoiceAdvanced">
     <div class="col-md-2" style="padding-right: 0;">
         <h4 class="number-advanced-label">Voice Fallback URL</h4>
     </div>
@@ -32,6 +32,11 @@
             <option value="GET">GET</option>
         </select>
     </div>
+    <div class="col-md-2">
+        <h4 class="number-advanced-label">Refer URL</h4>
+    </div>
+    <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="numberDetails.refer_application_sid" url-only-var="false" method-var="numberDetails.refer_method" url-var="numberDetails.refer_url" apps="localVoiceApps"></rc-endpoint-url>
+
 </div>
 <div class="row">
     <div class="col-md-2 col-md-offset-10">
@@ -40,13 +45,13 @@
 </div>
 
 <h4 class="voice-sms-ussd">SMS</h4>
-<div class="row number-infos-border">
+<div class="row number-infos-border main-request-area">
     <div class="col-md-2">
-        <h4 class="voice-video-ussd-request">Voice Request</h4>
+        <h4 class="voice-video-ussd-request">SMS Request</h4>
     </div>
     <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="numberDetails.sms_application_sid" url-only-var="false" method-var="numberDetails.sms_method" url-var="numberDetails.sms_url" apps="localSmsApps"></rc-endpoint-url>
 </div>
-<div class="row number-infos-border-expand" ng-show="showSmsAdvanced">
+<div class="row number-infos-border-expand advanced-settings-area" ng-show="showSmsAdvanced">
     <div class="col-md-2" style="padding-right: 0;">
         <h4 class="number-advanced-label">SMS Fallback URL</h4>
     </div>
@@ -65,13 +70,13 @@
 </div>
 
 <h4 class="voice-sms-ussd">USSD</h4>
-<div class="row number-infos-border">
+<div class="row number-infos-border main-request-area">
     <div class="col-md-2">
         <h4 class="voice-video-ussd-request">USSD Request</h4>
     </div>
     <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="numberDetails.ussd_application_sid" url-only-var="false" method-var="numberDetails.ussd_method" url-var="numberDetails.ussd_url" apps="localUssdApps"></rc-endpoint-url>
 </div>
-<div class="row number-infos-border-expand" ng-show="showUssdAdvanced">
+<div class="row number-infos-border-expand advanced-setting-area" ng-show="showUssdAdvanced">
     <div class="col-md-2" style="padding-right: 0;">
         <h4 class="number-advanced-label">USSD Fallback URL</h4>
     </div>
@@ -88,7 +93,6 @@
         <a href="" class="number-advanced-toggle" ng-click="showUssdAdvanced = !showUssdAdvanced"><span ng-show="showUssdAdvanced">hide </span>advanced</a>
     </div>
 </div>
-
 
 <!--
 <div class="well well-sm">

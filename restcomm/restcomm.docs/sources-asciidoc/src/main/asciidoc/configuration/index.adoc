@@ -55,9 +55,10 @@ There is two different ways to install Restcomm Connect. Either through Docker o
 
 * <<Restcomm - How to Add G729 Codec to the Media Server.adoc#g729,How to Add G729 Codec to the Media Server>>
 
-=== Security 
+=== Security
 
 * <<Restcomm - Enable HTTPS secure connector on JBoss AS 7 or EAP 6.adoc#secure,Enable HTTPS secure connector on JBoss AS 7 or EAP 6>>
+* <<Restcomm - Enable password reset URL.adoc,Enable password reset URL on Dashboard login>>
 
 === SMS
 
@@ -68,6 +69,14 @@ There is two different ways to install Restcomm Connect. Either through Docker o
 * <<ha/Restcomm - Configuring Load-balancer.adoc#load-balancer,Configuring Load-balancer>>
 * <<ha/Restcomm - Using a Single Mysql Database for 2 Restcomm Servers.adoc#mysql,Using a Single Mysql Database for 2 Restcomm Connect Servers>>
 * <<ha/Restcomm - Single RVD Workspace for two Restcomm Instances.adoc#rvd,Single RVD Workspace for two Restcomm Instances>>
+
+=== IMS related features
+
+* <<ims/Restcomm_IMS_GW.adoc#intro,Restcomm as a WebRTC GW to IMS >>
+
+=== Amazon S3 Integration
+
+* <<s3/Restcomm_S3.adoc#intro,Restcomm Amazon S3 Integration>>
 
 == Contributor Resources
 

@@ -19,6 +19,63 @@
  */
 package org.restcomm.connect.interpreter;
 
+import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import org.apache.commons.configuration.Configuration;
+import org.apache.http.Header;
+import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.message.BasicNameValuePair;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.fsm.Action;
+import org.restcomm.connect.commons.fsm.FiniteStateMachine;
+import org.restcomm.connect.commons.fsm.State;
+import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.SmsMessagesDao;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.dao.entities.SmsMessage;
+import org.restcomm.connect.dao.entities.SmsMessage.Direction;
+import org.restcomm.connect.dao.entities.SmsMessage.Status;
+import org.restcomm.connect.email.EmailService;
+import org.restcomm.connect.email.api.EmailRequest;
+import org.restcomm.connect.email.api.EmailResponse;
+import org.restcomm.connect.email.api.Mail;
+import org.restcomm.connect.http.client.Downloader;
+import org.restcomm.connect.http.client.DownloaderResponse;
+import org.restcomm.connect.http.client.HttpRequestDescriptor;
+import org.restcomm.connect.http.client.HttpResponseDescriptor;
+import org.restcomm.connect.interpreter.rcml.Attribute;
+import org.restcomm.connect.interpreter.rcml.GetNextVerb;
+import org.restcomm.connect.interpreter.rcml.Parser;
+import org.restcomm.connect.interpreter.rcml.ParserFailed;
+import org.restcomm.connect.interpreter.rcml.Tag;
+import org.restcomm.connect.interpreter.rcml.Verbs;
+import org.restcomm.connect.sms.api.CreateSmsSession;
+import org.restcomm.connect.sms.api.DestroySmsSession;
+import org.restcomm.connect.sms.api.GetLastSmsRequest;
+import org.restcomm.connect.sms.api.SmsServiceResponse;
+import org.restcomm.connect.sms.api.SmsSessionAttribute;
+import org.restcomm.connect.sms.api.SmsSessionInfo;
+import org.restcomm.connect.sms.api.SmsSessionRequest;
+import org.restcomm.connect.sms.api.SmsSessionResponse;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -32,64 +89,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
-
-import org.apache.commons.configuration.Configuration;
-import org.apache.http.Header;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.message.BasicNameValuePair;
-import org.joda.time.DateTime;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.NotificationsDao;
-import org.restcomm.connect.dao.SmsMessagesDao;
-import org.restcomm.connect.email.EmailService;
-import org.restcomm.connect.email.api.EmailRequest;
-import org.restcomm.connect.email.api.EmailResponse;
-import org.restcomm.connect.email.api.Mail;
-import org.restcomm.connect.dao.entities.Notification;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.entities.SmsMessage;
-import org.restcomm.connect.dao.entities.SmsMessage.Direction;
-import org.restcomm.connect.dao.entities.SmsMessage.Status;
-import org.restcomm.connect.commons.fsm.Action;
-import org.restcomm.connect.commons.fsm.FiniteStateMachine;
-import org.restcomm.connect.commons.fsm.State;
-import org.restcomm.connect.commons.fsm.Transition;
-import org.restcomm.connect.http.client.Downloader;
-import org.restcomm.connect.http.client.DownloaderResponse;
-import org.restcomm.connect.http.client.HttpRequestDescriptor;
-import org.restcomm.connect.http.client.HttpResponseDescriptor;
-import org.restcomm.connect.interpreter.rcml.Attribute;
-import org.restcomm.connect.interpreter.rcml.GetNextVerb;
-import org.restcomm.connect.interpreter.rcml.Parser;
-import org.restcomm.connect.interpreter.rcml.ParserFailed;
-import org.restcomm.connect.interpreter.rcml.Tag;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.sms.api.CreateSmsSession;
-import org.restcomm.connect.sms.api.DestroySmsSession;
-import org.restcomm.connect.sms.api.GetLastSmsRequest;
-import org.restcomm.connect.sms.api.SmsServiceResponse;
-import org.restcomm.connect.sms.api.SmsSessionAttribute;
-import org.restcomm.connect.sms.api.SmsSessionInfo;
-import org.restcomm.connect.sms.api.SmsSessionRequest;
-import org.restcomm.connect.sms.api.SmsSessionResponse;
-
-import akka.actor.ActorRef;
-import akka.actor.Actor;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-import org.restcomm.connect.interpreter.rcml.Verbs;
+import static akka.pattern.Patterns.ask;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -100,6 +102,8 @@ public final class SmsInterpreter extends UntypedActor {
     static String EMAIL_SENDER;
     // Logger
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+
+    private final ActorRef supervisor;
     // States for the FSM.
     private final State uninitialized;
     private final State acquiringLastSmsRequest;
@@ -125,6 +129,8 @@ public final class SmsInterpreter extends UntypedActor {
     private final ActorRef downloader;
     // The storage engine.
     private final DaoManager storage;
+    //Email configuration
+    private final Configuration emailconfiguration;
     //Runtime configuration
     private final Configuration runtime;
     // User specific configuration.
@@ -147,11 +153,12 @@ public final class SmsInterpreter extends UntypedActor {
     private ConcurrentHashMap<String, String> customHttpHeaderMap = new ConcurrentHashMap<String, String>();
     private ConcurrentHashMap<String, String> customRequestHeaderMap;
 
-    public SmsInterpreter(final ActorRef service, final Configuration configuration, final DaoManager storage,
+    public SmsInterpreter(final ActorRef supervisor, final ActorRef service, final Configuration configuration, final DaoManager storage,
             final Sid accountId, final String version, final URI url, final String method, final URI fallbackUrl,
             final String fallbackMethod) {
         super();
         final ActorRef source = self();
+        this.supervisor = supervisor;
         uninitialized = new State("uninitialized", null, null);
         acquiringLastSmsRequest = new State("acquiring last sms event", new AcquiringLastSmsEvent(source), null);
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
@@ -210,6 +217,7 @@ public final class SmsInterpreter extends UntypedActor {
         this.service = service;
         this.downloader = downloader();
         this.storage = storage;
+        this.emailconfiguration = configuration.subset("smtp-service");
         this.runtime = configuration.subset("runtime-settings");
         this.configuration = configuration.subset("sms-aggregator");
         this.accountId = accountId;
@@ -223,27 +231,39 @@ public final class SmsInterpreter extends UntypedActor {
     }
 
     private ActorRef downloader() {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new Downloader();
             }
-        }));
+        });
+        ActorRef downloader = null;
+        try {
+            downloader = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return downloader;
     }
 
     ActorRef mailer(final Configuration configuration) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public Actor create() throws Exception {
                 return new EmailService(configuration);
             }
-        }));
+        });
+        ActorRef mailer = null;
+        try {
+            mailer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return mailer;
     }
 
     protected String format(final String number) {
@@ -432,15 +452,21 @@ public final class SmsInterpreter extends UntypedActor {
     }
 
     private ActorRef parser(final String xml) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new Parser(xml, self());
             }
-        }));
+        });
+        ActorRef parser = null;
+        try {
+            parser = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return parser;
     }
 
     private void response(final Object message) {
@@ -953,7 +979,7 @@ public final class SmsInterpreter extends UntypedActor {
             // Send the email.
             final Mail emailMsg = new Mail(from, to, subject, verb.text(),cc,bcc);
             if (mailerService == null){
-                mailerService = mailer(configuration.subset("smtp-service"));
+                mailerService = mailer(emailconfiguration);
             }
             mailerService.tell(new EmailRequest(emailMsg), self());
         }

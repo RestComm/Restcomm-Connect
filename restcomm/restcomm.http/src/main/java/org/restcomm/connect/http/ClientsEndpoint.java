@@ -25,7 +25,6 @@ import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -128,10 +127,8 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             if ( ! org.apache.commons.lang.StringUtils.isEmpty( data.getFirst("VoiceApplicationSid") ) )
                 builder.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
         }
-        String rootUri = configuration.getString("root-uri");
-        rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
-        buffer.append(rootUri).append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
+        buffer.append("/").append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
                 .append("/Clients/").append(sid.toString());
         builder.setUri(URI.create(buffer.toString()));
         return builder.build();
@@ -192,7 +189,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         secure(accountsDao.getAccount(accountSid), "RestComm:Create:Clients");
         try {
             validate(data);
-        } catch (final NullPointerException exception) {
+        } catch (final NullPointerException | IllegalArgumentException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
 
@@ -251,6 +248,10 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             throw new NullPointerException("Login can not be null.");
         } else if (!data.containsKey("Password")) {
             throw new NullPointerException("Password can not be null.");
+        }
+        // https://github.com/RestComm/Restcomm-Connect/issues/1979
+        if (data.getFirst("Login").contains("@")) {
+            throw new IllegalArgumentException("Login contains invalid character: @ "+data.getFirst("Login"));
         }
     }
 

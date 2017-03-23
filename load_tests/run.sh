@@ -4,22 +4,27 @@
 ## Authors    : George Vagenas, Henrique Rosa
 #
 
-if [ $# -lt 6 ]; then
-    echo "No proper arguments provided: (1: $1) (2: $2) (3: $3) (4: $4) (5: $5) (6: $6) (7: $7)"
+if [ $# -lt 8 ]; then
+    echo "No proper arguments provided: (1: $1) (2: $2) (3: $3) (4: $4) (5: $5) (6: $6) (7: $7) (8: $8)"
     echo "Usage instructions: "
-    echo './run.sh $RESTCOMM_ADDRESS $LOCAL_ADDRESS $SIMULTANEOUS_CALLS $MAXIMUM_CALLS $CALL_RATE $TEST_NAME'
-    echo "Example: ./run.sh 192.168.1.11 192.168.1.12 100 10000 30 helloplay"
+    echo './run.sh $RESTCOMM_ADDRESS $RESTCOMM_NETWORK $RESTCOMM_SUBNET $LOCAL_ADDRESS $SIMULTANEOUS_CALLS $MAXIMUM_CALLS $CALL_RATE $TEST_NAME'
+    echo "Example: ./run.sh 192.168.1.11 192.168.1.0 255.255.255.0 192.168.1.12 100 10000 30 helloplay"
     exit 1
 fi
 
-# echo "(1: $1) (2: $2) (3: $3) (4: $4) (5: $5) (6: $6)"
+echo "(1: $1) (2: $2) (3: $3) (4: $4) (5: $5) (6: $6)"
 
 export RESTCOMM_ADDRESS=$1
-export LOCAL_ADDRESS=$2
-export SIMULTANEOUS_CALLS=$3
-export MAXIMUM_CALLS=$4
-export CALL_RATE=$5
-export TEST_NAME=$6
+export RESTCOMM_NETWORK=$2
+export RESTCOMM_SUBNET=$3
+export LOCAL_ADDRESS=$4
+export SIMULTANEOUS_CALLS=$5
+export MAXIMUM_CALLS=$6
+export CALL_RATE=$7
+export TEST_NAME=$8
+
+export MS_CACHE_ENABLED=false
+export MS_CACHE_SIZE=100
 
 if [[ -z $VOICERSS ]] || [ "$VOICERSS" == ''  ]; then
   echo "VoiceRSS TTS Service key is not set! Will exit"
@@ -85,6 +90,7 @@ fi
 }
 
 startRestcomm(){
+  echo "About to start Restcomm using $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh"
   $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
   if [ "$COLLECT_JMAP" == "true"  ] || [ "$COLLECT_JMAP" == "TRUE"  ]; then
       sleep 30
@@ -154,6 +160,30 @@ case "$TEST_NAME" in
     sleep 15
     $CURRENT_FOLDER/tests/hello-play-one-minute/helloplay-one-minute.sh
     ;;
+"createcall")
+  echo "Testing Create Call REST API"
+  prepareRestcomm
+  #In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm
+  $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+  sleep 5
+  echo "Testing Create Call REST API"
+  cp -aR $CURRENT_FOLDER/resources/audio/demo-prompt-one-minute.wav $RESTCOMM_HOME/standalone/deployments/restcomm.war/audio/demo-prompt.wav
+  rm -rf $RESTCOMM_HOME/standalone/deployments/restcomm.war/cache/AC*
+  startRestcomm
+  echo $"\n********** Restcomm started at $RESTCOMM_HOME\n"
+  sleep 45
+  echo $'\nChange default administrator password\n'
+  curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf -d "Password=$RESTCOMM_NEW_PASSWORD"
+
+  #Next run the client script that will initiate callls to Restcomm
+  echo "About to run createcall script that using CURL will create requests. Password: $RESTCOMM_NEW_PASSWORD Restcom Address: $RESTCOMM_ADDRESS SIPP client: sip:1999@$LOCAL_ADDRESS Max calls: $MAXIMUM_CALLS CPS: $CALL_RATE "
+  screen -dmS 'createcall' $CURRENT_FOLDER/tests/createcall/createcall.sh $RESTCOMM_NEW_PASSWORD $RESTCOMM_ADDRESS $LOCAL_ADDRESS $MAXIMUM_CALLS $CALL_RATE
+
+  #First run the server script that is the client that will listen for Restcomm calls
+  echo "About to start createcall server part that will listen for SIP INVITE requests"
+  # screen -dmS 'createcall-server' $CURRENT_FOLDER/tests/createcall/createcall-server.sh
+  $CURRENT_FOLDER/tests/createcall/createcall-server.sh
+  ;;
 "dialclient")
   echo "Testing DialClient"
   prepareRestcomm
@@ -164,7 +194,7 @@ case "$TEST_NAME" in
   cp -aR $CURRENT_FOLDER/tests/dialclient/DialClientApp.xml $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/
   sed -i "s/SIPP_SERVER_IP_HERE/$LOCAL_ADDRESS/g" $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/DialClientApp.xml
   startRestcomm
-  echo $'\n********** Restcomm started\n'
+  echo $"\n********** Restcomm started at $RESTCOMM_HOME\n"
   sleep 45
   echo $'\nChange default administrator password\n'
   curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf -d "Password=$RESTCOMM_NEW_PASSWORD"
@@ -213,5 +243,5 @@ if [ "$COLLECT_LOGS" = "true" ]; then
 fi
 
 # Stop RestComm and Media Server
-#stopRestcomm
+stopRestcomm
 echo $'\n********** Restcomm stopped\n'

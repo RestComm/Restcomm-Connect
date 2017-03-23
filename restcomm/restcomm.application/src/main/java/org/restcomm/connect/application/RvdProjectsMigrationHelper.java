@@ -21,6 +21,39 @@
 
 package org.restcomm.connect.application;
 
+import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActorFactory;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.thoughtworks.xstream.XStream;
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.io.FileUtils;
+import org.apache.ibatis.exceptions.TooManyResultsException;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommSupervisor;
+import org.restcomm.connect.commons.util.StringUtils;
+import org.restcomm.connect.dao.AccountsDao;
+import org.restcomm.connect.dao.ApplicationsDao;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
+import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Application;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.email.EmailService;
+import org.restcomm.connect.email.api.EmailRequest;
+import org.restcomm.connect.email.api.Mail;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
+
+import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -34,42 +67,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.ServletContext;
-
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.io.FileUtils;
-import org.apache.ibatis.exceptions.TooManyResultsException;
-import org.joda.time.DateTime;
-import org.restcomm.connect.email.api.EmailRequest;
-import org.restcomm.connect.email.api.Mail;
-import org.restcomm.connect.dao.AccountsDao;
-import org.restcomm.connect.dao.ApplicationsDao;
-import org.restcomm.connect.dao.ClientsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
-import org.restcomm.connect.dao.NotificationsDao;
-import org.restcomm.connect.email.EmailService;
-import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Application;
-import org.restcomm.connect.dao.entities.Client;
-import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.dao.entities.Notification;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.util.StringUtils;
-
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActorFactory;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-import com.thoughtworks.xstream.XStream;
+import static akka.pattern.Patterns.ask;
 
 /**
  * This class was designed to be used with exclusivity by {@link RvdProjectsMigrator}, once that
@@ -102,8 +104,8 @@ public class RvdProjectsMigrationHelper {
     private final NotificationsDao notificationsDao;
     private List<IncomingPhoneNumber> dids;
     private List<Client> clients;
-    private ActorSystem system;
     private ActorRef emailService;
+    private ActorRef supervisor;
 
     public RvdProjectsMigrationHelper(ServletContext servletContext, Configuration configuration) throws Exception {
         defineWorkspacePath(servletContext);
@@ -114,7 +116,7 @@ public class RvdProjectsMigrationHelper {
         this.didsDao = storage.getIncomingPhoneNumbersDao();
         this.clientsDao = storage.getClientsDao();
         this.notificationsDao = storage.getNotificationsDao();
-        this.system = ActorSystem.create();
+        supervisor = (ActorRef) servletContext.getAttribute(RestcommSupervisor.class.getName());
     }
 
     private void defineWorkspacePath(ServletContext servletContext) throws Exception {
@@ -345,7 +347,9 @@ public class RvdProjectsMigrationHelper {
                                     did.getStatusCallback(), did.getStatusCallbackMethod(), did.getVoiceApplicationSid(), null,
                                     did.getSmsMethod(), did.getSmsFallbackUrl(), did.getSmsFallbackMethod(), smsApplicationSid,
                                     did.getUri(), did.getUssdUrl(), did.getUssdMethod(), did.getUssdFallbackUrl(),
-                                    did.getUssdFallbackMethod(), did.getUssdApplicationSid(), did.isVoiceCapable(),
+                                    did.getUssdFallbackMethod(), did.getUssdApplicationSid(),
+                                    did.getReferUrl(), did.getReferMethod(), did.getReferApplicationSid(),
+                                    did.isVoiceCapable(),
                                     did.isSmsCapable(), did.isMmsCapable(), did.isFaxCapable(), did.isPureSip());
                             didsDao.updateIncomingPhoneNumber(updateSmsDid);
                             dids.set(i, updateSmsDid);
@@ -366,6 +370,7 @@ public class RvdProjectsMigrationHelper {
                                     did.getSmsUrl(), did.getSmsMethod(), did.getSmsFallbackUrl(), did.getSmsFallbackMethod(),
                                     did.getSmsApplicationSid(), did.getUri(), null, did.getUssdMethod(),
                                     did.getUssdFallbackUrl(), did.getUssdFallbackMethod(), ussdApplicationSid,
+                                    did.getReferUrl(), did.getReferMethod(), did.getReferApplicationSid(),
                                     did.isVoiceCapable(), did.isSmsCapable(), did.isMmsCapable(), did.isFaxCapable(),
                                     did.isPureSip());
                             didsDao.updateIncomingPhoneNumber(updateUssdDid);
@@ -387,6 +392,7 @@ public class RvdProjectsMigrationHelper {
                                     did.getSmsUrl(), did.getSmsMethod(), did.getSmsFallbackUrl(), did.getSmsFallbackMethod(),
                                     did.getSmsApplicationSid(), did.getUri(), did.getUssdUrl(), did.getUssdMethod(),
                                     did.getUssdFallbackUrl(), did.getUssdFallbackMethod(), did.getUssdApplicationSid(),
+                                    did.getReferUrl(), did.getReferMethod(), did.getReferApplicationSid(),
                                     did.isVoiceCapable(), did.isSmsCapable(), did.isMmsCapable(), did.isFaxCapable(),
                                     did.isPureSip());
                             didsDao.updateIncomingPhoneNumber(updateVoiceDid);
@@ -551,14 +557,19 @@ public class RvdProjectsMigrationHelper {
     }
 
     private ActorRef emailService(final Configuration configuration) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public Actor create() throws Exception {
                 return new EmailService(configuration);
             }
-        }));
+        });
+        ActorRef mailer = null;
+        try {
+            mailer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {}
+        return mailer;
     }
 
     public boolean isEmbeddedMigration() {

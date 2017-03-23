@@ -26,6 +26,10 @@
 						<var>request.method</var>
 						<value>OPTIONS</value>
 					</equal>
+					<equal>
+						<var>request.method</var>
+						<value>REFER</value>
+					</equal>
 				</or>
 			</pattern>
 		</servlet-mapping>
@@ -128,4 +132,10 @@
 			org.restcomm.connect.telephony.proxy.ProxyManagerProxy
 		</listener-class>
 	</listener>
+
+	<context-param>
+		<param-name>org.restcomm.servlets.sip.OVERRIDE_SYSTEM_HEADER_MODIFICATION
+		</param-name>
+		<param-value>Modifiable</param-value>
+	</context-param>
 </sip-app>

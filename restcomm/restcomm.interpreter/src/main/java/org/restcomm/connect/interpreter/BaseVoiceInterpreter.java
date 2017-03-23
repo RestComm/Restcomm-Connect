@@ -121,6 +121,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import javax.servlet.sip.SipServletResponse;
+
 import static akka.pattern.Patterns.ask;
 
 /**
@@ -137,6 +139,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
     static String EMAIL_SENDER = "restcomm@restcomm.org";
+
+    protected final ActorRef supervisor;
 
     // States for the FSM.
     // ==========================
@@ -201,6 +205,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     CallInfo callInfo = null;
     // The call state.
     CallStateChanged.State callState = null;
+    // The last outbound call response.
+    Integer outboundCallResponse = null;
     // A call detail record.
     CallDetailRecord callRecord = null;
 
@@ -224,6 +230,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     String method;
     URI fallbackUrl;
     String fallbackMethod;
+    URI referUrl;
+    String referMethod;
+    String referTarget;
+    String transferor;
+    String transferee;
     URI statusCallback;
     String statusCallbackMethod;
     String emailAddress;
@@ -245,9 +256,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     final Set<Transition> transitions = new HashSet<Transition>();
 
-    public BaseVoiceInterpreter() {
+    public BaseVoiceInterpreter(final ActorRef supervisor) {
         super();
         final ActorRef source = self();
+        this.supervisor = supervisor;
         // 20 States in common
         uninitialized = new State("uninitialized", null, null);
         acquiringAsrInfo = new State("acquiring asr info", new AcquiringAsrInfo(source), null);
@@ -388,16 +400,30 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         return asrService;
     }
 
-    ActorRef asr(final Configuration configuration) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
+    private boolean checkAsrService() {
+        boolean AsrActive=false;
+        Configuration Asrconfiguration=configuration.subset("speech-recognizer");
+        if (Asrconfiguration.getString("api-key") != null && !Asrconfiguration.getString("api-key").isEmpty()){
+            AsrActive=true;
+        }
+        return AsrActive;
+    }
 
+    ActorRef asr(final Configuration configuration) {
+        final Props props = new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
             @Override
             public Actor create() throws Exception {
                 return new ISpeechAsr(configuration);
             }
-        }));
+        });
+        ActorRef asr = null;
+        try {
+            asr = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return asr;
     }
 
     @SuppressWarnings("unchecked")
@@ -408,7 +434,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             Transcription transcription = (Transcription) response.attributes().get("transcription");
             if (response.succeeded()) {
                 transcription = transcription.setStatus(Transcription.Status.COMPLETED);
-                transcription = transcription.setTranscriptionText(response.get());
+                if (response.get() != null ) {
+                    transcription = transcription.setTranscriptionText(response.get());
+                }
             } else {
                 transcription = transcription.setStatus(Transcription.Status.FAILED);
             }
@@ -437,15 +465,20 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     }
 
     ActorRef fax(final Configuration configuration) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public Actor create() throws Exception {
                 return new InterfaxService(configuration);
             }
-        }));
+        });
+        ActorRef fax = null;
+        try {
+            fax = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return fax;
     }
 
     //Callback using the Akka ask pattern (http://doc.akka.io/docs/akka/2.2.5/java/untyped-actors.html#Ask__Send-And-Receive-Future) will force VoiceInterpter to wait until
@@ -507,27 +540,38 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     }
 
     ActorRef cache(final String path, final String uri) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
                 return new DiskCacheFactory(configuration).getDiskCache(path, uri);
             }
-        }));
+        });
+        ActorRef cache = null;
+        try {
+            cache = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return cache;
     }
 
     ActorRef downloader() {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new Downloader();
             }
-        }));
+        });
+        ActorRef downloader = null;
+        try {
+            downloader = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return downloader;
     }
 
     String e164(final String number) {
@@ -552,15 +596,21 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     }
 
     ActorRef mailer(final Configuration configuration) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public Actor create() throws Exception {
                 return new EmailService(configuration);
             }
-        }));
+        });
+        ActorRef mailer = null;
+        try {
+            mailer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return mailer;
     }
 
     private Notification notification(final int log, final int error, final String message) {
@@ -617,15 +667,21 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     }
 
     ActorRef parser(final String xml) {
-        final UntypedActorContext context = getContext();
-            return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public UntypedActor create() throws IOException {
                     return new Parser(xml, self());
                 }
-            }));
+            });
+        ActorRef parser = null;
+        try {
+            parser = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return parser;
     }
 
     void postCleanup() {
@@ -784,15 +840,21 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     ActorRef tts(final Configuration ttsConf) {
         final String classpath = ttsConf.getString("[@class]");
 
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public Actor create() throws Exception {
                 return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(ttsConf);
             }
-        }));
+        });
+        ActorRef tts = null;
+        try {
+            tts = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return tts;
     }
 
     abstract class AbstractAction implements Action {
@@ -1232,8 +1294,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             } else if (message instanceof SmsServiceResponse) {
                 //Blocked SMS Session request
                 call.tell(new Hangup(((SmsServiceResponse)message).cause().getMessage()), self());
+            } else if (Tag.class.equals(klass) && Verbs.hangup.equals(verb.name())) {
+                Integer sipResponse = outboundCallResponse != null ? outboundCallResponse : SipServletResponse.SC_REQUEST_TERMINATED;
+                call.tell(new Hangup(sipResponse), source);
             } else {
-                call.tell(new Hangup(), source);
+                call.tell(new Hangup(outboundCallResponse), source);
             }
         }
     }
@@ -1631,11 +1696,13 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (attribute != null) {
                 finishOnKey = attribute.value();
                 if (finishOnKey != null && !finishOnKey.isEmpty()) {
-                    if (!PATTERN.matcher(finishOnKey).matches()) {
-                        final Notification notification = notification(WARNING_NOTIFICATION, 13613, finishOnKey
-                                + " is not a valid finishOnKey value");
-                        notifications.addNotification(notification);
-                        finishOnKey = "1234567890*#";
+                    if (!finishOnKey.equals("-1")) {
+                        if (!PATTERN.matcher(finishOnKey).matches()) {
+                            final Notification notification = notification(WARNING_NOTIFICATION, 13613, finishOnKey
+                                    + " is not a valid finishOnKey value");
+                            notifications.addNotification(notification);
+                            finishOnKey = "1234567890*#";
+                        }
                     }
                 } else {
                     finishOnKey = "1234567890*#";
@@ -1800,13 +1867,14 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     }
                 }
             }
-            if (transcribe) {
+            if (transcribe && checkAsrService()) {
                 final Sid sid = Sid.generate(Sid.Type.TRANSCRIPTION);
                 final Transcription.Builder otherBuilder = Transcription.builder();
                 otherBuilder.setSid(sid);
                 otherBuilder.setAccountSid(accountId);
                 otherBuilder.setStatus(Transcription.Status.IN_PROGRESS);
                 otherBuilder.setRecordingSid(recordingSid);
+                otherBuilder.setTranscriptionText("Transcription Text not available");
                 otherBuilder.setDuration(duration);
                 otherBuilder.setPrice(new BigDecimal("0.00"));
                 buffer = new StringBuilder();
@@ -1826,7 +1894,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 } catch (final Exception exception) {
                     logger.error(exception.getMessage(), exception);
                 }
-            }
+            } else if(logger.isInfoEnabled()){
+                logger.info("AsrService activated but not properly configured. Please set api-key for AsrService");
+        }
+
             // If action is present redirect to the action URI.
             String action = null;
             attribute = verb.attribute("action");
