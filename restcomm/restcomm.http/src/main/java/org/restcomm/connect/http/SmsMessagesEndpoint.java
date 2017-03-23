@@ -294,7 +294,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         final String body = data.getFirst("Body");
         final SmsSessionRequest.Encoding encoding;
         if (!data.containsKey("Encoding")) {
-            encoding = SmsSessionRequest.Encoding.GSM;
+            encoding = SmsSessionRequest.Encoding.UCS_2;
         } else {
             encoding = SmsSessionRequest.Encoding.valueOf(data.getFirst("Encoding").replace('-', '_'));
         }

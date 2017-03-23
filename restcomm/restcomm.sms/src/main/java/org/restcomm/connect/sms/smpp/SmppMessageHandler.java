@@ -219,12 +219,15 @@ public class SmppMessageHandler extends UntypedActor  {
         SubmitSm submit0 = new SubmitSm();
         submit0.setSourceAddress(new Address((byte)smppTonNpiValue, (byte) smppTonNpiValue, request.getSmppFrom() ));
         submit0.setDestAddress(new Address((byte)smppTonNpiValue, (byte)smppTonNpiValue, request.getSmppTo()));
-        if (CharsetUtil.CHARSET_UCS_2 == request.getSmppEncoding()) {
-            submit0.setDataCoding(DataCoding.DATA_CODING_UCS2);
-            textBytes = request.getSmppContent().getBytes();
-        } else {
+        if (CharsetUtil.CHARSET_GSM7 == request.getSmppEncoding()) {
             submit0.setDataCoding(DataCoding.DATA_CODING_GSM7);
-            textBytes = CharsetUtil.encode(request.getSmppContent(), request.getSmppEncoding());
+            textBytes = CharsetUtil.encode(request.getSmppContent(), CharsetUtil.CHARSET_GSM7);
+        } else if (CharsetUtil.CHARSET_GSM8 == request.getSmppEncoding()) {
+            submit0.setDataCoding(DataCoding.DATA_CODING_GSM8);
+            textBytes = CharsetUtil.encode(request.getSmppContent(), CharsetUtil.CHARSET_GSM8);
+        } else {
+            submit0.setDataCoding(DataCoding.DATA_CODING_UCS2);
+            textBytes = CharsetUtil.encode(request.getSmppContent(), CharsetUtil.CHARSET_UCS_2);
         }
         submit0.setShortMessage(textBytes);
         try {
