@@ -119,7 +119,6 @@ import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Currency;
@@ -2082,22 +2081,26 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (!dialChildren.isEmpty()) {
                 CreateCall create = null;
                 final Tag child = dialChildren.get(0);
-                URL statusCallback = null;
+
+                URI statusCallback = null;
                 String statusCallbackMethod = "POST";
-                List<String> statusCallbackEvent = new ArrayList<String>();
-                statusCallbackEvent.add("initiated");
-                statusCallbackEvent.add("ringing");
-                statusCallbackEvent.add("answered");
-                statusCallbackEvent.add("completed");
+                List<String> statusCallbackEvent = null;
+
                 if (child.hasAttribute("statusCallback")) {
-                    statusCallback = new URL(child.attribute("statusCallback").value());
+                    statusCallback = new URI(child.attribute("statusCallback").value());
                 }
                 if (statusCallback != null) {
                     if (child.hasAttribute("statusCallbackMethod")) {
                         statusCallbackMethod = child.attribute("statusCallbackMethod").value();
                     }
                     if (child.hasAttribute("statusCallbackEvent")) {
-                        statusCallbackEvent = Arrays.asList(child.attribute("statusCallbackEvent").value().split(","));
+                        statusCallbackEvent = Arrays.asList(child.attribute("statusCallbackEvent").value().replaceAll("\\s+","").split(","));
+                    } else {
+                        statusCallbackEvent = new ArrayList<String>();
+                        statusCallbackEvent.add("initiated");
+                        statusCallbackEvent.add("ringing");
+                        statusCallbackEvent.add("answered");
+                        statusCallbackEvent.add("completed");
                     }
                 }
                 if (Nouns.client.equals(child.name())) {

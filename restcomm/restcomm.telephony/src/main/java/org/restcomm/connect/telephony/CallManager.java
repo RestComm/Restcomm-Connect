@@ -334,15 +334,29 @@ public final class CallManager extends UntypedActor {
         }
     }
 
-    private ActorRef call() {
-        final Props props = new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
+    private ActorRef call(final CreateCall request) {
+        Props props = null;
+        if (request == null) {
+            props = new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
 
-            @Override
-            public UntypedActor create() throws Exception {
-                return new Call(sipFactory, msControllerFactory.provideCallController(), configuration);
-            }
-        });
+                @Override
+                public UntypedActor create() throws Exception {
+                    return new Call(supervisor, sipFactory, msControllerFactory.provideCallController(), configuration,
+                            null, null, null);
+                }
+            });
+        } else {
+            props = new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public UntypedActor create() throws Exception {
+                    return new Call(supervisor, sipFactory, msControllerFactory.provideCallController(), configuration,
+                            request.statusCallback(), request.statusCallbackMethod(), request.statusCallbackEvent());
+                }
+            });
+        }
         ActorRef call = null;
         try {
             call = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
@@ -665,7 +679,7 @@ public final class CallManager extends UntypedActor {
         builder.setRcml(rcml);
         builder.setMonitoring(monitoring);
         final ActorRef interpreter = builder.build();
-        final ActorRef call = call();
+        final ActorRef call = call(null);
         final SipApplicationSession application = request.getApplicationSession();
         application.setAttribute(Call.class.getName(), call);
         call.tell(request, self());
@@ -1000,7 +1014,7 @@ public final class CallManager extends UntypedActor {
                 builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
                 builder.setMonitoring(monitoring);
                 final ActorRef interpreter = builder.build();
-                final ActorRef call = call();
+                final ActorRef call = call(null);
                 final SipApplicationSession application = request.getApplicationSession();
                 application.setAttribute(Call.class.getName(), call);
                 call.tell(request, self);
@@ -1066,7 +1080,7 @@ public final class CallManager extends UntypedActor {
             builder.setFallbackMethod(client.getVoiceFallbackMethod());
             builder.setMonitoring(monitoring);
             final ActorRef interpreter = builder.build();
-            final ActorRef call = call();
+            final ActorRef call = call(null);
             final SipApplicationSession application = request.getApplicationSession();
             application.setAttribute(Call.class.getName(), call);
             call.tell(request, self);
@@ -1713,7 +1727,7 @@ public final class CallManager extends UntypedActor {
         final String proxyUsername = (request.username() != null) ? request.username() : activeProxyUsername;
         final String proxyPassword = (request.password() != null) ? request.password() : activeProxyPassword;
 
-        final ActorRef call = call();
+        final ActorRef call = call(request);
         final ActorRef self = self();
         final boolean userAtDisplayedName = runtime.subset("outbound-proxy").getBoolean("user-at-displayed-name");
         InitializeOutbound init;
@@ -2179,7 +2193,7 @@ public final class CallManager extends UntypedActor {
                 builder.setImsUaPassword(password);
             }
             final ActorRef interpreter = builder.build();
-            final ActorRef call = call();
+            final ActorRef call = call(null);
             final SipApplicationSession application = request.getApplicationSession();
             application.setAttribute(Call.class.getName(), call);
             call.tell(request, self());
@@ -2212,7 +2226,7 @@ public final class CallManager extends UntypedActor {
             logger.error(errMsg);
             sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
         } else {
-            final ActorRef call = call();
+            final ActorRef call = call(request);
             final ActorRef self = self();
             final Configuration runtime = configuration.subset("runtime-settings");
             if (logger.isInfoEnabled()) {
