@@ -22,7 +22,7 @@ package org.restcomm.connect.telephony.api;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.dao.Sid;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -46,13 +46,13 @@ public final class CreateCall {
     private final Sid accountId;
     private boolean createCDR = true;
     private final Sid parentCallSid;
-    private final URL statusCallbackUrl;
+    private final URI statusCallbackUrl;
     private final String statusCallbackMethod;
     private final List<String> statusCallbackEvent;
 
     public CreateCall(final String from, final String to, final String username, final String password,
             final boolean isFromApi, final int timeout, final Type type, final Sid accountId, final Sid parentCallSid,
-            final URL statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent) {
+            final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent) {
         super();
         this.from = from;
         this.to = to;
@@ -112,7 +112,7 @@ public final class CreateCall {
         return parentCallSid;
     }
 
-    public URL statusCallback() { return statusCallbackUrl; }
+    public URI statusCallback() { return statusCallbackUrl; }
 
     public String statusCallbackMethod() { return statusCallbackMethod; }
 
