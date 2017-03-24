@@ -49,6 +49,7 @@ import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 import javax.sip.address.SipURI;
 import javax.sip.header.Header;
 import javax.sip.message.Response;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -657,6 +658,314 @@ public class DialStatusCallbackTest {
         assertTrue(liveIncomingCalls==0);
         assertTrue(liveOutgoingCalls==0);
         assertTrue(liveCallsArraySize==0);
+    }
+
+    private String dialStatusCallbackForSip = "<Response><Dial><Sip statusCallback=\"http://127.0.0.1:8090/status\">sip:henrique@127.0.0.1:5092</Sip></Dial></Response>";
+    @Test
+    public void testDialStatusCallbackDialSip() throws ParseException, InterruptedException {
+
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialStatusCallbackForSip)));
+
+        stubFor(post(urlPathMatching("/status.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        final SipCall henriqueCall = henriquePhone.createSipCall();
+        henriqueCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+
+        assertTrue(henriqueCall.waitForIncomingCall(5000));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.TRYING, "Henrique-Trying", 3600));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Henrique-Ringing", 3600));
+        String receivedBody = new String(henriqueCall.getLastReceivedRequest().getRawContent());
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.OK, "Henrique-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(henriqueCall.waitForAck(5000));
+
+        Thread.sleep(1000);
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==2);
+        assertTrue(liveIncomingCalls==1);
+        assertTrue(liveOutgoingCalls==1);
+        assertTrue(liveCallsArraySize==2);
+
+
+        Thread.sleep(3000);
+        bobCall.listenForDisconnect();
+
+        assertTrue(henriqueCall.disconnect());
+        Thread.sleep(500);
+        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the StatusCallback Requests");
+        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/status.*")));
+        assertEquals(4, requests.size());
+        String requestBody = requests.get(0).getBodyAsString();
+        assertTrue(requestBody.contains("SequenceNumber=0"));
+        assertTrue(requestBody.contains("CallStatus=initiated"));
+
+        requestBody = requests.get(1).getBodyAsString();
+        assertTrue(requestBody.contains("SequenceNumber=1"));
+        assertTrue(requestBody.contains("CallStatus=ringing"));
+
+        requestBody = requests.get(2).getBodyAsString();
+        assertTrue(requestBody.contains("SequenceNumber=2"));
+        assertTrue(requestBody.contains("CallStatus=answered"));
+
+        requestBody = requests.get(3).getBodyAsString();
+        assertTrue(requestBody.contains("SequenceNumber=3"));
+        assertTrue(requestBody.contains("CallStatus=completed"));
+
+        liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==0);
+        assertTrue(liveIncomingCalls==0);
+        assertTrue(liveOutgoingCalls==0);
+        assertTrue(liveCallsArraySize==0);
+    }
+
+    private String dialStatusCallbackForNumber = "<Response><Dial><Number statusCallback=\"http://127.0.0.1:8090/status\">+131313</Number></Dial></Response>";
+    @Test
+    public void testDialStatusCallbackDialNumber() throws ParseException, InterruptedException {
+
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialStatusCallbackForNumber)));
+
+        stubFor(post(urlPathMatching("/status.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
+        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "George-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(georgeCall.waitForAck(5000));
+
+        Thread.sleep(1000);
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==2);
+        assertTrue(liveIncomingCalls==1);
+        assertTrue(liveOutgoingCalls==1);
+        assertTrue(liveCallsArraySize==2);
+
+
+        Thread.sleep(3000);
+        bobCall.listenForDisconnect();
+
+        assertTrue(georgeCall.disconnect());
+        Thread.sleep(500);
+        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the StatusCallback Requests");
+        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/status.*")));
+        assertEquals(4, requests.size());
+        String requestBody = requests.get(0).getBodyAsString();
+        assertTrue(requestBody.contains("SequenceNumber=0"));
+        assertTrue(requestBody.contains("CallStatus=initiated"));
+
+        requestBody = requests.get(1).getBodyAsString();
+        assertTrue(requestBody.contains("SequenceNumber=1"));
+        assertTrue(requestBody.contains("CallStatus=ringing"));
+
+        requestBody = requests.get(2).getBodyAsString();
+        assertTrue(requestBody.contains("SequenceNumber=2"));
+        assertTrue(requestBody.contains("CallStatus=answered"));
+
+        requestBody = requests.get(3).getBodyAsString();
+        assertTrue(requestBody.contains("SequenceNumber=3"));
+        assertTrue(requestBody.contains("CallStatus=completed"));
+
+        liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==0);
+        assertTrue(liveIncomingCalls==0);
+        assertTrue(liveOutgoingCalls==0);
+        assertTrue(liveCallsArraySize==0);
+    }
+
+    private String dialFork = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:8090/status\" statusCallbackMethod=\"get\">alice</Client><Sip statusCallback=\"http://127.0.0.1:8090/status\" statusCallbackMethod=\"get\">sip:henrique@127.0.0.1:5092</Sip><Number statusCallback=\"http://127.0.0.1:8090/status\" statusCallbackMethod=\"get\">+131313</Number></Dial></Response>";
+    @Test
+    public synchronized void testDialForkNoAnswerButHenriqueStatusCallbackOnAll() throws InterruptedException, ParseException, MalformedURLException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialFork)));
+
+        stubFor(get(urlPathMatching("/status.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        // Register Alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare Alice to receive call
+        final SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Prepare George phone to receive call
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Prepare Henrique phone to receive call
+        // henriquePhone.setLoopback(true);
+        final SipCall henriqueCall = henriquePhone.createSipCall();
+        henriqueCall.listenForIncomingCall();
+
+        // Initiate a call using Bob
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Trying-Alice", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+
+        assertTrue(henriqueCall.waitForIncomingCall(30 * 1000));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.TRYING, "Trying-Henrique", 3600));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique", 3600));
+
+
+        String receivedBody = new String(henriqueCall.getLastReceivedRequest().getRawContent());
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.OK, "OK-Henrique", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(henriqueCall.waitForAck(50 * 1000));
+
+        georgeCall.listenForCancel();
+        aliceCall.listenForCancel();
+
+        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(30000);
+        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(30000);
+        assertNotNull(georgeCancelTransaction);
+        assertNotNull(aliceCancelTransaction);
+        georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK-2-Cancel-George", 3600);
+        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK-2-Cancel-Alice", 3600);
+
+        //Wait to cancel the other branches
+        Thread.sleep(2000);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls == 2);
+        assertTrue(liveCallsArraySize == 2);
+
+        henriqueCall.listenForDisconnect();
+
+        Thread.sleep(8000);
+
+        // hangup.
+
+        bobCall.disconnect();
+
+        assertTrue(henriqueCall.waitForDisconnect(30 * 1000));
+
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the StatusCallback Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/status.*")));
+        assertEquals(10, requests.size());
+        String requestUrl = requests.get(0).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=0"));
+        assertTrue(requestUrl.contains("CallStatus=initiated"));
+
+        requestUrl = requests.get(1).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=0"));
+        assertTrue(requestUrl.contains("CallStatus=initiated"));
+
+        requestUrl = requests.get(2).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=0"));
+        assertTrue(requestUrl.contains("CallStatus=initiated"));
+
+        requestUrl = requests.get(3).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=1"));
+        assertTrue(requestUrl.contains("CallStatus=ringing"));
+
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
     }
 
 
