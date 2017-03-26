@@ -1328,8 +1328,6 @@ public final class CallManager extends UntypedActor {
         builder.setMethod(request.method());
         builder.setFallbackUrl(request.fallbackUrl());
         builder.setFallbackMethod(request.fallbackMethod());
-        builder.setStatusCallback(request.callback());
-        builder.setStatusCallbackMethod(request.callbackMethod());
         builder.setMonitoring(monitoring);
         final ActorRef interpreter = builder.build();
         interpreter.tell(new StartInterpreter(request.call()), self);

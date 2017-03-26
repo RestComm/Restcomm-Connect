@@ -257,7 +257,9 @@ public final class Call extends UntypedActor {
     private boolean actAsImsUa;
 
     private boolean isOnHold;
-    private int duration;
+    private int callDuration;
+    private DateTime recordingStart;
+    private long recordingDuration;
 
     private HttpRequestDescriptor requestCallback;
     ActorRef downloader = null;
@@ -486,23 +488,24 @@ public final class Call extends UntypedActor {
 
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
 
-        parameters.add(new BasicNameValuePair("ParentCallSid", parentCallSid.toString()));
+        if (parentCallSid != null)
+            parameters.add(new BasicNameValuePair("ParentCallSid", parentCallSid.toString()));
 
         parameters.add(new BasicNameValuePair("CallStatus", state.toString()));
 
         if (state.equals(CallbackState.COMPLETED)) {
-            parameters.add(new BasicNameValuePair("CallDuration", String.valueOf(duration)));
+            parameters.add(new BasicNameValuePair("CallDuration", String.valueOf(callDuration)));
 
             //We never record an outgoing call leg, we only record parent call leg and both legs of the call
             //are mixed down into a single channel
-            //Only for REST-API created calls
-            if (recording) {
+            //The recording duration will be used only for REST-API created calls
+            if (recording && direction.equalsIgnoreCase("outbound-api")) {
                 if (recordingUri != null)
                     parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
                 if (recordingSid != null)
                     parameters.add(new BasicNameValuePair("RecordingSid", recordingSid.toString()));
-//                if (recordingDuration > -1)
-//                    parameters.add(new BasicNameValuePair("RecordingDuration", String.valueOf(recordingDuration)));
+                if (recordingDuration > -1)
+                    parameters.add(new BasicNameValuePair("RecordingDuration", String.valueOf(recordingDuration)));
             }
         }
 
@@ -533,6 +536,11 @@ public final class Call extends UntypedActor {
         }
 
         parameters.add(new BasicNameValuePair("SequenceNumber", sequence));
+
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("Created parameters for Call StatusCallback for state %s and sequence %s uri %s",state,sequence,statusCallback.toString());
+            logger.info(msg);
+        }
 
         return parameters;
     }
@@ -1653,13 +1661,13 @@ public final class Call extends UntypedActor {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.toString());
                 final DateTime now = DateTime.now();
                 outgoingCallRecord = outgoingCallRecord.setEndTime(now);
-                duration = (int) ((now.getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
-                outgoingCallRecord = outgoingCallRecord.setDuration(duration);
+                callDuration = (int) ((now.getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
+                outgoingCallRecord = outgoingCallRecord.setDuration(callDuration);
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
                 if(logger.isDebugEnabled()) {
                     logger.debug("Start: " + outgoingCallRecord.getStartTime());
                     logger.debug("End: " + outgoingCallRecord.getEndTime());
-                    logger.debug("Duration: " + duration);
+                    logger.debug("Duration: " + callDuration);
                     logger.debug("Just updated CDR for completed call");
                 }
             }
@@ -1907,6 +1915,9 @@ public final class Call extends UntypedActor {
                     }
                     msController.tell(new Stop(false), self);
                     // VoiceInterpreter will take care to prepare the Recording object
+                } else if (direction.equalsIgnoreCase("outbound-api")){
+                    //REST API Outgoing call, calculate recording
+                    recordingDuration = (DateTime.now().getMillis() - recordingStart.getMillis())/1000;
                 } else if (conference != null) {
                     // Outbound call sent BYE. !Important conference is the initial call here.
                     conference.tell(new StopRecording(accountId, runtimeSettings, daoManager), null);
@@ -2472,6 +2483,7 @@ public final class Call extends UntypedActor {
             this.recording = true;
             this.recordingUri = message.getRecordingUri();
             this.recordingSid = message.getRecordingSid();
+            this.recordingStart = DateTime.now();
         }
     }
 
@@ -2480,6 +2492,8 @@ public final class Call extends UntypedActor {
             // Forward message for Media Session Controller to handle
             this.msController.tell(message, sender);
             this.recording = false;
+
+            recordingDuration = (DateTime.now().getMillis() - recordingStart.getMillis())/1000;
         }
     }
 

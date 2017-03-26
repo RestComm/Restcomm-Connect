@@ -355,21 +355,22 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         final String password = data.getFirst("Password");
         final Integer timeout = getTimeout(data);
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+        final URI rcmlUrl = getUrl("Url", data);
 
         try {
-            if (data.containsKey("statusCallback")) {
-                statusCallback = new URI(data.getFirst("statusCallback").trim());
+            if (data.containsKey("StatusCallback")) {
+                statusCallback = new URI(data.getFirst("StatusCallback").trim());
             }
         } catch (Exception e) {
             //Handle Exception
         }
 
         if (statusCallback != null) {
-            if (data.containsKey("statusCallbackMethod")) {
-                statusCallbackMethod = data.getFirst("statusCallbackMethod").trim();
+            if (data.containsKey("StatusCallbackMethod")) {
+                statusCallbackMethod = data.getFirst("StatusCallbackMethod").trim();
             }
-            if (data.containsKey("statusCallbackEvent")) {
-                statusCallbackEvent = Arrays.asList(data.getFirst("statusCallbackEvent").trim().split(","));
+            if (data.containsKey("StatusCallbackEvent")) {
+                statusCallbackEvent = Arrays.asList(data.getFirst("StatusCallbackEvent").trim().split(","));
             }
         }
 
@@ -412,14 +413,12 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
                                 final CallInfo callInfo = callResponse.get();
                                 // Execute the call script.
                                 final String version = getApiVersion(data);
-                                final URI url = getUrl("Url", data);
+                                final URI url = rcmlUrl;
                                 final String method = getMethod("Method", data);
                                 final URI fallbackUrl = getUrl("FallbackUrl", data);
                                 final String fallbackMethod = getMethod("FallbackMethod", data);
-                                final URI callback = getUrl("StatusCallback", data);
-                                final String callbackMethod = getMethod("StatusCallbackMethod", data);
                                 final ExecuteCallScript execute = new ExecuteCallScript(call, accountId, version, url, method,
-                                        fallbackUrl, fallbackMethod, callback, callbackMethod);
+                                        fallbackUrl, fallbackMethod);
                                 callManager.tell(execute, null);
                                 cdrs.add(daos.getCallDetailRecordsDao().getCallDetailRecord(callInfo.sid()));
                             }

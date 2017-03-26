@@ -164,8 +164,8 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
         this.method = method;
         this.fallbackUrl = fallbackUrl;
         this.fallbackMethod = fallbackMethod;
-        this.statusCallback = statusCallback;
-        this.statusCallbackMethod = statusCallbackMethod;
+        this.viStatusCallback = statusCallback;
+        this.viStatusCallbackMethod = statusCallbackMethod;
         this.emailAddress = emailAddress;
         this.configuration = configuration;
         this.callManager = callManager;

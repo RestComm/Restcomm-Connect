@@ -1,5 +1,7 @@
 package org.restcomm.connect.testsuite.http;
 
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import org.apache.log4j.Logger;
@@ -17,16 +19,28 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.sip.address.SipURI;
 import javax.sip.header.FromHeader;
 import javax.sip.message.Response;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.List;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -45,6 +59,9 @@ public class CreateCallsWithStatusCallbackTest {
     private Deployer deployer;
     @ArquillianResource
     URL deploymentUrl;
+
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
@@ -126,12 +143,23 @@ public class CreateCallsWithStatusCallbackTest {
         }
     }
 
+    private String dialNumber = "<Response><Dial><Number>+131313</Number></Dial></Response>";
     @Test
     // Create a call to a SIP URI. Non-regression test for issue https://bitbucket.org/telestax/telscale-restcomm/issue/175
     // Use Calls Rest API to dial Bob (SIP URI sip:bob@127.0.0.1:5090) and connect him to the RCML app dial-number-entry.xml.
     // This RCML will dial +131313 which George's phone is listening (use the dial-number-entry.xml as a side effect to verify
     // that the call created successfully)
-    public void createCallSipUriTest() throws InterruptedException {
+    public void createCallNumberWithStatusCallback() throws InterruptedException {
+
+        stubFor(post(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialNumber)));
+
+        stubFor(get(urlPathMatching("/status.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
 
         SipCall bobCall = bobPhone.createSipCall();
         bobCall.listenForIncomingCall();
@@ -141,10 +169,13 @@ public class CreateCallsWithStatusCallbackTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        String rcmlUrl = "http://127.0.0.1:8090/1111";
+        String statusCallback = "http://127.0.0.1:8090/status";
+        String statusCallbackMethod = "GET";
+
 
         JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
-                adminAuthToken, from, to, rcmlUrl);
+                adminAuthToken, from, to, rcmlUrl, statusCallback, statusCallbackMethod, null);
         assertNotNull(callResult);
 
         assertTrue(bobCall.waitForIncomingCall(5000));
@@ -170,6 +201,121 @@ public class CreateCallsWithStatusCallbackTest {
 
         assertTrue(bobCall.waitForDisconnect(5000));
         assertTrue(bobCall.respondToDisconnect());
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the StatusCallback Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/status.*")));
+        assertEquals(4, requests.size());
+        String requestUrl = requests.get(0).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=0"));
+        assertTrue(requestUrl.contains("CallStatus=initiated"));
+
+        requestUrl = requests.get(1).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=1"));
+        assertTrue(requestUrl.contains("CallStatus=ringing"));
+
+        requestUrl = requests.get(2).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=2"));
+        assertTrue(requestUrl.contains("CallStatus=answered"));
+
+        requestUrl = requests.get(3).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=3"));
+        assertTrue(requestUrl.contains("CallStatus=completed"));
+
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==0);
+        assertTrue(liveIncomingCalls==0);
+        assertTrue(liveOutgoingCalls==0);
+        assertTrue(liveCallsArraySize==0);
+    }
+
+    private String dialNumberWithStatusCallback = "<Response><Dial><Number statusCallback=\"http://127.0.0.1:8090/statusOfDialNumber\" statusCallbackMethod=\"GET\">+131313</Number></Dial></Response>";
+    @Test
+    // Create a call to a SIP URI. Non-regression test for issue https://bitbucket.org/telestax/telscale-restcomm/issue/175
+    // Use Calls Rest API to dial Bob (SIP URI sip:bob@127.0.0.1:5090) and connect him to the RCML app dial-number-entry.xml.
+    // This RCML will dial +131313 which George's phone is listening (use the dial-number-entry.xml as a side effect to verify
+    // that the call created successfully)
+    public void createCallNumberWithStatusCallbackInBothTheRequestAndRCML() throws InterruptedException {
+
+        stubFor(post(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialNumberWithStatusCallback)));
+
+        stubFor(get(urlPathMatching("/statusOfDialBob.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        stubFor(get(urlPathMatching("/statusOfDialNumber.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        SipCall bobCall = bobPhone.createSipCall();
+        bobCall.listenForIncomingCall();
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        String from = "+15126002188";
+        String to = bobContact;
+        String rcmlUrl = "http://127.0.0.1:8090/1111";
+        String statusCallback = "http://127.0.0.1:8090/statusOfDialBob";
+        String statusCallbackMethod = "GET";
+
+
+        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl, statusCallback, statusCallbackMethod, null);
+        assertNotNull(callResult);
+
+        assertTrue(bobCall.waitForIncomingCall(5000));
+        String receivedBody = new String(bobCall.getLastReceivedRequest().getRawContent());
+        assertTrue(bobCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Bob", 3600));
+        assertTrue(bobCall
+                .sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, receivedBody, "application", "sdp", null, null));
+
+        // Restcomm now should execute RCML that will create a call to +131313 (george's phone)
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
+                null, null));
+
+        Thread.sleep(3000);
+
+        bobCall.listenForDisconnect();
+
+        assertTrue(georgeCall.disconnect());
+        assertTrue(georgeCall.waitForAck(5000));
+
+        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        Thread.sleep(10000);
+
+
+
+        logger.info("About to check the StatusCallback Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/statusOfDialNumber.*")));
+        assertEquals(4, requests.size());
+
+
+        List<LoggedRequest> requests2 = findAll(getRequestedFor(urlPathMatching("/statusOfDialBob.*")));
+        assertEquals(4, requests2.size());
+
+//        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+//        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+//        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+//        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+//        assertTrue(liveCalls==0);
+//        assertTrue(liveIncomingCalls==0);
+//        assertTrue(liveOutgoingCalls==0);
+//        assertTrue(liveCallsArraySize==0);
     }
 
     @Test
@@ -454,10 +600,8 @@ public class CreateCallsWithStatusCallbackTest {
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script_dialTest", "data/hsql/restcomm.script");
-        archive.addAsWebResource("dial-number-entry.xml");
-        archive.addAsWebResource("dial-client-entry.xml");
-        archive.addAsWebResource("hello-play.xml");
+        archive.addAsWebInfResource("restcomm.script_dialStatusCallbackTest", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
         logger.info("Packaged Test App");
         return archive;
     }
