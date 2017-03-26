@@ -215,7 +215,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private String forwardedFrom;
 
     public VoiceInterpreter(final ActorRef supervisor, final Configuration configuration, final Sid account, final Sid phone, final String version,
-                            final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
+                            final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI viStatusCallback,
                             final String statusCallbackMethod, final String referTarget, final String transferor, final String transferee,
                             final String emailAddress, final ActorRef callManager,
                             final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring, final String rcml,
@@ -409,8 +409,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.method = method;
         this.fallbackUrl = fallbackUrl;
         this.fallbackMethod = fallbackMethod;
-        this.statusCallback = statusCallback;
-        this.statusCallbackMethod = statusCallbackMethod;
+        this.viStatusCallback = viStatusCallback;
+        this.viStatusCallbackMethod = statusCallbackMethod;
         this.referTarget = referTarget;
         this.transferor = transferor;
         this.transferee = transferee;
@@ -1420,63 +1420,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
-//    List<NameValuePair> dialStatusCallbackParameters(final CallInfo currentCallInfo) {
-//        final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-//
-//        final String callSid = currentCallInfo.sid().toString();
-//        parameters.add(new BasicNameValuePair("CallSid", callSid));
-//
-//        final String parentCallSid = callInfo.sid().toString();
-//        parameters.add(new BasicNameValuePair("ParentCallSid", parentCallSid));
-//
-//        final String callStatus = currentCallInfo.state().toString();
-//        parameters.add(new BasicNameValuePair("CallStatus", callStatus));
-//
-//        if (currentCallInfo.state().equals(CallStateChanged.State.COMPLETED)) {
-//            final org.joda.time.Duration duration = new org.joda.time.Duration(currentCallInfo.dateCreated(), currentCallInfo.dateConUpdated());
-////            DateTimeFormatter fmt = DateTimeFormat.forPattern("mm:ss:SS");
-//            parameters.add(new BasicNameValuePair("CallDuration", duration.toString()));
-//
-//            if (recordingCall) {
-//                if (recordingUri != null)
-//                    parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
-//                if (recordingSid != null)
-//                    parameters.add(new BasicNameValuePair("RecordingSid", recordingSid.toString()));
-//                if (recordingDuration > -1)
-//                    parameters.add(new BasicNameValuePair("RecordingDuration", String.valueOf(recordingDuration)));
-//            }
-//        }
-//
-//        //RFC 2822 (example: Mon, 15 Aug 2005 15:52:01 +0000)
-//        DateTimeFormatter fmt = DateTimeFormat.forPattern("EEE, dd MMM YYYY HH:mm:ss ZZZZ");
-//        final String timestamp = DateTime.now().toString(fmt);
-//        parameters.add(new BasicNameValuePair("Timestamp", timestamp));
-//
-//        parameters.add(new BasicNameValuePair("CallbackSource", "call-progress-events"));
-//
-//        String sequence = "0";
-//
-//        switch (currentCallInfo.state()) {
-//            case RINGING:
-//                sequence = "1";
-//                break;
-//            case IN_PROGRESS:
-//                sequence = "2";
-//                break;
-//            case COMPLETED:
-//                sequence = "3";
-//                break;
-//            default:
-//                sequence = "0";
-//                break;
-//        }
-//
-//        parameters.add(new BasicNameValuePair("SequenceNumber", sequence));
-//
-//        parameters.add(new BasicNameValuePair("InstanceId", RestcommConfiguration.getInstance().getMain().getInstanceId()));
-//        return parameters;
-//    }
-
     List<NameValuePair> parameters() {
         final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
         final String callSid = callInfo.sid().toString();
@@ -1501,7 +1444,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         parameters.add(new BasicNameValuePair("CallerName", callerName));
         final String forwardedFrom = (callInfo.forwardedFrom() == null || callInfo.forwardedFrom().isEmpty()) ? "null" : callInfo.forwardedFrom();
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
-        parameters.add(new BasicNameValuePair("CallTimestamp", callInfo.dateCreated().toString()));
+        parameters.add(new BasicNameValuePair("", callInfo.dateCreated().toString()));
         if (referTarget != null) {
             parameters.add(new BasicNameValuePair("ReferTarget", referTarget));
         }

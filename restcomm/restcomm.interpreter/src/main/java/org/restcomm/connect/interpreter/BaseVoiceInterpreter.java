@@ -235,8 +235,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     String referTarget;
     String transferor;
     String transferee;
-    URI statusCallback;
-    String statusCallbackMethod;
+    URI viStatusCallback;
+    String viStatusCallbackMethod;
     String emailAddress;
     // application data.
     HttpRequestDescriptor request;
@@ -485,15 +485,15 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     //Callback using the Akka ask pattern (http://doc.akka.io/docs/akka/2.2.5/java/untyped-actors.html#Ask__Send-And-Receive-Future) will force VoiceInterpter to wait until
     //Downloader finish with this callback before shutdown everything. Issue https://github.com/Mobicents/RestComm/issues/437
     void callback(boolean ask) {
-        if (statusCallback != null) {
+        if (viStatusCallback != null) {
             if(logger.isInfoEnabled()){
-                logger.info("About to execute statusCallback: "+statusCallback.toString());
+                logger.info("About to execute viStatusCallback: "+ viStatusCallback.toString());
             }
-            if (statusCallbackMethod == null) {
-                statusCallbackMethod = "POST";
+            if (viStatusCallbackMethod == null) {
+                viStatusCallbackMethod = "POST";
             }
             final List<NameValuePair> parameters = parameters();
-            requestCallback = new HttpRequestDescriptor(statusCallback, statusCallbackMethod, parameters);
+            requestCallback = new HttpRequestDescriptor(viStatusCallback, viStatusCallbackMethod, parameters);
             if (!ask) {
                 downloader.tell(requestCallback, null);
             } else if (ask) {
@@ -2077,7 +2077,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 // Start observing events from the sms session.
                 session.tell(new Observe(source), source);
                 // Store the status callback in the sms session.
-                attribute = verb.attribute("statusCallback");
+                attribute = verb.attribute("viStatusCallback");
                 if (attribute != null) {
                     String callback = attribute.value();
                     if (callback != null && !callback.isEmpty()) {

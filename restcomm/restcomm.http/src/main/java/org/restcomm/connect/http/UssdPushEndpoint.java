@@ -147,10 +147,8 @@ public class UssdPushEndpoint extends SecuredEndpoint {
                             final String method = getMethod("Method", data);
                             final URI fallbackUrl = getUrl("FallbackUrl", data);
                             final String fallbackMethod = getMethod("FallbackMethod", data);
-                            final URI callback = getUrl("StatusCallback", data);
-                            final String callbackMethod = getMethod("StatusCallbackMethod", data);
                             final ExecuteCallScript execute = new ExecuteCallScript(call, accountId, version, url, method,
-                                    fallbackUrl, fallbackMethod, callback, callbackMethod);
+                                    fallbackUrl, fallbackMethod);
                             ussdCallManager.tell(execute, null);
                             // Create a call detail record for the call.
 //                            final CallDetailRecord.Builder builder = CallDetailRecord.builder();
