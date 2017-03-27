@@ -195,6 +195,11 @@ public class RestcommCallsTool {
     }
 
     public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl) {
+        return createCall(deploymentUrl, username, authToken, from, to, rcmlUrl, null, null, null);
+    }
+
+    public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl,
+                                  final String statusCallback, final String statusCallbackMethod, final String statusCallbackEvent) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -207,6 +212,13 @@ public class RestcommCallsTool {
         params.add("From", from);
         params.add("To", to);
         params.add("Url", rcmlUrl);
+
+        if (statusCallback != null)
+            params.add("StatusCallback", statusCallback);
+        if (statusCallbackMethod != null)
+            params.add("StatusCallbackMethod", statusCallbackMethod);
+        if (statusCallbackEvent != null)
+            params.add("StatusCallbackEvent", statusCallbackEvent);
 
         // webResource = webResource.queryParams(params);
         String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
