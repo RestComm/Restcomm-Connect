@@ -1,9 +1,30 @@
 package org.restcomm.connect.testsuite.telephony;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import gov.nist.javax.sip.address.SipUri;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.sip.Dialog;
+import javax.sip.InvalidArgumentException;
+import javax.sip.RequestEvent;
+import javax.sip.SipException;
+import javax.sip.address.SipURI;
+import javax.sip.header.Header;
+import javax.sip.header.UserAgentHeader;
+import javax.sip.message.Response;
+
+import org.apache.log4j.Logger;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -30,34 +51,21 @@ import org.restcomm.connect.testsuite.http.CreateClientsTool;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
-import javax.sip.Dialog;
-import javax.sip.InvalidArgumentException;
-import javax.sip.SipException;
-import javax.sip.address.SipURI;
-import javax.sip.header.UserAgentHeader;
-import javax.sip.message.Response;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import gov.nist.javax.sip.address.SipUri;
 
 /**
  * Test for clients with or without VoiceURL (Bitbucket issue 115). Clients without VoiceURL can dial anything.
  *
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @RunWith(Arquillian.class)
 public class ClientsDialTest {
+    private static Logger logger = Logger.getLogger(ClientsDialTest.class.getName());
 
     private static final String version = Version.getVersion();
 
@@ -340,7 +348,7 @@ public class ClientsDialTest {
         Thread.sleep(3000);
     }
 
-    @Test
+    @Ignore@Test
     public void testRegisterClients() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -359,7 +367,114 @@ public class ClientsDialTest {
         assertTrue(dimitriPhone.unregister(dimitriContact, 0));
     }
 
+    /**
+     * testP2PWithOutProperHngup
+     * https://github.com/RestComm/Restcomm-Connect/issues/1962
+     * p2p call, if not properly hangup, ( when failed to respond to options),
+     *  should be completed after sometime.
+     * 
+     * @throws ParseException
+     * @throws InterruptedException
+     * @throws InvalidArgumentException 
+     */
     @Test
+    public void testP2PWithOutProperHngup() throws ParseException, InterruptedException, InvalidArgumentException {
+
+        assertNotNull(mariaRestcommClientSid);
+        assertNotNull(dimitriRestcommClientSid);
+
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+
+        assertTrue(mariaPhone.register(uri, "maria", clientPassword, mariaContact, 3600, 3600));
+        assertTrue(dimitriPhone.register(uri, "dimitri", clientPassword, dimitriContact, 3600, 3600));
+
+        Credential c = new Credential("127.0.0.1", "maria", clientPassword);
+        mariaPhone.addUpdateCredential(c);
+
+        final SipCall dimitriCall = dimitriPhone.createSipCall();
+        dimitriCall.listenForIncomingCall();
+
+        Thread.sleep(1000);
+
+        // Maria initiates a call to Dimitri
+        long startTime = System.currentTimeMillis();
+        final SipCall mariaCall = mariaPhone.createSipCall();
+        mariaCall.initiateOutgoingCall(mariaContact, dimitriContact, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(mariaCall);
+        assertTrue(mariaCall.waitForAuthorisation(3000));
+
+        assertTrue(dimitriCall.waitForIncomingCall(5000));
+        assertTrue(dimitriCall.sendIncomingCallResponse(100, "Trying-Dimitri", 1800));
+        assertTrue(dimitriCall.sendIncomingCallResponse(180, "Ringing-Dimitri", 1800));
+        String receivedBody = new String(dimitriCall.getLastReceivedRequest().getRawContent());
+        assertTrue(dimitriCall.sendIncomingCallResponse(Response.OK, "OK-Dimitri", 3600, receivedBody, "application", "sdp", null,
+                null));
+
+        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+        int responseMaria = mariaCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseMaria == Response.TRYING || responseMaria == Response.RINGING);
+
+        Dialog mariaDialog = null;
+
+        if (responseMaria == Response.TRYING) {
+            assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, mariaCall.getLastReceivedResponse().getStatusCode());
+            mariaDialog = mariaCall.getDialog();
+        }
+
+        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, mariaCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(mariaCall.getDialog().equals(mariaDialog));
+        mariaCall.sendInviteOkAck();
+        assertTrue(mariaCall.getDialog().equals(mariaDialog));
+
+        assertTrue(!(mariaCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(dimitriCall.waitForAck(3000));
+
+        //Talk time ~ 3sec
+        Thread.sleep(3000);
+        //Check CDR
+        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertNotNull(cdrs);
+        JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
+        if(logger.isInfoEnabled()){
+        	
+        }
+        logger.info("cdrsArray.size(): "+cdrsArray.size());
+        assertTrue(cdrsArray.size() == 1);
+        String sid = cdrsArray.get(0).getAsJsonObject().get("sid").getAsString();
+        logger.info("cdr sid: "+sid);
+        assertNotNull(sid);
+
+        mariaPhone.listenRequestMessage();
+        RequestEvent request = mariaPhone.waitRequest(10000);
+        assertEquals(request.getRequest().getMethod(), SipRequest.OPTIONS);
+
+        ArrayList<Header> additionalHeader = new ArrayList<Header>();
+        Header reason = mariaSipStack.getHeaderFactory().createReasonHeader("udp", 503, "Destination not available");
+        additionalHeader.add(reason);
+        mariaPhone.sendReply(request, 503, "Service unavailable", null, null, 3600, additionalHeader, null, null);
+
+        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
+        mariaSipStack.dispose();
+        mariaPhone = null;
+        mariaSipStack = null;
+
+        // wait 3 min to call to diconnected
+        Thread.sleep(200000);
+
+        //Check CDR again and CDR should be completed
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        assertNotNull(cdr);
+        String status = cdr.get("status").getAsString();
+        logger.info("cdrs status: "+status);
+        assertTrue(status.equalsIgnoreCase("in_progress"));
+        assertTrue(status.equalsIgnoreCase("completed"));
+
+    }
+
+    @Ignore@Test
     public void testClientsCallEachOther() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -438,7 +553,7 @@ public class ClientsDialTest {
 
     }
 
-    @Test
+    @Ignore@Test
     public void testClientsCallEachOtherWithFriendlyNameSetKouKouRouKou() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -523,7 +638,7 @@ public class ClientsDialTest {
         assertTrue(totalTime <= 4.0);
     }
 
-    @Test
+    @Ignore@Test
     public void testClientDialOutPstn() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -581,7 +696,7 @@ public class ClientsDialTest {
         //        assertTrue(georgeCall.respondToDisconnect());
     }
 
-    @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Ignore@Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
     public void testClientDialOutPstnSimulateWebRTCClient() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -648,7 +763,7 @@ public class ClientsDialTest {
         //        assertTrue(georgeCall.respondToDisconnect());
     }
 
-    @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1379 - Webrtc calls from non WS clients aren't routed to PSTN #1379
+    @Ignore@Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1379 - Webrtc calls from non WS clients aren't routed to PSTN #1379
     public void testClientDialOutPstnWebRTCClientwithSDP() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -708,7 +823,7 @@ public class ClientsDialTest {
         //        assertTrue(georgeCall.respondToDisconnect());
     }
 
-    @Test
+    @Ignore@Test
     public void testClientDialToInvalidNumber() throws ParseException, InterruptedException, InvalidArgumentException, SipException {
         String invalidNumber = "+123456789";
         SipPhone outboundProxy = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:"+invalidNumber+"@127.0.0.1:5070");
@@ -752,7 +867,7 @@ public class ClientsDialTest {
         outboundProxy.dispose();
     }
 
-    @Test
+    @Ignore@Test
     public void testClientDialOutPstnCancelBefore200() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -808,7 +923,7 @@ public class ClientsDialTest {
     }
 
     private String dialClientRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client>alice</Client></Dial></Response>";
-    @Test
+    @Ignore@Test
     public synchronized void testDialClientAlice() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -860,7 +975,7 @@ public class ClientsDialTest {
         assertTrue(aliceCall.respondToDisconnect());
     }
 
-    @Test
+    @Ignore@Test
     public synchronized void testDialClientAliceWithExtraParamsAtContactHeader() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -924,7 +1039,7 @@ public class ClientsDialTest {
     }
 
     private String dialWebRTCClientRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client>bob</Client></Dial></Response>";
-    @Test
+    @Ignore@Test
     public synchronized void testDialClientWebRTCAliceFromAnotherInstance() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -963,7 +1078,7 @@ public class ClientsDialTest {
     }
 
     private String dialWebRTCClientForkRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client>bob</Client><Client>alice</Client></Dial></Response>";
-    @Test
+    @Ignore@Test
     public synchronized void testDialClientForkWithWebRTCAliceFromAnotherInstance() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1016,7 +1131,7 @@ public class ClientsDialTest {
     }
 
     private String dialAliceDimitriRcml= "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client>alice</Client><Sip>"+dimitriContact+"</Sip></Dial></Response>";
-    @Test
+    @Ignore@Test
     public synchronized void testDialForkClient_AliceMultipleRegistrations_George() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1105,7 +1220,7 @@ public class ClientsDialTest {
         assertTrue(liveCallsArraySize == 0);
     }
 
-    @Test
+    @Ignore@Test
     public synchronized void testDialForkClientWebRTCBob_And_AliceWithMultipleRegistrations() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1183,7 +1298,7 @@ public class ClientsDialTest {
     }
 
     private String clientWithAppHostedAppRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Number>+151261006100</Number></Dial></Response>";
-    @Test
+    @Ignore@Test
     public synchronized void testClientWithHostedApplication() throws InterruptedException, ParseException {
         stubFor(post(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
