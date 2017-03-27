@@ -537,9 +537,9 @@ public final class Call extends UntypedActor {
 
         parameters.add(new BasicNameValuePair("SequenceNumber", sequence));
 
-        if (logger.isInfoEnabled()) {
+        if (logger.isDebugEnabled()) {
             String msg = String.format("Created parameters for Call StatusCallback for state %s and sequence %s uri %s",state,sequence,statusCallback.toString());
-            logger.info(msg);
+            logger.debug(msg);
         }
 
         return parameters;
