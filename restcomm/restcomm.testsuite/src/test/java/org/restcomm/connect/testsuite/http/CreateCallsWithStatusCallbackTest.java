@@ -145,10 +145,6 @@ public class CreateCallsWithStatusCallbackTest {
 
     private String dialNumber = "<Response><Dial><Number>+131313</Number></Dial></Response>";
     @Test
-    // Create a call to a SIP URI. Non-regression test for issue https://bitbucket.org/telestax/telscale-restcomm/issue/175
-    // Use Calls Rest API to dial Bob (SIP URI sip:bob@127.0.0.1:5090) and connect him to the RCML app dial-number-entry.xml.
-    // This RCML will dial +131313 which George's phone is listening (use the dial-number-entry.xml as a side effect to verify
-    // that the call created successfully)
     public void createCallNumberWithStatusCallback() throws InterruptedException {
 
         stubFor(post(urlPathEqualTo("/1111"))
@@ -235,10 +231,6 @@ public class CreateCallsWithStatusCallbackTest {
 
     private String dialNumberWithStatusCallback = "<Response><Dial><Number statusCallback=\"http://127.0.0.1:8090/statusOfDialNumber\" statusCallbackMethod=\"GET\">+131313</Number></Dial></Response>";
     @Test
-    // Create a call to a SIP URI. Non-regression test for issue https://bitbucket.org/telestax/telscale-restcomm/issue/175
-    // Use Calls Rest API to dial Bob (SIP URI sip:bob@127.0.0.1:5090) and connect him to the RCML app dial-number-entry.xml.
-    // This RCML will dial +131313 which George's phone is listening (use the dial-number-entry.xml as a side effect to verify
-    // that the call created successfully)
     public void createCallNumberWithStatusCallbackInBothTheRequestAndRCML() throws InterruptedException {
 
         stubFor(post(urlPathEqualTo("/1111"))
@@ -307,23 +299,21 @@ public class CreateCallsWithStatusCallbackTest {
 
         List<LoggedRequest> requests2 = findAll(getRequestedFor(urlPathMatching("/statusOfDialBob.*")));
         assertEquals(4, requests2.size());
-
-//        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-//        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-//        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-//        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-//        assertTrue(liveCalls==0);
-//        assertTrue(liveIncomingCalls==0);
-//        assertTrue(liveOutgoingCalls==0);
-//        assertTrue(liveCallsArraySize==0);
     }
 
+    private String dialNumberWithRecording = "<Response><Dial record=\"true\"><Number statusCallback=\"http://127.0.0.1:8090/statusOfDialNumber\" statusCallbackMethod=\"GET\">+131313</Number></Dial></Response>";
     @Test
-    // Create a call to a SIP URI. Non-regression test for issue https://github.com/Mobicents/RestComm/issues/150
-    // Use Calls Rest API to dial Bob (SIP URI sip:bob@127.0.0.1:5090) and connect him to the RCML app dial-number-entry.xml.
-    // This RCML will dial +131313 which George's phone is listening (use the dial-number-entry.xml as a side effect to verify
-    // that the call created successfully)
-    public void createCallSipUriAllowFromModificationTest() throws InterruptedException {
+    public void createCallNumberWithStatusCallbackAndRecording() throws InterruptedException {
+
+        stubFor(post(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialNumberWithRecording)));
+
+        stubFor(get(urlPathMatching("/statusOfDialNumber.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
 
         SipCall bobCall = bobPhone.createSipCall();
         bobCall.listenForIncomingCall();
@@ -331,19 +321,18 @@ public class CreateCallsWithStatusCallbackTest {
         SipCall georgeCall = georgePhone.createSipCall();
         georgeCall.listenForIncomingCall();
 
-        String from = "sip:+15126002188@mobicents.org";
+        String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        String rcmlUrl = "http://127.0.0.1:8090/1111";
+//        String statusCallback = "http://127.0.0.1:8090/status";
+//        String statusCallbackMethod = "GET";
+
 
         JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
-                adminAuthToken, from, to, rcmlUrl);
+                adminAuthToken, from, to, rcmlUrl); //, statusCallback, statusCallbackMethod, null);
         assertNotNull(callResult);
 
         assertTrue(bobCall.waitForIncomingCall(5000));
-        FromHeader fromHeader = (FromHeader) bobCall.getLastReceivedRequest().getRequestEvent().getRequest().getHeader(FromHeader.NAME);
-        assertNotNull(fromHeader);
-//        System.out.println(fromHeader);
-        assertEquals(from, fromHeader.getAddress().getURI().toString().trim());
         String receivedBody = new String(bobCall.getLastReceivedRequest().getRawContent());
         assertTrue(bobCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Bob", 3600));
         assertTrue(bobCall
@@ -366,225 +355,39 @@ public class CreateCallsWithStatusCallbackTest {
 
         assertTrue(bobCall.waitForDisconnect(5000));
         assertTrue(bobCall.respondToDisconnect());
-    }
 
-    @Test
-    // Create a call to a Restcomm Client. Non-regression test for issue
-    // https://bitbucket.org/telestax/telscale-restcomm/issue/175
-    // Use Calls Rest API to dial Alice Restcomm client and connect him to the RCML app dial-number-entry.xml.
-    // This RCML will dial +131313 which George's phone is listening (use the dial-number-entry.xml as a side effect to verify
-    // that the call created successfully)
-    public void createCallClientTest() throws InterruptedException, ParseException {
+        Thread.sleep(10000);
 
-        SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.listenForIncomingCall();
+        logger.info("About to check the StatusCallback Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/statusOfDialNumber.*")));
+        assertEquals(4, requests.size());
+        String requestUrl = requests.get(0).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=0"));
+        assertTrue(requestUrl.contains("CallStatus=initiated"));
 
-        // Register Alice Restcomm client
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        requestUrl = requests.get(1).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=1"));
+        assertTrue(requestUrl.contains("CallStatus=ringing"));
 
-        SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.listenForIncomingCall();
+        requestUrl = requests.get(2).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=2"));
+        assertTrue(requestUrl.contains("CallStatus=answered"));
 
-        String from = "+15126002188";
-        String to = "client:alice";
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        requestUrl = requests.get(3).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=3"));
+        assertTrue(requestUrl.contains("CallStatus=completed"));
+        assertTrue(requestUrl.contains("RecordingUrl"));
+        assertTrue(requestUrl.contains("RecordingSid"));
+        assertTrue(requestUrl.contains("RecordingDuration"));
 
-        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
-                adminAuthToken, from, to, rcmlUrl);
-        assertNotNull(callResult);
-
-        assertTrue(aliceCall.waitForIncomingCall(5000));
-        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
-                null));
-
-        // Restcomm now should execute RCML that will create a call to +131313 (george's phone)
-
-        assertTrue(georgeCall.waitForIncomingCall(5000));
-        receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
-        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
-        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
-                null, null));
-
-        Thread.sleep(3000);
-
-        aliceCall.listenForDisconnect();
-
-        assertTrue(georgeCall.disconnect());
-        assertTrue(georgeCall.waitForAck(5000));
-
-        assertTrue(aliceCall.waitForDisconnect(5000));
-        assertTrue(aliceCall.respondToDisconnect());
-    }
-
-    @Test
-    // Create a call to a Restcomm Client for wrong RCML url
-    public void createCallClientTestWrongRcmlUrl() throws InterruptedException, ParseException {
-
-        SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.listenForIncomingCall();
-
-        // Register Alice Restcomm client
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
-
-        SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.listenForIncomingCall();
-
-        String from = "+15126002188";
-        String to = "client:alice";
-        String rcmlUrl = "/restcomm/dial-number-entry.xml";
-
-        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
-                adminAuthToken, from, to, rcmlUrl);
-        assertNotNull(callResult);
-
-        assertTrue(aliceCall.waitForIncomingCall(5000));
-        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
-                null));
-
-
-        aliceCall.listenForDisconnect();
-        assertTrue(aliceCall.waitForDisconnect(5000));
-        assertTrue(aliceCall.respondToDisconnect());
-    }
-
-    @Test
-    //Create call to client with multiple registrations. Client Alice has two registrations (2 locations) and both should ring
-    public void createCallClientTestWithMultipleRegistrations() throws InterruptedException, ParseException {
-
-        SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.listenForIncomingCall();
-
-        // Register Alice Restcomm client
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
-        assertTrue(alice2Phone.register(uri, "alice", "1234", alice2Contact, 3600, 3600));
-
-        SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.listenForIncomingCall();
-        SipCall alice2Call = alice2Phone.createSipCall();
-        alice2Call.listenForIncomingCall();
-
-        String from = "+15126002188";
-        String to = "client:alice";
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
-
-        JsonArray callResult = (JsonArray) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
-                adminAuthToken, from, to, rcmlUrl);
-        assertNotNull(callResult);
-
-        assertTrue(alice2Call.waitForIncomingCall(5000));
-        assertTrue(aliceCall.waitForIncomingCall(5000));
-
-        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
-                null));
-
-        assertTrue(alice2Call.sendIncomingCallResponse(Response.BUSY_HERE, "Busy-Here-Alice-2", 3600));
-
-
-        // Restcomm now should execute RCML that will create a call to +131313 (george's phone)
-
-        assertTrue(georgeCall.waitForIncomingCall(5000));
-        receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
-        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
-        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
-                null, null));
-
-        Thread.sleep(3000);
-
-        aliceCall.listenForDisconnect();
-
-        assertTrue(georgeCall.disconnect());
-        assertTrue(georgeCall.waitForAck(5000));
-
-        assertTrue(aliceCall.waitForDisconnect(5000));
-        assertTrue(aliceCall.respondToDisconnect());
-    }
-
-    @Test
-    // Create a call to a Number. Non-regression test for issue https://bitbucket.org/telestax/telscale-restcomm/issue/175
-    // Use Calls Rest API to dial Number +131313 which is George's phone and connect him to the RCML app dial-client-entry.xml.
-    // This RCML will dial Alice Restcomm client (use the dial-number-entry.xml as a side effect to verify that the call created
-    // successfully)
-    public void createCallNumberTest() throws InterruptedException, ParseException {
-
-        SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.listenForIncomingCall();
-
-        // Register Alice Restcomm client
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
-
-        SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.listenForIncomingCall();
-
-        String from = "+15126002188";
-        String to = "131313";
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
-
-        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
-                adminAuthToken, from, to, rcmlUrl);
-        assertNotNull(callResult);
-
-        assertTrue(georgeCall.waitForIncomingCall(5000));
-        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
-        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
-        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
-                null, null));
-
-        // Restcomm now should execute RCML that will create a call to Alice Restcomm client
-        assertTrue(aliceCall.waitForIncomingCall(5000));
-        receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
-                null));
-
-        Thread.sleep(3000);
-
-        aliceCall.listenForDisconnect();
-
-        assertTrue(georgeCall.disconnect());
-        assertTrue(georgeCall.waitForAck(5000));
-
-        assertTrue(aliceCall.waitForDisconnect(5000));
-        assertTrue(aliceCall.respondToDisconnect());
-    }
-
-    @Test
-    public void createCallNumberTestWith500ErrorResponse() throws InterruptedException, ParseException {
-
-        SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.listenForIncomingCall();
-
-        // Register Alice Restcomm client
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
-
-        SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.listenForIncomingCall();
-
-        String from = "+15126002188";
-        String to = "131313";
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
-
-        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
-                adminAuthToken, from, to, rcmlUrl);
-        assertNotNull(callResult);
-
-        assertTrue(georgeCall.waitForIncomingCall(5000));
-        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
-        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
-        assertTrue(georgeCall.sendIncomingCallResponse(Response.SERVER_INTERNAL_ERROR, "Service Unavailable", 3600));
-
-        assertTrue(georgeCall.waitForAck(5000));
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==0);
+        assertTrue(liveIncomingCalls==0);
+        assertTrue(liveOutgoingCalls==0);
+        assertTrue(liveCallsArraySize==0);
     }
 
     @Deployment(name = "CreateCallsTest", managed = true, testable = false)
