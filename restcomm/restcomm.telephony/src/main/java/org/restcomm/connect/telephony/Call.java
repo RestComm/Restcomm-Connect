@@ -2478,8 +2478,8 @@ public final class Call extends UntypedActor {
             }
 
             // Forward message for Media Session Controller to handle
-//            message.setCallId(this.id);
-//            this.msController.tell(message, sender);
+            message.setCallId(this.id);
+            this.msController.tell(message, sender);
             this.recording = true;
             this.recordingUri = message.getRecordingUri();
             this.recordingSid = message.getRecordingSid();
