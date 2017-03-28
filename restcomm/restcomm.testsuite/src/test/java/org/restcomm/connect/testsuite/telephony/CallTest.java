@@ -76,7 +76,6 @@ public final class CallTest {
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool = new SipStackTool("CallTest");
-        
     }
 
     @Before
