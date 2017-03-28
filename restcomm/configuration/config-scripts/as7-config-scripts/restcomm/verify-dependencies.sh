@@ -3,7 +3,14 @@
 ## Author: Henrique Rosa (henrique.rosa@telestax.com)
 
 verifyJava() {
-    if [ -z "$(which java)" ]; then
+	if [ -n "$(which java)" ]; then
+		
+		if [ $(java -version 2>&1 | head -n 1 | cut -d'"' -f2 | cut -d'.' -f2) -ne "7" ]; then
+             echo "Only Java 1.7 required."
+             exit 1
+		fi
+	
+	else
         echo "Java dependency is missing."
         echo "CentOS/RHEL: java-1.7.0-openjdk-devel.x86_64"
         echo "Debian/Ubuntu:"
@@ -12,7 +19,7 @@ verifyJava() {
         echo "    apt-get install openjdk-7-jdk"
         echo "macOS: brew cask install java7"
         exit 1
-    fi
+	fi
 }
 
 verifyTmux() {
