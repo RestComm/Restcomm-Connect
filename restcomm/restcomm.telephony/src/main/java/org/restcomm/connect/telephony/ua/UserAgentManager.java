@@ -19,20 +19,25 @@
  */
 package org.restcomm.connect.telephony.ua;
 
-import static java.lang.Integer.parseInt;
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
-import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
-import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
-
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.DigestAuthentication;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.RegistrationsDao;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.Registration;
+import org.restcomm.connect.monitoringservice.MonitoringService;
+import org.restcomm.connect.telephony.api.GetCall;
+import org.restcomm.connect.telephony.api.Hangup;
+import org.restcomm.connect.telephony.api.UserRegistration;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -46,30 +51,20 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.util.DigestAuthentication;
-import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.ClientsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.RegistrationsDao;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
-import org.restcomm.connect.dao.entities.Client;
-import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.monitoringservice.MonitoringService;
-import org.restcomm.connect.telephony.api.CallStateChanged;
-import org.restcomm.connect.telephony.api.GetCall;
-import org.restcomm.connect.telephony.api.Hangup;
-import org.restcomm.connect.telephony.api.UserRegistration;
-
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import static java.lang.Integer.parseInt;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
+import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
+import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -329,7 +324,7 @@ public final class UserAgentManager extends UntypedActor {
         removeRegistration(sipServletMessage, false);
     }
 
-    private void removeRegistration(final SipServletMessage sipServletMessage, boolean locationInContact) throws ServletParseException {
+    private void removeRegistration(final SipServletMessage sipServletMessage, boolean locationInContact) throws ServletParseException{
         String user = ((SipURI)sipServletMessage.getTo().getURI()).getUser();
         SipURI location = locationInContact ? ((SipURI)sipServletMessage.getAddressHeader("Contact").getURI()) :
             ((SipURI)sipServletMessage.getTo().getURI());
@@ -378,19 +373,6 @@ public final class UserAgentManager extends UntypedActor {
                     regDao.removeRegistration(reg);
                     monitoringService.tell(new UserRegistration(reg.getUserName(), reg.getLocation(), false), self());
                     monitoringService.tell(new GetCall(reg.getLocation()), self());
-                    /*poc for p2p call close begins*/
-                    try{
-                        CallDetailRecordsDao callDao = storage.getCallDetailRecordsDao();
-                        //TODO compare account and client sids as well to be accurate here
-                        List<CallDetailRecord> cdrs = callDao.getActiveCallDetailRecordBySenderAndAddress(reg.getUserName(), locationStored);
-                        logger.info("cdrs: "+cdrs);
-                        CallDetailRecord cdr = cdrs.get(0);
-                        cdr = cdr.setStatus(CallStateChanged.State.COMPLETED+"");
-                        callDao.updateCallDetailRecord(cdr);
-                    }catch(Exception e){
-                        logger.error("Exception: "+e);
-                    }
-                    /*poc for p2p call close ends*/
                 } else {
                     if (logger.isDebugEnabled()) {
                         String msg = String.format("Registration DID NOT removed. SIP Message location: %s, registration location (in DB) %s.", locationToTest, reg.getLocation());

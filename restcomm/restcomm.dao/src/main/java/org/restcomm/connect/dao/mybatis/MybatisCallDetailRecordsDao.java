@@ -299,15 +299,6 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     }
 
     @Override
-    public List<CallDetailRecord> getActiveCallDetailRecordBySenderAndAddress(String sender, String senderLocation) {
-        final Map<String, Object> map = new HashMap<String, Object>();
-        map.put("sender", sender);
-        //TODO replace by new column for now use call_path to test poc
-        map.put("call_path", senderLocation);
-        return getCallDetailRecords(namespace + "getActiveCallDetailRecordBySenderAndAddress", map);
-    }
-
-    @Override
     public void updateInCompleteCallDetailRecordsToCompletedByInstanceId(Sid instanceId) {
         final SqlSession session = sessions.openSession();
         try {

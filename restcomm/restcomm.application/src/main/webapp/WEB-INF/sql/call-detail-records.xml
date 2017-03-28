@@ -189,10 +189,6 @@
   <select id="getTotalRunningCallDetailRecordsByConferenceSid" parameterType="string" resultType="int">
     SELECT COUNT(*) FROM "restcomm_call_detail_records" WHERE "conference_sid"=#{conference_sid} and "status" ='in-progress';
   </select>
-  <select id="getActiveCallDetailRecordBySenderAndAddress" parameterType="map" resultType="hashmap">
-	SELECT * FROM "restcomm_call_detail_records" AS "restcomm_call_detail_records" WHERE "sender"=#{sender} and 
-	"call_path"={#call_path} and UPPER("status") in ('IN_PROGRESS','IN-PROGRESS', 'RINGING', 'QUEUED') and "direction"='Client-To-Client';
-  </select>
   
   <delete id="removeCallDetailRecord" parameterType="string">
     DELETE FROM "restcomm_call_detail_records" WHERE "sid"=#{sid};

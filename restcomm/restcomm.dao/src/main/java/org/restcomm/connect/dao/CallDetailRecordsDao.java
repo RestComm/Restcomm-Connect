@@ -57,8 +57,6 @@ public interface CallDetailRecordsDao {
 
     List<CallDetailRecord> getCallDetailRecordsByInstanceId(Sid instanceId);
 
-    List<CallDetailRecord> getActiveCallDetailRecordBySenderAndAddress(String sender, String senderLocation);
-
     List<CallDetailRecord> getInCompleteCallDetailRecordsByInstanceId(Sid instanceId);
 
     List<CallDetailRecord> getCallDetailRecordsByMsId(String msId);
