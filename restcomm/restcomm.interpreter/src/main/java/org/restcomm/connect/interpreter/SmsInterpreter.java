@@ -800,7 +800,7 @@ public final class SmsInterpreter extends UntypedActor {
                 // Start observing events from the sms session.
                 session.tell(new Observe(source), source);
                 // Store the status callback in the sms session.
-                attribute = verb.attribute("statusCallback");
+                attribute = verb.attribute("viStatusCallback");
                 if (attribute != null) {
                     String callback = attribute.value();
                     if (callback != null && !callback.isEmpty()) {

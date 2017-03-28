@@ -20,13 +20,19 @@
 package org.restcomm.connect.telephony;
 
 import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.mobicents.javax.servlet.sip.SipFactoryExt;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
@@ -46,6 +52,8 @@ import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.http.client.Downloader;
+import org.restcomm.connect.http.client.HttpRequestDescriptor;
 import org.restcomm.connect.mscontrol.api.messages.CloseMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.Collect;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
@@ -85,6 +93,7 @@ import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.telephony.api.RemoveParticipant;
+import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
 
 import javax.sdp.SdpException;
@@ -120,6 +129,8 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -223,6 +234,8 @@ public final class Call extends UntypedActor {
     private DaoManager daoManager;
     private boolean liveCallModification;
     private boolean recording;
+    private URI recordingUri;
+    private Sid recordingSid;
     private Sid parentCallSid;
 
     // Runtime Setting
@@ -244,11 +257,42 @@ public final class Call extends UntypedActor {
     private boolean actAsImsUa;
 
     private boolean isOnHold;
+    private int callDuration;
+    private DateTime recordingStart;
+    private long recordingDuration;
 
-    public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
+    private HttpRequestDescriptor requestCallback;
+    ActorRef downloader = null;
+    ActorRef supervisor = null;
+    private URI statusCallback;
+    private String statusCallbackMethod;
+    private List<String> statusCallbackEvent;
+    public static enum CallbackState {
+        INITIATED("initiated"), RINGING("ringing"), ANSWERED("answered"), COMPLETED("completed");
+
+        private final String text;
+
+        private CallbackState(final String text) {
+            this.text = text;
+        }
+
+        @Override
+        public String toString() {
+            return text;
+        }
+    };
+
+    public Call(final ActorRef supervisor, final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration,
+                final URI statusCallback, final String statusCallbackMethod, final List<String> statusCallbackEvent) {
         super();
         final ActorRef source = self();
-
+        this.supervisor = supervisor;
+        this.statusCallback = statusCallback;
+        this.statusCallbackMethod = statusCallbackMethod;
+        this.statusCallbackEvent = statusCallbackEvent;
+        if (statusCallback != null) {
+            downloader = downloader();
+        }
         // States for the FSM
         this.uninitialized = new State("uninitialized", null, null);
         this.initializing = new State("initializing", new Initializing(source), null);
@@ -370,6 +414,24 @@ public final class Call extends UntypedActor {
         }
     }
 
+    ActorRef downloader() {
+        final Props props = new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new Downloader();
+            }
+        });
+        ActorRef downloader = null;
+        try {
+            downloader = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            logger.error("Problem during creation of actor: "+e);
+        }
+        return downloader;
+    }
+
     private boolean is(State state) {
         return this.fsm.state().equals(state);
     }
@@ -399,6 +461,116 @@ public final class Call extends UntypedActor {
             }
         }
         return null;
+    }
+
+    private List<NameValuePair> dialStatusCallbackParameters(final CallbackState state) {
+
+        final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+
+        parameters.add(new BasicNameValuePair("InstanceId", RestcommConfiguration.getInstance().getMain().getInstanceId()));
+
+        parameters.add(new BasicNameValuePair("AccountSid", accountId.toString()));
+
+        parameters.add(new BasicNameValuePair("CallSid", id.toString()));
+
+        parameters.add(new BasicNameValuePair("From", this.from.getUser()));
+        String to = null;
+        if (this.to.isSipURI()) {
+            to = ((SipURI) this.to).getUser();
+        } else {
+            to = ((TelURL) this.to).getPhoneNumber();
+        }
+        parameters.add(new BasicNameValuePair("To", to));
+
+        parameters.add(new BasicNameValuePair("Direction", direction));
+
+        parameters.add(new BasicNameValuePair("CallerName", from.getUser()));
+
+        parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
+
+        if (parentCallSid != null)
+            parameters.add(new BasicNameValuePair("ParentCallSid", parentCallSid.toString()));
+
+        parameters.add(new BasicNameValuePair("CallStatus", state.toString()));
+
+        if (state.equals(CallbackState.COMPLETED)) {
+            parameters.add(new BasicNameValuePair("CallDuration", String.valueOf(callDuration)));
+
+            //We never record an outgoing call leg, we only record parent call leg and both legs of the call
+            //are mixed down into a single channel
+            //The recording duration will be used only for REST-API created calls
+            if (recording && direction.equalsIgnoreCase("outbound-api")) {
+                if (recordingUri != null)
+                    parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
+                if (recordingSid != null)
+                    parameters.add(new BasicNameValuePair("RecordingSid", recordingSid.toString()));
+                if (recordingDuration > -1)
+                    parameters.add(new BasicNameValuePair("RecordingDuration", String.valueOf(recordingDuration)));
+            }
+        }
+
+        //RFC 2822 (example: Mon, 15 Aug 2005 15:52:01 +0000)
+        DateTimeFormatter fmt = DateTimeFormat.forPattern("EEE, dd MMM YYYY HH:mm:ss ZZZZ");
+        final String timestamp = DateTime.now().toString(fmt);
+        parameters.add(new BasicNameValuePair("Timestamp", timestamp));
+
+        parameters.add(new BasicNameValuePair("CallbackSource", "call-progress-events"));
+
+        String sequence = "0";
+        switch (state) {
+            case INITIATED:
+                sequence = "0";
+                break;
+            case RINGING:
+                sequence = "1";
+                break;
+            case ANSWERED:
+                sequence = "2";
+                break;
+            case COMPLETED:
+                sequence = "3";
+                break;
+            default:
+                sequence = "0";
+                break;
+        }
+
+        parameters.add(new BasicNameValuePair("SequenceNumber", sequence));
+
+        if (logger.isDebugEnabled()) {
+            String msg = String.format("Created parameters for Call StatusCallback for state %s and sequence %s uri %s",state,sequence,statusCallback.toString());
+            logger.debug(msg);
+        }
+
+        return parameters;
+    }
+
+    private void executeStatusCallback(final CallbackState state) {
+        if (statusCallback != null) {
+            if (statusCallbackEvent.contains(state.toString())) {
+                if (logger.isDebugEnabled()) {
+                    String msg = String.format("About to execute Call StatusCallback to %s for state %s",statusCallback.toString(), state.text);
+                    logger.debug(msg);
+                }
+                if (statusCallbackMethod == null) {
+                    statusCallbackMethod = "POST";
+                }
+                final List<NameValuePair> parameters = dialStatusCallbackParameters(state);
+
+                if (parameters != null) {
+                    requestCallback = new HttpRequestDescriptor(statusCallback, statusCallbackMethod, parameters);
+                    downloader.tell(requestCallback, null);
+                }
+            } else {
+                if (logger.isDebugEnabled()) {
+                    String msg = String.format("Call StatusCallback did not run because state %s no in the statusCallbackEvent list", state.text);
+                    logger.debug(msg);
+                }
+            }
+        } else if(logger.isInfoEnabled()){
+            logger.info("status callback is null");
+        }
+
     }
 
     private void forwarding(final Object message) {
@@ -820,6 +992,7 @@ public final class Call extends UntypedActor {
             // Set the timeout period.
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.create(timeout, TimeUnit.SECONDS));
+            executeStatusCallback(CallbackState.INITIATED);
         }
     }
 
@@ -867,6 +1040,7 @@ public final class Call extends UntypedActor {
                 if (initialInetUri != null) {
                     ((SipServletResponse)message).getSession().setAttribute("realInetUri", initialInetUri);
                 }
+                executeStatusCallback(CallbackState.RINGING);
             }
 
             // Notify the observers.
@@ -1397,6 +1571,9 @@ public final class Call extends UntypedActor {
                     }
                     recordsDao.updateCallDetailRecord(outgoingCallRecord);
                 }
+                if (isOutbound()) {
+                    executeStatusCallback(CallbackState.ANSWERED);
+                }
             }
         }
     }
@@ -1484,15 +1661,18 @@ public final class Call extends UntypedActor {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.toString());
                 final DateTime now = DateTime.now();
                 outgoingCallRecord = outgoingCallRecord.setEndTime(now);
-                final int seconds = (int) ((now.getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
-                outgoingCallRecord = outgoingCallRecord.setDuration(seconds);
+                callDuration = (int) ((now.getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
+                outgoingCallRecord = outgoingCallRecord.setDuration(callDuration);
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
                 if(logger.isDebugEnabled()) {
                     logger.debug("Start: " + outgoingCallRecord.getStartTime());
                     logger.debug("End: " + outgoingCallRecord.getEndTime());
-                    logger.debug("Duration: " + seconds);
+                    logger.debug("Duration: " + callDuration);
                     logger.debug("Just updated CDR for completed call");
                 }
+            }
+            if (isOutbound()) {
+                executeStatusCallback(CallbackState.COMPLETED);
             }
         }
     }
@@ -1735,6 +1915,9 @@ public final class Call extends UntypedActor {
                     }
                     msController.tell(new Stop(false), self);
                     // VoiceInterpreter will take care to prepare the Recording object
+                } else if (direction.equalsIgnoreCase("outbound-api")){
+                    //REST API Outgoing call, calculate recording
+                    recordingDuration = (DateTime.now().getMillis() - recordingStart.getMillis())/1000;
                 } else if (conference != null) {
                     // Outbound call sent BYE. !Important conference is the initial call here.
                     conference.tell(new StopRecording(accountId, runtimeSettings, daoManager), null);
@@ -2298,6 +2481,9 @@ public final class Call extends UntypedActor {
             message.setCallId(this.id);
             this.msController.tell(message, sender);
             this.recording = true;
+            this.recordingUri = message.getRecordingUri();
+            this.recordingSid = message.getRecordingSid();
+            this.recordingStart = DateTime.now();
         }
     }
 
@@ -2306,6 +2492,8 @@ public final class Call extends UntypedActor {
             // Forward message for Media Session Controller to handle
             this.msController.tell(message, sender);
             this.recording = false;
+
+            recordingDuration = (DateTime.now().getMillis() - recordingStart.getMillis())/1000;
         }
     }
 
