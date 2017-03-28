@@ -132,7 +132,6 @@ Supply the credentials of the Restcomm account that will be used to create the c
 * Set *Password* to the _AuthToken_ of your account displayed in Dashboard.
 
 
-
 [[adding-variables-to-the-mix]]
 Adding variables
 ++++++++++++++++
@@ -149,6 +148,18 @@ This application will use the _firstname_ and _lastname_ parameters from a trigg
 following:
 
  http://this:8080/restcomm-rvd/services/apps/APdc8c1eea063d4a85b64a5bebda8e8c04/start?to=client:alice&firstname=nick&lastname=the+greek
+
+
+###### Variable scope
+
+In the example above `firstname` and `lastname` parameters defined in the url will result in creating module-scoped
+RVD variables. This means that the variables will be available only in the first module
+execution. To make them last for the whole application lifecycle the 'User parameter scope'
+option in _Advanced configuration_ options should be set to _Application_ as illustrated below.
+
+image:./images/WebTrigger_application_scoped_vars.png[application_scoped_variables]
+
+
 
 
 [[note-on-destinations]]
