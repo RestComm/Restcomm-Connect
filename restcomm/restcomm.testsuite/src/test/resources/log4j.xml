@@ -21,6 +21,9 @@
 	<logger name="org.mobicents.servlet.sip.annotations">
 		<level value="INFO" />
 	</logger>
+	<logger name="org.restcomm.connect.*">
+		<level value="DEBUG" />
+	</logger>
 	<root>
 		<priority value="DEBUG" />
 		<appender-ref ref="console" />

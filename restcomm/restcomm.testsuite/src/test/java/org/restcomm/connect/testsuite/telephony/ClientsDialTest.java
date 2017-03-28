@@ -443,8 +443,9 @@ public class ClientsDialTest {
         }
         logger.info("cdrsArray.size(): "+cdrsArray.size());
         assertTrue(cdrsArray.size() == 1);
-        String sid = cdrsArray.get(0).getAsJsonObject().get("sid").getAsString();
-        logger.info("cdr sid: "+sid);
+        JsonObject cdr = cdrsArray.get(0).getAsJsonObject();
+        String sid = cdr.get("sid").getAsString();
+        logger.info("cdr: "+cdr);
         assertNotNull(sid);
 
         mariaPhone.listenRequestMessage();
@@ -465,11 +466,10 @@ public class ClientsDialTest {
         Thread.sleep(200000);
 
         //Check CDR again and CDR should be completed
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
         String status = cdr.get("status").getAsString();
         logger.info("cdrs status: "+status);
-        assertTrue(status.equalsIgnoreCase("in_progress"));
         assertTrue(status.equalsIgnoreCase("completed"));
 
     }
