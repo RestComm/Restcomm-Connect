@@ -993,6 +993,7 @@ public final class CallManager extends UntypedActor {
                 builder.setPhone(number.getAccountSid());
                 builder.setVersion(number.getApiVersion());
                 // notifications should go to fromClientAccountSid email if not present then to number account
+                // https://github.com/RestComm/Restcomm-Connect/issues/2011
                 final Account account = accounts.getAccount(accSid);
                 builder.setEmailAddress(account.getEmailAddress());
                 final Sid sid = number.getVoiceApplicationSid();
