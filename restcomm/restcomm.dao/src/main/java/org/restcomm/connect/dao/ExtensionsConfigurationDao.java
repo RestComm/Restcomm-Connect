@@ -97,4 +97,7 @@ public interface ExtensionsConfigurationDao {
      * @return
      */
     boolean validate(ExtensionConfiguration extensionConfiguration);
+
+    /**/
+    ExtensionConfiguration getAccountExtensionConfiguration(String accountSid, String extensionSid);
 }

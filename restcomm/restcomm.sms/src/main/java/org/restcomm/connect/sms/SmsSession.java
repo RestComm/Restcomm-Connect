@@ -25,6 +25,9 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import com.cloudhopper.commons.charset.Charset;
 import com.cloudhopper.commons.charset.CharsetUtil;
+import com.cloudhopper.commons.util.ByteArrayUtil;
+import com.cloudhopper.smpp.tlv.Tlv;
+import com.cloudhopper.smpp.SmppConstants;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.sms.api.GetLastSmsRequest;
@@ -32,6 +35,7 @@ import org.restcomm.connect.sms.api.SmsSessionAttribute;
 import org.restcomm.connect.sms.api.SmsSessionInfo;
 import org.restcomm.connect.sms.api.SmsSessionRequest;
 import org.restcomm.connect.sms.api.SmsSessionResponse;
+import org.restcomm.connect.sms.api.SmsSessionRequest.Encoding;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RegistrationsDao;
@@ -45,6 +49,7 @@ import org.restcomm.connect.sms.smpp.SmppInboundMessageEntity;
 import org.restcomm.connect.sms.smpp.SmppMessageHandler;
 import org.restcomm.connect.sms.smpp.SmppOutboundMessageEntity;
 import org.restcomm.connect.telephony.api.TextMessage;
+import org.restcomm.smpp.parameter.TlvSet;
 
 import javax.servlet.ServletContext;
 import javax.servlet.sip.SipApplicationSession;
@@ -60,6 +65,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -78,6 +84,7 @@ public final class SmsSession extends UntypedActor {
     private ConcurrentHashMap<String, String> customRequestHeaderMap = new ConcurrentHashMap<String, String>();
     // Map for custom headers from HTTP App Server (when creating outbound SIP MESSAGE)
     private ConcurrentHashMap<String, String> customHttpHeaderMap;
+    private TlvSet tlvSet;
 
     private final DaoManager storage;
 
@@ -113,6 +120,18 @@ public final class SmsSession extends UntypedActor {
         this.externalIP = this.configuration.subset("runtime-settings").getString("external-ip");
         if (externalIP == null || externalIP.isEmpty() || externalIP.equals(""))
             externalIP = defaultHost;
+
+        this.tlvSet = new TlvSet();
+        if(!this.configuration.subset("outbound-sms").isEmpty()) {
+            //FIXME: hardcoded to TAG_DEST_NETWORK_ID
+            try {
+                String valStr = this.configuration.subset("outbound-sms").getString("destination_network_id");
+                //FIXME:fetch the tag value from the arbitrary key
+                this.tlvSet.addOptionalParameter(new Tlv(SmppConstants.TAG_DEST_NETWORK_ID,ByteArrayUtil.toByteArray(Integer.parseInt(valStr))));
+            } catch (Exception e) {
+                // TODO: handle exception
+            }
+        }
     }
 
     private void inbound(final Object message) throws IOException {
@@ -135,7 +154,8 @@ public final class SmsSession extends UntypedActor {
                 }
             }
             // Store the last sms event.
-            last = new SmsSessionRequest(from, to, body, customRequestHeaderMap);
+
+            last = new SmsSessionRequest(from, to, body, Encoding.GSM, customRequestHeaderMap, this.tlvSet);
             if (initial == null) {
                 initial = last;
             }
@@ -154,7 +174,8 @@ public final class SmsSession extends UntypedActor {
                 encoding = SmsSessionRequest.Encoding.UCS_2;
             }
             // Store the last sms event.
-            last = new SmsSessionRequest (request.getSmppFrom(), request.getSmppTo(), request.getSmppContent(), encoding, null);
+
+            last = new SmsSessionRequest (request.getSmppFrom(), request.getSmppTo(), request.getSmppContent(), encoding, null, request.getTlvSet());
             if (initial == null) {
                 initial = last;
             }
@@ -269,7 +290,7 @@ public final class SmsSession extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("Destination is not a local registered client, therefore, sending through SMPP to:  " + last.to() );
             }
-            if (sendUsingSmpp(last.from(), last.to(), last.body(), charset))
+            if (sendUsingSmpp(last.from(), last.to(), last.body(), tlvSet, charset))
                 return;
         }
 
@@ -326,16 +347,19 @@ public final class SmsSession extends UntypedActor {
             }
             // Log the exception.
             logger.error(exception.getMessage(), exception);
-        }}
-
+        }
+    }
     private boolean sendUsingSmpp(String from, String to, String body, Charset encoding) {
+        return sendUsingSmpp(from, to, body, null, encoding);
+    }
+    private boolean sendUsingSmpp(String from, String to, String body, TlvSet tlvSet, Charset encoding) {
         if ((SmppClientOpsThread.getSmppSession() != null && SmppClientOpsThread.getSmppSession().isBound()) && smppMessageHandler != null) {
             if(logger.isInfoEnabled()) {
                 logger.info("SMPP session is available and connected, outbound message will be forwarded to :  " + to );
                 logger.info("Encoding:  " + encoding );
             }
             try {
-                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(to, from, body, encoding);
+                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(to, from, body, encoding, tlvSet);
                 smppMessageHandler.tell(sms, null);
             }catch (final Exception exception) {
                 // Log the exception.
