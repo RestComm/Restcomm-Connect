@@ -124,7 +124,7 @@ public class CallLifecycleTest {
     private SipPhone georgePhone;
     private String georgeContact = "sip:+131313@127.0.0.1:5070";
 
-    // subaccountclient is a simple SIP Client. Will not register with Restcomm
+    // subaccountclient is a simple SIP Client. Will register with Restcomm
     private SipStack subAccountClientSipStack;
     private SipPhone subAccountClientPhone;
     private String subAccountClientContact = "sip:subaccountclient@127.0.0.1:5093";
@@ -1195,6 +1195,9 @@ public class CallLifecycleTest {
         SipCall georgeCall = georgePhone.createSipCall();
         georgeCall.listenForIncomingCall();
 
+        SipURI uri = subAccountClientSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(subAccountClientPhone.register(uri, "subaccountclient", "1234", subAccountClientContact, 3600, 3600));
+        
         // Create outgoing call with subAccountClient phone to parent number
         final SipCall subAccountClientCall = subAccountClientPhone.createSipCall();
         subAccountClientCall.initiateOutgoingCall(subAccountClientContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
