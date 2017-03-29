@@ -1,5 +1,7 @@
 package org.restcomm.connect.sms.smpp;
 
+import org.restcomm.smpp.parameter.TlvSet;
+
 import com.cloudhopper.commons.charset.Charset;
 
 public class SmppOutboundMessageEntity {
@@ -9,15 +11,23 @@ public class SmppOutboundMessageEntity {
     private final String smppFrom;
     private final String smppContent;
     private final Charset smppEncoding;
+    private final TlvSet tlvSet;
 
 
     public SmppOutboundMessageEntity(String smppTo, String smppFrom, String smppContent, Charset smppEncoding){
+         this(smppTo, smppFrom, smppContent, smppEncoding, null);
+    }
 
+    public SmppOutboundMessageEntity(String smppTo, String smppFrom, String smppContent, Charset smppEncoding, TlvSet tlvSet){
         this.smppTo = smppTo;
         this.smppFrom = smppFrom;
         this.smppContent = smppContent;
         this.smppEncoding = smppEncoding;
+        this.tlvSet = tlvSet;
+    }
 
+    public final TlvSet getTlvSet(){
+        return tlvSet;
     }
 
 
@@ -48,6 +58,10 @@ public class SmppOutboundMessageEntity {
             .append(smppContent)
             .append(",Encoding=")
             .append(smppEncoding);
+        if(tlvSet!=null){
+        builder.append(",TlvSet=")
+            .append(tlvSet.toString());
+        }
 
         return super.toString();
     }
