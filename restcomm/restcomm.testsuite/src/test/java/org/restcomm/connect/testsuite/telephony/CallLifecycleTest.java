@@ -132,6 +132,9 @@ public class CallLifecycleTest {
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
+    private String subAccountSid = "ACae6e420f425248d6a26948c17a9e2acg";
+    private String subAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("DialActionTest1");
@@ -1260,6 +1263,10 @@ public class CallLifecycleTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        
+        cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), subAccountSid, subAuthToken, callSid);
+        jsonObj = cdr.getAsJsonObject();
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
     }
 
     @Deployment(name = "DialAction", managed = true, testable = false)
