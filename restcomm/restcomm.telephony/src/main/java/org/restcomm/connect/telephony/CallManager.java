@@ -987,10 +987,13 @@ public final class CallManager extends UntypedActor {
                 builder.setConferenceManager(conferences);
                 builder.setBridgeManager(bridges);
                 builder.setSmsService(sms);
-                builder.setAccount(fromClientAccountSid == null? number.getAccountSid():fromClientAccountSid);
+                //https://github.com/RestComm/Restcomm-Connect/issues/1939
+                Sid accSid = fromClientAccountSid == null? number.getAccountSid() : fromClientAccountSid;
+                builder.setAccount(accSid);
                 builder.setPhone(number.getAccountSid());
                 builder.setVersion(number.getApiVersion());
-                final Account account = accounts.getAccount(number.getAccountSid());
+                // notifications should go to fromClientAccountSid email if not present then to number account
+                final Account account = accounts.getAccount(accSid);
                 builder.setEmailAddress(account.getEmailAddress());
                 final Sid sid = number.getVoiceApplicationSid();
                 if (sid != null) {
