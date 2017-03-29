@@ -259,6 +259,13 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
         return new ExtensionConfiguration(sid, extension, enabled, confData, confType, dateCreated, dateUpdated);
     }
 
+    private ExtensionConfiguration toAccountsExtensionConfiguration(final Map<String, Object> map) {
+        final Sid sid = new Sid((String)map.get("extension"));
+        final String extension = (String) map.get("extension");
+        final Object confData = map.get("configuration_data");
+        return new ExtensionConfiguration(sid, extension, true, confData, null, null, null);
+    }
+
     private Map<String, Object> toMap(final ExtensionConfiguration extensionConfiguration) {
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("sid", DaoUtils.writeSid(extensionConfiguration.getSid()));
@@ -275,5 +282,23 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
 
         map.put("enabled", extensionConfiguration.isEnabled());
         return map;
+    }
+
+    @Override
+    public ExtensionConfiguration getExtensionClob(String accountSid, String extensionSid) {
+        final SqlSession session = sessions.openSession();
+        ExtensionConfiguration extensionConfiguration = null;
+        try {
+            Map<String, Object> params = new HashMap<String, Object>();
+            params.put("account_sid", accountSid.toString());
+            params.put("extension_sid", extensionSid.toString());
+            final Map<String, Object> result  = session.selectOne(namespace + "getExtensionClob", params);
+            if (result != null) {
+                extensionConfiguration = toAccountsExtensionConfiguration(result);
+            }
+            return extensionConfiguration;
+        } finally {
+            session.close();
+        }
     }
 }

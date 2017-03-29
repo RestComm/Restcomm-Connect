@@ -47,10 +47,11 @@ public class ExtensionBootstrapper {
 
     public void start() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
 
-        List<HierarchicalConfiguration> exts = ((XMLConfiguration)configuration).configurationsAt("extensions.extension");
+        List<HierarchicalConfiguration> exts = ((XMLConfiguration)configuration).configurationsAt("extension");
 
         for (HierarchicalConfiguration ext: exts) {
-            String name = ext.getString("[@name]");
+            String name = ext.getString("name");
+            String extensionSid = ext.getString("extension_sid");
             String className = ext.getString("class");
             boolean enabled = ext.getBoolean("enabled");
             if (enabled) {

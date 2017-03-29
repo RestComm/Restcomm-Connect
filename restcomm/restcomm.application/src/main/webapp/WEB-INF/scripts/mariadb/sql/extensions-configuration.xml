@@ -61,4 +61,9 @@
   <select id="getDateUpdatedBySid" parameterType="String" resultType="date">
     SELECT date_updated FROM restcomm_extensions_configuration WHERE sid=#{sid};
   </select>
+
+  <select id="getExtensionClob" parameterType="map" resultType="hashmap">
+    SELECT configuration_data FROM restcomm_accounts_extensions 
+    WHERE account_sid=#{account_sid} AND extension_sid=#{extension_sid};
+  </select>
 </mapper>

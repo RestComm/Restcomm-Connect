@@ -381,6 +381,13 @@ date_updated DATETIME,
 enabled  BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+CREATE TABLE restcomm_accounts_extensions (
+account_sid VARCHAR(34) NOT NULL,
+extension_sid VARCHAR(34) NOT NULL,
+extension_blob CLOB,
+PRIMARY KEY (account_sid, extension_sid)
+);
+
 INSERT INTO restcomm_accounts VALUES (
 "ACae6e420f425248d6a26948c17a9e2acf",
 Date("2012-04-24"),
