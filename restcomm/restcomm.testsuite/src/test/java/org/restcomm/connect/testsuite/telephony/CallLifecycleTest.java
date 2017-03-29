@@ -1194,14 +1194,18 @@ public class CallLifecycleTest {
 
         SipCall georgeCall = georgePhone.createSipCall();
         georgeCall.listenForIncomingCall();
-
+        
         SipURI uri = subAccountClientSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(subAccountClientPhone.register(uri, "subaccountclient", "1234", subAccountClientContact, 3600, 3600));
+
+        Credential c = new Credential("127.0.0.1", "subaccountclient", "1234");
+        subAccountClientPhone.addUpdateCredential(c);
         
         // Create outgoing call with subAccountClient phone to parent number
         final SipCall subAccountClientCall = subAccountClientPhone.createSipCall();
         subAccountClientCall.initiateOutgoingCall(subAccountClientContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(subAccountClientCall);
+        assertTrue(subAccountClientCall.waitForAuthorisation(5000));
         assertTrue(subAccountClientCall.waitOutgoingCallResponse(5 * 1000));
         final int response = subAccountClientCall.getLastReceivedResponse().getStatusCode();
         assertTrue(response == Response.TRYING || response == Response.RINGING);
