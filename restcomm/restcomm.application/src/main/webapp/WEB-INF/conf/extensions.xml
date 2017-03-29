@@ -11,11 +11,9 @@
 	MA 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
 
 <extensions>
-    <!--
-    <extension>
-        <name>ExampleExtension</name>
-        <class>org.restcomm.connect.ExampleExtension</class>
+    <!-- extension name="MultiProvider">
+        <name>MultiProvider</name>
+        <class>org.restcomm.connect.extension.multiprovider.MultiProvider</class>
         <enabled>true</enabled>
-    </extension>
-    -->
+    </extension-->
 </extensions>

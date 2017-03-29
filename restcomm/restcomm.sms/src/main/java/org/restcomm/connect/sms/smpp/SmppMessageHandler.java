@@ -16,6 +16,7 @@ import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
 import com.cloudhopper.smpp.type.SmppTimeoutException;
 import com.cloudhopper.smpp.type.UnrecoverablePduException;
+import com.cloudhopper.smpp.tlv.Tlv;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.dao.Sid;
@@ -32,6 +33,7 @@ import org.restcomm.connect.sms.SmsSession;
 import org.restcomm.connect.sms.api.CreateSmsSession;
 import org.restcomm.connect.sms.api.DestroySmsSession;
 import org.restcomm.connect.sms.api.SmsServiceResponse;
+import org.restcomm.smpp.parameter.TlvSet;
 
 import javax.servlet.ServletContext;
 import javax.servlet.sip.SipFactory;
@@ -40,6 +42,7 @@ import javax.servlet.sip.SipURI;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Collection;
 
 public class SmppMessageHandler extends UntypedActor  {
 
@@ -75,7 +78,9 @@ public class SmppMessageHandler extends UntypedActor  {
             }
             outbound((SmppOutboundMessageEntity) message);
         } else if (message instanceof CreateSmsSession) {
-            final ActorRef session = session();
+            //Extension
+            Configuration cfg = this.configuration;
+            final ActorRef session = session(cfg);
             final SmsServiceResponse<ActorRef> response = new  SmsServiceResponse<ActorRef>(session);
             sender.tell(response, self);
         }else if (message instanceof DestroySmsSession) {
@@ -153,8 +158,9 @@ public class SmppMessageHandler extends UntypedActor  {
                     builder.setFallbackMethod(number.getSmsFallbackMethod());
                 }
                 interpreter = builder.build();
-
-                final ActorRef session = session();
+                Configuration cfg = this.configuration;
+                //Extension
+                final ActorRef session = session(cfg);
                 session.tell(request, self);
                 final StartInterpreter start = new StartInterpreter(session);
                 interpreter.tell(start, self);
@@ -181,13 +187,13 @@ public class SmppMessageHandler extends UntypedActor  {
         return result;
     }
 
-    private ActorRef session() {
+    private ActorRef session(final Configuration p_configuration) {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new SmsSession(configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
+                return new SmsSession(p_configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
             }
         });
         return system.actorOf(props);
@@ -214,6 +220,16 @@ public class SmppMessageHandler extends UntypedActor  {
         }
 
         submit0.setShortMessage(textBytes);
+
+        TlvSet tlvSet = request.getTlvSet();
+
+        if(tlvSet!=null) {
+            for (Tlv tlv : (Collection<Tlv>)tlvSet.getOptionalParameters()) {
+                submit0.setOptionalParameter(tlv);
+            }
+        }else{
+            logger.info("tlvSet is null");
+        }
         try {
             if(logger.isInfoEnabled()) {
                 logger.info("Sending SubmitSM for " + request);
