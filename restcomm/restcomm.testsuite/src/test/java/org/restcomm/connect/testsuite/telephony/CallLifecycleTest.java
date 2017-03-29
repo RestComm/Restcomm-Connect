@@ -204,7 +204,7 @@ public class CallLifecycleTest {
         Thread.sleep(4000);
     }
 
-    @Ignore@Test
+    @Test
     public void testDialCancelBeforeDialingClientAliceAfterTrying() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -256,7 +256,7 @@ public class CallLifecycleTest {
         assertTrue(maxConcurrentOutgoingCalls==0);
     }
 
-    @Ignore@Test
+    @Test
     public void testDialCancelBeforeDialingClientAliceAfterRinging() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -326,7 +326,7 @@ public class CallLifecycleTest {
     }
 
     private String dialAliceRcml = "<Response><Dial><Client>alice</Client></Dial></Response>";
-    @Ignore@Test
+    @Test
     public void testDialClientAlice() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -423,7 +423,7 @@ public class CallLifecycleTest {
     }
 
     private String dialAliceRcmlWithTimeLimit = "<Response><Dial timeLimit=\"10\"><Client>alice</Client></Dial></Response>";
-    @Ignore@Test
+    @Test
     public void testDialClientAliceWithTimeLimit() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -516,7 +516,7 @@ public class CallLifecycleTest {
 
     private String dialNumberRcml = "<Response><Dial><Number>+131313</Number></Dial></Response>";
 
-    @Ignore@Test
+    @Test
     public void testDialNumberPstn() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -587,7 +587,7 @@ public class CallLifecycleTest {
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
-    @Ignore@Test
+    @Test
     public void testDialNumberPstnRegisteredClientTimesOutCallDisconnects() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -663,7 +663,7 @@ public class CallLifecycleTest {
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
-    @Ignore@Test
+    @Test
     public void testDialNumberPstnForbidden() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -747,7 +747,7 @@ public class CallLifecycleTest {
         assertTrue(maxConcurrentOutgoingCalls==1);
     }
 
-    @Ignore@Test
+    @Test
     public void testDialNumberPstnBobDisconnects() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -830,7 +830,7 @@ public class CallLifecycleTest {
     }
     
     
-    @Ignore@Test
+    @Test
     public void testDialNumberPstn_404NotHere() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -913,7 +913,7 @@ public class CallLifecycleTest {
 
     private String dialNumberRcmlWithTimeout = "<Response><Dial timeout=\"10\"><Number>+131313</Number></Dial></Response>";
     
-    @Ignore@Test
+    @Test
     public void testDialNumberPstnNoAnswer() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -983,7 +983,7 @@ public class CallLifecycleTest {
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
     
-    @Ignore@Test
+    @Test
     public void testDialNumberPstn_500ServerInternalError() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1047,7 +1047,7 @@ public class CallLifecycleTest {
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
     
-    @Ignore@Test
+    @Test
     public void testDialNumberPstn_BusyHere() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1113,7 +1113,7 @@ public class CallLifecycleTest {
 
     private String dialAliceRcmlInvalidRCML = "%%<Response><Dial><Client>alice</Client></Dial></Response>";
 
-    @Ignore@Test
+    @Test
     public void testDialClientAlice_InvalidRCML() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
