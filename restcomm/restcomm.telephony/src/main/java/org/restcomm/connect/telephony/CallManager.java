@@ -518,7 +518,7 @@ public final class CallManager extends UntypedActor {
             } else {
                 // toClient is null or we couldn't make the b2bua call to another client. check if this call is for a registered
                 // DID (application)
-                if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
+                if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, client.getAccountSid())) {
                     // This is a call to a registered DID (application)
                     return;
                 }
@@ -562,7 +562,7 @@ public final class CallManager extends UntypedActor {
             }
         } else {
             // Client is null, check if this call is for a registered DID (application)
-            if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
+            if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, null)) {
                 // This is a call to a registered DID (application)
                 return;
             }
@@ -947,7 +947,7 @@ public final class CallManager extends UntypedActor {
      * @param phone
      */
     private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-                                             final ApplicationsDao applications, String phone) {
+                                             final ApplicationsDao applications, String phone, Sid fromClientAccountSid) {
         boolean isFoundHostedApp = false;
         // Format the destination to an E.164 phone number.
         final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
@@ -987,7 +987,8 @@ public final class CallManager extends UntypedActor {
                 builder.setConferenceManager(conferences);
                 builder.setBridgeManager(bridges);
                 builder.setSmsService(sms);
-                builder.setAccount(number.getAccountSid());
+                builder.setAccount(fromClientAccountSid == null? number.getAccountSid():fromClientAccountSid);
+                builder.setPhone(number.getAccountSid());
                 builder.setVersion(number.getApiVersion());
                 final Account account = accounts.getAccount(number.getAccountSid());
                 builder.setEmailAddress(account.getEmailAddress());
