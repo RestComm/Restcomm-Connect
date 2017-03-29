@@ -1265,12 +1265,13 @@ public class CallLifecycleTest {
                 callSid = param.split("=")[1];
             }
         }
+        //parent account should be able to access the CDR
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, subAccountSid, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
-        
+        //subAccount/child should be able to access the CDR
         cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), subAccountSid, subAuthToken, callSid);
         jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
