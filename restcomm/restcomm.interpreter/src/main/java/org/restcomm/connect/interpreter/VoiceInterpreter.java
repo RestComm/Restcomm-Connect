@@ -1181,10 +1181,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 break;
             case FAILED:
                 if (!sender.equals(call)) {
-                if (dialBranches != null && dialBranches.contains(sender)) {
-                    dialBranches.remove(sender);
-                }
+                    if (dialBranches != null && dialBranches.contains(sender)) {
+                        dialBranches.remove(sender);
+                    }
                     checkDialBranch(message,sender,attribute);
+                } else if (sender.equals(call)) {
+                    fsm.transition(message, finished);
                 }
                 break;
             case COMPLETED:
