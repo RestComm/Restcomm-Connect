@@ -88,7 +88,7 @@ public final class ConferenceDetailRecordConverter extends AbstractConverter imp
 
     private void writeSubResources(final ConferenceDetailRecord cdr, final JsonObject object) {
         final JsonObject other = new JsonObject();
-        writeParticipants(cdr, object);
+        writeParticipants(cdr, other);
         object.add("subresource_uris", other);
     }
 
@@ -99,7 +99,7 @@ public final class ConferenceDetailRecordConverter extends AbstractConverter imp
     }
 
     private void writeParticipants(final ConferenceDetailRecord cdr, final JsonObject object) {
-        object.addProperty("participants", prefix(cdr) + "/Participants");
+        object.addProperty("participants", prefix(cdr) + "/Participants.json");
     }
 
     private String prefix(final ConferenceDetailRecord cdr) {
