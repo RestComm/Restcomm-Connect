@@ -14,7 +14,7 @@
 			CAST(${usageExprPre}${usageExprCol}${usageExprSuf} AS SIGNED) AS "usage",
 			SUM(CONVERT("price", SIGNED)) AS "price",
 			DATE_FORMAT(date_created, '%Y-%m-%d') AS "start_date",
-			DATE_FORMAT(DATE_ADD(date_created, INTERVAL 1 DAY)) AS "end_date",
+			DATE_FORMAT(DATE_ADD(date_created, INTERVAL 1 DAY), '%Y-%m-%d') AS "end_date",
 			CONCAT(#{uri},
 				'?Category=', #{category},
 				'&amp;StartDate=', DATE_FORMAT(date_created, '%Y-%m-%d'),
@@ -44,11 +44,11 @@
 			<!-- select the highest lower bound -->
 			CONCAT(DATE_FORMAT(date_created,'%Y-%m'),'-01') AS "start_date",
 			<!-- select the lowest upper bound -->
-			DATE_FORMAT(LAST_DAY(date_created)) AS "end_date",
+			DATE_FORMAT(LAST_DAY(date_created),'%Y-%m-%d') AS "end_date",
 			CONCAT(#{uri},
 				'?Category=', #{category},
 				'&amp;StartDate=', CONCAT(DATE_FORMAT(date_created,'%Y-%m'),'-01'),
-				'&amp;EndDate=', DATE_FORMAT(LAST_DAY(date_created))
+				'&amp;EndDate=', DATE_FORMAT(LAST_DAY(date_created),'%Y-%m-%d')
 				) AS "uri"
 		FROM
 			${tableName}
