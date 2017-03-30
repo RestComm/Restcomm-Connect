@@ -1697,16 +1697,19 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (attribute != null) {
                 finishOnKey = attribute.value();
                 if (finishOnKey != null && !finishOnKey.isEmpty()) {
+                    //https://github.com/RestComm/Restcomm-Connect/issues/1886
                     if (!finishOnKey.equals("-1")) {
                         if (!PATTERN.matcher(finishOnKey).matches()) {
                             final Notification notification = notification(WARNING_NOTIFICATION, 13613, finishOnKey
                                     + " is not a valid finishOnKey value");
                             notifications.addNotification(notification);
-                            finishOnKey = "1234567890*#";
+                            //https://github.com/RestComm/Restcomm-Connect/issues/1925
+                            finishOnKey = "#";
                         }
                     }
                 } else {
-                    finishOnKey = "1234567890*#";
+                    //https://github.com/RestComm/Restcomm-Connect/issues/1925
+                    finishOnKey = "#";
                 }
             }
             boolean playBeep = true;
