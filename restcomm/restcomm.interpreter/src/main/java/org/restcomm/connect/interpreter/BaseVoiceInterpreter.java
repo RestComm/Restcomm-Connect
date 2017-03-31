@@ -235,8 +235,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     String referTarget;
     String transferor;
     String transferee;
-    URI statusCallback;
-    String statusCallbackMethod;
+    URI viStatusCallback;
+    String viStatusCallbackMethod;
     String emailAddress;
     // application data.
     HttpRequestDescriptor request;
@@ -255,6 +255,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     ActorRef monitoring;
 
     final Set<Transition> transitions = new HashSet<Transition>();
+    int recordingDuration = -1;
 
     public BaseVoiceInterpreter(final ActorRef supervisor) {
         super();
@@ -484,15 +485,15 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     //Callback using the Akka ask pattern (http://doc.akka.io/docs/akka/2.2.5/java/untyped-actors.html#Ask__Send-And-Receive-Future) will force VoiceInterpter to wait until
     //Downloader finish with this callback before shutdown everything. Issue https://github.com/Mobicents/RestComm/issues/437
     void callback(boolean ask) {
-        if (statusCallback != null) {
+        if (viStatusCallback != null) {
             if(logger.isInfoEnabled()){
-                logger.info("About to execute statusCallback: "+statusCallback.toString());
+                logger.info("About to execute viStatusCallback: "+ viStatusCallback.toString());
             }
-            if (statusCallbackMethod == null) {
-                statusCallbackMethod = "POST";
+            if (viStatusCallbackMethod == null) {
+                viStatusCallbackMethod = "POST";
             }
             final List<NameValuePair> parameters = parameters();
-            requestCallback = new HttpRequestDescriptor(statusCallback, statusCallbackMethod, parameters);
+            requestCallback = new HttpRequestDescriptor(viStatusCallback, viStatusCallbackMethod, parameters);
             if (!ask) {
                 downloader.tell(requestCallback, null);
             } else if (ask) {
@@ -1696,16 +1697,19 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (attribute != null) {
                 finishOnKey = attribute.value();
                 if (finishOnKey != null && !finishOnKey.isEmpty()) {
+                    //https://github.com/RestComm/Restcomm-Connect/issues/1886
                     if (!finishOnKey.equals("-1")) {
                         if (!PATTERN.matcher(finishOnKey).matches()) {
                             final Notification notification = notification(WARNING_NOTIFICATION, 13613, finishOnKey
                                     + " is not a valid finishOnKey value");
                             notifications.addNotification(notification);
-                            finishOnKey = "1234567890*#";
+                            //https://github.com/RestComm/Restcomm-Connect/issues/1925
+                            finishOnKey = "#";
                         }
                     }
                 } else {
-                    finishOnKey = "1234567890*#";
+                    //https://github.com/RestComm/Restcomm-Connect/issues/1925
+                    finishOnKey = "#";
                 }
             }
             boolean playBeep = true;
@@ -1806,8 +1810,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 callRecord = callRecord.setStatus(callState.toString());
                 final DateTime end = DateTime.now();
                 callRecord = callRecord.setEndTime(end);
-                final int seconds = (int) (end.getMillis() - callRecord.getStartTime().getMillis()) / 1000;
-                callRecord = callRecord.setDuration(seconds);
+                recordingDuration = (int) (end.getMillis() - callRecord.getStartTime().getMillis()) / 1000;
+                callRecord = callRecord.setDuration(recordingDuration);
                 final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                 records.updateCallDetailRecord(callRecord);
                 // Update the application.
@@ -2076,7 +2080,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 // Start observing events from the sms session.
                 session.tell(new Observe(source), source);
                 // Store the status callback in the sms session.
-                attribute = verb.attribute("statusCallback");
+                attribute = verb.attribute("viStatusCallback");
                 if (attribute != null) {
                     String callback = attribute.value();
                     if (callback != null && !callback.isEmpty()) {

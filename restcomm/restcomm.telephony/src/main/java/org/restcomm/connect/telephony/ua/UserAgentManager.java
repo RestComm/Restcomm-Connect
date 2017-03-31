@@ -178,7 +178,12 @@ public final class UserAgentManager extends UntypedActor {
                 //Instead of removing registrations we ping the client one last time to ensure it was not a temporary loss
                 // of connectivity. We don't need to remove the registration here. It will be handled only if the OPTIONS ping
                 // times out and the related calls from the client cleaned up as well
-                ping(result.getLocation());
+                try{
+                    ping(result.getLocation());
+                }catch(ServletParseException spe){
+                    logger.warning("Bad Parameters: "+result.getLocation());
+                    registrations.removeRegistration(result);
+                }
                 //registrations.removeRegistration(result);
                 //monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
             } else {
@@ -192,7 +197,12 @@ public final class UserAgentManager extends UntypedActor {
                     // Instead of removing registrations we ping the client one last time to ensure it was not a temporary loss
                     // of connectivity. We don't need to remove the registration here. It will be handled only if the OPTIONS ping
                     // times out and the related calls from the client cleaned up as well
-                    ping(result.getLocation());
+                    try{
+                        ping(result.getLocation());
+                    }catch(ServletParseException spe){
+                        logger.warning("Bad Parameters: "+result.getLocation());
+                        registrations.removeRegistration(result);
+                    }
                     // registrations.removeRegistration(result);
                     // monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
                 }
@@ -238,7 +248,12 @@ public final class UserAgentManager extends UntypedActor {
             }
             for (final Registration result : results) {
                 final String to = result.getLocation();
-                ping(to);
+                try{
+                    ping(to);
+                }catch(ServletParseException spe){
+                    logger.warning("Bad Parameters: "+to);
+                    registrations.removeRegistration(result);
+                }
             }
         } else {
             if (logger.isDebugEnabled()) {
@@ -499,6 +514,10 @@ public final class UserAgentManager extends UntypedActor {
         final int port = request.getInitialRemotePort();
 
         String transport = (uri.getTransportParam()==null?request.getParameter("transport"):uri.getTransportParam()); //Issue #935, take transport of initial request-uri if contact-uri has no transport parameter
+        //If RURI is secure (SIPS) then pick TLS for transport - https://github.com/RestComm/Restcomm-Connect/issues/1956
+        if (((SipURI)request.getRequestURI()).isSecure()) {
+            transport = "tls";
+        }
         if (transport == null && !request.getInitialTransport().equalsIgnoreCase("udp")) {
             //Issue1068, if Contact header or RURI doesn't specify transport, check InitialTransport from
             transport = request.getInitialTransport();
@@ -522,7 +541,12 @@ public final class UserAgentManager extends UntypedActor {
         }
 
         final StringBuffer buffer = new StringBuffer();
-        buffer.append("sip:").append(user).append("@").append(uri.getHost()).append(":").append(uri.getPort());
+        if (((SipURI)request.getRequestURI()).isSecure()) {
+            buffer.append("sips:");
+        } else {
+            buffer.append("sip:");
+        }
+        buffer.append(normalize(user)).append("@").append(uri.getHost()).append(":").append(uri.getPort());
         // https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than
         if (transport != null) {
             buffer.append(";transport=").append(transport);
@@ -725,7 +749,7 @@ public final class UserAgentManager extends UntypedActor {
             final Sid sid = Sid.generate(Sid.Type.REGISTRATION);
             final DateTime now = DateTime.now();
             final StringBuffer buffer = new StringBuffer();
-            buffer.append("sip:").append(user).append("@").append(uri.getHost()).append(":").append(uri.getPort());
+            buffer.append("sip:").append(normalize(user)).append("@").append(uri.getHost()).append(":").append(uri.getPort());
             // https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than
             if (transport != null) {
                 buffer.append(";transport=").append(transport);
@@ -770,6 +794,21 @@ public final class UserAgentManager extends UntypedActor {
         if(logger.isDebugEnabled()) {
             logger.debug("REGISTER IMS Response sent: "+incomingLegResposne);
         }
+    }
+
+    /**
+     * normalize: normalize clients that contain @ sign in user e.g. maria@xyz.com
+     * @param user
+     * @return
+     */
+    private String normalize(String user) {
+        if(user != null){
+            if(user.contains("@"))
+                user = user.replaceAll("@", "%40");
+        }
+        if(logger.isDebugEnabled())
+            logger.debug("Normalized User = " + user);
+        return user;
     }
 
     private void proxyRequestToIms(SipServletRequest request) throws ServletParseException, IOException {

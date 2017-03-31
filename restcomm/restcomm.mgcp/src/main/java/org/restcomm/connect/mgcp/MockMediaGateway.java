@@ -122,7 +122,7 @@ public class MockMediaGateway extends UntypedActor {
             private static final long serialVersionUID = 1L;
             @Override
             public UntypedActor create() throws Exception {
-                return new Connection(gateway, session, agent, timeout);
+                return new MockConnection(gateway, session, agent, timeout);
             }
         });
         ActorRef connection = null;
