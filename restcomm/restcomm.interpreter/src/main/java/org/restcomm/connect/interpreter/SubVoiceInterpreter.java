@@ -512,7 +512,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
             // Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
         }
     }
