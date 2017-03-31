@@ -313,7 +313,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
     private void invalidVerb(final Tag verb) {
         final ActorRef self = self();
         // Get the next verb.
-        final GetNextVerb next = GetNextVerb.instance();
+        final GetNextVerb next = new GetNextVerb();
         parser.tell(next, self);
     }
 
@@ -717,7 +717,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 }
             }
             // Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
         }
     }
@@ -802,7 +802,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                     cache.tell(request, source);
                 } else {
                     // Ask the parser for the next action to take.
-                    final GetNextVerb next = GetNextVerb.instance();
+                    final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, source);
                 }
             }
@@ -938,7 +938,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 synthesizer.tell(synthesize, source);
             } else {
                 // Ask the parser for the next action to take.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
             }
         }
@@ -992,7 +992,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 downloader.tell(request, source);
             } else {
                 // Ask the parser for the next action to take.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
             }
         }
