@@ -288,7 +288,9 @@ public class UssdCallManager extends UntypedActor {
         SipURI to = (SipURI)sipFactory.createSipURI(request.to(), uri);
 
         String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
-        from = outboundInterface(transport);
+        //from = outboundInterface(transport);
+        SipURI obi = outboundInterface(transport);
+        from = (obi == null) ? from : obi;
 
         final ActorRef ussdCall = ussdCall();
         final ActorRef self = self();
@@ -324,8 +326,6 @@ public class UssdCallManager extends UntypedActor {
         builder.setMethod(request.method());
         builder.setFallbackUrl(request.fallbackUrl());
         builder.setFallbackMethod(request.fallbackMethod());
-        builder.setStatusCallback(request.callback());
-        builder.setStatusCallbackMethod(request.callbackMethod());
         final ActorRef interpreter = builder.build();
         interpreter.tell(new StartInterpreter(request.call()), self);
     }

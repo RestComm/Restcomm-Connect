@@ -250,7 +250,7 @@ public final class CallDetailRecordConverter extends AbstractConverter implement
     }
 
     private void writeNotifications(final CallDetailRecord cdr, final JsonObject object) {
-        object.addProperty("notifications", prefix(cdr) + "/Notifications");
+        object.addProperty("notifications", prefix(cdr) + "/Notifications.json");
     }
 
     private void writeRecordings(final CallDetailRecord cdr, final HierarchicalStreamWriter writer) {
@@ -260,7 +260,7 @@ public final class CallDetailRecordConverter extends AbstractConverter implement
     }
 
     private void writeRecordings(final CallDetailRecord cdr, final JsonObject object) {
-        object.addProperty("recordings", prefix(cdr) + "/Recordings");
+        object.addProperty("recordings", prefix(cdr) + "/Recordings.json");
     }
 
     private void writeSubResources(final CallDetailRecord cdr, final HierarchicalStreamWriter writer) {

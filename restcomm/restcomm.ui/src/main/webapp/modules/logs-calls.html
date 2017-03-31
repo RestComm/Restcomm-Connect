@@ -63,7 +63,7 @@
     <table ng-show="(callsLogsList | filter:query).length > 0" class="table table-hover" ng-cloak>
         <thead class="logs-table-header">
         <!--th class="width-30pc">DATE <button ng-click="toggle=!toggle"><span  ng-class="{'glyphicon glyphicon-arrow-up':toggle,'glyphicon glyphicon-arrow-down':!toggle}" ></span></button> </th-->
-        <th class="width-20pc" ng-click="sortBy('date_created');toggleD=!toggleD;reverse=toggleD">Date<span class="pull-right" ng-show="predicate === 'date_created'"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></span></th>
+        <th class="width-20pc" ng-click="sortBy('date_created');toggleD=!toggleD;reverse=toggleD;pageChanged()">Date<span class="pull-right" ng-show="predicate === 'date_created'"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></span></th>
         <th class="width-10pc"><span class="pull-right">Direction</span></th>
         <th ng-show="search.sub_accounts" class="width-10pc">Account</th>
         <th class="width-10pc">From</th>
