@@ -97,7 +97,8 @@ public final class PlayCollect {
             for (int index = 0; index < initialPrompts.size(); index++) {
                 buffer.append(initialPrompts.get(index));
                 if (index < initialPrompts.size() - 1) {
-                    buffer.append(";");
+                    //https://github.com/RestComm/Restcomm-Connect/issues/1988
+                    buffer.append(",");
                 }
             }
         }
