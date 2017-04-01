@@ -99,12 +99,12 @@
 			COUNT(1) as "count",
 			CAST(${usageExprPre}${usageExprCol}${usageExprSuf} AS SIGNED) AS "usage",
 			SUM(CONVERT("price", SIGNED)) AS "price",
-			IFNULL(#{startDate}, MIN(date_created)) AS "start_date",
-			IFNULL(#{endDate}, MAX(date_created)) AS "end_date",
+			DATE_FORMAT(MIN(date_created), '%Y-%m-%d') AS "start_date",
+			DATE_FORMAT(MAX(date_created), '%Y-%m-%d') AS "end_date",
 			CONCAT(#{uri},
 				'?Category=', #{category},
-				'&amp;StartDate=', IFNULL(#{startDate}, MIN(date_created)),
-				'&amp;EndDate=', IFNULL(#{endDate}, MAX(date_created))
+				'&amp;StartDate=', DATE_FORMAT(MIN(date_created), '%Y-%m-%d'),
+				'&amp;EndDate=', DATE_FORMAT(MAX(date_created), '%Y-%m-%d')
 				) AS "uri"
 		FROM
 			${tableName}
