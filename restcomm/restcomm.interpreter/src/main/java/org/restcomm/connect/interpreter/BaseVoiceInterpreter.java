@@ -255,7 +255,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     //Monitoring service
     ActorRef monitoring;
 
-    Set<Transition> transitions = new HashSet<Transition>();
+    final Set<Transition> transitions = new HashSet<Transition>();
     int recordingDuration = -1;
 
     public BaseVoiceInterpreter(final ActorRef supervisor) {
