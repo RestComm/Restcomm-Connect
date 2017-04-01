@@ -32,7 +32,7 @@ import java.util.List;
  */
 @Immutable
 public final class CreateCall {
-    public static enum Type {
+    public enum Type {
         CLIENT, PSTN, SIP, USSD
     };
 

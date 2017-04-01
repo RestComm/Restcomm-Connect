@@ -22,6 +22,7 @@ package org.restcomm.connect.interpreter;
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
+import akka.actor.StopChild;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
@@ -592,7 +593,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     void invalidVerb(final Tag verb) {
         final ActorRef self = self();
         // Get the next verb.
-        final GetNextVerb next = GetNextVerb.instance();
+        final GetNextVerb next = new GetNextVerb();
         parser.tell(next, self);
     }
 
@@ -688,10 +689,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     void postCleanup() {
         if (smsSessions.isEmpty() && outstandingAsrRequests == 0) {
             final UntypedActorContext context = getContext();
+            supervisor.tell(new StopChild(parser), null);
             context.stop(self());
         }
         if (downloader != null && !downloader.isTerminated()) {
-            getContext().stop(downloader);
+            supervisor.tell(new StopChild(downloader), null);
         }
     }
 
@@ -1134,7 +1136,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     getCache().tell(request, source);
                 } else {
                     // Ask the parser for the next action to take.
-                    final GetNextVerb next = GetNextVerb.instance();
+                    final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, source);
                 }
             }
@@ -1269,7 +1271,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 getSynthesizer().tell(synthesize, source);
             } else {
                 // Ask the parser for the next action to take.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
             }
         }
@@ -1352,7 +1354,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 downloader.tell(request, source);
             } else {
                 // Ask the parser for the next action to take.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
             }
         }
@@ -1675,7 +1677,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 logger.info("Attribute, Action or Digits is null, FinishGathering failed, moving to the next available verb");
             }
             // Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
         }
     }
@@ -1989,7 +1991,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
             } else {
                 // Ask the parser for the next action to take.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
             }
             // A little clean up.
@@ -2175,7 +2177,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
             }
             // Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
         }
     }
