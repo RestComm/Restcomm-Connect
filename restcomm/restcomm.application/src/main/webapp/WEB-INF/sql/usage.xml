@@ -11,7 +11,8 @@
 			"account_sid",
 			"api_version",
 			COUNT(1) as "count",
-			${usageExprPre}"${usageExprCol}"${usageExprSuf} as "usage",
+			<!-- Without explicit BIGINT to get Long, we get ClassCastException  -->
+			CAST(${usageExprPre}"${usageExprCol}"${usageExprSuf} AS BIGINT) as "usage",
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
 			TO_CHAR("date_created", 'YYYY-MM-DD') AS "start_date",
 			TO_CHAR(DATE_ADD("date_created", INTERVAL 1 DAY), 'YYYY-MM-DD') AS "end_date",
@@ -38,7 +39,8 @@
 			"account_sid",
 			"api_version",
 			COUNT(1) as "count",
-			${usageExprPre}"${usageExprCol}"${usageExprSuf} as "usage",
+			<!-- Without explicit BIGINT to get Long, we get ClassCastException  -->
+			CAST(${usageExprPre}"${usageExprCol}"${usageExprSuf} AS BIGINT) as "usage",
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
 			<!-- select the highest lower bound -->
 			<!-- GREATEST(CONCAT(TO_CHAR("date_created", 'YYYY-MM'), '-01'), #{startDate}) AS "start_date", -->
@@ -73,7 +75,8 @@
 			"account_sid",
 			"api_version",
 			COUNT(1) as "count",
-			${usageExprPre}"${usageExprCol}"${usageExprSuf} as "usage",
+			<!-- Without explicit BIGINT to get Long, we get ClassCastException  -->
+			CAST(${usageExprPre}"${usageExprCol}"${usageExprSuf} AS BIGINT) as "usage",
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
 			<!-- select the highest lower bound -->
 			<!-- GREATEST(CONCAT(YEAR("date_created"), '-01-01'), #{startDate}) AS "start_date", -->
@@ -108,7 +111,8 @@
 			"account_sid",
 			"api_version",
 			COUNT(1) as "count",
-			${usageExprPre}"${usageExprCol}"${usageExprSuf} as "usage",
+			<!-- Without explicit BIGINT to get Long, we get ClassCastException  -->
+			CAST(${usageExprPre}"${usageExprCol}"${usageExprSuf} AS BIGINT) as "usage",
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
 			TO_CHAR(#{startDate}, 'YYYY-MM-DD') AS "start_date",
 			TO_CHAR(#{endDate}, 'YYYY-MM-DD') AS "end_date",
