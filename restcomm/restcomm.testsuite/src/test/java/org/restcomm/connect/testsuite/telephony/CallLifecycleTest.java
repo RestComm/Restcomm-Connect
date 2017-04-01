@@ -38,6 +38,7 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -181,6 +182,12 @@ public class CallLifecycleTest {
         Thread.sleep(1000);
         wireMockRule.resetRequests();
         Thread.sleep(4000);
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        System.gc();
+        System.out.println("System.gc() run");
     }
 
     @Test
