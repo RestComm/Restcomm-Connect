@@ -90,7 +90,7 @@ public final class ParserTest {
             {
                 final ActorRef observer = getRef();
                 // Create a new parser.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 final ActorRef parser = parser(input);
                 // Start consuming verbs until the end of the document.
                 parser.tell(next, observer);
@@ -139,7 +139,7 @@ public final class ParserTest {
             {
                 final ActorRef observer = getRef();
                 // Create a new parser.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 final ActorRef parser = parser(input);
                 // Start consuming verbs until the end of the document.
                 parser.tell(next, observer);
@@ -181,7 +181,7 @@ public final class ParserTest {
             {
                 final ActorRef observer = getRef();
                 // Create a new parser.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 System.out.println(rcmlContent);
                 final ActorRef parser = parser(rcmlContent);
                 // Start consuming verbs until the end of the document.

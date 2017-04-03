@@ -349,7 +349,7 @@ public class UssdInterpreter extends UntypedActor {
     void invalidVerb(final Tag verb) {
         final ActorRef self = self();
         // Get the next verb.
-        final GetNextVerb next = GetNextVerb.instance();
+        final GetNextVerb next = new GetNextVerb();
         parser.tell(next, self);
     }
 
@@ -570,7 +570,7 @@ public class UssdInterpreter extends UntypedActor {
             if (ussdLanguage.equals(verb.name())) {
                 if (ussdLanguageTag == null) {
                     ussdLanguageTag = verb;
-                    final GetNextVerb next = GetNextVerb.instance();
+                    final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, source);
                 } else {
                     // We support only one Language element
@@ -579,13 +579,13 @@ public class UssdInterpreter extends UntypedActor {
                 return;
             } else if (ussdMessage.equals(verb.name())) {
                 ussdMessageTags.add(verb);
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
                 return;
             } else if (ussdCollect.equals(verb.name())) {
                 if (ussdCollectTag == null) {
                     ussdCollectTag = verb;
-                    final GetNextVerb next = GetNextVerb.instance();
+                    final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, source);
                 } else {
                     // We support only one Collect element
@@ -748,7 +748,7 @@ public class UssdInterpreter extends UntypedActor {
                     return;
                 }
             }
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
         }
     }
@@ -961,7 +961,7 @@ public class UssdInterpreter extends UntypedActor {
                 return;
             }
             // Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             parser.tell(next, self());
         }
     }

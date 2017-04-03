@@ -57,6 +57,10 @@ public class RestcommSupervisor extends UntypedActor {
                 final ActorRef child = stop.child();
                 getContext().unwatch(child);
                 getContext().stop(child);
+                if (logger.isDebugEnabled()) {
+                    String logmsg = String.format("RestcommSupervisor, actor %s stopped. Sender %s",child.path(), sender.path());
+                    logger.debug(logmsg);
+                }
             } else {
                 unhandled(msg);
             }

@@ -21,6 +21,7 @@ package org.restcomm.connect.interpreter;
 
 import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
+import akka.actor.StopChild;
 import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -651,7 +652,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (logger.isInfoEnabled()) {
                         logger.info("Attribute is null, will ask for the next verb from parser");
                     }
-                    final GetNextVerb next = GetNextVerb.instance();
+                    final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, self());
                 } else {
                     if (logger.isInfoEnabled()) {
@@ -908,7 +909,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     conferenceWaitUris = new ArrayList<URI>();
                 URI waitUrl = response.get();
                 conferenceWaitUris.add(waitUrl);
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, self());
                 return;
             }
@@ -1061,7 +1062,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     //If the waitUrl is invalid then move to notFound
                     fsm.transition(message, hangingUp);
                 }
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, self());
                 return;
             }
@@ -1260,7 +1261,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     } else {
                         // XXX start processing new RCML and give instructions to call
                         // Ask the parser for the next action to take.
-                        final GetNextVerb next = GetNextVerb.instance();
+                        final GetNextVerb next = new GetNextVerb();
                         parser.tell(next, self());
                     }
                 }
@@ -1319,7 +1320,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (sender != null && !sender.equals(call)) {
                     callManager.tell(new DestroyCall(sender), self());
                 }
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, self());
             } else {
                 if (logger.isInfoEnabled()) {
@@ -1773,7 +1774,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 context.setReceiveTimeout(Duration.Undefined());
             }
             // Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             if (parser != null) {
                 parser.tell(next, source);
             } else if(logger.isInfoEnabled()) {
@@ -1977,7 +1978,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     dialChildren = new ArrayList<Tag>(verb.children());
                     dialChildrenWithAttributes = new HashMap<ActorRef, Tag>();
                     isForking = true;
-                    final StartForking start = StartForking.instance();
+                    final StartForking start = new StartForking();
                     source.tell(start, source);
                     if (logger.isInfoEnabled()) {
                         logger.info("Dial verb "+verb.toString().replace("\\n","")+" with more that one element, will start forking. Dial Children size: "+dialChildren.size());
@@ -1985,7 +1986,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             } else {
                 // Ask the parser for the next action to take.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
             }
         }
@@ -2105,7 +2106,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             } else {
                 if (dialBranches != null && dialBranches.size() > 0) {
                     // Fork.
-                    final Fork fork = Fork.instance();
+                    final Fork fork = new Fork();
                     source.tell(fork, source);
                     dialChildren = null;
                 } else {
@@ -2513,7 +2514,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             if (logger.isInfoEnabled()) {
                                 logger.info("At FinishDialing. Sender NOT in the dialBranches, attribute is null, will check for the next verb");
                             }
-                            final GetNextVerb next = GetNextVerb.instance();
+                            final GetNextVerb next = new GetNextVerb();
                             if (parser != null) {
                                 parser.tell(next, source);
                             }
@@ -2603,7 +2604,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 conference.tell(request, source);
             } else {
                 // Ask the parser for the next action to take.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
             }
 
@@ -2939,7 +2940,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             // Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
         }
     }
@@ -3089,7 +3090,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 call = null;
             }
 
-            getContext().stop(self());
+            supervisor.tell(new StopChild(self()), null);
             postCleanup();
         }
         if(asImsUa){
