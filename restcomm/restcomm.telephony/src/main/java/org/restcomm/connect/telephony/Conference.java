@@ -282,8 +282,16 @@ public final class Conference extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            // Stop the background music if present
-            mscontroller.tell(new StopMediaGroup(), super.source);
+            ConferenceModeratorPresent msg = (ConferenceModeratorPresent)message;
+            /* to media-server as media-server will automatically stop beep when it will receive 
+             * play command for beep. If a beep wont be played, then conference need to send 
+             * EndSignal(StopMediaGroup) to media-server to stop ongoing music-on-hold.
+             * https://github.com/RestComm/Restcomm-Connect/issues/2024
+             */
+            if(!msg.beep()){
+                // Stop the background music if present
+                mscontroller.tell(new StopMediaGroup(), super.source);
+            }
             updateConferenceStatus(ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT);
             // Notify the observers
             broadcast(new ConferenceStateChanged(name, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT));
