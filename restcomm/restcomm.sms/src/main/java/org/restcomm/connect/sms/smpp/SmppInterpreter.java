@@ -266,7 +266,7 @@ public class SmppInterpreter extends UntypedActor  {
         final NotificationsDao notifications = storage.getNotificationsDao();
         notifications.addNotification(notification);
         // Get the next verb.
-        final GetNextVerb next = GetNextVerb.instance();
+        final GetNextVerb next = new GetNextVerb();
         parser.tell(next, self);
     }
 
@@ -639,7 +639,7 @@ public class SmppInterpreter extends UntypedActor  {
                     customHttpHeaderMap.put(header.getName(), header.getValue());
                 }
             }
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
         }
     }
@@ -688,7 +688,7 @@ public class SmppInterpreter extends UntypedActor  {
                 downloader.tell(request, source);
             } else {
                 // Ask the parser for the next action to take.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
             }
         }
@@ -858,7 +858,7 @@ public class SmppInterpreter extends UntypedActor  {
                 }
             }
             // Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
         }
     }

@@ -26,15 +26,7 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class Fork {
-    private static final class Singleton {
-        private static final Fork instance = new Fork();
-    }
-
-    private Fork() {
+    public Fork() {
         super();
-    }
-
-    public static Fork instance() {
-        return Singleton.instance;
     }
 }
