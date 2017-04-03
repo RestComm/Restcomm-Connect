@@ -37,8 +37,7 @@ public class ConferenceModeratorPresent {
     final Boolean beep;
 
     /**
-     * @param beep:
-     * If a beep will be played in that case we don't need to send EndSignal(StopMediaGroup)
+     * @param beep - If a beep will be played in that case we don't need to send EndSignal(StopMediaGroup)
      * to media-server as media-server will automatically stop beep when it will receive
      * play command for beep. If a beep wont be played, then conference need to send
      * EndSignal(StopMediaGroup) to media-server to stop ongoing music-on-hold.
