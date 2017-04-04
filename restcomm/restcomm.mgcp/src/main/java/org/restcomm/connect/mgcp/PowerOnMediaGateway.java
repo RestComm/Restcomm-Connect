@@ -19,7 +19,6 @@
  */
 package org.restcomm.connect.mgcp;
 
-import akka.actor.ActorSystem;
 import jain.protocol.ip.mgcp.JainMgcpProvider;
 import jain.protocol.ip.mgcp.JainMgcpStack;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
@@ -116,7 +115,6 @@ public final class PowerOnMediaGateway {
         private long timeout;
         private JainMgcpStack stack;
         private JainMgcpProvider provider;
-        private ActorSystem system;
 
         private Builder() {
             super();
@@ -165,7 +163,5 @@ public final class PowerOnMediaGateway {
         public void setProvider(JainMgcpProvider provider) {
             this.provider = provider;
         }
-
-        public void setSystem(ActorSystem system) { this.system = system; }
     }
 }
