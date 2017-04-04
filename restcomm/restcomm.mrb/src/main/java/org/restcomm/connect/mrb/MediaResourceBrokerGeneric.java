@@ -21,7 +21,6 @@
 package org.restcomm.connect.mrb;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -74,7 +73,6 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
     protected String localMsId;
     protected Map<String, ActorRef> mediaGatewayMap;
 
-    protected ActorSystem system;
     protected JainMgcpStack mgcpStack;
     protected JainMgcpProvider mgcpProvider;
 
@@ -115,7 +113,6 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
         this.configuration = message.configuration();
         this.storage = message.storage();
         this.loader = message.loader();
-        this.system = message.system();
 
         localMediaServerEntity = uploadLocalMediaServersInDataBase();
         bindMGCPStack(localMediaServerEntity.getLocalIpAddress(), localMediaServerEntity.getLocalPort());
@@ -148,7 +145,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
         });
-        return system.actorOf(props);
+        return context().system().actorOf(props);
     }
 
     /**
@@ -187,7 +184,6 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
         builder.setTimeout(Long.parseLong(mediaServerEntity.getResponseTimeout()));
         builder.setStack(mgcpStack);
         builder.setProvider(mgcpProvider);
-        builder.setSystem(system);
 
         final PowerOnMediaGateway powerOn = builder.build();
         gateway.tell(powerOn, null);
@@ -206,7 +202,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
                 return new ConferenceMediaResourceControllerGeneric(localMediaGateway, configuration, storage, self());
             }
         });
-        return system.actorOf(props);
+        return context().system().actorOf(props);
     }
 
     /**
