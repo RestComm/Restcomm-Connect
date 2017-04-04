@@ -19,7 +19,6 @@
  */
 package org.restcomm.connect.mrb.api;
 
-import akka.actor.ActorSystem;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.dao.DaoManager;
@@ -32,14 +31,12 @@ public final class StartMediaResourceBroker {
     private final Configuration configuration;
     private final DaoManager storage;
     private final ClassLoader loader;
-    private final ActorSystem system;
 
-    public StartMediaResourceBroker(final Configuration configuration, final DaoManager storage, final ClassLoader loader, final ActorSystem system) {
+    public StartMediaResourceBroker(final Configuration configuration, final DaoManager storage, final ClassLoader loader) {
         super();
         this.configuration = configuration;
         this.storage = storage;
         this.loader = loader;
-        this.system = system;
     }
 
     public Configuration configuration(){
@@ -53,6 +50,4 @@ public final class StartMediaResourceBroker {
     public ClassLoader loader(){
         return this.loader;
     }
-
-    public ActorSystem system() { return system; }
 }
