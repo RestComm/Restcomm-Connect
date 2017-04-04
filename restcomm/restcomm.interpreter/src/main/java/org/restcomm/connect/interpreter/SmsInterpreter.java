@@ -21,6 +21,7 @@ package org.restcomm.connect.interpreter;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -73,8 +74,6 @@ import org.restcomm.connect.sms.api.SmsSessionAttribute;
 import org.restcomm.connect.sms.api.SmsSessionInfo;
 import org.restcomm.connect.sms.api.SmsSessionRequest;
 import org.restcomm.connect.sms.api.SmsSessionResponse;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -89,9 +88,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -103,7 +99,7 @@ public final class SmsInterpreter extends UntypedActor {
     // Logger
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final ActorRef supervisor;
+    private final ActorSystem system;
     // States for the FSM.
     private final State uninitialized;
     private final State acquiringLastSmsRequest;
@@ -153,12 +149,12 @@ public final class SmsInterpreter extends UntypedActor {
     private ConcurrentHashMap<String, String> customHttpHeaderMap = new ConcurrentHashMap<String, String>();
     private ConcurrentHashMap<String, String> customRequestHeaderMap;
 
-    public SmsInterpreter(final ActorRef supervisor, final ActorRef service, final Configuration configuration, final DaoManager storage,
+    public SmsInterpreter(final ActorRef service, final Configuration configuration, final DaoManager storage,
             final Sid accountId, final String version, final URI url, final String method, final URI fallbackUrl,
             final String fallbackMethod) {
         super();
         final ActorRef source = self();
-        this.supervisor = supervisor;
+        this.system = context().system();
         uninitialized = new State("uninitialized", null, null);
         acquiringLastSmsRequest = new State("acquiring last sms event", new AcquiringLastSmsEvent(source), null);
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
@@ -239,13 +235,7 @@ public final class SmsInterpreter extends UntypedActor {
                 return new Downloader();
             }
         });
-        ActorRef downloader = null;
-        try {
-            downloader = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return downloader;
+        return system.actorOf(props);
     }
 
     ActorRef mailer(final Configuration configuration) {
@@ -257,13 +247,7 @@ public final class SmsInterpreter extends UntypedActor {
                 return new EmailService(configuration);
             }
         });
-        ActorRef mailer = null;
-        try {
-            mailer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return mailer;
+        return system.actorOf(props);
     }
 
     protected String format(final String number) {
@@ -460,13 +444,7 @@ public final class SmsInterpreter extends UntypedActor {
                 return new Parser(xml, self());
             }
         });
-        ActorRef parser = null;
-        try {
-            parser = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return parser;
+        return system.actorOf(props);
     }
 
     private void response(final Object message) {

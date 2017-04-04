@@ -19,8 +19,16 @@
  */
 package org.restcomm.connect.telephony.ua;
 
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
+import org.restcomm.connect.dao.DaoManager;
+import scala.concurrent.duration.Duration;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -30,22 +38,8 @@ import javax.servlet.sip.SipServletContextEvent;
 import javax.servlet.sip.SipServletListener;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
-
-import akka.actor.ReceiveTimeout;
-import org.apache.commons.configuration.Configuration;
-import org.apache.log4j.Logger;
-import org.restcomm.connect.commons.faulttolerance.RestcommSupervisor;
-import org.restcomm.connect.dao.DaoManager;
-
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
-
-import static akka.pattern.Patterns.ask;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -56,7 +50,6 @@ public final class UserAgentManagerProxy extends SipServlet implements SipServle
     private static Logger logger = Logger.getLogger(UserAgentManagerProxy.class);
 
     private ActorSystem system;
-    private ActorRef supervisor;
     private ActorRef manager;
     private ServletContext servletContext;
     private int pingInterval;
@@ -112,13 +105,7 @@ public final class UserAgentManagerProxy extends SipServlet implements SipServle
                 return new UserAgentManager(configuration, factory, storage, servletContext);
             }
         });
-        ActorRef manager = null;
-        try {
-            manager = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return manager;
+        return system.actorOf(props);
     }
 
     @Override
@@ -129,7 +116,6 @@ public final class UserAgentManagerProxy extends SipServlet implements SipServle
             final SipFactory factory = (SipFactory) servletContext.getAttribute(SIP_FACTORY);
             final DaoManager storage = (DaoManager) servletContext.getAttribute(DaoManager.class.getName());
             system = (ActorSystem) servletContext.getAttribute(ActorSystem.class.getName());
-            supervisor = (ActorRef) servletContext.getAttribute(RestcommSupervisor.class.getName());
             logger.info("About to create new UserAgentManager");
             manager = manager(configuration, factory, storage);
             pingInterval = configuration.subset("runtime-settings").getInt("ping-interval", 60);
