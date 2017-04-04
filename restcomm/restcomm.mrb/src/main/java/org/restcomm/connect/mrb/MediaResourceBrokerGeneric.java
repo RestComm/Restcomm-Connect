@@ -20,17 +20,16 @@
  */
 package org.restcomm.connect.mrb;
 
-import static akka.pattern.Patterns.ask;
-
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.CreateProviderException;
+import jain.protocol.ip.mgcp.JainMgcpProvider;
+import jain.protocol.ip.mgcp.JainMgcpStack;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl;
@@ -53,17 +52,13 @@ import org.restcomm.connect.mrb.api.MediaGatewayForConference;
 import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
 import org.restcomm.connect.telephony.api.ConferenceStateChanged;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import jain.protocol.ip.mgcp.CreateProviderException;
-import jain.protocol.ip.mgcp.JainMgcpProvider;
-import jain.protocol.ip.mgcp.JainMgcpStack;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -79,7 +74,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
     protected String localMsId;
     protected Map<String, ActorRef> mediaGatewayMap;
 
-    protected ActorRef supervisor;
+    protected ActorSystem system;
     protected JainMgcpStack mgcpStack;
     protected JainMgcpProvider mgcpProvider;
 
@@ -120,7 +115,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
         this.configuration = message.configuration();
         this.storage = message.storage();
         this.loader = message.loader();
-        this.supervisor = message.supervisor();
+        this.system = message.system();
 
         localMediaServerEntity = uploadLocalMediaServersInDataBase();
         bindMGCPStack(localMediaServerEntity.getLocalIpAddress(), localMediaServerEntity.getLocalPort());
@@ -153,13 +148,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
         });
-        ActorRef gateway = null;
-        try {
-            gateway = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return gateway;
+        return system.actorOf(props);
     }
 
     /**
@@ -198,7 +187,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
         builder.setTimeout(Long.parseLong(mediaServerEntity.getResponseTimeout()));
         builder.setStack(mgcpStack);
         builder.setProvider(mgcpProvider);
-        builder.setSupervisor(supervisor);
+        builder.setSystem(system);
 
         final PowerOnMediaGateway powerOn = builder.build();
         gateway.tell(powerOn, null);
@@ -214,16 +203,10 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
             private static final long serialVersionUID = 1L;
             @Override
             public UntypedActor create() throws Exception {
-                return new ConferenceMediaResourceControllerGeneric(supervisor, localMediaGateway, configuration, storage, self());
+                return new ConferenceMediaResourceControllerGeneric(localMediaGateway, configuration, storage, self());
             }
         });
-        ActorRef confMRC = null;
-        try {
-            confMRC = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return confMRC;
+        return system.actorOf(props);
     }
 
     /**

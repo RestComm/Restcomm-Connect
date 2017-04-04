@@ -19,7 +19,6 @@ import com.cloudhopper.smpp.type.UnrecoverablePduException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.faulttolerance.RestcommSupervisor;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
@@ -33,8 +32,6 @@ import org.restcomm.connect.sms.SmsSession;
 import org.restcomm.connect.sms.api.CreateSmsSession;
 import org.restcomm.connect.sms.api.DestroySmsSession;
 import org.restcomm.connect.sms.api.SmsServiceResponse;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
 
 import javax.servlet.ServletContext;
 import javax.servlet.sip.SipFactory;
@@ -43,15 +40,11 @@ import javax.servlet.sip.SipURI;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
 
 public class SmppMessageHandler extends UntypedActor  {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private final ActorSystem system = getContext().system();
-    private final ActorRef supervisor;
     private final ServletContext servletContext;
     private final DaoManager storage;
     private final Configuration configuration;
@@ -64,7 +57,6 @@ public class SmppMessageHandler extends UntypedActor  {
         this.configuration = (Configuration) servletContext.getAttribute(Configuration.class.getName());
         this.sipFactory = (SipFactory) servletContext.getAttribute(SipFactory.class.getName());
         this.monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
-        this.supervisor = (ActorRef) servletContext.getAttribute(RestcommSupervisor.class.getName());
     }
 
     @Override
@@ -138,7 +130,7 @@ public class SmppMessageHandler extends UntypedActor  {
 
                 URI appUri = number.getSmsUrl();
 
-                final SmppInterpreterBuilder builder = new SmppInterpreterBuilder(supervisor);
+                final SmppInterpreterBuilder builder = new SmppInterpreterBuilder(system);
                 builder.setSmsService(self);
                 builder.setConfiguration(configuration);
                 builder.setStorage(storage);
@@ -198,13 +190,7 @@ public class SmppMessageHandler extends UntypedActor  {
                 return new SmsSession(configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
             }
         });
-        ActorRef session = null;
-        try {
-            session = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return session;
+        return system.actorOf(props);
     }
 
     public void outbound(SmppOutboundMessageEntity request) throws SmppInvalidArgumentException, IOException {

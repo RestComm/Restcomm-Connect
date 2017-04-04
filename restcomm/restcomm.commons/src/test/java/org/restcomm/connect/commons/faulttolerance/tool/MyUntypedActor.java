@@ -4,6 +4,7 @@ import static akka.pattern.Patterns.ask;
 
 import java.util.concurrent.TimeUnit;
 
+import akka.actor.ActorSystem;
 import org.restcomm.connect.commons.faulttolerance.SupervisorActorCreationStressTest;
 
 import akka.actor.ActorRef;
@@ -17,17 +18,17 @@ import scala.concurrent.duration.Duration;
 
 /**
  * MyUntypedActor represent a restcomm-connect class that request supervisor to create actor for it
- * 
+ *
  * @author mariafarooq
  *
  */
 public class MyUntypedActor  extends UntypedActor {
     private LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
-	
-	private final ActorRef supervisor;
 
-	public MyUntypedActor(final ActorRef supervisor){
-		this.supervisor = supervisor;
+	private final ActorSystem system;
+
+	public MyUntypedActor(final ActorSystem system){
+		this.system = system;
 	}
 
 	@Override
@@ -49,7 +50,7 @@ public class MyUntypedActor  extends UntypedActor {
             });
             ActorRef actorToBeCreated = null;
             try {
-            	actorToBeCreated = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
+            	actorToBeCreated = system.actorOf(props);
                 if (logger.isInfoEnabled())
                 	logger.debug("Actor created: "+actorToBeCreated.path());
             	SupervisorActorCreationStressTest.actorSuccessCount.incrementAndGet();
