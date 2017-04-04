@@ -199,7 +199,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             }
         });
         ActorRef mrb = system.actorOf(props);
-        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader, system), null);
+        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader), null);
         return mrb;
     }
 
