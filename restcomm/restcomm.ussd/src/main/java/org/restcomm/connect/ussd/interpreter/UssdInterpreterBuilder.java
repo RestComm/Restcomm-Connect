@@ -21,6 +21,7 @@
 package org.restcomm.connect.ussd.interpreter;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -28,13 +29,8 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
 
 import java.net.URI;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -42,7 +38,7 @@ import static akka.pattern.Patterns.ask;
 public class UssdInterpreterBuilder {
 
     private static Logger logger = Logger.getLogger(UssdInterpreterBuilder.class);
-    private final ActorRef supervisor;
+    private final ActorSystem system;
     private Configuration configuration;
     private DaoManager storage;
     private ActorRef calls;
@@ -59,8 +55,8 @@ public class UssdInterpreterBuilder {
     private String statusCallbackMethod;
     private String emailAddress;
 
-    public UssdInterpreterBuilder(ActorRef supervisor) {
-        this.supervisor = supervisor;
+    public UssdInterpreterBuilder(ActorSystem system) {
+        this.system = system;
     }
 
     public ActorRef build() {
@@ -68,17 +64,11 @@ public class UssdInterpreterBuilder {
             private static final long serialVersionUID = 1L;
             @Override
             public UntypedActor create() throws Exception {
-                return new UssdInterpreter(supervisor, configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod,
+                return new UssdInterpreter(system, configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod,
                         statusCallback, statusCallbackMethod, emailAddress, calls, conferences, sms, storage);
             }
         });
-        ActorRef ussdInterpreter = null;
-        try {
-            ussdInterpreter = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return ussdInterpreter;
+        return system.actorOf(props);
     }
 
     public void setConfiguration(final Configuration configuration) {

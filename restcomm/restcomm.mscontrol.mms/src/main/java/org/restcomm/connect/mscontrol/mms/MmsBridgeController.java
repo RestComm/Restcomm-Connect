@@ -22,6 +22,7 @@
 package org.restcomm.connect.mscontrol.mms;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -62,8 +63,6 @@ import org.restcomm.connect.mscontrol.api.messages.StartMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StartRecording;
 import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
@@ -73,9 +72,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -86,7 +82,7 @@ public class MmsBridgeController extends MediaServerController {
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final ActorRef supervisor;
+    private final ActorSystem system;
     // Finite State Machine
     private final FiniteStateMachine fsm;
     private final State uninitialized;
@@ -120,9 +116,9 @@ public class MmsBridgeController extends MediaServerController {
 
     private Sid callSid;
 
-    public MmsBridgeController(final ActorRef mrb, final ActorRef supervisor) {
+    public MmsBridgeController(final ActorRef mrb, final ActorSystem system) {
         final ActorRef self = self();
-        this.supervisor = supervisor;
+        this.system = system;
 
         // Finite states
         this.uninitialized = new State("uninitialized", null, null);
@@ -447,13 +443,7 @@ public class MmsBridgeController extends MediaServerController {
                     return new MgcpMediaGroup(mediaGateway, mediaSession, endpoint);
                 }
             });
-            ActorRef mediaGroup = null;
-            try {
-                mediaGroup = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-            } catch (Exception e) {
-                logger.error("Problem during creation of actor: "+e);
-            }
-            return mediaGroup;
+            return system.actorOf(props);
         }
 
         @Override

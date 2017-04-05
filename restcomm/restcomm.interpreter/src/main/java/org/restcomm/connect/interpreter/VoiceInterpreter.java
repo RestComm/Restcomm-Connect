@@ -120,6 +120,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Currency;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -213,13 +214,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private String imsUaPassword;
     private String forwardedFrom;
 
-    public VoiceInterpreter(final ActorRef supervisor, final Configuration configuration, final Sid account, final Sid phone, final String version,
-                            final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
+    public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
+                            final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI viStatusCallback,
                             final String statusCallbackMethod, final String referTarget, final String transferor, final String transferee,
                             final String emailAddress, final ActorRef callManager,
                             final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring, final String rcml,
                             final boolean asImsUa, final String imsUaLogin, final String imsUaPassword) {
-        super(supervisor);
+        super();
         final ActorRef source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
         downloadingFallbackRcml = new State("downloading fallback rcml", new DownloadingFallbackRcml(source), null);
@@ -408,8 +409,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.method = method;
         this.fallbackUrl = fallbackUrl;
         this.fallbackMethod = fallbackMethod;
-        this.statusCallback = statusCallback;
-        this.statusCallbackMethod = statusCallbackMethod;
+        this.viStatusCallback = viStatusCallback;
+        this.viStatusCallbackMethod = statusCallbackMethod;
         this.referTarget = referTarget;
         this.transferor = transferor;
         this.transferee = transferee;
@@ -650,7 +651,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (logger.isInfoEnabled()) {
                         logger.info("Attribute is null, will ask for the next verb from parser");
                     }
-                    final GetNextVerb next = GetNextVerb.instance();
+                    final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, self());
                 } else {
                     if (logger.isInfoEnabled()) {
@@ -907,7 +908,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     conferenceWaitUris = new ArrayList<URI>();
                 URI waitUrl = response.get();
                 conferenceWaitUris.add(waitUrl);
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, self());
                 return;
             }
@@ -1060,7 +1061,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     //If the waitUrl is invalid then move to notFound
                     fsm.transition(message, hangingUp);
                 }
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, self());
                 return;
             }
@@ -1186,10 +1187,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 break;
             case FAILED:
                 if (!sender.equals(call)) {
-                if (dialBranches != null && dialBranches.contains(sender)) {
-                    dialBranches.remove(sender);
-                }
+                    if (dialBranches != null && dialBranches.contains(sender)) {
+                        dialBranches.remove(sender);
+                    }
                     checkDialBranch(message,sender,attribute);
+                } else if (sender.equals(call)) {
+                    fsm.transition(message, finished);
                 }
                 break;
             case COMPLETED:
@@ -1263,7 +1266,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     } else {
                         // XXX start processing new RCML and give instructions to call
                         // Ask the parser for the next action to take.
-                        final GetNextVerb next = GetNextVerb.instance();
+                        final GetNextVerb next = new GetNextVerb();
                         parser.tell(next, self());
                     }
                 }
@@ -1322,7 +1325,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (sender != null && !sender.equals(call)) {
                     callManager.tell(new DestroyCall(sender), self());
                 }
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, self());
             } else {
                 if (logger.isInfoEnabled()) {
@@ -1449,7 +1452,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         parameters.add(new BasicNameValuePair("CallerName", callerName));
         final String forwardedFrom = (callInfo.forwardedFrom() == null || callInfo.forwardedFrom().isEmpty()) ? "null" : callInfo.forwardedFrom();
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
-        parameters.add(new BasicNameValuePair("CallTimestamp", callInfo.dateCreated().toString()));
+        parameters.add(new BasicNameValuePair("", callInfo.dateCreated().toString()));
         if (referTarget != null) {
             parameters.add(new BasicNameValuePair("ReferTarget", referTarget));
         }
@@ -1776,7 +1779,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 context.setReceiveTimeout(Duration.Undefined());
             }
             // Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             if (parser != null) {
                 parser.tell(next, source);
             } else if(logger.isInfoEnabled()) {
@@ -1980,7 +1983,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     dialChildren = new ArrayList<Tag>(verb.children());
                     dialChildrenWithAttributes = new HashMap<ActorRef, Tag>();
                     isForking = true;
-                    final StartForking start = StartForking.instance();
+                    final StartForking start = new StartForking();
                     source.tell(start, source);
                     if (logger.isInfoEnabled()) {
                         logger.info("Dial verb "+verb.toString().replace("\\n","")+" with more that one element, will start forking. Dial Children size: "+dialChildren.size());
@@ -1988,7 +1991,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             } else {
                 // Ask the parser for the next action to take.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
             }
         }
@@ -2029,29 +2032,51 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (!dialChildren.isEmpty()) {
                 CreateCall create = null;
                 final Tag child = dialChildren.get(0);
+
+                URI statusCallback = null;
+                String statusCallbackMethod = "POST";
+                List<String> statusCallbackEvent = null;
+
+                if (child.hasAttribute("statusCallback")) {
+                    statusCallback = new URI(child.attribute("statusCallback").value());
+                }
+                if (statusCallback != null) {
+                    if (child.hasAttribute("statusCallbackMethod")) {
+                        statusCallbackMethod = child.attribute("statusCallbackMethod").value();
+                    }
+                    if (child.hasAttribute("statusCallbackEvent")) {
+                        statusCallbackEvent = Arrays.asList(child.attribute("statusCallbackEvent").value().replaceAll("\\s+","").split(","));
+                    } else {
+                        statusCallbackEvent = new ArrayList<String>();
+                        statusCallbackEvent.add("initiated");
+                        statusCallbackEvent.add("ringing");
+                        statusCallbackEvent.add("answered");
+                        statusCallbackEvent.add("completed");
+                    }
+                }
                 if (Nouns.client.equals(child.name())) {
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCall.Type.CLIENT, accountId, callInfo.sid());
+                                CreateCall.Type.CLIENT, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                                CreateCall.Type.CLIENT, accountId, null);
+                                CreateCall.Type.CLIENT, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
                     }
                 } else if (Nouns.number.equals(child.name())) {
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCall.Type.PSTN, accountId, callInfo.sid());
+                                CreateCall.Type.PSTN, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                                CreateCall.Type.PSTN, accountId, null);
+                                CreateCall.Type.PSTN, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
                     }
                 } else if (Nouns.uri.equals(child.name())) {
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCall.Type.SIP, accountId, callInfo.sid());
+                                CreateCall.Type.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                                CreateCall.Type.SIP, accountId, null);
+                                CreateCall.Type.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
                     }
                 } else if (Nouns.SIP.equals(child.name())) {
                     // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
@@ -2076,17 +2101,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
-                                CreateCall.Type.SIP, accountId, callInfo.sid());
+                                CreateCall.Type.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
-                                CreateCall.Type.SIP, accountId, null);
+                                CreateCall.Type.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
                     }
                 }
                 callManager.tell(create, source);
             } else {
                 if (dialBranches != null && dialBranches.size() > 0) {
                     // Fork.
-                    final Fork fork = Fork.instance();
+                    final Fork fork = new Fork();
                     source.tell(fork, source);
                     dialChildren = null;
                 } else {
@@ -2494,7 +2519,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             if (logger.isInfoEnabled()) {
                                 logger.info("At FinishDialing. Sender NOT in the dialBranches, attribute is null, will check for the next verb");
                             }
-                            final GetNextVerb next = GetNextVerb.instance();
+                            final GetNextVerb next = new GetNextVerb();
                             if (parser != null) {
                                 parser.tell(next, source);
                             }
@@ -2584,7 +2609,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 conference.tell(request, source);
             } else {
                 // Ask the parser for the next action to take.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
             }
 
@@ -2920,7 +2945,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             // Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
         }
     }
@@ -3070,7 +3095,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 call = null;
             }
 
-            getContext().stop(self());
+            system.stop(self());
             postCleanup();
         }
         if(asImsUa){
@@ -3137,7 +3162,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 method = "POST";
             }
 
-            final SubVoiceInterpreterBuilder builder = new SubVoiceInterpreterBuilder(supervisor);
+            final SubVoiceInterpreterBuilder builder = new SubVoiceInterpreterBuilder(system);
             builder.setConfiguration(configuration);
             builder.setStorage(storage);
             builder.setCallManager(super.source);

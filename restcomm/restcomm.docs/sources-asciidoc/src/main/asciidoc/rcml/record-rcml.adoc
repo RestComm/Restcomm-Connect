@@ -12,7 +12,7 @@ The *<Record>* verb records the caller's voice and returns to you the URL of a f
 |action |relative or absolute URL |current document URL
 |method |GET, POST |POST
 |timeout |positive integer |5
-|finishOnKey |any digit, #, * or -1 to disable|1234567890*#
+|finishOnKey |any digit, #, * or -1 to disable|#
 |maxLength |integer greater than 1 with the number of seconds to wait |3600 (1 hour)
 |transcribe |true, false |false
 |transcribeCallback |relative or absolute URL |none

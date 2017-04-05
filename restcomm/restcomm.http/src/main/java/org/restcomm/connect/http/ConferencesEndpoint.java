@@ -88,6 +88,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
         builder.registerTypeAdapter(ConferenceDetailRecord.class, converter);
         builder.registerTypeAdapter(ConferenceDetailRecordList.class, listConverter);
         builder.setPrettyPrinting();
+        builder.disableHtmlEscaping();
         gson = builder.create();
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);

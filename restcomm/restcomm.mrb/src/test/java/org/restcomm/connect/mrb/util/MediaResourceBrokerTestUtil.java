@@ -1,10 +1,10 @@
 package org.restcomm.connect.mrb.util;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.UnknownHostException;
-import java.util.List;
-
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -12,21 +12,18 @@ import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.faulttolerance.RestcommSupervisor;
 import org.restcomm.connect.commons.loader.ObjectFactory;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.mybatis.MybatisDaoManager;
-import org.restcomm.connect.mgcp.ConnectionStateChanged;
 import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
 import org.restcomm.connect.telephony.api.ConferenceStateChanged;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.util.List;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -34,29 +31,27 @@ import akka.actor.UntypedActorFactory;
 public class MediaResourceBrokerTestUtil {
 	private final static Logger logger = Logger.getLogger(MediaResourceBrokerTestUtil.class.getName());
     protected static ActorSystem system;
-    protected static ActorRef supervisor = null;
     protected static Configuration configurationNode1;
     protected static Configuration configurationNode2;
     protected XMLConfiguration daoManagerConf = null;
-    
+
     protected MybatisDaoManager daoManager;
     protected ActorRef mediaResourceBrokerNode1;
     protected ActorRef mediaResourceBrokerNode2;
-    
+
     protected static final String CONFIG_PATH_NODE_1 = "/restcomm.xml";
     protected static final String CONFIG_PATH_NODE_2 = "/restcomm-node2.xml";
     protected static final String CONFIG_PATH_DAO_MANAGER = "/dao-manager.xml";
 
     protected static final String CONFERENCE_FRIENDLY_NAME_1 ="ACae6e420f425248d6a26948c17a9e2acf:1111";
     protected static final String CONFERENCE_FRIENDLY_NAME_2 ="ACae6e420f425248d6a26948c17a9e2acf:1122";
-    
+
 
     protected static final String ACCOUNT_SID_1 ="ACae6e420f425248d6a26948c17a9e2acf";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
         system = ActorSystem.create();
-        supervisor = system.actorOf(new Props(RestcommSupervisor.class), "supervisor");
     }
 
     @AfterClass
@@ -94,9 +89,9 @@ public class MediaResourceBrokerTestUtil {
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
         }));
-        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader, supervisor), null);
+        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader, system), null);
         return mrb;
-    
+
     }
 
 	protected void startDaoManager() throws ConfigurationException, MalformedURLException{
