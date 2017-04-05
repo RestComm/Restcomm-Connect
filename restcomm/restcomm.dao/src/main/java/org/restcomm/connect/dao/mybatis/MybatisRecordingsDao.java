@@ -19,25 +19,25 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.joda.time.DateTime;
+import org.restcomm.connect.dao.entities.MediaType;
+import org.restcomm.connect.commons.amazonS3.S3AccessTool;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.dao.DaoUtils;
+import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.entities.Recording;
+import org.restcomm.connect.dao.entities.RecordingFilter;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.joda.time.DateTime;
-import org.restcomm.connect.dao.DaoUtils;
-import org.restcomm.connect.dao.RecordingsDao;
-import org.restcomm.connect.dao.entities.MediaType;
-import org.restcomm.connect.dao.entities.Recording;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.amazonS3.S3AccessTool;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import org.restcomm.connect.commons.util.UriUtils;
-import org.restcomm.connect.dao.entities.RecordingFilter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -200,6 +200,17 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         }
     }
 
+    @Override
+    public void updateRecording(final Recording recording) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateRecording", toMap(recording));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
     private Map<String, Object> toMap(final Recording recording) {
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("sid", DaoUtils.writeSid(recording.getSid()));
@@ -220,9 +231,11 @@ public final class MybatisRecordingsDao implements RecordingsDao {
     }
 
     private Recording toRecording(final Map<String, Object> map) {
+        Recording recording = null;
+        boolean update = false;
         final Sid sid = DaoUtils.readSid(map.get("sid"));
         final DateTime dateCreated = DaoUtils.readDateTime(map.get("date_created"));
-        final DateTime dateUpdated = DaoUtils.readDateTime(map.get("date_updated"));
+        DateTime dateUpdated = DaoUtils.readDateTime(map.get("date_updated"));
         final Sid accountSid = DaoUtils.readSid(map.get("account_sid"));
         final Sid callSid = DaoUtils.readSid(map.get("call_sid"));
         final Double duration = DaoUtils.readDouble(map.get("duration"));
@@ -235,7 +248,47 @@ public final class MybatisRecordingsDao implements RecordingsDao {
             String file = String.format("/restcomm/%s/Accounts/%s/Recordings/%s",apiVersion,accountSid,sid);
             fileUri = generateLocalFileUri(file, ".wav").toString();
         }
+
+        // fileUri: http://192.168.1.190:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/RE4c9c09908b60402c8c0a77e24313f27d.wav
+        // s3Uri: https://gvagrestcomm.s3.amazonaws.com/RE4c9c09908b60402c8c0a77e24313f27d.wav
+        // old S3URI: https://s3.amazonaws.com/restcomm-as-a-service/logs/RE7ddbd5b441574e4ab786a1fddf33eb47.wav?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20170209T103950Z&X-Amz-SignedHeaders=host&X-Amz-Expires=604800&X-Amz-Credential=AKIAIRG5NINXKJAJM5DA%2F20170209%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=b3da2acc17ee9c6aca4cd151e154d94f530670850f0fcade2422f85d1c7cc992
         String s3Uri = (String) map.get("s3_uri");
-        return new Recording(sid, dateCreated, dateUpdated, accountSid, callSid, duration, apiVersion, uri, DaoUtils.readUri(fileUri), DaoUtils.readUri(s3Uri));
+        if (fileUri.contains("s3.amazonaws.com") && s3AccessTool != null) {
+            update = true;
+            dateUpdated = DateTime.now();
+            String tempUri = fileUri;
+            String file = String.format("/restcomm/%s/Accounts/%s/Recordings/%s",apiVersion,accountSid,sid);
+            String fileExtension = null;
+            URI oldS3Uri = null;
+            try {
+                oldS3Uri = new URI(tempUri);
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+            if (oldS3Uri != null) {
+                String tempS3Uri = oldS3Uri.getPath().replaceFirst("/","").replaceAll("/",",");
+                String bucketName = tempS3Uri.split(",")[0].trim();
+                String folder = tempS3Uri.split(",")[1].trim();
+                String filename = tempS3Uri.split(",")[2].trim();
+                fileExtension = filename.contains(".wav") ? ".wav" : ".mp4";
+                StringBuffer bucket = new StringBuffer();
+                bucket.append(bucketName);
+                if (folder != null && !folder.isEmpty())
+                    bucket.append("/").append(folder);
+                s3Uri =  s3AccessTool.getS3client().getUrl(bucket.toString(), filename).toString();
+            }
+            if (fileExtension == null) {
+                // assuming as WAV since previous attempt to obtain fileExtension failed
+                fileExtension = ".wav";
+            }
+            fileUri = generateLocalFileUri(file, fileExtension).toString();
+        }
+        recording = new Recording(sid, dateCreated, dateUpdated, accountSid, callSid, duration, apiVersion, uri, DaoUtils.readUri(fileUri), DaoUtils.readUri(s3Uri));
+        if (update) {
+            updateRecording(recording);
+        }
+        return recording;
     }
+
+
 }

@@ -26,15 +26,7 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class End {
-    private static final class Singleton {
-        private static final End instance = new End();
-    }
-
-    private End() {
+    public End() {
         super();
-    }
-
-    public static End instance() {
-        return Singleton.instance;
     }
 }

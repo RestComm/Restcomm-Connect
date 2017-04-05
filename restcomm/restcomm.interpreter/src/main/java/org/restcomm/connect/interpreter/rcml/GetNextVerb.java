@@ -26,15 +26,7 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class GetNextVerb {
-    private static final class Singleton {
-        private static final GetNextVerb instance = new GetNextVerb();
-    }
-
-    private GetNextVerb() {
+    public GetNextVerb() {
         super();
-    }
-
-    public static GetNextVerb instance() {
-        return Singleton.instance;
     }
 }

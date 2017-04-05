@@ -1,6 +1,0 @@
-<Response>
-    <Say>Welcome to the online health service, powered by Restcomm.</Say>
-    <Dial record="false">
-        <Sip>sip:1999@SIPP_SERVER_IP_HERE</Sip>
-    </Dial>
-</Response>
