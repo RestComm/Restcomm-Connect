@@ -214,6 +214,7 @@ public class DialRecordingTest {
 		assertTrue(aliceCall.waitForDisconnect(30 * 1000));
 		assertTrue(aliceCall.respondToDisconnect());
 
+		Thread.sleep(500);
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
 		assertNotNull(recording);
@@ -362,6 +363,18 @@ public class DialRecordingTest {
 		assertTrue(duration==3.0);
 	}
 
+	@Test
+	public void testGetRecordingWithOldS3Url() {
+		String callSid = "CA2d3f6354e75e46b3ac76f534129ff511";
+		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
+		assertNotNull(recording);
+		assertEquals(1, recording.size());
+		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
+		assertTrue(duration==3.0);
+		//Since for this test the S3Accesstoll is not enabled, the file_uri will still point to the old S3 URL.
+		//Check test org.restcomm.connect.testsuite.telephony.DialRecordingS3UploadTest_NoneSecurity.testGetRecordingWithOldS3Url()
+		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("https://s3.amazonaws.com"));
+	}
 
 	@Deployment(name = "DialRecordingTest", managed = true, testable = false)
 	public static WebArchive createWebArchiveNoGw() {
@@ -377,7 +390,7 @@ public class DialRecordingTest {
 		archive.delete("/WEB-INF/classes/application.conf");
 		archive.addAsWebInfResource("sip.xml");
 		archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-		archive.addAsWebInfResource("restcomm.script_dialTest_new", "data/hsql/restcomm.script");
+		archive.addAsWebInfResource("restcomm.script_DialRecording", "data/hsql/restcomm.script");
 		archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
 		logger.info("Packaged Test App");
 		return archive;

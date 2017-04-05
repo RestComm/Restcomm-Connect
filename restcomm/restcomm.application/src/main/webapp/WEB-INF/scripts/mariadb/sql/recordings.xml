@@ -9,6 +9,12 @@
     VALUES (#{sid}, #{date_created}, #{date_updated}, #{account_sid}, #{call_sid}, #{duration}, #{api_version}, #{uri}, #{file_uri}, #{s3_uri});
   </insert>
 
+    <update id="updateRecording" parameterType="map">
+        UPDATE restcomm_recordings
+        SET date_updated=#{date_updated}, uri=#{uri}, file_uri=#{file_uri}, s3_uri=#{s3_uri}
+        WHERE sid=#{sid};
+    </update>
+
   <select id="getRecording" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_recordings WHERE sid=#{sid};
   </select>
