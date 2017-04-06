@@ -20,6 +20,7 @@
 package org.restcomm.connect.telephony;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -34,16 +35,11 @@ import org.restcomm.connect.telephony.api.ConferenceStateChanged;
 import org.restcomm.connect.telephony.api.CreateConference;
 import org.restcomm.connect.telephony.api.DestroyConference;
 import org.restcomm.connect.telephony.api.StartConference;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -57,15 +53,15 @@ public final class ConferenceCenter extends UntypedActor {
     private final Map<String, ActorRef> conferences;
     private final Map<String, List<ActorRef>> initializing;
     private final DaoManager storage;
-    private final ActorRef supervisor;
+    private final ActorSystem system;
 
-    public ConferenceCenter(final ActorRef supervisor, final MediaServerControllerFactory factory, final DaoManager storage) {
+    public ConferenceCenter(final MediaServerControllerFactory factory, final DaoManager storage) {
         super();
         this.factory = factory;
         this.conferences = new HashMap<String, ActorRef>();
         this.initializing = new HashMap<String, List<ActorRef>>();
         this.storage = storage;
-        this.supervisor = supervisor;
+        this.system = context().system();
     }
 
     private ActorRef getConference(final String name) {
@@ -78,13 +74,7 @@ public final class ConferenceCenter extends UntypedActor {
                 return new Conference(name, factory.provideConferenceController(), storage);
             }
         });
-        ActorRef conference = null;
-        try {
-            conference = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return conference;
+        return system.actorOf(props);
     }
 
     @Override

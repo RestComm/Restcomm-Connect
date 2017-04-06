@@ -20,29 +20,15 @@
 
 package org.restcomm.connect.ussd.interpreter;
 
-import static akka.pattern.Patterns.ask;
-import static org.restcomm.connect.interpreter.rcml.Verbs.ussdCollect;
-import static org.restcomm.connect.interpreter.rcml.Verbs.ussdLanguage;
-import static org.restcomm.connect.interpreter.rcml.Verbs.ussdMessage;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Currency;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
-
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-
+import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -87,16 +73,25 @@ import org.restcomm.connect.ussd.commons.UssdInfoRequest;
 import org.restcomm.connect.ussd.commons.UssdMessageType;
 import org.restcomm.connect.ussd.commons.UssdRestcommResponse;
 
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.regex.Pattern;
+
+import static org.restcomm.connect.interpreter.rcml.Verbs.ussdCollect;
+import static org.restcomm.connect.interpreter.rcml.Verbs.ussdLanguage;
+import static org.restcomm.connect.interpreter.rcml.Verbs.ussdMessage;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -106,7 +101,7 @@ public class UssdInterpreter extends UntypedActor {
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final ActorRef supervisor;
+    private final ActorSystem system;
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
@@ -176,13 +171,13 @@ public class UssdInterpreter extends UntypedActor {
     private final State ready;
     private final State notFound;
 
-    public UssdInterpreter(final ActorRef supervisor, final Configuration configuration, final Sid account, final Sid phone, final String version,
-            final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
-            final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
-            final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage) {
+    public UssdInterpreter(final ActorSystem system, final Configuration configuration, final Sid account, final Sid phone, final String version,
+                           final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
+                           final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
+                           final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage) {
         super();
         final ActorRef source = self();
-        this.supervisor = supervisor;
+        this.system = system;
 
         uninitialized = new State("uninitialized", null, null);
         observeCall = new State("observe call", new ObserveCall(source), null);
@@ -302,13 +297,7 @@ public class UssdInterpreter extends UntypedActor {
                 return new EmailService(configuration);
             }
         });
-        ActorRef mailer = null;
-        try {
-            mailer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return mailer;
+        return system.actorOf(props);
     }
 
     ActorRef downloader() {
@@ -319,13 +308,7 @@ public class UssdInterpreter extends UntypedActor {
                 return new Downloader();
             }
         });
-        ActorRef downloader = null;
-        try {
-            downloader = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return downloader;
+        return system.actorOf(props);
     }
 
     ActorRef parser(final String xml) {
@@ -337,13 +320,7 @@ public class UssdInterpreter extends UntypedActor {
                 return new Parser(xml, self());
             }
         });
-        ActorRef parser = null;
-        try {
-            parser = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return parser;
+        return system.actorOf(props);
     }
 
     void invalidVerb(final Tag verb) {

@@ -1,6 +1,7 @@
 package org.restcomm.connect.sms.smpp;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -8,18 +9,13 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
 
 import java.net.URI;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
 
 public class SmppInterpreterBuilder {
 
     private static Logger logger = Logger.getLogger(SmppInterpreterBuilder.class);
-    private final ActorRef supervisor;
+    private final ActorSystem system;
     private Configuration configuration;
     private ActorRef service;
     private DaoManager storage;
@@ -30,9 +26,9 @@ public class SmppInterpreterBuilder {
     private URI fallbackUrl;
     private String fallbackMethod;
 
-    public SmppInterpreterBuilder(final ActorRef supervisor) {
+    public SmppInterpreterBuilder(final ActorSystem system) {
         super();
-        this.supervisor = supervisor;
+        this.system = system;
     }
 
     public ActorRef build() {
@@ -41,17 +37,11 @@ public class SmppInterpreterBuilder {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new SmppInterpreter(supervisor, service, configuration, storage, accountId, version, url, method, fallbackUrl,
+                return new SmppInterpreter(service, configuration, storage, accountId, version, url, method, fallbackUrl,
                         fallbackMethod);
             }
         });
-        ActorRef smppInterpreter = null;
-        try {
-            smppInterpreter = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return smppInterpreter;
+        return system.actorOf(props);
     }
 
     public void setConfiguration(final Configuration configuration) {

@@ -45,8 +45,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.io.File;
 import java.net.URI;
-import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -274,19 +274,29 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
                     if (securityLevel.equals(RecordingSecurityLevel.REDIRECT)) {
                         return temporaryRedirect(recordingUri).build();
                     } else {
-                        URL recordingUrl = recordingUri.toURL();
                         String contentType = recordingUri.toURL().openConnection().getContentType();
                         if (contentType == null || contentType.isEmpty()) {
                             contentType = "audio/x-wav";
                         }
                         //Fetch recording and serve it from here
-                        return ok(recordingUri.toURL().openStream(), recordingUri.toURL().openConnection().getContentType()).build();
+                        return ok(recordingUri.toURL().openStream(), contentType).build();
                     }
                 } else {
 //                    String recFile = "/restcomm/recordings/" + recording.getSid() + ".wav";
 //                    recordingUri = UriUtils.resolve(new URI(recFile));
-                    recordingUri = recording.getFileUri();
-                    return ok(recordingUri.toURL().openStream()).build();
+                    String path = configuration.getString("recordings-path");
+                    if (!path.endsWith("/")) {
+                        path += "/";
+                    }
+                    path += sid.toString() + ".wav";
+
+                    File recordingFile = new File(URI.create(path));
+                    if (recordingFile.exists()) {
+                        //Fetch recording and serve it from here
+                        return ok(recordingFile, "audio/x-wav").build();
+                    } else {
+                        return status(NOT_FOUND).build();
+                    }
                 }
             } catch (Exception e) {
                 if (logger.isInfoEnabled()) {
