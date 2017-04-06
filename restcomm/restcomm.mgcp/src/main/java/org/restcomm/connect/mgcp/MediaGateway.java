@@ -21,6 +21,7 @@ package org.restcomm.connect.mgcp;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -40,16 +41,11 @@ import jain.protocol.ip.mgcp.message.Notify;
 import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 import org.restcomm.connect.commons.util.RevolvingCounter;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
 
 import java.net.InetAddress;
 import java.util.Map;
 import java.util.TooManyListenersException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -81,12 +77,13 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
     private RevolvingCounter requestIdPool;
     private RevolvingCounter sessionIdPool;
     private RevolvingCounter transactionIdPool;
-    private ActorRef supervisor;
+    private ActorSystem system;
 
     public MediaGateway() {
         super();
         notificationListeners = new ConcurrentHashMap<String, ActorRef>();
         responseListeners = new ConcurrentHashMap<Integer, ActorRef>();
+        system = context().system();
     }
 
     private ActorRef getConnection(final Object message) {
@@ -102,13 +99,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
                 return new Connection(gateway, session, agent, timeout);
             }
         });
-        ActorRef connection = null;
-        try {
-            connection = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return connection;
+        return system.actorOf(props);
     }
 
     private ActorRef getBridgeEndpoint(final Object message) {
@@ -136,13 +127,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
                 }
             });
         }
-        ActorRef bridgeEndpoint = null;
-        try {
-            bridgeEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return bridgeEndpoint;
+        return system.actorOf(props);
     }
 
     private ActorRef getConferenceEndpoint(final Object message) {
@@ -158,13 +143,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
                 return new ConferenceEndpoint(gateway, session, agent, domain, timeout, endpointName);
             }
         });
-        ActorRef confEndpoint = null;
-        try {
-            confEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return confEndpoint;
+        return system.actorOf(props);
     }
 
     private MediaGatewayInfo getInfo(final Object message) {
@@ -184,13 +163,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
                     return new IvrEndpoint(gateway, session, agent, domain, timeout, endpointName);
                 }
             });
-        ActorRef ivrEndpoint = null;
-        try {
-            ivrEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return ivrEndpoint;
+        return system.actorOf(props);
     }
 
     private ActorRef getLink(final Object message) {
@@ -206,13 +179,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
                 return new Link(gateway, session, agent, timeout, connectionIdentifier);
             }
         });
-        ActorRef link = null;
-        try {
-            link = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return link;
+        return system.actorOf(props);
     }
 
     private ActorRef getPacketRelayEndpoint(final Object message) {
@@ -227,13 +194,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
                 return new PacketRelayEndpoint(gateway, session, agent, domain, timeout);
             }
         });
-        ActorRef packetRelayEndpoint = null;
-        try {
-            packetRelayEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return packetRelayEndpoint;
+        return system.actorOf(props);
     }
 
     private MediaSession getSession() {
@@ -301,7 +262,6 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         requestIdPool = new RevolvingCounter(1, Long.MAX_VALUE);
         sessionIdPool = new RevolvingCounter(1, Long.MAX_VALUE);
         transactionIdPool = new RevolvingCounter(1, Long.MAX_VALUE);
-        supervisor = request.getSupervisor();
     }
 
     @Override

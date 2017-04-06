@@ -21,8 +21,8 @@ package org.restcomm.connect.interpreter;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
-import akka.actor.StopChild;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
@@ -37,9 +37,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
-import org.restcomm.connect.email.api.EmailRequest;
-import org.restcomm.connect.email.api.EmailResponse;
-import org.restcomm.connect.email.api.Mail;
 import org.restcomm.connect.asr.AsrInfo;
 import org.restcomm.connect.asr.AsrRequest;
 import org.restcomm.connect.asr.AsrResponse;
@@ -49,27 +46,33 @@ import org.restcomm.connect.commons.cache.DiskCacheFactory;
 import org.restcomm.connect.commons.cache.DiskCacheRequest;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
 import org.restcomm.connect.commons.cache.HashGenerator;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.fsm.Action;
+import org.restcomm.connect.commons.fsm.FiniteStateMachine;
+import org.restcomm.connect.commons.fsm.State;
+import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.commons.util.WavUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.TranscriptionsDao;
-import org.restcomm.connect.email.EmailService;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.Recording;
-import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Direction;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;
 import org.restcomm.connect.dao.entities.Transcription;
+import org.restcomm.connect.email.EmailService;
+import org.restcomm.connect.email.api.EmailRequest;
+import org.restcomm.connect.email.api.EmailResponse;
+import org.restcomm.connect.email.api.Mail;
 import org.restcomm.connect.fax.FaxRequest;
 import org.restcomm.connect.fax.InterfaxService;
-import org.restcomm.connect.commons.fsm.Action;
-import org.restcomm.connect.commons.fsm.FiniteStateMachine;
-import org.restcomm.connect.commons.fsm.State;
-import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.http.client.Downloader;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
@@ -79,11 +82,11 @@ import org.restcomm.connect.interpreter.rcml.GetNextVerb;
 import org.restcomm.connect.interpreter.rcml.Parser;
 import org.restcomm.connect.interpreter.rcml.ParserFailed;
 import org.restcomm.connect.interpreter.rcml.Tag;
+import org.restcomm.connect.interpreter.rcml.Verbs;
 import org.restcomm.connect.mscontrol.api.messages.Collect;
 import org.restcomm.connect.mscontrol.api.messages.MediaGroupResponse;
 import org.restcomm.connect.mscontrol.api.messages.Play;
 import org.restcomm.connect.mscontrol.api.messages.Record;
-import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.sms.api.CreateSmsSession;
 import org.restcomm.connect.sms.api.DestroySmsSession;
 import org.restcomm.connect.sms.api.SmsServiceResponse;
@@ -91,7 +94,6 @@ import org.restcomm.connect.sms.api.SmsSessionAttribute;
 import org.restcomm.connect.sms.api.SmsSessionInfo;
 import org.restcomm.connect.sms.api.SmsSessionRequest;
 import org.restcomm.connect.sms.api.SmsSessionResponse;
-import org.restcomm.connect.interpreter.rcml.Verbs;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
@@ -102,12 +104,11 @@ import org.restcomm.connect.tts.api.GetSpeechSynthesizerInfo;
 import org.restcomm.connect.tts.api.SpeechSynthesizerInfo;
 import org.restcomm.connect.tts.api.SpeechSynthesizerRequest;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
-import org.restcomm.connect.commons.util.UriUtils;
-import org.restcomm.connect.commons.util.WavUtils;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
+import javax.servlet.sip.SipServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -121,8 +122,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-
-import javax.servlet.sip.SipServletResponse;
 
 import static akka.pattern.Patterns.ask;
 
@@ -141,7 +140,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
     static String EMAIL_SENDER = "restcomm@restcomm.org";
 
-    protected final ActorRef supervisor;
+    protected final ActorSystem system;
 
     // States for the FSM.
     // ==========================
@@ -258,10 +257,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     final Set<Transition> transitions = new HashSet<Transition>();
     int recordingDuration = -1;
 
-    public BaseVoiceInterpreter(final ActorRef supervisor) {
+    public BaseVoiceInterpreter() {
         super();
         final ActorRef source = self();
-        this.supervisor = supervisor;
+        this.system = context().system();
         // 20 States in common
         uninitialized = new State("uninitialized", null, null);
         acquiringAsrInfo = new State("acquiring asr info", new AcquiringAsrInfo(source), null);
@@ -419,13 +418,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new ISpeechAsr(configuration);
             }
         });
-        ActorRef asr = null;
-        try {
-            asr = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return asr;
+        return system.actorOf(props);
     }
 
     @SuppressWarnings("unchecked")
@@ -474,13 +467,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new InterfaxService(configuration);
             }
         });
-        ActorRef fax = null;
-        try {
-            fax = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return fax;
+        return system.actorOf(props);
     }
 
     //Callback using the Akka ask pattern (http://doc.akka.io/docs/akka/2.2.5/java/untyped-actors.html#Ask__Send-And-Receive-Future) will force VoiceInterpter to wait until
@@ -549,13 +536,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new DiskCacheFactory(configuration).getDiskCache(path, uri);
             }
         });
-        ActorRef cache = null;
-        try {
-            cache = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return cache;
+        return system.actorOf(props);
     }
 
     ActorRef downloader() {
@@ -567,13 +548,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new Downloader();
             }
         });
-        ActorRef downloader = null;
-        try {
-            downloader = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return downloader;
+        return system.actorOf(props);
     }
 
     String e164(final String number) {
@@ -606,13 +581,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new EmailService(configuration);
             }
         });
-        ActorRef mailer = null;
-        try {
-            mailer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return mailer;
+        return system.actorOf(props);
     }
 
     private Notification notification(final int log, final int error, final String message) {
@@ -677,23 +646,18 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     return new Parser(xml, self());
                 }
             });
-        ActorRef parser = null;
-        try {
-            parser = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return parser;
+        return system.actorOf(props);
     }
 
     void postCleanup() {
         if (smsSessions.isEmpty() && outstandingAsrRequests == 0) {
             final UntypedActorContext context = getContext();
-            supervisor.tell(new StopChild(parser), null);
+            if (parser != null)
+                system.stop(parser);
             context.stop(self());
         }
         if (downloader != null && !downloader.isTerminated()) {
-            supervisor.tell(new StopChild(downloader), null);
+            system.stop(downloader);
         }
     }
 
@@ -851,13 +815,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(ttsConf);
             }
         });
-        ActorRef tts = null;
-        try {
-            tts = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return tts;
+        return system.actorOf(props);
     }
 
     abstract class AbstractAction implements Action {

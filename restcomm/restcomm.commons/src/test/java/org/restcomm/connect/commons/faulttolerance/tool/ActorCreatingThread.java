@@ -12,11 +12,9 @@ import akka.testkit.JavaTestKit;
  *
  */
 public class ActorCreatingThread implements Runnable {
-	private final ActorRef supervisor;
 	private final ActorSystem system;
 
-	public ActorCreatingThread(final ActorRef supervisor, final ActorSystem system){
-		this.supervisor = supervisor;
+	public ActorCreatingThread(final ActorSystem system){
 		this.system = system;
 	}
 
@@ -25,16 +23,16 @@ public class ActorCreatingThread implements Runnable {
 		new JavaTestKit(system) {
         {
         	final ActorRef self = getRef();
-        	
+
         	ActorRef actorCreator = system.actorOf(new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public Actor create() throws Exception {
-                    return new MyUntypedActor(supervisor);
+                    return new MyUntypedActor(system);
                 }
             }));
-        	
+
         	actorCreator.tell(new String(), self);
         }};
 	}

@@ -20,6 +20,7 @@
 package org.restcomm.connect.http;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -36,7 +37,6 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.faulttolerance.RestcommSupervisor;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.SmsMessagesDao;
@@ -94,7 +94,7 @@ import static javax.ws.rs.core.Response.status;
 public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
-    protected ActorRef supervisor;
+    protected ActorSystem system;
     protected Configuration configuration;
     protected ActorRef aggregator;
     protected SmsMessagesDao dao;
@@ -116,7 +116,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         configuration = configuration.subset("runtime-settings");
         dao = storage.getSmsMessagesDao();
         aggregator = (ActorRef) context.getAttribute("org.restcomm.connect.sms.SmsService");
-        supervisor = (ActorRef) context.getAttribute(RestcommSupervisor.class.getName());
+        system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
         super.init(configuration);
         final SmsMessageConverter converter = new SmsMessageConverter(configuration);
         listConverter = new SmsMessageListConverter(configuration);
@@ -294,7 +294,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         final String body = data.getFirst("Body");
         final SmsSessionRequest.Encoding encoding;
         if (!data.containsKey("Encoding")) {
-            encoding = SmsSessionRequest.Encoding.GSM;
+            encoding = SmsSessionRequest.Encoding.UCS_2;
         } else {
             encoding = SmsSessionRequest.Encoding.valueOf(data.getFirst("Encoding").replace('-', '_'));
         }
@@ -388,13 +388,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
                 return new SmsSessionObserver();
             }
         });
-        ActorRef observer = null;
-        try {
-            observer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return observer;
+        return system.actorOf(props);
     }
 
     private final class SmsSessionObserver extends UntypedActor {

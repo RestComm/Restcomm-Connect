@@ -21,7 +21,6 @@ package org.restcomm.connect.interpreter;
 
 import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
-import akka.actor.StopChild;
 import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -215,13 +214,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private String imsUaPassword;
     private String forwardedFrom;
 
-    public VoiceInterpreter(final ActorRef supervisor, final Configuration configuration, final Sid account, final Sid phone, final String version,
+    public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI viStatusCallback,
                             final String statusCallbackMethod, final String referTarget, final String transferor, final String transferee,
                             final String emailAddress, final ActorRef callManager,
                             final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring, final String rcml,
                             final boolean asImsUa, final String imsUaLogin, final String imsUaPassword) {
-        super(supervisor);
+        super();
         final ActorRef source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
         downloadingFallbackRcml = new State("downloading fallback rcml", new DownloadingFallbackRcml(source), null);
@@ -3090,7 +3089,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 call = null;
             }
 
-            supervisor.tell(new StopChild(self()), null);
+            system.stop(self());
             postCleanup();
         }
         if(asImsUa){
@@ -3157,7 +3156,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 method = "POST";
             }
 
-            final SubVoiceInterpreterBuilder builder = new SubVoiceInterpreterBuilder(supervisor);
+            final SubVoiceInterpreterBuilder builder = new SubVoiceInterpreterBuilder(system);
             builder.setConfiguration(configuration);
             builder.setStorage(storage);
             builder.setCallManager(super.source);
