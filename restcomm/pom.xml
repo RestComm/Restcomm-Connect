@@ -514,6 +514,14 @@
 	</dependencyManagement>
 
 	<dependencies>
+
+		<!-- Performance metrics -->
+		<dependency>
+			<groupId>io.kamon</groupId>
+			<artifactId>kamon-core_2.10</artifactId>
+			<version>0.6.0</version>
+		</dependency>
+
 		<!-- Testing -->
 		<dependency>
 			<groupId>junit</groupId>

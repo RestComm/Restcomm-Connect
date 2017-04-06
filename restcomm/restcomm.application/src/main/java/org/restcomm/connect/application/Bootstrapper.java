@@ -7,6 +7,7 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import kamon.Kamon;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -65,6 +66,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     public void destroy() {
         system.shutdown();
         system.awaitTermination();
+        Kamon.shutdown();
     }
 
     private MediaServerControllerFactory mediaServerControllerFactory(final Configuration configuration, ClassLoader loader, DaoManager storage)
@@ -279,6 +281,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             RestcommConfiguration.createOnce(xml);
             context.setAttribute(Configuration.class.getName(), xml);
             context.setAttribute("ExtensionConfiguration", extensionConf);
+
+            Kamon.start();
+
             // Initialize global dependencies.
             final ClassLoader loader = getClass().getClassLoader();
             // Create the actor system.
