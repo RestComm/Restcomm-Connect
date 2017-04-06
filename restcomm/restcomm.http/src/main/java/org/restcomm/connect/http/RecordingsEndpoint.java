@@ -293,12 +293,22 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
                     if (!path.endsWith("/")) {
                         path += "/";
                     }
-                    path += sid.toString() + ".wav";
+                    String fileExtension = ".wav";
+                    if (recording.getFileUri() != null) {
+                        fileExtension = recording.getFileUri().toString().endsWith("wav") ? ".wav" : ".mp4";
+                    }
+                    path += sid.toString() + fileExtension;
 
                     File recordingFile = new File(URI.create(path));
                     if (recordingFile.exists()) {
                         //Fetch recording and serve it from here
-                        return ok(recordingFile, "audio/x-wav").build();
+                        String contentType;
+                        if (fileExtension.equals(".wav")) {
+                            contentType = "audio/x-wav";
+                        } else {
+                            contentType = "video/mp4";
+                        }
+                        return ok(recordingFile, contentType).build();
                     } else {
                         return status(NOT_FOUND).build();
                     }
