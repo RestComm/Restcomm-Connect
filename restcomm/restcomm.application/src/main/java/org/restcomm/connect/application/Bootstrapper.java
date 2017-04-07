@@ -64,8 +64,10 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
     @Override
     public void destroy() {
-        system.shutdown();
-        system.awaitTermination();
+        if (system != null) {
+            system.shutdown();
+            system.awaitTermination();
+        }
         Kamon.shutdown();
     }
 
@@ -281,9 +283,6 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             RestcommConfiguration.createOnce(xml);
             context.setAttribute(Configuration.class.getName(), xml);
             context.setAttribute("ExtensionConfiguration", extensionConf);
-
-            Kamon.start();
-
             // Initialize global dependencies.
             final ClassLoader loader = getClass().getClassLoader();
             // Create the actor system.
@@ -341,6 +340,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 logger.error("ServletException during initialization: ", exception);
             }
             context.setAttribute(MediaServerControllerFactory.class.getName(), mscontrollerFactory);
+
+            Kamon.start();
 
             Boolean rvdMigrationEnabled = new Boolean(xml.subset("runtime-settings").getString("rvd-workspace-migration-enabled", "true"));
             if (rvdMigrationEnabled) {

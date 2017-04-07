@@ -89,7 +89,7 @@ public class MediaResourceBrokerTestUtil {
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
         }));
-        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader, system), null);
+        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader), null);
         return mrb;
 
     }
