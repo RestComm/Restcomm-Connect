@@ -191,6 +191,12 @@
 
 		<dependency>
 			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.tts.awspolly</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+                <dependency>
+			<groupId>org.restcomm</groupId>
 			<artifactId>restcomm-connect.tts.api</artifactId>
 			<version>${project.version}</version>
 		</dependency>

@@ -21,13 +21,13 @@
 
 package org.restcomm.connect.mscontrol.mms;
 
-import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
-
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActorFactory;
+import org.apache.log4j.Logger;
+import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 
 /**
  * Provides controllers for Mobicents Media Server.
@@ -37,6 +37,7 @@ import akka.actor.UntypedActorFactory;
  */
 public class MmsControllerFactory implements MediaServerControllerFactory {
 
+    private static Logger logger = Logger.getLogger(MmsControllerFactory.class);
     private final ActorSystem system;
     private final CallControllerFactory callControllerFactory;
     private final ConferenceControllerFactory conferenceControllerFactory;
@@ -54,17 +55,20 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
     @Override
     public ActorRef provideCallController() {
-        return system.actorOf(new Props(this.callControllerFactory));
+        final Props props = new Props(this.callControllerFactory);
+        return system.actorOf(props);
     }
 
     @Override
     public ActorRef provideConferenceController() {
-        return system.actorOf(new Props(this.conferenceControllerFactory));
+        final Props props = new Props(this.conferenceControllerFactory);
+        return system.actorOf(props);
     }
 
     @Override
     public ActorRef provideBridgeController() {
-        return system.actorOf(new Props(this.bridgeControllerFactory));
+        final Props props = new Props(this.bridgeControllerFactory);
+        return system.actorOf(props);
     }
 
     private final class CallControllerFactory implements UntypedActorFactory {
@@ -73,7 +77,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            return new MmsCallController(mrb);
+            return new MmsCallController(mrb, system);
         }
 
     }
@@ -96,7 +100,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            return new MmsBridgeController(mrb);
+            return new MmsBridgeController(mrb, system);
         }
 
     }

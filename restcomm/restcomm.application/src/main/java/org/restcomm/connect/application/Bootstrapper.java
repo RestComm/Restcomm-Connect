@@ -1,21 +1,12 @@
 package org.restcomm.connect.application;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Properties;
-
-import javax.media.mscontrol.MsControlException;
-import javax.media.mscontrol.MsControlFactory;
-import javax.media.mscontrol.spi.Driver;
-import javax.media.mscontrol.spi.DriverManager;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.sip.SipServlet;
-import javax.servlet.sip.SipServletContextEvent;
-import javax.servlet.sip.SipServletListener;
-import javax.servlet.sip.SipURI;
-
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -39,14 +30,20 @@ import org.restcomm.connect.mscontrol.api.MediaServerInfo;
 import org.restcomm.connect.mscontrol.jsr309.Jsr309ControllerFactory;
 import org.restcomm.connect.mscontrol.mms.MmsControllerFactory;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
+import javax.media.mscontrol.MsControlException;
+import javax.media.mscontrol.MsControlFactory;
+import javax.media.mscontrol.spi.Driver;
+import javax.media.mscontrol.spi.DriverManager;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipServletContextEvent;
+import javax.servlet.sip.SipServletListener;
+import javax.servlet.sip.SipURI;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.List;
+import java.util.Properties;
 
 /**
  *
@@ -81,7 +78,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 try {
                     settings = configuration.subset("media-server-manager");
                     ActorRef mrb = mediaResourceBroker(settings, storage, loader);
-                    factory = new MmsControllerFactory(this.system, mrb);
+                    factory = new MmsControllerFactory(system, mrb);
                 } catch (UnknownHostException e) {
                     throw new ServletException(e);
                 }
@@ -192,7 +189,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     }
 
     private ActorRef mediaResourceBroker(final Configuration configuration, final DaoManager storage, final ClassLoader loader) throws UnknownHostException{
-        ActorRef mrb = system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -200,7 +197,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 final String classpath = configuration.getString("mrb[@class]");
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
-        }));
+        });
+        ActorRef mrb = system.actorOf(props);
         mrb.tell(new StartMediaResourceBroker(configuration, storage, loader), null);
         return mrb;
     }
@@ -223,15 +221,15 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     }
 
     private ActorRef monitoringService(final Configuration configuration, final DaoManager daoManager, final ClassLoader loader) {
-        final ActorRef monitoring = system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new MonitoringService(daoManager);
             }
-        }));
-        return monitoring;
+        });
+        return system.actorOf(props);
 
     }
 
@@ -339,7 +337,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             }
             context.setAttribute(MediaServerControllerFactory.class.getName(), mscontrollerFactory);
 
-            Boolean rvdMigrationEnabled = new Boolean(xml.subset("runtime-settings").getString("rvd-workspace-migration-enabled", "true"));
+            Boolean rvdMigrationEnabled = new Boolean(xml.subset("runtime-settings").getString("rvd-workspace-migration-enabled", "false"));
             if (rvdMigrationEnabled) {
                 //Replicate RVD Projects as database entities
                 try {

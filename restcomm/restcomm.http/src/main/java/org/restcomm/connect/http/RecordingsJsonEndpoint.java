@@ -23,7 +23,9 @@ import javax.ws.rs.GET;
 import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
@@ -38,7 +40,7 @@ public final class RecordingsJsonEndpoint extends RecordingsEndpoint {
     }
 
     @GET
-    public Response getRecordings(@PathParam("accountSid") final String accountSid) {
-        return getRecordings(accountSid, APPLICATION_JSON_TYPE);
+    public Response getRecordings(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
+        return getRecordings(accountSid, info, APPLICATION_JSON_TYPE);
     }
 }

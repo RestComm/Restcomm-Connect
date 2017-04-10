@@ -88,6 +88,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
         builder.registerTypeAdapter(ConferenceDetailRecord.class, converter);
         builder.registerTypeAdapter(ConferenceDetailRecordList.class, listConverter);
         builder.setPrettyPrinting();
+        builder.disableHtmlEscaping();
         gson = builder.create();
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
@@ -181,7 +182,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
         listConverter.setCount(total);
         listConverter.setPage(Integer.parseInt(page));
         listConverter.setPageSize(Integer.parseInt(pageSize));
-        listConverter.setPathUri(info.getRequestUri().getPath());
+        listConverter.setPathUri("/"+getApiVersion(null)+"/"+info.getPath());
 
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new ConferenceDetailRecordList(cdrs));

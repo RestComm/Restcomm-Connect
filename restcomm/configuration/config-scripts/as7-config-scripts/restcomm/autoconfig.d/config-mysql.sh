@@ -170,7 +170,7 @@ enableDataSource() {
 ## Description: Configures RestComm DAO manager to use MySQL
 ## Params: none
 configDaoManager() {
-	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/dao-manager.xml
 
 	sed -e "s|<data-files>.*</data-files>|<data-files></data-files>|g" $FILE > $FILE.bak
 	mv $FILE.bak $FILE

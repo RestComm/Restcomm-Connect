@@ -24,18 +24,18 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.DaoManager;
 
 import java.net.URI;
-
-import org.apache.commons.configuration.Configuration;
-
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class SubVoiceInterpreterBuilder {
+    private Logger logger = Logger.getLogger(SubVoiceInterpreterBuilder.class);
     private final ActorSystem system;
     private Configuration configuration;
     private DaoManager storage;
@@ -64,7 +64,7 @@ public final class SubVoiceInterpreterBuilder {
     }
 
     public ActorRef build() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -73,7 +73,8 @@ public final class SubVoiceInterpreterBuilder {
                         fallbackMethod, statusCallback, statusCallbackMethod, emailAddress, calls, conferences, sms, storage,
                         hangupOnEnd);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     public void setConfiguration(final Configuration configuration) {

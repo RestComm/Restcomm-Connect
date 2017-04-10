@@ -17,21 +17,21 @@ import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
 import com.cloudhopper.smpp.type.SmppTimeoutException;
 import com.cloudhopper.smpp.type.UnrecoverablePduException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.interpreter.StartInterpreter;
+import org.restcomm.connect.monitoringservice.MonitoringService;
+import org.restcomm.connect.sms.SmsSession;
 import org.restcomm.connect.sms.api.CreateSmsSession;
 import org.restcomm.connect.sms.api.DestroySmsSession;
 import org.restcomm.connect.sms.api.SmsServiceResponse;
-import org.restcomm.connect.sms.SmsSession;
-import org.restcomm.connect.commons.util.UriUtils;
 
 import javax.servlet.ServletContext;
 import javax.servlet.sip.SipFactory;
@@ -182,14 +182,15 @@ public class SmppMessageHandler extends UntypedActor  {
     }
 
     private ActorRef session() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new SmsSession(configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     public void outbound(SmppOutboundMessageEntity request) throws SmppInvalidArgumentException, IOException {
@@ -204,12 +205,15 @@ public class SmppMessageHandler extends UntypedActor  {
         SubmitSm submit0 = new SubmitSm();
         submit0.setSourceAddress(new Address((byte)smppTonNpiValue, (byte) smppTonNpiValue, request.getSmppFrom() ));
         submit0.setDestAddress(new Address((byte)smppTonNpiValue, (byte)smppTonNpiValue, request.getSmppTo()));
-        if (CharsetUtil.CHARSET_UCS_2 == request.getSmppEncoding()) {
-            submit0.setDataCoding(DataCoding.DATA_CODING_UCS2);
-            textBytes = request.getSmppContent().getBytes();
-        } else {
+        if (CharsetUtil.CHARSET_GSM7 == request.getSmppEncoding()) {
             submit0.setDataCoding(DataCoding.DATA_CODING_GSM7);
-            textBytes = CharsetUtil.encode(request.getSmppContent(), request.getSmppEncoding());
+            textBytes = CharsetUtil.encode(request.getSmppContent(), CharsetUtil.CHARSET_GSM7);
+        } else if (CharsetUtil.CHARSET_GSM8 == request.getSmppEncoding()) {
+            submit0.setDataCoding(DataCoding.DATA_CODING_GSM8);
+            textBytes = CharsetUtil.encode(request.getSmppContent(), CharsetUtil.CHARSET_GSM8);
+        } else {
+            submit0.setDataCoding(DataCoding.DATA_CODING_UCS2);
+            textBytes = CharsetUtil.encode(request.getSmppContent(), CharsetUtil.CHARSET_UCS_2);
         }
         submit0.setShortMessage(textBytes);
         try {

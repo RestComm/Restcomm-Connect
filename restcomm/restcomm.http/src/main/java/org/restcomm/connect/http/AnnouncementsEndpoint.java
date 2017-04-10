@@ -14,9 +14,9 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.cache.DiskCacheFactory;
 import org.restcomm.connect.commons.cache.DiskCacheRequest;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Announcement;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.http.converter.AnnouncementConverter;
 import org.restcomm.connect.http.converter.AnnouncementListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
@@ -53,12 +53,12 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
     protected ServletContext context;
     protected Configuration configuration;
     protected Configuration runtime;
-    protected ActorSystem system;
     protected ActorRef synthesizer;
     protected ActorRef cache;
     protected Gson gson;
     protected XStream xstream;
     private URI uri;
+    private ActorSystem system;
 
     public AnnouncementsEndpoint() {
         super();
@@ -158,25 +158,27 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
     private ActorRef tts(final Configuration configuration) {
         final String classpath = configuration.getString("[@class]");
 
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public Actor create() throws Exception {
                 return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(configuration);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     private ActorRef cache(final String path, final String uri) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public Actor create() throws Exception {
                 return new DiskCacheFactory(configuration).getDiskCache(path, uri);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     @PreDestroy

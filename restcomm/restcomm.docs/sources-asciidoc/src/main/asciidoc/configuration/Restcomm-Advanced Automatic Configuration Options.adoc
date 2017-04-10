@@ -7,7 +7,7 @@
 [source,bash]
 ----
 #If set no automatic configuration will done. Everything needs to be set manually.
-CONF_MANUAL='FALSE' #Used to configure RestComm manually and not take under consideration restcomm.conf & advanced.conf files.
+MANUAL_SETUP='FALSE' #Used to configure RestComm manually and not take under consideration restcomm.conf & advanced.conf files.
 ----
 
 * Section *#Secure SSL configuration*.
@@ -68,6 +68,7 @@ MYSQL_SCHEMA=''
 MYSQL_SNDHOST='' #Used for DB redundancy. If set RestComm (Jboss) will point to it if principal DB fails.
 ----
 
+[[amazons3]]
 * Section *#Amazon S3 Bucket*.
 [source,bash]
 ----

@@ -21,16 +21,18 @@
 
 package org.restcomm.connect.telephony;
 
-import org.restcomm.connect.telephony.api.BridgeManagerResponse;
-import org.restcomm.connect.telephony.api.BridgeStateChanged;
-import org.restcomm.connect.telephony.api.CreateBridge;
-import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
-import org.restcomm.connect.commons.patterns.Observe;
-
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
+import org.restcomm.connect.telephony.api.BridgeManagerResponse;
+import org.restcomm.connect.telephony.api.BridgeStateChanged;
+import org.restcomm.connect.telephony.api.CreateBridge;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -38,22 +40,27 @@ import akka.actor.UntypedActorFactory;
  */
 public class BridgeManager extends UntypedActor {
 
+    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+
     private final MediaServerControllerFactory factory;
+    private final ActorSystem system;
 
     public BridgeManager(final MediaServerControllerFactory factory) {
         super();
         this.factory = factory;
+        this.system = context().system();
     }
 
     private ActorRef createBridge() {
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new Bridge(factory.provideBridgeController());
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     /*

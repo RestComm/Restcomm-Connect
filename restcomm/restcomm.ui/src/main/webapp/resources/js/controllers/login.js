@@ -2,15 +2,17 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout, $dialog, AuthService, Notifications, $state) {
+rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout, $dialog, AuthService, Notifications, $state, PublicConfig) {
 
   $scope.alerts = [];
-
   $scope.credentials = {
     host: window.location.host/*,
     sid: "administrator@company.com",
     token: "RestComm"*/
   };
+  $scope.PublicConfig = PublicConfig;
+
+
 
   $scope.login = function() {
     AuthService.login($scope.credentials.sid, $scope.credentials.token).then(function (loginStatus) {

@@ -8,13 +8,13 @@ An Client instance resource represents a user agent registered with RestComm.
 
 */2012-04-24/Accounts/\{AccountSid}/Clients/\{ClientSid}*
 
-* Using SIP User Agents. 
-When using RestComm to handle SIP user agent you have to create a new Client resource, this resource acts as an account for your user agent and also dictates how calls made by the user agent should be handled. 
+* Using SIP User Agents.
+When using RestComm to handle SIP user agent you have to create a new Client resource, this resource acts as an account for your user agent and also dictates how calls made by the user agent should be handled.
 
-* Client without VoiceUrl 
-Restcomm has a new implied behavior when VoiceUrl is not provided for a Client account. Restcomm will proxy calls from such Clients to the destination Client (only if registered) or to the destination Application DID. 
+* Client without VoiceUrl
+Restcomm has a new implied behavior when VoiceUrl is not provided for a Client account. Restcomm will proxy calls from such Clients to the destination Client (only if registered) or to the destination Application DID.
 
-Only registered Clients are allowed to use the *B2BUA/P2P/Proxy* functionalities of Restcomm. Proxying and P2P calls are only allowed between registered(authenticated) Clients. 
+Only registered Clients are allowed to use the *B2BUA/P2P/Proxy* functionalities of Restcomm. Proxying and P2P calls are only allowed between registered(authenticated) Clients.
 
 === Resource Properties
 
@@ -35,14 +35,12 @@ Only registered Clients are allowed to use the *B2BUA/P2P/Proxy* functionalities
 |VoiceFallbackUrl |The URL that RestComm will request if execution of VoiceUrl fails for any reason.
 |VoiceFallbackMethod |The HTTP method RestComm will use when requesting the VoiceFallbackUrl. Either GET or POST.
 |VoiceApplicationSid |If this entry contains an Sid to a voice application then RestComm will ignore these voice URLs and use the voice URLs specified by the voice application.
-|StatusCallback |The URL that RestComm will request to pass status parameters (such as the call state) to your application.
-|StatusCallbackMethod |The HTTP method RestComm will use to make requests to the StatusCallback URL. Either GET or POST.
 |Uri |The URI for this Client, relative to https://localhost:port/restcomm.
 |===============================================================================================================================================================================
 
 === Supported Operations
 
-*HTTP GET.* Returns the representation of an Client resource, including the properties above. 
+*HTTP GET.* Returns the representation of an Client resource, including the properties above.
 
 *HTTP POST/PUT.* Modifies a Client resource and returns the representation, including the properties above. Below you will find a list of optional parameters.
 
@@ -59,20 +57,18 @@ Only registered Clients are allowed to use the *B2BUA/P2P/Proxy* functionalities
 |VoiceFallbackUrl |The URL that RestComm will request if execution of VoiceUrl fails for any reason.
 |VoiceFallbackMethod |The HTTP method RestComm will use when requesting the VoiceFallbackUrl. Either GET or POST.
 |VoiceApplicationSid |If this entry contains an Sid to a voice application then RestComm will ignore these voice URLs and use the voice URLs specified by the voice application.
-|StatusCallback |The URL that RestComm will request to pass status parameters (such as the call state) to your application.
-|StatusCallbackMethod |The HTTP method RestComm will use to make requests to the StatusCallback URL. Either GET or POST.
 |===============================================================================================================================================================================
 
 *HTTP DELETE.* Deletes a Client from the user's Account.
 
 == Client List Resource
 
-=== Client List Resource URI. 
+=== Client List Resource URI.
 
 */2012-04-24/Accounts/\{AccountSid}/Clients*
 
 === Supported Operations
-*HTTP GET.* Returns the list representation of all the Client resources for this Account, including the properties above. 
+*HTTP GET.* Returns the list representation of all the Client resources for this Account, including the properties above.
 *HTTP POST*. Creates a new Client and returns the representation of the resource, including the properties above. Below you will find a list of required and optional parameters.
 
 === Request Parameters
@@ -89,8 +85,6 @@ Only registered Clients are allowed to use the *B2BUA/P2P/Proxy* functionalities
 |VoiceFallbackUrl |The URL that RestComm will request if execution of VoiceUrl fails for any reason.
 |VoiceFallbackMethod |The HTTP method RestComm will use when requesting the VoiceFallbackUrl. Either GET or POST.
 |VoiceApplicationSid |If this entry contains an Sid to a voice application then RestComm will ignore these voice URLs and use the voice URLs specified by the voice application.
-|StatusCallback |The URL that RestComm will request to pass status parameters (such as the call state) to your application.
-|StatusCallbackMethod |The HTTP method RestComm will use to make requests to the StatusCallback URL. Either GET or POST.
 |===============================================================================================================================================================================
 
 == Create a Client
@@ -98,7 +92,7 @@ Only registered Clients are allowed to use the *B2BUA/P2P/Proxy* functionalities
 The client name will be Alice as shown below
 
 ....
- curl -X POST  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json -d "Login=alice" -d "Password=test" 
+ curl -X POST  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json -d "Login=alice" -d "Password=test"
 ....
 
 The output of the command will be similar to the one below
@@ -166,7 +160,7 @@ XML GET Response
       <Status>1</Status>
       <VoiceMethod>POST</VoiceMethod>
       <VoiceFallbackMethod>POST</VoiceFallbackMethod>
-      <Uri>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL3003328d0de04ba68f38de85b732ed56</Uri>
+      <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL3003328d0de04ba68f38de85b732ed56</Uri>
     </Client>
     <Client>
       <Sid>CLa2b99142e111427fbb489c3de357f60a</Sid>
@@ -180,7 +174,7 @@ XML GET Response
       <Status>1</Status>
       <VoiceMethod>POST</VoiceMethod>
       <VoiceFallbackMethod>POST</VoiceFallbackMethod>
-      <Uri>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa2b99142e111427fbb489c3de357f60a</Uri>
+      <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa2b99142e111427fbb489c3de357f60a</Uri>
     </Client>
   </Clients>
 </RestcommResponse>

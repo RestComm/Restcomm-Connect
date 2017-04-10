@@ -56,8 +56,9 @@ A *Call* represents a connection between a phone or user agent and RestComm. Thi
 |Method |The HTTP method RestComm should use when making its request to the above Url. Defaults to POST.
 |FallbackUrl |The URL that RestComm will request if execution of Url fails for any reason.
 |FallbackMethod |The HTTP method that RestComm should use to request the FallbackUrl. Must be either GET or POST. Defaults to POST.
-|StatusCallback |A URL that RestComm will request when the call ends to notify your app.
-|StatusCallbackMethod |The HTTP method RestComm should use when requesting the above StatusCallback. Defaults to POST.
+|statusCallbackEvent |`initiated`, `ringing`, `answered`, `completed`. Default none
+|statusCallback |any url. Default none
+|statusCallbackMethod |`GET`, `POST`. Default `POST`
 |Timeout |The number of seconds that RestComm should allow the phone to ring before assuming there is no answer. The default is 60 seconds.
 |==========================================================================================================================================
 
@@ -350,7 +351,7 @@ Check LiveCallModification test scripts for Hold/Unhold calls at: https://github
 
 === Filter using the From parameter.
 
-he example below will only return Calls made from client Alice
+The example below will only return Calls made from client Alice
 
 ....
  curl -X GET  http://administrator%40company.com:77f8c12cc7166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?From=alice
@@ -383,8 +384,8 @@ The result will be similar to the one below
       <CallerName/>
       <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAc0fb839632cf444f9066876d5de741e0</Uri>
       <SubresourceUris>
-        <Notifications>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAc0fb839632cf444f9066876d5de741e0/Notifications</Notifications>
-        <Recordings>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAc0fb839632cf444f9066876d5de741e0/Recordings</Recordings>
+        <Notifications>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAc0fb839632cf444f9066876d5de741e0/Notifications</Notifications>
+        <Recordings>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAc0fb839632cf444f9066876d5de741e0/Recordings</Recordings>
       </SubresourceUris>
     </Call>
   </Calls>
@@ -444,8 +445,8 @@ The result of the *PageSize* parameter
       <CallerName/>
       <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA4049cf008d6b4277b92ab863fd4ec7c8</Uri>
       <SubresourceUris>
-        <Notifications>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA4049cf008d6b4277b92ab863fd4ec7c8/Notifications</Notifications>
-        <Recordings>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA4049cf008d6b4277b92ab863fd4ec7c8/Recordings</Recordings>
+        <Notifications>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA4049cf008d6b4277b92ab863fd4ec7c8/Notifications</Notifications>
+        <Recordings>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA4049cf008d6b4277b92ab863fd4ec7c8/Recordings</Recordings>
       </SubresourceUris>
     </Call>
   </Calls>

@@ -95,7 +95,7 @@ public class RegisterClientTest {
     // Dimitris is a Restcomm Client **without** VoiceURL. This Restcomm Client can dial anything.
     private SipStack mariaSipStack2;
     private SipPhone mariaPhone2;
-    private String mariaContact2 = "sip:maria@127.0.1.1:5093";
+    private String mariaContact2 = "sip:maria@127.0.0.1:5093";
 
     private String mariaRestcommContact = "sip:maria@127.0.0.1:5080";
 
@@ -127,7 +127,7 @@ public class RegisterClientTest {
         mariaSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
         mariaPhone = mariaSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, mariaContact);
 
-        mariaSipStack2 = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.1.1", "5093", "127.0.0.1:5080");
+        mariaSipStack2 = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5093", "127.0.0.1:5080");
         mariaPhone2 = mariaSipStack2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, mariaContact2);
 
         mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria", strongPassword, null);
@@ -244,7 +244,7 @@ public class RegisterClientTest {
 
         //According to issue 106: https://telestax.atlassian.net/browse/RESTCOMM-106
         //Restcomm will only use the last REGISTER address
-        //Last REGISTRATION was from Maria-2 
+        //Last REGISTRATION was from Maria-2
         assertTrue(mariaCall_2.waitForIncomingCall(3000));
         assertTrue(mariaCall_2.sendIncomingCallResponse(100, "Trying-Maria-2", 1800));
         assertTrue(mariaCall_2.sendIncomingCallResponse(180, "Ringing-Maria-2", 1800));

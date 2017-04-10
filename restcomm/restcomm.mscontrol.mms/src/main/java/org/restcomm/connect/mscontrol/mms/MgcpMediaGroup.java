@@ -95,7 +95,7 @@ public class MgcpMediaGroup extends MediaGroup {
     protected final State updatingInternalLink;
 
     // FSM.
-    private final FiniteStateMachine fsm;
+    protected FiniteStateMachine fsm;
 
     // MGCP runtime stuff.
     protected final ActorRef gateway;
@@ -376,7 +376,11 @@ public class MgcpMediaGroup extends MediaGroup {
         builder.setPreSpeechTimer(request.timeout());
         builder.setPostSpeechTimer(request.timeout());
         builder.setRecordingLength(request.length());
-        builder.setEndInputKey(request.endInputKey());
+        if (!request.endInputKey().equals("-1")) {
+            builder.setEndInputKey(request.endInputKey());
+        } else {
+            builder.setEndInputKey("null");
+        }
         builder.setRecordingId(request.destination());
         this.lastEvent = AUMgcpEvent.aupr;
         stop(lastEvent);

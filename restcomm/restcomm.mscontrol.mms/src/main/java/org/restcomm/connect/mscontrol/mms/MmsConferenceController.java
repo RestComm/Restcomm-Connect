@@ -503,45 +503,6 @@ public final class MmsConferenceController extends MediaServerController {
         }
     }
 
-    /*private final class CreatingMediaGroup extends AbstractAction {
-
-        public CreatingMediaGroup(ActorRef source) {
-            super(source);
-        }
-
-        private ActorRef createMediaGroup(final Object message) {
-            return getContext().actorOf(new Props(new UntypedActorFactory() {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public UntypedActor create() throws Exception {
-                    return new MgcpMediaGroup(mediaGateway, mediaSession, cnfEndpoint);
-                }
-            }));
-        }
-
-        @Override
-        public void execute(Object message) throws Exception {
-            mediaGroup = createMediaGroup(message);
-            mediaGroup.tell(new Observe(super.source), super.source);
-            mediaGroup.tell(new StartMediaGroup(), super.source);
-        }
-
-    }
-
-    @Deprecated
-    private final class DestroyingMediaGroup extends AbstractAction {
-
-        public DestroyingMediaGroup(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(Object message) throws Exception {
-            mediaGroup.tell(new StopMediaGroup(), super.source);
-        }
-    }*/
-
     private final class Active extends AbstractAction {
 
         public Active(final ActorRef source) {
@@ -551,7 +512,7 @@ public final class MmsConferenceController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             ConferenceMediaResourceControllerStateChanged msg = (ConferenceMediaResourceControllerStateChanged)message;
-            broadcast(new MediaServerConferenceControllerStateChanged(MediaServerControllerState.ACTIVE, conferenceSid, msg.conferenceState()));
+            broadcast(new MediaServerConferenceControllerStateChanged(MediaServerControllerState.ACTIVE, conferenceSid, msg.conferenceState(), msg.moderatorPresent()));
         }
     }
 

@@ -20,23 +20,24 @@
 
 package org.restcomm.connect.ussd.interpreter;
 
-import java.net.URI;
-
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.commons.dao.Sid;
-
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.DaoManager;
+
+import java.net.URI;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 public class UssdInterpreterBuilder {
 
+    private static Logger logger = Logger.getLogger(UssdInterpreterBuilder.class);
     private final ActorSystem system;
     private Configuration configuration;
     private DaoManager storage;
@@ -59,15 +60,15 @@ public class UssdInterpreterBuilder {
     }
 
     public ActorRef build() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
                 return new UssdInterpreter(configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod,
                         statusCallback, statusCallbackMethod, emailAddress, calls, conferences, sms, storage);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     public void setConfiguration(final Configuration configuration) {

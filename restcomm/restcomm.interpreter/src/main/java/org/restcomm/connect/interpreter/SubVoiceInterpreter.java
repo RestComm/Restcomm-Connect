@@ -20,6 +20,7 @@
 package org.restcomm.connect.interpreter;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActorContext;
 import akka.event.Logging;
@@ -31,16 +32,16 @@ import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
 import org.restcomm.connect.asr.AsrResponse;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
-import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.NotificationsDao;
-import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.fax.FaxResponse;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.dao.CallDetailRecordsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.fax.FaxResponse;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
 import org.restcomm.connect.interpreter.rcml.Attribute;
@@ -91,7 +92,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
     private Boolean hangupOnEnd = false;
     private ActorRef originalInterpreter;
 
-    public SubVoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
+    public SubVoiceInterpreter(final ActorSystem system, final Configuration configuration, final Sid account, final Sid phone, final String version,
             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
             final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
             final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage) {
@@ -101,9 +102,9 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     public SubVoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
-            final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
-            final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
-            final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage, final Boolean hangupOnEnd) {
+                               final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
+                               final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
+                               final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage, final Boolean hangupOnEnd) {
         super();
         source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
@@ -164,8 +165,8 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
         this.method = method;
         this.fallbackUrl = fallbackUrl;
         this.fallbackMethod = fallbackMethod;
-        this.statusCallback = statusCallback;
-        this.statusCallbackMethod = statusCallbackMethod;
+        this.viStatusCallback = statusCallback;
+        this.viStatusCallbackMethod = statusCallbackMethod;
         this.emailAddress = emailAddress;
         this.configuration = configuration;
         this.callManager = callManager;
@@ -512,7 +513,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
             // Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
         }
     }

@@ -19,7 +19,16 @@
  */
 package org.restcomm.connect.sms;
 
-import java.io.IOException;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.sms.smpp.SmppMessageHandler;
+import org.restcomm.connect.sms.smpp.SmppService;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -29,18 +38,7 @@ import javax.servlet.sip.SipServletContextEvent;
 import javax.servlet.sip.SipServletListener;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
-
-import org.apache.commons.configuration.Configuration;
-import org.apache.log4j.Logger;
-import org.restcomm.connect.dao.DaoManager;
-
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import org.restcomm.connect.sms.smpp.SmppMessageHandler;
-import org.restcomm.connect.sms.smpp.SmppService;
+import java.io.IOException;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -72,37 +70,37 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
 
 
     private ActorRef service(final Configuration configuration, final SipFactory factory, final DaoManager storage) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
-                return new SmsService(system, configuration, factory, storage, context);
+                return new SmsService(configuration, factory, storage, context);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     private ActorRef smppService(final Configuration configuration, final SipFactory factory, final DaoManager storage,
                                  final ServletContext context, final ActorRef smppMessageHandler) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
                 return new SmppService(system, configuration, factory, storage, context, smppMessageHandler);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     private ActorRef smppMessageHandler () {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
                 return new SmppMessageHandler(context);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     @Override
