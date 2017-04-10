@@ -5,6 +5,8 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -51,7 +53,8 @@ public class MediaResourceBrokerTestUtil {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        system = ActorSystem.create();
+        Config config = ConfigFactory.load("akka_fault_tolerance_application.conf");
+        system = ActorSystem.create("test", config );
     }
 
     @AfterClass
@@ -89,7 +92,7 @@ public class MediaResourceBrokerTestUtil {
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
         }));
-        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader, system), null);
+        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader), null);
         return mrb;
 
     }
