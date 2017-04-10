@@ -19,8 +19,16 @@
  */
 package org.restcomm.connect.telephony.ua;
 
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
+import org.restcomm.connect.dao.DaoManager;
+import scala.concurrent.duration.Duration;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -30,18 +38,8 @@ import javax.servlet.sip.SipServletContextEvent;
 import javax.servlet.sip.SipServletListener;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
-
-import akka.actor.ReceiveTimeout;
-import org.apache.commons.configuration.Configuration;
-import org.apache.log4j.Logger;
-import org.restcomm.connect.dao.DaoManager;
-
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import scala.concurrent.duration.Duration;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -99,14 +97,15 @@ public final class UserAgentManagerProxy extends SipServlet implements SipServle
 //    }
 
     private ActorRef manager(final Configuration configuration, final SipFactory factory, final DaoManager storage) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new UserAgentManager(configuration, factory, storage, servletContext);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     @Override

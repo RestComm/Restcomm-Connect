@@ -12,7 +12,7 @@ The *<Record>* verb records the caller's voice and returns to you the URL of a f
 |action |relative or absolute URL |current document URL
 |method |GET, POST |POST
 |timeout |positive integer |5
-|finishOnKey |any digit, #, * |1234567890*#
+|finishOnKey |any digit, #, * or -1 to disable|#
 |maxLength |integer greater than 1 with the number of seconds to wait |3600 (1 hour)
 |transcribe |true, false |false
 |transcribeCallback |relative or absolute URL |none
@@ -33,7 +33,7 @@ The *<Record>* verb records the caller's voice and returns to you the URL of a f
 
 * *method.* The 'method' attribute takes the value 'GET' or 'POST'. This tells RestComm whether to request the URL via HTTP GET or POST.
 * *timeout.* The 'timeout' attribute tells RestComm to end the recording after a number of seconds of silence has passed.
-* *finishOnKey.* The 'finishOnKey' attribute lets you choose a set of digits that end the recording when entered. For example, if you set 'finishOnKey' to '\#' and the caller presses '#', RestComm will immediately stop recording and submit 'RecordingUrl', 'RecordingDuration', and the '\#' as parameters in a request to the 'action' URL. The allowed values are the digits 0-9, '#' and '*'. Unlike <Gather>, you may specify more than one character as a 'finishOnKey' value.
+* *finishOnKey.* The 'finishOnKey' attribute lets you choose a set of digits that end the recording when entered. For example, if you set 'finishOnKey' to '\#' and the caller presses '#', RestComm will immediately stop recording and submit 'RecordingUrl', 'RecordingDuration', and the '\#' as parameters in a request to the 'action' URL. The allowed values are the digits 0-9, '#', '\*' and '-1'. The default value is '1234567890*#' which means that any key will end the recording. The value '-1' is a special value that can be used to disable finishOnKey and never stop recording on a DTMF. Unlike <Gather>, you may specify more than one character as a 'finishOnKey' value but '-1' must be used alone.
 * *maxLength.* The 'maxLength' attribute lets you set the maximum length for the recording in seconds.
 * *transcribe.* The 'transcribe' attribute tells RestComm that you would like a text representation of the audio of the recording.
 * *transcribeCallback.* The 'transcribeCallback' attribute is used in conjunction with the 'transcribe' attribute. It allows you to specify a URL to which RestComm will make an asynchronous POST request when the transcription is complete. This is not a request for RCML and the response will not change call flow, but the request will contain the standard RCML request parameters as well as 'TranscriptionStatus', 'TranscriptionText', 'TranscriptionUrl' and 'RecordingUrl'. If 'transcribeCallback' is specified, then there is no need to specify 'transcribe=true'. It is implied. If you specify 'transcribe=true' without a 'transcribeCallback', the completed transcription will be stored for you to retrieve later (see the REST API Transcriptions section), but RestComm will not asynchronously notify your application.
@@ -52,7 +52,7 @@ The *<Record>* verb records the caller's voice and returns to you the URL of a f
 * *playBeep.* The 'playBeep' attribute allows you to toggle between playing a sound before the start of a recording.
 * *Nesting.* The <Record> verb can not have any other verbs or nouns nested.
 
-=== Examples 
+=== Examples
 For an example of how to use the <Record> verb see below.
 
 ----

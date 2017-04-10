@@ -23,19 +23,15 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
-
-import java.lang.reflect.Type;
-
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
-
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.util.StringUtils;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
+
+import java.lang.reflect.Type;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -43,12 +39,10 @@ import org.restcomm.connect.commons.util.StringUtils;
 @ThreadSafe
 public final class CallDetailRecordConverter extends AbstractConverter implements JsonSerializer<CallDetailRecord> {
     private final String apiVersion;
-    private final String rootUri;
 
     public CallDetailRecordConverter(final Configuration configuration) {
         super(configuration);
         apiVersion = configuration.getString("api-version");
-        rootUri = StringUtils.addSuffixIfNotPresent(configuration.getString("root-uri"), "/");
     }
 
     @SuppressWarnings("rawtypes")
@@ -89,7 +83,7 @@ public final class CallDetailRecordConverter extends AbstractConverter implement
 
     private String prefix(final CallDetailRecord cdr) {
         final StringBuilder buffer = new StringBuilder();
-        buffer.append(rootUri).append(apiVersion).append("/Accounts/");
+        buffer.append("/").append(apiVersion).append("/Accounts/");
         buffer.append(cdr.getAccountSid().toString()).append("/Calls/");
         buffer.append(cdr.getSid());
         return buffer.toString();
@@ -256,7 +250,7 @@ public final class CallDetailRecordConverter extends AbstractConverter implement
     }
 
     private void writeNotifications(final CallDetailRecord cdr, final JsonObject object) {
-        object.addProperty("notifications", prefix(cdr) + "/Notifications");
+        object.addProperty("notifications", prefix(cdr) + "/Notifications.json");
     }
 
     private void writeRecordings(final CallDetailRecord cdr, final HierarchicalStreamWriter writer) {
@@ -266,7 +260,7 @@ public final class CallDetailRecordConverter extends AbstractConverter implement
     }
 
     private void writeRecordings(final CallDetailRecord cdr, final JsonObject object) {
-        object.addProperty("recordings", prefix(cdr) + "/Recordings");
+        object.addProperty("recordings", prefix(cdr) + "/Recordings.json");
     }
 
     private void writeSubResources(final CallDetailRecord cdr, final HierarchicalStreamWriter writer) {

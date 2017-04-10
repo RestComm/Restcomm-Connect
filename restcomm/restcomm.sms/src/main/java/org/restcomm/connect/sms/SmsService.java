@@ -110,10 +110,10 @@ public final class SmsService extends UntypedActor {
     //List of extensions for SmsService
     List<RestcommExtensionGeneric> extensions;
 
-    public SmsService(final ActorSystem system, final Configuration configuration, final SipFactory factory,
+    public SmsService(final Configuration configuration, final SipFactory factory,
             final DaoManager storage, final ServletContext servletContext) {
         super();
-        this.system = system;
+        this.system = context().system();
         this.configuration = configuration;
         final Configuration runtime = configuration.subset("runtime-settings");
         this.authenticateUsers = runtime.getBoolean("authenticate");
@@ -320,7 +320,7 @@ public final class SmsService extends UntypedActor {
             }
         } catch (Exception e) {
             String errMsg = "There is no valid Restcomm SMS Request URL configured for this number : " + phone;
-            sendNotification(errMsg, 12003, "error", true);
+            sendNotification(errMsg, 12003, "warning", true);
         }
         return isFoundHostedApp;
     }
@@ -419,14 +419,15 @@ public final class SmsService extends UntypedActor {
     }
 
     private ActorRef session() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new SmsSession(configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     // used for sending warning and error logs to notification engine and to the console

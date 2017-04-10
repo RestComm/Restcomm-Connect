@@ -102,7 +102,10 @@ ussd_url MEDIUMTEXT,
 ussd_method VARCHAR(4),
 ussd_fallback_url MEDIUMTEXT,
 ussd_fallback_method VARCHAR(4),
-ussd_application_sid VARCHAR(34)
+ussd_application_sid VARCHAR(34),
+refer_url MEDIUMTEXT,
+refer_method VARCHAR(4),
+refer_application_sid VARCHAR(34)
 );
 
 CREATE TABLE restcomm_applications (
@@ -166,7 +169,8 @@ master_ivr_endpoint_session_id VARCHAR(200),
 master_bridge_endpoint_id VARCHAR(20),
 master_bridge_endpoint_session_id VARCHAR(200),
 master_bridge_conn_id VARCHAR(200),
-master_ivr_conn_id VARCHAR(200)
+master_ivr_conn_id VARCHAR(200),
+moderator_present BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE restcomm_clients (
@@ -243,7 +247,8 @@ call_sid VARCHAR(34) NOT NULL,
 duration DOUBLE NOT NULL,
 api_version VARCHAR(10) NOT NULL,
 uri MEDIUMTEXT NOT NULL,
-file_uri MEDIUMTEXT
+file_uri MEDIUMTEXT,
+s3_uri MEDIUMTEXT
 );
 
 CREATE TABLE restcomm_transcriptions (
@@ -309,6 +314,38 @@ ttl INT NOT NULL,
 uri MEDIUMTEXT NOT NULL
 );
 
+CREATE TABLE restcomm_geolocation(
+sid VARCHAR(34) NOT NULL PRIMARY KEY,
+date_created DATETIME NOT NULL,
+date_updated DATETIME NOT NULL,
+date_executed DATETIME NOT NULL,
+account_sid VARCHAR(34) NOT NULL,
+source VARCHAR(30),
+device_identifier VARCHAR(30) NOT NULL,
+geolocation_type VARCHAR(15) NOT NULL,
+response_status VARCHAR(30),
+cell_id VARCHAR(10),
+location_area_code VARCHAR(10),
+mobile_country_code INTEGER,
+mobile_network_code VARCHAR(3),
+network_entity_address BIGINT,
+age_of_location_info INTEGER,
+device_latitude VARCHAR(15),
+device_longitude VARCHAR(15),
+accuracy BIGINT,
+physical_address VARCHAR(50),
+internet_address VARCHAR(50),
+formatted_address VARCHAR(200),
+location_timestamp DATETIME,
+event_geofence_latitude VARCHAR(15),
+event_geofence_longitude VARCHAR(15),
+radius BIGINT,
+geolocation_positioning_type VARCHAR(15),
+last_geolocation_response VARCHAR(15),
+cause VARCHAR(150),
+api_version VARCHAR(10) NOT NULL,
+uri MEDIUMTEXT NOT NULL);
+
 CREATE TABLE update_scripts (
 script VARCHAR(255) NOT NULL,
 date_executed DATETIME NOT NULL
@@ -358,25 +395,25 @@ null,
 "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf");
 
 /* Create demo Applications */
-INSERT INTO restcomm_applications VALUES('AP73926e7113fa4d95981aa96b76eca854','2015-09-23 06:56:04.108000','2015-09-23 06:56:04.108000','rvdCollectVerbDemo','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24',FALSE,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/AP73926e7113fa4d95981aa96b76eca854','/restcomm-rvd/services/apps/AP73926e7113fa4d95981aa96b76eca854/controller','voice');
-INSERT INTO restcomm_applications VALUES('AP81cf45088cba4abcac1261385916d582','2015-09-23 06:56:17.977000','2015-09-23 06:56:17.977000','rvdESDemo','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24',FALSE,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/AP81cf45088cba4abcac1261385916d582','/restcomm-rvd/services/apps/AP81cf45088cba4abcac1261385916d582/controller','voice');
-INSERT INTO restcomm_applications VALUES('APb70c33bf0b6748f09eaec97030af36f3','2015-09-23 06:56:26.120000','2015-09-23 06:56:26.120000','rvdSayVerbDemo','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24',FALSE,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/APb70c33bf0b6748f09eaec97030af36f3','/restcomm-rvd/services/apps/APb70c33bf0b6748f09eaec97030af36f3/controller','voice');
+INSERT INTO restcomm_applications VALUES('AP73926e7113fa4d95981aa96b76eca854','2015-09-23 06:56:04.108000','2015-09-23 06:56:04.108000','rvdCollectVerbDemo','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24',FALSE,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/AP73926e7113fa4d95981aa96b76eca854','/restcomm-rvd/services/apps/AP73926e7113fa4d95981aa96b76eca854/controller','voice');
+INSERT INTO restcomm_applications VALUES('AP81cf45088cba4abcac1261385916d582','2015-09-23 06:56:17.977000','2015-09-23 06:56:17.977000','rvdESDemo','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24',FALSE,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/AP81cf45088cba4abcac1261385916d582','/restcomm-rvd/services/apps/AP81cf45088cba4abcac1261385916d582/controller','voice');
+INSERT INTO restcomm_applications VALUES('APb70c33bf0b6748f09eaec97030af36f3','2015-09-23 06:56:26.120000','2015-09-23 06:56:26.120000','rvdSayVerbDemo','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24',FALSE,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/APb70c33bf0b6748f09eaec97030af36f3','/restcomm-rvd/services/apps/APb70c33bf0b6748f09eaec97030af36f3/controller','voice');
 
 /* Bind default DID to demo apps */
-INSERT INTO restcomm_incoming_phone_numbers VALUES('PNdd7a0a0248244615978bd5781598e5eb','2013-10-04 17:42:02.500000000','2013-10-04 17:42:02.500000000','234','ACae6e420f425248d6a26948c17a9e2acf','+1234','2012-04-24',FALSE,'/restcomm/demos/hello-play.xml','POST',NULL,'POST',NULL,'POST',NULL,NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNdd7a0a0248244615978bd5781598e5eb', true, false, false, false, true, 0.0, null, null, null, null, null);
-INSERT INTO restcomm_incoming_phone_numbers VALUES('PN146638eec1e2415d832785e30d227598','2013-10-11 14:56:08.549000000','2013-10-11 14:56:08.549000000','This app plays the Hello World msg and requires Text-to-speech ','ACae6e420f425248d6a26948c17a9e2acf','+1235','2012-04-24',FALSE,'/restcomm/demos/hello-world.xml','POST',NULL,'POST',NULL,'POST',NULL,NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN146638eec1e2415d832785e30d227598', true, false, false, false, true, 0.0, null, null, null, null, null);
-INSERT INTO restcomm_incoming_phone_numbers VALUES('PNabf9c98b95d64b26b5993ad52e809566','2013-10-11 14:55:56.670000000','2013-10-11 14:55:56.670000000','This app uses the collect verb to get user input','ACae6e420f425248d6a26948c17a9e2acf','+1236','2012-04-24',FALSE,'/restcomm/demos/gather/hello-gather.xml','POST',NULL,'POST',NULL,'POST',NULL,NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNabf9c98b95d64b26b5993ad52e809566', true, false, false, false, true, 0.0, null, null, null, null, null);
-INSERT INTO restcomm_incoming_phone_numbers VALUES('PN91275300c95547039c3723a1e58b5662','2013-10-31 22:12:19.318000000','2013-10-31 22:12:19.318000000','This app requires that you configure the sip:username@ipaddress:port','ACae6e420f425248d6a26948c17a9e2acf','+1237','2012-04-24',FALSE,'/restcomm/demos/dial/sip/dial-sip.xml','POST',NULL,'POST',NULL,'POST',NULL,NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN91275300c95547039c3723a1e58b5662', true, false, false, false, true, 0.0, null, null, null, null, null);
-INSERT INTO restcomm_incoming_phone_numbers VALUES('PN0b4201c6c87749f29367e6cf000686cb','2013-11-04 12:14:10.520000000','2013-11-04 12:14:10.520000000','This app calls registered restcomm client Alice ','ACae6e420f425248d6a26948c17a9e2acf','+1238','2012-04-24',FALSE,'/restcomm/demos/dial/client/dial-client.xml','POST',NULL,'POST',NULL,'POST',NULL,NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN0b4201c6c87749f29367e6cf000686cb', true, false, false, false, true, 0.0, null, null, null, null, null);
-INSERT INTO restcomm_incoming_phone_numbers VALUES('PN9f27f81e725640d988486ff15f48ad18','2013-11-04 12:42:11.530000000','2013-11-04 12:42:11.530000000','This app join a conf bridge with wait music playing ','ACae6e420f425248d6a26948c17a9e2acf','+1310','2012-04-24',FALSE,'/restcomm/demos/dial/conference/dial-conference.xml','POST',NULL,'POST',NULL,'POST',NULL,NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN9f27f81e725640d988486ff15f48ad18', true, false, false, false, true, 0.0, null, null, null, null, null);
-INSERT INTO restcomm_incoming_phone_numbers VALUES('PN3862668c51634d18ae027c63438b4583','2013-11-04 12:42:44.777000000','2013-11-04 12:42:44.777000000','This app adds you to a conf bridge as a moderator','ACae6e420f425248d6a26948c17a9e2acf','+1311','2012-04-24',FALSE,'/restcomm/demos/dial/conference/dial-conference-moderator.xml','POST',NULL,'POST',NULL,'POST',NULL,NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN3862668c51634d18ae027c63438b4583', true, false, false, false, true, 0.0, null, null, null, null, null);
-INSERT INTO restcomm_incoming_phone_numbers VALUES('PNc2b81d68a221482ea387b6b4e2cbd9d7','2014-02-17 22:36:58.008000000','2014-02-17 22:36:58.008000000','This makes a call to a basic RVD app ','ACae6e420f425248d6a26948c17a9e2acf','+1239','2012-04-24',FALSE,NULL,'POST',NULL,'POST',NULL,'POST','APb70c33bf0b6748f09eaec97030af36f3',NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNc2b81d68a221482ea387b6b4e2cbd9d7',true, false, false, false, true, 0.0, null, null, null, null, null);
-INSERT INTO restcomm_incoming_phone_numbers VALUES('PN46678e5b01d44973bf184f6527bc33f7','2014-02-17 22:37:08.709000000','2014-02-17 22:37:08.709000000','This is an IVR app that maps user input to specific action','ACae6e420f425248d6a26948c17a9e2acf','+1240','2012-04-24',FALSE,NULL,'POST',NULL,'POST',NULL,'POST','AP73926e7113fa4d95981aa96b76eca854',NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN46678e5b01d44973bf184f6527bc33f7',true, false, false, false, true, 0.0, null, null, null, null, null);
-INSERT INTO restcomm_incoming_phone_numbers VALUES('PNb43ed9e641364277b6432547ff1109e9','2014-02-17 22:37:19.392000000','2014-02-17 22:37:19.392000000','RVD external services app, customer ID 1 or 2 ','ACae6e420f425248d6a26948c17a9e2acf','+1241','2012-04-24',FALSE,NULL,'POST',NULL,'POST',NULL,'POST','AP81cf45088cba4abcac1261385916d582',NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNb43ed9e641364277b6432547ff1109e9',true, false, false, false, true, 0.0, null, null, null, null, null);
+INSERT INTO restcomm_incoming_phone_numbers VALUES('PNdd7a0a0248244615978bd5781598e5eb','2013-10-04 17:42:02.500000000','2013-10-04 17:42:02.500000000','234','ACae6e420f425248d6a26948c17a9e2acf','+1234','2012-04-24',FALSE,'/restcomm/demos/hello-play.xml','POST',NULL,'POST',NULL,'POST',NULL,NULL,'POST',NULL,'POST',NULL,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNdd7a0a0248244615978bd5781598e5eb', true, false, false, false, true, 0.0, null, null, null, null, null, null, null, null);
+INSERT INTO restcomm_incoming_phone_numbers VALUES('PN146638eec1e2415d832785e30d227598','2013-10-11 14:56:08.549000000','2013-10-11 14:56:08.549000000','This app plays the Hello World msg and requires Text-to-speech ','ACae6e420f425248d6a26948c17a9e2acf','+1235','2012-04-24',FALSE,'/restcomm/demos/hello-world.xml','POST',NULL,'POST',NULL,'POST',NULL,NULL,'POST',NULL,'POST',NULL,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN146638eec1e2415d832785e30d227598', true, false, false, false, true, 0.0, null, null, null, null, null, null, null, null);
+INSERT INTO restcomm_incoming_phone_numbers VALUES('PNabf9c98b95d64b26b5993ad52e809566','2013-10-11 14:55:56.670000000','2013-10-11 14:55:56.670000000','This app uses the collect verb to get user input','ACae6e420f425248d6a26948c17a9e2acf','+1236','2012-04-24',FALSE,'/restcomm/demos/gather/hello-gather.xml','POST',NULL,'POST',NULL,'POST',NULL,NULL,'POST',NULL,'POST',NULL,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNabf9c98b95d64b26b5993ad52e809566', true, false, false, false, true, 0.0, null, null, null, null, null, null, null, null);
+INSERT INTO restcomm_incoming_phone_numbers VALUES('PN91275300c95547039c3723a1e58b5662','2013-10-31 22:12:19.318000000','2013-10-31 22:12:19.318000000','This app requires that you configure the sip:username@ipaddress:port','ACae6e420f425248d6a26948c17a9e2acf','+1237','2012-04-24',FALSE,'/restcomm/demos/dial/sip/dial-sip.xml','POST',NULL,'POST',NULL,'POST',NULL,NULL,'POST',NULL,'POST',NULL,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN91275300c95547039c3723a1e58b5662', true, false, false, false, true, 0.0, null, null, null, null, null, null, null, null);
+INSERT INTO restcomm_incoming_phone_numbers VALUES('PN0b4201c6c87749f29367e6cf000686cb','2013-11-04 12:14:10.520000000','2013-11-04 12:14:10.520000000','This app calls registered restcomm client Alice ','ACae6e420f425248d6a26948c17a9e2acf','+1238','2012-04-24',FALSE,'/restcomm/demos/dial/client/dial-client.xml','POST',NULL,'POST',NULL,'POST',NULL,NULL,'POST',NULL,'POST',NULL,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN0b4201c6c87749f29367e6cf000686cb', true, false, false, false, true, 0.0, null, null, null, null, null, null, null, null);
+INSERT INTO restcomm_incoming_phone_numbers VALUES('PN9f27f81e725640d988486ff15f48ad18','2013-11-04 12:42:11.530000000','2013-11-04 12:42:11.530000000','This app join a conf bridge with wait music playing ','ACae6e420f425248d6a26948c17a9e2acf','+1310','2012-04-24',FALSE,'/restcomm/demos/dial/conference/dial-conference.xml','POST',NULL,'POST',NULL,'POST',NULL,NULL,'POST',NULL,'POST',NULL,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN9f27f81e725640d988486ff15f48ad18', true, false, false, false, true, 0.0, null, null, null, null, null, null, null, null);
+INSERT INTO restcomm_incoming_phone_numbers VALUES('PN3862668c51634d18ae027c63438b4583','2013-11-04 12:42:44.777000000','2013-11-04 12:42:44.777000000','This app adds you to a conf bridge as a moderator','ACae6e420f425248d6a26948c17a9e2acf','+1311','2012-04-24',FALSE,'/restcomm/demos/dial/conference/dial-conference-moderator.xml','POST',NULL,'POST',NULL,'POST',NULL,NULL,'POST',NULL,'POST',NULL,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN3862668c51634d18ae027c63438b4583', true, false, false, false, true, 0.0, null, null, null, null, null, null, null, null);
+INSERT INTO restcomm_incoming_phone_numbers VALUES('PNc2b81d68a221482ea387b6b4e2cbd9d7','2014-02-17 22:36:58.008000000','2014-02-17 22:36:58.008000000','This makes a call to a basic RVD app ','ACae6e420f425248d6a26948c17a9e2acf','+1239','2012-04-24',FALSE,NULL,'POST',NULL,'POST',NULL,'POST','APb70c33bf0b6748f09eaec97030af36f3',NULL,'POST',NULL,'POST',NULL,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNc2b81d68a221482ea387b6b4e2cbd9d7',true, false, false, false, true, 0.0, null, null, null, null, null, null, null, null);
+INSERT INTO restcomm_incoming_phone_numbers VALUES('PN46678e5b01d44973bf184f6527bc33f7','2014-02-17 22:37:08.709000000','2014-02-17 22:37:08.709000000','This is an IVR app that maps user input to specific action','ACae6e420f425248d6a26948c17a9e2acf','+1240','2012-04-24',FALSE,NULL,'POST',NULL,'POST',NULL,'POST','AP73926e7113fa4d95981aa96b76eca854',NULL,'POST',NULL,'POST',NULL,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN46678e5b01d44973bf184f6527bc33f7',true, false, false, false, true, 0.0, null, null, null, null, null, null, null, null);
+INSERT INTO restcomm_incoming_phone_numbers VALUES('PNb43ed9e641364277b6432547ff1109e9','2014-02-17 22:37:19.392000000','2014-02-17 22:37:19.392000000','RVD external services app, customer ID 1 or 2 ','ACae6e420f425248d6a26948c17a9e2acf','+1241','2012-04-24',FALSE,NULL,'POST',NULL,'POST',NULL,'POST','AP81cf45088cba4abcac1261385916d582',NULL,'POST',NULL,'POST',NULL,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNb43ed9e641364277b6432547ff1109e9',true, false, false, false, true, 0.0, null, null, null, null, null, null, null, null);
 
 /* Create demo clients */
-INSERT INTO restcomm_clients VALUES('CLa2b99142e111427fbb489c3de357f60a','2013-11-04 12:52:44.144000000','2013-11-04 12:52:44.144000000','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24','alice','alice','1234',1,NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa2b99142e111427fbb489c3de357f60a');
-INSERT INTO restcomm_clients VALUES('CL3003328d0de04ba68f38de85b732ed56','2013-11-04 16:33:39.248000000','2013-11-04 16:33:39.248000000','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24','bob','bob','1234',1,NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL3003328d0de04ba68f38de85b732ed56');
+INSERT INTO restcomm_clients VALUES('CLa2b99142e111427fbb489c3de357f60a','2013-11-04 12:52:44.144000000','2013-11-04 12:52:44.144000000','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24','alice','alice','1234',1,NULL,'POST',NULL,'POST',NULL,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa2b99142e111427fbb489c3de357f60a');
+INSERT INTO restcomm_clients VALUES('CL3003328d0de04ba68f38de85b732ed56','2013-11-04 16:33:39.248000000','2013-11-04 16:33:39.248000000','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24','bob','bob','1234',1,NULL,'POST',NULL,'POST',NULL,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL3003328d0de04ba68f38de85b732ed56');
 
 /* Create index on restcomm_call_detail_records on conference_sid column */
 CREATE INDEX idx_cdr_conference_sid ON restcomm_call_detail_records (conference_sid);
@@ -384,5 +421,26 @@ CREATE INDEX idx_cdr_conference_sid ON restcomm_call_detail_records (conference_
 /* Create index on restcomm_call_detail_records on conference_sid column */
 CREATE INDEX idx_cdr_conference_status ON restcomm_conference_detail_records (status);
 
-/* Create stored procedure addConferenceDetailRecord  */
-source addConferenceDetailRecord.sql
+DELIMITER //
+DROP PROCEDURE IF EXISTS addConferenceDetailRecord;
+CREATE PROCEDURE addConferenceDetailRecord(	IN in_sid VARCHAR(34),
+									IN in_date_created DATETIME,
+									IN in_date_updated DATETIME,
+									IN in_account_sid VARCHAR(34),
+									IN in_status VARCHAR(100),
+									IN in_friendly_name VARCHAR(60),
+									IN in_api_version VARCHAR(10),
+									IN in_uri MEDIUMTEXT,
+									IN in_master_ms_id VARCHAR(34),
+									IN master_present BOOLEAN )
+BEGIN
+	IF EXISTS(SELECT * FROM restcomm_conference_detail_records WHERE friendly_name=in_friendly_name AND status LIKE 'RUNNING%')
+	THEN
+		SELECT * FROM restcomm_conference_detail_records WHERE friendly_name=in_friendly_name AND status LIKE 'RUNNING%';
+	ELSE
+		INSERT INTO restcomm_conference_detail_records (sid, date_created, date_updated, account_sid, status, friendly_name, api_version, uri, master_ms_id, master_present) VALUES (in_sid, in_date_created, in_date_updated, in_account_sid, in_status, in_friendly_name, in_api_version, in_uri, in_master_ms_id, master_present);
+
+	END IF;
+
+END //
+DELIMITER ;

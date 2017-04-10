@@ -1,19 +1,20 @@
 package org.restcomm.connect.sms.smpp;
 
-import java.net.URI;
-
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.commons.dao.Sid;
-
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.DaoManager;
+
+import java.net.URI;
 
 public class SmppInterpreterBuilder {
 
+    private static Logger logger = Logger.getLogger(SmppInterpreterBuilder.class);
     private final ActorSystem system;
     private Configuration configuration;
     private ActorRef service;
@@ -31,7 +32,7 @@ public class SmppInterpreterBuilder {
     }
 
     public ActorRef build() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -39,7 +40,8 @@ public class SmppInterpreterBuilder {
                 return new SmppInterpreter(service, configuration, storage, accountId, version, url, method, fallbackUrl,
                         fallbackMethod);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     public void setConfiguration(final Configuration configuration) {

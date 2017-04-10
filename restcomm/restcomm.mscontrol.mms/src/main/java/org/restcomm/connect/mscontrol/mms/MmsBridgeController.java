@@ -21,16 +21,13 @@
 
 package org.restcomm.connect.mscontrol.mms;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.sound.sampled.UnsupportedAudioFileException;
-
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
@@ -66,12 +63,14 @@ import org.restcomm.connect.mscontrol.api.messages.StartRecording;
 import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -82,6 +81,7 @@ public class MmsBridgeController extends MediaServerController {
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
+    private final ActorSystem system;
     // Finite State Machine
     private final FiniteStateMachine fsm;
     private final State uninitialized;
@@ -115,8 +115,9 @@ public class MmsBridgeController extends MediaServerController {
 
     private Sid callSid;
 
-    public MmsBridgeController(final ActorRef mrb) {
+    public MmsBridgeController(final ActorRef mrb, final ActorSystem system) {
         final ActorRef self = self();
+        this.system = system;
 
         // Finite states
         this.uninitialized = new State("uninitialized", null, null);
@@ -433,14 +434,15 @@ public class MmsBridgeController extends MediaServerController {
         }
 
         private ActorRef createMediaGroup(final Object message) {
-            return getContext().actorOf(new Props(new UntypedActorFactory() {
+            final Props props = new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public UntypedActor create() throws Exception {
                     return new MgcpMediaGroup(mediaGateway, mediaSession, endpoint);
                 }
-            }));
+            });
+            return system.actorOf(props);
         }
 
         @Override

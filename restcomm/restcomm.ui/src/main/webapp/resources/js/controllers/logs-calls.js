@@ -10,7 +10,7 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $uibModa
 
   // default search values
   $scope.search = {
-    local_only: true,
+    //local_only: true,
     sub_accounts: false
   }
 
@@ -75,6 +75,7 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $uibModa
     if (search.sub_accounts) {
       params["SubAccounts"] = search.sub_accounts;
     }
+    params["Reverse"] = $scope.reverse;
 
     return params;
   }

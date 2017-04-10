@@ -1,20 +1,21 @@
 package org.restcomm.connect.interpreter;
 
-import java.net.URI;
-
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.telephony.api.CallInfo;
-
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.telephony.api.CallInfo;
+
+import java.net.URI;
 
 public class ConfVoiceInterpreterBuilder {
 
+    private Logger logger = Logger.getLogger(ConfVoiceInterpreterBuilder.class);
     private ActorSystem system;
     private Configuration configuration;
     private Sid account;
@@ -32,15 +33,15 @@ public class ConfVoiceInterpreterBuilder {
     }
 
     public ActorRef build() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
                 return new ConfVoiceInterpreter(configuration, account, version, url, method, emailAddress, conference,
                         storage, callInfo);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     public void setConfiguration(final Configuration configuration) {

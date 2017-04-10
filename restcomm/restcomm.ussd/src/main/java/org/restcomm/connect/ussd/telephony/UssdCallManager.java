@@ -19,24 +19,16 @@
  */
 package org.restcomm.connect.ussd.telephony;
 
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.regex.Pattern;
-
-import javax.servlet.ServletContext;
-import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipURI;
-
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -44,7 +36,6 @@ import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CreateCall;
@@ -53,15 +44,22 @@ import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreter;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreterBuilder;
-import org.restcomm.connect.commons.util.UriUtils;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipURI;
+import java.io.IOException;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -72,7 +70,6 @@ public class UssdCallManager extends UntypedActor {
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
 
-    private final ActorSystem system;
     private final Configuration configuration;
     private final ServletContext context;
     private final SipFactory sipFactory;
@@ -88,18 +85,18 @@ public class UssdCallManager extends UntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
+    private final ActorSystem system;
+
     /**
      * @param configuration
      * @param context
-     * @param system
-     * @param gateway
      * @param conferences
      * @param sms
      * @param factory
      * @param storage
      */
-    public UssdCallManager(Configuration configuration, ServletContext context, ActorSystem system,
-            ActorRef conferences, ActorRef sms, SipFactory factory, DaoManager storage) {
+    public UssdCallManager(final ActorSystem system, Configuration configuration, ServletContext context,
+                           ActorRef conferences, ActorRef sms, SipFactory factory, DaoManager storage) {
         super();
         this.system = system;
         this.configuration = configuration;
@@ -114,14 +111,14 @@ public class UssdCallManager extends UntypedActor {
     }
 
     private ActorRef ussdCall() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public UntypedActor create() throws Exception {
                 return new UssdCall(sipFactory);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     private void check(final Object message) throws IOException {
@@ -282,7 +279,9 @@ public class UssdCallManager extends UntypedActor {
         SipURI to = (SipURI)sipFactory.createSipURI(request.to(), uri);
 
         String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
-        from = outboundInterface(transport);
+        //from = outboundInterface(transport);
+        SipURI obi = outboundInterface(transport);
+        from = (obi == null) ? from : obi;
 
         final ActorRef ussdCall = ussdCall();
         final ActorRef self = self();
@@ -318,8 +317,6 @@ public class UssdCallManager extends UntypedActor {
         builder.setMethod(request.method());
         builder.setFallbackUrl(request.fallbackUrl());
         builder.setFallbackMethod(request.fallbackMethod());
-        builder.setStatusCallback(request.callback());
-        builder.setStatusCallbackMethod(request.callbackMethod());
         final ActorRef interpreter = builder.build();
         interpreter.tell(new StartInterpreter(request.call()), self);
     }

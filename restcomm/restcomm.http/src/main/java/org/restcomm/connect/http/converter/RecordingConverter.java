@@ -22,6 +22,7 @@ package org.restcomm.connect.http.converter;
 import java.lang.reflect.Type;
 
 import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.amazonS3.RecordingSecurityLevel;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.Recording;
 
@@ -37,8 +38,15 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  */
 @ThreadSafe
 public final class RecordingConverter extends AbstractConverter implements JsonSerializer<Recording> {
+
+    private RecordingSecurityLevel securityLevel = RecordingSecurityLevel.SECURE;
+
     public RecordingConverter(final Configuration configuration) {
         super(configuration);
+    }
+
+    public void setSecurityLevel(final RecordingSecurityLevel securityLevel) {
+        this.securityLevel = securityLevel;
     }
 
     @SuppressWarnings("rawtypes")
@@ -62,6 +70,11 @@ public final class RecordingConverter extends AbstractConverter implements JsonS
         writer.startNode("FileUri");
         writer.setValue(recording.getFileUri().toString());
         writer.endNode();
+        if (securityLevel.equals(RecordingSecurityLevel.NONE) && recording.getS3Uri() != null) {
+            writer.startNode("S3Uri");
+            writer.setValue(recording.getS3Uri().toString());
+            writer.endNode();
+        }
         writer.endNode();
     }
 
@@ -76,7 +89,12 @@ public final class RecordingConverter extends AbstractConverter implements JsonS
         writeDuration(recording.getDuration(), object);
         writeApiVersion(recording.getApiVersion(), object);
         writeUri(recording.getUri(), object);
-        object.addProperty("file_uri", recording.getFileUri().toString());
+        if (recording.getFileUri() != null) {
+            object.addProperty("file_uri", recording.getFileUri().toString());
+        }
+        if (securityLevel.equals(RecordingSecurityLevel.NONE) && recording.getS3Uri() != null) {
+            object.addProperty("s3_uri", recording.getS3Uri().toString());
+        }
         return object;
     }
 }

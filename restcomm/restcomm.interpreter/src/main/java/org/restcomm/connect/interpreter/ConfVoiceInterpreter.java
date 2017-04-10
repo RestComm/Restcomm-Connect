@@ -2,6 +2,7 @@ package org.restcomm.connect.interpreter;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
@@ -18,22 +19,23 @@ import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
-import org.restcomm.connect.email.api.EmailRequest;
-import org.restcomm.connect.email.api.Mail;
 import org.restcomm.connect.commons.cache.DiskCacheFactory;
 import org.restcomm.connect.commons.cache.DiskCacheRequest;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
 import org.restcomm.connect.commons.cache.HashGenerator;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.NotificationsDao;
-import org.restcomm.connect.email.EmailService;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
-import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.email.EmailService;
+import org.restcomm.connect.email.api.EmailRequest;
+import org.restcomm.connect.email.api.Mail;
 import org.restcomm.connect.http.client.Downloader;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
@@ -51,7 +53,6 @@ import org.restcomm.connect.mscontrol.api.messages.MediaServerControllerResponse
 import org.restcomm.connect.mscontrol.api.messages.Play;
 import org.restcomm.connect.mscontrol.api.messages.StartMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
-import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallStateChanged;
 import org.restcomm.connect.telephony.api.DestroyWaitUrlConfMediaGroup;
@@ -145,12 +146,15 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
     private ActorRef originalInterpreter;
 
+    private ActorSystem system;
+
     public ConfVoiceInterpreter(final Configuration configuration, final Sid account, final String version, final URI url,
             final String method, final String emailAddress, final ActorRef conference, final DaoManager storage,
             final CallInfo callInfo) {
 
         super();
 
+        this.system = context().system();
         source = self();
         uninitialized = new State("uninitialized", null, null);
 
@@ -258,27 +262,27 @@ public class ConfVoiceInterpreter extends UntypedActor {
     }
 
     private ActorRef cache(final String path, final String uri) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new DiskCacheFactory(configuration).getDiskCache(path, uri);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     private ActorRef downloader() {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new Downloader();
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     private String e164(final String number) {
@@ -294,20 +298,20 @@ public class ConfVoiceInterpreter extends UntypedActor {
     private void invalidVerb(final Tag verb) {
         final ActorRef self = self();
         // Get the next verb.
-        final GetNextVerb next = GetNextVerb.instance();
+        final GetNextVerb next = new GetNextVerb();
         parser.tell(next, self);
     }
 
     ActorRef mailer(final Configuration configuration) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public Actor create() throws Exception {
                 return new EmailService(configuration);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     private Notification notification(final int log, final int error, final String message) {
@@ -498,15 +502,15 @@ public class ConfVoiceInterpreter extends UntypedActor {
     }
 
     private ActorRef parser(final String xml) {
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
                 return new Parser(xml, self());
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     private void postCleanup() {
@@ -572,15 +576,15 @@ public class ConfVoiceInterpreter extends UntypedActor {
     private ActorRef tts(final Configuration configuration) {
         final String classpath = configuration.getString("[@class]");
 
-        final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public Actor create() throws Exception {
                 return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(configuration);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     private abstract class AbstractAction implements Action {
@@ -680,7 +684,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 }
             }
             // Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
         }
     }
@@ -765,7 +769,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                     cache.tell(request, source);
                 } else {
                     // Ask the parser for the next action to take.
-                    final GetNextVerb next = GetNextVerb.instance();
+                    final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, source);
                 }
             }
@@ -901,7 +905,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 synthesizer.tell(synthesize, source);
             } else {
                 // Ask the parser for the next action to take.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
             }
         }
@@ -955,7 +959,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 downloader.tell(request, source);
             } else {
                 // Ask the parser for the next action to take.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
             }
         }

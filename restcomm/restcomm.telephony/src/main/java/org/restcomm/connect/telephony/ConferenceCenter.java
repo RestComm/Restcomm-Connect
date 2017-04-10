@@ -19,11 +19,14 @@
  */
 package org.restcomm.connect.telephony;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
@@ -33,13 +36,10 @@ import org.restcomm.connect.telephony.api.CreateConference;
 import org.restcomm.connect.telephony.api.DestroyConference;
 import org.restcomm.connect.telephony.api.StartConference;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -53,6 +53,7 @@ public final class ConferenceCenter extends UntypedActor {
     private final Map<String, ActorRef> conferences;
     private final Map<String, List<ActorRef>> initializing;
     private final DaoManager storage;
+    private final ActorSystem system;
 
     public ConferenceCenter(final MediaServerControllerFactory factory, final DaoManager storage) {
         super();
@@ -60,10 +61,11 @@ public final class ConferenceCenter extends UntypedActor {
         this.conferences = new HashMap<String, ActorRef>();
         this.initializing = new HashMap<String, List<ActorRef>>();
         this.storage = storage;
+        this.system = context().system();
     }
 
     private ActorRef getConference(final String name) {
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -71,7 +73,8 @@ public final class ConferenceCenter extends UntypedActor {
                 //Here Here we can pass Gateway where call is connected
                 return new Conference(name, factory.provideConferenceController(), storage);
             }
-        }));
+        });
+        return system.actorOf(props);
     }
 
     @Override

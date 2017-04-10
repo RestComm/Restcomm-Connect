@@ -21,16 +21,16 @@
 
 package org.restcomm.connect.mscontrol.jsr309;
 
-import javax.media.mscontrol.MsControlFactory;
-
-import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
-import org.restcomm.connect.mscontrol.api.MediaServerInfo;
-
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActorFactory;
+import org.apache.log4j.Logger;
+import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
+import org.restcomm.connect.mscontrol.api.MediaServerInfo;
+
+import javax.media.mscontrol.MsControlFactory;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -38,7 +38,8 @@ import akka.actor.UntypedActorFactory;
  */
 public class Jsr309ControllerFactory implements MediaServerControllerFactory {
 
-    // Actor system
+    private static Logger logger = Logger.getLogger(Jsr309ControllerFactory.class);
+    // Actor supervisor
     private final ActorSystem system;
 
     // JSR-309
@@ -53,7 +54,7 @@ public class Jsr309ControllerFactory implements MediaServerControllerFactory {
     private final MediaServerInfo mediaServerInfo;
 
     public Jsr309ControllerFactory(ActorSystem system, MediaServerInfo mediaServerInfo, MsControlFactory msControlFactory) {
-        // Actor system
+        // Actor supervisor
         this.system = system;
 
         // Factories
@@ -68,17 +69,20 @@ public class Jsr309ControllerFactory implements MediaServerControllerFactory {
 
     @Override
     public ActorRef provideCallController() {
-        return system.actorOf(new Props(this.callControllerFactory));
+        final Props props = new Props(this.callControllerFactory);
+        return system.actorOf(props);
     }
 
     @Override
     public ActorRef provideConferenceController() {
-        return system.actorOf(new Props(this.conferenceControllerFactory));
+        final Props props = new Props(this.conferenceControllerFactory);
+        return system.actorOf(props);
     }
 
     @Override
     public ActorRef provideBridgeController() {
-        return system.actorOf(new Props(this.bridgeControllerFactory));
+        final Props props = new Props(this.bridgeControllerFactory);
+        return system.actorOf(props);
     }
 
     private final class CallControllerFactory implements UntypedActorFactory {

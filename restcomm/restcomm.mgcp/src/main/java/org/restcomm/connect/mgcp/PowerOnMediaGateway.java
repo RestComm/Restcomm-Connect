@@ -19,12 +19,11 @@
  */
 package org.restcomm.connect.mgcp;
 
-import java.net.InetAddress;
-
-import org.restcomm.connect.commons.annotations.concurrency.Immutable;
-
 import jain.protocol.ip.mgcp.JainMgcpProvider;
 import jain.protocol.ip.mgcp.JainMgcpStack;
+import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+
+import java.net.InetAddress;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -46,7 +45,8 @@ public final class PowerOnMediaGateway {
     private final JainMgcpProvider provider;
 
     public PowerOnMediaGateway(final String name, final InetAddress localIp, final int localPort, final InetAddress remoteIp,
-            final int remotePort, final boolean useNat, final InetAddress externalIp, final long timeout, final JainMgcpStack stack, final JainMgcpProvider provider) {
+            final int remotePort, final boolean useNat, final InetAddress externalIp, final long timeout, final JainMgcpStack stack,
+                               final JainMgcpProvider provider) {
         super();
         this.name = name;
         this.localIp = localIp;
