@@ -13,8 +13,8 @@
 			COUNT(1) as "count",
 			${usageExprPre}"${usageExprCol}"${usageExprSuf} as "usage",
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
-			TO_CHAR(MIN("date_created"), 'YYYY-MM-DD') AS "start_date",
-			TO_CHAR(MAX("date_created"), 'YYYY-MM-DD') as "end_date",
+			#{startDate} AS "start_date",
+			#{endDate} as "end_date",
 			'/todo' AS "uri"
 		FROM
 			"${tableName}"
@@ -36,8 +36,8 @@
 			COUNT(1) as "count",
 			${usageExprPre}"${usageExprCol}"${usageExprSuf} as "usage",
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
-			TO_CHAR(MIN("date_created"), 'YYYY-MM-DD') AS "start_date",
-			TO_CHAR(MAX("date_created"), 'YYYY-MM-DD') as "end_date",
+			#{startDate} AS "start_date",
+			#{endDate} as "end_date",
 			'/todo' AS "uri"
 		FROM
 			"${tableName}"
@@ -59,8 +59,8 @@
 			COUNT(1) as "count",
 			${usageExprPre}"${usageExprCol}"${usageExprSuf} as "usage",
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
-			TO_CHAR(MIN("date_created"), 'YYYY-MM-DD') AS "start_date",
-			TO_CHAR(MAX("date_created"), 'YYYY-MM-DD') as "end_date",
+			#{startDate} AS "start_date",
+			#{endDate} as "end_date",
 			'/todo' AS "uri"
 		FROM
 			"${tableName}"
@@ -82,8 +82,8 @@
 			COUNT(1) as "count",
 			${usageExprPre}"${usageExprCol}"${usageExprSuf} as "usage",
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
-			TO_CHAR(MIN("date_created"), 'YYYY-MM-DD') AS "start_date",
-			TO_CHAR(MAX("date_created"), 'YYYY-MM-DD') as "end_date",
+			#{startDate} AS "start_date",
+			#{endDate} as "end_date",
 			'/todo' AS "uri"
 		FROM
 			"${tableName}"

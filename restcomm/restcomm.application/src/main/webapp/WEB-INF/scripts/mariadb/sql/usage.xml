@@ -13,8 +13,8 @@
 			COUNT(1) AS "count",
 			CAST(${usageExprPre}${usageExprCol}${usageExprSuf} AS SIGNED) AS "usage",
 			SUM(CONVERT("price", SIGNED)) AS "price",
-			CONVERT(MIN(date_created), DATE) AS "start_date",
-			CONVERT(MAX(date_created), DATE) AS "end_date",
+			#{startDate} AS "start_date",
+			#{endDate} as "end_date",
 			'/todo' AS "uri"
 		FROM
 			${tableName}
@@ -36,8 +36,8 @@
 			COUNT(1) as "count",
 			CAST(${usageExprPre}${usageExprCol}${usageExprSuf} AS SIGNED) AS "usage",
 			SUM(CONVERT("price", SIGNED)) AS "price",
-			CONVERT(MIN(date_created), DATE) AS "start_date",
-			CONVERT(MAX(date_created), DATE) AS "end_date",
+			#{startDate} AS "start_date",
+			#{endDate} as "end_date",
 			'/todo' AS "uri"
 		FROM
 			${tableName}
@@ -59,8 +59,8 @@
 			COUNT(1) as "count",
 			CAST(${usageExprPre}${usageExprCol}${usageExprSuf} AS SIGNED) AS "usage",
 			SUM(CONVERT("price", SIGNED)) AS "price",
-			CONVERT(MIN(date_created), DATE) AS "start_date",
-			CONVERT(MAX(date_created), DATE) AS "end_date",
+			#{startDate} AS "start_date",
+			#{endDate} as "end_date",
 			'/todo' AS "uri"
 		FROM
 			${tableName}
@@ -82,8 +82,8 @@
 			COUNT(1) as "count",
 			CAST(${usageExprPre}${usageExprCol}${usageExprSuf} AS SIGNED) AS "usage",
 			SUM(CONVERT("price", SIGNED)) AS "price",
-			CONVERT(MIN(date_created), DATE) AS "start_date",
-			CONVERT(MAX(date_created), DATE) AS "end_date",
+			#{startDate} AS "start_date",
+			#{endDate} as "end_date",
 			'/todo' AS "uri"
 		FROM
 			${tableName}
