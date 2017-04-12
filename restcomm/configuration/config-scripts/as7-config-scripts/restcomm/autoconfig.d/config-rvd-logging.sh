@@ -8,12 +8,13 @@
 ##
 ## usage:
 ##
-## 	./config-rvd-logging.sh	 - adds handler logger (INFO) elements if missing
+## 	./config-rvd-logging.sh	 - adds handler and logger (INFO) elements if missing
 ##	./config-rvd-logging.sh DEBUG  - creates or updates loggers by setting level to DEBUG
+##	./config-rvd-logging.sh DEBUG FILE  - creates or updates loggers (DEBUG) but also configures them to use the 'FILE' periodic handler (main restcomm log)
 ##
 ## environment:
 ##
-##	requires RESTCOMM_HOME variable to be set
+##	requires RESTCOMM_HOME env variable to be set
 ##
 ## Author: otsakir@gmail.com - Orestis Tsakiridis
 
