@@ -165,7 +165,7 @@
 		<module>restcomm.extension.api</module>
 		<module>restcomm.extension.controller</module>
 		<!--FIXME: temporary will move to telscale-->
-		<module>restcomm.extension.multiprovider</module>
+		<!--module>restcomm.extension.multiprovider</module-->
 		<module>restcomm.identity</module>
 		<module>restcomm.mrb</module>
                 <module>restcomm.mrb.api</module>
