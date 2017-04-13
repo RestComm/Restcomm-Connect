@@ -384,14 +384,14 @@ public class Jsr309ConferenceController extends MediaServerController {
                 mediaGroup.getPlayer().addListener(playerListener);
 
                 // Set default conference video resolution to 720p
-                // mediaSession.setAttribute("CONFERENCE_VIDEO_SIZE", "720p");
+                mediaSession.setAttribute("CONFERENCE_VIDEO_SIZE", "720p");
 
                 // Set number of ports for the available participants and possible media group
                 Parameters mixerParams = mediaSession.createParameters();
                 mixerParams.put(MediaMixer.MAX_PORTS, 900);
 
                 // Create the conference room also
-                mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO, mixerParams);
+                mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
                 mediaMixer.addListener(mixerAllocationListener);
                 mediaMixer.confirm();
                 // Wait for event confirmation before sending response to the conference
