@@ -1551,6 +1551,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             return null;
         }
+
+        protected Tag video(final Tag container) {
+            final List<Tag> children = container.children();
+            for (final Tag child : children) {
+                if (Nouns.video.equals(child.name())) {
+                    return child;
+                }
+            }
+            return null;
+        }
     }
 
     private final class InitializingCall extends AbstractAction {
@@ -1959,7 +1969,21 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Handle conferencing.
                 final Tag child = conference(verb);
                 if (child != null) {
-                    final String name = child.text();
+                    String name = null;
+                    final Tag grandchild = video(child);
+                    if (grandchild != null) {
+                        Attribute attribute = verb.attribute("name");
+                        // FIXME ^ should be 'child' instead of 'verb'?
+                        if (!String.valueOf(attribute.toString()).isEmpty()) {
+                            name = attribute.value();
+                        } else {
+                            String errorMsg = "Attribute \"name\" not found or \"name\" value is empty inside Conference verb.";
+                            logger.error(errorMsg);
+                            throw new Exception(errorMsg);
+                        }
+                    } else {
+                        name = child.text();
+                    }
                     final StringBuilder buffer = new StringBuilder();
                     buffer.append(accountId.toString()).append(":").append(name);
                     Sid sid = null;

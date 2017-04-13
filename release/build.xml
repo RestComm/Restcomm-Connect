@@ -34,7 +34,7 @@
   <property name="restcomm-media.distro.zip.path" value="${checkout.dir}/${restcomm-media.download.distro.file}"/>
 
   <!-- <property name="restcomm-olympus.download.url" value="https://mobicents.ci.cloudbees.com/job/Olympus/${olympus.build}/artifact/target/olympus.war"/> -->
-  <property name="restcomm-olympus.download.url" value="https://mobicents.ci.cloudbees.com/job/Olympus/lastSuccessfulBuild/artifact/target/olympus.war"/>
+  <property name="restcomm-olympus.download.url" value="https://mobicents.ci.cloudbees.com/job/Olympus-2.X/lastSuccessfulBuild/artifact/target/olympus.war"/>
   <property name="restcomm-olympus.path" value="${configuration.directory}/olympus.war"/>
 
   <!-- Determine RVD retrieval URL
@@ -218,17 +218,17 @@
     <touch file="${release.as7.dir}/standalone/deployments/RvdExternalServicesDemo.war.dodeploy"/>
 
     <!-- Copy Dialogic JSR 309 connector -->
-    <copy failonerror="true" file="${configuration.directory}/dlgmsc-5.0-alpha.jar" toDir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
-    <copy failonerror="true" file="${configuration.directory}/dlgcsmiltypes-4.1.429.jar" toDir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
-    <copy failonerror="true" file="${configuration.directory}/msmltypes-4.1.429.jar" toDir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
+    <copy failonerror="true" file="${configuration.directory}/dialogic309-3.2-snapshot-jboss.jar" toDir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
+    <copy failonerror="true" file="${configuration.directory}/dialogicmsmltypes-3.2-GA-14621.jar" toDir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
+    <copy failonerror="true" file="${configuration.directory}/dialogicsmiltypes-3.2-GA-14621.jar" toDir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
 
     <!-- Copy Config scripts -->
     <!--copy toDir="${release.as7.dir}/tools/config-scripts" failonerror="true">
-		<fileset dir="${configuration.directory}/config-scripts">
-			<include name="**/*"/>
-			<exclude name="as7-config-scripts/**"/>
-		</fileset>
-	</copy>
+    <fileset dir="${configuration.directory}/config-scripts">
+      <include name="**/*"/>
+      <exclude name="as7-config-scripts/**"/>
+    </fileset>
+  </copy>
 -->
     <copy failonerror="true" toDir="${release.as7.dir}/bin/restcomm">
       <fileset dir="${configuration.directory}/config-scripts/as7-config-scripts/restcomm">
@@ -259,8 +259,8 @@
     <mkdir dir="${restcomm.docs.dir}"/>
     <copy failonerror="true" file="${configuration.directory}/README" todir="${restcomm.docs.dir}">
       <!-- <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
-		                <include name="**/*" />
-		        </fileset> -->
+                    <include name="**/*" />
+            </fileset> -->
     </copy>
     <mkdir dir="${restcomm.docs.dir}/phone-number-provisioning-javadocs"/>
     <copy failonerror="true" todir="${restcomm.docs.dir}/phone-number-provisioning-javadocs">
@@ -272,8 +272,8 @@
     <mkdir dir="${restcomm.docs.tomcat.dir}"/>
     <copy failonerror="true" file="${configuration.directory}/README" todir="${restcomm.docs.tomcat.dir}">
       <!-- <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
-		                <include name="**/*" />
-		        </fileset> -->
+                    <include name="**/*" />
+            </fileset> -->
     </copy>
     <mkdir dir="${restcomm.docs.tomcat.dir}/phone-number-provisioning-javadocs"/>
     <copy failonerror="true" todir="${restcomm.docs.tomcat.dir}/phone-number-provisioning-javadocs">
