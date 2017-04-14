@@ -1972,8 +1972,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     String name = null;
                     final Tag grandchild = video(child);
                     if (grandchild != null) {
-                        Attribute attribute = verb.attribute("name");
-                        // FIXME ^ should be 'child' instead of 'verb'?
+                        Attribute attribute = child.attribute("name");
                         if (!String.valueOf(attribute.toString()).isEmpty()) {
                             name = attribute.value();
                         } else {
