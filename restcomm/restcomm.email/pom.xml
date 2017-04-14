@@ -5,7 +5,7 @@
     <parent>
         <artifactId>restcomm-connect</artifactId>
         <groupId>org.restcomm</groupId>
-        <version>8.2.0-SNAPSHOT</version>
+        <version>8.2.0.MPROV_1981.6</version>
     </parent>
 
         <artifactId>restcomm-connect.email</artifactId>
