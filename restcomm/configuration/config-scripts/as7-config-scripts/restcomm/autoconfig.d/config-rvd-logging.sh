@@ -114,7 +114,7 @@ createLoggers(){
 }
 
 formatXml(){
-    tmpfile=$(mktemp)
+    tmpfile=$(mktemp -t rvdconfig)
     xmlstarlet fo "$STANDALONE_SIP" > "$tmpfile"
     mv "$tmpfile" "$STANDALONE_SIP" 
 }
