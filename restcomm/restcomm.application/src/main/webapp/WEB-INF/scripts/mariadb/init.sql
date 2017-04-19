@@ -384,15 +384,13 @@ enabled  BOOLEAN NOT NULL DEFAULT TRUE
 CREATE TABLE restcomm_organizations (
 sid VARCHAR(34) NOT NULL PRIMARY KEY,
 domain_name VARCHAR(255) NOT NULL,
-type VARCHAR(255),
-status VARCHAR(255),
 date_created DATETIME NOT NULL,
 date_updated DATETIME NOT NULL
 );
 
 INSERT INTO restcomm_organizations VALUES(
 'ORafbe225ad37541eba518a74248f0ac4c', 
-'default.restcomm.com', NULL, NULL, 
+'default.restcomm.com', 
 '2017-04-19 00:00:00.000000000',
 '2017-04-19 00:00:00.000000000' 
 );
