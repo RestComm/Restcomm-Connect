@@ -1,0 +1,43 @@
+[plantuml, data-model, png]
+--
+
+!define table(x) class x << (T,#FFAAAA) >>
+!define primary_key(x) <u>x</u>
+!define foreign_key(x) <b>x</b>
+hide methods
+hide stereotypes
+
+table(restcomm_organizations) {
+  +primary_key(sid)
+  domain_name [unique]
+  type
+  status
+  use_as_default_domain [boolean]
+}
+
+table(restcomm_accounts) {
+  +primary_key(sid)
+  +foreign_key(domain_sid)
+  email
+  type
+  status
+}
+
+table(restcomm_numbers) {
+  +primary_key(sid)
+  +foreign_key(account_sid)
+  number
+}
+
+table(restcomm_clients) {
+  +primary_key(sid)
+  +foreign_key(account_sid)
+  client
+}
+
+restcomm_accounts "*" --- "1" restcomm_organizations
+restcomm_numbers  "1" --- "1" restcomm_organizations
+restcomm_numbers  "1" --- "1" restcomm_accounts
+restcomm_clients  "1" --- "1" restcomm_organizations
+restcomm_clients  "1" --- "1" restcomm_accounts
+--
