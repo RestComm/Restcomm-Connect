@@ -175,7 +175,7 @@ public final class Parser extends UntypedActor {
                     logger.debug("Parser, next verb: "+verb.toString());
                 }
             } else {
-                final End end = End.instance();
+                final End end = new End();
                 sender.tell(end, sender);
                 if(logger.isDebugEnabled()) {
                     logger.debug("Parser, next verb: "+end.toString());
