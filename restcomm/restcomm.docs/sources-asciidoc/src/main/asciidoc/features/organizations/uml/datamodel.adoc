@@ -10,14 +10,12 @@ hide stereotypes
 table(restcomm_organizations) {
   +primary_key(sid)
   domain_name [unique]
-  type
-  status
   use_as_default_domain [boolean]
 }
 
 table(restcomm_accounts) {
   +primary_key(sid)
-  +foreign_key(domain_sid)
+  +foreign_key(organization_sid)
   email
   type
   status
