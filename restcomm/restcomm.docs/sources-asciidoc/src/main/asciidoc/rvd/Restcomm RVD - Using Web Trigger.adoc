@@ -1,20 +1,20 @@
-Web Trigger is an alternative way to start a voice application over HTTP. It allows establishing a call between an RVD application and a destination address using a simple HTTP request. 
+Web Trigger is an alternative way to start a voice application. It allows establishing a call between an RVD application and a destination address using a simple HTTP request.
+Any RVD Voice application can be configured to be started using Web Trigger. The process of doing that is roughly the following:
 
-Any RVD Voice application can be configured to be started through Web Trigger. The process of doing that is roughly the following:
-
-* Create the Voice application in RVD.
+* Create a Voice application in RVD.
 * Enable and configure Web Trigger feature for this application.
-* Configure Restcomm REST API access for the logged user in RVD.
+* Start your application by making a request to the WebTrigger URL.
 
 Other features of Web Trigger include:
 
-* Secure your trigger using a custom token.
-* Provide additional HTTP parameters that are available as RVD application variables.
-* Set the caller identifier that will be presented to the callee.
+* Custom authentication using an application-specific token.
+* Initialization of RVD variables by using HTTP parameters.
+* Control caller identifier that will be presented to the callee.
 
 Web Trigger relies on the Restcomm Calls REST API to do the actual work. You can find more information on how a call between an RCML application and a destination address is established at <<../api/calls-api.adoc#calls,Restcomm API – Calls>>. 
 
-In the following example we will create a sample application that will establish a call between a Restcomm Client and an application and execute it.
+In the following example we will create a sample application that, when
+ trigerred, will establish a call between a Restcomm Client and the application and execute it.
 
 [[step-1---create-the-voice-application]]
 Step 1 - Create the Voice application
@@ -28,45 +28,95 @@ No need to change anything yet. If you don't know what RVD is and how to create 
 Step 2 - Enable Web Trigger
 +++++++++++++++++++++++++++
 
-* In the project menu, click on __Web Trigger__:
+In the project menu, click on __Web Trigger__:
 
 image:./images/show_web_trigger_form.png[show_web_trigger_form,width=624,height=75]
 
-* Check __Enable Web Trigger__:
+Then, check __Enable Web Trigger__:
 
-image:./images/enable_web_trigger.png[enable_web_trigger,width=489,height=230]
+image:./images/WebTrigger_enable.png[web_trigger_enable,width=489,height=230]
 
 [[step-3---register-your-sip-client]]
 Step 3 - Register your SIP client
 +++++++++++++++++++++++++++++++++
 
-You will need a destination address to receive the triggered call.
+You will need a registered destination address to receive the triggered call.
+Fire up your favourite SIP client and register to your Restcomm instance as **alice**. Default password is _1234._
 
-* Fire up your favourite SIP client and register to your Restcomm instance as **alice**. Default password is _1234._
+Step 4 - Trigger a call
++++++++++++++++++++++++
 
-[[step-4---configure-web-trigger]]
-Step 4 - Configure Web Trigger
-++++++++++++++++++++++++++++++
+Using your favorite REST client make a call to the WebTrigger URL. You can copy it from the configuration form:
 
-Back to RVD, after enabling Web Trigger in *Step 2* complete the configuration form so that it looks as follows:
+image:./images/WebTrigger_copy_URL.png[copy_web_trigger_url]
 
-[[web_trigger_form_completed]]
-image:./images/web_trigger_form_completed.png[web_trigger_form_completed,width=487,height=622]
+Before making the request you need to specify a destination for the call in the `to` parameter. You may use the _client_
+you just registered. The destination goes in the `to` parameter of the request:
 
-* Fill *To* with **client:alice**. This should be the same as the client you registered to Restcomm in **Step 3**.
-* Fill *From* with **1234**. This is the arbitrary caller id that will appear to Alice when she receives the call.
-* Fill *Access token* with **ToPsEcReT**. This is a secret token that will protect your Web Trigger from malicious users. Though RVD won't require this field it's *VERY IMPORTANT* to provide it.
-* Notice the suggested _Web Trigger URL_ on the top of the form. We will use that on **Step 6 - Build trigger URL**.
+ http://this:8080/restcomm-rvd/services/apps/APdc8c1eea063d4a85b64a5bebda8e8c04/start?to=client:alice
 
-If a warning about Restcomm API credentials appears at the bottom of the form the additional *Step 5* is needed. link:[]
+Notice _client:_ prefix in the `to` parameter.
 
-[[step-5---provide-credentials-for-restcomm-api-access-once-per-operating-user]]
-Step 5 - Provide credentials for Restcomm API access (once per operating user)
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Also, WebTrigger supports Basic HTTP authentication. Use your restcomm account credentials in order
+to authenticate. In this example we will use *administrator@company.com* / *RestComm*.
 
-If you've already done this for the logged user you may skip this step. 
+Here is the cURL command to make the request:
 
-As already noted, RVD relies on Restcomm Calls REST API to create the actual call between the application and the destination address. For that, RVD needs to know the credentials of the Restcomm Account that will make the call. In order to supply these credentials:
+ $ curl -X GET --user 'administrator@company.com:RestComm' 'http://this:8080/restcomm-rvd/services/apps/APdc8c1eea063d4a85b64a5bebda8e8c04/start?to=client:alice'
+
+In addition to specifying the destination of the call, the caller ID may also be specified (optional) using
+the `from` parameter. Here is the how the trigger URL  will look like when the caller ID  is set to *bob*:
+
+ .../start?to=client:alice&from=bob
+
+At this point you should be able to trigger a call to your registered client and listen to
+ your application.
+
+
+
+Authenticate with application-specific tokens
++++++++++++++++++++++++++++++++++++++++++++++
+
+In case you don't want to reveal your account credentials to the user of the trigger you can
+use an alternative form of authentication that relies on custom application-specific tokens. To enable it
+you will need to define an arbitrary security token in the configuration form and then use it in the request that
+will trigger the call. If the tokens match the request will be accepted.
+
+Here is the configuration form with the _application access token_ set to *MyTopSeCrEt*.
+
+image:./images/WebTrigger_specify_application_token.png[specify_application_access_token]
+
+Since there are no Basic HTTP authentication headers involved you may easily trigger the call by typing the WebTrigger URL
+directly in the browser:
+
+ http://this:8080/restcomm-rvd/services/apps/APdc8c1eea063d4a85b64a5bebda8e8c04/start?to=client:alice&token=MyTopSeCrEt
+
+IMPORTANT: Before giving it a try make sure that you have configured
+ <<configure-restcomm-api-credentials,Restcomm API credentials>> in RVD settings.
+
+Call source and destination overrides
++++++++++++++++++++++++++++++++++++++
+
+There can be cases when the destination or the source of a WebTrigger call should be locked
+down to a fixed value and not be controlled from the request. In order to do that _overrides_ can
+be provided in the configuration form as follows:
+
+image:./images/WebTrigger_overrides.png[source_dest_overrides]
+
+Now, the `to` and `form` parameters in the HTTP request will be ignored and values in the form
+will be used instead.
+
+
+[[configure-restcomm-api-credentials]]
+Configure Restcomm API access credentials
++++++++++++++++++++++++++++++++++++++++++
+
+In order to use application-specific tokens Restcomm API credentials should be configured in RVD
+ settings. RVD relies on Restcomm Calls REST API to create the actual call between the
+ application and the destination address. For that, it needs to know the credentials of
+ the Restcomm Account that will make the call.
+
+To supply these credentials:
 
 * Click on the top right gear icon as illustrated bellow:
 
@@ -76,74 +126,51 @@ This will bring up the IDE Settings form for the logged user:
 
 image:./images/ide_settings_profile_form_complete.png[ide_settings_profile_form_complete,width=300,height=179]
 
-Supply the credentials of the Restcomm account that will be used to create the call. Typing the _username_ and _password_ you use to log into RVD will do.
+Supply the credentials of the Restcomm account that will be used to create the call.
 
-* Set *Username* to _administrator@company.com_
-* Set *Password* to whatever password you have set
+* Set *Username* to the restcomm username on whose behalf the calls will be made. In this tutorial we used _administrator@company.com_
+* Set *Password* to the _AuthToken_ of your account displayed in Dashboard.
 
-_* As of Restcomm 7.5.0 these credentials need to be configured separately for each different user that operates RVD. For older versions, an RVD-wide approach was used that posed various security issues and was abandoned._
-
-[[step-6---build-trigger-url]]
-Step 6 - Build trigger URL
-++++++++++++++++++++++++++
-
-You will now need to build the URL that will initiate the Web Trigger. The generic form of this URL is the following: http://HOST:PORT/restcomm-rvd/services/apps/APPLICATION_NAME/start?token=ACCESS_TOKEN
-
-* *HOST* and *PORT* depend on how you have set up and access restcomm.
-* *APPLICATION_NAME* is the name of the RVD application. In this case that would be __TestWebTrigger__. You will need to url-encode the name in case it contains any special characters like spaces etc.
-* *ACCESS_TOKEN* is the _Access token_ specified in Step 4. In this case it would be __ToPsEcReT__.
-
-RVD will also try to build the URL automatically. You may copy it from Web Trigger Configuration form in **Step 4**. It's right under _Web Trigger URL_ field. 
-
-Here is the URL used for this example: 
-
-*http://HOST:PORT/restcomm-rvd/services/apps/TestWebTrigger/start?token=ToPsEcReT*
-
-[[step-7---trigger-the-call]]
-Step 7 - Trigger the call
-+++++++++++++++++++++++++
-
-Everything has been set up. Time to test the trigger.
-
-* Using your web browser or your favourite HTTP client  make a GET request to the URL you built in **Step 6**. Your SIP client should ring!
-* Notice the caller ID in the incoming call. It should be set to 1234. That's the *From* value we specified in *Step 4.*
-* Pick up the call. You should now hear the application and the typical RVD greeting: _"Welcome to Telestax Restcom Visual Designer Demo"._
 
 [[adding-variables-to-the-mix]]
-Adding variables to the mix
-+++++++++++++++++++++++++++
+Adding variables
+++++++++++++++++
 
-Application behaviour can be further enhanced by adding parameters to your trigger URL and use them in your application. We will now personalize the greeting by passing caller _firstname_ and _lastname_ parameters.
+Application behaviour can be further enhanced by adding parameters to your trigger URL.
+All additional parameters will be converted to RVD variables and can be used in your application.
 
-* Modify your TestWebTrigger project so that it looks as follows:
+Bellow is a personalized greeting of the application using `firstname` and `lastname` variables.
+
 
 image:./images/add_variables_to_the_mix.png[add_variables_to_the_mix,width=763,height=341]
 
-* Modify the trigger URL by adding _firstname_ and _lastname_ custom parameters. It should look like the following:http://RESTCOMM_HOSTNAME:PORT/restcomm-rvd/services/apps/TestWebTrigger/start?token=ToPsEcReT**&firstname=foo&lastname=bar**
+This application will use the _firstname_ and _lastname_ parameters from a trigger URL like the
+following:
 
-RVD will detect these additional parameters and create variables using the same name.
+ http://this:8080/restcomm-rvd/services/apps/APdc8c1eea063d4a85b64a5bebda8e8c04/start?to=client:alice&firstname=nick&lastname=the+greek
 
-* Point your web browser or  your HTTP client to the url above.
 
-Your SIP phone should ring. Pick it up. You should now hear the personalized greeting: _"Hello **foo bar**. Welcome to Telestax Restcom Visual Designer Demo !"_
+###### Variable scope
 
-[[override-destination-of-the-call]]
-Override destination of the call
-++++++++++++++++++++++++++++++++
+In the example above `firstname` and `lastname` parameters defined in the url will result in creating module-scoped
+RVD variables. This means that the variables will be available only in the first module
+execution. To make them last for the whole application lifecycle the 'User parameter scope'
+option in _Advanced configuration_ options should be set to _Application_ as illustrated below.
 
-You can explicitly specify the destination of the call by adding the special *to* parameter to your URL. This won't create an RVD variable but will change the destination of the call instead.
+image:./images/WebTrigger_application_scoped_vars.png[application_scoped_variables]
 
-* Modify the trigger URL so that is calls *bob* instead of **alice**. The URL should now look like this: http://RESTCOMM_HOSTNAME:PORT/restcomm-rvd/services/apps/TestWebTrigger/start?token=ToPsEcReT&firstname=foo&lastname=bar&**to=client:bob**
-* Register your SIP phone as *bob* instead of *alice*
-* Make the HTTP request
 
-Bob should now receive the call.
+
 
 [[note-on-destinations]]
-Note on destinations
-++++++++++++++++++++
+Destination address syntax
+++++++++++++++++++++++++++
 
-Throughout this tutorial we have only used _client_ destinations for the call. Restcomm Calls REST API and consequently RVD WebTrigger support four different types of destination address. Any of these types can be used as a destination address. Here are some example values you can use as *to* parameters in the URL (or specify in Step 4 *To* field) for each of these types:
+Throughout this tutorial we have only used _client_ destinations for the call. Restcomm
+Calls REST API and consequently RVD WebTrigger support four different types of destination
+address. Any of these types can be used as a destination address. Here are some example
+values you can use as destinations either directly in the URL `to` parameter or as overrides
+ in the configuration form.
 
 [[client]]
 * *client*
@@ -163,29 +190,4 @@ Throughout this tutorial we have only used _client_ destinations for the call. R
 ** +1234598323
 
 IMPORTANT: Make sure you url-encode these values if you specify the *to* destination in the trigger URL!
-
-[[basic-http-authentication]]
-HTTP Basic Authentication
-+++++++++++++++++++++++++
-
-As of Restcomm version 7.7.0 support for HTTP Basic authentication has been added to WebTrigger. The mechanism works as an alternative to custom token authentication. In order to take advantage of it you'll just have to provide your restcomm account credentials as an HTTP _Authorization_ header. 
-
-*Example*
-
-credentials 
-
-  _administrator@company.com:RestComm
-  
-URL
-
-  http://RESTCOMM_HOSTNAME:PORT/restcomm-rvd/services/apps/TestWebTrigger/start
-  
-Headers
-
-  Authorization: Basic YWRtaW5pc3RyYXRvckBjb21wYW55LmNvbTpSZXN0Q29tbQ==
-  
-* Note that there is no *token* URL parameter
-* You don't need to supply the _Access Token_ field in the WebTrigger form discribed in _Step 4_. In fact, you can have this field empty to disable token authentication.
-* You don't need to supply credentials for _Restcomm API access_ as decribed in _Step 5_. Skip this step.
-
 

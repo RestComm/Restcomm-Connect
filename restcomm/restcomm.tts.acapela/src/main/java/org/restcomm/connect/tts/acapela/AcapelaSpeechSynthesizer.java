@@ -144,6 +144,7 @@ public final class AcapelaSpeechSynthesizer extends UntypedActor {
         women.put("sv", configuration.getString("speakers.swedish.female"));
         women.put("tr", configuration.getString("speakers.turkish.female"));
         women.put("zh-cn", configuration.getString("speakers.mandarin-chinese.female"));
+        women.put("ja", configuration.getString("speakers.japanese.female"));
         // Initialize male voices.
         men.put("bf", configuration.getString("speakers.belgium-french.male"));
         men.put("bp", configuration.getString("speakers.brazilian-portuguese.male"));
@@ -168,6 +169,7 @@ public final class AcapelaSpeechSynthesizer extends UntypedActor {
         men.put("sv", configuration.getString("speakers.swedish.male"));
         men.put("tr", configuration.getString("speakers.turkish.male"));
         men.put("zh-cn", configuration.getString("speakers.mandarin-chinese.male"));
+        men.put("ja", configuration.getString("speakers.japanese.male"));
     }
 
     @Override

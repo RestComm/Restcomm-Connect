@@ -15,12 +15,12 @@ import akka.japi.Function;
 import scala.collection.Iterable;
 import scala.concurrent.duration.Duration;
 
-import static akka.actor.SupervisorStrategy.restart;
 import static akka.actor.SupervisorStrategy.resume;
 
 /**
  * Created by gvagenas on 22/02/2017.
  */
+@Deprecated
 public class RestcommSupervisor extends UntypedActor {
 
     private LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -57,6 +57,10 @@ public class RestcommSupervisor extends UntypedActor {
                 final ActorRef child = stop.child();
                 getContext().unwatch(child);
                 getContext().stop(child);
+                if (logger.isDebugEnabled()) {
+                    String logmsg = String.format("RestcommSupervisor, actor %s stopped. Sender %s",child.path(), sender.path());
+                    logger.debug(logmsg);
+                }
             } else {
                 unhandled(msg);
             }

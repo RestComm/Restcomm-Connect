@@ -23,6 +23,7 @@ package org.restcomm.connect.application;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActorFactory;
 import com.google.gson.Gson;
@@ -34,7 +35,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.ibatis.exceptions.TooManyResultsException;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.faulttolerance.RestcommSupervisor;
 import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
@@ -50,8 +50,6 @@ import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.email.EmailService;
 import org.restcomm.connect.email.api.EmailRequest;
 import org.restcomm.connect.email.api.Mail;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
 
 import javax.servlet.ServletContext;
 import java.io.File;
@@ -67,11 +65,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static akka.pattern.Patterns.ask;
 
 /**
  * This class was designed to be used with exclusivity by {@link RvdProjectsMigrator}, once that
@@ -105,7 +100,7 @@ public class RvdProjectsMigrationHelper {
     private List<IncomingPhoneNumber> dids;
     private List<Client> clients;
     private ActorRef emailService;
-    private ActorRef supervisor;
+    private ActorSystem system;
 
     public RvdProjectsMigrationHelper(ServletContext servletContext, Configuration configuration) throws Exception {
         defineWorkspacePath(servletContext);
@@ -116,7 +111,7 @@ public class RvdProjectsMigrationHelper {
         this.didsDao = storage.getIncomingPhoneNumbersDao();
         this.clientsDao = storage.getClientsDao();
         this.notificationsDao = storage.getNotificationsDao();
-        supervisor = (ActorRef) servletContext.getAttribute(RestcommSupervisor.class.getName());
+        system = (ActorSystem) servletContext.getAttribute(ActorSystem.class.getName());
     }
 
     private void defineWorkspacePath(ServletContext servletContext) throws Exception {
@@ -565,11 +560,7 @@ public class RvdProjectsMigrationHelper {
                 return new EmailService(configuration);
             }
         });
-        ActorRef mailer = null;
-        try {
-            mailer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {}
-        return mailer;
+        return system.actorOf(props);
     }
 
     public boolean isEmbeddedMigration() {
