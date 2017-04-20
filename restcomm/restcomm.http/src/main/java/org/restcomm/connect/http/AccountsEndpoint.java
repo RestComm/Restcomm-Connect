@@ -138,7 +138,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         final StringBuilder buffer = new StringBuilder();
         buffer.append("/").append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
-        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
+        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri, null);
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
