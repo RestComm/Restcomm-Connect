@@ -31,13 +31,7 @@ public interface OrganizationsDao {
      *
      * @param organization
      */
-    public void addOrganization(Organization organization);
-    /**
-     * getOrganization by domainName
-     * @param domainName
-     * @return Organization entity
-     */
-    public Organization getOrganization(final String domainName);
+    public void addOrganization(final Organization organization);
     /**
      * getOrganization by sid
      * @param sid
@@ -45,11 +39,8 @@ public interface OrganizationsDao {
      */
     public Organization getOrganization(final Sid sid);
     /**
+     * updateOrganization
      * @param organization
      */
     public void updateOrganization(final Organization organization);
-    /**
-     * @param organization
-     */
-    public void removeOrganization(final Organization organization);
 }

@@ -249,7 +249,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             final String hostname = configuration.getString("hostname");
             if(logger.isInfoEnabled())
                 logger.info("Generate Default Domain Name based on RC hostname: "+hostname);
-            Organization organization = storage.getOrganizationsDao().getOrganization("ORafbe225ad37541eba518a74248f0ac4c");
+            Organization organization = storage.getOrganizationsDao().getOrganizationByDomainName("ORafbe225ad37541eba518a74248f0ac4c");
             if(organization != null){
                 organization = organization.setDomainName(hostname);
                 storage.getOrganizationsDao().updateOrganization(organization);
