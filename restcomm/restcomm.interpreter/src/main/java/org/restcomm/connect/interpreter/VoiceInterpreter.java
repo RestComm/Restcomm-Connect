@@ -27,6 +27,7 @@ import akka.event.LoggingAdapter;
 import akka.pattern.AskTimeoutException;
 import akka.util.Timeout;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -51,6 +52,7 @@ import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.email.api.EmailResponse;
 import org.restcomm.connect.fax.FaxResponse;
@@ -1919,6 +1921,91 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             return timeLimit;
         }
+
+        protected MediaAttributes.MediaType videoEnabled(final Tag container) {
+            boolean videoEnabled = false;
+            Attribute attribute = container.attribute("enable");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    videoEnabled = Boolean.getBoolean(value);
+                }
+            }
+            if (videoEnabled) {
+                return MediaAttributes.MediaType.AUDIO_VIDEO;
+            } else {
+                return MediaAttributes.MediaType.AUDIO_ONLY;
+            }
+        }
+
+        protected MediaAttributes.VideoMode videoMode(final Tag container){
+            MediaAttributes.VideoMode videoMode = MediaAttributes.VideoMode.MCU;
+            Attribute attribute = container.attribute("mode");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    try {
+                        videoMode = MediaAttributes.VideoMode.getValueOf(value);
+                    } catch (IllegalArgumentException e) {
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        final Notification notification = notification(WARNING_NOTIFICATION, 15001, value
+                                + " is not a valid mode value for <Video>");
+                        notifications.addNotification(notification);
+                    }
+                }
+            }
+            return videoMode;
+        }
+
+        protected MediaAttributes.VideoResolution videoResolution(final Tag container) {
+            MediaAttributes.VideoResolution videoResolution = MediaAttributes.VideoResolution.SEVEN_TWENTY_P;
+            Attribute attribute = container.attribute("resolution");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    try {
+                        videoResolution = MediaAttributes.VideoResolution.getValueOf(value);
+                    } catch (IllegalArgumentException e) {
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        final Notification notification = notification(WARNING_NOTIFICATION, 15002, value
+                                + " is not a valid resolution value for <Video>");
+                        notifications.addNotification(notification);
+                    }
+                }
+            }
+            return videoResolution;
+        }
+
+        protected MediaAttributes.VideoLayout videoLayout(final Tag container) {
+            MediaAttributes.VideoLayout videoLayout = MediaAttributes.VideoLayout.LINEAR;
+            Attribute attribute = container.attribute("layout");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    try {
+                        videoLayout = MediaAttributes.VideoLayout.getValueOf(value);
+                    } catch (IllegalArgumentException e) {
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        final Notification notification = notification(WARNING_NOTIFICATION, 15003, value
+                                + " is not a valid layout value for <Video>");
+                        notifications.addNotification(notification);
+                    }
+                }
+            }
+            return videoLayout;
+        }
+
+        protected String videoOverlay(final Tag container) {
+            String videoOverlay = null;
+            Attribute attribute = container.attribute("overlay");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    videoOverlay = value;
+                }
+            }
+            return videoOverlay;
+        }
     }
 
     private final class StartDialing extends AbstractDialAction {
@@ -1970,18 +2057,29 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final Tag child = conference(verb);
                 if (child != null) {
                     String name = null;
+                    MediaAttributes mediaAttributes = new MediaAttributes();
                     final Tag grandchild = video(child);
-                    if (grandchild != null) {
+                    if (grandchild == null) {
+                        name = child.text();
+                    } else {
+                        // Handle video conferencing
                         Attribute attribute = child.attribute("name");
-                        if (!String.valueOf(attribute.toString()).isEmpty()) {
+                        if (attribute != null && !StringUtils.isEmpty(attribute.toString())) {
                             name = attribute.value();
                         } else {
-                            String errorMsg = "Attribute \"name\" not found or \"name\" value is empty inside Conference verb.";
+                            String errorMsg = "Attribute \"name\" not found or \"name\" value is empty inside <Conference> verb.";
                             logger.error(errorMsg);
                             throw new Exception(errorMsg);
                         }
-                    } else {
-                        name = child.text();
+                        final MediaAttributes.MediaType mediaType = videoEnabled(grandchild);
+                        if (!MediaAttributes.MediaType.AUDIO_ONLY.equals(mediaType)) {
+                            final MediaAttributes.VideoMode videoMode = videoMode(grandchild);
+                            final MediaAttributes.VideoResolution videoResolution = videoResolution(grandchild);
+                            final MediaAttributes.VideoLayout videoLayout = videoLayout(grandchild);
+                            final String videoOverlay = videoOverlay(grandchild);
+                            mediaAttributes = new MediaAttributes(mediaType, videoMode, videoResolution, videoLayout,
+                                    videoOverlay);
+                        }
                     }
                     final StringBuilder buffer = new StringBuilder();
                     buffer.append(accountId.toString()).append(":").append(name);
@@ -1992,7 +2090,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (sid == null && callRecord != null) {
                         sid = callRecord.getSid();
                     }
-                    final CreateConference create = new CreateConference(buffer.toString(), sid);
+                    final CreateConference create = new CreateConference(buffer.toString(), sid, mediaAttributes);
                     conferenceManager.tell(create, source);
                 } else {
                     // Handle forking.

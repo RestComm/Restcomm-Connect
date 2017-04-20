@@ -4,7 +4,7 @@
 	<Say>You will be connected to the video conference bridge</Say>
 	<Dial>
 		<Conference startConferenceOnEnter="true" name="1112">
-			<Video enable="true" mode="sfu" resolution="720p" layou="linear" overlay="text"></Video>
+			<Video enable="true" mode="sfu" resolution="720p" layout="linear" overlay="text"></Video>
 		</Conference>
 	</Dial>
 </Response>
