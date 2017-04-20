@@ -1928,7 +1928,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (attribute != null) {
                 final String value = attribute.value();
                 if (value != null && !value.isEmpty()) {
-                    videoEnabled = Boolean.getBoolean(value);
+                    videoEnabled = Boolean.valueOf(value);
                 }
             }
             if (videoEnabled) {
