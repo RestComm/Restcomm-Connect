@@ -39,12 +39,14 @@ import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.ExtensionsConfigurationDao;
 import org.restcomm.connect.dao.GatewaysDao;
+import org.restcomm.connect.dao.GeolocationDao;
 import org.restcomm.connect.dao.HttpCookiesDao;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.InstanceIdDao;
 import org.restcomm.connect.dao.MediaResourceBrokerDao;
 import org.restcomm.connect.dao.MediaServersDao;
 import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.OrganizationsDao;
 import org.restcomm.connect.dao.OutgoingCallerIdsDao;
 import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.RegistrationsDao;
@@ -52,7 +54,6 @@ import org.restcomm.connect.dao.ShortCodesDao;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.TranscriptionsDao;
 import org.restcomm.connect.dao.UsageDao;
-import org.restcomm.connect.dao.GeolocationDao;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -86,6 +87,7 @@ public final class MybatisDaoManager implements DaoManager {
     private MediaResourceBrokerDao mediaResourceBrokerDao;
     private ExtensionsConfigurationDao extensionsConfigurationDao;
     private GeolocationDao geolocationDao;
+    private OrganizationsDao organizationsDao;
 
     public MybatisDaoManager() {
         super();
@@ -214,6 +216,11 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
+    public OrganizationsDao getOrganizationsDao() {
+        return organizationsDao;
+    }
+
+    @Override
     public void shutdown() {
         // Nothing to do.
     }
@@ -286,5 +293,6 @@ public final class MybatisDaoManager implements DaoManager {
         mediaResourceBrokerDao = new MybatisMediaResourceBrokerDao(sessions);
         extensionsConfigurationDao = new MybatisExtensionsConfigurationDao(sessions);
         geolocationDao = new MybatisGeolocationDao(sessions);
+        organizationsDao = new MybatisOrganizationDao(sessions);
     }
 }

@@ -31,16 +31,16 @@ public interface OrganizationsDao {
      *
      * @param organization
      */
-    public void addOrganization(final Organization organization);
+    void addOrganization(final Organization organization);
     /**
      * getOrganization by sid
      * @param sid
      * @return Organization entity
      */
-    public Organization getOrganization(final Sid sid);
+    Organization getOrganization(final Sid sid);
     /**
      * updateOrganization
      * @param organization
      */
-    public void updateOrganization(final Organization organization);
+    void updateOrganization(final Organization organization);
 }
