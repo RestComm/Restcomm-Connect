@@ -44,6 +44,7 @@ import javax.media.mscontrol.resource.AllocationEvent;
 import javax.media.mscontrol.resource.AllocationEventListener;
 import javax.media.mscontrol.resource.RTC;
 
+import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -54,6 +55,7 @@ import org.restcomm.connect.commons.fsm.TransitionRollbackException;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.mscontrol.api.MediaServerController;
 import org.restcomm.connect.mscontrol.api.MediaServerInfo;
 import org.restcomm.connect.mscontrol.api.exceptions.MediaServerControllerException;
@@ -376,6 +378,9 @@ public class Jsr309ConferenceController extends MediaServerController {
         @Override
         public void execute(Object message) throws Exception {
             try {
+                CreateMediaSession msg = (CreateMediaSession) message;
+                MediaAttributes mediaAttributes = msg.mediaAttributes();
+
                 // Create media session
                 mediaSession = msControlFactory.createMediaSession();
 
@@ -383,15 +388,22 @@ public class Jsr309ConferenceController extends MediaServerController {
                 mediaGroup = mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
                 mediaGroup.getPlayer().addListener(playerListener);
 
-                // Set default conference video resolution to 720p
-                mediaSession.setAttribute("CONFERENCE_VIDEO_SIZE", "720p");
+                if (MediaAttributes.MediaType.VIDEO_ONLY.equals(mediaAttributes.getMediaType())) {
+                    // video only
+                    configureVideoMediaSession(mediaAttributes);
+                    Parameters mixerParams = createMixerParams();
+                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
+                } else if (MediaAttributes.MediaType.AUDIO_VIDEO.equals(mediaAttributes.getMediaType())) {
+                    // audio and video
+                    configureVideoMediaSession(mediaAttributes);
+                    Parameters mixerParams = createMixerParams();
+                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
+                } else {
+                    // audio only
+                    Parameters mixerParams = createMixerParams();
+                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO, mixerParams);
+                }
 
-                // Set number of ports for the available participants and possible media group
-                Parameters mixerParams = mediaSession.createParameters();
-                mixerParams.put(MediaMixer.MAX_PORTS, 900);
-
-                // Create the conference room also
-                mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
                 mediaMixer.addListener(mixerAllocationListener);
                 mediaMixer.confirm();
                 // Wait for event confirmation before sending response to the conference
@@ -399,6 +411,28 @@ public class Jsr309ConferenceController extends MediaServerController {
                 // Move to a failed state, cleaning all resources and closing media session
                 fsm.transition(e, failed);
             }
+        }
+
+        private void configureVideoMediaSession(final MediaAttributes mediaAttributes) {
+            // mode configuration
+            if (MediaAttributes.VideoMode.SFU.equals(mediaAttributes.getVideoMode())) {
+                // sfu not fully supported yet, waiting for next jsr309 connector release, using default mcu
+                // mediaSession.setAttribute("mediaMixerMode", mediaAttributes.getVideoMode().toString());
+            }
+            // resolution configuration
+            mediaSession.setAttribute("CONFERENCE_VIDEO_SIZE", mediaAttributes.getVideoResolution().toString());
+            // layout configuration
+            mediaSession.setAttribute("REGION", mediaAttributes.getVideoLayout().toString());
+            // overlay configuration
+            if (!StringUtils.isEmpty(mediaAttributes.getVideoOverlay())) {
+                mediaSession.setAttribute("CAPTION", mediaAttributes.getVideoOverlay());
+            }
+        }
+
+        private Parameters createMixerParams() {
+            Parameters mixerParams = mediaSession.createParameters();
+            mixerParams.put(MediaMixer.MAX_PORTS, 900);
+            return mixerParams;
         }
     }
 
