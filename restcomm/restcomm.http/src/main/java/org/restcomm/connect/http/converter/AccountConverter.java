@@ -67,7 +67,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         writeDateUpdated(account.getDateUpdated(), writer);
         writeAuthToken(account, writer);
         writeUri(account.getUri(), writer);
-        writeSid(account.getOrganizationSid(), writer);
+        writeOrganizationSid(account, writer);
         writeSubResourceUris(account, writer);
         writer.endNode();
     }
@@ -85,7 +85,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         writeDateUpdated(account.getDateUpdated(), object);
         writeAuthToken(account, object);
         writeUri(account, object);
-        writeSid(account.getOrganizationSid(), object);
+        writeOrganizationSid(account, object);
         writeSubResourceUris(account, object);
         return object;
     }
@@ -116,6 +116,16 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
 
     private void writeAuthToken(final Account account, final JsonObject object) {
         object.addProperty("auth_token", account.getAuthToken());
+    }
+
+    private void writeOrganizationSid(final Account account, final HierarchicalStreamWriter writer) {
+        writer.startNode("OrganizationSid");
+        writer.setValue(account.getOrganizationSid().toString());
+        writer.endNode();
+    }
+
+    private void writeOrganizationSid(final Account account, final JsonObject object) {
+        object.addProperty("organization_sid", account.getOrganizationSid().toString());
     }
 
     private void writeAvailablePhoneNumbers(final Account account, final HierarchicalStreamWriter writer) {
