@@ -20,6 +20,7 @@ import org.restcomm.connect.commons.loader.ObjectFactory;
 import org.restcomm.connect.commons.loader.ObjectInstantiationException;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.InstanceId;
+import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.shiro.ShiroResources;
 import org.restcomm.connect.extension.controller.ExtensionBootstrapper;
 import org.restcomm.connect.identity.IdentityContext;
@@ -237,6 +238,28 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return context.getContextPath();
     }
 
+    /**
+     * generateDefaultDomainName based on RC hostname
+     * https://github.com/RestComm/Restcomm-Connect/issues/2085
+     * @param configuration
+     * @param storage
+     */
+    private void generateDefaultDomainName (final Configuration configuration, final DaoManager storage) {
+        try{
+            final String hostname = configuration.getString("hostname");
+            if(logger.isInfoEnabled())
+                logger.info("Generate Default Domain Name based on RC hostname: "+hostname);
+            Organization organization = storage.getOrganizationsDao().getOrganization("ORafbe225ad37541eba518a74248f0ac4c");
+            if(organization != null){
+                organization = organization.setDomainName(hostname);
+                storage.getOrganizationsDao().updateOrganization(organization);
+            }else{
+                logger.error("Unable to generateDefaultDomainName default org not found");
+            }
+        }catch(Exception e){
+            logger.error("Unable to generateDefaultDomainName {}", e);
+        }
+    }
     @Override
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(Bootstrapper.class)) {
@@ -365,6 +388,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             } catch (UnknownHostException e) {
                 logger.error("UnknownHostException during the generation of InstanceId: "+e);
             }
+
+            generateDefaultDomainName(xml.subset("http-client"), storage);
+
             context.setAttribute(InstanceId.class.getName(), instanceId);
             monitoring.tell(instanceId, null);
             RestcommConfiguration.getInstance().getMain().setInstanceId(instanceId.getId().toString());

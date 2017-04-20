@@ -3,7 +3,7 @@ USE restcomm;
 
 CREATE TABLE restcomm_organizations (
 sid VARCHAR(34) NOT NULL PRIMARY KEY,
-domain_name VARCHAR(255) NOT NULL,
+domain_name VARCHAR(255) NOT NULL UNIQUE,
 date_created DATETIME NOT NULL,
 date_updated DATETIME NOT NULL
 );
