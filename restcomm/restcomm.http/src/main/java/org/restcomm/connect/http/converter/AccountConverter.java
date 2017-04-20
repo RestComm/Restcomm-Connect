@@ -67,6 +67,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         writeDateUpdated(account.getDateUpdated(), writer);
         writeAuthToken(account, writer);
         writeUri(account.getUri(), writer);
+        writeSid(account.getOrganizationSid(), writer);
         writeSubResourceUris(account, writer);
         writer.endNode();
     }
@@ -84,6 +85,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         writeDateUpdated(account.getDateUpdated(), object);
         writeAuthToken(account, object);
         writeUri(account, object);
+        writeSid(account.getOrganizationSid(), object);
         writeSubResourceUris(account, object);
         return object;
     }

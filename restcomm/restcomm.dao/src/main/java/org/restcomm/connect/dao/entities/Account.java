@@ -44,10 +44,11 @@ public final class Account {
     private final String authToken;
     private final String role;
     private final URI uri;
+    private final Sid organizationSid;
 
     public Account(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String emailAddress,
                    final String friendlyName, final Sid parentSid, final Type type, final Status status, final String authToken,
-                   final String role, final URI uri) {
+                   final String role, final URI uri, final Sid organizationSid) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -60,6 +61,7 @@ public final class Account {
         this.authToken = authToken;
         this.role = role;
         this.uri = uri;
+        this.organizationSid = organizationSid;
     }
 
     public static Builder builder() {
@@ -110,34 +112,38 @@ public final class Account {
         return uri;
     }
 
+    public Sid getOrganizationSid() {
+        return organizationSid;
+    }
+
     public Account setEmailAddress(final String emailAddress) {
         return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
-                role, uri);
+                role, uri, organizationSid);
     }
 
     public Account setFriendlyName(final String friendlyName) {
         return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
-                role, uri);
+                role, uri, organizationSid);
     }
 
     public Account setType(final Type type) {
         return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
-                role, uri);
+                role, uri, organizationSid);
     }
 
     public Account setStatus(final Status status) {
         return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
-                role, uri);
+                role, uri, organizationSid);
     }
 
     public Account setAuthToken(final String authToken) {
         return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
-                role, uri);
+                role, uri, organizationSid);
     }
 
     public Account setRole(final String role) {
         return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
-                role, uri);
+                role, uri, organizationSid);
     }
 
     public enum Status {
@@ -200,6 +206,7 @@ public final class Account {
         private String authToken;
         private String role;
         private URI uri;
+        private Sid organizationSid;
 
         private Builder() {
             super();
@@ -207,7 +214,7 @@ public final class Account {
 
         public Account build() {
             final DateTime now = DateTime.now();
-            return new Account(sid, now, now, emailAddress, friendlyName, parentSid, type, status, authToken, role, uri);
+            return new Account(sid, now, now, emailAddress, friendlyName, parentSid, type, status, authToken, role, uri, organizationSid);
         }
 
         public void setSid(final Sid sid) {
@@ -224,6 +231,10 @@ public final class Account {
 
         public void setParentSid(final Sid parentSid) {
             this.parentSid = parentSid;
+        }
+
+        public void setOrganizationSid(final Sid organizationSid) {
+            this.organizationSid = organizationSid;
         }
 
         public void setType(final Type type) {
