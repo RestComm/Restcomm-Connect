@@ -100,6 +100,8 @@ public class AccountsEndpointTest extends EndpointTest {
     SipPhone thinhPhone;
     //String thinhContact = "sip:lyhungthinh@127.0.0.1:5090";
 
+	private final Object DEFAULT_ORG_SID = "ORafbe225ad37541eba518a74248f0ac4c";
+
     @BeforeClass
     public static void beforeClass() {
         tool1 = new SipStackTool("AccountsEndpointTest");
@@ -159,9 +161,9 @@ public class AccountsEndpointTest extends EndpointTest {
                 adminUsername, adminAuthToken, createdUsernanme, createdPassword);
         JsonObject getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
                 adminAuthToken, createdUsernanme);
-        logger.info("createAccountResponse: "+createAccountResponse);
-        logger.info("getAccountResponse: "+getAccountResponse);
         assertTrue(getAccountResponse.get("sid").getAsString().equals(createdAccountSid));
+        // account should be assigned a default org
+        assertTrue(getAccountResponse.get("organization_sid").getAsString().equals(DEFAULT_ORG_SID));        
         assertEquals(createdAuthToken, getAccountResponse.get("auth_token").getAsString());
         assertTrue(createAccountResponse.get("sid").getAsString().equals(createdAccountSid));
         assertEquals(createdAuthToken, createAccountResponse.get("auth_token").getAsString());
