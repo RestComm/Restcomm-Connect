@@ -160,6 +160,7 @@ public class AccountsEndpointTest extends EndpointTest {
         JsonObject getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
                 adminAuthToken, createdUsernanme);
         logger.info("createAccountResponse: "+createAccountResponse);
+        logger.info("getAccountResponse: "+getAccountResponse);
         assertTrue(getAccountResponse.get("sid").getAsString().equals(createdAccountSid));
         assertEquals(createdAuthToken, getAccountResponse.get("auth_token").getAsString());
         assertTrue(createAccountResponse.get("sid").getAsString().equals(createdAccountSid));

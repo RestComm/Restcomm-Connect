@@ -120,12 +120,14 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
 
     private void writeOrganizationSid(final Account account, final HierarchicalStreamWriter writer) {
         writer.startNode("OrganizationSid");
-        writer.setValue(account.getOrganizationSid().toString());
+    	String organizationSid = account.getOrganizationSid() == null ? "" : account.getOrganizationSid().toString();
+        writer.setValue(organizationSid);
         writer.endNode();
     }
 
     private void writeOrganizationSid(final Account account, final JsonObject object) {
-        object.addProperty("organization_sid", account.getOrganizationSid().toString());
+    	String organizationSid = account.getOrganizationSid() == null ? "" : account.getOrganizationSid().toString();
+        object.addProperty("organization_sid", organizationSid);
     }
 
     private void writeAvailablePhoneNumbers(final Account account, final HierarchicalStreamWriter writer) {
