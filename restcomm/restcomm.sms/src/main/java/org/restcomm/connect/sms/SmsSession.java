@@ -148,10 +148,10 @@ public final class SmsSession extends UntypedActor {
             final SmppInboundMessageEntity request = (SmppInboundMessageEntity) message;
 
             final SmsSessionRequest.Encoding encoding;
-            if(request.getSmppEncoding().equals(CharsetUtil.CHARSET_GSM)) {
-                encoding = SmsSessionRequest.Encoding.GSM;
-            } else {
+            if(request.getSmppEncoding().equals(CharsetUtil.CHARSET_UCS_2) {
                 encoding = SmsSessionRequest.Encoding.UCS_2;
+            } else {
+                encoding = SmsSessionRequest.Encoding.GSM;
             }
             // Store the last sms event.
             last = new SmsSessionRequest (request.getSmppFrom(), request.getSmppTo(), request.getSmppContent(), encoding, null);
