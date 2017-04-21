@@ -11,6 +11,8 @@ SYSLOGS_DIR=/var/log
 BASEDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 RESTCOMM_LOG_BASE=$(cd $BASEDIR/../../ && pwd)
 RESTCOMM_CORE_LOG=$RESTCOMM_LOG_BASE/standalone/log
+RVD_LOG=$RESTCOMM_LOG_BASE/standalone/log/rvd
+RVD_LOG_FILE=rvd.log
 MMS_LOGS=$RESTCOMM_LOG_BASE/mediaserver/log
 LOGS_DIR_ZIP=$BASEDIR/$DIR_NAME
 
@@ -28,6 +30,11 @@ restcomm_logs_bytime () {
         FROM=`grep -n "^${arr[0]}"  $RESTCOMM_CORE_LOG/$RESTCOMM_CORE_FILE |cut -f1 -d: | tail -1`
         TO=`grep -n "^${arr[1]}"  $RESTCOMM_CORE_LOG/$RESTCOMM_CORE_FILE |cut -f1 -d: | tail -1`
         awk 'NR=="'"$FROM"'", NR=="'"$TO"'"; NR=="'"$TO"'" {print; exit}' $RESTCOMM_CORE_LOG/$RESTCOMM_CORE_FILE > $LOGS_DIR_ZIP/RestCommlinesTime.log
+    fi
+}
+rvd_logs () {
+    if [ -f $RVD_LOG/$RVD_LOG_FILE ]; then
+        cp $RVD_LOG/$RVD_LOG_FILE $LOGS_DIR_ZIP/rvd_server.log
     fi
 }
 mediaserver_logs () {
@@ -177,6 +184,7 @@ fi
 if [ -d "$LOGS_DIR_ZIP" ]; then
     getPID
     restcomm_logs
+    rvd_logs
     mediaserver_logs
     system_logs
     JVM_perfo_stats

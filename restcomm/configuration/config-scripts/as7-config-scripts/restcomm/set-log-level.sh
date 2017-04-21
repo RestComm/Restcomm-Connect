@@ -66,6 +66,17 @@ for compt in $arr
             restcomm)
                 COMPONENT=org.restcomm.connect
                 changelog $COMPONENT $2
+                # update RVD's logging level too. TODO do this separately on 'rvd)' when docker scripts are updated too
+                COMPONENT=org.restcomm.connect.rvd.LOCAL
+                changelog $COMPONENT $2
+                COMPONENT=org.restcomm.connect.rvd.GLOBAL
+                changelog $COMPONENT $2
+                ;;
+             rvd)
+                COMPONENT=org.restcomm.connect.rvd.LOCAL
+                changelog $COMPONENT $2
+                COMPONENT=org.restcomm.connect.rvd.GLOBAL
+                changelog $COMPONENT $2
                 ;;
              root)
                  COMPONENT=ROOT

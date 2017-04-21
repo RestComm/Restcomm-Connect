@@ -39,6 +39,15 @@ public interface UsageDao {
 
   List<Usage> getUsageAllTime(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate);
 
+  List<Usage> getUsage(final Sid accountSid, String uri);
+
+  List<Usage> getUsageDaily(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate, String uri);
+
+  List<Usage> getUsageMonthly(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate, String uri);
+
+  List<Usage> getUsageYearly(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate, String uri);
+
+  List<Usage> getUsageAllTime(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate, String uri);
   /*
   List<Usage> getUsageToday(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate);
 
