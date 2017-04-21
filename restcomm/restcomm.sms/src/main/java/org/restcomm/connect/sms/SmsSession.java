@@ -148,7 +148,7 @@ public final class SmsSession extends UntypedActor {
             final SmppInboundMessageEntity request = (SmppInboundMessageEntity) message;
 
             final SmsSessionRequest.Encoding encoding;
-            if(request.getSmppEncoding().equals(CharsetUtil.CHARSET_UCS_2) {
+            if(request.getSmppEncoding().equals(CharsetUtil.CHARSET_UCS_2)) {
                 encoding = SmsSessionRequest.Encoding.UCS_2;
             } else {
                 encoding = SmsSessionRequest.Encoding.GSM;
