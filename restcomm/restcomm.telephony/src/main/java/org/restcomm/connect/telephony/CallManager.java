@@ -469,8 +469,9 @@ public final class CallManager extends UntypedActor {
             logger.info("proxyIp: " + proxyIp);
         }
 
+        Client toClient = clients.getClient(toUser);
+
         if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have little control over
-            Client toClient = clients.getClient(toUser);
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to the b2bua
                 if(logger.isInfoEnabled()) {
                     logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "+ toClient);
@@ -553,6 +554,11 @@ public final class CallManager extends UntypedActor {
             }
         } else {
             // Client is null, check if this call is for a registered DID (application)
+            //        //First try to check if the call is for a client
+            if ( toClient != null) {
+                proxyDialClientThroughMediaServer(request , toClient, toClient.getLogin());
+                return;
+            }
             if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
                 // This is a call to a registered DID (application)
                 return;
@@ -656,6 +662,29 @@ public final class CallManager extends UntypedActor {
 
     private void proxyThroughMediaServer(final SipServletRequest request, final Client client, final String destNumber) {
         String rcml = "<Response><Dial>"+destNumber+"</Dial></Response>";
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        builder.setConfiguration(configuration);
+        builder.setStorage(storage);
+        builder.setCallManager(self());
+        builder.setConferenceManager(conferences);
+        builder.setBridgeManager(bridges);
+        builder.setSmsService(sms);
+        builder.setAccount(client.getAccountSid());
+        builder.setVersion(client.getApiVersion());
+        final Account account = storage.getAccountsDao().getAccount(client.getAccountSid());
+        builder.setEmailAddress(account.getEmailAddress());
+        builder.setRcml(rcml);
+        builder.setMonitoring(monitoring);
+        final ActorRef interpreter = builder.build();
+        final ActorRef call = call(null);
+        final SipApplicationSession application = request.getApplicationSession();
+        application.setAttribute(Call.class.getName(), call);
+        call.tell(request, self());
+        interpreter.tell(new StartInterpreter(call), self());
+    }
+
+    private void proxyDialClientThroughMediaServer(final SipServletRequest request, final Client client, final String destNumber) {
+        String rcml = "<Response><Dial><Client>"+destNumber+"</Client></Dial></Response>";
         final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
