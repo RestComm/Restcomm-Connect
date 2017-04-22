@@ -2122,7 +2122,8 @@ public final class Call extends UntypedActor {
             }
         }
         if (sessionState == SipSession.State.INITIAL.name() || (sessionState == SipSession.State.EARLY.name() && isInbound())) {
-            int sipResponse = (enable200OkDelay && hangup.getSipResponse() != null) ? hangup.getSipResponse() : Response.SERVER_INTERNAL_ERROR;
+            // github issue#2013 fix
+            int sipResponse = hangup.getSipResponse() != null ? hangup.getSipResponse() : Response.SERVER_INTERNAL_ERROR;
             final SipServletResponse resp = invite.createResponse(sipResponse);
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
                 resp.addHeader("Reason",hangup.getMessage());
