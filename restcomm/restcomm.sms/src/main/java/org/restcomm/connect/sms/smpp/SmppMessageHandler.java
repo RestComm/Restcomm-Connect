@@ -27,6 +27,17 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.extension.api.ExtensionRequest;
+import org.restcomm.connect.extension.api.ExtensionResponse;
+import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.MessageExtensionResponse;
+import org.restcomm.connect.extension.api.NodeExtensionResponse;
+import org.restcomm.connect.extension.api.RestcommExtensionException;
+import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
+import org.restcomm.connect.extension.api.SessionExtensionResponse;
+import org.restcomm.connect.extension.api.SystemExtensionResponse;
+import org.restcomm.connect.extension.api.TransactionExtensionResponse;
+import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.sms.SmsSession;
@@ -53,6 +64,8 @@ public class SmppMessageHandler extends UntypedActor  {
     private final Configuration configuration;
     private final SipFactory sipFactory;
     private final ActorRef monitoringService;
+    //List of extensions for SmsService
+    List<RestcommExtensionGeneric> extensions;
 
     public SmppMessageHandler(final ServletContext servletContext) {
         this.servletContext = servletContext;
@@ -60,6 +73,11 @@ public class SmppMessageHandler extends UntypedActor  {
         this.configuration = (Configuration) servletContext.getAttribute(Configuration.class.getName());
         this.sipFactory = (SipFactory) servletContext.getAttribute(SipFactory.class.getName());
         this.monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
+        //FIXME:SmsService or SmppMessageHandler
+        extensions = ExtensionController.getInstance().getExtensions(ExtensionType.SmsService);
+        if (logger.isInfoEnabled()) {
+            logger.info("SmsService extensions: "+(extensions != null ? extensions.size() : "0"));
+        }
     }
 
     @Override
@@ -79,15 +97,74 @@ public class SmppMessageHandler extends UntypedActor  {
             outbound((SmppOutboundMessageEntity) message);
         } else if (message instanceof CreateSmsSession) {
             //Extension
-            Configuration cfg = this.configuration;
-            final ActorRef session = session(cfg);
-            final SmsServiceResponse<ActorRef> response = new  SmsServiceResponse<ActorRef>(session);
-            sender.tell(response, self);
+            ExtensionRequest er = new ExtensionRequest();
+            er.setObject(message);
+            er.setConfiguration(this.configuration);
+            ExtensionResponse extensionResponse = executePreOutboundAction(er);
+            if (extensionResponse.isAllowed()) {
+                Object obj = handleExtensionResponse(extensionResponse);
+                //Configuration cfg = this.configuration;
+                final ActorRef session = session((Configuration)obj);
+                final SmsServiceResponse<ActorRef> response = new  SmsServiceResponse<ActorRef>(session);
+                sender.tell(response, self);
+            } else {
+                final SmsServiceResponse<ActorRef> response = new SmsServiceResponse(new RestcommExtensionException("Now allowed to create SmsSession"));
+                sender.tell(response, self());
+            }
+            executePostOutboundAction(message);
         }else if (message instanceof DestroySmsSession) {
             final DestroySmsSession destroySmsSession = (DestroySmsSession) message;
             final ActorRef session = destroySmsSession.session();
             context.stop(session);
         }
+    }
+
+    private Object handleExtensionResponse(ExtensionResponse response) {
+        // TODO Auto-generated method stub
+        Object object = this.configuration;//new Object();
+        if(response instanceof SystemExtensionResponse){
+            //TODO:return systemwide level customization behaviour
+        }
+        if(response instanceof NodeExtensionResponse){
+            //TODO:return node level customization behaviour
+        }
+        if(response instanceof SessionExtensionResponse){
+            SessionExtensionResponse ser = (SessionExtensionResponse) response;
+            Configuration config = ser.getConfiguration();
+
+            object = config;
+        }
+        if(response instanceof TransactionExtensionResponse){
+            //TODO:return transaction level customization behaviour
+        }
+        if(response instanceof MessageExtensionResponse){
+            //TODO:return message level customization behaviour
+        }
+        return object;
+    }
+
+    private ExtensionResponse executePreOutboundAction(final Object er) {
+        //TODO: should allow multiple types of responses perhaps
+        ExtensionResponse response = new ExtensionResponse();
+        if (extensions != null && extensions.size() > 0) {
+
+            for (RestcommExtensionGeneric extension : extensions) {
+                logger.info( "isEnabled="+extension.isEnabled());
+                if (extension.isEnabled()) {
+                    response = extension.preOutboundAction(er);
+                    //fail fast
+                    if (!response.isAllowed()){
+                        break;
+                    }
+                }
+            }
+        }
+        //return object
+        return response;
+    }
+
+    private boolean executePostOutboundAction(final Object message) {
+        return true;
     }
 
     private void inbound(final SmppInboundMessageEntity request ) throws IOException {
