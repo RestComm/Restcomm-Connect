@@ -84,7 +84,7 @@ public abstract class UsageEndpoint extends SecuredEndpoint {
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(Usage.class, converter);
     builder.setPrettyPrinting();
-    gson = builder.create();
+    gson = builder.disableHtmlEscaping().create();
     xstream = new XStream();
     xstream.alias("RestcommResponse", RestCommResponse.class);
     xstream.registerConverter(converter);
@@ -98,6 +98,8 @@ public abstract class UsageEndpoint extends SecuredEndpoint {
     String categoryStr = info.getQueryParameters().getFirst("Category");
     String startDateStr = info.getQueryParameters().getFirst("StartDate");
     String endDateStr = info.getQueryParameters().getFirst("EndDate");
+    //pass in reqUri without query params
+    String reqUri = request.getServletPath() + "/" + info.getPath(false);
 
     Usage.Category category = categoryStr != null ? Usage.Category.valueOf(categoryStr) : null;
     DateTime startDate = new DateTime(0).withTimeAtStartOfDay();
@@ -121,30 +123,30 @@ public abstract class UsageEndpoint extends SecuredEndpoint {
 
     final List<Usage> usage;
     if (subresource.toLowerCase().equals("daily")) {
-      usage = dao.getUsageDaily(new Sid(accountSid), category, startDate, endDate);
+      usage = dao.getUsageDaily(new Sid(accountSid), category, startDate, endDate, reqUri);
     }
     else if (subresource.toLowerCase().equals("monthly")) {
-      usage = dao.getUsageMonthly(new Sid(accountSid), category, startDate, endDate);
+      usage = dao.getUsageMonthly(new Sid(accountSid), category, startDate, endDate, reqUri);
     }
     else if (subresource.toLowerCase().equals("yearly")) {
-      usage = dao.getUsageYearly(new Sid(accountSid), category, startDate, endDate);
+      usage = dao.getUsageYearly(new Sid(accountSid), category, startDate, endDate, reqUri);
     }
     else if (subresource.toLowerCase().equals("alltime")) {
-      usage = dao.getUsageAllTime(new Sid(accountSid), category, startDate, endDate);
+      usage = dao.getUsageAllTime(new Sid(accountSid), category, startDate, endDate, reqUri);
     } else if (subresource.toLowerCase().equals("today")) {
-      usage = dao.getUsageAllTime(new Sid(accountSid), category, DateTime.now(), DateTime.now());
+      usage = dao.getUsageAllTime(new Sid(accountSid), category, DateTime.now(), DateTime.now(), reqUri);
     }
     else if (subresource.toLowerCase().equals("yesterday")) {
-      usage = dao.getUsageAllTime(new Sid(accountSid), category, DateTime.now().minusDays(1), DateTime.now().minusDays(1));
+      usage = dao.getUsageAllTime(new Sid(accountSid), category, DateTime.now().minusDays(1), DateTime.now().minusDays(1), reqUri);
     }
     else if (subresource.toLowerCase().equals("thismonth")) {
-      usage = dao.getUsageAllTime(new Sid(accountSid), category, DateTime.now().dayOfMonth().withMinimumValue(), DateTime.now().dayOfMonth().withMaximumValue());
+      usage = dao.getUsageAllTime(new Sid(accountSid), category, DateTime.now().dayOfMonth().withMinimumValue(), DateTime.now().dayOfMonth().withMaximumValue(), reqUri);
     }
     else if (subresource.toLowerCase().equals("lastmonth")) {
-      usage = dao.getUsageAllTime(new Sid(accountSid), category, DateTime.now().minusMonths(1).dayOfMonth().withMinimumValue(), DateTime.now().minusMonths(1).dayOfMonth().withMaximumValue());
+      usage = dao.getUsageAllTime(new Sid(accountSid), category, DateTime.now().minusMonths(1).dayOfMonth().withMinimumValue(), DateTime.now().minusMonths(1).dayOfMonth().withMaximumValue(), reqUri);
     }
     else {
-      usage = dao.getUsageAllTime(new Sid(accountSid), category, startDate, endDate);
+      usage = dao.getUsageAllTime(new Sid(accountSid), category, startDate, endDate, reqUri);
     }
 
     if (usage == null) {

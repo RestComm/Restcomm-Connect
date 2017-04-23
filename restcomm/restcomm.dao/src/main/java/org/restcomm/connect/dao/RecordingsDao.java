@@ -47,4 +47,6 @@ public interface RecordingsDao {
     // Support for filtering of recording list result, Issue 1395
     Integer getTotalRecording(RecordingFilter filter);
     List<Recording> getRecordings(RecordingFilter filter);
+
+    void updateRecording(Recording recording);
 }

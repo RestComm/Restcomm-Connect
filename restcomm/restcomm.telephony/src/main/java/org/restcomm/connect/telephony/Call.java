@@ -20,6 +20,7 @@
 package org.restcomm.connect.telephony;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
@@ -93,7 +94,6 @@ import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.telephony.api.RemoveParticipant;
-import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
 
 import javax.sdp.SdpException;
@@ -129,8 +129,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -263,7 +261,7 @@ public final class Call extends UntypedActor {
 
     private HttpRequestDescriptor requestCallback;
     ActorRef downloader = null;
-    ActorRef supervisor = null;
+    ActorSystem system = null;
     private URI statusCallback;
     private String statusCallbackMethod;
     private List<String> statusCallbackEvent;
@@ -282,11 +280,11 @@ public final class Call extends UntypedActor {
         }
     };
 
-    public Call(final ActorRef supervisor, final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration,
+    public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration,
                 final URI statusCallback, final String statusCallbackMethod, final List<String> statusCallbackEvent) {
         super();
         final ActorRef source = self();
-        this.supervisor = supervisor;
+        this.system = context().system();
         this.statusCallback = statusCallback;
         this.statusCallbackMethod = statusCallbackMethod;
         this.statusCallbackEvent = statusCallbackEvent;
@@ -423,13 +421,7 @@ public final class Call extends UntypedActor {
                 return new Downloader();
             }
         });
-        ActorRef downloader = null;
-        try {
-            downloader = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return downloader;
+        return system.actorOf(props);
     }
 
     private boolean is(State state) {
