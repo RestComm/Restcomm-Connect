@@ -2959,6 +2959,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (callRecord != null) {
                 final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                 callRecord = records.getCallDetailRecord(callRecord.getSid());
+                if (CallStateChanged.State.FAILED.equals(callState)) {
+                    callState = CallStateChanged.State.COMPLETED;
+                }
                 callRecord = callRecord.setStatus(callState.toString());
                 final DateTime end = DateTime.now();
                 callRecord = callRecord.setEndTime(end);
