@@ -27,6 +27,7 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
 public final class PlayCollect {
@@ -97,7 +98,8 @@ public final class PlayCollect {
             for (int index = 0; index < initialPrompts.size(); index++) {
                 buffer.append(initialPrompts.get(index));
                 if (index < initialPrompts.size() - 1) {
-                    buffer.append(";");
+                    //https://github.com/RestComm/Restcomm-Connect/issues/1988
+                    buffer.append(",");
                 }
             }
         }
