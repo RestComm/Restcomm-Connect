@@ -2,8 +2,8 @@ package org.restcomm.connect.http;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
-import akka.actor.StopChild;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.util.Timeout;
@@ -15,7 +15,6 @@ import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.cache.DiskCacheFactory;
 import org.restcomm.connect.commons.cache.DiskCacheRequest;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.faulttolerance.RestcommSupervisor;
 import org.restcomm.connect.dao.entities.Announcement;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.AnnouncementConverter;
@@ -59,7 +58,7 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
     protected Gson gson;
     protected XStream xstream;
     private URI uri;
-    private ActorRef supervisor;
+    private ActorSystem system;
 
     public AnnouncementsEndpoint() {
         super();
@@ -67,7 +66,7 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
 
     @PostConstruct
     public void init() {
-        supervisor = (ActorRef) context.getAttribute(RestcommSupervisor.class.getName());
+        system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         Configuration ttsConfiguration = configuration.subset("speech-synthesizer");
         runtime = configuration.subset("runtime-settings");
@@ -167,13 +166,7 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
                 return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(configuration);
             }
         });
-        ActorRef tts = null;
-        try {
-            tts = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return tts;
+        return system.actorOf(props);
     }
 
     private ActorRef cache(final String path, final String uri) {
@@ -185,13 +178,7 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
                 return new DiskCacheFactory(configuration).getDiskCache(path, uri);
             }
         });
-        ActorRef cache = null;
-        try {
-            cache = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return cache;
+        return system.actorOf(props);
     }
 
     @PreDestroy
@@ -199,7 +186,7 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
         if(logger.isInfoEnabled()){
             logger.info("Stopping actors before endpoint destroy");
         }
-        supervisor.tell(new StopChild(cache), null);
-        supervisor.tell(new StopChild(synthesizer), null);
+        system.stop(cache);
+        system.stop(synthesizer);
     }
 }

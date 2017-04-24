@@ -23,14 +23,17 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+
 import org.apache.commons.configuration.Configuration;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+
 import org.joda.time.DateTime;
 import org.restcomm.connect.dao.entities.Usage;
 
 import java.lang.reflect.Type;
+import java.net.URI;
 
 /**
  * @author brainslog@gmail.com (Alexandre Mendonca)
@@ -171,6 +174,10 @@ public final class UsageConverter extends AbstractConverter implements JsonSeria
 
   private void writePriceUnit(final String priceUnit, final JsonObject object) {
     object.addProperty("price_unit", priceUnit);
+  }
+
+  protected void writeUri(final URI uri, final JsonObject object) {
+      object.addProperty("uri", uri.toString());
   }
 
   @Override
