@@ -22,6 +22,7 @@
 package org.restcomm.connect.telephony;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -32,12 +33,6 @@ import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.telephony.api.BridgeManagerResponse;
 import org.restcomm.connect.telephony.api.BridgeStateChanged;
 import org.restcomm.connect.telephony.api.CreateBridge;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
-
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -48,12 +43,12 @@ public class BridgeManager extends UntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     private final MediaServerControllerFactory factory;
-    private final ActorRef supervisor;
+    private final ActorSystem system;
 
-    public BridgeManager(final ActorRef supervisor, final MediaServerControllerFactory factory) {
+    public BridgeManager(final MediaServerControllerFactory factory) {
         super();
         this.factory = factory;
-        this.supervisor = supervisor;
+        this.system = context().system();
     }
 
     private ActorRef createBridge() {
@@ -65,13 +60,7 @@ public class BridgeManager extends UntypedActor {
                 return new Bridge(factory.provideBridgeController());
             }
         });
-        ActorRef bridge = null;
-        try {
-            bridge = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return bridge;
+        return system.actorOf(props);
     }
 
     /*

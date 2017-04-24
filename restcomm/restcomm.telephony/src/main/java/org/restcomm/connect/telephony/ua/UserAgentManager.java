@@ -178,7 +178,12 @@ public final class UserAgentManager extends UntypedActor {
                 //Instead of removing registrations we ping the client one last time to ensure it was not a temporary loss
                 // of connectivity. We don't need to remove the registration here. It will be handled only if the OPTIONS ping
                 // times out and the related calls from the client cleaned up as well
-                ping(result.getLocation());
+                try{
+                    ping(result.getLocation());
+                }catch(ServletParseException spe){
+                    logger.warning("Bad Parameters: "+result.getLocation());
+                    registrations.removeRegistration(result);
+                }
                 //registrations.removeRegistration(result);
                 //monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
             } else {
@@ -192,7 +197,12 @@ public final class UserAgentManager extends UntypedActor {
                     // Instead of removing registrations we ping the client one last time to ensure it was not a temporary loss
                     // of connectivity. We don't need to remove the registration here. It will be handled only if the OPTIONS ping
                     // times out and the related calls from the client cleaned up as well
-                    ping(result.getLocation());
+                    try{
+                        ping(result.getLocation());
+                    }catch(ServletParseException spe){
+                        logger.warning("Bad Parameters: "+result.getLocation());
+                        registrations.removeRegistration(result);
+                    }
                     // registrations.removeRegistration(result);
                     // monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
                 }
@@ -238,7 +248,12 @@ public final class UserAgentManager extends UntypedActor {
             }
             for (final Registration result : results) {
                 final String to = result.getLocation();
-                ping(to);
+                try{
+                    ping(to);
+                }catch(ServletParseException spe){
+                    logger.warning("Bad Parameters: "+to);
+                    registrations.removeRegistration(result);
+                }
             }
         } else {
             if (logger.isDebugEnabled()) {
@@ -311,8 +326,8 @@ public final class UserAgentManager extends UntypedActor {
 
     private void removeRegistration(final SipServletMessage sipServletMessage, boolean locationInContact) throws ServletParseException{
         String user = ((SipURI)sipServletMessage.getTo().getURI()).getUser();
-        String location = locationInContact ? ((SipURI)sipServletMessage.getAddressHeader("Contact").getURI()).toString() :
-            ((SipURI)sipServletMessage.getTo().getURI()).toString();
+        SipURI location = locationInContact ? ((SipURI)sipServletMessage.getAddressHeader("Contact").getURI()) :
+            ((SipURI)sipServletMessage.getTo().getURI());
         if(logger.isDebugEnabled()) {
             logger.debug("Error response for the OPTIONS to: "+location+" will remove registration");
         }
@@ -335,18 +350,21 @@ public final class UserAgentManager extends UntypedActor {
                             " reg.getLocation(): "+reg.getLocation() + ", reg.getDateExpires(): " + reg.getDateExpires()
                             + ", reg.getDateUpdated(): " + reg.getDateUpdated()
                             + ", location: " + location
-                            + ", reg.getLocation().contains(location): " + reg.getLocation().contains(location));
+                            + ", reg.getLocation().contains(location): " + reg.getLocation().contains(location.toString()));
                     if (reg.getDateExpires().isBeforeNow() || reg.getDateExpires().isEqualNow()) {
                         logger.debug("Registration: "+ reg.getAddressOfRecord()+" expired");
                     }
                 }
 
+                String locationStored = getLocationWithoutParameters(regLocation);
+                String locationToTest = getLocationWithoutParameters(location);
+
+
                 // We clean up only if the location is similar to the registration location to avoid cleaning up all registration lcoation for the AOR
-                // and only if the OPTIONS was not replied to in the pingInterval * 3 since the last REGISTER received to avoid cleaning up if
                 // We keep getting REGISTER and allow for some leeway in case of connectivity issues from restcomm clients.
 //                if (regLocation != null && optionsTimeout && reg.getLocation().contains(location) &&
-                if (regLocation != null && reg.getLocation().contains(location) &&
-                        (reg.getAddressOfRecord().equalsIgnoreCase(regLocation.toString()) || reg.getLocation().equalsIgnoreCase(regLocation.toString()))) {
+                if (locationStored != null && locationStored.equalsIgnoreCase(locationToTest) ) {
+//                    && (reg.getAddressOfRecord().equalsIgnoreCase(regLocation.toString()) || reg.getLocation().equalsIgnoreCase(regLocation.toString()))) {
 
                     if(logger.isDebugEnabled()) {
                         logger.debug("Registration: " + reg.getLocation() + " failed to response to OPTIONS and will be removed");
@@ -357,12 +375,18 @@ public final class UserAgentManager extends UntypedActor {
                     monitoringService.tell(new GetCall(reg.getLocation()), self());
                 } else {
                     if (logger.isDebugEnabled()) {
-                        String msg = String.format("Registration DID NOT removed. SIP Message location: %s, registration location (in DB) %s.", location, reg.getLocation());
+                        String msg = String.format("Registration DID NOT removed. SIP Message location: %s, registration location (in DB) %s.", locationToTest, reg.getLocation());
                         logger.debug(msg);
                     }
                 }
             }
         }
+    }
+
+    private String getLocationWithoutParameters(final SipURI location) {
+        String result = null;
+        result = "sip:"+location.getUser()+"@"+location.getHost()+":"+location.getPort();
+        return result;
     }
 
     private void patch(final SipURI uri, final String address, final int port) throws UnknownHostException {
@@ -490,6 +514,10 @@ public final class UserAgentManager extends UntypedActor {
         final int port = request.getInitialRemotePort();
 
         String transport = (uri.getTransportParam()==null?request.getParameter("transport"):uri.getTransportParam()); //Issue #935, take transport of initial request-uri if contact-uri has no transport parameter
+        //If RURI is secure (SIPS) then pick TLS for transport - https://github.com/RestComm/Restcomm-Connect/issues/1956
+        if (((SipURI)request.getRequestURI()).isSecure()) {
+            transport = "tls";
+        }
         if (transport == null && !request.getInitialTransport().equalsIgnoreCase("udp")) {
             //Issue1068, if Contact header or RURI doesn't specify transport, check InitialTransport from
             transport = request.getInitialTransport();
@@ -513,7 +541,12 @@ public final class UserAgentManager extends UntypedActor {
         }
 
         final StringBuffer buffer = new StringBuffer();
-        buffer.append("sip:").append(user).append("@").append(uri.getHost()).append(":").append(uri.getPort());
+        if (((SipURI)request.getRequestURI()).isSecure()) {
+            buffer.append("sips:");
+        } else {
+            buffer.append("sip:");
+        }
+        buffer.append(normalize(user)).append("@").append(uri.getHost()).append(":").append(uri.getPort());
         // https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than
         if (transport != null) {
             buffer.append(";transport=").append(transport);
@@ -716,7 +749,7 @@ public final class UserAgentManager extends UntypedActor {
             final Sid sid = Sid.generate(Sid.Type.REGISTRATION);
             final DateTime now = DateTime.now();
             final StringBuffer buffer = new StringBuffer();
-            buffer.append("sip:").append(user).append("@").append(uri.getHost()).append(":").append(uri.getPort());
+            buffer.append("sip:").append(normalize(user)).append("@").append(uri.getHost()).append(":").append(uri.getPort());
             // https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than
             if (transport != null) {
                 buffer.append(";transport=").append(transport);
@@ -761,6 +794,21 @@ public final class UserAgentManager extends UntypedActor {
         if(logger.isDebugEnabled()) {
             logger.debug("REGISTER IMS Response sent: "+incomingLegResposne);
         }
+    }
+
+    /**
+     * normalize: normalize clients that contain @ sign in user e.g. maria@xyz.com
+     * @param user
+     * @return
+     */
+    private String normalize(String user) {
+        if(user != null){
+            if(user.contains("@"))
+                user = user.replaceAll("@", "%40");
+        }
+        if(logger.isDebugEnabled())
+            logger.debug("Normalized User = " + user);
+        return user;
     }
 
     private void proxyRequestToIms(SipServletRequest request) throws ServletParseException, IOException {

@@ -20,29 +20,15 @@
 
 package org.restcomm.connect.ussd.interpreter;
 
-import static akka.pattern.Patterns.ask;
-import static org.restcomm.connect.interpreter.rcml.Verbs.ussdCollect;
-import static org.restcomm.connect.interpreter.rcml.Verbs.ussdLanguage;
-import static org.restcomm.connect.interpreter.rcml.Verbs.ussdMessage;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Currency;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
-
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-
+import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -87,16 +73,25 @@ import org.restcomm.connect.ussd.commons.UssdInfoRequest;
 import org.restcomm.connect.ussd.commons.UssdMessageType;
 import org.restcomm.connect.ussd.commons.UssdRestcommResponse;
 
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.regex.Pattern;
+
+import static org.restcomm.connect.interpreter.rcml.Verbs.ussdCollect;
+import static org.restcomm.connect.interpreter.rcml.Verbs.ussdLanguage;
+import static org.restcomm.connect.interpreter.rcml.Verbs.ussdMessage;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -106,7 +101,7 @@ public class UssdInterpreter extends UntypedActor {
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final ActorRef supervisor;
+    private final ActorSystem system;
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
@@ -176,13 +171,13 @@ public class UssdInterpreter extends UntypedActor {
     private final State ready;
     private final State notFound;
 
-    public UssdInterpreter(final ActorRef supervisor, final Configuration configuration, final Sid account, final Sid phone, final String version,
-            final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
-            final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
-            final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage) {
+    public UssdInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
+                           final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
+                           final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
+                           final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage) {
         super();
         final ActorRef source = self();
-        this.supervisor = supervisor;
+        this.system = context().system();
 
         uninitialized = new State("uninitialized", null, null);
         observeCall = new State("observe call", new ObserveCall(source), null);
@@ -302,13 +297,7 @@ public class UssdInterpreter extends UntypedActor {
                 return new EmailService(configuration);
             }
         });
-        ActorRef mailer = null;
-        try {
-            mailer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return mailer;
+        return system.actorOf(props);
     }
 
     ActorRef downloader() {
@@ -319,13 +308,7 @@ public class UssdInterpreter extends UntypedActor {
                 return new Downloader();
             }
         });
-        ActorRef downloader = null;
-        try {
-            downloader = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return downloader;
+        return system.actorOf(props);
     }
 
     ActorRef parser(final String xml) {
@@ -337,70 +320,76 @@ public class UssdInterpreter extends UntypedActor {
                 return new Parser(xml, self());
             }
         });
-        ActorRef parser = null;
-        try {
-            parser = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return parser;
+        return system.actorOf(props);
     }
 
     void invalidVerb(final Tag verb) {
         final ActorRef self = self();
         // Get the next verb.
-        final GetNextVerb next = GetNextVerb.instance();
+        final GetNextVerb next = new GetNextVerb();
         parser.tell(next, self);
     }
 
     List<NameValuePair> parameters() {
-        final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-        final String callSid = callInfo.sid().toString();
-        parameters.add(new BasicNameValuePair("CallSid", callSid));
-        final String accountSid = accountId.toString();
-        parameters.add(new BasicNameValuePair("AccountSid", accountSid));
-        final String from = (callInfo.from());
-        parameters.add(new BasicNameValuePair("From", from));
-        final String to = (callInfo.to());
-        parameters.add(new BasicNameValuePair("To", to));
-        final String state = callState.toString();
-        parameters.add(new BasicNameValuePair("CallStatus", state));
-        parameters.add(new BasicNameValuePair("ApiVersion", version));
-        final String direction = callInfo.direction();
-        parameters.add(new BasicNameValuePair("Direction", direction));
-        final String callerName = callInfo.fromName();
-        parameters.add(new BasicNameValuePair("CallerName", callerName));
-        final String forwardedFrom = callInfo.forwardedFrom();
-        parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
-        // logger.info("Type " + callInfo.type());
-        if (CreateCall.Type.SIP == callInfo.type()) {
-            // Adding SIP OUT Headers and SipCallId for
-            // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
-            SipServletResponse lastResponse = callInfo.lastResponse();
-            // logger.info("lastResponse " + lastResponse);
-            if (lastResponse != null) {
-                final int statusCode = lastResponse.getStatus();
-                final String method = lastResponse.getMethod();
-                // See https://www.twilio.com/docs/sip/receiving-sip-headers
-                // Headers on the final SIP response message (any 4xx or 5xx message or the final BYE/200) are posted to the
-                // Dial action URL.
-                if ((statusCode >= 400 && "INVITE".equalsIgnoreCase(method))
-                        || (statusCode >= 200 && statusCode < 300 && "BYE".equalsIgnoreCase(method))) {
-                    final String sipCallId = lastResponse.getCallId();
-                    parameters.add(new BasicNameValuePair("DialSipCallId", sipCallId));
-                    parameters.add(new BasicNameValuePair("DialSipResponseCode", "" + statusCode));
-                    Iterator<String> headerIt = lastResponse.getHeaderNames();
-                    while (headerIt.hasNext()) {
-                        String headerName = headerIt.next();
-                        if (headerName.startsWith("X-")) {
-                            parameters.add(new BasicNameValuePair("DialSipHeader_" + headerName, lastResponse
-                                    .getHeader(headerName)));
+        CallInfo info = null;
+        if (callInfo != null) {
+            info = callInfo;
+        } else if (outboundCallInfo != null){
+            info = outboundCallInfo;
+        }
+        if (info != null) {
+            final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+            final String callSid = info.sid().toString();
+            parameters.add(new BasicNameValuePair("CallSid", callSid));
+            final String accountSid = accountId.toString();
+            parameters.add(new BasicNameValuePair("AccountSid", accountSid));
+            final String from = (info.from());
+            parameters.add(new BasicNameValuePair("From", from));
+            final String to = (info.to());
+            parameters.add(new BasicNameValuePair("To", to));
+            if (callState == null)
+                callState = info.state();
+            final String state = callState.toString();
+            parameters.add(new BasicNameValuePair("CallStatus", state));
+            parameters.add(new BasicNameValuePair("ApiVersion", version));
+            final String direction = info.direction();
+            parameters.add(new BasicNameValuePair("Direction", direction));
+            final String callerName = info.fromName();
+            parameters.add(new BasicNameValuePair("CallerName", callerName));
+            final String forwardedFrom = info.forwardedFrom();
+            parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
+            // logger.info("Type " + callInfo.type());
+            if (CreateCall.Type.SIP == info.type()) {
+                // Adding SIP OUT Headers and SipCallId for
+                // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+                SipServletResponse lastResponse = info.lastResponse();
+                // logger.info("lastResponse " + lastResponse);
+                if (lastResponse != null) {
+                    final int statusCode = lastResponse.getStatus();
+                    final String method = lastResponse.getMethod();
+                    // See https://www.twilio.com/docs/sip/receiving-sip-headers
+                    // Headers on the final SIP response message (any 4xx or 5xx message or the final BYE/200) are posted to the
+                    // Dial action URL.
+                    if ((statusCode >= 400 && "INVITE".equalsIgnoreCase(method))
+                            || (statusCode >= 200 && statusCode < 300 && "BYE".equalsIgnoreCase(method))) {
+                        final String sipCallId = lastResponse.getCallId();
+                        parameters.add(new BasicNameValuePair("DialSipCallId", sipCallId));
+                        parameters.add(new BasicNameValuePair("DialSipResponseCode", "" + statusCode));
+                        Iterator<String> headerIt = lastResponse.getHeaderNames();
+                        while (headerIt.hasNext()) {
+                            String headerName = headerIt.next();
+                            if (headerName.startsWith("X-")) {
+                                parameters.add(new BasicNameValuePair("DialSipHeader_" + headerName, lastResponse
+                                        .getHeader(headerName)));
+                            }
                         }
                     }
                 }
             }
+            return parameters;
+        } else {
+            return null;
         }
-        return parameters;
     }
 
     void sendMail(final Notification notification) {
@@ -513,7 +502,19 @@ public class UssdInterpreter extends UntypedActor {
                 @SuppressWarnings("unchecked")
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
                 // Check from whom is the message (initial call or outbound call) and update info accordingly
-                if (sender == ussdCall) {
+
+                if( response.get().direction().contains("inbound") ){
+                    callInfo = response.get();
+                    ussdCall.tell(new Answer(callInfo.sid()), source);
+                    }
+                else if ("outbound-api".equals(response.get().direction())){
+                         outboundCallInfo = response.get();
+                         fsm.transition(message, downloadingRcml);
+                }else{
+                    logger.debug("direction doesn't match inbound or outbound,  : " + response.get().direction().toString() );
+                }
+
+                /* if (sender == ussdCall) {
                     callInfo = response.get();
                 } else {
                     outboundCallInfo = response.get();
@@ -525,7 +526,7 @@ public class UssdInterpreter extends UntypedActor {
                 } else {
                     fsm.transition(message, downloadingRcml);
                     //                     fsm.transition(message, initializingCall);
-                }
+                }*/
             }
         } else if (DownloaderResponse.class.equals(klass)) {
             final DownloaderResponse response = (DownloaderResponse) message;
@@ -558,7 +559,7 @@ public class UssdInterpreter extends UntypedActor {
             if (ussdLanguage.equals(verb.name())) {
                 if (ussdLanguageTag == null) {
                     ussdLanguageTag = verb;
-                    final GetNextVerb next = GetNextVerb.instance();
+                    final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, source);
                 } else {
                     // We support only one Language element
@@ -567,13 +568,13 @@ public class UssdInterpreter extends UntypedActor {
                 return;
             } else if (ussdMessage.equals(verb.name())) {
                 ussdMessageTags.add(verb);
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
                 return;
             } else if (ussdCollect.equals(verb.name())) {
                 if (ussdCollectTag == null) {
                     ussdCollectTag = verb;
-                    final GetNextVerb next = GetNextVerb.instance();
+                    final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, source);
                 } else {
                     // We support only one Collect element
@@ -631,55 +632,44 @@ public class UssdInterpreter extends UntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-            if(logger.isInfoEnabled()) {
-                logger.info("Downloading RCML");
+            if (callInfo != null) {
+                final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
+                final CallDetailRecord.Builder builder = CallDetailRecord.builder();
+                builder.setSid(callInfo.sid());
+                builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
+                builder.setDateCreated(callInfo.dateCreated());
+                builder.setAccountSid(accountId);
+                builder.setTo(callInfo.to());
+                builder.setCallerName(callInfo.fromName());
+                builder.setFrom(callInfo.from());
+                builder.setForwardedFrom(callInfo.forwardedFrom());
+                builder.setPhoneNumberSid(phoneId);
+                builder.setStatus(callState.toString());
+                final DateTime now = DateTime.now();
+                builder.setStartTime(now);
+                builder.setDirection(callInfo.direction());
+                builder.setApiVersion(version);
+                builder.setPrice(new BigDecimal("0.00"));
+                // TODO implement currency property to be read from Configuration
+                builder.setPriceUnit(Currency.getInstance("USD"));
+                final StringBuilder buffer = new StringBuilder();
+                buffer.append("/").append(version).append("/Accounts/");
+                buffer.append(accountId.toString()).append("/Calls/");
+                buffer.append(callInfo.sid().toString());
+                final URI uri = URI.create(buffer.toString());
+                builder.setUri(uri);
+                builder.setCallPath(ussdCall.path().toString());
+                callRecord = builder.build();
+                records.addCallDetailRecord(callRecord);
             }
-            final Class<?> klass = message.getClass();
-            final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-            if (CallResponse.class.equals(klass)) {
-                final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-                callInfo = response.get();
-                callState = callInfo.state();
-                if (callInfo.direction().equals("inbound")) {
-                    // Create a call detail record for the call.
-                    final CallDetailRecord.Builder builder = CallDetailRecord.builder();
-                    builder.setSid(callInfo.sid());
-                    builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
-                    builder.setDateCreated(callInfo.dateCreated());
-                    builder.setAccountSid(accountId);
-                    builder.setTo(callInfo.to());
-                    builder.setCallerName(callInfo.fromName());
-                    builder.setFrom(callInfo.from());
-                    builder.setForwardedFrom(callInfo.forwardedFrom());
-                    builder.setPhoneNumberSid(phoneId);
-                    builder.setStatus(callState.toString());
-                    final DateTime now = DateTime.now();
-                    builder.setStartTime(now);
-                    builder.setDirection(callInfo.direction());
-                    builder.setApiVersion(version);
-                    builder.setPrice(new BigDecimal("0.00"));
-                    // TODO implement currency property to be read from Configuration
-                    builder.setPriceUnit(Currency.getInstance("USD"));
-                    final StringBuilder buffer = new StringBuilder();
-                    buffer.append("/").append(version).append("/Accounts/");
-                    buffer.append(accountId.toString()).append("/Calls/");
-                    buffer.append(callInfo.sid().toString());
-                    final URI uri = URI.create(buffer.toString());
-                    builder.setUri(uri);
-
-                    builder.setCallPath(ussdCall.path().toString());
-
-                    callRecord = builder.build();
-                    records.addCallDetailRecord(callRecord);
                     // Update the application.
                     callback();
-                }
-            }
             // Ask the downloader to get us the application that will be executed.
             final List<NameValuePair> parameters = parameters();
             request = new HttpRequestDescriptor(url, method, parameters);
             downloader.tell(request, source);
         }
+
     }
 
     private final class DownloadingFallbackRcml extends AbstractAction {
@@ -749,7 +739,7 @@ public class UssdInterpreter extends UntypedActor {
                     return;
                 }
             }
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
         }
     }
@@ -847,7 +837,7 @@ public class UssdInterpreter extends UntypedActor {
                     logger.info("UssdMessage prepared: " + ussdMessage.toString() + " hasCollect: " + hasCollect);
                 }
 
-                if (callInfo.direction().equalsIgnoreCase("inbound")) {
+                if (callInfo != null && callInfo.direction().equalsIgnoreCase("inbound")) {
                     // USSD PULL
                     if (hasCollect) {
                         ussdRestcommResponse.setMessageType(UssdMessageType.unstructuredSSRequest_Request);
@@ -962,7 +952,7 @@ public class UssdInterpreter extends UntypedActor {
                 return;
             }
             // Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             parser.tell(next, self());
         }
     }

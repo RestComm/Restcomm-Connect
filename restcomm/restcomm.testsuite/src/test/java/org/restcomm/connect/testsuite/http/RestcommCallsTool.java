@@ -80,11 +80,11 @@ public class RestcommCallsTool {
         String response = null;
         response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
 //        response = response.replaceAll("\\[", "").replaceAll("]", "").trim();
-        JsonParser parser = new JsonParser();
-
         JsonArray jsonArray = null;
         try {
-            jsonArray = parser.parse(response).getAsJsonArray();
+            JsonParser parser = new JsonParser();
+            JsonObject jsonObject = parser.parse(response).getAsJsonObject();
+            jsonArray = jsonObject.get("recordings").getAsJsonArray();
         } catch (Exception e) {
             logger.info("Exception during getRecordings for url: "+url+" exception: "+e);
             logger.info("Response object: "+response);
@@ -147,12 +147,35 @@ public class RestcommCallsTool {
 
     }
 
+    /**
+     * getCall from same account
+     * 
+     * @param deploymentUrl
+     * @param username
+     * @param authToken
+     * @param sid
+     * @return
+     */
     public JsonObject getCall(String deploymentUrl, String username, String authToken, String sid){
+        return getCall(deploymentUrl, username, authToken, username, sid);
+    }
+
+    /**
+     * getCall from another account's resource
+     * https://github.com/RestComm/Restcomm-Connect/issues/1939
+     * @param deploymentUrl
+     * @param username
+     * @param authToken
+     * @param resourceAccountSid
+     * @param sid
+     * @return
+     */
+    public JsonObject getCall(String deploymentUrl, String username, String authToken, String resourceAccountSid, String sid){
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
 
-        String url = getAccountsUrl(deploymentUrl, username, false);
+        String url = getAccountsUrl(deploymentUrl, resourceAccountSid, false);
 
         WebResource webResource = jerseyClient.resource(url);
 
@@ -195,6 +218,11 @@ public class RestcommCallsTool {
     }
 
     public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl) {
+        return createCall(deploymentUrl, username, authToken, from, to, rcmlUrl, null, null, null);
+    }
+
+    public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl,
+                                  final String statusCallback, final String statusCallbackMethod, final String statusCallbackEvent) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -207,6 +235,13 @@ public class RestcommCallsTool {
         params.add("From", from);
         params.add("To", to);
         params.add("Url", rcmlUrl);
+
+        if (statusCallback != null)
+            params.add("StatusCallback", statusCallback);
+        if (statusCallbackMethod != null)
+            params.add("StatusCallbackMethod", statusCallbackMethod);
+        if (statusCallbackEvent != null)
+            params.add("StatusCallbackEvent", statusCallbackEvent);
 
         // webResource = webResource.queryParams(params);
         String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
