@@ -7,92 +7,113 @@
 
 	<select id="getDailyCalls" parameterType="map" resultType="hashmap">
 		SELECT
-			'calls' AS "category",
+			#{category} AS "category",
 			account_sid,
 			api_version,
 			COUNT(1) AS "count",
 			CAST(${usageExprPre}${usageExprCol}${usageExprSuf} AS SIGNED) AS "usage",
 			SUM(CONVERT("price", SIGNED)) AS "price",
-			CONVERT(MIN(date_created), DATE) AS "start_date",
-			CONVERT(MAX(date_created), DATE) AS "end_date",
-			'/todo' AS "uri"
+			DATE_FORMAT(date_created, '%Y-%m-%d') AS "start_date",
+			DATE_FORMAT(DATE_ADD(date_created, INTERVAL 1 DAY), '%Y-%m-%d') AS "end_date",
+			CONCAT(#{uri},
+				'?Category=', #{category},
+				'&amp;StartDate=', DATE_FORMAT(date_created, '%Y-%m-%d'),
+				'&amp;EndDate=', DATE_FORMAT(DATE_ADD(date_created, INTERVAL 1 DAY), '%Y-%m-%d')
+				) AS "uri"
 		FROM
 			${tableName}
 		WHERE
 			account_sid=#{sid} AND
-			date_created >= #{startDate} AND
+			date_created &gt;= #{startDate} AND
+			<!--  if we allow startDate and endDate to be the same, we should increase the end bound by 1 day-->
 			date_created &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
 		GROUP BY
-			CAST(YEAR(date_created) AS CHAR) + '-' + CAST(MONTH(date_created) AS CHAR) + '-' + CAST(DAY(date_created) AS CHAR), account_sid, api_version
+			start_date, account_sid, api_version
 		ORDER BY
 			start_date
 	</select>
 
-<select id="getMonthlyCalls" parameterType="map" resultType="hashmap">
+	<select id="getMonthlyCalls" parameterType="map" resultType="hashmap">
 		SELECT
-			'calls' AS "category",
+			#{category} AS "category",
 			account_sid,
 			api_version,
 			COUNT(1) as "count",
 			CAST(${usageExprPre}${usageExprCol}${usageExprSuf} AS SIGNED) AS "usage",
 			SUM(CONVERT("price", SIGNED)) AS "price",
-			CONVERT(MIN(date_created), DATE) AS "start_date",
-			CONVERT(MAX(date_created), DATE) AS "end_date",
-			'/todo' AS "uri"
+			<!-- select the highest lower bound -->
+			CONCAT(DATE_FORMAT(date_created,'%Y-%m'),'-01') AS "start_date",
+			<!-- select the lowest upper bound -->
+			DATE_FORMAT(LAST_DAY(date_created),'%Y-%m-%d') AS "end_date",
+			CONCAT(#{uri},
+				'?Category=', #{category},
+				'&amp;StartDate=', CONCAT(DATE_FORMAT(date_created,'%Y-%m'),'-01'),
+				'&amp;EndDate=', DATE_FORMAT(LAST_DAY(date_created),'%Y-%m-%d')
+				) AS "uri"
 		FROM
 			${tableName}
 		WHERE
 			account_sid=#{sid} AND
-			date_created >= #{startDate} AND
+			date_created &gt;= #{startDate} AND
 			date_created &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
 		GROUP BY
-			CAST(YEAR(date_created) AS CHAR) + '-' + CAST(MONTH(date_created) AS CHAR), account_sid, api_version
+			start_date, account_sid, api_version
 		ORDER BY
-			"start_date"
+			start_date
 	</select>
 
 	<select id="getYearlyCalls" parameterType="map" resultType="hashmap">
 		SELECT
-			'calls' AS "category",
+			#{category} AS "category",
 			account_sid,
 			api_version,
 			COUNT(1) as "count",
 			CAST(${usageExprPre}${usageExprCol}${usageExprSuf} AS SIGNED) AS "usage",
 			SUM(CONVERT("price", SIGNED)) AS "price",
-			CONVERT(MIN(date_created), DATE) AS "start_date",
-			CONVERT(MAX(date_created), DATE) AS "end_date",
-			'/todo' AS "uri"
+			<!-- select the highest lower bound -->
+			CONCAT(YEAR(date_created), '-01-01') AS "start_date",
+			<!-- select the lowest upper bound -->
+			CONCAT(YEAR(date_created), '-12-31') AS "end_date",
+			CONCAT(#{uri},
+				'?Category=', #{category},
+				'&amp;StartDate=', CONCAT(YEAR(date_created), '-01-01'),
+				'&amp;EndDate=', CONCAT(YEAR(date_created), '-12-31')
+				) AS "uri"
 		FROM
 			${tableName}
 		WHERE
 			account_sid=#{sid} AND
-			date_created >= #{startDate} AND
+			date_created &gt;= #{startDate} AND
 			date_created &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
 		GROUP BY
-			CAST(YEAR(date_created) AS CHAR), account_sid, api_version
+			start_date, account_sid, api_version
 		ORDER BY
 			start_date
 	</select>
 
 	<select id="getAllTimeCalls" parameterType="map" resultType="hashmap">
 		SELECT
-			'calls' AS "category",
+			#{category} AS "category",
 			account_sid,
 			api_version,
 			COUNT(1) as "count",
 			CAST(${usageExprPre}${usageExprCol}${usageExprSuf} AS SIGNED) AS "usage",
 			SUM(CONVERT("price", SIGNED)) AS "price",
-			CONVERT(MIN(date_created), DATE) AS "start_date",
-			CONVERT(MAX(date_created), DATE) AS "end_date",
-			'/todo' AS "uri"
+			DATE_FORMAT(MIN(date_created), '%Y-%m-%d') AS "start_date",
+			DATE_FORMAT(MAX(date_created), '%Y-%m-%d') AS "end_date",
+			CONCAT(#{uri},
+				'?Category=', #{category},
+				'&amp;StartDate=', DATE_FORMAT(MIN(date_created), '%Y-%m-%d'),
+				'&amp;EndDate=', DATE_FORMAT(MAX(date_created), '%Y-%m-%d')
+				) AS "uri"
 		FROM
 			${tableName}
 		WHERE
 			account_sid=#{sid} AND
-			date_created >= #{startDate} AND
+			date_created &gt;= #{startDate} AND
 			date_created &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
 		GROUP BY
-			EXTRACT(MONTH FROM "date_created"), "account_sid", "api_version"
+			"account_sid", "api_version"
 		ORDER BY
 			start_date
 	</select>
@@ -100,7 +121,7 @@
 	<!--
 	<select id="getTodayCalls" parameterType="map" resultType="hashmap">
 		SELECT
-			'calls' AS "category",
+			#{category} AS "category",
 			"account_sid",
 			"api_version",
 			COUNT(1) as "count",
@@ -108,7 +129,7 @@
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
 			TO_CHAR(TODAY(), 'YYYY-MM-DD') AS "start_date",
 			TO_CHAR(TODAY(), 'YYYY-MM-DD') as "end_date",
-			'/todo' AS "uri"
+			#{uri} AS "uri"
 		FROM
 			"restcomm_call_detail_records"
 		WHERE
@@ -124,7 +145,7 @@
 
 	<select id="getYesterdayCalls" parameterType="map" resultType="hashmap">
 		SELECT
-			'calls' AS "category",
+			#{category} AS "category",
 			"account_sid",
 			"api_version",
 			COUNT(1) as "count",
@@ -132,7 +153,7 @@
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
 			TO_CHAR(DATE_SUB(TODAY(), INTERVAL 1 DAY), 'YYYY-MM-DD') AS "start_date",
 			TO_CHAR(DATE_SUB(TODAY(), INTERVAL 1 DAY), 'YYYY-MM-DD') as "end_date",
-			'/todo' AS "uri"
+			#{uri} AS "uri"
 		FROM
 			"restcomm_call_detail_records"
 		WHERE
@@ -148,7 +169,7 @@
 
 	<select id="getThisMonthCalls" parameterType="string" resultType="hashmap">
 		SELECT
-			'calls' AS "category",
+			#{category} AS "category",
 			"account_sid",
 			"api_version",
 			COUNT(1) as "count",
@@ -156,7 +177,7 @@
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
 			CONCAT(TO_CHAR(TODAY(), 'YYYY-MM-'),'01') AS "start_date",
 			TO_CHAR(LAST_DAY(TODAY()), 'YYYY-MM-DD') as "end_date",
-			'/todo' AS "uri"
+			#{uri} AS "uri"
 		FROM
 			"restcomm_call_detail_records"
 		WHERE
@@ -171,7 +192,7 @@
 
 	<select id="getLastMonthCalls" parameterType="map" resultType="hashmap">
 		SELECT
-			'calls' AS "category",
+			#{category} AS "category",
 			"account_sid",
 			"api_version",
 			COUNT(1) as "count",
@@ -179,7 +200,7 @@
 			SUM(CONVERT("price",SQL_FLOAT)) as "price",
 			CONCAT(TO_CHAR(LAST_DAY(DATE_SUB(TODAY(), INTERVAL 1 MONTH)), 'YYYY-MM-'),'01') AS "start_date",
 			TO_CHAR(LAST_DAY(DATE_SUB(TODAY(), INTERVAL 1 MONTH)), 'YYYY-MM-DD') as "end_date",
-			'/todo' AS "uri"
+			#{uri} AS "uri"
 
 		FROM
 			"restcomm_call_detail_records"

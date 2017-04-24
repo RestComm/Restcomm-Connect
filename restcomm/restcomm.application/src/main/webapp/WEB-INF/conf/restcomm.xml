@@ -296,6 +296,22 @@
 		<minutes-to-retain-public-url>10</minutes-to-retain-public-url>
 		<remove-original-file>true</remove-original-file>
 		<bucket-region>us-east-1</bucket-region>
+		<!--
+		Restcomm Recordings - Amazon S3 integration security details
+
+		The Security level controls the details that the Recordings REST API will
+		provide to the user and also how the user will access the wav file.
+
+		1. NONE: Recordings REST API will contain the S3_URI with no credentials.
+		   Restcomm will fetch and serve recording to the user if the FILE_URI of the Recording is used
+		2. REDIRECT: Recordings REST API will NOT contain the S3_URI. Restcomm will
+		   create redirect response and recording will be served by Amazon S3 if the FILE_URI of the Recording is used
+		3. DEFAULT SECURE: Recordings REST API will NOT contain the S3_URI. Restcomm will
+		   fetch and serve recording to the user if the FILE_URI of the Recording is used
+
+		DEFAULT VALUE: SECURE
+		-->
+		<security-level>secure</security-level>
 		<testing>false</testing>
 		<testing-url>http://127.0.0.1:8090/s3</testing-url>
 	</amazon-s3>
@@ -326,7 +342,18 @@
 		when necessary so if your server already has a routable IP address setting
 		this parameter will have no effect. <max-response-time> - In milliseconds
 		the maximum amount of time to wait for a response from the media server before
-		abandoning the request. This does NOT apply to RQNT/NOTIFY request/response. -->
+		abandoning the request. This does NOT apply to RQNT/NOTIFY request/response.
+		<rtp-timeout> This indicates rtp timeout, in seconds.
+		<rtp-timeout-timer-start-time> This is used to indicate when the RTP/RTCP timeout
+		timer starts. It can have one of the following values:
+         *  "im" for immediate i.e., the timer starts as soon as the
+            request is received.  This is the default.
+         *  "ra" to indicate that the timer should start only after an
+            RTCP packet has been received from the other end (i.e., the
+            timer will be initiated when the first RTCP packet is
+            received after the request is made).  Note that in the case
+            where the other end does not support RTCP, the timer will
+            never be initiated.-->
 	<media-server-manager>
 		<mgcp-server class="org.restcomm.connect.mgcp.MediaGateway" name="Mobicents Media Server">
             <local-address>127.0.0.1</local-address>
@@ -335,6 +362,8 @@
             <remote-port>2427</remote-port>
             <response-timeout>500</response-timeout>
             <external-address><null/></external-address>
+            <rtp-timeout>60</rtp-timeout>
+            <rtp-timeout-timer-start-time>im</rtp-timeout-timer-start-time>
         </mgcp-server>
 		<mrb class="org.restcomm.connect.mrb.MediaResourceBrokerGeneric" name="Community MediaResourceBroker">
 		</mrb>
@@ -466,6 +495,7 @@
 				<swedish> <female>elin8k</female> <male>emil8k</male> </swedish>
 				<turkish> <female>ipek8k</female> <male></male> </turkish>
 				<mandarin-chinese> <female>lulu8k</female> <male></male> </mandarin-chinese>
+				<japanese> <female>sakura8k</female> <male></male> </japanese>
 			</speakers>
 		</acapela>
 

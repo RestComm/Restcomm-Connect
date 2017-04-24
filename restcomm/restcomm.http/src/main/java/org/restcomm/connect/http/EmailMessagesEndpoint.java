@@ -2,6 +2,7 @@ package org.restcomm.connect.http;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -12,7 +13,6 @@ import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-import org.restcomm.connect.commons.faulttolerance.RestcommSupervisor;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
@@ -25,8 +25,6 @@ import org.restcomm.connect.email.api.EmailResponse;
 import org.restcomm.connect.email.api.Mail;
 import org.restcomm.connect.http.converter.EmailMessageConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -34,9 +32,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import java.util.concurrent.TimeUnit;
 
-import static akka.pattern.Patterns.ask;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
@@ -54,7 +50,7 @@ public class EmailMessagesEndpoint extends SecuredEndpoint {
     private static Logger logger = Logger.getLogger(EmailMessagesEndpoint.class);
     @Context
     protected ServletContext context;
-    protected ActorRef supervisor;
+    protected ActorSystem system;
     protected Configuration configuration;
     protected Configuration confemail;
     protected Gson gson;
@@ -76,7 +72,7 @@ public class EmailMessagesEndpoint extends SecuredEndpoint {
         confemail=configuration.subset("smtp-service");
         configuration = configuration.subset("runtime-settings");
         accountsDao = storage.getAccountsDao();
-        supervisor = (ActorRef) context.getAttribute(RestcommSupervisor.class.getName());
+        system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
         super.init(configuration);
         final EmailMessageConverter converter = new EmailMessageConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
@@ -230,13 +226,7 @@ public class EmailMessagesEndpoint extends SecuredEndpoint {
                 return new EmailService(configuration);
             }
         });
-        ActorRef session = null;
-        try {
-            session = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return session;
+        return system.actorOf(props);
     }
 
     private ActorRef observer() {
@@ -248,13 +238,7 @@ public class EmailMessagesEndpoint extends SecuredEndpoint {
                 return new EmailSessionObserver();
             }
         });
-        ActorRef observer = null;
-        try {
-            observer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return observer;
+        return system.actorOf(props);
     }
 
     private final class EmailSessionObserver extends UntypedActor {

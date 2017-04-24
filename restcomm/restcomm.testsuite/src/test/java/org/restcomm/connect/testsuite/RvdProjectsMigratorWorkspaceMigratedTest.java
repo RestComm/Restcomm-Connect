@@ -119,7 +119,7 @@ public class RvdProjectsMigratorWorkspaceMigratedTest {
     public void checkNotifications() {
         JsonArray notificationsListJson = RestcommRvdProjectsMigratorTool.getInstance().getEntitiesList(
                 deploymentUrl.toString(), adminUsername, adminAuthToken, adminAccountSid,
-                RestcommRvdProjectsMigratorTool.Endpoint.NOTIFICATIONS);
+                RestcommRvdProjectsMigratorTool.Endpoint.NOTIFICATIONS, "notifications");
         String message = notificationsListJson.toString();
         assertTrue(message.contains("Workspace migration finished with success"));
         assertTrue(message.contains("3 Projects processed"));

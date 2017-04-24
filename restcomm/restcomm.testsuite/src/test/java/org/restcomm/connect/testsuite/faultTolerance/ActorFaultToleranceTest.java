@@ -3,28 +3,18 @@ package org.restcomm.connect.testsuite.faultTolerance;
 import akka.actor.ActorPath;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.OneForOneStrategy;
 import akka.actor.Props;
-import akka.actor.SupervisorStrategy;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.japi.Function;
 import akka.testkit.JavaTestKit;
-import akka.testkit.TestProbe;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.restcomm.connect.commons.faulttolerance.RestcommSupervisor;
-import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
 
-import java.util.concurrent.TimeUnit;
-
-import static akka.actor.SupervisorStrategy.escalate;
-import static akka.actor.SupervisorStrategy.resume;
-import static akka.actor.SupervisorStrategy.stop;
 import static akka.pattern.Patterns.ask;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -39,7 +29,9 @@ public class ActorFaultToleranceTest {
 
 	@BeforeClass
 	public static void setup () {
-		system = ActorSystem.create();
+		Config config = ConfigFactory.load("akka_fault_tolerance_application.conf");
+		system = ActorSystem.create("test", config );
+		System.out.println(system.settings());
 	}
 
 	@AfterClass
@@ -97,10 +89,7 @@ public class ActorFaultToleranceTest {
 		new JavaTestKit(system) {{
 			LoggingAdapter logger = Logging.getLogger(system, this);
 
-			ActorRef supervisor = system.actorOf(new Props(RestcommSupervisor.class), "supervisor2");
-
-			final ActorRef subject = (ActorRef) Await.result(ask(supervisor,
-					new Props(TestActor.class), 5000), Duration.create(10, TimeUnit.SECONDS));
+			final ActorRef subject = system.actorOf(new Props(TestActor.class));
 
 			subject.tell("exceptionMsgReceived", getRef());
 			expectMsgEquals(duration("1 second"), false);
@@ -126,13 +115,9 @@ public class ActorFaultToleranceTest {
 		new JavaTestKit(system) {{
 			LoggingAdapter logger = Logging.getLogger(system, this);
 
-			ActorRef supervisor = system.actorOf(new Props(RestcommSupervisor.class), "supervisor");
+			final ActorRef subject = system.actorOf(new Props(TestActor.class));
 
-			final ActorRef subject = (ActorRef) Await.result(ask(supervisor,
-					new Props(TestActor.class), 5000), Duration.create(10, TimeUnit.SECONDS));
-
-			final ActorRef childActor = (ActorRef) Await.result(ask(supervisor,
-					new Props(TestActor2.class), 5000), Duration.create(10, TimeUnit.SECONDS));
+			final ActorRef childActor = system.actorOf(new Props(TestActor2.class));
 
 			childActor.tell("exceptionMsgReceived", getRef());
 			expectMsgEquals(duration("1 second"), false);

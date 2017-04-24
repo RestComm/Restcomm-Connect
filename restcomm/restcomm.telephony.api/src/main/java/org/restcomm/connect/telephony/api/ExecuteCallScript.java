@@ -16,11 +16,9 @@ public final class ExecuteCallScript {
     private final String method;
     private final URI fallbackUrl;
     private final String fallbackMethod;
-    private final URI callback;
-    private final String callbackMethod;
 
     public ExecuteCallScript(final ActorRef call, final Sid account, final String version, final URI url, final String method,
-            final URI fallbackUrl, final String fallbackMethod, final URI callback, final String callbackMethod) {
+            final URI fallbackUrl, final String fallbackMethod) {
         super();
         this.call = call;
         this.account = account;
@@ -29,8 +27,6 @@ public final class ExecuteCallScript {
         this.method = method;
         this.fallbackUrl = fallbackUrl;
         this.fallbackMethod = fallbackMethod;
-        this.callback = callback;
-        this.callbackMethod = callbackMethod;
     }
 
     public ActorRef call() {
@@ -59,13 +55,5 @@ public final class ExecuteCallScript {
 
     public String fallbackMethod() {
         return fallbackMethod;
-    }
-
-    public URI callback() {
-        return callback;
-    }
-
-    public String callbackMethod() {
-        return callbackMethod;
     }
 }
