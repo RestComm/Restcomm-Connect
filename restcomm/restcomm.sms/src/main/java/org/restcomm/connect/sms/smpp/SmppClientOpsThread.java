@@ -356,12 +356,10 @@ public class SmppClientOpsThread implements Runnable {
                     String destSmppAddress = deliverSm.getDestAddress().getAddress();
                     String sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
                     Charset charset;
-                    if (DataCoding.DATA_CODING_GSM7 == deliverSm.getDataCoding()) {
-                        charset = CharsetUtil.CHARSET_GSM7;
-                    } else if (DataCoding.DATA_CODING_GSM8 == deliverSm.getDataCoding()) {
-                        charset = CharsetUtil.CHARSET_GSM8;
-                    } else {
+                    if (DataCoding.DATA_CODING_UCS2 == deliverSm.getDataCoding()) {
                         charset = CharsetUtil.CHARSET_UCS_2;
+                    } else {
+                        charset = CharsetUtil.CHARSET_GSM;
                     }
                     //send received SMPP PDU message to restcomm
                     try {

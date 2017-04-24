@@ -469,8 +469,9 @@ public final class CallManager extends UntypedActor {
             logger.info("proxyIp: " + proxyIp);
         }
 
+        Client toClient = clients.getClient(toUser);
+
         if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have little control over
-            Client toClient = clients.getClient(toUser);
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to the b2bua
                 if(logger.isInfoEnabled()) {
                     logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "+ toClient);
@@ -509,7 +510,7 @@ public final class CallManager extends UntypedActor {
             } else {
                 // toClient is null or we couldn't make the b2bua call to another client. check if this call is for a registered
                 // DID (application)
-                if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
+                if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, client.getAccountSid())) {
                     // This is a call to a registered DID (application)
                     return;
                 }
@@ -553,7 +554,12 @@ public final class CallManager extends UntypedActor {
             }
         } else {
             // Client is null, check if this call is for a registered DID (application)
-            if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
+            //        //First try to check if the call is for a client
+            if ( toClient != null) {
+                proxyDialClientThroughMediaServer(request , toClient, toClient.getLogin());
+                return;
+            }
+            if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, null)) {
                 // This is a call to a registered DID (application)
                 return;
             }
@@ -656,6 +662,29 @@ public final class CallManager extends UntypedActor {
 
     private void proxyThroughMediaServer(final SipServletRequest request, final Client client, final String destNumber) {
         String rcml = "<Response><Dial>"+destNumber+"</Dial></Response>";
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        builder.setConfiguration(configuration);
+        builder.setStorage(storage);
+        builder.setCallManager(self());
+        builder.setConferenceManager(conferences);
+        builder.setBridgeManager(bridges);
+        builder.setSmsService(sms);
+        builder.setAccount(client.getAccountSid());
+        builder.setVersion(client.getApiVersion());
+        final Account account = storage.getAccountsDao().getAccount(client.getAccountSid());
+        builder.setEmailAddress(account.getEmailAddress());
+        builder.setRcml(rcml);
+        builder.setMonitoring(monitoring);
+        final ActorRef interpreter = builder.build();
+        final ActorRef call = call(null);
+        final SipApplicationSession application = request.getApplicationSession();
+        application.setAttribute(Call.class.getName(), call);
+        call.tell(request, self());
+        interpreter.tell(new StartInterpreter(call), self());
+    }
+
+    private void proxyDialClientThroughMediaServer(final SipServletRequest request, final Client client, final String destNumber) {
+        String rcml = "<Response><Dial><Client>"+destNumber+"</Client></Dial></Response>";
         final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
@@ -938,7 +967,7 @@ public final class CallManager extends UntypedActor {
      * @param phone
      */
     private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-                                             final ApplicationsDao applications, String phone) {
+                                             final ApplicationsDao applications, String phone, Sid fromClientAccountSid) {
         boolean isFoundHostedApp = false;
         // Format the destination to an E.164 phone number.
         final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
@@ -978,9 +1007,14 @@ public final class CallManager extends UntypedActor {
                 builder.setConferenceManager(conferences);
                 builder.setBridgeManager(bridges);
                 builder.setSmsService(sms);
-                builder.setAccount(number.getAccountSid());
+                //https://github.com/RestComm/Restcomm-Connect/issues/1939
+                Sid accSid = fromClientAccountSid == null? number.getAccountSid() : fromClientAccountSid;
+                builder.setAccount(accSid);
+                builder.setPhone(number.getAccountSid());
                 builder.setVersion(number.getApiVersion());
-                final Account account = accounts.getAccount(number.getAccountSid());
+                // notifications should go to fromClientAccountSid email if not present then to number account
+                // https://github.com/RestComm/Restcomm-Connect/issues/2011
+                final Account account = accounts.getAccount(accSid);
                 builder.setEmailAddress(account.getEmailAddress());
                 final Sid sid = number.getVoiceApplicationSid();
                 if (sid != null) {
