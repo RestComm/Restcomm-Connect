@@ -147,12 +147,35 @@ public class RestcommCallsTool {
 
     }
 
+    /**
+     * getCall from same account
+     * 
+     * @param deploymentUrl
+     * @param username
+     * @param authToken
+     * @param sid
+     * @return
+     */
     public JsonObject getCall(String deploymentUrl, String username, String authToken, String sid){
+        return getCall(deploymentUrl, username, authToken, username, sid);
+    }
+
+    /**
+     * getCall from another account's resource
+     * https://github.com/RestComm/Restcomm-Connect/issues/1939
+     * @param deploymentUrl
+     * @param username
+     * @param authToken
+     * @param resourceAccountSid
+     * @param sid
+     * @return
+     */
+    public JsonObject getCall(String deploymentUrl, String username, String authToken, String resourceAccountSid, String sid){
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
 
-        String url = getAccountsUrl(deploymentUrl, username, false);
+        String url = getAccountsUrl(deploymentUrl, resourceAccountSid, false);
 
         WebResource webResource = jerseyClient.resource(url);
 
