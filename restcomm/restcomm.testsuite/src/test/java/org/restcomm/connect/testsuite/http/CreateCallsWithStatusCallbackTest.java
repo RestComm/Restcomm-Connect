@@ -376,9 +376,6 @@ public class CreateCallsWithStatusCallbackTest {
         requestUrl = requests.get(3).getUrl();
         assertTrue(requestUrl.contains("SequenceNumber=3"));
         assertTrue(requestUrl.contains("CallStatus=completed"));
-        assertTrue(requestUrl.contains("RecordingUrl"));
-        assertTrue(requestUrl.contains("RecordingSid"));
-        assertTrue(requestUrl.contains("RecordingDuration"));
 
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
