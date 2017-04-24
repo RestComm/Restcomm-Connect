@@ -1961,7 +1961,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (child != null) {
                     final String name = child.text();
                     final StringBuilder buffer = new StringBuilder();
-                    buffer.append(accountId.toString()).append(":").append(name);
+                    //conference account should be phone account. i.e account of whoever owns that phone number.
+                    //https://github.com/RestComm/Restcomm-Connect/issues/1939
+                    Sid conferenceAccountId = phoneId == null? accountId : phoneId;
+                    buffer.append(conferenceAccountId.toString()).append(":").append(name);
                     Sid sid = null;
                     if (callInfo != null && callInfo.sid() != null) {
                         sid = callInfo.sid();
