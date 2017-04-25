@@ -149,7 +149,7 @@ public class RestcommCallsTool {
 
     /**
      * getCall from same account
-     * 
+     *
      * @param deploymentUrl
      * @param username
      * @param authToken
@@ -279,6 +279,11 @@ public class RestcommCallsTool {
     public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,
                                  String rcmlUrl) throws Exception {
         return modifyCall(deploymentUrl, username, authToken, callSid, status, rcmlUrl, false, null);
+    }
+
+    public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,
+                                 String rcmlUrl, boolean moveConnectedLeg) throws Exception {
+        return modifyCall(deploymentUrl, username, authToken, callSid, status, rcmlUrl, moveConnectedLeg, null);
     }
 
     /**
