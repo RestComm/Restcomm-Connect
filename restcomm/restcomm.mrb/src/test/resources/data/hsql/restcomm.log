@@ -1,4 +1,9 @@
-/*C3*/SET SCHEMA PUBLIC
+/*C5*/SET SCHEMA PUBLIC
 DELETE FROM "restcomm_media_servers" WHERE "ms_id"=2 AND "local_ip"='127.0.0.1' AND "local_port"=2727 AND "remote_ip"='127.0.0.1' AND "remote_port"=2427 AND "compatibility" IS NULL AND "response_timeout"='1500' AND "external_address" IS NULL
 INSERT INTO "restcomm_media_servers" VALUES(2,'127.0.0.1',2727,'127.0.0.1',2427,NULL,'1500',NULL)
+COMMIT
+INSERT INTO "restcomm_conference_detail_records" VALUES('CFf7210adc7fee44a8b6324eddcabff17a','2017-04-25 08:20:09.390000','2017-04-25 08:20:09.391000','ACae6e420f425248d6a26948c17a9e2acf','RUNNING_INITIALIZING','b8acb57adfe14c1bb48f010a55b36432','2012-04-24','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Conferences/CFf7210adc7fee44a8b6324eddcabff17a','2',NULL,TRUE,NULL,NULL,NULL,NULL,NULL,NULL)
+COMMIT
+DELETE FROM "restcomm_conference_detail_records" WHERE "sid"='CFf7210adc7fee44a8b6324eddcabff17a'
+INSERT INTO "restcomm_conference_detail_records" VALUES('CFf7210adc7fee44a8b6324eddcabff17a','2017-04-25 08:20:09.390000','2017-04-25 08:20:09.453000','ACae6e420f425248d6a26948c17a9e2acf','RUNNING_MODERATOR_ABSENT','b8acb57adfe14c1bb48f010a55b36432','2012-04-24','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Conferences/CFf7210adc7fee44a8b6324eddcabff17a','2',NULL,TRUE,NULL,NULL,NULL,NULL,NULL,NULL)
 COMMIT
