@@ -100,4 +100,13 @@ public interface ExtensionsConfigurationDao {
 
     /**/
     ExtensionConfiguration getAccountExtensionConfiguration(String accountSid, String extensionSid);
+
+    /**/
+    void addAccountExtensionConfiguration(ExtensionConfiguration extensionConfiguration, Sid accountSid) throws ConfigurationException;
+
+    /**/
+    void updateAccountExtensionConfiguration(ExtensionConfiguration extensionConfiguration, Sid accountSid) throws ConfigurationException;
+
+    /**/
+    void deleteAccountExtensionConfiguration(String accountSid, String extensionSid);
 }

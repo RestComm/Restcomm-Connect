@@ -301,4 +301,68 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
             session.close();
         }
     }
+
+    @Override
+    public void addAccountExtensionConfiguration(ExtensionConfiguration extensionConfiguration, Sid accountSid) throws ConfigurationException {
+        final SqlSession session = sessions.openSession();
+        try {
+            if (extensionConfiguration != null && extensionConfiguration.getConfigurationData() != null) {
+                if (validate(extensionConfiguration)) {
+                    final Map<String, Object> map = new HashMap<String, Object>();
+                    map.put("account_sid", DaoUtils.writeSid(accountSid));
+                    map.put("extension_sid", DaoUtils.writeSid(extensionConfiguration.getSid()));
+
+                    if (extensionConfiguration.getConfigurationData() != null)
+                        map.put("configuration_data", extensionConfiguration.getConfigurationData());
+
+                    session.insert(namespace + "addAccountExtensionConfiguration", map);
+                    session.commit();
+                } else {
+                    throw new ConfigurationException("Exception trying to add new configuration, validation failed. configuration type: "
+                            + extensionConfiguration.getConfigurationType());
+                }
+            }
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void updateAccountExtensionConfiguration(ExtensionConfiguration extensionConfiguration, Sid accountSid)
+            throws ConfigurationException {
+        final SqlSession session = sessions.openSession();
+        try {
+            if (extensionConfiguration != null && extensionConfiguration.getConfigurationData() != null) {
+                if (validate(extensionConfiguration)) {
+                    final Map<String, Object> map = new HashMap<String, Object>();
+                    map.put("account_sid", DaoUtils.writeSid(accountSid));
+                    map.put("extension_sid", DaoUtils.writeSid(extensionConfiguration.getSid()));
+
+                    if (extensionConfiguration.getConfigurationData() != null)
+                        map.put("configuration_data", extensionConfiguration.getConfigurationData());
+                    session.update(namespace + "updateAccountExtensionConfiguration", map);
+                } else {
+                    throw new ConfigurationException("Exception trying to update configuration, validation failed. configuration type: "
+                            + extensionConfiguration.getConfigurationType());
+                }
+            }
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void deleteAccountExtensionConfiguration(String accountSid, String extensionSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            Map<String, Object> params = new HashMap<String, Object>();
+            params.put("account_sid", accountSid.toString());
+            params.put("extension_sid", extensionSid.toString());
+            session.delete(namespace + "deleteAccountExtensionConfiguration", params);
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
 }
