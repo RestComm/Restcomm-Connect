@@ -438,7 +438,7 @@ public final class CallManager extends UntypedActor {
         // Try to find an application defined for the client.
         final SipURI fromUri = (SipURI) request.getFrom().getURI();
         final Sid fromOrganizationSid = getOrganizationSidBySipHost(fromUri);
-    	if(logger.isDebugEnabled()) {
+        if(logger.isDebugEnabled()) {
             logger.debug("fromOrganizationSid" + fromOrganizationSid);
         }
         String fromUser = fromUri.getUser();
@@ -479,7 +479,7 @@ public final class CallManager extends UntypedActor {
             logger.info("proxyIp: " + proxyIp);
         }
         final Sid toOrganizationSid = getOrganizationSidBySipHost((SipURI) request.getTo().getURI());
-    	if(logger.isDebugEnabled()) {
+        if(logger.isDebugEnabled()) {
             logger.debug("toOrganizationSid" + toOrganizationSid);
         }
         Client toClient = clients.getClient(toUser, toOrganizationSid);
