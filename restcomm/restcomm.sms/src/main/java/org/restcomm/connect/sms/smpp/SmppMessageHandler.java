@@ -26,6 +26,7 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.sms.SmsSession;
@@ -51,12 +52,15 @@ public class SmppMessageHandler extends UntypedActor  {
     private final SipFactory sipFactory;
     private final ActorRef monitoringService;
 
+    private final String defaultOrganization;
+
     public SmppMessageHandler(final ServletContext servletContext) {
         this.servletContext = servletContext;
         this.storage = (DaoManager) servletContext.getAttribute(DaoManager.class.getName());
         this.configuration = (Configuration) servletContext.getAttribute(Configuration.class.getName());
         this.sipFactory = (SipFactory) servletContext.getAttribute(SipFactory.class.getName());
         this.monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
+        defaultOrganization = (String) servletContext.getAttribute("defaultOrganization");
     }
 
     @Override
@@ -75,7 +79,8 @@ public class SmppMessageHandler extends UntypedActor  {
             }
             outbound((SmppOutboundMessageEntity) message);
         } else if (message instanceof CreateSmsSession) {
-            final ActorRef session = session();
+            CreateSmsSession createSmsSession = (CreateSmsSession) message;
+            final ActorRef session = session(getOrganizationSidByAccountSid(new Sid(createSmsSession.getAccountSid())));
             final SmsServiceResponse<ActorRef> response = new  SmsServiceResponse<ActorRef>(session);
             sender.tell(response, self);
         }else if (message instanceof DestroySmsSession) {
@@ -154,7 +159,10 @@ public class SmppMessageHandler extends UntypedActor  {
                 }
                 interpreter = builder.build();
 
-                final ActorRef session = session();
+                Sid organizationSid = storage.getOrganizationsDao().getOrganization(storage.getAccountsDao().getAccount(number.getAccountSid()).getOrganizationSid()).getSid();
+                if(logger.isDebugEnabled())
+                    logger.debug("redirectToHostedSmsApp organizationSid = "+organizationSid);
+                final ActorRef session = session(organizationSid);
                 session.tell(request, self);
                 final StartInterpreter start = new StartInterpreter(session);
                 interpreter.tell(start, self);
@@ -181,13 +189,13 @@ public class SmppMessageHandler extends UntypedActor  {
         return result;
     }
 
-    private ActorRef session() {
+    private ActorRef session(final Sid organizationSid) {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new SmsSession(configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
+                return new SmsSession(configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext, organizationSid);
             }
         });
         return system.actorOf(props);
@@ -224,5 +232,20 @@ public class SmppMessageHandler extends UntypedActor  {
                 | InterruptedException e) {
             logger.error("SMPP message cannot be sent : " + e );
         }
+    }
+
+    /**
+     * getOrganizationSidByAccountSid
+     * @param accountSid
+     * @return Sid of Organization
+     */
+    private Sid getOrganizationSidByAccountSid(final Sid accountSid){
+        if(accountSid != null){
+            return storage.getAccountsDao().getAccount(accountSid).getOrganizationSid();
+        }
+        Organization organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
+        if(logger.isDebugEnabled())
+            logger.debug("organization is null going to choose default: "+organization);
+        return organization.getSid();
     }
 }
