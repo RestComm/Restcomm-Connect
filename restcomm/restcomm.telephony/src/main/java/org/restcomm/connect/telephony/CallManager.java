@@ -437,14 +437,17 @@ public final class CallManager extends UntypedActor {
         final ApplicationsDao applications = storage.getApplicationsDao();
         // Try to find an application defined for the client.
         final SipURI fromUri = (SipURI) request.getFrom().getURI();
-        final Sid organizationSid = getOrganizationSidBySipHost(fromUri);
+        final Sid fromOrganizationSid = getOrganizationSidBySipHost(fromUri);
+    	if(logger.isDebugEnabled()) {
+            logger.debug("fromOrganizationSid" + fromOrganizationSid);
+        }
         String fromUser = fromUri.getUser();
         final ClientsDao clients = storage.getClientsDao();
-        final Client client = clients.getClient(fromUser,organizationSid);
+        final Client client = clients.getClient(fromUser,fromOrganizationSid);
         if (client != null) {
             // Make sure we force clients to authenticate.
             if (!authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
-                    || CallControlHelper.checkAuthentication(request, storage, organizationSid)) {
+                    || CallControlHelper.checkAuthentication(request, storage, fromOrganizationSid)) {
                 // if the client has authenticated, try to redirect to the Client VoiceURL app
                 // otherwise continue trying to process the Client invite
                 if (redirectToClientVoiceApp(self, request, accounts, applications, client)) {
@@ -476,6 +479,9 @@ public final class CallManager extends UntypedActor {
             logger.info("proxyIp: " + proxyIp);
         }
         final Sid toOrganizationSid = getOrganizationSidBySipHost((SipURI) request.getTo().getURI());
+    	if(logger.isDebugEnabled()) {
+            logger.debug("toOrganizationSid" + toOrganizationSid);
+        }
         Client toClient = clients.getClient(toUser, toOrganizationSid);
 
         if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have little control over

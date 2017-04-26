@@ -44,6 +44,7 @@ import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Direction;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;
@@ -151,7 +152,11 @@ public final class SmsService extends UntypedActor {
         final SipURI fromURI = (SipURI) request.getFrom().getURI();
         final String fromUser = fromURI.getUser();
         final ClientsDao clients = storage.getClientsDao();
-        final Client client = clients.getClient(fromUser);
+        final Sid fromOrganizationSid = getOrganizationSidBySipHost(fromURI);
+        if(logger.isDebugEnabled()) {
+            logger.debug("fromOrganizationSid" + fromOrganizationSid);
+        }
+        final Client client = clients.getClient(fromUser, fromOrganizationSid);
         final AccountsDao accounts = storage.getAccountsDao();
         final ApplicationsDao applications = storage.getApplicationsDao();
 
@@ -159,7 +164,7 @@ public final class SmsService extends UntypedActor {
         if (client != null) {
             // Make sure we force clients to authenticate.
             if (authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
-                    && !CallControlHelper.checkAuthentication(request, storage)) {
+                    && !CallControlHelper.checkAuthentication(request, storage, fromOrganizationSid)) {
                 if(logger.isInfoEnabled()) {
                     logger.info("Client " + client.getLogin() + " failed to authenticate");
                 }
@@ -190,7 +195,11 @@ public final class SmsService extends UntypedActor {
             // try to see if the request is destined to another registered client
             // if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we
             // have little control over
-            Client toClient = clients.getClient(toUser);
+        	final Sid toOrganizationSid = getOrganizationSidBySipHost((SipURI) request.getTo().getURI());
+        	if(logger.isDebugEnabled()) {
+                logger.debug("toOrganizationSid" + toOrganizationSid);
+            }
+            Client toClient = clients.getClient(toUser, toOrganizationSid);
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect
                 // to the b2bua
                 if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
@@ -502,5 +511,26 @@ public final class SmsService extends UntypedActor {
         final URI uri = URI.create(buffer.toString());
         builder.setUri(uri);
         return builder.build();
+    }
+
+    /**
+     * getOrganizationSidBySipHost
+     *
+     * @param fromUri
+     * @return Sid of Organization
+     */
+    private Sid getOrganizationSidBySipHost(final SipURI fromUri){
+        final String organizationDomainName = fromUri.getHost();
+        if(logger.isDebugEnabled())
+            logger.debug("organizationDomainName: "+organizationDomainName);
+        Organization organization = storage.getOrganizationsDao().getOrganizationByDomainName(organizationDomainName);
+        if(logger.isDebugEnabled())
+            logger.debug("organization: "+organization);
+        if(organization == null){
+            organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
+            if(logger.isDebugEnabled())
+                logger.debug("organization is null going to choose default: "+organization);
+        }
+        return organization.getSid();
     }
 }
