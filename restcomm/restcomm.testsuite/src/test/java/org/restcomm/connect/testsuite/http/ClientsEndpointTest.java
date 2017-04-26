@@ -64,7 +64,7 @@ public class ClientsEndpointTest {
     String developerAccountSid = "AC11111111111111111111111111111111";
     String removedClientSid = "CLb8838febabef4970a10dda1680506815";
 
-    //developer is account in Organization - org2.restcomm.com
+    //developerOrg2 is account in Organization - org2.restcomm.com
     String developerOrg2Username = "developer2@org2.com";
     String developeerOrg2AuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     String developerOrg2AccountSid = "AC11111111111111111111111111111112";
@@ -196,9 +196,10 @@ public class ClientsEndpointTest {
     /**
      * addSameClientNameInDifferentOrganizations
      * https://github.com/RestComm/Restcomm-Connect/issues/2106
-     * We should be able to add sane client in different organizations
+     * We should be able to add same client in different organizations
      * 
      */
+    @Test
     public void addSameClientNameInDifferentOrganizations() {
     	/*
     	 * Add client maria in Organization - default.restcomm.com
@@ -214,6 +215,7 @@ public class ClientsEndpointTest {
         /*
     	 * Add client maria in Organization - org2.restcomm.com
     	 */
+        jersey = getClient(developerOrg2AccountSid, developeerOrg2AuthToken);
         resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerOrg2AccountSid + "/Clients.json" ) );
         params = new MultivaluedMapImpl();
         params.add("Login","maria");
