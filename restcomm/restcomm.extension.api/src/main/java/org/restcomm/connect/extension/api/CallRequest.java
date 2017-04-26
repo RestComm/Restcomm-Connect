@@ -7,7 +7,7 @@ import org.restcomm.connect.commons.dao.Sid;
  * Created by gvagenas on 27/09/16.
  */
 public class CallRequest {
-    public static enum Type {
+    public enum Type {
         CLIENT, PSTN, SIP, USSD
     };
 

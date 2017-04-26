@@ -91,6 +91,16 @@ public final class UserAgentManagerTest {
     private SipPhone phone3;
     private String aliceContact3 = "sip:alice@127.0.0.1:5071;transport=udp;rc-id=7616";
 
+    private static SipStackTool tool4;
+    private SipStack sipStack4;
+    private SipPhone phone4;
+    private String aliceContact4 = "sip:alice@127.0.0.1:5072";
+
+    private static SipStackTool tool5;
+    private SipStack sipStack5;
+    private SipPhone phone5;
+    private String mariaContact5 = "sip:maria.test%40telestax.com@127.0.0.1:5072";
+
     public UserAgentManagerTest() {
         super();
     }
@@ -100,6 +110,8 @@ public final class UserAgentManagerTest {
         tool1 = new SipStackTool("UserAgentTest1");
         tool2 = new SipStackTool("UserAgentTest2");
         tool3 = new SipStackTool("UserAgentTest3");
+        tool4 = new SipStackTool("UserAgentTest4");
+        tool5 = new SipStackTool("UserAgentTest5");
     }
 
     @Before
@@ -112,6 +124,12 @@ public final class UserAgentManagerTest {
 
         sipStack3 = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5071", "127.0.0.1:5080");
         phone3 = sipStack3.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact3);
+
+        sipStack4 = tool4.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5072", "127.0.0.1:5080");
+        phone4 = sipStack4.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5080, aliceContact4);
+
+        sipStack5 = tool5.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5073", "127.0.0.1:5080");
+        phone5 = sipStack5.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5080, mariaContact5);
     }
 
     @After
@@ -134,12 +152,20 @@ public final class UserAgentManagerTest {
         if (sipStack3 != null) {
             sipStack3.dispose();
         }
+        if (phone4 != null) {
+            phone4.dispose();
+        }
+        if (sipStack4 != null) {
+            sipStack4.dispose();
+        }
+        if (sipStack5 != null) {
+            sipStack5.dispose();
+        }
 //        deployer.undeploy("UserAgentTest");
     }
 
     @Test
     public void registerUserAgent() throws Exception {
-//        deployer.deploy("UserAgentTest");
         SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         Credential c = new Credential("127.0.0.1","alice", "1234");
         phone.addUpdateCredential(c);
@@ -153,7 +179,6 @@ public final class UserAgentManagerTest {
 
     @Test
     public void registerUserAgentWithTransport() throws Exception {
-//        deployer.deploy("UserAgentTest");
         SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         Credential c = new Credential("127.0.0.1","alice", "1234");
         phone.addUpdateCredential(c);
@@ -161,6 +186,20 @@ public final class UserAgentManagerTest {
         Thread.sleep(500);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(phone.unregister("sip:127.0.0.1:5070;transport=udp", 0));
+        Thread.sleep(500);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+    }
+
+    @Test
+    public void registerUserAgentWithSecureTransport() throws Exception {
+        SipURI uri = sipStack4.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        uri.setSecure(true);
+        Credential c = new Credential("127.0.0.1","alice", "1234");
+        phone4.addUpdateCredential(c);
+        assertTrue(phone4.register(uri, "alice", "1234", "sip:127.0.0.1:5072", 3600, 3600));
+        Thread.sleep(500);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(phone4.unregister("sip:127.0.0.1:5072", 0));
         Thread.sleep(500);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
@@ -319,6 +358,44 @@ public final class UserAgentManagerTest {
     }
 
     @Test
+    public void registerUserAgentWithExtraParamsAnd503ToOptionsPingNoTransport() throws ParseException, InterruptedException, InvalidArgumentException {
+//        deployer.deploy("UserAgentTest");
+        // Register the phone so we can get OPTIONS pings from RestComm.
+        SipURI uri = sipStack3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        Credential c = new Credential("127.0.0.1","alice", "1234");
+        phone3.addUpdateCredential(c);
+
+        assertTrue(phone3.register(uri, "alice", "1234", aliceContact3, 3600, 3600));
+        Thread.sleep(500);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+
+        phone3.listenRequestMessage();
+        RequestEvent requestEvent = phone3.waitRequest(10000);
+        assertNotNull(requestEvent);
+        assertTrue(requestEvent.getRequest().getMethod().equals(SipRequest.OPTIONS));
+        String extraParam = ((SipUri)requestEvent.getRequest().getRequestURI()).getParameter("rc-id");
+        assertNotNull(extraParam);
+        logger.info("RequestEvent :"+requestEvent.getRequest().toString());
+
+        ArrayList<Header> additionalHeader = new ArrayList<Header>();
+        Header reason = sipStack3.getHeaderFactory().createReasonHeader("udp", 503, "Destination not available");
+        additionalHeader.add(reason);
+        ArrayList<Header> replaceHeaders = new ArrayList<Header>();
+        //The To Header will not contain the transport
+        Header toHeader = sipStack3.getHeaderFactory().createToHeader(sipStack3.getAddressFactory().createAddress("sip:alice@127.0.0.1:5071;rc-id=7616"), null);
+        replaceHeaders.add(toHeader);
+        phone3.sendReply(requestEvent, 503, "Service unavailable", null, null, 3600, additionalHeader, replaceHeaders, null);
+
+        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
+        sipStack3.dispose();
+        phone3 = null;
+        sipStack3 = null;
+
+        Thread.sleep(1000);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+    }
+
+    @Test
     public void registerUserAgentWithExtraParamsAnd408ToOptionsPing() throws ParseException, InterruptedException, InvalidArgumentException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
@@ -382,6 +459,33 @@ public final class UserAgentManagerTest {
         sipStack2 = null;
 
         Thread.sleep(1000);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+    }
+
+    /**
+     * registerUserAgentWithAtTheRateSignInLogin
+     * we should be able to register and remove registration on non-response to options
+     * @throws ParseException
+     * @throws InterruptedException
+     * @throws InvalidArgumentException
+     */
+    @Test
+    public void registerUserAgentWithAtTheRateSignInLogin() throws ParseException, InterruptedException, InvalidArgumentException {
+        SipURI uri = sipStack5.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        Credential c = new Credential("127.0.0.1","maria.test@telestax.com", "1234");
+        phone5.addUpdateCredential(c);
+        assertTrue(phone5.register(uri, "maria.test@telestax.com", "1234", mariaContact5, 3600, 3600));
+        Thread.sleep(2000);
+
+        //user should be registered successfully
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+
+        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
+        sipStack5.dispose();
+        phone5 = null;
+        sipStack5 = null;
+
+        Thread.sleep(100000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 

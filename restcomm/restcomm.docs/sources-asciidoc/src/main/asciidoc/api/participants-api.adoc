@@ -30,8 +30,29 @@ A *Participant* represents a single participant currently connected to a running
 === Supported Operations
 **HTTP GET**. Returns the representation of a Participant resource, including the properties above.
 
-**HTTP POST**.
-Not supported
+**HTTP POST** to a Participant to mute/unmute a live Participant, we make an *HTTP POST* request to a live Participant instance resource URI: 
+
+....
+/2012-04-24/Accounts/{AccountSid}/Conferences/{ConferenceSid}/Participants/{CallSid}
+.... 
+
+or 
+
+....
+/2012-04-24/Accounts/{AccountSid}/Conferences/{ConferenceSid}/Participants/{CallSid}.json
+.... 
+
+The following parameters are available for you to *POST* request.:
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|===================================================================================================================================================================================================================================================
+|Parameter |Description
+| Mute | Either *true* or *flase*. Setting value of this parameter to *true* will mute the call. Setting value of this parameter to *false* will unmute the call.
+|===================================================================================================================================================================================================================================================
+
+
 
 **HTTP PUT**.
 Not supported
@@ -48,7 +69,7 @@ Not supported
 === Supported Operations
 **HTTP GET**. Returns the list representation of all the Participant resources for this Account, including the properties above.
 
-**HTTP POST**.
+**HTTP POST**
 Not supported
 
 **HTTP PUT**.
@@ -56,3 +77,53 @@ Not supported
 
 **HTTP DELETE**.
 Not supported
+
+=== Examples
+
+You can Mute/unMute an inprogress call as shown bellow.
+
+.Mute a Participant
+====
+curl -X POST http://<AccountSid>:<AutheToken>@<Domain>/restcomm/2012-04-24/Accounts/<AccountSid>/Conferences/<ConferenceSid>/Participants/<CallSid> -d "Mute=true"
+====
+
+*Sample Mute Response*
+----
+<RestcommResponse>
+  <Call>
+    <Sid>CA02b649d3ffe24408a1e141be089f347b</Sid>
+    <ConferenceSid>CFcc373b0637114f088eae954fa73f0f57</ConferenceSid>
+    <DateCreated>Wed, 15 Mar 2017 10:10:57 +0000</DateCreated>
+    <DateUpdated>Wed, 15 Mar 2017 10:15:33 +0000</DateUpdated>
+    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+    <Muted>true</Muted>
+    <Hold>false</Hold>
+    <StartConferenceOnEnter>true</StartConferenceOnEnter>
+    <EndConferenceOnEnter>false</EndConferenceOnEnter>
+    <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA02b649d3ffe24408a1e141be089f347b</Uri>
+  </Call>
+</RestcommResponse>
+----
+
+.unMute a Muted Participant
+====
+curl -X POST http://<AccountSid>:<AutheToken>@<Domain>/restcomm/2012-04-24/Accounts/<AccountSid>/Conferences/<ConferenceSid>/Participants/<CallSid> -d "Mute=false"
+====
+
+*Sample unMute Response*
+----
+<RestcommResponse>
+  <Call>
+    <Sid>CA02b649d3ffe24408a1e141be089f347b</Sid>
+    <ConferenceSid>CFcc373b0637114f088eae954fa73f0f57</ConferenceSid>
+    <DateCreated>Wed, 15 Mar 2017 10:10:57 +0000</DateCreated>
+    <DateUpdated>Wed, 15 Mar 2017 10:16:44 +0000</DateUpdated>
+    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+    <Muted>false</Muted>
+    <Hold>false</Hold>
+    <StartConferenceOnEnter>true</StartConferenceOnEnter>
+    <EndConferenceOnEnter>false</EndConferenceOnEnter>
+    <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA02b649d3ffe24408a1e141be089f347b</Uri>
+  </Call>
+</RestcommResponse>
+----

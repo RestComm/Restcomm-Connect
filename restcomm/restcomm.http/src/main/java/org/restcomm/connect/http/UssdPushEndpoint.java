@@ -122,9 +122,10 @@ public class UssdPushEndpoint extends SecuredEndpoint {
         final Integer timeout = getTimeout(data);
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
         CreateCall create = null;
+        //Currently we don't support StatusCallback for USSD Push requests
         try {
             create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.USSD,
-                    accountId, null);
+                    accountId, null, null, null, null);
             create.setCreateCDR(false);
             Future<Object> future = (Future<Object>) ask(ussdCallManager, create, expires);
             Object object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
@@ -146,10 +147,8 @@ public class UssdPushEndpoint extends SecuredEndpoint {
                             final String method = getMethod("Method", data);
                             final URI fallbackUrl = getUrl("FallbackUrl", data);
                             final String fallbackMethod = getMethod("FallbackMethod", data);
-                            final URI callback = getUrl("StatusCallback", data);
-                            final String callbackMethod = getMethod("StatusCallbackMethod", data);
                             final ExecuteCallScript execute = new ExecuteCallScript(call, accountId, version, url, method,
-                                    fallbackUrl, fallbackMethod, callback, callbackMethod);
+                                    fallbackUrl, fallbackMethod);
                             ussdCallManager.tell(execute, null);
                             // Create a call detail record for the call.
 //                            final CallDetailRecord.Builder builder = CallDetailRecord.builder();
