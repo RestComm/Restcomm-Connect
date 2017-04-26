@@ -180,7 +180,7 @@ public class RestcommConferenceParticipantsTool {
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
 
         if (muted != null)
-            params.add("Muted", ""+muted);
+            params.add("Mute", ""+muted);
 
         JsonObject jsonObject = null;
 

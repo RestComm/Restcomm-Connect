@@ -2781,7 +2781,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             } else if (conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
                 // Tell the conference the moderator is now present
                 // Causes background music to stop playing and all participants will be unmuted
-                conference.tell(new ConferenceModeratorPresent(), source);
+                conference.tell(new ConferenceModeratorPresent(beep), source);
                 if (beep) {
                     playBeepOnEnter(source);
                 }else{

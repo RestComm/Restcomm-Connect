@@ -149,7 +149,7 @@ public class RestcommCallsTool {
 
     /**
      * getCall from same account
-     * 
+     *
      * @param deploymentUrl
      * @param username
      * @param authToken
@@ -253,13 +253,53 @@ public class RestcommCallsTool {
         }
     }
 
+    /**
+     * @param deploymentUrl
+     * @param username
+     * @param authToken
+     * @param callSid
+     * @param mute
+     * @return
+     * @throws Exception
+     */
+    public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, Boolean mute) throws Exception {
+        return modifyCall(deploymentUrl, username, authToken, callSid, null, null, false, mute);
+    }
+
+    /**
+     * @param deploymentUrl
+     * @param username
+     * @param authToken
+     * @param callSid
+     * @param status
+     * @param rcmlUrl
+     * @return
+     * @throws Exception
+     */
     public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,
                                  String rcmlUrl) throws Exception {
-        return modifyCall(deploymentUrl, username, authToken, callSid, status, rcmlUrl, false);
+        return modifyCall(deploymentUrl, username, authToken, callSid, status, rcmlUrl, false, null);
     }
 
     public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,
-            String rcmlUrl, boolean moveConnectedLeg) throws Exception {
+                                 String rcmlUrl, boolean moveConnectedLeg) throws Exception {
+        return modifyCall(deploymentUrl, username, authToken, callSid, status, rcmlUrl, moveConnectedLeg, null);
+    }
+
+    /**
+     * @param deploymentUrl
+     * @param username
+     * @param authToken
+     * @param callSid
+     * @param status
+     * @param rcmlUrl
+     * @param moveConnectedLeg
+     * @param mute
+     * @return
+     * @throws Exception
+     */
+    public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,
+            String rcmlUrl, boolean moveConnectedLeg, Boolean mute) throws Exception {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -279,6 +319,12 @@ public class RestcommCallsTool {
             params.add("Url", rcmlUrl);
         if (moveConnectedLeg)
             params.add("MoveConnectedCallLeg", "true");
+        if (mute != null){
+        	if(mute)
+        		params.add("Mute", "true");
+        	else
+        		params.add("Mute", "false");
+        }
 
         JsonObject jsonObject = null;
 
