@@ -26,15 +26,7 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class StartForking {
-    private static final class Singleton {
-        private static final StartForking instance = new StartForking();
-    }
-
-    private StartForking() {
+    public StartForking() {
         super();
-    }
-
-    public static StartForking instance() {
-        return Singleton.instance;
     }
 }

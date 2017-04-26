@@ -20,18 +20,17 @@
  */
 package org.restcomm.connect.mrb.mock;
 
-import java.net.UnknownHostException;
-import java.util.HashMap;
-
-import org.restcomm.connect.mgcp.MediaResourceBrokerResponse;
-import org.restcomm.connect.mrb.api.GetConferenceMediaResourceController;
-import org.restcomm.connect.mrb.api.GetMediaGateway;
-import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
-import org.restcomm.connect.mrb.MediaResourceBrokerGeneric;
-
 import akka.actor.ActorRef;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.restcomm.connect.mgcp.MediaResourceBrokerResponse;
+import org.restcomm.connect.mrb.MediaResourceBrokerGeneric;
+import org.restcomm.connect.mrb.api.GetConferenceMediaResourceController;
+import org.restcomm.connect.mrb.api.GetMediaGateway;
+import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
+
+import java.net.UnknownHostException;
+import java.util.HashMap;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -87,7 +86,6 @@ public class MockMediaResourceBroker extends MediaResourceBrokerGeneric {
         this.configuration = message.configuration();
         this.storage = message.storage();
         this.loader = message.loader();
-        this.supervisor = message.supervisor();
 
         localMediaServerEntity = uploadLocalMediaServersInDataBase();
         this.localMediaGateway = turnOnMediaGateway(localMediaServerEntity);

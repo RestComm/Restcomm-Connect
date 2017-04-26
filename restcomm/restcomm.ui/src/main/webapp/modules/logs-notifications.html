@@ -12,32 +12,47 @@
     </div>
 </div>
 
-<div class="row logs-search-container" ng-show="notificationsLogsList.length > 0">
+<div class="row logs-search-container" ng-show="notificationsLogsList.length > 0 || search">
     <div class="row">
-        <div class="col-md-3 logs-search-title">Date</div>
+        <div class="col-md-2 logs-search-title">Date</div>
         <div class="col-md-2 logs-search-title">Code</div>
         <div class="col-md-3 logs-search-title">URL</div>
-        <div class="col-md-4 logs-search-title">Text</div>
+        <div class="col-md-3 logs-search-title">Text</div>
     </div>
     <div class="row">
         <form>
-            <div class="col-md-3">
-                <input type="date" class="logs-search-input" placeholder="Date" ng-model="query.date_created" />
+            <div class="col-md-2">
+                <div class="form-group">
+                    <input type="date" class="logs-search-input" placeholder="Start date" ng-model="search.start_time" />
+                    <!--
+                                            <input id="startpicker" pick-a-date="date" class="input-sm form-control" placeholder="Start Date" ng-model="search.start_time" />
+                            <span class="input-group-btn">
+                                <button  type="button" id="startDate" class="btn btn-default input-sm" ng-click="openDate('startDate')"><i class="glyphicon glyphicon-calendar"></i></button>
+                            </span>
+                    -->
+                </div>
+                <div class="form-group">
+                    <input type="date" class="logs-search-input" placeholder="End date" ng-model="search.end_time" />
+                    <!--
+                                            <input id="endpicker" pick-a-date="date" pick-a-date-options="options"  class="input-sm form-control" placeholder="End Date" ng-model="search.end_time" />
+                            <span class="input-group-btn">
+                                <button  type="button" id="endDate" class="btn btn-default input-sm" ng-click="openDate('endDate')"><i class="glyphicon glyphicon-calendar"></i></button>
+                            </span>
+                    -->
+                </div>
             </div>
             <div class="col-sm-2">
-                <input type="text" class="logs-search-input" placeholder="Error Code" ng-model="query.error_code" />
+                <input type="text" class="logs-search-input" placeholder="Error Code" ng-model="search.error_code" />
             </div>
             <div class="col-md-3">
-                <input type="text" class="logs-search-input" placeholder="Request URL" ng-model="query.request_url" />
+                <input type="text" class="logs-search-input" placeholder="Request URL" ng-model="search.request_url" />
             </div>
-            <div class="col-md-4">
-                <input type="text" class="logs-search-input" placeholder="Notification Text" ng-model="query.message_text" />
+            <div class="col-md-3">
+                <input type="text" class="logs-search-input" placeholder="Notification Text" ng-model="search.message_text" />
             </div>
-            <!--
             <div class="col-md-2">
-                <button class="logs-search-button" type="submit" ng-click="getCallsList()"></button>
+                <button class="logs-search-button" type="submit" ng-click="getNotificationsLogsList()"></button>
             </div>
-            -->
         </form>
     </div>
 </div>
@@ -51,37 +66,43 @@
 <div class="row">
     <table ng-show="(notificationsLogsList | filter:query).length > 0" class="table table-hover" ng-cloak>
         <thead class="logs-table-header">
-        <th class="width-20pc" ng-click="sortBy('date_created');toggleD=!toggleD;reverse=toggleD">Date<span class="pull-right" ng-show="predicate === 'date_created'"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></span></th>
-        <th class="width-5pc">Type</th>
-        <th class="width-5pc">Code</th>
-        <th class="width-10pc">Call</th>
-        <th class="width-20pc">Text</th>
+            <!--  disabled order toggling until it is properly supported from server side
+            <th class="width-20pc" ng-click="sortBy('date_created');toggleD=!toggleD;reverse=toggleD;pageChanged()">Date<span class="pull-right" ng-show="predicate === 'date_created'"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></span></th>
+            -->
+            <th class="width-20pc">Date</th>
+            <th class="width-5pc">Type</th>
+            <th class="width-5pc">Code</th>
+            <th class="width-10pc">Call</th>
+            <th class="width-20pc">Text</th>
         </thead>
         <tbody>
-        <tr ng-repeat="notification in filtered = (notificationsLogsList | filter:query | orderBy:sort:reverse) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit" class="logs-table-row">
-            <td><a href="" ng-click="showNotificationDetailsModal(notification)">{{ notification.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
-            <td><div class="text-center" uib-tooltip="{{ notification.log == 0 ? 'ERROR' : 'WARNING' }}"><i ng-class="notification.log == 0 ? 'fa fa-times' : 'fa fa-warning'"></i></div></td>
-            <td><div class="text-center"><a href="{{ notification.more_info }}" target="_blank">{{ notification.error_code }}</a></div></td>
-            <td><div class="text-center"><a href="#/logs/calls/{{ notification.call_sid }}">{{ notification.call_sid }}</a></div></td>
-            <td><div class="text-center" title="{{ notification.message_text }}">{{ (notification.message_text | limitTo: 35) + '...' }}</div></td>
-        </tr>
-        </tbody>
-        <tfoot>
-        <td><small class="pull-left">{{ filtered.length }} Notification{{ filtered.length == 1 ? "" : "s" }}</small></td>
-        <td colspan=3>
-            <form class="form-inline text-center">
-                <h6>Items / Page</h6>
-                <div class="btn-group buttons-per-page" data-toggle="buttons-radio">
-                    <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
-                    <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
-                    <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
-                </div>
-            </form>
-        </td>
-        <td colspan="99">
-        <uib-pagination class="pagination pagination-sm pull-right" total-items="filtered.length" items-per-page="entryLimit" ng-model="currentPage" max-size="maxSize" boundary-links="true" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
-           <!--<pagination class="pagination pagination-sm pull-right" total-items="notificationsLogsList.length" items-per-page="entryLimit" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>  -->
-        </td>
+            <tr ng-repeat="notification in filtered = (notificationsLogsList | filter:query | orderBy:sort:reverse)">
+                <td><a href="" ng-click="showNotificationDetailsModal(notification)">{{ notification.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
+                <td><div class="text-center" uib-tooltip="{{ notification.log == 0 ? 'ERROR' : 'WARNING' }}"><i ng-class="notification.log == 0 ? 'fa fa-times' : 'fa fa-warning'"></i></div></td>
+                <td><div class="text-center"><a href="{{ notification.more_info }}" target="_blank">{{ notification.error_code }}</a></div></td>
+                <td><div class="text-center"><a href="#/logs/calls/{{ notification.call_sid }}">{{ notification.call_sid }}</a></div></td>
+                <td><div class="text-center" title="{{ notification.message_text }}">{{ (notification.message_text | limitTo: 35) + '...' }}</div></td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <td><small class="pull-left">{{ totalNotification }} Notification{{ totalNotification == 1 ? "" : "s" }}</small></td>
+            <td colspan=3>
+                <form class="form-inline text-center">
+                    <h6>Items / Page</h6>
+                    <div class="btn-group buttons-per-page" data-toggle="buttons-radio">
+                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
+                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
+                        <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
+                    </div>
+                </form>
+            </td>
+            <td colspan="99">
+                <uib-pagination class="pagination pagination-sm pull-right" total-items="totalNotification"
+						ng-model="currentPage" max-size="maxSize" boundary-links="true" ng-change="pageChanged()"
+						items-per-page="entryLimit" previous-text="<" next-text=">" first-text="<<" last-text=">>"
+						></uib-pagination>
+               <!--<pagination class="pagination pagination-sm pull-right" total-items="notificationsLogsList.length" items-per-page="entryLimit" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></pagination>  --> 
+            </td>
         </tfoot>
     </table>
 </div>

@@ -316,7 +316,7 @@ public class DialRecordingS3UploadAnswerDelayTest {
 	}
 
 
-	@Deployment(name = "DialRecordingS3UploadTest", managed = true, testable = false)
+	@Deployment(name = "DialRecordingS3UploadTest_Secure", managed = true, testable = false)
 	public static WebArchive createWebArchiveNoGw() {
 		logger.info("Packaging Test App");
 		WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");

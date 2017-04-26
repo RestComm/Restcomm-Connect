@@ -68,6 +68,7 @@ MYSQL_SCHEMA=''
 MYSQL_SNDHOST='' #Used for DB redundancy. If set RestComm (Jboss) will point to it if principal DB fails.
 ----
 
+[[amazons3]]
 * Section *#Amazon S3 Bucket*.
 [source,bash]
 ----

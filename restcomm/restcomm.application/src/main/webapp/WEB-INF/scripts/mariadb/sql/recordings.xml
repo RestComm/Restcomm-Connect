@@ -9,6 +9,12 @@
     VALUES (#{sid}, #{date_created}, #{date_updated}, #{account_sid}, #{call_sid}, #{duration}, #{api_version}, #{uri}, #{file_uri}, #{s3_uri});
   </insert>
 
+    <update id="updateRecording" parameterType="map">
+        UPDATE restcomm_recordings
+        SET date_updated=#{date_updated}, uri=#{uri}, file_uri=#{file_uri}, s3_uri=#{s3_uri}
+        WHERE sid=#{sid};
+    </update>
+
   <select id="getRecording" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_recordings WHERE sid=#{sid};
   </select>
@@ -32,4 +38,75 @@
   <delete id="removeRecordings" parameterType="string">
     DELETE FROM restcomm_recordings WHERE account_sid=#{account_sid};
   </delete>
+
+  <select id="getTotalRecordingByUsingFilters" parameterType="org.restcomm.connect.dao.entities.RecordingFilter" resultType="int">
+            SELECT COUNT(*) FROM restcomm_recordings WHERE
+
+            <!-- are we counting cdrs from a single account or from an account set -->
+            <if test="accountSidSet == null">
+                    account_sid=#{accountSid}
+            </if>
+            <if test="accountSidSet != null">
+                    <if test="!accountSidSet.isEmpty()">
+                            account_sid IN
+                            <foreach item="item" index="index" collection="accountSidSet" open="(" separator="," close=")">
+                                    #{item}
+                            </foreach>
+                    </if>
+                    <if test="accountSidSet.isEmpty()">
+                            account_sid=''
+                    </if>
+            </if>
+
+            <if test="instanceid != null">
+                    AND instanceid like #{instanceid}
+            </if>
+            <if test="callSid != null">
+                    AND call_sid like #{callSid}
+            </if>
+            <!-- select * from "restcomm_sms_messages" where "start_time" >= '2013-08-23' order by "start_time" ; -->
+            <if test="startTime != null">
+                AND date_created &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                    AND date_created &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
+            </if>
+
+    </select>
+
+    <select id="getRecordingsByUsingFilters" parameterType="org.restcomm.connect.dao.entities.RecordingFilter" resultType="hashmap">
+            SELECT * FROM restcomm_recordings AS restcomm_recordings WHERE
+
+            <!-- are we counting cdrs from a single account or from an account set -->
+            <if test="accountSidSet == null">
+                    account_sid=#{accountSid}
+            </if>
+            <if test="accountSidSet != null">
+                    <if test="!accountSidSet.isEmpty()">
+                            account_sid IN
+                            <foreach item="item" index="index" collection="accountSidSet" open="(" separator="," close=")">
+                                    #{item}
+                            </foreach>
+                    </if>
+                    <if test="accountSidSet.isEmpty()">
+                            account_sid=''
+                    </if>
+            </if>
+
+            <if test="instanceid != null">
+                    AND instanceid like #{instanceid}
+            </if>
+            <if test="callSid != null">
+                    AND call_sid like #{callSid}
+            </if>
+            <!-- select * from "restcomm_sms_messages" where "start_time" >= '2013-08-23' order by "start_time" ; -->
+            <if test="startTime != null">
+                AND date_created &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                    AND date_created &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
+            </if>
+            order by date_created
+            LIMIT #{limit} OFFSET #{offset}
+    </select>
 </mapper>
