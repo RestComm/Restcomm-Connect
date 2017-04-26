@@ -58,10 +58,16 @@ public class ClientsEndpointTest {
     private SipPhone bobPhone;
     private String bobContact = "sip:bob@127.0.0.1:5090";
 
+    //developer is account in Organization - default.restcomm.com
     String developerUsername = "developer@company.com";
     String developeerAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     String developerAccountSid = "AC11111111111111111111111111111111";
     String removedClientSid = "CLb8838febabef4970a10dda1680506815";
+
+    //developer is account in Organization - org2.restcomm.com
+    String developerOrg2Username = "developer2@org2.com";
+    String developeerOrg2AuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    String developerOrg2AccountSid = "AC11111111111111111111111111111112";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -185,6 +191,36 @@ public class ClientsEndpointTest {
         ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
         Assert.assertEquals(400, response.getStatus());
         Assert.assertTrue("Response should contain 'invalid' term", response.getEntity(String.class).toLowerCase().contains("invalid"));
+    }
+
+    /**
+     * addSameClientNameInDifferentOrganizations
+     * https://github.com/RestComm/Restcomm-Connect/issues/2106
+     * We should be able to add sane client in different organizations
+     * 
+     */
+    public void addSameClientNameInDifferentOrganizations() {
+    	/*
+    	 * Add client maria in Organization - default.restcomm.com
+    	 */
+    	Client jersey = getClient(developerUsername, developeerAuthToken);
+        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.add("Login","maria");
+        params.add("Password","RestComm1234!");
+        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(200, response.getStatus());
+
+        /*
+    	 * Add client maria in Organization - org2.restcomm.com
+    	 */
+        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerOrg2AccountSid + "/Clients.json" ) );
+        params = new MultivaluedMapImpl();
+        params.add("Login","maria");
+        params.add("Password","RestComm1234!");
+        response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(200, response.getStatus());
+    	
     }
 
     protected String getResourceUrl(String suffix) {
