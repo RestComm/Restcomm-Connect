@@ -102,7 +102,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
                final SqlSession session = sessions.openSession();
                String phoneRegexPattern = null;
                try {
-                    List<IncomingPhoneNumber> listPhones = getAllIncomingPhoneNumbers();
+                    List<IncomingPhoneNumber> listPhones = getIncomingPhoneNumbersRegex();
                    for (IncomingPhoneNumber listPhone : listPhones){
                        if (listPhone.getPhoneNumber().startsWith("+")){
                             phoneRegexPattern = listPhone.getPhoneNumber().replace("+", "/+");
@@ -118,11 +118,11 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
                             if (resultRestcommRegexHostedNumber != null) {
                                 return toIncomingPhoneNumber(resultRestcommRegexHostedNumber);
                             }else{
-                                logger.error("Error, Regex check returns a  null value "  );
+                                logger.info("Error, Regex check returns a  null value "  );
                             }
                         }
                     }
-                        logger.warn("No matching phone number found, make sure your Restcomm Regex phone number is correctly defined");
+                        logger.info("No matching phone number found, make sure your Restcomm Regex phone number is correctly defined");
                }finally {
             session.close();
         }
@@ -153,6 +153,23 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         final SqlSession session = sessions.openSession();
         try {
             final List<Map<String, Object>> results = session.selectList(namespace + "getAllIncomingPhoneNumbers");
+            final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    incomingPhoneNumbers.add(toIncomingPhoneNumber(result));
+                }
+            }
+            return incomingPhoneNumbers;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public List<IncomingPhoneNumber> getIncomingPhoneNumbersRegex() {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getIncomingPhoneNumbersRegex");
             final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
