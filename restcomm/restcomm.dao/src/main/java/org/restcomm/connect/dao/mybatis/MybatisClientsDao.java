@@ -19,20 +19,6 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.joda.time.DateTime;
-import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.dao.ClientsDao;
-import org.restcomm.connect.dao.entities.Client;
-import org.restcomm.connect.commons.dao.Sid;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static org.restcomm.connect.dao.DaoUtils.readDateTime;
 import static org.restcomm.connect.dao.DaoUtils.readInteger;
 import static org.restcomm.connect.dao.DaoUtils.readSid;
@@ -41,6 +27,20 @@ import static org.restcomm.connect.dao.DaoUtils.readUri;
 import static org.restcomm.connect.dao.DaoUtils.writeDateTime;
 import static org.restcomm.connect.dao.DaoUtils.writeSid;
 import static org.restcomm.connect.dao.DaoUtils.writeUri;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.entities.Client;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -72,7 +72,10 @@ public final class MybatisClientsDao implements ClientsDao {
     }
 
     @Override
-    public Client getClient(final String login) {
+    public Client getClient(final String login, Sid organizationSid) {
+        final Map<String, Object> map = new HashMap<String, Object>();
+        map.put("login", login);
+        map.put("organization_sid", writeSid(organizationSid));
         return getClient(namespace + "getClientByLogin", login);
     }
 

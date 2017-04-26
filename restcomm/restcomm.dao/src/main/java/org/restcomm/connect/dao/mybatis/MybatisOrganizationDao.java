@@ -71,6 +71,21 @@ public final class MybatisOrganizationDao implements OrganizationsDao {
     }
 
     @Override
+    public Organization getOrganizationByDomainName(String domainName) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Map<String, Object> result = session.selectOne(namespace + "getOrganizationByDomainName", domainName);
+            if (result != null) {
+                return toOrganization(result);
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public void updateOrganization(Organization organization) {
         final SqlSession session = sessions.openSession();
         try {
