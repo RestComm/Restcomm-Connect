@@ -103,6 +103,10 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
                String phoneRegexPattern = null;
                try {
                     List<IncomingPhoneNumber> listPhones = getIncomingPhoneNumbersRegex();
+                    if (logger.isInfoEnabled()) {
+                        String msg = String.format("Found %d Regex IncomingPhone numbers",listPhones.size());
+                        logger.info(msg);
+                    }
                    for (IncomingPhoneNumber listPhone : listPhones){
                        if (listPhone.getPhoneNumber().startsWith("+")){
                             phoneRegexPattern = listPhone.getPhoneNumber().replace("+", "/+");
@@ -116,14 +120,32 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
                         if (m.find()) {
                             final Map<String, Object> resultRestcommRegexHostedNumber = session.selectOne(namespace + selector, phoneRegexPattern);
                             if (resultRestcommRegexHostedNumber != null) {
+                                if (logger.isInfoEnabled()) {
+                                    String msg = String.format("Pattern that matched is \"%s\"",phoneRegexPattern);
+                                    logger.info(msg);
+                                }
                                 return toIncomingPhoneNumber(resultRestcommRegexHostedNumber);
-                            }else{
-                                logger.info("Error, Regex check returns a  null value "  );
+                            } else{
+                                if (logger.isInfoEnabled()) {
+                                    String msg = String.format("Error, Regex \"%s\" check returns a  null value", phoneRegexPattern);
+                                    logger.info(msg);
+                                }
+                            }
+                        } else {
+                            if (logger.isInfoEnabled()) {
+                                String msg = String.format("Error, Regex \"%s\" check returns a  null value", phoneRegexPattern);
+                                logger.info(msg);
                             }
                         }
                     }
                         logger.info("No matching phone number found, make sure your Restcomm Regex phone number is correctly defined");
-               }finally {
+               } catch (Exception e) {
+                   if (logger.isDebugEnabled()) {
+                       String msg = String.format("Exception while trying to match for a REGEX incoming phone number");
+                       logger.debug(msg);
+                   }
+               }
+               finally {
             session.close();
         }
        return null;
