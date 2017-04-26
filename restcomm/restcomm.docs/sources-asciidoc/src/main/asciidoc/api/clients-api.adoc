@@ -16,6 +16,8 @@ Restcomm has a new implied behavior when VoiceUrl is not provided for a Client a
 
 Only registered Clients are allowed to use the *B2BUA/P2P/Proxy* functionalities of Restcomm. Proxying and P2P calls are only allowed between registered(authenticated) Clients.
 
+The CDR records generated for calls made by Clients, will have account SID the account that the Client belongs to.
+
 === Resource Properties
 
 [cols=",",options="header",]

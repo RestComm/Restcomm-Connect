@@ -65,7 +65,7 @@ public final class SmsSessionRequest {
     }
 
     public SmsSessionRequest(final String from, final String to, final String body, final SipServletRequest origRequest, final ConcurrentHashMap<String, String> customHeaders) {
-        this(from, to, body, Encoding.UCS_2, origRequest, customHeaders);
+        this(from, to, body, Encoding.GSM, origRequest, customHeaders);
     }
 
     public SmsSessionRequest(final String from, final String to, final String body, final Encoding encoding, final ConcurrentHashMap<String, String> customHeaders) {
@@ -73,7 +73,7 @@ public final class SmsSessionRequest {
     }
 
     public SmsSessionRequest(final String from, final String to, final String body, final ConcurrentHashMap<String, String> customHeaders) {
-        this(from, to, body, Encoding.UCS_2, null, customHeaders);
+        this(from, to, body, Encoding.GSM, null, customHeaders);
     }
 
     public String from() {
