@@ -11,6 +11,10 @@
 		SELECT * FROM restcomm_organizations WHERE sid=#{sid};
 	</select>
 
+	<select id="getOrganizationByDomainName" parameterType="string" resultType="hashmap">
+		SELECT * FROM restcomm_organizations WHERE domain_name=#{domain_name};
+	</select>
+
 	<update id="updateOrganization" parameterType="map">
 		UPDATE restcomm_organizations SET date_updated=#{date_updated},
 		domain_name=#{domain_name}

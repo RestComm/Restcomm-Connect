@@ -38,6 +38,13 @@ public interface OrganizationsDao {
      * @return Organization entity
      */
     Organization getOrganization(final Sid sid);
+
+    /**
+     * getOrganizationByDomainName
+     * @param domainName
+     * @return Organization entity
+     */
+    Organization getOrganizationByDomainName(final String domainName);
     /**
      * updateOrganization
      * @param organization

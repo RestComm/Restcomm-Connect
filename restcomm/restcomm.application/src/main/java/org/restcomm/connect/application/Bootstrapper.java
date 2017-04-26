@@ -245,12 +245,12 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
      * @param configuration
      * @param storage
      */
-    private void generateDefaultDomainName (final Configuration configuration, final DaoManager storage) {
+    private void generateDefaultDomainName (final Configuration configuration, final DaoManager storage, String defaultOrganization) {
         try{
             final String hostname = configuration.getString("hostname");
             if(logger.isInfoEnabled())
                 logger.info("Generate Default Domain Name based on RC hostname: "+hostname);
-            Organization organization = storage.getOrganizationsDao().getOrganization(new Sid("ORafbe225ad37541eba518a74248f0ac4c"));
+            Organization organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
             if(organization != null){
                 organization = organization.setDomainName(hostname);
                 storage.getOrganizationsDao().updateOrganization(organization);
@@ -390,7 +390,10 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 logger.error("UnknownHostException during the generation of InstanceId: "+e);
             }
 
-            generateDefaultDomainName(xml.subset("http-client"), storage);
+            //Should it be configurable?
+            final String defaultOrganization = "ORafbe225ad37541eba518a74248f0ac4c";
+            context.setAttribute("defaultOrganization", defaultOrganization);
+            generateDefaultDomainName(xml.subset("http-client"), storage, defaultOrganization);
 
             context.setAttribute(InstanceId.class.getName(), instanceId);
             monitoring.tell(instanceId, null);

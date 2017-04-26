@@ -364,7 +364,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 clientData.add("Password", data.getFirst("Password"));
                 clientData.add("FriendlyName", account.getFriendlyName());
                 clientData.add("AccountSid", account.getSid().toString());
-                Client client = clientDao.getClient(clientData.getFirst("Login"));
+                Client client = clientDao.getClient(clientData.getFirst("Login"), account.getOrganizationSid());
                 if (client == null) {
                     client = createClientFrom(account.getSid(), clientData);
                     clientDao.addClient(client);
@@ -521,7 +521,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 String email = modifiedAccount.getEmailAddress();
                 if (email != null && !email.equals("")) {
                     String username = email.split("@")[0];
-                    Client client = clientDao.getClient(username);
+                    Client client = clientDao.getClient(username, account.getOrganizationSid());
                     if (client != null) {
                         // TODO: need to encrypt this password because it's
                         // same with Account password.

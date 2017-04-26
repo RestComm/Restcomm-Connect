@@ -110,6 +110,8 @@ public final class SmsService extends UntypedActor {
     //List of extensions for SmsService
     List<RestcommExtensionGeneric> extensions;
 
+    private final String defaultOrganization;
+
     public SmsService(final Configuration configuration, final SipFactory factory,
             final DaoManager storage, final ServletContext servletContext) {
         super();
@@ -130,6 +132,7 @@ public final class SmsService extends UntypedActor {
         if (logger.isInfoEnabled()) {
             logger.info("SmsService extensions: "+(extensions != null ? extensions.size() : "0"));
         }
+        defaultOrganization = (String) servletContext.getAttribute("defaultOrganization");
     }
 
     private void message(final Object message) throws IOException {
