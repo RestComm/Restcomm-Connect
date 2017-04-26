@@ -401,7 +401,7 @@ public class MockMediaGateway extends UntypedActor {
                         sleepTime = Integer.parseInt(param.replace("rlt=", ""));
                     }
                 }
-                if (sleepTime == 3600000) {
+                if (sleepTime == 36000) {
                     //If maxLength is not set, rlt will be rlt=3600000
                     //In that case don't sleep at all
                     sleepTime = 0;
