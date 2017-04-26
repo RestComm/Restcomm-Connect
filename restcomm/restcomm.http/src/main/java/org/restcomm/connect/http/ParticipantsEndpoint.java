@@ -47,12 +47,8 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.http.converter.CallDetailRecordListConverter;
-import org.restcomm.connect.http.converter.RecordingListConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.converter.ConferenceParticipantConverter;
-import org.restcomm.connect.http.converter.RecordingConverter;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -63,30 +59,32 @@ import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
 import org.restcomm.connect.dao.entities.CallDetailRecordList;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.http.converter.CallDetailRecordListConverter;
+import org.restcomm.connect.http.converter.ConferenceParticipantConverter;
+import org.restcomm.connect.http.converter.RecordingConverter;
+import org.restcomm.connect.http.converter.RecordingListConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
 import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.GetCallInfo;
-import org.restcomm.connect.mscontrol.api.messages.Mute;
-import org.restcomm.connect.mscontrol.api.messages.Unmute;
-
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
-import akka.actor.ActorRef;
-import akka.util.Timeout;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 
+import akka.actor.ActorRef;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
+
 /**
  * @author maria-farooq@live.com (Maria Farooq)
  */
 @NotThreadSafe
-public abstract class ParticipantsEndpoint extends SecuredEndpoint {
+public abstract class ParticipantsEndpoint extends CallsEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
@@ -283,15 +281,12 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
             return status(BAD_REQUEST).build();
         }
 
-        final String mutedStr = data.getFirst("Muted");
+        Boolean mute = Boolean.valueOf(data.getFirst("Mute"));
         // Mute/UnMute call
-        if (mutedStr != null) {
-
-            boolean muted = Boolean.parseBoolean(mutedStr);
+        if (mute != null) {
             String callPath = null;
             final ActorRef call;
             final CallInfo callInfo;
-
             try {
                 callPath = cdr.getCallPath();
                 Future<Object> future = (Future<Object>) ask(callManager, new GetCall(callPath), expires);
@@ -301,22 +296,16 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
                 CallResponse<CallInfo> response = (CallResponse<CallInfo>) Await.result(future,
                         Duration.create(100000, TimeUnit.SECONDS));
                 callInfo = response.get();
-
             } catch (Exception exception) {
                 return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
             }
-            if (callInfo.state().name().equalsIgnoreCase("IN_PROGRESS")){
-                if (muted) {
-                    if (call != null) {
-                        call.tell(new Mute(), call);
-                    }
-                } else {
-                    if (call != null) {
-                        call.tell(new Unmute(), call);
-                    }
+
+            if(call != null){
+                try{
+                    muteUnmuteCall(mute, callInfo, call, cdr, dao);
+                } catch (Exception exception) {
+                    return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
                 }
-                cdr = cdr.setMuted(muted);
-                dao.updateCallDetailRecord(cdr);
             }
         }
         if (APPLICATION_JSON_TYPE == responseType) {

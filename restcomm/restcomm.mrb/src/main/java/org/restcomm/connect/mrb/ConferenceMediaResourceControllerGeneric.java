@@ -280,10 +280,16 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
     }
 
     protected void onPlay(Play message, ActorRef self, ActorRef sender) {
-        if (!playing) {
-            this.playing = Boolean.TRUE;
+        /*
+         * https://github.com/RestComm/Restcomm-Connect/issues/2024
+         * We actually dont care about running beeps or MOH, we will send new play
+         * it will stop exiting playing audio and will play new one
+         * (unless both are exactly same)
+         */
+        //if (!playing) {
+            //this.playing = Boolean.TRUE;
             this.mediaGroup.tell(message, self);
-        }
+        //}
     }
 
     protected void onStartRecording(StartRecording message, ActorRef self, ActorRef sender) throws Exception {
