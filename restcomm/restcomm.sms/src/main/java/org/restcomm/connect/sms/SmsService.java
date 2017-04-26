@@ -195,8 +195,8 @@ public final class SmsService extends UntypedActor {
             // try to see if the request is destined to another registered client
             // if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we
             // have little control over
-        	final Sid toOrganizationSid = getOrganizationSidBySipHost((SipURI) request.getTo().getURI());
-        	if(logger.isDebugEnabled()) {
+            final Sid toOrganizationSid = getOrganizationSidBySipHost((SipURI) request.getTo().getURI());
+            if(logger.isDebugEnabled()) {
                 logger.debug("toOrganizationSid" + toOrganizationSid);
             }
             Client toClient = clients.getClient(toUser, toOrganizationSid);
@@ -221,7 +221,7 @@ public final class SmsService extends UntypedActor {
                 final SipServletResponse trying = request.createResponse(SipServletResponse.SC_TRYING);
                 trying.send();
 
-                ActorRef session = session();
+                ActorRef session = session(fromOrganizationSid);
                 // Create an SMS detail record.
                 final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
                 final SmsMessage.Builder builder = SmsMessage.builder();
@@ -324,7 +324,10 @@ public final class SmsService extends UntypedActor {
                     }
                     interpreter = builder.build();
                 }
-                final ActorRef session = session();
+                Sid organizationSid = storage.getOrganizationsDao().getOrganization(storage.getAccountsDao().getAccount(number.getAccountSid()).getOrganizationSid()).getSid();
+                if(logger.isDebugEnabled())
+                    logger.debug("redirectToHostedSmsApp organizationSid = "+organizationSid);
+                final ActorRef session = session(organizationSid);
                 session.tell(request, self);
                 final StartInterpreter start = new StartInterpreter(session);
                 interpreter.tell(start, self);
@@ -362,7 +365,8 @@ public final class SmsService extends UntypedActor {
         final ActorRef sender = sender();
         if (CreateSmsSession.class.equals(klass)) {
             if (executePreOutboundAction(message)) {
-                final ActorRef session = session();
+                CreateSmsSession createSmsSession = (CreateSmsSession) message;
+                final ActorRef session = session(getOrganizationSidByAccountSid(new Sid(createSmsSession.getAccountSid())));
                 final SmsServiceResponse<ActorRef> response = new SmsServiceResponse<ActorRef>(session);
                 sender.tell(response, self);
             } else {
@@ -430,13 +434,13 @@ public final class SmsService extends UntypedActor {
         return result;
     }
 
-    private ActorRef session() {
+    private ActorRef session(final Sid organizationSid) {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new SmsSession(configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
+                return new SmsSession(configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext, organizationSid);
             }
         });
         return system.actorOf(props);
@@ -531,6 +535,21 @@ public final class SmsService extends UntypedActor {
             if(logger.isDebugEnabled())
                 logger.debug("organization is null going to choose default: "+organization);
         }
+        return organization.getSid();
+    }
+
+    /**
+     * getOrganizationSidByAccountSid
+     * @param accountSid
+     * @return Sid of Organization
+     */
+    private Sid getOrganizationSidByAccountSid(final Sid accountSid){
+        if(accountSid != null){
+            return storage.getAccountsDao().getAccount(accountSid).getOrganizationSid();
+        }
+        Organization organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
+        if(logger.isDebugEnabled())
+            logger.debug("organization is null going to choose default: "+organization);
         return organization.getSid();
     }
 }

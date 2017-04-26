@@ -33,6 +33,7 @@ import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.Registration;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.telephony.api.GetCall;
@@ -89,6 +90,7 @@ public final class UserAgentManager extends UntypedActor {
     private String imsProxyAddress;
     private int imsProxyPort;
     private String imsDomain;
+    private final String defaultOrganization;
 
     public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage,
             final ServletContext servletContext) {
@@ -122,6 +124,7 @@ public final class UserAgentManager extends UntypedActor {
             }
         }
 
+        defaultOrganization = (String) servletContext.getAttribute("defaultOrganization");
         firstTimeCleanup();
     }
 
@@ -293,7 +296,7 @@ public final class UserAgentManager extends UntypedActor {
                 } else if(authenticateUsers) { // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
                     final String authorization = request.getHeader("Proxy-Authorization");
                     if (authorization != null) {
-                      if (permitted(authorization, method)) {
+                      if (permitted(authorization, method, (SipURI) request.getFrom().getURI())) {
                           register(message);
                       } else {
                           SipServletResponse response = ((SipServletRequest) message).createResponse(javax.servlet.sip.SipServletResponse.SC_FORBIDDEN); //Issue #935, Send 403 FORBIDDEN instead of issuing 407 again and again
@@ -394,7 +397,7 @@ public final class UserAgentManager extends UntypedActor {
         uri.setPort(port);
     }
 
-    private boolean permitted(final String authorization, final String method) {
+    private boolean permitted(final String authorization, final String method, SipURI sipURI) {
         final Map<String, String> map = toMap(authorization);
         final String user = map.get("username").trim();
         final String algorithm = map.get("algorithm");
@@ -406,7 +409,7 @@ public final class UserAgentManager extends UntypedActor {
         final String qop = map.get("qop");
         final String response = map.get("response");
         final ClientsDao clients = storage.getClientsDao();
-        final Client client = clients.getClient(user);
+        final Client client = clients.getClient(user, getOrganizationSidBySipHost(sipURI));
         if (client != null && Client.ENABLED == client.getStatus()) {
             final String password = client.getPassword();
             final String result = DigestAuthentication.response(algorithm, user, realm, password, nonce, nc, cnonce, method,
@@ -846,6 +849,27 @@ public final class UserAgentManager extends UntypedActor {
         SipURI sipURI = ((SipURI)contact.getURI());
         sipURI.setPort(outgoingRequest.getLocalPort());
         sipURI.setHost(outgoingRequest.getLocalAddr());
+    }
+
+    /**
+     * getOrganizationSidBySipHost
+     *
+     * @param fromUri
+     * @return Sid of Organization
+     */
+    private Sid getOrganizationSidBySipHost(final SipURI fromUri){
+        final String organizationDomainName = fromUri.getHost();
+        if(logger.isDebugEnabled())
+            logger.debug("organizationDomainName: "+organizationDomainName);
+        Organization organization = storage.getOrganizationsDao().getOrganizationByDomainName(organizationDomainName);
+        if(logger.isDebugEnabled())
+            logger.debug("organization: "+organization);
+        if(organization == null){
+            organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
+            if(logger.isDebugEnabled())
+                logger.debug("organization is null going to choose default: "+organization);
+        }
+        return organization.getSid();
     }
 
     @Override

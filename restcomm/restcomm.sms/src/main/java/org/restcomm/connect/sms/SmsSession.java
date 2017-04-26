@@ -37,6 +37,7 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.Registration;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
@@ -93,8 +94,9 @@ public final class SmsSession extends UntypedActor {
 
     private final ActorRef monitoringService;
 
+    private final Sid organizationSid;
     public SmsSession(final Configuration configuration, final SipFactory factory, final SipURI transport,
-                      final DaoManager storage, final ActorRef monitoringService, final ServletContext servletContext) {
+                      final DaoManager storage, final ActorRef monitoringService, final ServletContext servletContext, final Sid organizationSid) {
         super();
         this.configuration = configuration;
         this.smsConfiguration = configuration.subset("sms-aggregator");
@@ -113,6 +115,7 @@ public final class SmsSession extends UntypedActor {
         this.externalIP = this.configuration.subset("runtime-settings").getString("external-ip");
         if (externalIP == null || externalIP.isEmpty() || externalIP.equals(""))
             externalIP = defaultHost;
+        this.organizationSid = organizationSid;
     }
 
     private void inbound(final Object message) throws IOException {
@@ -251,7 +254,7 @@ public final class SmsSession extends UntypedActor {
 
         monitoringService.tell(new TextMessage(last.from(), last.to(), TextMessage.SmsState.OUTBOUND), self());
         final ClientsDao clients = storage.getClientsDao();
-        final Client toClient = clients.getClient(last.to());
+        final Client toClient = clients.getClient(last.to(), organizationSid);
         Registration toClientRegistration = null;
         if (toClient != null) {
             final RegistrationsDao registrations = storage.getRegistrationsDao();
