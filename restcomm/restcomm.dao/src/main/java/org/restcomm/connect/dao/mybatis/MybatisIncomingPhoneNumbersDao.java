@@ -121,19 +121,19 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
                             final Map<String, Object> resultRestcommRegexHostedNumber = session.selectOne(namespace + selector, phoneRegexPattern);
                             if (resultRestcommRegexHostedNumber != null) {
                                 if (logger.isInfoEnabled()) {
-                                    String msg = String.format("Pattern that matched is \"%s\"",phoneRegexPattern);
+                                    String msg = String.format("Pattern \"%s\" matched the phone number \"%s\"",phoneRegexPattern, inBoundPhoneNumber);
                                     logger.info(msg);
                                 }
                                 return toIncomingPhoneNumber(resultRestcommRegexHostedNumber);
                             } else{
                                 if (logger.isInfoEnabled()) {
-                                    String msg = String.format("Error, Regex \"%s\" check returns a  null value", phoneRegexPattern);
+                                    String msg = String.format("Error, Regex \"%s\" cannot be matched for phone number \"%s\"", phoneRegexPattern, inBoundPhoneNumber);
                                     logger.info(msg);
                                 }
                             }
                         } else {
                             if (logger.isInfoEnabled()) {
-                                String msg = String.format("Error, Regex \"%s\" check returns a  null value", phoneRegexPattern);
+                                String msg = String.format("Error, Regex \"%s\" cannot be matched for phone number \"%s\"", phoneRegexPattern, inBoundPhoneNumber);
                                 logger.info(msg);
                             }
                         }
