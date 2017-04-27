@@ -37,6 +37,7 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.sip.DialogState;
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
 
@@ -44,6 +45,7 @@ import org.apache.log4j.Logger;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
+import org.cafesip.sipunit.SipRequest;
 import org.cafesip.sipunit.SipStack;
 import org.cafesip.sipunit.SipTransaction;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
@@ -62,6 +64,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.testsuite.UssdPullTestMessages;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
@@ -70,10 +73,7 @@ import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonObject;
 
 /**
- * Test for Dial Action attribute. Reference:
- * https://www.twilio.com/docs/api/twiml/dial#attributes-action The 'action'
- * attribute takes a URL as an argument. When the dialed call ends, Restcomm
- * will make a GET or POST request to this URL
+ * Test for Regex for IncomingPhoneNumbers
  *
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
@@ -96,7 +96,6 @@ public class CallRegexTest {
     @ArquillianResource
     URL deploymentUrl;
 
-    //Dial Action URL: http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/DialAction Method: POST
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
 
@@ -403,7 +402,7 @@ public class CallRegexTest {
         assertTrue(maxConcurrentIncomingCalls == 1);
         assertTrue(maxConcurrentOutgoingCalls == 1);
     }
-    
+
     @Test
     public void testDialClientAlice7711133() throws ParseException, InterruptedException, MalformedURLException {
         //matches regex expression "^*77...33#$"
@@ -593,7 +592,7 @@ public class CallRegexTest {
         assertTrue(maxConcurrentIncomingCalls == 1);
         assertTrue(maxConcurrentOutgoingCalls == 1);
     }
-    
+
 @Test
     public void testDialClientAlice12233() throws ParseException, InterruptedException, MalformedURLException {
 //matches regex expression "^[12]2233#$"
@@ -687,7 +686,7 @@ public class CallRegexTest {
         assertTrue(maxConcurrentCalls == 2);
         assertTrue(maxConcurrentIncomingCalls == 1);
         assertTrue(maxConcurrentOutgoingCalls == 1);
-    }    
+    }
 
 @Test
     public void testDialClientAlice22233() throws ParseException, InterruptedException, MalformedURLException {
@@ -782,7 +781,7 @@ public class CallRegexTest {
         assertTrue(maxConcurrentCalls == 2);
         assertTrue(maxConcurrentIncomingCalls == 1);
         assertTrue(maxConcurrentOutgoingCalls == 1);
-    }  
+    }
 
 @Test
     public void testDialClientAlice222_888_999_500() throws ParseException, InterruptedException, MalformedURLException {
@@ -877,9 +876,9 @@ public class CallRegexTest {
         assertTrue(maxConcurrentCalls == 2);
         assertTrue(maxConcurrentIncomingCalls == 1);
         assertTrue(maxConcurrentOutgoingCalls == 1);
-    }     
+    }
 
-    
+
 @Test
     public void testDialClientAlice222_333_444_500() throws ParseException, InterruptedException, MalformedURLException {
 //matches regex expression "^\\*222\\*...\\*...\\*500#$"
@@ -973,9 +972,9 @@ public class CallRegexTest {
         assertTrue(maxConcurrentCalls == 2);
         assertTrue(maxConcurrentIncomingCalls == 1);
         assertTrue(maxConcurrentOutgoingCalls == 1);
-    }     
-    
-  
+    }
+
+
 @Test
     public void testDialClientAlice42342() throws ParseException, InterruptedException, MalformedURLException {
 //matches regex expression "[45]234[23]"
@@ -1069,7 +1068,7 @@ public class CallRegexTest {
         assertTrue(maxConcurrentCalls == 2);
         assertTrue(maxConcurrentIncomingCalls == 1);
         assertTrue(maxConcurrentOutgoingCalls == 1);
-    }     
+    }
 
 @Test
     public void testDialClientAlice52343() throws ParseException, InterruptedException, MalformedURLException {
@@ -1164,7 +1163,7 @@ public class CallRegexTest {
         assertTrue(maxConcurrentCalls == 2);
         assertTrue(maxConcurrentIncomingCalls == 1);
         assertTrue(maxConcurrentOutgoingCalls == 1);
-    }  
+    }
 
 @Test
     public void testDialClientAlice999111() throws ParseException, InterruptedException, MalformedURLException {
@@ -1259,7 +1258,7 @@ public class CallRegexTest {
         assertTrue(maxConcurrentCalls == 2);
         assertTrue(maxConcurrentIncomingCalls == 1);
         assertTrue(maxConcurrentOutgoingCalls == 1);
-    }  
+    }
 
 @Test
     public void testDialClientAlice999222() throws ParseException, InterruptedException, MalformedURLException {
@@ -1355,7 +1354,159 @@ public class CallRegexTest {
         assertTrue(maxConcurrentIncomingCalls == 1);
         assertTrue(maxConcurrentOutgoingCalls == 1);
     }
-    
+
+    @Test
+    public void testDialClientAliceNoRegex() throws ParseException, InterruptedException, MalformedURLException {
+//matches regex expression "999..."
+        stubFor(get(urlPathEqualTo("/1313"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialAliceRcml)));
+
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, "sip:1313@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        logger.info("Last response: " + response);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: " + bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+
+        assertTrue(aliceCall.waitForIncomingCall(5000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Alice-Trying", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Alice-Ringing", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "Alice-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(aliceCall.waitForAck(5000));
+
+        Thread.sleep(1000);
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls == 2);
+        assertTrue(liveIncomingCalls == 1);
+        assertTrue(liveOutgoingCalls == 1);
+        assertTrue(liveCallsArraySize == 2);
+
+        Thread.sleep(3000);
+        bobCall.listenForDisconnect();
+
+        assertTrue(aliceCall.disconnect());
+        Thread.sleep(500);
+        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1313")));
+        assertTrue(requests.size() == 1);
+        //        requests.get(0).g;
+        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
+        List<String> params = Arrays.asList(requestBody.split("&"));
+        String callSid = "";
+        for (String param : params) {
+            if (param.contains("CallSid")) {
+                callSid = param.split("=")[1];
+            }
+        }
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+        JsonObject jsonObj = cdr.getAsJsonObject();
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+        logger.info("LiveCalls: " + liveCalls);
+        liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+        logger.info("LiveCallsArraySize: " + liveCallsArraySize);
+        assertTrue(liveCalls == 0);
+        assertTrue(liveCallsArraySize == 0);
+        int maxConcurrentCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentCalls").getAsInt();
+        int maxConcurrentIncomingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
+        int maxConcurrentOutgoingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
+        assertTrue(maxConcurrentCalls == 2);
+        assertTrue(maxConcurrentIncomingCalls == 1);
+        assertTrue(maxConcurrentOutgoingCalls == 1);
+    }
+
+    static String ussdClientRequestBody = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+            + "<ussd-data>\n"
+            + "\t<language value=\"en\"/>\n"
+            + "\t<ussd-string value=\"5544\"/>\n"
+            + "</ussd-data>";
+
+    static String ussdRestcommResponse = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<ussd-data>\n"
+            + "<language value=\"en\"></language>\n"
+            + "<ussd-string value=\"The information you requested is 1234567890\"></ussd-string>\n"
+            + "<anyExt>\n"
+            + "<message-type>processUnstructuredSSRequest_Response</message-type>\n"
+            + "</anyExt>\n"
+            + "</ussd-data>\n";
+
+    private String ussdRcml = "<Response><UssdMessage>The information you requested is 1234567890</UssdMessage></Response>";
+    @Test
+    public void testUssdPull() {
+
+        stubFor(get(urlPathEqualTo("/ussd"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(ussdRcml)));
+
+
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, "sip:*777#@127.0.0.1:5080", null, ussdClientRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
+        } else {
+            assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+
+        assertTrue(bobCall.getDialog().getState().getValue()== DialogState._CONFIRMED);
+
+        assertTrue(bobCall.listenForDisconnect());
+
+        assertTrue(bobCall.waitForDisconnect(30 * 1000));
+        bobCall.respondToDisconnect();
+        SipRequest bye = bobCall.getLastReceivedRequest();
+        String receivedUssdPayload = new String(bye.getRawContent());
+        assertTrue(receivedUssdPayload.equalsIgnoreCase(ussdRestcommResponse.trim()));
+        bobCall.dispose();
+
+    }
+
+
     @Deployment(name = "DialAction", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
