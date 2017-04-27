@@ -76,10 +76,10 @@ public final class MybatisClientsDao implements ClientsDao {
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("login", login);
         map.put("organization_sid", writeSid(organizationSid));
-        return getClient(namespace + "getClientByLogin", login);
+        return getClient(namespace + "getClientByLogin", map);
     }
 
-    private Client getClient(final String selector, final String parameter) {
+    private Client getClient(final String selector, final Object parameter) {
         final SqlSession session = sessions.openSession();
         try {
             final Map<String, Object> result = session.selectOne(selector, parameter);
