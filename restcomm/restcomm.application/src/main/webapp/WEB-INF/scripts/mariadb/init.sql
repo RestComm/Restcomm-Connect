@@ -113,7 +113,8 @@ ussd_fallback_method VARCHAR(4),
 ussd_application_sid VARCHAR(34),
 refer_url MEDIUMTEXT,
 refer_method VARCHAR(4),
-refer_application_sid VARCHAR(34)
+refer_application_sid VARCHAR(34),
+organization_sid VARCHAR(34) NOT NULL DEFAULT "ORafbe225ad37541eba518a74248f0ac4c"
 );
 
 CREATE TABLE restcomm_applications (
