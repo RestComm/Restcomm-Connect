@@ -111,7 +111,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         checkAuthenticatedAccount();
     }
 
-    private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) throws PasswordTooWeak {
+    private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data, Account parent) throws PasswordTooWeak {
         validate(data);
 
         final DateTime now = DateTime.now();
@@ -138,7 +138,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         final StringBuilder buffer = new StringBuilder();
         buffer.append("/").append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
-        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri, null);
+        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri, parent.getOrganizationSid());
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
@@ -334,9 +334,10 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
         // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
         final Sid sid = userIdentityContext.getEffectiveAccount().getSid();
+        final Account parent = accountsDao.getAccount(sid);
         Account account = null;
         try {
-            account = createFrom(sid, data);
+            account = createFrom(sid, data, parent);
         } catch (final NullPointerException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         } catch (PasswordTooWeak passwordTooWeak) {
@@ -350,7 +351,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
             - only Administrators can choose a role for newly created accounts. Normal users will create accounts with the same role as their own.
          */
         if (accountsDao.getAccount(account.getSid()) == null && !account.getEmailAddress().equalsIgnoreCase("administrator@company.com")) {
-            final Account parent = accountsDao.getAccount(sid);
             if (parent.getStatus().equals(Account.Status.ACTIVE) && isSecuredByPermission("RestComm:Create:Accounts")) {
                 if (!hasAccountRole(getAdministratorRole()) || !data.containsKey("Role")) {
                     account = account.setRole(parent.getRole());
