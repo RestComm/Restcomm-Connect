@@ -251,7 +251,13 @@ public final class SmsSession extends UntypedActor {
 
         monitoringService.tell(new TextMessage(last.from(), last.to(), TextMessage.SmsState.OUTBOUND), self());
         final ClientsDao clients = storage.getClientsDao();
-        final Client toClient = clients.getClient(last.to());
+        String to;
+        if (last.to().toLowerCase().startsWith("client")) {
+            to = last.to().replaceAll("client:","");
+        } else {
+            to = last.to();
+        }
+        final Client toClient = clients.getClient(to);
         Registration toClientRegistration = null;
         if (toClient != null) {
             final RegistrationsDao registrations = storage.getRegistrationsDao();
