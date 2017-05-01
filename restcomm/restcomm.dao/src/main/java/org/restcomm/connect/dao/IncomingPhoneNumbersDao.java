@@ -38,7 +38,7 @@ public interface IncomingPhoneNumbersDao {
 
     List<IncomingPhoneNumber> getIncomingPhoneNumbersByFilter(IncomingPhoneNumberFilter incomingPhoneNumberFilter);
 
-    IncomingPhoneNumber getIncomingPhoneNumber(String phoneNumber);
+    List<IncomingPhoneNumber> getIncomingPhoneNumber(String phoneNumber);
 
     void removeIncomingPhoneNumber(Sid sid);
 
