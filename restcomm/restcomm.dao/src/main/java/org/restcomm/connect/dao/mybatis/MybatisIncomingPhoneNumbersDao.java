@@ -38,6 +38,7 @@ import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @ThreadSafe
 public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumbersDao {
