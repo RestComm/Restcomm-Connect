@@ -94,8 +94,9 @@ public class SmppMessageHandler extends UntypedActor  {
         final ActorRef self = self();
 
         String to = request.getSmppTo();
-        final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(to);
+        final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
+        List<IncomingPhoneNumber> numbers = numbersDao.getIncomingPhoneNumber(to);
+        IncomingPhoneNumber number = numbers.get(0);
 
         if( redirectToHostedSmsApp(self,request, storage.getAccountsDao(), storage.getApplicationsDao(),to  )){
             if(logger.isInfoEnabled()) {
@@ -120,14 +121,22 @@ public class SmppMessageHandler extends UntypedActor  {
             phone = phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberUtil.PhoneNumberFormat.E164);
         } catch (Exception e) {}
         // Try to find an application defined for the phone number.
-        final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
-        if (number == null) {
-            number = numbers.getIncomingPhoneNumber(to);
+        final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
+        List<IncomingPhoneNumber> numbers = numbersDao.getIncomingPhoneNumber(phone);
+        IncomingPhoneNumber number = null;
+        if(!numbers.isEmpty()){
+            number = numbers.get(0);
         }
-        if (number == null) {
+
+        if(number == null){
+            numbers = numbersDao.getIncomingPhoneNumber(to);
+            number = numbers.isEmpty() ? null : numbers.get(0);
+        }
+
+        if(number == null){
             // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
-            number = numbers.getIncomingPhoneNumber("*");
+            numbers = numbersDao.getIncomingPhoneNumber("*");
+            number = numbers.isEmpty() ? null : numbers.get(0);
         }
         try {
             if (number != null) {

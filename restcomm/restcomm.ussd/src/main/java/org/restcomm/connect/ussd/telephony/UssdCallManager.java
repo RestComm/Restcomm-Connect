@@ -36,6 +36,7 @@ import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CreateCall;
@@ -44,6 +45,9 @@ import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreter;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreterBuilder;
+
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
 import javax.servlet.ServletContext;
 import javax.servlet.sip.ServletParseException;
@@ -86,6 +90,7 @@ public class UssdCallManager extends UntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     private final ActorSystem system;
+    private final String defaultOrganization;
 
     /**
      * @param configuration
@@ -108,6 +113,7 @@ public class UssdCallManager extends UntypedActor {
         this.ussdGatewayUri = ussdGatewayConfig.getString("ussd-gateway-uri");
         this.ussdGatewayUsername = ussdGatewayConfig.getString("ussd-gateway-user");
         this.ussdGatewayPassword = ussdGatewayConfig.getString("ussd-gateway-password");
+        defaultOrganization = (String) context.getAttribute("defaultOrganization");
     }
 
     private ActorRef ussdCall() {
@@ -210,7 +216,7 @@ public class UssdCallManager extends UntypedActor {
 
         if (request.getContentType().equals("application/vnd.3gpp.ussd+xml")) {
             // This is a USSD Invite
-            number = numbersDao.getIncomingPhoneNumber(id);
+            number = getMostOptimalIncomingPhoneNumber(request, id);
             if (number != null) {
                 final UssdInterpreterBuilder builder = new UssdInterpreterBuilder(system);
                 builder.setConfiguration(configuration);
@@ -330,5 +336,89 @@ public class UssdCallManager extends UntypedActor {
             final ActorRef ussdCall = (ActorRef) application.getAttribute(UssdCall.class.getName());
             ussdCall.tell(response, self);
         }
+    }
+
+    /**
+     * @param SipServletRequest
+     * @param phone
+     * @return
+     */
+    private IncomingPhoneNumber getMostOptimalIncomingPhoneNumber(final SipServletRequest request, String phone) {
+        // Format the destination to an E.164 phone number.
+        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+        String formatedPhone = null;
+        try {
+            formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
+        } catch (Exception e) {
+        }
+        List<IncomingPhoneNumber> numbers = null;
+        IncomingPhoneNumber number = null;
+        // Try to find an application defined for the phone number.
+        final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
+        //get all number with same number, by both formatedPhone and unformatedPhone
+        numbers = numbersDao.getIncomingPhoneNumber(formatedPhone);
+        numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+        if (phone.startsWith("+")) {
+            //remove the (+) and check if exists
+            phone= phone.replaceFirst("\\+","");
+            numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+        } else {
+            //Add "+" add check if number exists
+            phone = "+".concat(phone);
+            numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+        }
+        if(numbers.isEmpty()){
+            // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
+            numbers.addAll(numbersDao.getIncomingPhoneNumber("*"));
+        }
+        if(!numbers.isEmpty()){
+            boolean foundNumberInSameOrganization = false;
+            boolean foundNonSipNumberInDifferntOrganization = false;
+            Sid organizationSid = getOrganizationSidBySipURIHost((SipURI)request.getTo().getURI());
+            // find number in same organization
+            for(IncomingPhoneNumber n : numbers){
+                if(n.getOrganizationSid() == organizationSid){
+                    foundNumberInSameOrganization = true;
+                    number = n;
+                }
+                if(foundNumberInSameOrganization)
+                    break;
+            }
+            /* if number is not found in same organization
+             * then find a non sip (provider) number in a different organization
+             */
+            if(!foundNumberInSameOrganization){
+                for(IncomingPhoneNumber n : numbers){
+                    if(!n.isPureSip()){
+                        foundNonSipNumberInDifferntOrganization = true;
+                        number = n;
+                    }
+                    if(foundNonSipNumberInDifferntOrganization)
+                        break;
+                }
+            }
+        }
+        return number;
+    }
+
+    /**
+     * getOrganizationSidBySipURIHost
+     *
+     * @param sipURI
+     * @return Sid of Organization
+     */
+    private Sid getOrganizationSidBySipURIHost(final SipURI sipURI){
+        final String organizationDomainName = sipURI.getHost();
+        if(logger.isDebugEnabled())
+            logger.debug("sipURI: "+sipURI+" | organizationDomainName: "+organizationDomainName);
+        Organization organization = storage.getOrganizationsDao().getOrganizationByDomainName(organizationDomainName);
+        if(logger.isDebugEnabled())
+            logger.debug("organization: "+organization);
+        if(organization == null){
+            organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
+            if(logger.isDebugEnabled())
+                logger.debug("organization is null going to choose default: "+organization);
+        }
+        return organization.getSid();
     }
 }

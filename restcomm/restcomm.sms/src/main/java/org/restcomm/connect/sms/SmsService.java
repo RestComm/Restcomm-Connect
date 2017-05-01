@@ -281,18 +281,7 @@ public final class SmsService extends UntypedActor {
         // Handle the SMS message.
         final SipURI uri = (SipURI) request.getRequestURI();
         final String to = uri.getUser();
-        // Format the destination to an E.164 phone number.
-        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-        String phone = to;
-        try {
-            phone = phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164);
-        } catch (Exception e) {}
-        // Try to find an application defined for the phone number.
-        final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
-        if (number == null) {
-            number = numbers.getIncomingPhoneNumber(to);
-        }
+        IncomingPhoneNumber number = getMostOptimalIncomingPhoneNumber(request, to);
         try {
             if (number != null) {
                 URI appUri = number.getSmsUrl();
@@ -334,7 +323,7 @@ public final class SmsService extends UntypedActor {
                 isFoundHostedApp = true;
             }
         } catch (Exception e) {
-            String errMsg = "There is no valid Restcomm SMS Request URL configured for this number : " + phone;
+            String errMsg = "There is no valid Restcomm SMS Request URL configured for this number : " + to;
             sendNotification(errMsg, 12003, "warning", true);
         }
         return isFoundHostedApp;
@@ -551,5 +540,68 @@ public final class SmsService extends UntypedActor {
         if(logger.isDebugEnabled())
             logger.debug("organization is null going to choose default: "+organization);
         return organization.getSid();
+    }
+
+    /**
+     * @param SipServletRequest
+     * @param phone
+     * @return
+     */
+    private IncomingPhoneNumber getMostOptimalIncomingPhoneNumber(final SipServletRequest request, String phone) {
+        // Format the destination to an E.164 phone number.
+        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+        String formatedPhone = null;
+        try {
+            formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
+        } catch (Exception e) {
+        }
+        List<IncomingPhoneNumber> numbers = null;
+        IncomingPhoneNumber number = null;
+        // Try to find an application defined for the phone number.
+        final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
+        //get all number with same number, by both formatedPhone and unformatedPhone
+        numbers = numbersDao.getIncomingPhoneNumber(formatedPhone);
+        numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+        if (phone.startsWith("+")) {
+            //remove the (+) and check if exists
+            phone= phone.replaceFirst("\\+","");
+            numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+        } else {
+            //Add "+" add check if number exists
+            phone = "+".concat(phone);
+            numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+        }
+        if(numbers.isEmpty()){
+            // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
+            numbers.addAll(numbersDao.getIncomingPhoneNumber("*"));
+        }
+        if(!numbers.isEmpty()){
+            boolean foundNumberInSameOrganization = false;
+            boolean foundNonSipNumberInDifferntOrganization = false;
+            Sid organizationSid = getOrganizationSidBySipURIHost((SipURI)request.getTo().getURI());
+            // find number in same organization
+            for(IncomingPhoneNumber n : numbers){
+                if(n.getOrganizationSid() == organizationSid){
+                    foundNumberInSameOrganization = true;
+                    number = n;
+                }
+                if(foundNumberInSameOrganization)
+                    break;
+            }
+            /* if number is not found in same organization
+             * then find a non sip (provider) number in a different organization
+             */
+            if(!foundNumberInSameOrganization){
+                for(IncomingPhoneNumber n : numbers){
+                    if(!n.isPureSip()){
+                        foundNonSipNumberInDifferntOrganization = true;
+                        number = n;
+                    }
+                    if(foundNonSipNumberInDifferntOrganization)
+                        break;
+                }
+            }
+        }
+        return number;
     }
 }
