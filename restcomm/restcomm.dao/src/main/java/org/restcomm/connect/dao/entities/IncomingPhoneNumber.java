@@ -65,6 +65,7 @@ public final class IncomingPhoneNumber {
     private String referMethod;
     private Sid referApplicationSid;
     private String referApplicationName;
+    private final Sid organizationSid;
 
     // Capabilities
     private Boolean voiceCapable;
@@ -80,10 +81,10 @@ public final class IncomingPhoneNumber {
             final Sid voiceApplicationSid, final URI smsUrl, final String smsMethod, final URI smsFallbackUrl,
             final String smsFallbackMethod, final Sid smsApplicationSid, final URI uri, final URI ussdUrl, final String ussdMethod, final URI ussdFallbackUrl,
             final String ussdFallbackMethod, final Sid ussdApplicationSid,
-            final URI referUrl, final String referMethod, final Sid referApplicationSid) {
+            final URI referUrl, final String referMethod, final Sid referApplicationSid, final Sid organizationSid) {
         this(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, cost, apiVersion, hasVoiceCallerIdLookup,
                 voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod,
-                voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, referUrl, referMethod, referApplicationSid, null, null, null, null, null);
+                voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, referUrl, referMethod, referApplicationSid, null, null, null, null, null, organizationSid);
     }
 
     public IncomingPhoneNumber(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
@@ -95,12 +96,12 @@ public final class IncomingPhoneNumber {
                                final String ussdFallbackMethod, final Sid ussdApplicationSid,
                                final URI referUrl, final String referMethod, final Sid referApplicationSid,
                                final Boolean voiceCapable,
-                               final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable, final Boolean pureSip) {
+                               final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable, final Boolean pureSip, final Sid organizationSid) {
         this(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, cost, apiVersion, hasVoiceCallerIdLookup,
                 voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod,
                 voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid,
                         referUrl, referMethod, referApplicationSid,
-                voiceCapable, smsCapable, mmsCapable, faxCapable, pureSip, null, null, null, null);
+                voiceCapable, smsCapable, mmsCapable, faxCapable, pureSip, null, null, null, null, organizationSid);
     }
 
     public IncomingPhoneNumber(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
@@ -112,7 +113,7 @@ public final class IncomingPhoneNumber {
             final String ussdFallbackMethod, final Sid ussdApplicationSid,
             final URI referUrl, final String referMethod, final Sid referApplicationSid,
             final Boolean voiceCapable,
-            final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable, final Boolean pureSip, final String voiceApplicationName, final String smsApplicationName, final String ussdApplicationName, final String referApplicationName) {
+            final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable, final Boolean pureSip, final String voiceApplicationName, final String smsApplicationName, final String ussdApplicationName, final String referApplicationName, final Sid organizationSid) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -153,6 +154,7 @@ public final class IncomingPhoneNumber {
         this.smsApplicationName = smsApplicationName;
         this.ussdApplicationName = ussdApplicationName;
         this.referApplicationName = referApplicationName;
+        this.organizationSid = organizationSid;
     }
 
     /**
@@ -677,6 +679,13 @@ public final class IncomingPhoneNumber {
         return ussdApplicationName;
     }
 
+    /**
+     * @return the organizationSid
+     */
+    public Sid getOrganizationSid() {
+        return organizationSid;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -721,6 +730,7 @@ public final class IncomingPhoneNumber {
         private Boolean faxCapable;
         private Boolean pureSip;
 
+        private Sid organizationSid;
 
         private Builder() {
             super();
@@ -733,7 +743,7 @@ public final class IncomingPhoneNumber {
                     statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
                     smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid,
                     referUrl, referMethod, referApplicationSid,
-                    voiceCapable, smsCapable, mmsCapable, faxCapable, pureSip);
+                    voiceCapable, smsCapable, mmsCapable, faxCapable, pureSip, organizationSid);
         }
 
         public void setSid(final Sid sid) {
@@ -836,6 +846,10 @@ public final class IncomingPhoneNumber {
             this.ussdApplicationSid = ussdApplicationSid;
         }
 
+        public void setOrganizationSid(final Sid organizationSid) {
+            this.organizationSid = organizationSid;
+        }
+
         public URI getReferUrl() {
             return referUrl;
         }
@@ -854,6 +868,10 @@ public final class IncomingPhoneNumber {
 
         public Sid getReferApplicationSid() {
             return referApplicationSid;
+        }
+
+        public Sid getOrganizationSid() {
+            return organizationSid;
         }
 
         public void setReferApplicationSid(Sid referApplicationSid) {
