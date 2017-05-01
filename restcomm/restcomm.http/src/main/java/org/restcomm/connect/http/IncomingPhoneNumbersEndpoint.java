@@ -140,7 +140,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
-    private IncomingPhoneNumber createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
+    private IncomingPhoneNumber createFrom(final Sid accountSid, final MultivaluedMap<String, String> data, Sid organizationSid) {
         final IncomingPhoneNumber.Builder builder = IncomingPhoneNumber.builder();
         final Sid sid = Sid.generate(Sid.Type.PHONE_NUMBER);
         builder.setSid(sid);
@@ -191,6 +191,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         builder.setReferUrl(getUrl("ReferUrl", data));
         builder.setReferMethod(getMethod("ReferMethod", data));
         builder.setReferApplicationSid(getSid("ReferApplicationSid",data));
+        builder.setOrganizationSid(organizationSid);
 
         final Configuration configuration = this.configuration.subset("runtime-settings");
         final StringBuilder buffer = new StringBuilder();
@@ -279,7 +280,8 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
 
     protected Response putIncomingPhoneNumber(final String accountSid, final MultivaluedMap<String, String> data,
             PhoneNumberType phoneNumberType, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Create:IncomingPhoneNumbers");
+    	Account account = accountsDao.getAccount(accountSid);
+        secure(account, "RestComm:Create:IncomingPhoneNumbers");
         try {
             validate(data);
         } catch (final NullPointerException exception) {
@@ -293,9 +295,27 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                 number = e164(number);
             } catch (NumberParseException e) {}
         }
-        IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(number);
-        if (incomingPhoneNumber == null) {
-            incomingPhoneNumber = createFrom(new Sid(accountSid), data);
+        Boolean isSip = Boolean.parseBoolean(isSIP);
+        Boolean available = true;
+        List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumber(number);
+        /* check if number is occupied by same organization or different.
+         * if it is occupied by different organization then we can add it in current.
+         * but it has to be pure sip as provider numbers must be unique even across organizations.
+         * https://github.com/RestComm/Restcomm-Connect/issues/2073
+         */
+    	if(incomingPhoneNumbers.isEmpty()){
+    		if(!isSip){
+    			//provider numbers must be unique even across organizations.
+    			available = false;
+    		}else{
+                for(IncomingPhoneNumber incomingPhoneNumber : incomingPhoneNumbers){
+            	    if(incomingPhoneNumber.getOrganizationSid() == account.getOrganizationSid()){
+            	    	available = false;
+            	    }
+            	}
+    		}
+        } else if (incomingPhoneNumbers == null || available) {
+        	IncomingPhoneNumber incomingPhoneNumber = createFrom(new Sid(accountSid), data, account.getOrganizationSid());
             phoneNumberParameters.setPhoneNumberType(phoneNumberType);
 
             org.restcomm.connect.provisioning.number.api.PhoneNumber phoneNumber = convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber);
