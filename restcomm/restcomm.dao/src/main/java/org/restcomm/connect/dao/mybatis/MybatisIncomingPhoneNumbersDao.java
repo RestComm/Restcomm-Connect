@@ -213,6 +213,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         final URI referUrl = DaoUtils.readUri(map.get("refer_url"));
         final String referMethod = DaoUtils.readString(map.get("refer_method"));
         final Sid referApplicationSid = DaoUtils.readSid(map.get("refer_application_sid"));
+        final Sid organizationSid = DaoUtils.readSid(map.get("organization_sid"));
 
 
         final Boolean voiceCapable = DaoUtils.readBoolean(map.get("voice_capable"));
@@ -232,7 +233,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
                 smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid,
                 referUrl, referMethod, referApplicationSid,
-                voiceCapable, smsCapable, mmsCapable, faxCapable, pureSip, voiceApplicationName, smsApplicationName, ussdApplicationName, referApplicationName);
+                voiceCapable, smsCapable, mmsCapable, faxCapable, pureSip, voiceApplicationName, smsApplicationName, ussdApplicationName, referApplicationName, organizationSid);
     }
 
     private Map<String, Object> toMap(final IncomingPhoneNumber incomingPhoneNumber) {
@@ -272,6 +273,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         map.put("fax_capable", incomingPhoneNumber.isFaxCapable());
         map.put("pure_sip", incomingPhoneNumber.isPureSip());
         map.put("cost", incomingPhoneNumber.getCost());
+        map.put("organization_sid", DaoUtils.writeSid(incomingPhoneNumber.getOrganizationSid()));
         return map;
     }
 }
