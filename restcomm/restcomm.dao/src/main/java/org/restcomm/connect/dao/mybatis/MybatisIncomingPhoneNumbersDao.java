@@ -71,7 +71,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         final SqlSession session = sessions.openSession();
         try {
             final List<Map<String, Object>> results = session.selectList(namespace + "getIncomingPhoneNumberByValue",
-            		phoneNumber);
+                    phoneNumber);
             final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -82,7 +82,6 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         } finally {
             session.close();
         }
-    
     }
 
     private IncomingPhoneNumber getIncomingPhoneNumber(final String selector, Object parameter) {
