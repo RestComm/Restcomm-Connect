@@ -152,7 +152,7 @@ public final class SmsService extends UntypedActor {
         final SipURI fromURI = (SipURI) request.getFrom().getURI();
         final String fromUser = fromURI.getUser();
         final ClientsDao clients = storage.getClientsDao();
-        final Sid fromOrganizationSid = getOrganizationSidBySipHost(fromURI);
+        final Sid fromOrganizationSid = getOrganizationSidBySipURIHost(fromURI);
         if(logger.isDebugEnabled()) {
             logger.debug("fromOrganizationSid" + fromOrganizationSid);
         }
@@ -195,7 +195,7 @@ public final class SmsService extends UntypedActor {
             // try to see if the request is destined to another registered client
             // if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we
             // have little control over
-            final Sid toOrganizationSid = getOrganizationSidBySipHost((SipURI) request.getTo().getURI());
+            final Sid toOrganizationSid = getOrganizationSidBySipURIHost((SipURI) request.getTo().getURI());
             if(logger.isDebugEnabled()) {
                 logger.debug("toOrganizationSid" + toOrganizationSid);
             }
@@ -520,13 +520,13 @@ public final class SmsService extends UntypedActor {
     /**
      * getOrganizationSidBySipHost
      *
-     * @param fromUri
+     * @param sipURI
      * @return Sid of Organization
      */
-    private Sid getOrganizationSidBySipHost(final SipURI fromUri){
-        final String organizationDomainName = fromUri.getHost();
+    private Sid getOrganizationSidBySipURIHost(final SipURI sipURI){
+        final String organizationDomainName = sipURI.getHost();
         if(logger.isDebugEnabled())
-            logger.debug("organizationDomainName: "+organizationDomainName);
+            logger.debug("sipURI: "+sipURI+" | organizationDomainName: "+organizationDomainName);
         Organization organization = storage.getOrganizationsDao().getOrganizationByDomainName(organizationDomainName);
         if(logger.isDebugEnabled())
             logger.debug("organization: "+organization);

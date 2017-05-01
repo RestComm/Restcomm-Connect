@@ -437,7 +437,7 @@ public final class CallManager extends UntypedActor {
         final ApplicationsDao applications = storage.getApplicationsDao();
         // Try to find an application defined for the client.
         final SipURI fromUri = (SipURI) request.getFrom().getURI();
-        final Sid fromOrganizationSid = getOrganizationSidBySipHost(fromUri);
+        final Sid fromOrganizationSid = getOrganizationSidBySipURIHost(fromUri);
         if(logger.isDebugEnabled()) {
             logger.debug("fromOrganizationSid" + fromOrganizationSid);
         }
@@ -478,7 +478,7 @@ public final class CallManager extends UntypedActor {
             logger.info("mediaExternalIp: " + mediaExternalIp);
             logger.info("proxyIp: " + proxyIp);
         }
-        final Sid toOrganizationSid = getOrganizationSidBySipHost((SipURI) request.getTo().getURI());
+        final Sid toOrganizationSid = getOrganizationSidBySipURIHost((SipURI) request.getTo().getURI());
         if(logger.isDebugEnabled()) {
             logger.debug("toOrganizationSid" + toOrganizationSid);
         }
@@ -587,15 +587,15 @@ public final class CallManager extends UntypedActor {
     }
 
     /**
-     * getOrganizationSidBySipHost
+     * getOrganizationSidBySipURIHost
      *
-     * @param fromUri
+     * @param sipURI
      * @return Sid of Organization
      */
-    private Sid getOrganizationSidBySipHost(final SipURI fromUri){
-        final String organizationDomainName = fromUri.getHost();
+    private Sid getOrganizationSidBySipURIHost(final SipURI sipURI){
+        final String organizationDomainName = sipURI.getHost();
         if(logger.isDebugEnabled())
-            logger.debug("organizationDomainName: "+organizationDomainName);
+            logger.debug("sipURI: "+sipURI+" | organizationDomainName: "+organizationDomainName);
         Organization organization = storage.getOrganizationsDao().getOrganizationByDomainName(organizationDomainName);
         if(logger.isDebugEnabled())
             logger.debug("organization: "+organization);
@@ -862,21 +862,7 @@ public final class CallManager extends UntypedActor {
 
         final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
         String phone = cdr.getTo();
-        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
-        if(number == null){
-            if (phone.startsWith("+")) {
-                //remove the (+) and check if exists
-                phone= phone.replaceFirst("\\+","");
-                number = numbers.getIncomingPhoneNumber(phone);
-            } else {
-                //Add "+" add check if number exists
-                phone = "+".concat(phone);
-                number = numbers.getIncomingPhoneNumber(phone);
-            }
-        }
-        if (number == null) {
-            number = numbers.getIncomingPhoneNumber("*");
-        }
+        IncomingPhoneNumber number = getMostOptimalIncomingPhoneNumber(request, phone);
 
         if (number == null || (number.getReferUrl() == null && number.getReferApplicationSid() == null)) {
             if (logger.isInfoEnabled()) {
@@ -1002,36 +988,9 @@ public final class CallManager extends UntypedActor {
     private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
                                              final ApplicationsDao applications, String phone, Sid fromClientAccountSid) {
         boolean isFoundHostedApp = false;
-        // Format the destination to an E.164 phone number.
-        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-        String formatedPhone = null;
-        try {
-            formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
-        } catch (Exception e) {
-        }
         IncomingPhoneNumber number = null;
         try {
-            // Try to find an application defined for the phone number.
-            final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-            number = numbers.getIncomingPhoneNumber(formatedPhone);
-            if (number == null) {
-                number = numbers.getIncomingPhoneNumber(phone);
-            }
-            if(number == null){
-                if (phone.startsWith("+")) {
-                    //remove the (+) and check if exists
-                    phone= phone.replaceFirst("\\+","");
-                    number = numbers.getIncomingPhoneNumber(phone);
-                } else {
-                    //Add "+" add check if number exists
-                    phone = "+".concat(phone);
-                    number = numbers.getIncomingPhoneNumber(phone);
-                }
-            }
-            if (number == null) {
-                // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
-                number = numbers.getIncomingPhoneNumber("*");
-            }
+            number = getMostOptimalIncomingPhoneNumber(request, phone);
             if (number != null) {
                 final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
                 builder.setConfiguration(configuration);
@@ -1091,6 +1050,69 @@ public final class CallManager extends UntypedActor {
             isFoundHostedApp = false;
         }
         return isFoundHostedApp;
+    }
+
+    /**
+     * @param SipServletRequest
+     * @param phone
+     * @return
+     */
+    private IncomingPhoneNumber getMostOptimalIncomingPhoneNumber(final SipServletRequest request, String phone) {
+        // Format the destination to an E.164 phone number.
+        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+        String formatedPhone = null;
+        try {
+            formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
+        } catch (Exception e) {
+        }
+        List<IncomingPhoneNumber> numbers = null;
+        IncomingPhoneNumber number = null;
+        // Try to find an application defined for the phone number.
+        final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
+        //get all number with same number, by both formatedPhone and unformatedPhone
+        numbers = numbersDao.getIncomingPhoneNumber(formatedPhone);
+        numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+        if (phone.startsWith("+")) {
+            //remove the (+) and check if exists
+            phone= phone.replaceFirst("\\+","");
+            numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+        } else {
+            //Add "+" add check if number exists
+            phone = "+".concat(phone);
+            numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+        }
+        if(numbers.isEmpty()){
+            // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
+            numbers.addAll(numbersDao.getIncomingPhoneNumber("*"));
+        }
+        if(!numbers.isEmpty()){
+            boolean foundNumberInSameOrganization = false;
+            boolean foundNonSipNumberInDifferntOrganization = false;
+            Sid organizationSid = getOrganizationSidBySipURIHost((SipURI)request.getTo().getURI());
+            // find number in same organization
+            for(IncomingPhoneNumber n : numbers){
+                if(n.getOrganizationSid() == organizationSid){
+                    foundNumberInSameOrganization = true;
+                    number = n;
+                }
+                if(foundNumberInSameOrganization)
+                    break;
+            }
+            /* if number is not found in same organization
+             * then find a non sip (provider) number in a different organization
+             */
+            if(!foundNumberInSameOrganization){
+                for(IncomingPhoneNumber n : numbers){
+                    if(!n.isPureSip()){
+                        foundNonSipNumberInDifferntOrganization = true;
+                        number = n;
+                    }
+                    if(foundNonSipNumberInDifferntOrganization)
+                        break;
+                }
+            }
+        }
+        return number;
     }
 
     /**

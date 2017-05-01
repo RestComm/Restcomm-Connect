@@ -280,7 +280,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
 
     protected Response putIncomingPhoneNumber(final String accountSid, final MultivaluedMap<String, String> data,
             PhoneNumberType phoneNumberType, final MediaType responseType) {
-    	Account account = accountsDao.getAccount(accountSid);
+        Account account = accountsDao.getAccount(accountSid);
         secure(account, "RestComm:Create:IncomingPhoneNumbers");
         try {
             validate(data);
@@ -303,19 +303,19 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
          * but it has to be pure sip as provider numbers must be unique even across organizations.
          * https://github.com/RestComm/Restcomm-Connect/issues/2073
          */
-    	if(incomingPhoneNumbers.isEmpty()){
-    		if(!isSip){
-    			//provider numbers must be unique even across organizations.
-    			available = false;
-    		}else{
+        if(incomingPhoneNumbers.isEmpty()){
+            if(!isSip){
+                //provider numbers must be unique even across organizations.
+                available = false;
+            }else{
                 for(IncomingPhoneNumber incomingPhoneNumber : incomingPhoneNumbers){
-            	    if(incomingPhoneNumber.getOrganizationSid() == account.getOrganizationSid()){
-            	    	available = false;
-            	    }
-            	}
-    		}
+                    if(incomingPhoneNumber.getOrganizationSid() == account.getOrganizationSid()){
+                        available = false;
+                    }
+                }
+            }
         } else if (incomingPhoneNumbers == null || available) {
-        	IncomingPhoneNumber incomingPhoneNumber = createFrom(new Sid(accountSid), data, account.getOrganizationSid());
+            IncomingPhoneNumber incomingPhoneNumber = createFrom(new Sid(accountSid), data, account.getOrganizationSid());
             phoneNumberParameters.setPhoneNumberType(phoneNumberType);
 
             org.restcomm.connect.provisioning.number.api.PhoneNumber phoneNumber = convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber);
