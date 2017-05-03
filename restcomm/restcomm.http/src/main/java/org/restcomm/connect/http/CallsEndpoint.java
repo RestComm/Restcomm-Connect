@@ -515,7 +515,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 
         if (url == null && status == null && mute == null ) {
             // Throw exception. We can either redirect a running call using Url or change the state of a Call with Status
-            final String errorMessage = "You can either redirect a running call using \"Url\" or change the state of a Call with \"Status\"";
+            final String errorMessage = "You can either redirect a running call using \"Url\" or change the state of a Call with \"Status\" or mute a call using \"Mute=true\"";
             return status(javax.ws.rs.core.Response.Status.CONFLICT).entity(errorMessage).build();
         }
 
