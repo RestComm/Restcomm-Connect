@@ -27,6 +27,7 @@ import org.restcomm.connect.commons.dao.Sid;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
+ * @author maria.farooq@telestax.com
  */
 @Immutable
 public final class Registration implements Comparable<Registration> {
@@ -43,17 +44,18 @@ public final class Registration implements Comparable<Registration> {
     private final String userAgent;
     private final boolean webrtc;
     private final boolean isLBPresent;
+    private final Sid organizationSid;
 
     public Registration(final Sid sid, final String instanceId, final DateTime dateCreated, final DateTime dateUpdated, final String addressOfRecord,
             final String displayName, final String userName, final String userAgent, final int timeToLive,
-            final String location, final boolean webRTC, final boolean isLBPresent) {
+            final String location, final boolean webRTC, final boolean isLBPresent, final Sid organizationSid) {
         this(sid, instanceId, dateCreated, dateUpdated, DateTime.now().plusSeconds(timeToLive), addressOfRecord, displayName, userName,
-                userAgent, timeToLive, location, webRTC, isLBPresent);
+                userAgent, timeToLive, location, webRTC, isLBPresent, organizationSid);
     }
 
     public Registration(final Sid sid, final String instanceId, final DateTime dateCreated, final DateTime dateUpdated, final DateTime dateExpires,
             final String addressOfRecord, final String displayName, final String userName, final String userAgent,
-            final int timeToLive, final String location, final boolean webRTC, final boolean isLBPresent) {
+            final int timeToLive, final String location, final boolean webRTC, final boolean isLBPresent, final Sid organizationSid) {
         super();
         this.sid = sid;
         this.instanceId = instanceId;
@@ -68,6 +70,8 @@ public final class Registration implements Comparable<Registration> {
         this.timeToLive = timeToLive;
         this.webrtc = webRTC;
         this.isLBPresent = isLBPresent; //(isLBPresent != null) ? isLBPresent : false;
+        //https://github.com/RestComm/Restcomm-Connect/issues/2106
+        this.organizationSid = organizationSid;
     }
 
     public Sid getSid() {
@@ -120,15 +124,19 @@ public final class Registration implements Comparable<Registration> {
         return isLBPresent;
     }
 
+    public Sid getOrganizationSid() {
+        return organizationSid;
+    }
+
     public Registration setTimeToLive(final int timeToLive) {
         final DateTime now = DateTime.now();
         return new Registration(sid, instanceId, dateCreated, now, now.plusSeconds(timeToLive), addressOfRecord, displayName, userName,
-                userAgent, timeToLive, location, webrtc, isLBPresent);
+                userAgent, timeToLive, location, webrtc, isLBPresent, organizationSid);
     }
 
     public Registration updated() {
         final DateTime now = DateTime.now();
-        return new Registration(sid, instanceId, dateCreated, now, dateExpires, addressOfRecord, displayName, userName, userAgent, timeToLive, location, webrtc, isLBPresent);
+        return new Registration(sid, instanceId, dateCreated, now, dateExpires, addressOfRecord, displayName, userName, userAgent, timeToLive, location, webrtc, isLBPresent, organizationSid);
     }
 
     @Override

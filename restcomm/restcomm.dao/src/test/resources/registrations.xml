@@ -6,17 +6,17 @@
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.RegistrationsDao">
   <insert id="addRegistration" parameterType="map">
     INSERT INTO "restcomm_registrations" ("sid", "date_created", "date_updated", "date_expires", "address_of_record", "display_name",
-    "user_name", "user_agent", "ttl",  "location", "webrtc", "instanceid", "isLBPresent")
+    "user_name", "user_agent", "ttl",  "location", "webrtc", "instanceid", "isLBPresent", "organization_sid")
     VALUES (#{sid}, #{date_created}, #{date_updated}, #{date_expires}, #{address_of_record}, #{display_name}, #{user_name}, #{user_agent},
-    #{ttl}, #{location}, #{webrtc}, #{instanceid}, #{isLBPresent});
+    #{ttl}, #{location}, #{webrtc}, #{instanceid}, #{isLBPresent}, #{organization_sid});
   </insert>
   
   <select id="getRegistrations" resultType="hashmap">
     SELECT * FROM "restcomm_registrations";
   </select>
   
-  <select id="getRegistration" parameterType="string" resultType="hashmap">
-    SELECT * FROM "restcomm_registrations" WHERE "user_name"=#{user_name};
+  <select id="getRegistration" parameterType="map" resultType="hashmap">
+    SELECT * FROM "restcomm_registrations" WHERE "user_name"=#{user_name} and "organization_sid"=#{organization_sid};
   </select>
 
   <select id="getRegistrationByInstanceId" parameterType="string" resultType="hashmap">

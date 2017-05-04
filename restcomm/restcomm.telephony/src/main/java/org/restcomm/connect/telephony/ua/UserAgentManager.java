@@ -409,7 +409,7 @@ public final class UserAgentManager extends UntypedActor {
         final String qop = map.get("qop");
         final String response = map.get("response");
         final ClientsDao clients = storage.getClientsDao();
-        final Client client = clients.getClient(user, getOrganizationSidBySipHost(sipURI));
+        final Client client = clients.getClient(user, getOrganizationSidBySipURIHost(sipURI));
         if (client != null && Client.ENABLED == client.getStatus()) {
             final String password = client.getPassword();
             final String result = DigestAuthentication.response(algorithm, user, realm, password, nonce, nc, cnonce, method,
@@ -584,7 +584,7 @@ public final class UserAgentManager extends UntypedActor {
 
         boolean webRTC = isWebRTC(transport, ua);
 
-        final Registration registration = new Registration(sid, instanceId, now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent);
+        final Registration registration = new Registration(sid, instanceId, now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent, getOrganizationSidBySipURIHost(to));
         final RegistrationsDao registrations = storage.getRegistrationsDao();
 
         if (ttl == 0) {
@@ -764,7 +764,7 @@ public final class UserAgentManager extends UntypedActor {
             if (ua == null)
                 ua = "GenericUA";
             boolean webRTC = isWebRTC(transport, ua);
-            final Registration registration = new Registration(sid, RestcommConfiguration.getInstance().getMain().getInstanceId(), now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent);
+            final Registration registration = new Registration(sid, RestcommConfiguration.getInstance().getMain().getInstanceId(), now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent, getOrganizationSidBySipURIHost(to));
             final RegistrationsDao registrations = storage.getRegistrationsDao();
 
             if (ttl == 0) {
@@ -852,15 +852,15 @@ public final class UserAgentManager extends UntypedActor {
     }
 
     /**
-     * getOrganizationSidBySipHost
+     * getOrganizationSidBySipURIHost
      *
-     * @param fromUri
+     * @param sipURI
      * @return Sid of Organization
      */
-    private Sid getOrganizationSidBySipHost(final SipURI fromUri){
-        final String organizationDomainName = fromUri.getHost();
+    private Sid getOrganizationSidBySipURIHost(final SipURI sipURI){
+        final String organizationDomainName = sipURI.getHost();
         if(logger.isDebugEnabled())
-            logger.debug("organizationDomainName: "+organizationDomainName);
+            logger.debug("sipURI: "+sipURI+" | organizationDomainName: "+organizationDomainName);
         Organization organization = storage.getOrganizationsDao().getOrganizationByDomainName(organizationDomainName);
         if(logger.isDebugEnabled())
             logger.debug("organization: "+organization);

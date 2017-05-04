@@ -38,6 +38,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.entities.Registration;
 import org.restcomm.connect.commons.dao.Sid;
@@ -239,6 +240,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
         map.put("ttl", registration.getTimeToLive());
         map.put("webrtc", registration.isWebRTC());
         map.put("isLBPresent", registration.isLBPresent());
+        map.put("organization_sid", DaoUtils.writeSid(registration.getOrganizationSid()));
         return map;
     }
 
@@ -259,7 +261,8 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
         if (readBoolean(map.get("isLBPresent")) != null) {
             isLBPresent = readBoolean(map.get("isLBPresent"));
         }
+        final Sid organizationSid = readSid(map.get("organization_sid"));
         return new Registration(sid, instanceId, dateCreated, dateUpdated, dateExpires, addressOfRecord, dislplayName, userName, userAgent,
-                timeToLive, location, webRTC, isLBPresent);
+                timeToLive, location, webRTC, isLBPresent, organizationSid);
     }
 }
