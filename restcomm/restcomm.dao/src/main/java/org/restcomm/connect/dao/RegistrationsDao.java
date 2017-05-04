@@ -21,21 +21,23 @@ package org.restcomm.connect.dao;
 
 import java.util.List;
 
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Registration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 public interface RegistrationsDao {
     void addRegistration(Registration registration);
 
-    Registration getRegistration(String user);
+    Registration getRegistration(String user, Sid organizationSid);
 
     Registration getRegistrationByInstanceId(String User, String instanceId);
 
     List<Registration> getRegistrationsByInstanceId(String instanceId);
 
-    List<Registration> getRegistrations(String user);
+    List<Registration> getRegistrations(String user, Sid organizationSid);
 
     List<Registration> getRegistrations();
 
