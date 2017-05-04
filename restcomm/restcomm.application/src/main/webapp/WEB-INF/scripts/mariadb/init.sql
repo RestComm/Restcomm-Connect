@@ -114,7 +114,7 @@ ussd_application_sid VARCHAR(34),
 refer_url MEDIUMTEXT,
 refer_method VARCHAR(4),
 refer_application_sid VARCHAR(34),
-organization_sid VARCHAR(34) NOT NULL DEFAULT "ORafbe225ad37541eba518a74248f0ac4c"
+organization_sid VARCHAR(34) NOT NULL
 );
 
 CREATE TABLE restcomm_applications (
@@ -213,7 +213,8 @@ ttl INT NOT NULL,
 location MEDIUMTEXT NOT NULL,
 webrtc BOOLEAN NOT NULL DEFAULT FALSE,
 instanceid VARCHAR(255),
-isLBPresent BOOLEAN NOT NULL DEFAULT FALSE
+isLBPresent BOOLEAN NOT NULL DEFAULT FALSE,
+organization_sid VARCHAR(34) NOT NULL
 );
 
 CREATE TABLE restcomm_short_codes (
