@@ -513,7 +513,7 @@ public final class UserAgentManagerTest {
         uri = sipStack6.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         c = new Credential("127.0.0.1","alice", "1234");
         phone6.addUpdateCredential(c);
-        sipStack6.getHeaderFactory().createToHeader(sipStack6.getAddressFactory().createAddress("company.restcomm.com"), null);
+        sipStack6.getHeaderFactory().createToHeader(sipStack6.getAddressFactory().createAddress("<sip:alice@company.restcomm.com>"), null);
         assertTrue(phone6.register(uri, "alice", "1234", aliceContact6, 3600, 3600));
         Thread.sleep(2000);
 
