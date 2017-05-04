@@ -335,7 +335,7 @@ public final class UserAgentManager extends UntypedActor {
             logger.debug("Error response for the OPTIONS to: "+location+" will remove registration");
         }
         final RegistrationsDao regDao = storage.getRegistrationsDao();
-        List<Registration> registrations = regDao.getRegistrations(user, getOrganizationSidBySipURIHost((SipURI)sipServletMessage.getTo()));
+        List<Registration> registrations = regDao.getRegistrations(user, getOrganizationSidBySipURIHost((SipURI)sipServletMessage.getTo().getURI()));
         if (registrations != null) {
             Iterator<Registration> iter = registrations.iterator();
             SipURI regLocation = null;
