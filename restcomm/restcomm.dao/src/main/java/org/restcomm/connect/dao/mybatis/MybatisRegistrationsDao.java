@@ -71,13 +71,16 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
     }
 
     @Override
-    public Registration getRegistration(String user) {
+    public Registration getRegistration(String user, Sid organizationSid) {
         final SqlSession session = sessions.openSession();
         try {
             // https://bitbucket.org/telestax/telscale-restcomm/issue/107/dial-fails-to-call-a-client-registered
             // we get all registrations and sort them by latest updated date so that we target the device where the user last
             // updated the registration
-            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistration", user);
+            final Map<String, Object> map = new HashMap<String, Object>();
+            map.put("user_name", user);
+            map.put("organization_sid", writeSid(organizationSid));
+            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistration", map);
             final List<Registration> records = new ArrayList<Registration>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -149,13 +152,16 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
     }
 
     @Override
-    public List<Registration> getRegistrations(String user) {
+    public List<Registration> getRegistrations(String user, Sid organizationSid) {
         final SqlSession session = sessions.openSession();
         try {
             // https://bitbucket.org/telestax/telscale-restcomm/issue/107/dial-fails-to-call-a-client-registered
             // we get all registrations and sort them by latest updated date so that we target the device where the user last
             // updated the registration
-            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistration", user);
+            final Map<String, Object> map = new HashMap<String, Object>();
+            map.put("user_name", user);
+            map.put("organization_sid", writeSid(organizationSid));
+            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistration", map);
             final List<Registration> records = new ArrayList<Registration>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
