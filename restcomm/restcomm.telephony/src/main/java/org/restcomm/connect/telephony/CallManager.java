@@ -1613,8 +1613,9 @@ public final class CallManager extends UntypedActor {
         //2. Check if the client has more than one registrations
 
         List<Registration> registrationToDial = new CopyOnWriteArrayList<Registration>();
+        Sid organizationSid = storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid();
 
-        List<Registration> registrations = registrationsDao.getRegistrations(client);
+        List<Registration> registrations = registrationsDao.getRegistrations(client, organizationSid);
         if (registrations != null && registrations.size() > 0) {
             if (logger.isInfoEnabled()) {
                 logger.info("Preparing call for client: "+client+". There are "+registrations.size()+" registrations at the database for this client");
@@ -2203,7 +2204,7 @@ public final class CallManager extends UntypedActor {
             logger.info("looking for registrations for number: " + formattedNumber);
         }
         final RegistrationsDao registrationsDao = storage.getRegistrationsDao();
-        List<Registration> registrations = registrationsDao.getRegistrations(formattedNumber);
+        List<Registration> registrations = registrationsDao.getRegistrations(formattedNumber, getOrganizationSidBySipURIHost((SipURI)regUri));
 
         if(registrations == null || registrations.size() ==0){
             return null;
