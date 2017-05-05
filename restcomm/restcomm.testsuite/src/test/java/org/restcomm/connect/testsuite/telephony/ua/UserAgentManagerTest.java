@@ -76,8 +76,6 @@ public final class UserAgentManagerTest {
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    // second admin in org testdomain2.restcomm.com
-    private String adminAccountSid2 = "ACae6e420f425248d6a26948c17a9e2acg";
 
     private static SipStackTool tool1;
     private SipStack sipStack;
@@ -112,7 +110,7 @@ public final class UserAgentManagerTest {
     private static SipStackTool tool7;
     private SipStack sipStack7;
     private SipPhone phone7;
-    private String aliceContact7 = "sip:alice@testdomain.restcomm.com";
+    private String aliceContact7 = "sip:alice@127.0.0.1:5074";
 
     public UserAgentManagerTest() {
         super();
@@ -529,7 +527,7 @@ public final class UserAgentManagerTest {
         //alice should be registered successfully
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
 
-        //register another alice of organization (testdomain.restcomm.com)
+        //register another alice of organization (127.0.0.1)
         uri = sipStack7.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         c = new Credential("127.0.0.1","alice", "1234");
         phone7.addUpdateCredential(c);
@@ -548,7 +546,6 @@ public final class UserAgentManagerTest {
         sipStack7.dispose();
         phone7 = null;
         sipStack7 = null;
-
         Thread.sleep(100000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
