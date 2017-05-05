@@ -538,7 +538,6 @@ public final class UserAgentManagerTest {
 
         //both users should be registered successfully
         int totalRegistrations = MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-        totalRegistrations += MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid2, adminAuthToken);
         logger.info("Totatl Registrations: "+totalRegistrations);
         assertTrue(totalRegistrations==2);
 
