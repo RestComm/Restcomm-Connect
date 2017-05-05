@@ -1097,9 +1097,15 @@ public final class CallManager extends UntypedActor {
             boolean foundNumberInSameOrganization = false;
             boolean foundNonSipNumberInDifferntOrganization = false;
             Sid organizationSid = getOrganizationSidBySipURIHost((SipURI)request.getTo().getURI());
+            //TODO remove it before merge
+            logger.info("getMostOptimalIncomingPhoneNumber: organizationSid: "+organizationSid);
             // find number in same organization
             for(IncomingPhoneNumber n : numbers){
-                if(n.getOrganizationSid() == organizationSid){
+                //TODO remove it before merge
+                logger.info("getMostOptimalIncomingPhoneNumber: n.getOrganizationSid(): "+n.getOrganizationSid());
+                if(n.getOrganizationSid().equals(organizationSid)){
+                    //TODO remove it before merge
+                    logger.info("getMostOptimalIncomingPhoneNumber: foundNumberInSameOrganization: "+number);
                     foundNumberInSameOrganization = true;
                     number = n;
                 }
@@ -1114,6 +1120,8 @@ public final class CallManager extends UntypedActor {
                     if(!n.isPureSip()){
                         foundNonSipNumberInDifferntOrganization = true;
                         number = n;
+                        //TODO remove it before merge
+                        logger.info("getMostOptimalIncomingPhoneNumber: foundNonSipNumberInDifferntOrganization: "+number);
                     }
                     if(foundNonSipNumberInDifferntOrganization)
                         break;
