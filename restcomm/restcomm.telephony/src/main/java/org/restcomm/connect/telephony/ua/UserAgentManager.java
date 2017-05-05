@@ -337,7 +337,12 @@ public final class UserAgentManager extends UntypedActor {
             logger.debug("Error response for the OPTIONS to: "+location+" will remove registration");
         }
         final RegistrationsDao regDao = storage.getRegistrationsDao();
-        List<Registration> registrations = regDao.getRegistrations(user, getOrganizationSidBySipURIHost((SipURI)sipServletMessage.getTo().getURI()));
+        List<Registration> registrations = regDao.getRegistrationsByLocation(user, "%"+location.getHost()+":"+location.getPort());
+        if(logger.isDebugEnabled()) {
+            logger.debug("Resultant registrations of given criteria are:"+registrations);
+            //TODO: remove following log line
+            logger.debug("Current registrations are:"+regDao.getRegistrations());
+        }
         if (registrations != null) {
             Iterator<Registration> iter = registrations.iterator();
             SipURI regLocation = null;
@@ -545,31 +550,7 @@ public final class UserAgentManager extends UntypedActor {
             patch(uri, ip, port);
         }
 
-        final StringBuffer buffer = new StringBuffer();
-        if (((SipURI)request.getRequestURI()).isSecure()) {
-            buffer.append("sips:");
-        } else {
-            buffer.append("sip:");
-        }
-        buffer.append(normalize(user)).append("@").append(uri.getHost()).append(":").append(uri.getPort());
-        // https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than
-        if (transport != null) {
-            buffer.append(";transport=").append(transport);
-        }
-
-        Iterator<String> extraParameterNames = uri.getParameterNames();
-        while (extraParameterNames.hasNext()) {
-            String paramName = extraParameterNames.next();
-            if (!paramName.equalsIgnoreCase("transport")) {
-                String paramValue = uri.getParameter(paramName);
-                buffer.append(";");
-                buffer.append(paramName);
-                buffer.append("=");
-                buffer.append(paramValue);
-            }
-        }
-
-        final String address = buffer.toString();
+        final String address = createAddress(request);
         // Prepare the response.
         final SipServletResponse response = request.createResponse(SC_OK);
         // Update the data store.
@@ -644,6 +625,49 @@ public final class UserAgentManager extends UntypedActor {
         } catch (Exception e) {
             logger.error("Exception while trying to setInvalidateWhenReady(true) after sent response to register : "+response.toString()+" exception: "+e);
         }
+    }
+
+    private String createAddress(SipServletRequest request) throws ServletParseException {
+
+        final Address contact = request.getAddressHeader("Contact");
+        final SipURI uri = (SipURI) contact.getURI();
+        final SipURI to = (SipURI) request.getTo().getURI();
+        final String user = to.getUser().trim();
+
+        String transport = (uri.getTransportParam()==null?request.getParameter("transport"):uri.getTransportParam()); //Issue #935, take transport of initial request-uri if contact-uri has no transport parameter
+        //If RURI is secure (SIPS) then pick TLS for transport - https://github.com/RestComm/Restcomm-Connect/issues/1956
+        if (((SipURI)request.getRequestURI()).isSecure()) {
+            transport = "tls";
+        }
+        if (transport == null && !request.getInitialTransport().equalsIgnoreCase("udp")) {
+            //Issue1068, if Contact header or RURI doesn't specify transport, check InitialTransport from
+            transport = request.getInitialTransport();
+        }
+
+        final StringBuffer buffer = new StringBuffer();
+        if (((SipURI)request.getRequestURI()).isSecure()) {
+            buffer.append("sips:");
+        } else {
+            buffer.append("sip:");
+        }
+        buffer.append(normalize(user)).append("@").append(uri.getHost()).append(":").append(uri.getPort());
+        // https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than
+        if (transport != null) {
+            buffer.append(";transport=").append(transport);
+        }
+
+        Iterator<String> extraParameterNames = uri.getParameterNames();
+        while (extraParameterNames.hasNext()) {
+            String paramName = extraParameterNames.next();
+            if (!paramName.equalsIgnoreCase("transport")) {
+                String paramValue = uri.getParameter(paramName);
+                buffer.append(";");
+                buffer.append(paramName);
+                buffer.append("=");
+                buffer.append(paramValue);
+            }
+        }
+        return buffer.toString();
     }
 
     /**
@@ -870,8 +894,7 @@ public final class UserAgentManager extends UntypedActor {
             logger.debug("organization: "+organization);
         if(organization == null){
             organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
-            if(logger.isDebugEnabled())
-                logger.debug("organization is null going to choose default: "+organization);
+            logger.error("organization is null going to choose default: "+organization);
         }
         return organization.getSid();
     }

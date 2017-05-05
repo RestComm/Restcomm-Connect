@@ -89,7 +89,6 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
                 }
             }
             return records;
-        
         } finally {
             session.close();
         }

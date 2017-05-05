@@ -148,4 +148,13 @@ public final class Registration implements Comparable<Registration> {
             return 1;
     }
 
+    @Override
+    public String toString() {
+        return "Registration [sid=" + sid + ", instanceId=" + instanceId + ", dateCreated=" + dateCreated
+                + ", dateUpdated=" + dateUpdated + ", dateExpires=" + dateExpires + ", addressOfRecord="
+                + addressOfRecord + ", displayName=" + displayName + ", userName=" + userName + ", timeToLive="
+                + timeToLive + ", location=" + location + ", userAgent=" + userAgent + ", webrtc=" + webrtc
+                + ", isLBPresent=" + isLBPresent + ", organizationSid=" + organizationSid + "]";
+    }
+
 }
