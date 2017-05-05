@@ -19,11 +19,34 @@
  */
 package org.restcomm.connect.telephony.ua;
 
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import static java.lang.Integer.parseInt;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
+import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
+import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
+
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.Parameterable;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
+
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
@@ -40,32 +63,11 @@ import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.UserRegistration;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.sip.Address;
-import javax.servlet.sip.Parameterable;
-import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletMessage;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import static java.lang.Integer.parseInt;
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
-import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
-import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -139,7 +141,7 @@ public final class UserAgentManager extends UntypedActor {
                 if (logger.isInfoEnabled())
                     logger.info("Will remove WebRTC client: "+result.getLocation());
                 registrations.removeRegistration(result);
-                monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
+                monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false, result.getOrganizationSid()), self());
             } else {
                 final DateTime expires = result.getDateExpires();
                 if (expires.isBeforeNow() || expires.isEqualNow()) {
@@ -147,7 +149,7 @@ public final class UserAgentManager extends UntypedActor {
                         logger.info("Registration: " + result.getLocation() + " expired and will be removed now");
                     }
                     registrations.removeRegistration(result);
-                    monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
+                    monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false, result.getOrganizationSid()), self());
                     monitoringService.tell(new GetCall(result.getLocation()), self());
                 } else {
                     final DateTime updated = result.getDateUpdated();
@@ -158,7 +160,7 @@ public final class UserAgentManager extends UntypedActor {
                             logger.info("Registration: " + result.getLocation() + " didn't respond to OPTIONS and will be removed now");
                         }
                         registrations.removeRegistration(result);
-                        monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
+                        monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false, result.getOrganizationSid()), self());
                         monitoringService.tell(new GetCall(result.getLocation()), self());
                     }
                 }
@@ -374,7 +376,7 @@ public final class UserAgentManager extends UntypedActor {
                     }
 
                     regDao.removeRegistration(reg);
-                    monitoringService.tell(new UserRegistration(reg.getUserName(), reg.getLocation(), false), self());
+                    monitoringService.tell(new UserRegistration(reg.getUserName(), reg.getLocation(), false, reg.getOrganizationSid()), self());
                     monitoringService.tell(new GetCall(reg.getLocation()), self());
                 } else {
                     if (logger.isDebugEnabled()) {
@@ -584,19 +586,20 @@ public final class UserAgentManager extends UntypedActor {
 
         boolean webRTC = isWebRTC(transport, ua);
 
-        final Registration registration = new Registration(sid, instanceId, now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent, getOrganizationSidBySipURIHost(to));
+        Sid organizationSid = getOrganizationSidBySipURIHost(to);
+        final Registration registration = new Registration(sid, instanceId, now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent, organizationSid);
         final RegistrationsDao registrations = storage.getRegistrationsDao();
 
         if (ttl == 0) {
             // Remove Registration if ttl=0
             registrations.removeRegistration(registration);
             response.setHeader("Expires", "0");
-            monitoringService.tell(new UserRegistration(user, address, false), self());
+            monitoringService.tell(new UserRegistration(user, address, false, organizationSid), self());
             if(logger.isInfoEnabled()) {
                 logger.info("The user agent manager unregistered " + user + " at address "+address+":"+port);
             }
         } else {
-            monitoringService.tell(new UserRegistration(user, address, true), self());
+            monitoringService.tell(new UserRegistration(user, address, true, organizationSid), self());
             if (registrations.hasRegistration(registration)) {
                 // Update Registration if exists
                 registrations.updateRegistration(registration);
@@ -764,19 +767,20 @@ public final class UserAgentManager extends UntypedActor {
             if (ua == null)
                 ua = "GenericUA";
             boolean webRTC = isWebRTC(transport, ua);
-            final Registration registration = new Registration(sid, RestcommConfiguration.getInstance().getMain().getInstanceId(), now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent, getOrganizationSidBySipURIHost(to));
+            Sid organizationSid = getOrganizationSidBySipURIHost(to);
+            final Registration registration = new Registration(sid, RestcommConfiguration.getInstance().getMain().getInstanceId(), now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent, organizationSid);
             final RegistrationsDao registrations = storage.getRegistrationsDao();
 
             if (ttl == 0) {
                 // Remove Registration if ttl=0
                 registrations.removeRegistration(registration);
                 incomingLegResposne.setHeader("Expires", "0");
-                monitoringService.tell(new UserRegistration(user, address, false), self());
+                monitoringService.tell(new UserRegistration(user, address, false, organizationSid), self());
                 if(logger.isInfoEnabled()) {
                     logger.info("The user agent manager unregistered " + user + " at address "+address+":"+port);
                 }
             } else {
-                monitoringService.tell(new UserRegistration(user, address, true), self());
+                monitoringService.tell(new UserRegistration(user, address, true, organizationSid), self());
                 if (registrations.hasRegistration(registration)) {
                     // Update Registration if exists
                     registrations.updateRegistration(registration);
