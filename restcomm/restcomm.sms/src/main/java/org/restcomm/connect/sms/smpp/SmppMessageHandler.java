@@ -253,8 +253,7 @@ public class SmppMessageHandler extends UntypedActor  {
             return storage.getAccountsDao().getAccount(accountSid).getOrganizationSid();
         }
         Organization organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
-        if(logger.isDebugEnabled())
-            logger.debug("organization is null going to choose default: "+organization);
+        logger.error("organization is null going to choose default: "+organization);
         return organization.getSid();
     }
 }

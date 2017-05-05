@@ -601,8 +601,7 @@ public final class CallManager extends UntypedActor {
             logger.debug("organization: "+organization);
         if(organization == null){
             organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
-            if(logger.isDebugEnabled())
-                logger.debug("organization is null going to choose default: "+organization);
+            logger.error("organization is null going to choose default: "+organization);
         }
         return organization.getSid();
     }
