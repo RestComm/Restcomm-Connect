@@ -76,6 +76,8 @@ public final class UserAgentManagerTest {
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    // second admin in org testdomain2.restcomm.com
+    private String adminAccountSid2 = "ACae6e420f425248d6a26948c17a9e2acg";
 
     private static SipStackTool tool1;
     private SipStack sipStack;
@@ -105,7 +107,12 @@ public final class UserAgentManagerTest {
     private static SipStackTool tool6;
     private SipStack sipStack6;
     private SipPhone phone6;
-    private String aliceContact6 = "sip:alice@company.restcomm.com";
+    private String aliceContact6 = "sip:alice@testdomain2.restcomm.com";
+
+    private static SipStackTool tool7;
+    private SipStack sipStack7;
+    private SipPhone phone7;
+    private String aliceContact7 = "sip:alice@testdomain.restcomm.com";
 
     public UserAgentManagerTest() {
         super();
@@ -119,6 +126,7 @@ public final class UserAgentManagerTest {
         tool4 = new SipStackTool("UserAgentTest4");
         tool5 = new SipStackTool("UserAgentTest5");
         tool6 = new SipStackTool("UserAgentTest6");
+        tool7 = new SipStackTool("UserAgentTest7");
     }
 
     @Before
@@ -140,6 +148,9 @@ public final class UserAgentManagerTest {
 
         sipStack6 = tool6.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5074", "127.0.0.1:5080");
         phone6 = sipStack6.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5080, aliceContact6);
+
+        sipStack7 = tool7.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5075", "127.0.0.1:5080");
+        phone7 = sipStack7.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5080, aliceContact7);
     }
 
     @After
@@ -499,36 +510,45 @@ public final class UserAgentManagerTest {
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
+    /**
+     * registerMultipleUsersWithSameLoginUnderDifferentOrganizations
+     * https://github.com/RestComm/Restcomm-Connect/issues/2106
+     * @throws ParseException
+     * @throws InterruptedException
+     * @throws InvalidArgumentException
+     */
     @Test
     public void registerMultipleUsersWithSameLoginUnderDifferentOrganizations() throws ParseException, InterruptedException, InvalidArgumentException {
-        SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        Credential c = new Credential("127.0.0.1","alice", "1234");
-        phone.addUpdateCredential(c);
-        assertTrue(phone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
-        Thread.sleep(2000);
-
-        //user should be registered successfully
+       
+        //register alice of organization (testdomain2.restcomm.com)
+        SipURI uri = sipStack6.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        Credential c = new Credential("testdomain2.restcomm.com","alice", "1234");
+        phone6.addUpdateCredential(c);
+        assertTrue(phone6.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5074", 3600, 3600));
+        Thread.sleep(500);
+        //alice should be registered successfully
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
 
-        //another alice in different organization
-        uri = sipStack6.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        c = new Credential("company.restcomm.com","alice", "1234");
-        phone6.addUpdateCredential(c);
-        
-        //ArrayList<Header> replaceHeaders = new ArrayList<Header>();
-        //Header toHeader = sipStack6.getHeaderFactory().createToHeader(sipStack6.getAddressFactory().createAddress("<sip:alice@company.restcomm.com>"), null);
-        //replaceHeaders.add(toHeader);
-        
-        assertTrue(phone6.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5074", 3600, 3600));
-        Thread.sleep(2000);
+        //register another alice of organization (testdomain.restcomm.com)
+        uri = sipStack7.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        c = new Credential("127.0.0.1","alice", "1234");
+        phone7.addUpdateCredential(c);
+        assertTrue(phone7.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5075", 3600, 3600));
+        Thread.sleep(500);
 
-        //user should be registered successfully
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        //both users should be registered successfully
+        int totalRegistrations = MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        totalRegistrations += MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid2, adminAuthToken);
+        logger.info("Totatl Registrations: "+totalRegistrations);
+        assertTrue(totalRegistrations==2);
 
-        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
-        sipStack.dispose();
-        phone = null;
-        sipStack = null;
+        //Dispose phones. Restcomm will fail to send the OPTIONS message and should remove the registration
+        sipStack6.dispose();
+        phone6 = null;
+        sipStack6 = null;
+        sipStack7.dispose();
+        phone7 = null;
+        sipStack7 = null;
 
         Thread.sleep(100000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
