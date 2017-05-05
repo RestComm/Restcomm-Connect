@@ -71,6 +71,31 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
     }
 
     @Override
+    public List<Registration> getRegistrationsByLocation(String user, String location) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Map<String, Object> map = new HashMap<String, Object>();
+            map.put("user_name", user);
+            map.put("location", location.concat("%"));
+
+            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistrationsByLocation", map);
+            final List<Registration> records = new ArrayList<Registration>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    records.add(toPresenceRecord(result));
+                }
+                if (!records.isEmpty()) {
+                    Collections.sort(records);
+                }
+            }
+            return records;
+        
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public Registration getRegistration(String user, Sid organizationSid) {
         final SqlSession session = sessions.openSession();
         try {
