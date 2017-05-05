@@ -18,6 +18,10 @@
   <select id="getRegistration" parameterType="map" resultType="hashmap">
     SELECT * FROM restcomm_registrations WHERE user_name=#{user_name} and organization_sid=#{organization_sid};
   </select>
+  
+  <select id="getRegistrationsByLocation" parameterType="map" resultType="hashmap">
+    SELECT * FROM restcomm_registrations WHERE user_name=#{user_name} and location LIKE #{location};
+  </select>
 
   <select id="getRegistrationByInstanceId" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_registrations WHERE user_name=#{user_name} AND instanceid=#{instanceid};
