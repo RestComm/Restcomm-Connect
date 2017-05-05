@@ -47,6 +47,7 @@ import javax.sip.RequestEvent;
 import javax.sip.address.Address;
 import javax.sip.address.SipURI;
 import javax.sip.header.Header;
+import javax.sip.header.ToHeader;
 import javax.sip.message.Response;
 import java.net.URL;
 import java.text.ParseException;
@@ -104,7 +105,7 @@ public final class UserAgentManagerTest {
     private static SipStackTool tool6;
     private SipStack sipStack6;
     private SipPhone phone6;
-    private String aliceContact6 = "sip:alice@127.0.0.1:5070";
+    private String aliceContact6 = "sip:alice@company.restcomm.com";
 
     public UserAgentManagerTest() {
         super();
@@ -511,10 +512,14 @@ public final class UserAgentManagerTest {
 
         //another alice in different organization
         uri = sipStack6.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        c = new Credential("127.0.0.1","alice", "1234");
+        c = new Credential("company.restcomm.com","alice", "1234");
         phone6.addUpdateCredential(c);
-        sipStack6.getHeaderFactory().createToHeader(sipStack6.getAddressFactory().createAddress("<sip:alice@company.restcomm.com>"), null);
-        assertTrue(phone6.register(uri, "alice", "1234", aliceContact6, 3600, 3600));
+        
+        //ArrayList<Header> replaceHeaders = new ArrayList<Header>();
+        //Header toHeader = sipStack6.getHeaderFactory().createToHeader(sipStack6.getAddressFactory().createAddress("<sip:alice@company.restcomm.com>"), null);
+        //replaceHeaders.add(toHeader);
+        
+        assertTrue(phone6.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5074", 3600, 3600));
         Thread.sleep(2000);
 
         //user should be registered successfully
