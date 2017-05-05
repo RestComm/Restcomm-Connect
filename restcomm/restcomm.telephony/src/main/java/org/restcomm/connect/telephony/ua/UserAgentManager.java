@@ -339,9 +339,7 @@ public final class UserAgentManager extends UntypedActor {
         final RegistrationsDao regDao = storage.getRegistrationsDao();
         List<Registration> registrations = regDao.getRegistrationsByLocation(user, "%"+location.getHost()+":"+location.getPort());
         if(logger.isDebugEnabled()) {
-            logger.debug("Resultant registrations of given criteria are:"+registrations);
-            //TODO: remove following log line
-            logger.debug("Current registrations are:"+regDao.getRegistrations());
+            logger.debug("Resultant registrations of given criteria, that will be removed are:"+registrations);
         }
         if (registrations != null) {
             Iterator<Registration> iter = registrations.iterator();
