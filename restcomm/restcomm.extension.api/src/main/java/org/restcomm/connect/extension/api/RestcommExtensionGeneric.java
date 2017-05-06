@@ -78,4 +78,15 @@ public interface RestcommExtensionGeneric {
      */
     ExtensionResponse postApiAction(ApiRequest apiRequest);
 
+    /**
+     * Extension name getter
+     * @return String name of Extension
+     */
+    String getName();
+
+    /**
+     * Extension version getter
+     * @return String version of Extension
+     */
+    String getVersion();
 }
