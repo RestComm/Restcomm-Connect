@@ -247,7 +247,7 @@ public final class SmsService extends UntypedActor {
                 session.tell(new SmsSessionAttribute("record", record), self());
                 // Send the SMS.
                 TlvSet tlvSet = new TlvSet();
-                final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()), Encoding.GSM, request, null, tlvSet);
+                final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()), request, tlvSet, null);
                 monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_PROXY_OUT), self);
                 session.tell(sms, self());
             }
@@ -337,65 +337,13 @@ public final class SmsService extends UntypedActor {
         return isFoundHostedApp;
     }
 
-    private ExtensionResponse executePreOutboundAction(final Object er) {
-        //TODO: should allow multiple types of responses perhaps
-        ExtensionResponse response = new ExtensionResponse();
-        if (extensions != null && extensions.size() > 0) {
-
-            for (RestcommExtensionGeneric extension : extensions) {
-                logger.info( "isEnabled="+extension.isEnabled());
-                if (extension.isEnabled()) {
-                    response = extension.preOutboundAction(er);
-                    //fail fast
-                    if (!response.isAllowed()){
-                        break;
-                    }
-                }
-            }
-        }
-        //return object
-        return response;
-    }
-
-    private boolean executePostOutboundAction(final Object message) {
-        return true;
-    }
-
-    //FIXME: make into static util?
-    //FIXME: there must be a fixed contract between the returned extensions object
-    // and how the system will reconfigure itself with the type of ExtensionResponse
-    // for now we will just map SessionExtensionResponse to Configuration object
-    private Object handleExtensionResponse(ExtensionResponse response){
-        //check type of extension
-        //FIXME: hack to default
-        Object object = this.configuration;//new Object();
-        if(response instanceof SystemExtensionResponse){
-            //TODO:return systemwide level customization behaviour
-        }
-        if(response instanceof NodeExtensionResponse){
-            //TODO:return node level customization behaviour
-        }
-        if(response instanceof SessionExtensionResponse){
-            SessionExtensionResponse ser = (SessionExtensionResponse) response;
-            Configuration config = ser.getConfiguration();
-
-            object = config;
-        }
-        if(response instanceof TransactionExtensionResponse){
-            //TODO:return transaction level customization behaviour
-        }
-        if(response instanceof MessageExtensionResponse){
-            //TODO:return message level customization behaviour
-        }
-        return object;
-    }
-
     @Override
     public void onReceive(final Object message) throws Exception {
         final UntypedActorContext context = getContext();
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
+        ExtensionController ec = ExtensionController.getInstance();
         if (CreateSmsSession.class.equals(klass)) {
             //retrieve extension object
             //FIXME:we need a real interface here rather than amending a preexisting request interface
@@ -403,10 +351,10 @@ public final class SmsService extends UntypedActor {
             er.setObject(message);
             er.setConfiguration(this.configuration);
 
-            ExtensionResponse extensionResponse = executePreOutboundAction(er);
+            ExtensionResponse extensionResponse = ec.executePreOutboundAction(er, this.extensions);
             if (extensionResponse.isAllowed()) {
                 //pass in response object to sms session
-                Object obj = handleExtensionResponse(extensionResponse);
+                Object obj = ec.handleExtensionResponse(extensionResponse, this.configuration);
                 //FIXME:not all instances of extensions should modify
                 //a session configuration, we should do checks here
                 final ActorRef session = session((Configuration)obj);
@@ -416,7 +364,7 @@ public final class SmsService extends UntypedActor {
                 final SmsServiceResponse<ActorRef> response = new SmsServiceResponse(new RestcommExtensionException("Now allowed to create SmsSession"));
                 sender.tell(response, self());
             }
-            executePostOutboundAction(message);
+            ec.executePostOutboundAction(message, this.extensions);
         } else if (DestroySmsSession.class.equals(klass)) {
             final DestroySmsSession request = (DestroySmsSession) message;
             final ActorRef session = request.session();

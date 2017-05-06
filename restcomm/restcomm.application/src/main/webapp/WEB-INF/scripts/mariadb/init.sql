@@ -401,10 +401,6 @@ null,
 "Administrator",
 "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf");
 
-INSERT INTO restcomm_accounts_extensions VALUES("ACae6e420f425248d6a26948c17a9e2acf","EX00000000000000000000000000000005","{\"outbound-sms\": [{\"destination_network_id\": \"1000\"}]}")
-INSERT INTO restcomm_accounts_extensions VALUES("ACae6e420f425248d6a26948c17a9e2acg","EX00000000000000000000000000000005","{\"outbound-sms\": [{\"destination_network_id\": \"2000\"}]}")
-INSERT INTO restcomm_accounts_extensions VALUES("ACae6e420f425248d6a26948c17a9e2ach","EX00000000000000000000000000000005","{\"outbound-sms\": [{\"destination_network_id\": \"3000\"}]}")
-INSERT INTO restcomm_extensions_configuration VALUES("EX00000000000000000000000000000005","multi_provider","{\"outbound-sms\": [{\"destination_network_id\": \"1\"}]}","JSON","2012-04-24 00:00:00.000000","2012-04-24 00:00:00.000000",TRUE, TRUE);
 /* Create demo Applications */
 INSERT INTO restcomm_applications VALUES('AP73926e7113fa4d95981aa96b76eca854','2015-09-23 06:56:04.108000','2015-09-23 06:56:04.108000','rvdCollectVerbDemo','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24',FALSE,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/AP73926e7113fa4d95981aa96b76eca854','/restcomm-rvd/services/apps/AP73926e7113fa4d95981aa96b76eca854/controller','voice');
 INSERT INTO restcomm_applications VALUES('AP81cf45088cba4abcac1261385916d582','2015-09-23 06:56:17.977000','2015-09-23 06:56:17.977000','rvdESDemo','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24',FALSE,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/AP81cf45088cba4abcac1261385916d582','/restcomm-rvd/services/apps/AP81cf45088cba4abcac1261385916d582/controller','voice');

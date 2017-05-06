@@ -73,7 +73,7 @@ public class SmppMessageHandler extends UntypedActor  {
         this.configuration = (Configuration) servletContext.getAttribute(Configuration.class.getName());
         this.sipFactory = (SipFactory) servletContext.getAttribute(SipFactory.class.getName());
         this.monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
-        //FIXME:SmsService or SmppMessageHandler
+        //FIXME:Should new ExtensionType.SmppMessageHandler be defined?
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.SmsService);
         if (logger.isInfoEnabled()) {
             logger.info("SmsService extensions: "+(extensions != null ? extensions.size() : "0"));
@@ -85,6 +85,7 @@ public class SmppMessageHandler extends UntypedActor  {
         final UntypedActorContext context = getContext();
         final ActorRef sender = sender();
         final ActorRef self = self();
+        ExtensionController ec = ExtensionController.getInstance();
         if (message instanceof SmppInboundMessageEntity){
             if(logger.isInfoEnabled()) {
                 logger.info("SmppMessageHandler processing Inbound Message " + message.toString());
@@ -96,14 +97,12 @@ public class SmppMessageHandler extends UntypedActor  {
             }
             outbound((SmppOutboundMessageEntity) message);
         } else if (message instanceof CreateSmsSession) {
-            //Extension
             ExtensionRequest er = new ExtensionRequest();
             er.setObject(message);
             er.setConfiguration(this.configuration);
-            ExtensionResponse extensionResponse = executePreOutboundAction(er);
+            ExtensionResponse extensionResponse = ec.executePreOutboundAction(er, this.extensions);
             if (extensionResponse.isAllowed()) {
-                Object obj = handleExtensionResponse(extensionResponse);
-                //Configuration cfg = this.configuration;
+                Object obj = ec.handleExtensionResponse(extensionResponse, this.configuration);
                 final ActorRef session = session((Configuration)obj);
                 final SmsServiceResponse<ActorRef> response = new  SmsServiceResponse<ActorRef>(session);
                 sender.tell(response, self);
@@ -111,60 +110,12 @@ public class SmppMessageHandler extends UntypedActor  {
                 final SmsServiceResponse<ActorRef> response = new SmsServiceResponse(new RestcommExtensionException("Now allowed to create SmsSession"));
                 sender.tell(response, self());
             }
-            executePostOutboundAction(message);
+            ec.executePostOutboundAction(message, this.extensions);
         }else if (message instanceof DestroySmsSession) {
             final DestroySmsSession destroySmsSession = (DestroySmsSession) message;
             final ActorRef session = destroySmsSession.session();
             context.stop(session);
         }
-    }
-
-    private Object handleExtensionResponse(ExtensionResponse response) {
-        // TODO Auto-generated method stub
-        Object object = this.configuration;//new Object();
-        if(response instanceof SystemExtensionResponse){
-            //TODO:return systemwide level customization behaviour
-        }
-        if(response instanceof NodeExtensionResponse){
-            //TODO:return node level customization behaviour
-        }
-        if(response instanceof SessionExtensionResponse){
-            SessionExtensionResponse ser = (SessionExtensionResponse) response;
-            Configuration config = ser.getConfiguration();
-
-            object = config;
-        }
-        if(response instanceof TransactionExtensionResponse){
-            //TODO:return transaction level customization behaviour
-        }
-        if(response instanceof MessageExtensionResponse){
-            //TODO:return message level customization behaviour
-        }
-        return object;
-    }
-
-    private ExtensionResponse executePreOutboundAction(final Object er) {
-        //TODO: should allow multiple types of responses perhaps
-        ExtensionResponse response = new ExtensionResponse();
-        if (extensions != null && extensions.size() > 0) {
-
-            for (RestcommExtensionGeneric extension : extensions) {
-                logger.info( "isEnabled="+extension.isEnabled());
-                if (extension.isEnabled()) {
-                    response = extension.preOutboundAction(er);
-                    //fail fast
-                    if (!response.isAllowed()){
-                        break;
-                    }
-                }
-            }
-        }
-        //return object
-        return response;
-    }
-
-    private boolean executePostOutboundAction(final Object message) {
-        return true;
     }
 
     private void inbound(final SmppInboundMessageEntity request ) throws IOException {
@@ -305,7 +256,9 @@ public class SmppMessageHandler extends UntypedActor  {
                 submit0.setOptionalParameter(tlv);
             }
         }else{
-            logger.info("tlvSet is null");
+            if(logger.isInfoEnabled()) {
+                logger.info("TlvSet is null");
+            }
         }
         try {
             if(logger.isInfoEnabled()) {

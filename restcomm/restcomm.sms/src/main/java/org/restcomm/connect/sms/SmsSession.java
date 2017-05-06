@@ -123,13 +123,12 @@ public final class SmsSession extends UntypedActor {
 
         this.tlvSet = new TlvSet();
         if(!this.configuration.subset("outbound-sms").isEmpty()) {
-            //FIXME: hardcoded to TAG_DEST_NETWORK_ID
+            //TODO: handle arbitrary keys instead of just TAG_DEST_NETWORK_ID
             try {
                 String valStr = this.configuration.subset("outbound-sms").getString("destination_network_id");
-                //FIXME:fetch the tag value from the arbitrary key
                 this.tlvSet.addOptionalParameter(new Tlv(SmppConstants.TAG_DEST_NETWORK_ID,ByteArrayUtil.toByteArray(Integer.parseInt(valStr))));
             } catch (Exception e) {
-                // TODO: handle exception
+                logger.error("Error while parsing tlv configuration " + e);
             }
         }
     }
@@ -155,7 +154,7 @@ public final class SmsSession extends UntypedActor {
             }
             // Store the last sms event.
 
-            last = new SmsSessionRequest(from, to, body, Encoding.GSM, customRequestHeaderMap, this.tlvSet);
+            last = new SmsSessionRequest(from, to, body, this.tlvSet, customRequestHeaderMap);
             if (initial == null) {
                 initial = last;
             }
@@ -175,7 +174,7 @@ public final class SmsSession extends UntypedActor {
             }
             // Store the last sms event.
 
-            last = new SmsSessionRequest (request.getSmppFrom(), request.getSmppTo(), request.getSmppContent(), encoding, null, request.getTlvSet());
+            last = new SmsSessionRequest (request.getSmppFrom(), request.getSmppTo(), request.getSmppContent(), encoding, request.getTlvSet(), null);
             if (initial == null) {
                 initial = last;
             }
