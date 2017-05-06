@@ -383,7 +383,6 @@ public class Jsr309ConferenceController extends MediaServerController {
 
                 // Create media session
                 mediaSession = msControlFactory.createMediaSession();
-                logger.warning("i1552-Jsr309ConferenceController-Initializing-execute: "+mediaSession);
 
                 // Create the media group with recording capabilities
                 mediaGroup = mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
