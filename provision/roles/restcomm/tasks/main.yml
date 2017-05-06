@@ -1,0 +1,6 @@
+---
+- name: clone a repo
+  git: repo=https://github.com/alexclear/Restcomm-Connect.git dest=/root/Restcomm-Connect
+
+- name: put a build script
+  template: src=restcomm-connect-build.sh dest=/root/Restcomm-Connect/restcomm-connect-build.sh mode=0755
