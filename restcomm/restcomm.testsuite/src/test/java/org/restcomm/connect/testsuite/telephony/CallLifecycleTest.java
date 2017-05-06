@@ -407,7 +407,6 @@ public class CallLifecycleTest {
         String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
         List<String> params = Arrays.asList(requestBody.split("&"));
         String callSid = "";
-        
         for (String param : params) {
             if (param.contains("CallSid")) {
                 callSid = param.split("=")[1];
