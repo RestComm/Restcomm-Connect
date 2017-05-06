@@ -78,16 +78,16 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         final SqlSession session = sessions.openSession();
         String inboundPhoneNumber = null;
           try {
-            //if(parameter.toString().contains("*")){}{
-            //perform direct check
             final Map<String, Object> result = session.selectOne(namespace + selector, parameter);
             if (result != null ) {
                 return toIncomingPhoneNumber(result);
-            }//}
+            }
             //check if there is a Regex match only if parameter is a String aka phone Number
             if(!(parameter instanceof Sid)){
-               inboundPhoneNumber = parameter.toString().replace("+1", "");
-               logger.warn(" Inbound phoneNumber : " + inboundPhoneNumber );
+//               inboundPhoneNumber = parameter.toString().replace("+1", "");
+                if (logger.isInfoEnabled()) {
+                    logger.info("About to check for REGEX incoming phone number for phoneNumber : " + inboundPhoneNumber);
+                }
               return checkIncomingPhoneNumberRegexMatch(selector, inboundPhoneNumber);
                }
 

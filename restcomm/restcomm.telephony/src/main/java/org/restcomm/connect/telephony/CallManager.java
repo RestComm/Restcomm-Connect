@@ -976,13 +976,13 @@ public final class CallManager extends UntypedActor {
         //Don't format to E.164 if contains# or * as this is
         //for a Regex or USSD call
         if (phone.contains("*") || phone.contains("#")){
-               formatedPhone = phone;
-          }else{
-        try {
-            formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
-        } catch (NumberParseException e) {
-            logger.error("Exception when try to format : " + e);
-        }
+            formatedPhone = phone;
+        }else{
+            try {
+                formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
+            } catch (NumberParseException e) {
+                logger.error("Exception when try to format : " + e);
+            }
         }
         IncomingPhoneNumber number = null;
         try {
@@ -992,8 +992,7 @@ public final class CallManager extends UntypedActor {
             if (number == null) {
                 number = numbers.getIncomingPhoneNumber(phone);
             }
-            //if(number == null){
-            if(numbers.getIncomingPhoneNumber(phone) == null){
+            if(number == null){
                 if (phone.startsWith("+")) {
                     //remove the (+) and check if exists
                     phone= phone.replaceFirst("\\+","");
