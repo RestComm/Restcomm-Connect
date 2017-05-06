@@ -726,7 +726,6 @@ public class Jsr309CallController extends MediaServerController {
         if (is(active)) {
             try {
                 // join call leg to bridge
-                logger.warning("i1552-Jsr309CallController-onJoinBridge: "+this.mediaSession);
                 this.bridge = sender;
                 this.mediaMixer = (MediaMixer) message.getEndpoint();
                 this.networkConnection.join(Direction.DUPLEX, mediaMixer);
@@ -744,7 +743,6 @@ public class Jsr309CallController extends MediaServerController {
         if (is(active)) {
             try {
                 // join call leg to bridge
-                logger.warning("i1552-Jsr309CallController-onJoinConference: "+this.mediaSession);
                 this.bridge = sender;
                 this.mediaMixer = (MediaMixer) message.getEndpoint();
                 this.networkConnection.join(Direction.DUPLEX, mediaMixer);
@@ -850,8 +848,7 @@ public class Jsr309CallController extends MediaServerController {
             try {
                 // Create media session
                 mediaSession = msControlFactory.createMediaSession();
-                mediaSession.setAttribute("CAPTION", "testInitializingCall");
-                logger.warning("i1552-Jsr309CallController-Initializing-execute: "+mediaSession);
+
                 // Create media group with full capabilities
                 mediaGroup = mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
 
