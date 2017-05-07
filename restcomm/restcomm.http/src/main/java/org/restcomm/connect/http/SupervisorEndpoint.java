@@ -132,10 +132,10 @@ public class SupervisorEndpoint extends SecuredEndpoint{
         //Get the list of live calls from Monitoring Service
         MonitoringServiceResponse monitoringServiceResponse;
         try {
-            final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+            final Timeout expires = new Timeout(Duration.create(5, TimeUnit.SECONDS));
             GetLiveCalls getLiveCalls = new GetLiveCalls();
             Future<Object> future = (Future<Object>) ask(monitoringService, getLiveCalls, expires);
-            monitoringServiceResponse = (MonitoringServiceResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+            monitoringServiceResponse = (MonitoringServiceResponse) Await.result(future, Duration.create(5, TimeUnit.SECONDS));
         } catch (Exception exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
