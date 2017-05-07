@@ -40,20 +40,25 @@ createHandler(){
     result=$?
     if [ "$result" -eq 1 ]; then
 	echo "adding RVD handler"
-	xmlstarlet ed -P -N domainns=urn:jboss:domain:1.4 -N logns=urn:jboss:domain:logging:1.2 -d "//logns:periodic-rotating-file-handler[@name='RVD']" -s "//logns:subsystem" -t elem -n periodic-rotating-file-handler  \
-	--var handler-field '$prev' \
-	-i '$handler-field' -t attr -n name -v RVD \
-	-i '$handler-field' -t attr -n autoflush -v true \
-	-s '$handler-field' -t elem -n formatter --var formatter-field '$prev' \
-	-s '$formatter-field' -t elem -n pattern-formatter --var pattern-formatter-field '$prev' \
-	-i '$pattern-formatter-field' -t attr -n pattern -v "%d{MMdd HH:mm:ss,SSS X} %p (%t) %m %n" \
-	-s '$handler-field' -t elem -n file --var file-field '$prev' \
-	-i '$file-field' -t attr -n relative-to -v "jboss.server.log.dir" \
-	-i '$file-field' -t attr -n path -v "rvd/rvd.log" \
-	-s '$handler-field' -t elem -n suffix --var suffix-field '$prev' \
-	-s '$suffix-field' -t attr -n value -v ".yyyy-MM-dd" \
-	-s '$handler-field' -t elem -n append --var append-field '$prev' \
-	-s '$append-field' -t attr -n value -v true \
+	xmlstarlet ed -P -N logns=urn:jboss:domain:logging:1.2 -d "//logns:periodic-rotating-file-handler[@name='RVD']" -s "//logns:subsystem" -t elem -n periodic-rotating-file-handler_TMP -v "" \
+    -i //periodic-rotating-file-handler_TMP -t attr -n name -v RVD \
+    -i //periodic-rotating-file-handler_TMP -t attr -n autoflush -v true \
+    -s //periodic-rotating-file-handler_TMP -t elem -n formatter_TMP -v "" \
+    -s //formatter_TMP -t elem -n pattern-formatter_TMP -v "" \
+    -i //pattern-formatter_TMP -t attr -n pattern -v "%d{MMdd HH:mm:ss,SSS X} %p (%t) %m %n" \
+    -s //periodic-rotating-file-handler_TMP -t elem -n file_TMP -v "" \
+    -i //file_TMP -t attr -n relative-to -v "jboss.server.log.dir" \
+    -i //file_TMP -t attr -n path -v "rvd/rvd.log" \
+    -s //periodic-rotating-file-handler_TMP -t elem -n suffix_TMP -v "" \
+    -s //suffix_TMP -t attr -n value -v ".yyyy-MM-dd" \
+    -s //periodic-rotating-file-handler_TMP -t elem -n append_TMP -v "" \
+    -s //append_TMP -t attr -n value -v true \
+    -r //periodic-rotating-file-handler_TMP -v periodic-rotating-file-handler \
+    -r //formatter_TMP -v formatter \
+    -r //pattern-formatter_TMP -v pattern-formatter \
+    -r //file_TMP -v file \
+    -r //suffix_TMP -v suffix \
+    -r //append_TMP -v append \
 	$STANDALONE_SIP > ${STANDALONE_SIP}_tmp
 	mv ${STANDALONE_SIP}_tmp $STANDALONE_SIP
         XML_UPDATED=true
@@ -73,13 +78,18 @@ createLoggers(){
     result=$?
     if [ "$result" -eq 1 -o \( "$result" = 0 -a "$OVERRIDE" = true \) ]; then
 	echo "adding RVD local logger - $RVD_LOG_LEVEL/$LOGGING_HANDLER handler"
-	xmlstarlet ed -P -N domainns=urn:jboss:domain:1.4 -N logns=urn:jboss:domain:logging:1.2 -d "//logns:logger[@category='org.restcomm.connect.rvd.LOCAL']" -s "//logns:subsystem" -t elem -n logger --var local-logger-field '$prev' \
-	-i '$local-logger-field' -t attr -n category -v "org.restcomm.connect.rvd.LOCAL" \
-	-s '$local-logger-field' -t elem -n level --var level-field '$prev' \
-	-i '$level-field' -t attr -n name -v "$RVD_LOG_LEVEL" \
-	-s '$local-logger-field' -t elem -n handlers --var handlers-field '$prev' \
-	-s '$handlers-field' -t elem -n handler --var handler-field '$prev' \
-	-s '$handler-field' -t attr -n name -v "$LOGGING_HANDLER" \
+    xmlstarlet ed -P -N logns=urn:jboss:domain:logging:1.2 -d "//logns:logger[@category='org.restcomm.connect.rvd.LOCAL']" \
+    -s "//logns:subsystem" -t elem -n logger_TMP -v "" \
+    -i //logger_TMP -t attr -n category -v "org.restcomm.connect.rvd.LOCAL" \
+    -s //logger_TMP -t elem -n level_TMP -v "" \
+    -i //level_TMP -t attr -n name -v "$RVD_LOG_LEVEL" \
+    -s //logger_TMP -t elem -n handlers_TMP -v "" \
+    -s //handlers_TMP -t elem -n handler_TMP -v "" \
+    -s //handler_TMP -t attr -n name -v "$LOGGING_HANDLER" \
+    -r //logger_TMP -v logger \
+    -r //level_TMP -v level \
+    -r //handlers_TMP -v handlers \
+    -r //handler_TMP -v handler \
 	$STANDALONE_SIP > ${STANDALONE_SIP}_tmp
 	mv ${STANDALONE_SIP}_tmp $STANDALONE_SIP
         XML_UPDATED=true
@@ -95,13 +105,18 @@ createLoggers(){
     result=$?
     if [ "$result" -eq 1 -o \( "$result" = 0 -a "$OVERRIDE" = true \) ]; then
 	echo "adding RVD global logger - $RVD_LOG_LEVEL/$LOGGING_HANDLER handler"
-	xmlstarlet ed -P -N domainns=urn:jboss:domain:1.4 -N logns=urn:jboss:domain:logging:1.2 -d "//logns:logger[@category='org.restcomm.connect.rvd.GLOBAL']" -s "//logns:subsystem" -t elem -n logger --var local-logger-field '$prev' \
-	-i '$local-logger-field' -t attr -n category -v "org.restcomm.connect.rvd.GLOBAL" \
-	-s '$local-logger-field' -t elem -n level --var level-field '$prev' \
-	-i '$level-field' -t attr -n name -v "$RVD_LOG_LEVEL" \
-	-s '$local-logger-field' -t elem -n handlers --var handlers-field '$prev' \
-	-s '$handlers-field' -t elem -n handler --var handler-field '$prev' \
-	-s '$handler-field' -t attr -n name -v "$LOGGING_HANDLER" \
+    xmlstarlet ed -P -N logns=urn:jboss:domain:logging:1.2 -d "//logns:logger[@category='org.restcomm.connect.rvd.GLOBAL']" \
+     -s "//logns:subsystem" -t elem -n logger_TMP -v "" \
+    -i //logger_TMP -t attr -n category -v "org.restcomm.connect.rvd.GLOBAL" \
+    -s //logger_TMP -t elem -n level_TMP -v "" \
+    -i //level_TMP -t attr -n name -v "$RVD_LOG_LEVEL" \
+    -s //logger_TMP -t elem -n handlers_TMP -v "" \
+    -s //handlers_TMP -t elem -n handler_TMP -v "" \
+    -s //handler_TMP -t attr -n name -v "$LOGGING_HANDLER" \
+    -r //logger_TMP -v logger \
+    -r //level_TMP -v level \
+    -r //handlers_TMP -v handlers \
+    -r //handler_TMP -v handler \
 	$STANDALONE_SIP > ${STANDALONE_SIP}_tmp
 	mv ${STANDALONE_SIP}_tmp $STANDALONE_SIP
         XML_UPDATED=true
@@ -114,7 +129,7 @@ createLoggers(){
 }
 
 formatXml(){
-    tmpfile=$(mktemp)
+    tmpfile=$(mktemp -t rvdconfigXXX)
     xmlstarlet fo "$STANDALONE_SIP" > "$tmpfile"
     mv "$tmpfile" "$STANDALONE_SIP" 
 }
