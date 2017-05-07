@@ -44,7 +44,6 @@ import javax.media.mscontrol.resource.AllocationEvent;
 import javax.media.mscontrol.resource.AllocationEventListener;
 import javax.media.mscontrol.resource.RTC;
 
-import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -342,7 +341,7 @@ public class Jsr309ConferenceController extends MediaServerController {
     private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
         if (is(active)) {
             // Tell call to join conference by passing reference of the media mixer
-            final JoinConference join = new JoinConference(this.mediaMixer, message.getConnectionMode(), message.getSid());
+            final JoinConference join = new JoinConference(this.mediaMixer, message.getConnectionMode(), message.getSid(), message.mediaAttributes());
             message.getCall().tell(join, sender);
         }
     }
@@ -423,10 +422,6 @@ public class Jsr309ConferenceController extends MediaServerController {
             mediaSession.setAttribute("CONFERENCE_VIDEO_SIZE", mediaAttributes.getVideoResolution().toString());
             // layout configuration
             mediaSession.setAttribute("REGION", mediaAttributes.getVideoLayout().toString());
-            // overlay configuration
-            if (!StringUtils.isEmpty(mediaAttributes.getVideoOverlay())) {
-                mediaSession.setAttribute("CAPTION", mediaAttributes.getVideoOverlay());
-            }
         }
 
         private Parameters createMixerParams() {

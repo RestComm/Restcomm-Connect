@@ -199,6 +199,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     Tag conferenceVerb;
     List<URI> conferenceWaitUris;
     private boolean playMusicForConference = false;
+    private MediaAttributes mediaAttributes;
     //Used for system apps, such as when WebRTC client is dialing out.
     //The rcml will be used instead of download the RCML
     private String rcml;
@@ -433,6 +434,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.asImsUa = asImsUa;
         this.imsUaLogin = imsUaLogin;
         this.imsUaPassword = imsUaPassword;
+        this.mediaAttributes = new MediaAttributes();
     }
 
     private boolean is(State state) {
@@ -2057,7 +2059,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final Tag child = conference(verb);
                 if (child != null) {
                     String name = null;
-                    MediaAttributes mediaAttributes = new MediaAttributes();
                     final Tag grandchild = video(child);
                     if (grandchild == null) {
                         name = child.text();
@@ -2720,7 +2721,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 //Adding conference record in DB
                 //For outbound call the CDR will be updated at Call.InProgress()
                 addConferenceStuffInCDR(conferenceSid);
-                final AddParticipant request = new AddParticipant(call);
+                final AddParticipant request = new AddParticipant(call, mediaAttributes);
                 conference.tell(request, source);
             } else {
                 // Ask the parser for the next action to take.
