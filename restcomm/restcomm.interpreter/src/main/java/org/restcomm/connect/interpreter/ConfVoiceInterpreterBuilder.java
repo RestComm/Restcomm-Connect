@@ -1,6 +1,7 @@
 package org.restcomm.connect.interpreter;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -9,18 +10,13 @@ import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.telephony.api.CallInfo;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
 
 import java.net.URI;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
 
 public class ConfVoiceInterpreterBuilder {
 
     private Logger logger = Logger.getLogger(ConfVoiceInterpreterBuilder.class);
-    private ActorRef supervisor;
+    private ActorSystem system;
     private Configuration configuration;
     private Sid account;
     private String version;
@@ -31,9 +27,9 @@ public class ConfVoiceInterpreterBuilder {
     private DaoManager storage;
     private CallInfo callInfo;
 
-    public ConfVoiceInterpreterBuilder(final ActorRef supervisor) {
+    public ConfVoiceInterpreterBuilder(final ActorSystem system) {
         super();
-        this.supervisor = supervisor;
+        this.system = system;
     }
 
     public ActorRef build() {
@@ -41,17 +37,11 @@ public class ConfVoiceInterpreterBuilder {
             private static final long serialVersionUID = 1L;
             @Override
             public UntypedActor create() throws Exception {
-                return new ConfVoiceInterpreter(supervisor, configuration, account, version, url, method, emailAddress, conference,
+                return new ConfVoiceInterpreter(configuration, account, version, url, method, emailAddress, conference,
                         storage, callInfo);
             }
         });
-        ActorRef confVoiceInterpreter = null;
-        try {
-            confVoiceInterpreter = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return confVoiceInterpreter;
+        return system.actorOf(props);
     }
 
     public void setConfiguration(final Configuration configuration) {
