@@ -44,7 +44,7 @@ public final class PlayRecordTest {
         builder.setClearDigitBuffer(true);
         builder.setPreSpeechTimer(1000);
         builder.setPostSpeechTimer(1000);
-        builder.setRecordingLength(15000);
+        builder.setRecordingLength(1500);
         builder.setEndInputKey("#");
         final PlayRecord playRecord = builder.build();
         final String result = playRecord.toString();
@@ -74,7 +74,7 @@ public final class PlayRecordTest {
         builder.setClearDigitBuffer(true);
         builder.setPreSpeechTimer(1000);
         builder.setPostSpeechTimer(1000);
-        builder.setRecordingLength(15000);
+        builder.setRecordingLength(1500);
         builder.setEndInputKey("#");
         final PlayRecord playRecord = builder.build();
         final String result = playRecord.toString();
@@ -93,7 +93,7 @@ public final class PlayRecordTest {
         builder.setClearDigitBuffer(true);
         builder.setPreSpeechTimer(1000);
         builder.setPostSpeechTimer(1050);
-        builder.setRecordingLength(15000);
+        builder.setRecordingLength(1500);
         builder.setEndInputKey("#");
         final PlayRecord playRecord = builder.build();
         final String result = playRecord.toString();

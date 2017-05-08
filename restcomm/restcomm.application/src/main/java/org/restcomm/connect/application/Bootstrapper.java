@@ -337,7 +337,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             }
             context.setAttribute(MediaServerControllerFactory.class.getName(), mscontrollerFactory);
 
-            Boolean rvdMigrationEnabled = new Boolean(xml.subset("runtime-settings").getString("rvd-workspace-migration-enabled", "true"));
+            Boolean rvdMigrationEnabled = new Boolean(xml.subset("runtime-settings").getString("rvd-workspace-migration-enabled", "false"));
             if (rvdMigrationEnabled) {
                 //Replicate RVD Projects as database entities
                 try {
