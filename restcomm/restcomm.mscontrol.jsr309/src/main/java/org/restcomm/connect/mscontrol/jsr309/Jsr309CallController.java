@@ -716,7 +716,7 @@ public class Jsr309CallController extends MediaServerController {
                 params.put(Recorder.START_BEEP, Boolean.FALSE);
 
                 // Video parameters
-                if (MediaAttributes.MediaType.AUDIO_VIDEO.equals(message.media()) || 
+                if (MediaAttributes.MediaType.AUDIO_VIDEO.equals(message.media()) ||
                         MediaAttributes.MediaType.VIDEO_ONLY.equals(message.media())) {
                     params.put(Recorder.VIDEO_CODEC, CodecConstants.H264);
                     String sVideoFMTP = "profile=" + "66";
