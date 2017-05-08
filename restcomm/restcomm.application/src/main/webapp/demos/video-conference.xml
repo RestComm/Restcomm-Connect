@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Say>Welcome to the video conference bridge</Say>
+	<Say>When moderator joins you will be connected</Say>
+	<Dial>
+		<Conference startConferenceOnEnter="false" waitUrl="/restcomm/music/rock/nickleus_-_original_guitar_song_200907251723.wav" name="1112">
+			<Video enable="true" mode="mcu" resolution="720p" layout="tile" overlay="text"></Video>
+		</Conference>
+	</Dial>
+</Response>

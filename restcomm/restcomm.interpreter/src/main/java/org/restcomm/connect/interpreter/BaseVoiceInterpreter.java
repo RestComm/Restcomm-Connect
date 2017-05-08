@@ -61,9 +61,9 @@ import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.TranscriptionsDao;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.Recording;
-import org.restcomm.connect.dao.entities.MediaType;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Direction;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;
@@ -222,7 +222,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     Sid recordingSid = null;
     URI recordingUri = null;
     URI publicRecordingUri = null;
-    MediaType recordingMediaType = null;
+    MediaAttributes.MediaType recordingMediaType = null;
     // Information to reach the application that will be executed
     // by this interpreter.
     Sid accountId;
@@ -1710,13 +1710,13 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     }
                 }
             }
-            recordingMediaType = MediaType.AUDIO_ONLY;
+            recordingMediaType = MediaAttributes.MediaType.AUDIO_ONLY;
             attribute = verb.attribute("media");
             if (attribute != null) {
                 final String value = attribute.value();
                 if (value != null && !value.isEmpty()) {
                     try {
-                        recordingMediaType = MediaType.getValueOf(value);
+                        recordingMediaType = MediaAttributes.MediaType.getValueOf(value);
                     } catch (final IllegalArgumentException exception) {
                         final Notification notification = notification(WARNING_NOTIFICATION, 13612, value
                                 + " is not a valid media value");
@@ -1734,7 +1734,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (!httpRecordingUri.endsWith("/")) {
                 httpRecordingUri += "/";
             }
-            String fileExtension = recordingMediaType.equals(MediaType.AUDIO_ONLY) ? ".wav" : ".mp4";
+            String fileExtension = recordingMediaType.equals(MediaAttributes.MediaType.AUDIO_ONLY) ? ".wav" : ".mp4";
             path += recordingSid.toString() + fileExtension;
             httpRecordingUri += recordingSid.toString() + fileExtension;
             recordingUri = URI.create(path);
@@ -1927,7 +1927,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         if (!httpRecordingUri.endsWith("/")) {
                             httpRecordingUri += "/";
                         }
-                        String fileExtension = recordingMediaType.equals(MediaType.AUDIO_ONLY) ? ".wav" : ".mp4";
+                        String fileExtension = recordingMediaType.equals(MediaAttributes.MediaType.AUDIO_ONLY) ? ".wav" : ".mp4";
                         httpRecordingUri += recordingSid.toString() + fileExtension;
                         URI publicRecordingUri = UriUtils.resolve(new URI(httpRecordingUri));
                         parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));

@@ -59,10 +59,11 @@ import javax.media.mscontrol.resource.RTC;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
-import org.restcomm.connect.dao.entities.MediaType;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -159,7 +160,7 @@ public class Jsr309CallController extends MediaServerController {
     private Boolean collecting;
     private DateTime recordStarted;
     private DaoManager daoManager;
-    private MediaType recordingMediaType;
+    private MediaAttributes.MediaType recordingMediaType;
 
     // Runtime Setting
     private Configuration runtimeSettings;
@@ -581,7 +582,7 @@ public class Jsr309CallController extends MediaServerController {
             this.recordStarted = DateTime.now();
 
             // Tell media group to start recording
-            final Record record = new Record(recordingUri, 5, 3600, "1234567890*#", MediaType.AUDIO_ONLY);
+            final Record record = new Record(recordingUri, 5, 3600, "1234567890*#", MediaAttributes.MediaType.AUDIO_ONLY);
             onRecord(record, self, sender);
         }
     }
@@ -715,7 +716,8 @@ public class Jsr309CallController extends MediaServerController {
                 params.put(Recorder.START_BEEP, Boolean.FALSE);
 
                 // Video parameters
-                if (MediaType.AUDIO_VIDEO.equals(message.media()) || MediaType.VIDEO_ONLY.equals(message.media())) {
+                if (MediaAttributes.MediaType.AUDIO_VIDEO.equals(message.media()) || 
+                        MediaAttributes.MediaType.VIDEO_ONLY.equals(message.media())) {
                     params.put(Recorder.VIDEO_CODEC, CodecConstants.H264);
                     String sVideoFMTP = "profile=" + "66";
                     sVideoFMTP += ";level=" + "3.1";
@@ -724,7 +726,7 @@ public class Jsr309CallController extends MediaServerController {
                     sVideoFMTP += ";framerate=" + "15";
                     params.put(Recorder.VIDEO_FMTP, sVideoFMTP);
                     params.put(Recorder.VIDEO_MAX_BITRATE, 2000);
-                    if (MediaType.AUDIO_VIDEO.equals(message.media())) {
+                    if (MediaAttributes.MediaType.AUDIO_VIDEO.equals(message.media())) {
                         params.put(Recorder.AUDIO_CODEC, CodecConstants.AMR);
                     }
                 }
@@ -763,6 +765,11 @@ public class Jsr309CallController extends MediaServerController {
         if (is(active)) {
             try {
                 // join call leg to bridge
+                // overlay configuration
+                MediaAttributes ma = message.mediaAttributes();
+                if (!StringUtils.isEmpty(ma.getVideoOverlay())) {
+                    mediaSession.setAttribute("CAPTION", ma.getVideoOverlay());
+                }
                 this.bridge = sender;
                 this.mediaMixer = (MediaMixer) message.getEndpoint();
                 this.networkConnection.join(Direction.DUPLEX, mediaMixer);

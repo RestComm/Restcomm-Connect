@@ -23,6 +23,7 @@ package org.restcomm.connect.mscontrol.api.messages;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -36,8 +37,10 @@ public final class CreateMediaSession {
     private final boolean webrtc;
     private final Sid callSid;
     private final String conferenceName;
+    private final MediaAttributes mediaAttributes;
 
-    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound, boolean webrtc, Sid callSid, final String conferenceName) {
+    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound, boolean webrtc, Sid callSid,
+            final String conferenceName, final MediaAttributes mediaAttributes) {
         super();
         this.connectionMode = connectionMode;
         this.sessionDescription = sessionDescription;
@@ -45,26 +48,27 @@ public final class CreateMediaSession {
         this.webrtc = webrtc;
         this.callSid = callSid;
         this.conferenceName = conferenceName;
+        this.mediaAttributes = mediaAttributes;
     }
 
     public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound, boolean webrtc, Sid callSid) {
-        this(connectionMode, sessionDescription, outbound, webrtc, callSid, null);
+        this(connectionMode, sessionDescription, outbound, webrtc, callSid, null, new MediaAttributes());
     }
 
     public CreateMediaSession(String connectionMode) {
-        this("sendrecv", "", false, false, null, null);
+        this("sendrecv", "", false, false, null, null, new MediaAttributes());
     }
 
-    public CreateMediaSession(Sid callSid, final String conferenceName) {
-        this("", "", false, false, callSid, conferenceName);
+    public CreateMediaSession(Sid callSid, final String conferenceName, final MediaAttributes mediaAttributes) {
+        this("", "", false, false, callSid, conferenceName, mediaAttributes);
     }
 
     public CreateMediaSession(Sid callSid) {
-        this("", "", false, false, callSid, null);
+        this("", "", false, false, callSid, null, new MediaAttributes());
     }
 
     public CreateMediaSession() {
-        this("", "", false, false, null, null);
+        this("", "", false, false, null, null, new MediaAttributes());
     }
 
     public String getConnectionMode() {
@@ -89,6 +93,10 @@ public final class CreateMediaSession {
 
     public String conferenceName() {
         return conferenceName;
+    }
+
+    public MediaAttributes mediaAttributes() {
+        return mediaAttributes;
     }
 
 }

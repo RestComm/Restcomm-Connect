@@ -27,6 +27,7 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 import akka.actor.ActorRef;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -38,15 +39,21 @@ public final class JoinCall {
     private final ActorRef call;
     private final ConnectionMode connectionMode;
     private final Sid sid;
+    private final MediaAttributes mediaAttributes;
 
     public JoinCall(final ActorRef call, final ConnectionMode connectionMode) {
         this(call, connectionMode, null);
     }
 
     public JoinCall(final ActorRef call, final ConnectionMode connectionMode, final Sid sid) {
+        this(call, connectionMode, sid, new MediaAttributes());
+    }
+
+    public JoinCall(final ActorRef call, final ConnectionMode connectionMode, final Sid sid, final MediaAttributes mediaAttributes){
         this.call = call;
         this.connectionMode = connectionMode;
         this.sid = sid;
+        this.mediaAttributes = mediaAttributes;
     }
 
     public ActorRef getCall() {
@@ -59,5 +66,9 @@ public final class JoinCall {
 
     public Sid getSid () {
         return sid;
+    }
+
+    public MediaAttributes mediaAttributes(){
+        return mediaAttributes;
     }
 }
