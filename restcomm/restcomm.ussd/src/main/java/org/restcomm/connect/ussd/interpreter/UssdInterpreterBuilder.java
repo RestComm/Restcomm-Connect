@@ -64,7 +64,7 @@ public class UssdInterpreterBuilder {
             private static final long serialVersionUID = 1L;
             @Override
             public UntypedActor create() throws Exception {
-                return new UssdInterpreter(system, configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod,
+                return new UssdInterpreter(configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod,
                         statusCallback, statusCallbackMethod, emailAddress, calls, conferences, sms, storage);
             }
         });

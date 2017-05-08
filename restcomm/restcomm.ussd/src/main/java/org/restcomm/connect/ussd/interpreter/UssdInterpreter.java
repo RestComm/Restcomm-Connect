@@ -171,13 +171,13 @@ public class UssdInterpreter extends UntypedActor {
     private final State ready;
     private final State notFound;
 
-    public UssdInterpreter(final ActorSystem system, final Configuration configuration, final Sid account, final Sid phone, final String version,
+    public UssdInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
                            final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
                            final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
                            final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage) {
         super();
         final ActorRef source = self();
-        this.system = system;
+        this.system = context().system();
 
         uninitialized = new State("uninitialized", null, null);
         observeCall = new State("observe call", new ObserveCall(source), null);
@@ -331,53 +331,65 @@ public class UssdInterpreter extends UntypedActor {
     }
 
     List<NameValuePair> parameters() {
-        final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-        final String callSid = callInfo.sid().toString();
-        parameters.add(new BasicNameValuePair("CallSid", callSid));
-        final String accountSid = accountId.toString();
-        parameters.add(new BasicNameValuePair("AccountSid", accountSid));
-        final String from = (callInfo.from());
-        parameters.add(new BasicNameValuePair("From", from));
-        final String to = (callInfo.to());
-        parameters.add(new BasicNameValuePair("To", to));
-        final String state = callState.toString();
-        parameters.add(new BasicNameValuePair("CallStatus", state));
-        parameters.add(new BasicNameValuePair("ApiVersion", version));
-        final String direction = callInfo.direction();
-        parameters.add(new BasicNameValuePair("Direction", direction));
-        final String callerName = callInfo.fromName();
-        parameters.add(new BasicNameValuePair("CallerName", callerName));
-        final String forwardedFrom = callInfo.forwardedFrom();
-        parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
-        // logger.info("Type " + callInfo.type());
-        if (CreateCall.Type.SIP == callInfo.type()) {
-            // Adding SIP OUT Headers and SipCallId for
-            // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
-            SipServletResponse lastResponse = callInfo.lastResponse();
-            // logger.info("lastResponse " + lastResponse);
-            if (lastResponse != null) {
-                final int statusCode = lastResponse.getStatus();
-                final String method = lastResponse.getMethod();
-                // See https://www.twilio.com/docs/sip/receiving-sip-headers
-                // Headers on the final SIP response message (any 4xx or 5xx message or the final BYE/200) are posted to the
-                // Dial action URL.
-                if ((statusCode >= 400 && "INVITE".equalsIgnoreCase(method))
-                        || (statusCode >= 200 && statusCode < 300 && "BYE".equalsIgnoreCase(method))) {
-                    final String sipCallId = lastResponse.getCallId();
-                    parameters.add(new BasicNameValuePair("DialSipCallId", sipCallId));
-                    parameters.add(new BasicNameValuePair("DialSipResponseCode", "" + statusCode));
-                    Iterator<String> headerIt = lastResponse.getHeaderNames();
-                    while (headerIt.hasNext()) {
-                        String headerName = headerIt.next();
-                        if (headerName.startsWith("X-")) {
-                            parameters.add(new BasicNameValuePair("DialSipHeader_" + headerName, lastResponse
-                                    .getHeader(headerName)));
+        CallInfo info = null;
+        if (callInfo != null) {
+            info = callInfo;
+        } else if (outboundCallInfo != null){
+            info = outboundCallInfo;
+        }
+        if (info != null) {
+            final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+            final String callSid = info.sid().toString();
+            parameters.add(new BasicNameValuePair("CallSid", callSid));
+            final String accountSid = accountId.toString();
+            parameters.add(new BasicNameValuePair("AccountSid", accountSid));
+            final String from = (info.from());
+            parameters.add(new BasicNameValuePair("From", from));
+            final String to = (info.to());
+            parameters.add(new BasicNameValuePair("To", to));
+            if (callState == null)
+                callState = info.state();
+            final String state = callState.toString();
+            parameters.add(new BasicNameValuePair("CallStatus", state));
+            parameters.add(new BasicNameValuePair("ApiVersion", version));
+            final String direction = info.direction();
+            parameters.add(new BasicNameValuePair("Direction", direction));
+            final String callerName = info.fromName();
+            parameters.add(new BasicNameValuePair("CallerName", callerName));
+            final String forwardedFrom = info.forwardedFrom();
+            parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
+            // logger.info("Type " + callInfo.type());
+            if (CreateCall.Type.SIP == info.type()) {
+                // Adding SIP OUT Headers and SipCallId for
+                // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+                SipServletResponse lastResponse = info.lastResponse();
+                // logger.info("lastResponse " + lastResponse);
+                if (lastResponse != null) {
+                    final int statusCode = lastResponse.getStatus();
+                    final String method = lastResponse.getMethod();
+                    // See https://www.twilio.com/docs/sip/receiving-sip-headers
+                    // Headers on the final SIP response message (any 4xx or 5xx message or the final BYE/200) are posted to the
+                    // Dial action URL.
+                    if ((statusCode >= 400 && "INVITE".equalsIgnoreCase(method))
+                            || (statusCode >= 200 && statusCode < 300 && "BYE".equalsIgnoreCase(method))) {
+                        final String sipCallId = lastResponse.getCallId();
+                        parameters.add(new BasicNameValuePair("DialSipCallId", sipCallId));
+                        parameters.add(new BasicNameValuePair("DialSipResponseCode", "" + statusCode));
+                        Iterator<String> headerIt = lastResponse.getHeaderNames();
+                        while (headerIt.hasNext()) {
+                            String headerName = headerIt.next();
+                            if (headerName.startsWith("X-")) {
+                                parameters.add(new BasicNameValuePair("DialSipHeader_" + headerName, lastResponse
+                                        .getHeader(headerName)));
+                            }
                         }
                     }
                 }
             }
+            return parameters;
+        } else {
+            return null;
         }
-        return parameters;
     }
 
     void sendMail(final Notification notification) {
@@ -620,34 +632,36 @@ public class UssdInterpreter extends UntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-            final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-            final CallDetailRecord.Builder builder = CallDetailRecord.builder();
-                    builder.setSid(callInfo.sid());
-                    builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
-                    builder.setDateCreated(callInfo.dateCreated());
-                    builder.setAccountSid(accountId);
-                    builder.setTo(callInfo.to());
-                    builder.setCallerName(callInfo.fromName());
-                    builder.setFrom(callInfo.from());
-                    builder.setForwardedFrom(callInfo.forwardedFrom());
-                    builder.setPhoneNumberSid(phoneId);
-                    builder.setStatus(callState.toString());
-                    final DateTime now = DateTime.now();
-                    builder.setStartTime(now);
-                    builder.setDirection(callInfo.direction());
-                    builder.setApiVersion(version);
-                    builder.setPrice(new BigDecimal("0.00"));
-                    // TODO implement currency property to be read from Configuration
-                    builder.setPriceUnit(Currency.getInstance("USD"));
-                    final StringBuilder buffer = new StringBuilder();
-                    buffer.append("/").append(version).append("/Accounts/");
-                    buffer.append(accountId.toString()).append("/Calls/");
-                    buffer.append(callInfo.sid().toString());
-                    final URI uri = URI.create(buffer.toString());
-                    builder.setUri(uri);
-                    builder.setCallPath(ussdCall.path().toString());
-                    callRecord = builder.build();
-                    records.addCallDetailRecord(callRecord);
+            if (callInfo != null) {
+                final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
+                final CallDetailRecord.Builder builder = CallDetailRecord.builder();
+                builder.setSid(callInfo.sid());
+                builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
+                builder.setDateCreated(callInfo.dateCreated());
+                builder.setAccountSid(accountId);
+                builder.setTo(callInfo.to());
+                builder.setCallerName(callInfo.fromName());
+                builder.setFrom(callInfo.from());
+                builder.setForwardedFrom(callInfo.forwardedFrom());
+                builder.setPhoneNumberSid(phoneId);
+                builder.setStatus(callState.toString());
+                final DateTime now = DateTime.now();
+                builder.setStartTime(now);
+                builder.setDirection(callInfo.direction());
+                builder.setApiVersion(version);
+                builder.setPrice(new BigDecimal("0.00"));
+                // TODO implement currency property to be read from Configuration
+                builder.setPriceUnit(Currency.getInstance("USD"));
+                final StringBuilder buffer = new StringBuilder();
+                buffer.append("/").append(version).append("/Accounts/");
+                buffer.append(accountId.toString()).append("/Calls/");
+                buffer.append(callInfo.sid().toString());
+                final URI uri = URI.create(buffer.toString());
+                builder.setUri(uri);
+                builder.setCallPath(ussdCall.path().toString());
+                callRecord = builder.build();
+                records.addCallDetailRecord(callRecord);
+            }
                     // Update the application.
                     callback();
             // Ask the downloader to get us the application that will be executed.
@@ -823,7 +837,7 @@ public class UssdInterpreter extends UntypedActor {
                     logger.info("UssdMessage prepared: " + ussdMessage.toString() + " hasCollect: " + hasCollect);
                 }
 
-                if (callInfo.direction().equalsIgnoreCase("inbound")) {
+                if (callInfo != null && callInfo.direction().equalsIgnoreCase("inbound")) {
                     // USSD PULL
                     if (hasCollect) {
                         ussdRestcommResponse.setMessageType(UssdMessageType.unstructuredSSRequest_Request);
