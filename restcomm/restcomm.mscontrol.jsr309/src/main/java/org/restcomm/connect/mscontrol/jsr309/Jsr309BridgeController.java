@@ -53,7 +53,7 @@ import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
-import org.restcomm.connect.dao.entities.MediaType;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -280,7 +280,7 @@ public class Jsr309BridgeController extends MediaServerController {
             builder.setUri(URI.create(buffer.toString()));
             final Recording recording = builder.build();
             RecordingsDao recordsDao = daoManager.getRecordingsDao();
-            recordsDao.addRecording(recording, MediaType.AUDIO_ONLY);
+            recordsDao.addRecording(recording, MediaAttributes.MediaType.AUDIO_ONLY);
         }
 
     }

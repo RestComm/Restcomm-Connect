@@ -41,7 +41,7 @@ import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.commons.util.WavUtils;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
-import org.restcomm.connect.dao.entities.MediaType;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.mgcp.CreateConferenceEndpoint;
 import org.restcomm.connect.mgcp.DestroyEndpoint;
@@ -211,7 +211,7 @@ public class MmsBridgeController extends MediaServerController {
         builder.setUri(URI.create(buffer.toString()));
         final Recording recording = builder.build();
         RecordingsDao recordsDao = daoManager.getRecordingsDao();
-        recordsDao.addRecording(recording, MediaType.AUDIO_ONLY);
+        recordsDao.addRecording(recording, MediaAttributes.MediaType.AUDIO_ONLY);
     }
 
     /*
@@ -374,7 +374,7 @@ public class MmsBridgeController extends MediaServerController {
             this.recordingRequest = message;
 
             // Tell media group to start recording
-            Record record = new Record(message.getRecordingUri(), timeout, maxLength, finishOnKey, MediaType.AUDIO_ONLY);
+            Record record = new Record(message.getRecordingUri(), timeout, maxLength, finishOnKey, MediaAttributes.MediaType.AUDIO_ONLY);
             this.mediaGroup.tell(record, self);
         }
     }

@@ -22,13 +22,13 @@ package org.restcomm.connect.dao.mybatis;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
-import org.restcomm.connect.dao.entities.MediaType;
 import org.restcomm.connect.commons.amazonS3.S3AccessTool;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.dao.entities.RecordingFilter;
 
@@ -62,8 +62,8 @@ public final class MybatisRecordingsDao implements RecordingsDao {
     }
 
     @Override
-    public void addRecording(Recording recording, MediaType mediaType) {
-        String fileExtension = mediaType.equals(MediaType.AUDIO_ONLY) ? ".wav" : ".mp4";
+    public void addRecording(Recording recording, MediaAttributes.MediaType mediaType) {
+        String fileExtension = mediaType.equals(MediaAttributes.MediaType.AUDIO_ONLY) ? ".wav" : ".mp4";
         if (s3AccessTool != null) {
             URI s3Uri = s3AccessTool.uploadFile(recordingPath+"/"+recording.getSid().toString()+fileExtension);
             if (s3Uri != null) {
