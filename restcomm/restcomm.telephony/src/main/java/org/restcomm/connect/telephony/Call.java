@@ -1413,7 +1413,7 @@ public final class Call extends UntypedActor {
                         logger.debug("We are behind load balancer, checking if the request URI needs to be patched");
                     }
                     String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
-                    SipURI uri = factory.createSipURI(null, realIP);
+                    SipURI uri = factory.createSipURI(((SipURI) ack.getRequestURI()).getUser(), realIP);
                     boolean patchRURI = true;
                     try {
                         // https://github.com/RestComm/Restcomm-Connect/issues/1336 checking if the initial IP and Port behind LB is part of the route set or not
@@ -1464,7 +1464,7 @@ public final class Call extends UntypedActor {
                         logger.info("Using the real ip address and port of the sip client " + realInetUri.toString()
                                 + " as a request uri of the ACK");
                     }
-
+                        realInetUri.setUser(((SipURI) ack.getRequestURI()).getUser());
                         ack.setRequestURI(realInetUri);
                     }
                 }
@@ -2044,7 +2044,8 @@ public final class Call extends UntypedActor {
                                         + initialPortBeforeLB + " for ACK message, ");
                             }
                             String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
-                            SipURI uri = factory.createSipURI(null, realIP);
+                            SipURI uri = factory.createSipURI(((SipURI) ack.getRequestURI()).getUser(), realIP);
+
                             ack.setRequestURI(uri);
                         } else if (!ack.getHeaders("Route").hasNext()) {
                             final SipServletRequest originalInvite = message.getRequest();
@@ -2062,6 +2063,8 @@ public final class Call extends UntypedActor {
                                     logger.info("Using the real ip address and port of the sip client " + realInetUri.toString()
                                             + " as a request uri of the ACK");
                                 }
+
+                                realInetUri.setUser(((SipURI) ack.getRequestURI()).getUser());
                                 ack.setRequestURI(realInetUri);
                             }
                         }

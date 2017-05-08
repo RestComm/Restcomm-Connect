@@ -82,7 +82,10 @@ public final class PlayCollectTest {
         System.out.println("Signal Parameters: " + result + "\n");
     }
 
-    @Ignore
+    /**
+     * testFormattingWithMultiplePrompts
+     * https://github.com/RestComm/Restcomm-Connect/issues/1988
+     */
     @Test
     public void testFormattingWithMultiplePrompts() {
         // We will used the builder pattern to create this message.
@@ -91,14 +94,14 @@ public final class PlayCollectTest {
         builder.addPrompt(URI.create("world.wav"));
         builder.setClearDigitBuffer(true);
         builder.setMinNumberOfDigits(1);
-        builder.setMaxNumberOfDigits(16);
+        builder.setMaxNumberOfDigits(32767);
         builder.setDigitPattern("0123456789*#");
-        builder.setFirstDigitTimer(1000);
-        builder.setInterDigitTimer(1050);
-        builder.setEndInputKey("#");
+        builder.setFirstDigitTimer(50);
+        builder.setInterDigitTimer(50);
+        builder.setEndInputKey("*");
         final PlayCollect playCollect = builder.build();
         final String result = playCollect.toString();
-        assertTrue("ip=hello.wav;world.wav cb=true mx=16 mn=1 dp=0123456789*# fdt=10 idt=11 eik=#".equals(result));
-        System.out.println("Signal Parameters: " + result + "\n");
+        final String expectedResult = "ip=hello.wav,world.wav cb=true mx=32767 mn=1 dp=0123456789*# fdt=500 idt=500 eik=*";
+        assertTrue(expectedResult.equals(result));
     }
 }
