@@ -344,6 +344,8 @@ public class UssdCallManager extends UntypedActor {
      * @return
      */
     private IncomingPhoneNumber getMostOptimalIncomingPhoneNumber(final SipServletRequest request, String phone) {
+        //TODO remove it before merge
+        logger.info("*********************** getMostOptimalIncomingPhoneNumber started ***********************");
         // Format the destination to an E.164 phone number.
         final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
         String formatedPhone = null;
@@ -357,15 +359,23 @@ public class UssdCallManager extends UntypedActor {
         final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
         //get all number with same number, by both formatedPhone and unformatedPhone
         numbers = numbersDao.getIncomingPhoneNumber(formatedPhone);
+        //TODO remove it before merge
+        logger.info("getMostOptimalIncomingPhoneNumber: get formatedPhone result size: "+numbers.size());
         numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+        //TODO remove it before merge
+        logger.info("getMostOptimalIncomingPhoneNumber: get unformatedPhone result size: "+numbers.size());
         if (phone.startsWith("+")) {
             //remove the (+) and check if exists
             phone= phone.replaceFirst("\\+","");
             numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+            //TODO remove it before merge
+            logger.info("getMostOptimalIncomingPhoneNumber: get phone without plus result size: "+numbers.size());
         } else {
             //Add "+" add check if number exists
             phone = "+".concat(phone);
             numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+            //TODO remove it before merge
+            logger.info("getMostOptimalIncomingPhoneNumber: get phone with plus result size: "+numbers.size());
         }
         if(numbers.isEmpty()){
             // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
@@ -375,9 +385,15 @@ public class UssdCallManager extends UntypedActor {
             boolean foundNumberInSameOrganization = false;
             boolean foundNonSipNumberInDifferntOrganization = false;
             Sid organizationSid = getOrganizationSidBySipURIHost((SipURI)request.getTo().getURI());
+            //TODO remove it before merge
+            logger.info("getMostOptimalIncomingPhoneNumber: organizationSid: "+organizationSid);
             // find number in same organization
             for(IncomingPhoneNumber n : numbers){
-                if(n.getOrganizationSid() == organizationSid){
+                //TODO remove it before merge
+                logger.info("getMostOptimalIncomingPhoneNumber: n.getOrganizationSid(): "+n.getOrganizationSid());
+                if(n.getOrganizationSid().equals(organizationSid)){
+                    //TODO remove it before merge
+                    logger.info("getMostOptimalIncomingPhoneNumber: foundNumberInSameOrganization: "+number);
                     foundNumberInSameOrganization = true;
                     number = n;
                 }
@@ -392,12 +408,16 @@ public class UssdCallManager extends UntypedActor {
                     if(!n.isPureSip()){
                         foundNonSipNumberInDifferntOrganization = true;
                         number = n;
+                        //TODO remove it before merge
+                        logger.info("getMostOptimalIncomingPhoneNumber: foundNonSipNumberInDifferntOrganization: "+number);
                     }
                     if(foundNonSipNumberInDifferntOrganization)
                         break;
                 }
             }
         }
+        //TODO remove it before merge
+        logger.info("*********************** getMostOptimalIncomingPhoneNumber ended ***********************"+number);
         return number;
     }
 
