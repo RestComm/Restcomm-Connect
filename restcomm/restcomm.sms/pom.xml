@@ -20,7 +20,6 @@
 		<dependency>
 		    <groupId>org.restcomm.smpp</groupId>
 		    <artifactId>smpp-extensions</artifactId>
-		    <version>1.0.13</version>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
