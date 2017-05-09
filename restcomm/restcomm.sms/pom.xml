@@ -18,6 +18,10 @@
 
 	<dependencies>
 		<dependency>
+		    <groupId>org.restcomm.smpp</groupId>
+		    <artifactId>smpp-extensions</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<scope>provided</scope>

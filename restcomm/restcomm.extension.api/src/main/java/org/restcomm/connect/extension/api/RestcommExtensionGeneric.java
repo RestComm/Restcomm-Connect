@@ -57,7 +57,7 @@ public interface RestcommExtensionGeneric {
      * and either block/allow it or modify the session before Restcomm process it
      * @return ExtensionResponse see ExtensionResponse
      */
-    ExtensionResponse preOutboundAction(Object message);
+    ExtensionResponse preOutboundAction(ExtensionRequest extensionRequest);
     /**
      * Method that will be executed AFTER the process of an Outbound session
      * Implement this method so you will be able to check the Outgoing session
@@ -78,4 +78,15 @@ public interface RestcommExtensionGeneric {
      */
     ExtensionResponse postApiAction(ApiRequest apiRequest);
 
+    /**
+     * Extension name getter
+     * @return String name of Extension
+     */
+    String getName();
+
+    /**
+     * Extension version getter
+     * @return String version of Extension
+     */
+    String getVersion();
 }
