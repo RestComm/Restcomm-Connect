@@ -90,7 +90,7 @@
 		<commons-codec.version>1.10</commons-codec.version>
 		<commons-lang.version>2.6</commons-lang.version>
 		<jain.mgcp.version>1.0</jain.mgcp.version>
-		<mobicents.mgcp.impl.version>6.0.22</mobicents.mgcp.impl.version>
+		<mobicents.mgcp.impl.version>6.0.23</mobicents.mgcp.impl.version>
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
     <sipservletapi.version>3.1.761</sipservletapi.version>
