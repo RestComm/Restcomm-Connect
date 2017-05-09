@@ -1,5 +1,6 @@
 package org.restcomm.connect.extension.controller;
 
+import org.restcomm.connect.extension.api.ExtensionRequest;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.MessageExtensionResponse;
@@ -88,7 +89,7 @@ public class ExtensionController {
         }
     }
 
-    public ExtensionResponse executePreOutboundAction(final Object er, List<RestcommExtensionGeneric> extensions) {
+    public ExtensionResponse executePreOutboundAction(final ExtensionRequest er, List<RestcommExtensionGeneric> extensions) {
         //FIXME: if we have more than one extension in chain
         // and all of them are successful, we only receive the last
         // extensionResponse
