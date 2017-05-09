@@ -18,31 +18,27 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.restcomm.connect.extension.api;
-
 /**
- * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
- *
+ * When an Extension returns a SessionReponse, RC will reconfigure the session it is in
  */
-public class ExtensionResponse {
-    private Object object;
-    private boolean allowed = true;
-
-    public ExtensionResponse() {}
-
-    public Object getObject() {
-        return object;
+package org.restcomm.connect.extension.api;
+import org.apache.commons.configuration.Configuration;
+public class SessionExtensionResponse extends ExtensionResponse {
+    //TODO: needs discussion, definition
+    /**
+     * The Extension is expected to populate the session specific
+     * Configuration
+     */
+    public void setConfiguration(Configuration configuration){
+        super.setObject(configuration);
     }
 
-    public void setObject(Object object) {
-        this.object = object;
-    }
-
-    public boolean isAllowed() {
-        return allowed;
-    }
-
-    public void setAllowed(boolean allowed) {
-        this.allowed = allowed;
+    /**
+     * RC expects an Extension to populate Configuration when it returns
+     * this SessionResponse
+     * @return Configuration object
+     */
+    public Configuration getConfiguration(){
+        return (Configuration) super.getObject();
     }
 }

@@ -23,8 +23,11 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+
+import org.restcomm.connect.commons.dao.Sid;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
@@ -36,8 +39,8 @@ public class ExtensionsConfigurationJsonEndpoint extends ExtensionsConfiguration
 
     @Path("/{extensionId}")
     @GET
-    public Response getConfigurationAsJson(@PathParam("extensionId") final String extension) {
-        return getConfiguration(extension, APPLICATION_JSON_TYPE);
+    public Response getConfigurationAsJson(@PathParam("extensionId") final String extension, @QueryParam("AccountSid") Sid accountSid) {
+        return getConfiguration(extension, accountSid, APPLICATION_JSON_TYPE);
     }
 
     @POST
