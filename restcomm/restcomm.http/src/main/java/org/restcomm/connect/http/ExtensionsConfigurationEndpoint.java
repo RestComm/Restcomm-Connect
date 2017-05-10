@@ -138,7 +138,7 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
                 final RestCommResponse response = new RestCommResponse(extensionConfiguration);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else if (APPLICATION_JSON_TYPE == responseType) {
-                return ok(gson.toJson(extensionConfiguration.getConfigurationData()), APPLICATION_JSON).build();
+                return ok(gson.toJson(extensionConfiguration), APPLICATION_JSON).build();
             } else {
                 return null;
             }
