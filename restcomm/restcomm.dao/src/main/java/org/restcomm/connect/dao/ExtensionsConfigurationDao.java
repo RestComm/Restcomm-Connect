@@ -97,4 +97,33 @@ public interface ExtensionsConfigurationDao {
      * @return
      */
     boolean validate(ExtensionConfiguration extensionConfiguration);
+
+    /**
+     * Get account specific ExtensionConfiguration
+     * @param accountSid
+     * @param extensionSid
+     * @return ExtensionConfiguration
+     */
+    ExtensionConfiguration getAccountExtensionConfiguration(String accountSid, String extensionSid);
+
+    /**
+     * Add a new account specific ExtensionConfiguration
+     * @param extensionConfiguration
+     * @param accountSid
+     */
+    void addAccountExtensionConfiguration(ExtensionConfiguration extensionConfiguration, Sid accountSid) throws ConfigurationException;
+
+    /**
+     * Update an existing account specific ExtensionConfiguration
+     * @param extensionConfiguration
+     * @param accountSid
+     */
+    void updateAccountExtensionConfiguration(ExtensionConfiguration extensionConfiguration, Sid accountSid) throws ConfigurationException;
+
+    /**
+     * Delete account specific ExtensionConfiguration
+     * @param accountSid
+     * @param extensionSid
+     */
+    void deleteAccountExtensionConfiguration(String accountSid, String extensionSid);
 }

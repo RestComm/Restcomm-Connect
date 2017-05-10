@@ -19,30 +19,28 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.restcomm.connect.extension.api;
+import org.apache.commons.configuration.Configuration;
 
-/**
- * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
- *
- */
-public class ExtensionResponse {
-    private Object object;
-    private boolean allowed = true;
+public class ExtensionRequest {
+    private Object payload;
+    private Configuration configuration;
 
-    public ExtensionResponse() {}
+    public ExtensionRequest() {}
 
     public Object getObject() {
-        return object;
+        return payload;
     }
 
     public void setObject(Object object) {
-        this.object = object;
+        this.payload = object;
     }
 
-    public boolean isAllowed() {
-        return allowed;
+    public void setConfiguration(Configuration configuration) {
+        this.configuration = configuration;
     }
 
-    public void setAllowed(boolean allowed) {
-        this.allowed = allowed;
+    public Configuration getConfiguration() {
+        return this.configuration;
     }
+
 }
