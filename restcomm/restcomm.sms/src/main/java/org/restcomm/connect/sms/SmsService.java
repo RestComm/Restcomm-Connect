@@ -49,6 +49,7 @@ import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Direction;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;
 import org.restcomm.connect.extension.api.ExtensionResponse;
+import org.restcomm.connect.extension.api.ExtensionRequest;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
@@ -61,9 +62,12 @@ import org.restcomm.connect.sms.api.DestroySmsSession;
 import org.restcomm.connect.sms.api.SmsServiceResponse;
 import org.restcomm.connect.sms.api.SmsSessionAttribute;
 import org.restcomm.connect.sms.api.SmsSessionRequest;
+
 import org.restcomm.connect.telephony.api.TextMessage;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
+
+import org.restcomm.smpp.parameter.TlvSet;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -73,12 +77,14 @@ import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipURI;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Currency;
 import java.util.List;
+
 
 import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 
@@ -220,8 +226,9 @@ public final class SmsService extends UntypedActor {
 
                 final SipServletResponse trying = request.createResponse(SipServletResponse.SC_TRYING);
                 trying.send();
+                //TODO:do extensions check here too?
+                ActorRef session = session(this.configuration, fromOrganizationSid);
 
-                ActorRef session = session(fromOrganizationSid);
                 // Create an SMS detail record.
                 final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
                 final SmsMessage.Builder builder = SmsMessage.builder();
@@ -248,7 +255,8 @@ public final class SmsService extends UntypedActor {
                 // Store the sms record in the sms session.
                 session.tell(new SmsSessionAttribute("record", record), self());
                 // Send the SMS.
-                final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()),request, null);
+                TlvSet tlvSet = new TlvSet();
+                final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()), request, tlvSet, null);
                 monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_PROXY_OUT), self);
                 session.tell(sms, self());
             }
@@ -316,7 +324,9 @@ public final class SmsService extends UntypedActor {
                 Sid organizationSid = storage.getOrganizationsDao().getOrganization(storage.getAccountsDao().getAccount(number.getAccountSid()).getOrganizationSid()).getSid();
                 if(logger.isDebugEnabled())
                     logger.debug("redirectToHostedSmsApp organizationSid = "+organizationSid);
-                final ActorRef session = session(organizationSid);
+                //TODO:do extensions check here too?
+                final ActorRef session = session(this.configuration, organizationSid);
+
                 session.tell(request, self);
                 final StartInterpreter start = new StartInterpreter(session);
                 interpreter.tell(start, self);
@@ -329,40 +339,35 @@ public final class SmsService extends UntypedActor {
         return isFoundHostedApp;
     }
 
-    private boolean executePreOutboundAction(final Object message) {
-        if (extensions != null && extensions.size() > 0) {
-            for (RestcommExtensionGeneric extension : extensions) {
-                if (extension.isEnabled()) {
-                    ExtensionResponse response = extension.preOutboundAction(message);
-                    if (!response.isAllowed())
-                        return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private boolean executePostOutboundAction(final Object message) {
-        return true;
-    }
-
     @Override
     public void onReceive(final Object message) throws Exception {
         final UntypedActorContext context = getContext();
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
+        ExtensionController ec = ExtensionController.getInstance();
         if (CreateSmsSession.class.equals(klass)) {
-            if (executePreOutboundAction(message)) {
+            //retrieve extension object
+            //FIXME:we need a real interface here rather than amending a preexisting request interface
+            ExtensionRequest er = new ExtensionRequest();
+            er.setObject(message);
+            er.setConfiguration(this.configuration);
+
+            ExtensionResponse extensionResponse = ec.executePreOutboundAction(er, this.extensions);
+            if (extensionResponse.isAllowed()) {
+                //pass in response object to sms session
+                Object obj = ec.handleExtensionResponse(extensionResponse, this.configuration);
+                //FIXME:not all instances of extensions should modify
+                //a session configuration, we should do checks here
                 CreateSmsSession createSmsSession = (CreateSmsSession) message;
-                final ActorRef session = session(getOrganizationSidByAccountSid(new Sid(createSmsSession.getAccountSid())));
+                final ActorRef session = session((Configuration)obj, getOrganizationSidByAccountSid(new Sid(createSmsSession.getAccountSid())));
                 final SmsServiceResponse<ActorRef> response = new SmsServiceResponse<ActorRef>(session);
                 sender.tell(response, self);
             } else {
                 final SmsServiceResponse<ActorRef> response = new SmsServiceResponse(new RestcommExtensionException("Now allowed to create SmsSession"));
                 sender.tell(response, self());
             }
-            executePostOutboundAction(message);
+            ec.executePostOutboundAction(message, this.extensions);
         } else if (DestroySmsSession.class.equals(klass)) {
             final DestroySmsSession request = (DestroySmsSession) message;
             final ActorRef session = request.session();
@@ -423,13 +428,13 @@ public final class SmsService extends UntypedActor {
         return result;
     }
 
-    private ActorRef session(final Sid organizationSid) {
+    private ActorRef session(final Configuration p_configuration, final Sid organizationSid) {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new SmsSession(configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext, organizationSid);
+                return new SmsSession(p_configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext, organizationSid);
             }
         });
         return system.actorOf(props);

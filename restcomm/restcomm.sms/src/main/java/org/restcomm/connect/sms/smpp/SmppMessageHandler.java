@@ -16,6 +16,7 @@ import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
 import com.cloudhopper.smpp.type.SmppTimeoutException;
 import com.cloudhopper.smpp.type.UnrecoverablePduException;
+import com.cloudhopper.smpp.tlv.Tlv;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.dao.Sid;
@@ -27,12 +28,19 @@ import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Organization;
+import org.restcomm.connect.extension.api.ExtensionRequest;
+import org.restcomm.connect.extension.api.ExtensionResponse;
+import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.RestcommExtensionException;
+import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
+import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.sms.SmsSession;
 import org.restcomm.connect.sms.api.CreateSmsSession;
 import org.restcomm.connect.sms.api.DestroySmsSession;
 import org.restcomm.connect.sms.api.SmsServiceResponse;
+import org.restcomm.smpp.parameter.TlvSet;
 
 import javax.servlet.ServletContext;
 import javax.servlet.sip.SipFactory;
@@ -41,6 +49,7 @@ import javax.servlet.sip.SipURI;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Collection;
 
 public class SmppMessageHandler extends UntypedActor  {
 
@@ -51,6 +60,8 @@ public class SmppMessageHandler extends UntypedActor  {
     private final Configuration configuration;
     private final SipFactory sipFactory;
     private final ActorRef monitoringService;
+    //List of extensions for SmsService
+    List<RestcommExtensionGeneric> extensions;
 
     private final String defaultOrganization;
 
@@ -61,6 +72,11 @@ public class SmppMessageHandler extends UntypedActor  {
         this.sipFactory = (SipFactory) servletContext.getAttribute(SipFactory.class.getName());
         this.monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
         defaultOrganization = (String) servletContext.getAttribute("defaultOrganization");
+        //FIXME:Should new ExtensionType.SmppMessageHandler be defined?
+        extensions = ExtensionController.getInstance().getExtensions(ExtensionType.SmsService);
+        if (logger.isInfoEnabled()) {
+            logger.info("SmsService extensions: "+(extensions != null ? extensions.size() : "0"));
+        }
     }
 
     @Override
@@ -68,6 +84,7 @@ public class SmppMessageHandler extends UntypedActor  {
         final UntypedActorContext context = getContext();
         final ActorRef sender = sender();
         final ActorRef self = self();
+        ExtensionController ec = ExtensionController.getInstance();
         if (message instanceof SmppInboundMessageEntity){
             if(logger.isInfoEnabled()) {
                 logger.info("SmppMessageHandler processing Inbound Message " + message.toString());
@@ -79,10 +96,21 @@ public class SmppMessageHandler extends UntypedActor  {
             }
             outbound((SmppOutboundMessageEntity) message);
         } else if (message instanceof CreateSmsSession) {
-            CreateSmsSession createSmsSession = (CreateSmsSession) message;
-            final ActorRef session = session(getOrganizationSidByAccountSid(new Sid(createSmsSession.getAccountSid())));
-            final SmsServiceResponse<ActorRef> response = new  SmsServiceResponse<ActorRef>(session);
-            sender.tell(response, self);
+            ExtensionRequest er = new ExtensionRequest();
+            er.setObject(message);
+            er.setConfiguration(this.configuration);
+            ExtensionResponse extensionResponse = ec.executePreOutboundAction(er, this.extensions);
+            if (extensionResponse.isAllowed()) {
+                Object obj = ec.handleExtensionResponse(extensionResponse, this.configuration);
+                CreateSmsSession createSmsSession = (CreateSmsSession) message;
+                final ActorRef session = session((Configuration)obj, getOrganizationSidByAccountSid(new Sid(createSmsSession.getAccountSid())));
+                final SmsServiceResponse<ActorRef> response = new  SmsServiceResponse<ActorRef>(session);
+                sender.tell(response, self);
+            } else {
+                final SmsServiceResponse<ActorRef> response = new SmsServiceResponse(new RestcommExtensionException("Now allowed to create SmsSession"));
+                sender.tell(response, self());
+            }
+            ec.executePostOutboundAction(message, this.extensions);
         }else if (message instanceof DestroySmsSession) {
             final DestroySmsSession destroySmsSession = (DestroySmsSession) message;
             final ActorRef session = destroySmsSession.session();
@@ -171,7 +199,9 @@ public class SmppMessageHandler extends UntypedActor  {
                 Sid organizationSid = storage.getOrganizationsDao().getOrganization(storage.getAccountsDao().getAccount(number.getAccountSid()).getOrganizationSid()).getSid();
                 if(logger.isDebugEnabled())
                     logger.debug("redirectToHostedSmsApp organizationSid = "+organizationSid);
-                final ActorRef session = session(organizationSid);
+                Configuration cfg = this.configuration;
+                //Extension
+                final ActorRef session = session(cfg, organizationSid);
                 session.tell(request, self);
                 final StartInterpreter start = new StartInterpreter(session);
                 interpreter.tell(start, self);
@@ -198,13 +228,13 @@ public class SmppMessageHandler extends UntypedActor  {
         return result;
     }
 
-    private ActorRef session(final Sid organizationSid) {
+    private ActorRef session(final Configuration p_configuration, final Sid organizationSid) {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new SmsSession(configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext, organizationSid);
+                return new SmsSession(p_configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext, organizationSid);
             }
         });
         return system.actorOf(props);
@@ -231,6 +261,18 @@ public class SmppMessageHandler extends UntypedActor  {
         }
 
         submit0.setShortMessage(textBytes);
+
+        TlvSet tlvSet = request.getTlvSet();
+
+        if(tlvSet!=null) {
+            for (Tlv tlv : (Collection<Tlv>)tlvSet.getOptionalParameters()) {
+                submit0.setOptionalParameter(tlv);
+            }
+        }else{
+            if(logger.isInfoEnabled()) {
+                logger.info("TlvSet is null");
+            }
+        }
         try {
             if(logger.isInfoEnabled()) {
                 logger.info("Sending SubmitSM for " + request);
