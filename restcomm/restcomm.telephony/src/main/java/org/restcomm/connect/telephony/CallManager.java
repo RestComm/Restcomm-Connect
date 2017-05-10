@@ -83,6 +83,7 @@ import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.Registration;
 import org.restcomm.connect.extension.api.CallRequest;
+import org.restcomm.connect.extension.api.ExtensionRequest;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
@@ -489,9 +490,14 @@ public final class CallManager extends UntypedActor {
                 if(logger.isInfoEnabled()) {
                     logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "+ toClient);
                 }
+
                 CallRequest callRequest = new CallRequest(fromUser, toUser, CallRequest.Type.CLIENT,
                         client.getAccountSid(), false, false);
-                if (executePreOutboundAction(callRequest)) {
+                ExtensionController ec = ExtensionController.getInstance();
+                ExtensionRequest er = new ExtensionRequest();
+                er.setObject(callRequest);
+                ExtensionResponse extensionResponse = ec.executePreOutboundAction(er, this.extensions);
+                if (extensionResponse.isAllowed()) {
                     if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                         if(logger.isInfoEnabled()) {
                             logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp + " toHost: "
@@ -518,7 +524,7 @@ public final class CallManager extends UntypedActor {
                     final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
                     resp.send();
                 }
-                executePostOutboundAction(callRequest);
+                ec.executePostOutboundAction(callRequest, this.extensions);
                 return;
             } else {
                 // toClient is null or we couldn't make the b2bua call to another client. check if this call is for a registered
@@ -549,7 +555,11 @@ public final class CallManager extends UntypedActor {
                 if (proxyURI != null && !proxyURI.isEmpty()) {
 //                    String destination = ((SipURI)request.getTo().getURI()).getUser();
                     CallRequest callRequest = new CallRequest(fromUser,toUser, CallRequest.Type.PSTN, client.getAccountSid(), false, false);
-                    if (executePreOutboundAction(callRequest)) {
+                    ExtensionController ec = ExtensionController.getInstance();
+                    ExtensionRequest er = new ExtensionRequest();
+                    er.setObject(callRequest);
+                    ExtensionResponse extensionResponse = ec.executePreOutboundAction(er, this.extensions);
+                    if (extensionResponse.isAllowed()) {
                         proxyOut(request, client, toUser, toHost, toHostIpAddress, toPort, outboundIntf, proxyURI, proxyUsername, proxyPassword, from, to, callToSipUri);
                     } else {
                         final SipServletResponse response = request.createResponse(SC_FORBIDDEN, "Call request not allowed");
@@ -558,7 +568,7 @@ public final class CallManager extends UntypedActor {
                             logger.debug("Call request now allowed: "+callRequest.toString());
                         }
                     }
-                    executePostOutboundAction(callRequest);
+                    ec.executePostOutboundAction(callRequest, this.extensions);
                     return;
                 } else {
                     String msg = "Restcomm tried to proxy this call to an outbound party but it seems the outbound proxy is not configured.";
@@ -1557,9 +1567,13 @@ public final class CallManager extends UntypedActor {
     private void outbound(final Object message, final ActorRef sender) throws ServletParseException {
         final CreateCall request = (CreateCall) message;
         CallRequest callRequest = new CallRequest(request.from(), request.to(), CallRequest.Type.valueOf(request.type().name()), request.accountId(), request.isFromApi(), request.parentCallSid() != null);
+        ExtensionController ec = ExtensionController.getInstance();
+        ExtensionRequest er = new ExtensionRequest();
+        er.setObject(callRequest);
+        ExtensionResponse extensionResponse = ec.executePreOutboundAction(er, this.extensions);
         switch (request.type()) {
             case CLIENT: {
-                if (executePreOutboundAction(callRequest)) {
+                if (extensionResponse.isAllowed()) {
                     outboundToClient(request, sender);
                 } else {
                     //Extensions didn't allowed this call
@@ -1567,11 +1581,11 @@ public final class CallManager extends UntypedActor {
                     logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), this.createCallRequest), self());
                 }
-                executePostOutboundAction(callRequest);
+                ec.executePostOutboundAction(callRequest, this.extensions);
                 break;
             }
             case PSTN: {
-                if (executePreOutboundAction(callRequest)) {
+                if (extensionResponse.isAllowed()) {
                     outboundToPstn(request, sender);
                 } else {
                     //Extensions didn't allowed this call
@@ -1579,14 +1593,14 @@ public final class CallManager extends UntypedActor {
                     logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), this.createCallRequest), self());
                 }
-                executePostOutboundAction(callRequest);
+                ec.executePostOutboundAction(callRequest, this.extensions);
                 break;
             }
             case SIP: {
                 if (actAsImsUa) {
                     outboundToIms(request, sender);
                 }
-                else if (executePreOutboundAction(callRequest)) {
+                else if (extensionResponse.isAllowed()) {
                     outboundToSip(request, sender);
                 }  else {
                     //Extensions didn't allowed this call
@@ -1594,27 +1608,10 @@ public final class CallManager extends UntypedActor {
                     logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), this.createCallRequest), self());
                 }
-                executePostOutboundAction(callRequest);
+                ec.executePostOutboundAction(callRequest, this.extensions);
                 break;
             }
         }
-    }
-
-    private boolean executePreOutboundAction(final Object message) {
-        if (extensions != null && extensions.size() > 0) {
-            for (RestcommExtensionGeneric extension : extensions) {
-                if (extension.isEnabled()) {
-                    ExtensionResponse response = extension.preOutboundAction(message);
-                    if (!response.isAllowed())
-                        return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private boolean executePostOutboundAction(final CallRequest callRequest) {
-        return false;
     }
 
     private void outboundToClient(final CreateCall request, final ActorRef sender) throws ServletParseException {

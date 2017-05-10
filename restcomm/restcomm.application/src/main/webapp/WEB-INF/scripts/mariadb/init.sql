@@ -391,6 +391,13 @@ date_updated DATETIME,
 enabled  BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+CREATE TABLE restcomm_accounts_extensions (
+account_sid VARCHAR(34) NOT NULL,
+extension_sid VARCHAR(34) NOT NULL,
+configuration_data LONGTEXT NOT NULL,
+PRIMARY KEY (account_sid, extension_sid)
+);
+
 INSERT INTO restcomm_organizations VALUES(
 "ORafbe225ad37541eba518a74248f0ac4c", 
 "default.restcomm.com", 
