@@ -42,6 +42,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
@@ -63,6 +64,7 @@ import org.restcomm.connect.extension.api.CallRequest;
 import org.restcomm.connect.extension.api.ExtensionRequest;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
+
 import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
@@ -346,7 +348,7 @@ public final class CallManager extends UntypedActor {
                 @Override
                 public UntypedActor create() throws Exception {
                     return new Call(sipFactory, msControllerFactory.provideCallController(), configuration,
-                            null, null, null);
+                            null, null, null, null);
                 }
             });
         } else {
@@ -356,7 +358,7 @@ public final class CallManager extends UntypedActor {
                 @Override
                 public UntypedActor create() throws Exception {
                     return new Call(sipFactory, msControllerFactory.provideCallController(), configuration,
-                            request.statusCallback(), request.statusCallbackMethod(), request.statusCallbackEvent());
+                            request.statusCallback(), request.statusCallbackMethod(), request.statusCallbackEvent(), request.getOutboundProxyHeaders());
                 }
             });
         }
@@ -483,7 +485,7 @@ public final class CallManager extends UntypedActor {
                     logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "+ toClient);
                 }
 
-                CallRequest callRequest = new CallRequest(fromUser, toUser, CallRequest.Type.CLIENT,
+                CallRequest callRequest = new CallRequest(fromUser, toUser, CreateCallType.CLIENT,
                         client.getAccountSid(), false, false);
                 ExtensionController ec = ExtensionController.getInstance();
                 ExtensionRequest er = new ExtensionRequest();
@@ -546,7 +548,7 @@ public final class CallManager extends UntypedActor {
                 // proxy DID or number if the outbound proxy fields are not empty in the restcomm.xml
                 if (proxyURI != null && !proxyURI.isEmpty()) {
 //                    String destination = ((SipURI)request.getTo().getURI()).getUser();
-                    CallRequest callRequest = new CallRequest(fromUser,toUser, CallRequest.Type.PSTN, client.getAccountSid(), false, false);
+                    CallRequest callRequest = new CallRequest(fromUser,toUser, CreateCallType.PSTN, client.getAccountSid(), false, false);
                     ExtensionController ec = ExtensionController.getInstance();
                     ExtensionRequest er = new ExtensionRequest();
                     er.setObject(callRequest);
@@ -1498,11 +1500,11 @@ public final class CallManager extends UntypedActor {
 
     private void outbound(final Object message, final ActorRef sender) throws ServletParseException {
         final CreateCall request = (CreateCall) message;
-        CallRequest callRequest = new CallRequest(request.from(), request.to(), CallRequest.Type.valueOf(request.type().name()), request.accountId(), request.isFromApi(), request.parentCallSid() != null);
+        //CallRequest callRequest = new CallRequest(request.from(), request.to(), CreateCallType.valueOf(request.type().name()), request.accountId(), request.isFromApi(), request.parentCallSid() != null);
         ExtensionController ec = ExtensionController.getInstance();
-        ExtensionRequest er = new ExtensionRequest();
-        er.setObject(callRequest);
-        ExtensionResponse extensionResponse = ec.executePreOutboundAction(er, this.extensions);
+        //ExtensionRequest er = new ExtensionRequest();
+
+        ExtensionResponse extensionResponse = ec.executePreOutboundAction(request, this.extensions);
         switch (request.type()) {
             case CLIENT: {
                 if (extensionResponse.isAllowed()) {
@@ -1513,11 +1515,14 @@ public final class CallManager extends UntypedActor {
                     logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), this.createCallRequest), self());
                 }
-                ec.executePostOutboundAction(callRequest, this.extensions);
+                ec.executePostOutboundAction(request, this.extensions);
                 break;
             }
             case PSTN: {
                 if (extensionResponse.isAllowed()) {
+                    //modify the CreateCall request
+                    //ec.handleExtensionResponse(extensionResponse, request);
+                    //request.setOutboundProxyHeaders(outboundProxyHeaders);
                     outboundToPstn(request, sender);
                 } else {
                     //Extensions didn't allowed this call
@@ -1525,7 +1530,7 @@ public final class CallManager extends UntypedActor {
                     logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), this.createCallRequest), self());
                 }
-                ec.executePostOutboundAction(callRequest, this.extensions);
+                ec.executePostOutboundAction(request, this.extensions);
                 break;
             }
             case SIP: {
@@ -1540,7 +1545,7 @@ public final class CallManager extends UntypedActor {
                     logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), this.createCallRequest), self());
                 }
-                ec.executePostOutboundAction(callRequest, this.extensions);
+                ec.executePostOutboundAction(request, this.extensions);
                 break;
             }
         }
@@ -1658,7 +1663,7 @@ public final class CallManager extends UntypedActor {
     }
 
     private void outboundToPstn(final CreateCall request, final ActorRef sender) throws ServletParseException {
-        final String uri = activeProxy;
+        final String uri = (!request.getOutboundProxy().isEmpty()) ? request.getOutboundProxy() : activeProxy;
         SipURI outboundIntf = null;
         SipURI from = null;
         SipURI to = null;

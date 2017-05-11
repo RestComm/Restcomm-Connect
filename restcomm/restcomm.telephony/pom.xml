@@ -80,7 +80,12 @@
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
-
+        <dependency>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.extension.api</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
 		<dependency>
 			<groupId>org.restcomm</groupId>
 			<artifactId>restcomm-connect.dao</artifactId>

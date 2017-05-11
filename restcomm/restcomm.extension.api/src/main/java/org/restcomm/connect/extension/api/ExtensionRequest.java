@@ -20,8 +20,9 @@
  */
 package org.restcomm.connect.extension.api;
 import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 
-public class ExtensionRequest {
+public class ExtensionRequest implements IExtensionRequest{
     private Object payload;
     private Configuration configuration;
 
@@ -41,6 +42,12 @@ public class ExtensionRequest {
 
     public Configuration getConfiguration() {
         return this.configuration;
+    }
+
+    @Override
+    public CreateCallType getType() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }
