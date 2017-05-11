@@ -23,10 +23,26 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author Maria Farooq
  */
 @Immutable
 public final class StopMediaGroup {
     private boolean liveCallModification;
+
+    private Boolean beep;
+
+    /**
+     * @param beep - If a beep will be played in that case we don't need to send EndSignal(StopMediaGroup)
+     * to media-server as media-server will automatically stop beep when it will receive
+     * play command for beep. If a beep wont be played, then conference need to send
+     * EndSignal(StopMediaGroup) to media-server to stop ongoing music-on-hold.
+     * https://github.com/RestComm/Restcomm-Connect/issues/2024
+     * this is applicable only for restcomm mediaserver
+     */
+    public StopMediaGroup(final Boolean beep) {
+         super();
+        this.beep = beep;
+    }
 
     public StopMediaGroup() {
         super();
@@ -38,5 +54,9 @@ public final class StopMediaGroup {
 
     public boolean isLiveCallModification() {
         return liveCallModification;
+    }
+
+    public Boolean beep() {
+        return beep;
     }
 }
