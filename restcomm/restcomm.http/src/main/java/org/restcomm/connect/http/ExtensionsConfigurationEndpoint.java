@@ -22,6 +22,7 @@ package org.restcomm.connect.http;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
@@ -87,23 +88,44 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
      * @param responseType
      * @return
      */
-    protected Response getConfiguration(final String extensionId, final MediaType responseType) {
+    protected Response getConfiguration(final String extensionId, final Sid accountSid, final MediaType responseType) {
         //Parameter "extensionId" could be the extension Sid or extension name.
         if (!isSuperAdmin()) {
             throw new InsufficientPermission();
         }
 
         ExtensionConfiguration extensionConfiguration = null;
+        ExtensionConfiguration extensionAccountConfiguration = null;
+        Sid extensionSid = null;
+        String extensionName = null;
+
+        if(Sid.pattern.matcher(extensionId).matches()){
+            extensionSid = new Sid(extensionId);
+        } else {
+            extensionName = extensionId;
+        }
 
         if (Sid.pattern.matcher(extensionId).matches()) {
             try {
-                extensionConfiguration = extensionsConfigurationDao.getConfigurationBySid(new Sid(extensionId));
+                extensionConfiguration = extensionsConfigurationDao.getConfigurationBySid(extensionSid);
             } catch (Exception e) {
                 return status(NOT_FOUND).build();
             }
         } else {
             try {
-                extensionConfiguration = extensionsConfigurationDao.getConfigurationByName(extensionId);
+                extensionConfiguration = extensionsConfigurationDao.getConfigurationByName(extensionName);
+            } catch (Exception e) {
+                return status(NOT_FOUND).build();
+            }
+        }
+
+        if (accountSid!=null) {
+            if(extensionSid == null ){
+                extensionSid = extensionConfiguration.getSid();
+            }
+            try {
+                extensionAccountConfiguration = extensionsConfigurationDao.getAccountExtensionConfiguration(accountSid.toString(), extensionSid.toString());
+                extensionConfiguration.setConfigurationData(extensionAccountConfiguration.getConfigurationData(), extensionAccountConfiguration.getConfigurationType());
             } catch (Exception e) {
                 return status(NOT_FOUND).build();
             }
@@ -146,6 +168,7 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         DateTime dateCreated = DateTime.now();
         DateTime dateUpdated = DateTime.now();
         ExtensionConfiguration extensionConfiguration = new ExtensionConfiguration(sid, extension, enabled, configurationData, configurationType, dateCreated, dateUpdated);
+
         return extensionConfiguration;
     }
 
@@ -154,17 +177,37 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
             throw new InsufficientPermission();
         }
 
-        ExtensionConfiguration extensionConfiguration = null;
-        try {
-            extensionConfiguration = createFrom(data, responseType);
-        } catch (final NullPointerException exception) {
-            return status(BAD_REQUEST).entity(exception.getMessage()).build();
-        }
+        Sid accountSid = null;
 
-        try {
-            extensionsConfigurationDao.addConfiguration(extensionConfiguration);
-        } catch (ConfigurationException exception) {
-            return status(NOT_ACCEPTABLE).entity(exception.getMessage()).build();
+        String accountSidQuery = data.getFirst("AccountSid");
+        if(accountSidQuery != null && !accountSidQuery.isEmpty()){
+            accountSid = new Sid(accountSidQuery);
+        }
+        //if extension doesnt exist, add new extension
+        String extensionName = data.getFirst("ExtensionName");
+        ExtensionConfiguration extensionConfiguration = extensionsConfigurationDao.getConfigurationByName(extensionName);
+
+        if(extensionConfiguration==null){
+            try {
+                extensionConfiguration = createFrom(data, responseType);
+            } catch (final NullPointerException exception) {
+                return status(BAD_REQUEST).entity(exception.getMessage()).build();
+            }
+            try {
+                extensionsConfigurationDao.addConfiguration(extensionConfiguration);
+            } catch (ConfigurationException exception) {
+                return status(NOT_ACCEPTABLE).entity(exception.getMessage()).build();
+            }
+        }
+        if (accountSid!=null) {
+            try {
+                Object configurationData = data.getFirst("ConfigurationData");
+                // if accountSid exists, then this configuration is account specific, if it doesnt then its global config
+                extensionConfiguration.setConfigurationData(configurationData, extensionConfiguration.getConfigurationType());
+                extensionsConfigurationDao.addAccountExtensionConfiguration(extensionConfiguration, accountSid);
+            } catch (ConfigurationException exception) {
+                return status(NOT_ACCEPTABLE).entity(exception.getMessage()).build();
+            }
         }
 
         if (APPLICATION_JSON_TYPE == responseType) {
@@ -192,6 +235,12 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         }
 
         ExtensionConfiguration updatedExtensionConfiguration = null;
+        Sid accountSid = null;
+        String accountSidQuery = data.getFirst("AccountSid");
+        if(accountSidQuery != null && !accountSidQuery.isEmpty()){
+            accountSid = new Sid(accountSidQuery);
+        }
+
         try {
             updatedExtensionConfiguration = prepareUpdatedConfiguration(extensionConfiguration, data, responseType);
         } catch (final NullPointerException exception) {
@@ -199,7 +248,11 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         }
 
         try {
-            extensionsConfigurationDao.updateConfiguration(updatedExtensionConfiguration);
+            if (accountSid==null) {
+                extensionsConfigurationDao.updateConfiguration(updatedExtensionConfiguration);
+            } else {
+                extensionsConfigurationDao.updateAccountExtensionConfiguration(updatedExtensionConfiguration, accountSid);
+            }
         } catch (ConfigurationException exception) {
             return status(NOT_ACCEPTABLE).entity(exception.getMessage()).build();
         }
