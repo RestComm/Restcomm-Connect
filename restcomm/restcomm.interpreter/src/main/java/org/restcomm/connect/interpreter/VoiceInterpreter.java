@@ -1176,6 +1176,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         checkDialBranch(message, sender, action);
                     }
                 }
+                if (is(initializingCall)) {
+                    sender.tell(new Hangup(), self());
+                }
                 break;
             case FAILED:
                 if (!sender.equals(call)) {
