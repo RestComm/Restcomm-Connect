@@ -1149,6 +1149,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         checkDialBranch(message, sender, action);
                         return;
                     }
+                } if (is(initializingCall)) {
+                    fsm.transition(message, finished);
                 } else {
                     fsm.transition(message, finishDialing);
                     return;
@@ -1319,8 +1321,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (sender != null && !sender.equals(call)) {
                     callManager.tell(new DestroyCall(sender), self());
                 }
-                final GetNextVerb next = new GetNextVerb();
-                parser.tell(next, self());
+                if (parser != null) {
+                    final GetNextVerb next = new GetNextVerb();
+                    parser.tell(next, self());
+                }
             } else {
                 if (logger.isInfoEnabled()) {
                     logger.info("Executing Dial Action for inbound call");
