@@ -28,7 +28,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 			}
 			$http({
 				method:"POST",
-				url:"/restcomm-rvd/services/ras/apps/metadata",
+				url:"http://192.168.2.3:8080/restcomm-rvd/services/ras/apps/metadata",
 				data: applicationSids,
 				headers: {'Content-Type': 'application/json'}
 			}).success(function(data){

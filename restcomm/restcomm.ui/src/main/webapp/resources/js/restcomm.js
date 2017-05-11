@@ -398,7 +398,8 @@ rcMod.
           var restcomm_prefix = "/restcomm/"
     	  var rvd_prefix = "/restcomm-rvd/";
     	  if ( ! config.headers.Authorization ) { // if no header is already present
-              if ( config.url.substring(0, rvd_prefix.length) === rvd_prefix || config.url.substring(0, restcomm_prefix.length) === restcomm_prefix  ) {
+              //if ( config.url.substring(0, rvd_prefix.length) === rvd_prefix || config.url.substring(0, restcomm_prefix.length) === restcomm_prefix  ) {
+              if ( config.url.indexOf(rvd_prefix) >= 0 || config.url.substring(0, restcomm_prefix.length) === restcomm_prefix  ) {
                   var AuthService = $injector.get('AuthService');
                   var account = AuthService.getAccount();
                   if (!!account) {
