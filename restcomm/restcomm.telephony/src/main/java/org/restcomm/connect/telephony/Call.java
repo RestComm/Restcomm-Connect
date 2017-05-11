@@ -2108,6 +2108,8 @@ public final class Call extends UntypedActor {
                 // Move to next state to clean media resources and close session
                 fsm.transition(message, stopping);
             }
+        } else if (is(failingNoAnswer)) {
+            fsm.transition(message, canceling);
         }
     }
 
