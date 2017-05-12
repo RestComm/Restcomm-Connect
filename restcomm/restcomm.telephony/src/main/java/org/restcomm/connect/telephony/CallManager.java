@@ -473,6 +473,7 @@ public final class CallManager extends UntypedActor {
         SipURI outboundIntf = outboundInterface(transport);
 
         if(logger.isInfoEnabled()) {
+            logger.info("ToUser: " + toUser);
             logger.info("ToHost: " + toHost);
             logger.info("ruri: " + ruri);
             logger.info("myHostIp: " + myHostIp);
@@ -1051,7 +1052,7 @@ public final class CallManager extends UntypedActor {
             if (number != null) {
                 errMsg = "The number " + number.getPhoneNumber() + " does not have a Restcomm hosted application attached";
             } else {
-                errMsg = "The number does not have a Restcomm hosted application attached";
+                errMsg = "The number does not exist" + notANumber;
             }
             sendNotification(errMsg, 11007, "error", false);
             logger.warning(errMsg, notANumber);
@@ -1071,9 +1072,16 @@ public final class CallManager extends UntypedActor {
         // Format the destination to an E.164 phone number.
         final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
         String formatedPhone = null;
-        try {
-            formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
-        } catch (Exception e) {
+        //Don't format to E.164 if contains# or * as this is
+        //for a Regex or USSD call
+        if (phone.contains("*") || phone.contains("#")){
+            formatedPhone = phone;
+        }else{
+            try {
+                formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
+            } catch (NumberParseException e) {
+                logger.error("Exception when try to format : " + e);
+            }
         }
         List<IncomingPhoneNumber> numbers = null;
         IncomingPhoneNumber number = null;

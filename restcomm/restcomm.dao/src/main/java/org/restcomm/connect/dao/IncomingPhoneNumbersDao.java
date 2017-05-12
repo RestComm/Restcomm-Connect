@@ -48,4 +48,5 @@ public interface IncomingPhoneNumbersDao {
     void updateIncomingPhoneNumber(IncomingPhoneNumber incomingPhoneNumber);
 
     List<IncomingPhoneNumber> getAllIncomingPhoneNumbers();
+    List<IncomingPhoneNumber> getIncomingPhoneNumbersRegex();
 }

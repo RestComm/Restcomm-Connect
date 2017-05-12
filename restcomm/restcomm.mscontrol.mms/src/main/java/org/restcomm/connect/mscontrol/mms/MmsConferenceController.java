@@ -219,9 +219,19 @@ public final class MmsConferenceController extends MediaServerController {
             onMediaGroupStateChanged((MediaGroupStateChanged) message, self, sender);
         }*/  else if (JoinCall.class.equals(klass)) {
             onJoinCall((JoinCall) message, self, sender);
-        } else if (Play.class.equals(klass) || StartRecording.class.equals(klass) || StopRecording.class.equals(klass) || StopMediaGroup.class.equals(klass)) {
+        } else if (Play.class.equals(klass) || StartRecording.class.equals(klass) || StopRecording.class.equals(klass)) {
             conferenceMediaResourceController.tell(message, sender);
-        } else if(EndpointStateChanged.class.equals(klass)) {
+        } else if (StopMediaGroup.class.equals(klass)) {
+            StopMediaGroup msg = (StopMediaGroup)message;
+            /* to media-server as media-server will automatically stop beep when it will receive
+             * play command for beep. If a beep wont be played, then conference need to send
+             * EndSignal(StopMediaGroup) to media-server to stop ongoing music-on-hold.
+             * https://github.com/RestComm/Restcomm-Connect/issues/2024
+             */
+            if(!msg.beep()){
+                conferenceMediaResourceController.tell(message, sender);
+            }
+        }else if(EndpointStateChanged.class.equals(klass)) {
             onEndpointStateChanged((EndpointStateChanged) message, self, sender);
         } else if (MediaResourceBrokerResponse.class.equals(klass)) {
             onMediaResourceBrokerResponse((MediaResourceBrokerResponse<?>) message, self, sender);
