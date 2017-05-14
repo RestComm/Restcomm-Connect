@@ -10,6 +10,7 @@ The <Conference> noun allows you to connect to a named conference room and talk 
 [cols=",,",options="header",]
 |============================================================
 |Name |Allowed Values |Default Value
+|name |String |none
 |muted |true, false |false
 |beep |true, false |true
 |startConferenceOnEnter |true, false |true
@@ -18,6 +19,22 @@ The <Conference> noun allows you to connect to a named conference room and talk 
 |waitMethod |GET or POST |POST
 |maxParticipants |positive integer <= 40 |40
 |============================================================
+
+* *name.* The 'name' attribute allows you to inform the conference name for a video call. This attribute should be used only when `<Video>` noun is nested, otherwise the conference name should be informed as value of the tag `<Conference>`.
+
+Conference name without `<Video>` noun nesting:
+
+----
+<Conference>1112</Conference>
+----
+
+Conference name with `<Video>` noun nesting:
+
+----
+<Conference name="alice"><Video enable=”true”></Conference>
+----
+
+For more information, please read <<video-rcml.adoc#video,Video noun documentation>>.
 
 * *muted.* The 'muted' attribute lets you specify whether a participant can speak in the conference. If this attribute is set to 'true', the participant will only be able to listen to people in the conference.
 * *beep.* The 'beep' attribute lets you specify whether a notification beep is played to the conference when a participant joins or leaves the conference.

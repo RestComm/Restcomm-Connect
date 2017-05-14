@@ -16,12 +16,31 @@ The `<Sip>` noun supports the following attributes that modify its behavior:
 [cols=",,",options="header",]
 |==========================================================================
 |Attribute Name |Allowed Values |Default Value
+|name |String |none
 |url |any url |none
 |method |`GET`, `POST` |`POST`
 |statusCallbackEvent |`initiated`, `ringing`, `answered`, `completed` |none
 |statusCallback |any url |none
 |statusCallbackMethod |`GET`, `POST` |`POST`
 |==========================================================================
+
+==== name
+
+The 'name' attribute allows you to inform the SIP URI who will answer to a video call. This attribute should be used only when `<Video>` noun is nested, otherwise the SIP URI should be informed as value of the tag `<Sip>`.
+
+Sip URI (name) without `<Video>` noun nesting.
+
+----
+<Sip>sip:alice@127.0.0.1:5080</Sip>
+----
+
+Sip URI (name) with `<Video>` noun nesting.
+
+----
+<Sip name="sip:alice@127.0.0.1:5080"><Video enable=”true”></Video></Sip>
+----
+
+For more information, please read <<video-rcml.adoc#video,Video noun documentation>>.
 
 ==== url
 
