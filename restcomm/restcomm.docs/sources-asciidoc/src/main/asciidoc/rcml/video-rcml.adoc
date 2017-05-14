@@ -3,7 +3,9 @@
 [[video]]
 == Video
 
-The `<Video>` noun allows to configure and enable video for calls and conferences, therefore, it can be nested under `<Client>`, `<Sip>` and `<Conference>` nouns.
+The `<Video>` noun allows to configure and enable video* for calls and conferences, therefore, it can be nested under `<Client>`, `<Sip>` and `<Conference>` nouns.
+
+IMPORTANT: * Video is supported only when Restcomm is configured to use Dialogic's PowerMedia XMS media server.
 
 IMPORTANT: When `<Video>` noun is nested with other nouns, the client name, sip URI and the conference room should be informed as `name` attribute on each of their nouns.
 Example: `<Client>alice</Client>` should be `<Client name="alice"></Client>`.
