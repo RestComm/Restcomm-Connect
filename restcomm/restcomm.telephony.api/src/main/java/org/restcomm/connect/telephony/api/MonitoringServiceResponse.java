@@ -20,6 +20,7 @@
  */
 package org.restcomm.connect.telephony.api;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -34,14 +35,20 @@ public class MonitoringServiceResponse {
     private final List<CallInfo> callDetailsList;
     private final Map<String, Integer> countersMap;
     private final Map<String, Double> durationMap;
+    private final boolean withCallDetailsList;
+    private final URI callDetailsUrl;
 
 
-    public MonitoringServiceResponse(final InstanceId instanceId, final List<CallInfo> callDetailsList, final Map<String, Integer> countersMap, final Map<String, Double> durationMap) {
+    public MonitoringServiceResponse(final InstanceId instanceId, final List<CallInfo> callDetailsList,
+                                     final Map<String, Integer> countersMap, final Map<String, Double> durationMap,
+                                     final boolean withCallDetailsList, final URI callDetailsUrl) {
         super();
         this.instanceId = instanceId;
         this.callDetailsList = callDetailsList;
         this.countersMap = countersMap;
         this.durationMap = durationMap;
+        this.withCallDetailsList = withCallDetailsList;
+        this.callDetailsUrl = callDetailsUrl;
     }
 
     public List<CallInfo> getCallDetailsList() {
@@ -58,5 +65,13 @@ public class MonitoringServiceResponse {
 
     public Map<String, Double> getDurationMap() {
         return durationMap;
+    }
+
+    public URI getCallDetailsUrl () {
+        return callDetailsUrl;
+    }
+
+    public boolean isWithCallDetailsList () {
+        return withCallDetailsList;
     }
 }
