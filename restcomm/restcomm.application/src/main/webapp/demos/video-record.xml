@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Say>A message of 10 seconds will be recorded after the beep, using the camera and microphone.</Say>
+	<Record finishOnKey="#" maxLength="10" media="audio_video"></Record>
+	<Say>Message recorded with success.</Say>
+</Response>

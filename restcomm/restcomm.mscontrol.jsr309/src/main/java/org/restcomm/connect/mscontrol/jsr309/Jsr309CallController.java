@@ -41,6 +41,7 @@ import javax.media.mscontrol.MsControlFactory;
 import javax.media.mscontrol.Parameter;
 import javax.media.mscontrol.Parameters;
 import javax.media.mscontrol.join.Joinable.Direction;
+import javax.media.mscontrol.mediagroup.CodecConstants;
 import javax.media.mscontrol.mediagroup.MediaGroup;
 import javax.media.mscontrol.mediagroup.Player;
 import javax.media.mscontrol.mediagroup.PlayerEvent;
@@ -58,9 +59,11 @@ import javax.media.mscontrol.resource.RTC;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -122,7 +125,7 @@ public class Jsr309CallController extends MediaServerController {
     private final State failed;
 
     // JSR-309 runtime stuff
-    private static final String[] CODEC_POLICY_AUDIO = new String[] { "audio" };
+    private static final String[] CODEC_POLICY_AUDIO = new String[] { "audio", "video" };
 
     private final MsControlFactory msControlFactory;
     private final MediaServerInfo mediaServerInfo;
@@ -157,6 +160,7 @@ public class Jsr309CallController extends MediaServerController {
     private Boolean collecting;
     private DateTime recordStarted;
     private DaoManager daoManager;
+    private MediaAttributes.MediaType recordingMediaType;
 
     // Runtime Setting
     private Configuration runtimeSettings;
@@ -218,6 +222,7 @@ public class Jsr309CallController extends MediaServerController {
         this.recording = Boolean.FALSE;
         this.playing = Boolean.FALSE;
         this.collecting = Boolean.FALSE;
+        this.recordingMediaType = null;
     }
 
     private boolean is(State state) {
@@ -496,7 +501,7 @@ public class Jsr309CallController extends MediaServerController {
     }
 
     private void onCloseMediaSession(CloseMediaSession message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active) || is(initializing) || is(updatingMediaSession)) {
+        if (is(active) || is(initializing) || is(updatingMediaSession) || is(pending)) {
             fsm.transition(message, inactive);
         }
     }
@@ -577,7 +582,7 @@ public class Jsr309CallController extends MediaServerController {
             this.recordStarted = DateTime.now();
 
             // Tell media group to start recording
-            final Record record = new Record(recordingUri, 5, 3600, "1234567890*#");
+            final Record record = new Record(recordingUri, 5, 3600, "1234567890*#", MediaAttributes.MediaType.AUDIO_ONLY);
             onRecord(record, self, sender);
         }
     }
@@ -710,9 +715,26 @@ public class Jsr309CallController extends MediaServerController {
                 // TODO set as definitive media group parameter - handled by RestComm
                 params.put(Recorder.START_BEEP, Boolean.FALSE);
 
+                // Video parameters
+                if (MediaAttributes.MediaType.AUDIO_VIDEO.equals(message.media()) ||
+                        MediaAttributes.MediaType.VIDEO_ONLY.equals(message.media())) {
+                    params.put(Recorder.VIDEO_CODEC, CodecConstants.H264);
+                    String sVideoFMTP = "profile=" + "66";
+                    sVideoFMTP += ";level=" + "3.1";
+                    sVideoFMTP += ";width=" + "1280";
+                    sVideoFMTP += ";height=" + "720";
+                    sVideoFMTP += ";framerate=" + "15";
+                    params.put(Recorder.VIDEO_FMTP, sVideoFMTP);
+                    params.put(Recorder.VIDEO_MAX_BITRATE, 2000);
+                    if (MediaAttributes.MediaType.AUDIO_VIDEO.equals(message.media())) {
+                        params.put(Recorder.AUDIO_CODEC, CodecConstants.AMR);
+                    }
+                }
+
                 this.recorderListener.setEndOnKey(message.endInputKey());
                 this.recorderListener.setRemote(sender);
                 this.mediaGroup.getRecorder().record(message.destination(), rtcs, params);
+                this.recordingMediaType = message.media();
                 this.recording = Boolean.TRUE;
             } catch (MsControlException e) {
                 logger.error("Recording failed: " + e.getMessage());
@@ -743,6 +765,11 @@ public class Jsr309CallController extends MediaServerController {
         if (is(active)) {
             try {
                 // join call leg to bridge
+                // overlay configuration
+                MediaAttributes ma = message.mediaAttributes();
+                if (!StringUtils.isEmpty(ma.getVideoOverlay())) {
+                    mediaSession.setAttribute("CAPTION", ma.getVideoOverlay());
+                }
                 this.bridge = sender;
                 this.mediaMixer = (MediaMixer) message.getEndpoint();
                 this.networkConnection.join(Direction.DUPLEX, mediaMixer);
@@ -801,7 +828,7 @@ public class Jsr309CallController extends MediaServerController {
                     builder.setUri(URI.create(buffer.toString()));
                     final Recording recording = builder.build();
                     RecordingsDao recordsDao = daoManager.getRecordingsDao();
-                    recordsDao.addRecording(recording);
+                    recordsDao.addRecording(recording, recordingMediaType);
                 }
             }
 
@@ -863,7 +890,13 @@ public class Jsr309CallController extends MediaServerController {
                 // Distinguish between WebRTC and SIP calls
                 Parameters sdpParameters = mediaSession.createParameters();
                 Map<String, String> configurationData = new HashMap<String, String>();
-                configurationData.put("webrtc", webrtc ? "yes" : "no");
+                if (webrtc) {
+                    configurationData.put("webrtc", "yes");
+                    // Enable DTLS, ICE Lite and RTCP feedback
+                    configurationData.put("Supported", "dlgc-encryption-dtls, dlgc-ice, dlgc-rtcp-feedback-audiovideo");
+                } else {
+                    configurationData.put("webrtc", "no");
+                }
                 sdpParameters.put(SdpPortManager.SIP_HEADERS, configurationData);
                 networkConnection.setParameters(sdpParameters);
 
