@@ -248,12 +248,14 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     private void generateDefaultDomainName (final Configuration configuration, final DaoManager storage, String defaultOrganization) {
         try{
             final String hostname = configuration.getString("hostname");
-            if(logger.isInfoEnabled())
-                logger.info("Generate Default Domain Name based on RC hostname: "+hostname);
             Organization organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
             if(organization != null){
-                organization = organization.setDomainName(hostname);
-                storage.getOrganizationsDao().updateOrganization(organization);
+                if(hostname != null && !hostname.trim().equals("")){
+                    if(logger.isInfoEnabled())
+                        logger.info("Generate Default Domain Name based on RC hostname: "+hostname);
+                    organization = organization.setDomainName(hostname);
+                    storage.getOrganizationsDao().updateOrganization(organization);   
+                }
             }else{
                 logger.error("Unable to generateDefaultDomainName default org not found");
             }
