@@ -20,15 +20,6 @@
  */
 package org.restcomm.connect.http.converter;
 
-import java.lang.reflect.Type;
-import java.util.Iterator;
-import java.util.Map;
-
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.telephony.api.CallInfo;
-import org.restcomm.connect.telephony.api.MonitoringServiceResponse;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -36,6 +27,15 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.telephony.api.CallInfo;
+import org.restcomm.connect.telephony.api.MonitoringServiceResponse;
+
+import java.lang.reflect.Type;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -77,11 +77,16 @@ public class MonitoringServiceConverter extends AbstractConverter implements Jso
         }
         result.add("Metrics", metrics);
 
-        if (monitoringServiceResponse.getCallDetailsList().size() > 0)
-            for (CallInfo callInfo: monitoringServiceResponse.getCallDetailsList()) {
-                callsArray.add(context.serialize(callInfo));
+        if (monitoringServiceResponse.isWithCallDetailsList()) {
+            if (monitoringServiceResponse.getCallDetailsList() != null && monitoringServiceResponse.getCallDetailsList().size() > 0) {
+                for (CallInfo callInfo : monitoringServiceResponse.getCallDetailsList()) {
+                    callsArray.add(context.serialize(callInfo));
+                }
             }
             result.add("LiveCallDetails", callsArray);
+        } else {
+            result.addProperty("LiveCallDetails", UriUtils.resolve(monitoringServiceResponse.getCallDetailsUrl()).toString());
+        }
         return result;
     }
 
@@ -89,7 +94,6 @@ public class MonitoringServiceConverter extends AbstractConverter implements Jso
     public void marshal(Object object, HierarchicalStreamWriter writer, MarshallingContext context) {
         final MonitoringServiceResponse monitoringServiceResponse = (MonitoringServiceResponse) object;
         final Map<String, Double> durationMap = monitoringServiceResponse.getDurationMap();
-        int size = monitoringServiceResponse.getCallDetailsList().size();
         final Map<String, Integer> countersMap = monitoringServiceResponse.getCountersMap();
         Iterator<String> counterIterator = countersMap.keySet().iterator();
         Iterator<String> durationIterator = durationMap.keySet().iterator();
@@ -121,13 +125,19 @@ public class MonitoringServiceConverter extends AbstractConverter implements Jso
         }
         writer.endNode();
 
-        if (size > 0) {
-            writer.startNode("LiveCallDetails");
+        if (monitoringServiceResponse.isWithCallDetailsList()) {
+            if (monitoringServiceResponse.getCallDetailsList() != null && monitoringServiceResponse.getCallDetailsList().size() > 0) {
+                writer.startNode("LiveCallDetails");
 
-            for (final CallInfo callInfo : monitoringServiceResponse.getCallDetailsList()) {
-                context.convertAnother(callInfo);
+                for (final CallInfo callInfo : monitoringServiceResponse.getCallDetailsList()) {
+                    context.convertAnother(callInfo);
+                }
+                writer.endNode();
+            } else {
+                writer.startNode("LiveCallDetails");
+                writer.setValue(UriUtils.resolve(monitoringServiceResponse.getCallDetailsUrl()).toString());
+                writer.endNode();
             }
-            writer.endNode();
         }
     }
 }
