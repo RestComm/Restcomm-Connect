@@ -20,17 +20,11 @@
  */
 package org.restcomm.connect.monitoringservice;
 
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.servlet.sip.ServletParseException;
-import javax.sip.header.ContactHeader;
-
+import akka.actor.ActorRef;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.dao.DaoManager;
@@ -41,14 +35,22 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
 import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.GetLiveCalls;
+import org.restcomm.connect.telephony.api.GetStatistics;
 import org.restcomm.connect.telephony.api.MonitoringServiceResponse;
 import org.restcomm.connect.telephony.api.TextMessage;
 import org.restcomm.connect.telephony.api.UserRegistration;
 
-import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import javax.servlet.sip.ServletParseException;
+import javax.sip.header.ContactHeader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -138,6 +140,8 @@ public class MonitoringService extends UntypedActor{
             onCallResponse((CallResponse<CallInfo>)message, self, sender);
         } else if (CallStateChanged.class.equals(klass)) {
             onCallStateChanged((CallStateChanged)message, self, sender);
+        } else if (GetStatistics.class.equals(klass)) {
+            onGetStatistics((GetStatistics) message, self, sender);
         } else if (GetLiveCalls.class.equals(klass)) {
             onGetLiveCalls((GetLiveCalls)message, self, sender);
         } else if (UserRegistration.class.equals(klass)) {
@@ -359,7 +363,8 @@ public class MonitoringService extends UntypedActor{
      * @param self
      * @param sender
      */
-    private void onGetLiveCalls(GetLiveCalls message, ActorRef self, ActorRef sender) throws ParseException {
+    private void onGetStatistics (GetStatistics message, ActorRef self, ActorRef sender) throws ParseException {
+
         List<CallInfo> callDetailsList = new ArrayList<CallInfo>(callDetailsMap.values());
         Map<String, Integer> countersMap = new HashMap<String, Integer>();
         Map<String, Double> durationMap = new HashMap<String, Double>();
@@ -371,7 +376,7 @@ public class MonitoringService extends UntypedActor{
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_INCOMING_CALLS_SINCE_UPTIME, incomingCallsUpToNow.get());
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_OUTGOING_CALL_SINCE_UPTIME, outgoingCallsUpToNow.get());
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_REGISTERED_USERS, registeredUsers.size());
-        countersMap.put(MonitoringMetrics.COUNTERS_MAP_LIVE_CALLS, callDetailsList.size());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_LIVE_CALLS, callDetailsMap.size());
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_MAXIMUM_CONCURRENT_CALLS, maxConcurrentCalls.get());
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_MAXIMUM_CONCURRENT_INCOMING_CALLS, maxConcurrentIncomingCalls.get());
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_MAXIMUM_CONCURRENT_OUTGOING_CALLS, maxConcurrentOutgoingCalls.get());
@@ -421,8 +426,29 @@ public class MonitoringService extends UntypedActor{
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_TEXT_MESSAGE_NOT_FOUND, textNotFound.get());
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_TEXT_MESSAGE_OUTBOUND, textOutbound.get());
 
-        MonitoringServiceResponse callInfoList = new MonitoringServiceResponse(instanceId, callDetailsList, countersMap, durationMap);
+        MonitoringServiceResponse callInfoList = null;
+        if (message.isWithLiveCallDetails()) {
+            callInfoList = new MonitoringServiceResponse(instanceId, callDetailsList, countersMap, durationMap, true, null);
+        } else {
+            URI callDetailsUri = null;
+            try {
+                callDetailsUri = new URI(String.format("/restcomm/%s/Accounts/%s/Supervisor.json/livecalls", RestcommConfiguration.getInstance().getMain().getApiVersion(), message.getAccountSid()));
+            } catch (URISyntaxException e) {
+                logger.error("Problem while trying to create the LiveCalls detail URI");
+            }
+            callInfoList = new MonitoringServiceResponse(instanceId, null, countersMap, durationMap, false, callDetailsUri);
+        }
         sender.tell(callInfoList, self);
+    }
+
+    /**
+     * @param message
+     * @param self
+     * @param sender
+     */
+    private void onGetLiveCalls (GetLiveCalls message, ActorRef self, ActorRef sender) throws ParseException {
+        List<CallInfo> callDetailsList = new ArrayList<CallInfo>(callDetailsMap.values());
+        sender.tell(new LiveCallsDetails(callDetailsList), self());
     }
 
     @Override
