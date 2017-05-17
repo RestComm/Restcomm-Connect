@@ -98,7 +98,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
             }
             //check if there is a Regex match only if parameter is a String aka phone Number
             if(!(parameter instanceof Sid)){
-//               inboundPhoneNumber = parameter.toString().replace("+1", "");
+               inboundPhoneNumber = parameter.toString().replace("+1", "");
                 if (logger.isInfoEnabled()) {
                     logger.info("About to check for REGEX incoming phone number for phoneNumber : " + inboundPhoneNumber);
                 }
