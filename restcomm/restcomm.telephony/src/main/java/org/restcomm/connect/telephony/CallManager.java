@@ -988,16 +988,17 @@ public final class CallManager extends UntypedActor {
         // Format the destination to an E.164 phone number.
         final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
         String formatedPhone = null;
-        //Don't format to E.164 if contains# or * as this is
-        //for a Regex or USSD call
-        if (phone.contains("*") || phone.contains("#")){
-            formatedPhone = phone;
-        }else{
+        if (!(phone.contains("*") || phone.contains("#"))) {
             try {
                 formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
             } catch (NumberParseException e) {
                 logger.error("Exception when try to format : " + e);
             }
+        }
+        if (formatedPhone == null) {
+            //Don't format to E.164 if phone contains # or * as this is
+            //for a Regex or USSD short number
+            formatedPhone = phone;
         }
         IncomingPhoneNumber number = null;
         try {
