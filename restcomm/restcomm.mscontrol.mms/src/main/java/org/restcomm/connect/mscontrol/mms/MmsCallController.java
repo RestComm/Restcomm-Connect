@@ -404,8 +404,8 @@ public class MmsCallController extends MediaServerController {
         final State state = fsm.state();
 
         if(logger.isInfoEnabled()) {
-            logger.info("********** MmsCallController Current State: \"" + state.toString());
-            logger.info("********** MmsCallController Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
+            logger.info("********** MmsCallController "+ self.path()+" Current State: \"" + state.toString());
+            logger.info("********** MmsCallController "+ self.path()+" Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
         }
 
         if (Observe.class.equals(klass)) {
