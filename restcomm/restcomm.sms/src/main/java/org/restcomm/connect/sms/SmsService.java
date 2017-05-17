@@ -584,7 +584,7 @@ public final class SmsService extends UntypedActor {
             Sid organizationSid = getOrganizationSidBySipURIHost((SipURI)request.getTo().getURI());
             // find number in same organization
             for(IncomingPhoneNumber n : numbers){
-                if(n.getOrganizationSid() == organizationSid){
+                if(n.getOrganizationSid().equals(organizationSid)){
                     foundNumberInSameOrganization = true;
                     number = n;
                 }
