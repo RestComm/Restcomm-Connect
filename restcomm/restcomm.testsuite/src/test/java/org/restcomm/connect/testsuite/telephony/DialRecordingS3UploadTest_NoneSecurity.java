@@ -224,7 +224,7 @@ public class DialRecordingS3UploadTest_NoneSecurity {
 				null));
 		assertTrue(aliceCall.waitForAck(50 * 1000));
 
-		Thread.sleep(3000);
+		Thread.sleep(35000);
 
 		// hangup.
 		aliceCall.listenForDisconnect();
@@ -233,6 +233,7 @@ public class DialRecordingS3UploadTest_NoneSecurity {
 		assertTrue(aliceCall.waitForDisconnect(30 * 1000));
 		assertTrue(aliceCall.respondToDisconnect());
 
+		Thread.sleep(1000);
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
 		assertNotNull(recording);
