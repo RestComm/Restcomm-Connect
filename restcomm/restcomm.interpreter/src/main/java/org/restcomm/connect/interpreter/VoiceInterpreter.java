@@ -2513,7 +2513,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         } else if (outboundCall != null) {
                             outboundCall.tell(new Cancel(), source);
                         }
-                        if (dialBranches == null) {
+                        //Issue https://github.com/RestComm/Restcomm-Connect/issues/2157. If outbound call != null,
+                        //then checking the DialBranch here will cause race condition that will prevent outbound call to move
+                        //to completed state because checkDialBranch() method will ask for the next verb which could be the End.tag
+                        if (dialBranches == null && outboundCall == null) {
                             checkDialBranch(message,sender,action);
                         }
                         dialChildren = null;
