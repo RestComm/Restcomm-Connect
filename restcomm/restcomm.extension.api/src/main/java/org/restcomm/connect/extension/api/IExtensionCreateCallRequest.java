@@ -1,5 +1,6 @@
 package org.restcomm.connect.extension.api;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 import org.restcomm.connect.commons.dao.Sid;
@@ -49,11 +50,11 @@ public interface IExtensionCreateCallRequest extends IExtensionRequest {
     /**
      * @return the outboundProxyHeaders
      */
-    Map<String,String> getOutboundProxyHeaders();
+    Map<String,ArrayList<String>> getOutboundProxyHeaders();
 
     /**
      * @param outboundProxyHeaders the outboundProxyHeaders to set
      */
-    void setOutboundProxyHeaders(Map<String,String> outboundProxyHeaders);
+    void setOutboundProxyHeaders(Map<String,ArrayList<String>> outboundProxyHeaders);
 
 }

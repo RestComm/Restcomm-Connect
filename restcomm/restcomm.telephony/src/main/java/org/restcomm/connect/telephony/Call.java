@@ -88,7 +88,6 @@ import org.restcomm.connect.telephony.api.Cancel;
 import org.restcomm.connect.telephony.api.ChangeCallDirection;
 import org.restcomm.connect.telephony.api.ConferenceInfo;
 import org.restcomm.connect.telephony.api.ConferenceResponse;
-
 import org.restcomm.connect.telephony.api.Dial;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.GetCallObservers;
@@ -194,7 +193,7 @@ public final class Call extends UntypedActor {
     private javax.servlet.sip.URI to;
     // custom headers for SIP Out https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     private Map<String, String> rcmlHeaders;
-    private Map<String, String> headers;
+    private Map<String, ArrayList<String>> headers;
     private String username;
     private String password;
     private CreateCallType type;
@@ -292,7 +291,8 @@ public final class Call extends UntypedActor {
     }
 
     public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration,
-                final URI statusCallback, final String statusCallbackMethod, final List<String> statusCallbackEvent, Map<String, String> headers) {
+                final URI statusCallback, final String statusCallbackMethod, final List<String> statusCallbackEvent, Map<String, ArrayList<String>> headers)
+    {
         super();
         final ActorRef source = self();
         this.system = context().system();
@@ -303,7 +303,7 @@ public final class Call extends UntypedActor {
             downloader = downloader();
         }
         this.rcmlHeaders = new HashMap<String, String>();
-        this.headers = new HashMap<String, String>();
+        this.headers = new HashMap<String, ArrayList<String>>();
         if(headers != null){
             this.headers = headers;
         }
@@ -1000,6 +1000,16 @@ public final class Call extends UntypedActor {
             executeStatusCallback(CallbackState.INITIATED);
         }
 
+        //FIXME: duplicate code
+        private void addHeadersToMessage(SipServletRequest message, Map<String, String> rcmlHeaders, String keyPrepend) {
+
+            for (Map.Entry<String, String> entry : rcmlHeaders.entrySet()) {
+                String headerName = keyPrepend + entry.getKey();
+                String headerVal = message.getHeader(headerName);
+                message.addHeader(headerName , entry.getValue());
+            }
+        }
+
         /**
          *
          */
@@ -1012,22 +1022,51 @@ public final class Call extends UntypedActor {
         }
 
         /**
-         *
-         */
-        private void addHeadersToMessage(SipServletMessage message, Map<String, String> headers) {
-            addHeadersToMessage(message, headers, "");
-        }
-
-        /**
          * @param keyPrepend TODO
          *
          */
-        private void addHeadersToMessage(SipServletMessage message, Map<String, String> headers, String keyPrepend) {
-            if (headers != null) {
-                Set<Map.Entry<String, String>> entrySet = headers.entrySet();
-                for (Map.Entry<String, String> entry : entrySet) {
-                    //TODO: can abstract this to add keyappend, valprepend, valappend
-                    message.addHeader(keyPrepend + entry.getKey(), entry.getValue());
+        private void addHeadersToMessage(SipServletRequest message, Map<String, ArrayList<String> > headers) {
+
+            if(headers!=null) {
+                for (Map.Entry<String, ArrayList<String>> entry : headers.entrySet()) {
+                    //check of header exists
+                    String headerName = entry.getKey();
+                    String headerVal = message.getHeader(headerName);
+
+                    //FIXME: do getValue check first?
+                    StringBuilder sb = new StringBuilder();
+                    String concatValue;
+                    for(String pair :entry.getValue()){
+                        logger.debug("pair="+pair);
+                        sb.append(";").append(pair);
+                    }
+                    logger.debug("headerName="+headerName+" headerVal="+headerVal+" concatValue="+sb.toString());
+                    if(!headerName.equalsIgnoreCase("Request-URI")){
+                        if(headerVal!=null && !headerVal.isEmpty()) {
+                            message.setHeader(headerName , headerVal+sb.toString());
+                        }else{
+                            message.addHeader(headerName , sb.toString());
+                        }
+                    }else{
+                        //handle Request-URI
+                        //((SipServletRequest)message).getRequestURI();
+                        javax.servlet.sip.URI reqURI = message.getRequestURI();
+                        logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
+                        for(String keyValPair :entry.getValue()){
+                            String parName = "";
+                            String parVal = "";
+                            int equalsPos = keyValPair.indexOf("=");
+                            parName = keyValPair.substring(0, equalsPos);
+                            parVal = keyValPair.substring(equalsPos+1);
+                            reqURI.setParameter(parName, parVal);
+                            logger.debug("ReqURI pars ="+parName+"="+parVal+" equalsPos="+equalsPos+" keyValPair="+keyValPair);
+                        }
+
+                        message.setRequestURI(reqURI);
+                        logger.debug("----ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
+                    }
+
+                    logger.debug("--headerName="+headerName+" headerVal="+message.getHeader(headerName));
                 }
             }
         }

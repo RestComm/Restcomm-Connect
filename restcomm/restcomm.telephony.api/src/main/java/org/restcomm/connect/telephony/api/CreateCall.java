@@ -25,6 +25,7 @@ import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.extension.api.IExtensionCreateCallRequest;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -52,7 +53,7 @@ public final class CreateCall implements IExtensionCreateCallRequest{
     private String outboundProxy;
     private String outboundProxyUsername;
     private String outboundProxyPassword;
-    private Map<String,String> outboundProxyHeaders;
+    private Map<String,ArrayList<String>> outboundProxyHeaders;
 
     public CreateCall(final String from, final String to, final String username, final String password,
             final boolean isFromApi, final int timeout, final CreateCallType type, final Sid accountId, final Sid parentCallSid,
@@ -63,7 +64,7 @@ public final class CreateCall implements IExtensionCreateCallRequest{
     public CreateCall(final String from, final String to, final String username, final String password,
             final boolean isFromApi, final int timeout, final CreateCallType type, final Sid accountId, final Sid parentCallSid,
             final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent,
-            final String outboundProxy, final String outboundProxyUsername, final String outboundProxyPassword, final Map<String,String> outboundProxyHeaders) {
+            final String outboundProxy, final String outboundProxyUsername, final String outboundProxyPassword, final Map<String,ArrayList<String>> outboundProxyHeaders) {
         super();
         this.from = from;
         this.to = to;
@@ -78,8 +79,8 @@ public final class CreateCall implements IExtensionCreateCallRequest{
         this.statusCallbackMethod = statusCallbackMethod;
         this.statusCallbackEvent = statusCallbackEvent;
         this.outboundProxy = outboundProxy;
-        this.outboundProxyUsername = outboundProxyUsername;
-        this.outboundProxyPassword = outboundProxyPassword;
+        this.outboundProxyUsername = outboundProxyUsername;//FIXME:unused
+        this.outboundProxyPassword = outboundProxyPassword;//FIXME:unused
         this.outboundProxyHeaders = outboundProxyHeaders;
     }
 
@@ -152,36 +153,36 @@ public final class CreateCall implements IExtensionCreateCallRequest{
      * @return the outboundProxyUsername
      */
     public String getOutboundProxyUsername() {
-        return outboundProxyUsername;
+        return username;
     }
     /**
      * @param outboundProxyUsername the outboundProxyUsername to set
      */
     public void setOutboundProxyUsername(String outboundProxyUsername) {
-        this.outboundProxyUsername = outboundProxyUsername;
+        this.username = outboundProxyUsername;
     }
     /**
      * @return the outboundProxyPassword
      */
     public String getOutboundProxyPassword() {
-        return outboundProxyPassword;
+        return password;
     }
     /**
      * @param outboundProxyPassword the outboundProxyPassword to set
      */
     public void setOutboundProxyPassword(String outboundProxyPassword) {
-        this.outboundProxyPassword = outboundProxyPassword;
+        this.password = outboundProxyPassword;
     }
     /**
      * @return the outboundProxyHeaders
      */
-    public Map<String,String> getOutboundProxyHeaders() {
+    public Map<String,ArrayList<String>> getOutboundProxyHeaders() {
         return outboundProxyHeaders;
     }
     /**
      * @param outboundProxyHeaders the outboundProxyHeaders to set
      */
-    public void setOutboundProxyHeaders(Map<String,String> outboundProxyHeaders) {
+    public void setOutboundProxyHeaders(Map<String,ArrayList<String>> outboundProxyHeaders) {
         this.outboundProxyHeaders = outboundProxyHeaders;
     }
     public String getFrom() {
