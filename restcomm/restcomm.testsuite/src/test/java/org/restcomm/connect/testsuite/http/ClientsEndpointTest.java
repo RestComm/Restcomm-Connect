@@ -211,6 +211,15 @@ public class ClientsEndpointTest {
         params.add("Password","RestComm1234!");
         ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
         Assert.assertEquals(200, response.getStatus());
+        
+        //try to add same client again in same organization - should not be allowed
+        jersey = getClient(developerUsername, developeerAuthToken);
+        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
+        params = new MultivaluedMapImpl();
+        params.add("Login","maria");
+        params.add("Password","RestComm1234!");
+        response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(409, response.getStatus());
 
         /*
     	 * Add client maria in Organization - org2.restcomm.com
