@@ -75,6 +75,7 @@ import static javax.ws.rs.core.Response.status;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author gvagenas@gmail.com
  * @author jean.deruelle@telestax.com
+ * @author maria.farooq@telestax.com
  */
 @NotThreadSafe
 public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
@@ -309,7 +310,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                 available = false;
             }else{
                 for(IncomingPhoneNumber incomingPhoneNumber : incomingPhoneNumbers){
-                    if(incomingPhoneNumber.getOrganizationSid() == account.getOrganizationSid()){
+                    if(incomingPhoneNumber.getOrganizationSid().equals(account.getOrganizationSid())){
                         available = false;
                     }
                 }
