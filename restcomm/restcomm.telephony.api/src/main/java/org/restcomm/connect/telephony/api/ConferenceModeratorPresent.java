@@ -34,7 +34,7 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 @Immutable
 public class ConferenceModeratorPresent {
 
-    final Boolean beep;
+    private final Boolean beep;
 
     /**
      * @param beep - If a beep will be played in that case we don't need to send EndSignal(StopMediaGroup)
@@ -42,6 +42,7 @@ public class ConferenceModeratorPresent {
      * play command for beep. If a beep wont be played, then conference need to send
      * EndSignal(StopMediaGroup) to media-server to stop ongoing music-on-hold.
      * https://github.com/RestComm/Restcomm-Connect/issues/2024
+     * this is applicable only for restcomm mediaserver
      */
     public ConferenceModeratorPresent(final Boolean beep) {
          super();
@@ -50,6 +51,6 @@ public class ConferenceModeratorPresent {
 
     public Boolean beep() {
         return beep;
-     }
+    }
 
 }
