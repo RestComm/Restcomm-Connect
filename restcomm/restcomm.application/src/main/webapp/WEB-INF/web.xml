@@ -8,13 +8,18 @@
   <servlet>
     <servlet-name>Jersey</servlet-name>
     <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+    <!-- Enable CORS request filter (allows all cors requests) -->
+    <init-param>
+      <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
+      <param-value>org.restcomm.connect.http.cors.CorsFilter</param-value>
+    </init-param>
   </servlet>
 
   <context-param>
     <param-name>resteasy.scan</param-name>
     <param-value>false</param-value>
   </context-param>
-  
+
   <context-param>
     <param-name>resteasy.scan.providers</param-name>
     <param-value>false</param-value>
@@ -24,12 +29,12 @@
     <param-name>resteasy.scan.resources</param-name>
     <param-value>false</param-value>
   </context-param>
-  
+
   <servlet-mapping>
     <servlet-name>Jersey</servlet-name>
     <url-pattern>/2012-04-24/*</url-pattern>
   </servlet-mapping>
-  
+
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>
   </welcome-file-list>

@@ -39,4 +39,6 @@ public interface MainConfigurationSet {
     void setInstanceId(String instanceId);
 
     String getInstanceId();
+
+    String getApiVersion();
 }
