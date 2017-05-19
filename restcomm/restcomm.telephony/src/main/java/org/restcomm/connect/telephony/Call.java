@@ -541,7 +541,7 @@ public final class Call extends UntypedActor {
         if (statusCallback != null) {
             if (statusCallbackEvent.contains(state.toString())) {
                 if (logger.isDebugEnabled()) {
-                    String msg = String.format("About to execute Call StatusCallback to %s for state %s",statusCallback.toString(), state.text);
+                    String msg = String.format("About to execute Call StatusCallback for state %s to StatusCallback %s. Call from %s to %s direction %s", state.text, statusCallback.toString(), from.toString(), to.toString(), direction);
                     logger.debug(msg);
                 }
                 if (statusCallbackMethod == null) {
@@ -2108,6 +2108,8 @@ public final class Call extends UntypedActor {
                 // Move to next state to clean media resources and close session
                 fsm.transition(message, stopping);
             }
+        } else if (is(failingNoAnswer)) {
+            fsm.transition(message, canceling);
         }
     }
 

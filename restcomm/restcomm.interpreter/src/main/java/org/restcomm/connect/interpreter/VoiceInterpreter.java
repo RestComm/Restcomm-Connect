@@ -1149,6 +1149,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         checkDialBranch(message, sender, action);
                         return;
                     }
+                } if (is(initializingCall)) {
+                    fsm.transition(message, finished);
                 } else {
                     fsm.transition(message, finishDialing);
                     return;
@@ -1173,6 +1175,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         logger.info("No-Answer event received, and dialBrances is either null or 0 size, sender: "+sender.path()+", vi state: "+fsm.state());
                         checkDialBranch(message, sender, action);
                     }
+                }
+                if (is(initializingCall)) {
+                    sender.tell(new Hangup(), self());
                 }
                 break;
             case FAILED:
@@ -1319,8 +1324,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (sender != null && !sender.equals(call)) {
                     callManager.tell(new DestroyCall(sender), self());
                 }
-                final GetNextVerb next = new GetNextVerb();
-                parser.tell(next, self());
+                if (parser != null) {
+                    final GetNextVerb next = new GetNextVerb();
+                    parser.tell(next, self());
+                }
             } else {
                 if (logger.isInfoEnabled()) {
                     logger.info("Executing Dial Action for inbound call");
@@ -2506,7 +2513,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         } else if (outboundCall != null) {
                             outboundCall.tell(new Cancel(), source);
                         }
-                        if (dialBranches == null) {
+                        //Issue https://github.com/RestComm/Restcomm-Connect/issues/2157. If outbound call != null,
+                        //then checking the DialBranch here will cause race condition that will prevent outbound call to move
+                        //to completed state because checkDialBranch() method will ask for the next verb which could be the End.tag
+                        if (dialBranches == null && outboundCall == null) {
                             checkDialBranch(message,sender,action);
                         }
                         dialChildren = null;
