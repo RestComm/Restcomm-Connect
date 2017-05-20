@@ -51,6 +51,7 @@ import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.email.api.EmailResponse;
 import org.restcomm.connect.fax.FaxResponse;
@@ -197,6 +198,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     Tag conferenceVerb;
     List<URI> conferenceWaitUris;
     private boolean playMusicForConference = false;
+    private MediaAttributes mediaAttributes;
     //Used for system apps, such as when WebRTC client is dialing out.
     //The rcml will be used instead of download the RCML
     private String rcml;
@@ -432,6 +434,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.asImsUa = asImsUa;
         this.imsUaLogin = imsUaLogin;
         this.imsUaPassword = imsUaPassword;
+        this.mediaAttributes = new MediaAttributes();
     }
 
     private boolean is(State state) {
@@ -1565,6 +1568,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             return null;
         }
+
+        protected Tag video(final Tag container) {
+            final List<Tag> children = container.children();
+            for (final Tag child : children) {
+                if (Nouns.video.equals(child.name())) {
+                    return child;
+                }
+            }
+            return null;
+        }
     }
 
     private final class InitializingCall extends AbstractAction {
@@ -1923,6 +1936,106 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             return timeLimit;
         }
+
+        protected MediaAttributes.MediaType videoEnabled(final Tag container) {
+            boolean videoEnabled = false;
+            Attribute attribute = container.attribute("enable");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    videoEnabled = Boolean.valueOf(value);
+                }
+            }
+            if (videoEnabled) {
+                return MediaAttributes.MediaType.AUDIO_VIDEO;
+            } else {
+                return MediaAttributes.MediaType.AUDIO_ONLY;
+            }
+        }
+
+        protected MediaAttributes.VideoMode videoMode(final Tag container){
+            MediaAttributes.VideoMode videoMode = MediaAttributes.VideoMode.MCU;
+            Attribute attribute = container.attribute("mode");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    try {
+                        videoMode = MediaAttributes.VideoMode.getValueOf(value);
+                    } catch (IllegalArgumentException e) {
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        final Notification notification = notification(WARNING_NOTIFICATION, 15001, value
+                                + " is not a valid mode value for <Video>");
+                        notifications.addNotification(notification);
+                    }
+                }
+            }
+            return videoMode;
+        }
+
+        protected MediaAttributes.VideoResolution videoResolution(final Tag container) {
+            MediaAttributes.VideoResolution videoResolution = MediaAttributes.VideoResolution.SEVEN_TWENTY_P;
+            Attribute attribute = container.attribute("resolution");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    try {
+                        videoResolution = MediaAttributes.VideoResolution.getValueOf(value);
+                    } catch (IllegalArgumentException e) {
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        final Notification notification = notification(WARNING_NOTIFICATION, 15002, value
+                                + " is not a valid resolution value for <Video>");
+                        notifications.addNotification(notification);
+                    }
+                }
+            }
+            return videoResolution;
+        }
+
+        protected MediaAttributes.VideoLayout videoLayout(final Tag container) {
+            MediaAttributes.VideoLayout videoLayout = MediaAttributes.VideoLayout.LINEAR;
+            Attribute attribute = container.attribute("layout");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    try {
+                        videoLayout = MediaAttributes.VideoLayout.getValueOf(value);
+                    } catch (IllegalArgumentException e) {
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        final Notification notification = notification(WARNING_NOTIFICATION, 15003, value
+                                + " is not a valid layout value for <Video>");
+                        notifications.addNotification(notification);
+                    }
+                }
+            }
+            return videoLayout;
+        }
+
+        protected String videoOverlay(final Tag container) {
+            String videoOverlay = null;
+            Attribute attribute = container.attribute("overlay");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    videoOverlay = value;
+                }
+            }
+            return videoOverlay;
+        }
+
+        public void fetchMediaAttributes(final Tag container){
+            Tag video = video(container);
+            if(video != null){
+                MediaAttributes.MediaType mediaType = videoEnabled(video);
+                if (!MediaAttributes.MediaType.AUDIO_ONLY.equals(mediaType)) {
+                    final MediaAttributes.VideoMode videoMode = videoMode(video);
+                    final MediaAttributes.VideoResolution videoResolution = videoResolution(video);
+                    final MediaAttributes.VideoLayout videoLayout = videoLayout(video);
+                    final String videoOverlay = videoOverlay(video);
+                    mediaAttributes = new MediaAttributes(mediaType, videoMode, videoResolution, videoLayout,
+                            videoOverlay);
+                }
+            }
+        }
     }
 
     private final class StartDialing extends AbstractDialAction {
@@ -2065,13 +2178,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         statusCallbackEvent.add("completed");
                     }
                 }
+                fetchMediaAttributes(child);
+                //TODO lookup for callee according with the existence of video tag and replace occurrences below
                 if (Nouns.client.equals(child.name())) {
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCall.Type.CLIENT, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
+                                CreateCall.Type.CLIENT, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                                CreateCall.Type.CLIENT, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                                CreateCall.Type.CLIENT, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     }
                 } else if (Nouns.number.equals(child.name())) {
                     if (call != null && callInfo != null) {
@@ -2084,10 +2199,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 } else if (Nouns.uri.equals(child.name())) {
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCall.Type.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
+                                CreateCall.Type.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                                CreateCall.Type.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                                CreateCall.Type.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     }
                 } else if (Nouns.SIP.equals(child.name())) {
                     // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
@@ -2112,10 +2227,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
-                                CreateCall.Type.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
+                                CreateCall.Type.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
-                                CreateCall.Type.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                                CreateCall.Type.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     }
                 }
                 callManager.tell(create, source);
