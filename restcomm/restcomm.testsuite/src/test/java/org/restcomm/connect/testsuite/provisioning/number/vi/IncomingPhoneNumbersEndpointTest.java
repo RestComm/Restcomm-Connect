@@ -1097,7 +1097,7 @@ public class IncomingPhoneNumbersEndpointTest {
     public void testCreateNonPureSipPhoneNumbersForOrganizations() {
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))
-                .withRequestBody(containing("11223344"))
+                .withRequestBody(containing("4166902867"))
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
@@ -1105,7 +1105,7 @@ public class IncomingPhoneNumbersEndpointTest {
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
-                .withRequestBody(containing("11223344"))
+                .withRequestBody(containing("4166902867"))
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
@@ -1118,7 +1118,7 @@ public class IncomingPhoneNumbersEndpointTest {
         WebResource webResource = jerseyClient.resource(provisioningURL);
 
         MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-        formData.add("PhoneNumber", "11223344");
+        formData.add("PhoneNumber", "+14166902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
@@ -1130,10 +1130,9 @@ public class IncomingPhoneNumbersEndpointTest {
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
         
-        logger.info("testCreatePureSipPhoneNumber from default org jsonResponse: " + jsonResponse.toString());
+        System.out.println(jsonResponse.toString());
         
-        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultSIPPurchaseNumber));
-        
+        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultLocalPurchaseNumber));
         /*
          * try to create same number again 
          * under same organization/account, 
@@ -1141,7 +1140,7 @@ public class IncomingPhoneNumbersEndpointTest {
          * */
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))
-                .withRequestBody(containing("11223344"))
+                .withRequestBody(containing("4156902867"))
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
@@ -1149,7 +1148,7 @@ public class IncomingPhoneNumbersEndpointTest {
         
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("assignDID"))
-                .withRequestBody(containing("11223344"))
+                .withRequestBody(containing("4156902867"))
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
@@ -1160,56 +1159,31 @@ public class IncomingPhoneNumbersEndpointTest {
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Local.json";
         webResource = jerseyClient.resource(provisioningURL);
         formData = new MultivaluedMapImpl();
-        formData.add("PhoneNumber", "11223344");
+        formData.add("PhoneNumber", "+4156902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         logger.info("testCreatePureSipPhoneNumber from default org TWICE clientResponse: " + clientResponse.toString());
-        assertTrue(clientResponse.getStatus() != 200);
+        assertTrue(clientResponse.getStatus() == 403);
         
         /*
          * try to create same number again 
          * under different organization/account, 
-         * it should be allowed
+         * it should not be allowed
          * */
-        stubFor(post(urlEqualTo("/test"))
-                .withRequestBody(containing("queryDID"))
-                .withRequestBody(containing("11223344"))
-                .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-        
-        stubFor(post(urlEqualTo("/test"))
-                .withRequestBody(containing("assignDID"))
-                .withRequestBody(containing("11223344"))
-                .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-        jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminOrg2Username, adminOrg2AuthToken));
 
         provisioningURL = deploymentUrl + baseURLOrg2 + "IncomingPhoneNumbers/Local.json";
         webResource = jerseyClient.resource(provisioningURL);
 
         formData = new MultivaluedMapImpl();
-        formData.add("PhoneNumber", "11223344");
+        formData.add("PhoneNumber", "+4156902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        assertTrue(clientResponse.getStatus() == 200);
-        response = clientResponse.getEntity(String.class);
-        System.out.println(response);
-        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-        parser = new JsonParser();
-        jsonResponse = parser.parse(response).getAsJsonObject();
-        
-        logger.info("testCreatePureSipPhoneNumber from Org2 jsonResponse: " + jsonResponse.toString());
-        
-        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultSIPPurchaseNumberOrg2));
+        assertTrue(clientResponse.getStatus() == 403);
         
     }
     
