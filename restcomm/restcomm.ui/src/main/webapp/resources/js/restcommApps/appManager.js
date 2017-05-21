@@ -1,4 +1,4 @@
-var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManagerCtrl', function($scope, $upload, $location, products, localApps, $sce, Notifications, rappManagerConfig, $filter, $state,$stateParams) {
+var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManagerCtrl', function($scope, $upload, $location, products, localApps, $sce, Notifications, rappManagerConfig, $filter, $state,$stateParams, PublicConfig) {
 	
 	/* Sample list item
 	{
@@ -198,7 +198,7 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 	    for (var i = 0; i < $files.length; i++) {
 	      var file = $files[i];
 	      $scope.upload = $upload.upload({
-	        url: '/restcomm-rvd/services/ras/apps',
+	        url: PublicConfig.rvdBaseUrl + '/services/ras/apps',
 	        file: file,
 	      }).progress(function(evt) {
 	        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));

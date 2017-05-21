@@ -670,8 +670,8 @@ rcServices.factory('RCommLogsTranscriptions', function($resource) {
   );
 });
 
-rcServices.factory('RCommApps', function($resource) {
-	  return $resource('/restcomm-rvd/services/projects');
+rcServices.factory('RCommApps', function($resource, PublicConfig) {
+	  return $resource(PublicConfig.rvdBaseUrl + '/services/projects');
 });
 
 rcServices.factory('RCVersion', function($resource) {

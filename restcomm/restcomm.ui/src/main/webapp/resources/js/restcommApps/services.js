@@ -1,4 +1,4 @@
-angular.module("rcApp.restcommApps").service("rappService", function ($http, $q, Notifications, AuthService, rappManagerConfig) {
+angular.module("rcApp.restcommApps").service("rappService", function ($http, $q, Notifications, AuthService, rappManagerConfig, PublicConfig) {
 	var service = {};
 	//var localApps = undefined;
 	var deferred;
@@ -28,7 +28,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 			}
 			$http({
 				method:"POST",
-				url:"http://192.168.2.3:8080/restcomm-rvd/services/ras/apps/metadata",
+				url: PublicConfig.rvdBaseUrl + "/services/ras/apps/metadata",
 				data: applicationSids,
 				headers: {'Content-Type': 'application/json'}
 			}).success(function(data){
@@ -90,7 +90,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 	
 	function getAppConfig(applicationSid, mode) {
 		var defer = $q.defer();
-		$http({url: '/restcomm-rvd/services/ras/apps/' + applicationSid + '/config' + (mode ? ("/"+mode) : "") , method: "GET" })
+		$http({url: PublicConfig.rvdBaseUrl + '/services/ras/apps/' + applicationSid + '/config' + (mode ? ("/"+mode) : "") , method: "GET" })
 		.success(function (data, status, headers, config) {
 			if (data.rvdStatus == "OK") {
 				defer.resolve(data.payload);
@@ -109,7 +109,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 	
 	function getApp(applicationSid) {
 		var defer = $q.defer();
-		$http({url: '/restcomm-rvd/services/ras/apps/' + applicationSid, method: "GET" })
+		$http({url: PublicConfig.rvdBaseUrl + '/services/ras/apps/' + applicationSid, method: "GET" })
 		.success(function (data, status, headers, config) {
 			if (data.rvdStatus == "OK") {
 				//console.log("succesfull retrieved app config");
@@ -127,7 +127,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 	
 	function getBoostrapObject(applicationSid) {
 		var deferred = $q.defer();
-		$http.get('/restcomm-rvd/services/ras/apps/' + applicationSid + '/bootstrap' )
+		$http.get(PublicConfig.rvdBaseUrl + '/services/ras/apps/' + applicationSid + '/bootstrap' )
 		.success(function (data, status) {
 			deferred.resolve(data);
 		})
