@@ -189,6 +189,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private ActorRef confSubVoiceInterpreter;
     private Attribute dialRecordAttribute;
     private boolean dialActionExecuted = false;
+    private boolean dialCompletedStatusCallBackExecuted = false;
     private ActorRef sender;
     private boolean liveCallModification = false;
     private boolean recordingCall = true;
@@ -2521,6 +2522,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                         dialChildren = null;
                         callback();
+                        dialCompletedStatusCallBackExecuted = true;
                         return;
                     } else if (dialBranches != null && dialBranches.contains(sender)) {
                         if (logger.isInfoEnabled()) {
@@ -2995,6 +2997,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (!dialActionExecuted) {
                 executeDialAction(message, outboundCall);
                 callback(true);
+                dialCompletedStatusCallBackExecuted = true;
+            }
+
+            if (!dialCompletedStatusCallBackExecuted) {
+                callback();
             }
             // XXX review bridge cleanup!!
 
