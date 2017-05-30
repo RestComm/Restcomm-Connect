@@ -127,13 +127,13 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
                                 return toIncomingPhoneNumber(resultRestcommRegexHostedNumber);
                             } else{
                                 if (logger.isInfoEnabled()) {
-                                    String msg = String.format("Error, Regex \"%s\" cannot be matched for phone number \"%s\"", phoneRegexPattern, inBoundPhoneNumber);
+                                    String msg = String.format("Regex \"%s\" cannot be matched for phone number \"%s\"", phoneRegexPattern, inBoundPhoneNumber);
                                     logger.info(msg);
                                 }
                             }
                         } else {
                             if (logger.isInfoEnabled()) {
-                                String msg = String.format("Error, Regex \"%s\" cannot be matched for phone number \"%s\"", phoneRegexPattern, inBoundPhoneNumber);
+                                String msg = String.format("Regex \"%s\" cannot be matched for phone number \"%s\"", phoneRegexPattern, inBoundPhoneNumber);
                                 logger.info(msg);
                             }
                         }
