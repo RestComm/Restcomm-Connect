@@ -1,4 +1,4 @@
 {
     "resetPasswordUrl": "",
-    "rvdBaseUrl":"http://rvd.this:8081/restcomm-rvd"
+    "rvdUrl":"/restcomm-rvd"
 }

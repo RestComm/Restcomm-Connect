@@ -671,7 +671,7 @@ rcServices.factory('RCommLogsTranscriptions', function($resource) {
 });
 
 rcServices.factory('RCommApps', function($resource, PublicConfig) {
-	  return $resource(PublicConfig.rvdBaseUrl + '/services/projects');
+	  return $resource(PublicConfig.rvdUrl + '/services/projects');
 });
 
 rcServices.factory('RCVersion', function($resource) {

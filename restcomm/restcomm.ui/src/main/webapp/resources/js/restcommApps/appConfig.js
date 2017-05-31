@@ -18,7 +18,7 @@ var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('Rap
 		var bootstrapObject = $scope.generateBootstrap(rappConfig);
 		//console.log(bootstrapObject);
 		$http({
-			url: PublicConfig.rvdBaseUrl + '/services/ras/apps/' + $scope.applicationSid + '/bootstrap',
+			url: PublicConfig.rvdUrl + '/services/ras/apps/' + $scope.applicationSid + '/bootstrap',
 			method: 'POST',
 			data: bootstrapObject,
 			headers: {'Content-Type': 'application/data'}
