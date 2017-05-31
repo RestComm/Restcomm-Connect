@@ -64,7 +64,7 @@ rcDirectives.directive('rcListFilter', function() {
   };
 });
 
-rcDirectives.directive('rcEndpointUrl', function() {
+rcDirectives.directive('rcEndpointUrl', function(PublicConfig) {
   return {
     restrict: 'E',
     scope: {
@@ -80,7 +80,7 @@ rcDirectives.directive('rcEndpointUrl', function() {
         $scope.appNameVar = "";
         $scope.setApp = function() {
             if ($scope.appNameVar === 'create_new_project') {
-                window.open('/restcomm-rvd');
+                window.open(PublicConfig.rvdUrl);
             } else
             // if this is an application SID, populate the sidVar
             if ($scope.appNameVar && $scope.appNameVar.substr(0,2) == "AP") {

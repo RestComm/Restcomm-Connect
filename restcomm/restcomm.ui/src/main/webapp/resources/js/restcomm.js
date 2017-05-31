@@ -392,11 +392,12 @@ angular
 // There is a circular dependency issue when directly injecting AuthService in the function. A workaround using $injector has
 // been used - http://stackoverflow.com/questions/20647483/angularjs-injecting-service-into-a-http-interceptor-circular-dependency
 rcMod.
-  factory('authHttpResponseInterceptor',['$q','$location','$injector','IdentityConfig','Notifications',function($q,$location,$injector,IdentityConfig, Notifications){
+  factory('authHttpResponseInterceptor',['$q','$location','$injector','IdentityConfig','Notifications',function($q,$location,$injector,IdentityConfig, Notifications) {
     return {
       request: function(config) {
+          var PublicConfig = $injector.get('PublicConfig');
           var restcomm_prefix = "/restcomm/"
-    	  var rvd_prefix = "/restcomm-rvd/";
+    	  var rvd_prefix = PublicConfig.rvdUrl+"/";
     	  if ( ! config.headers.Authorization ) { // if no header is already present
               //if ( config.url.substring(0, rvd_prefix.length) === rvd_prefix || config.url.substring(0, restcomm_prefix.length) === restcomm_prefix  ) {
               if ( config.url.indexOf(rvd_prefix) >= 0 || config.url.substring(0, restcomm_prefix.length) === restcomm_prefix  ) {

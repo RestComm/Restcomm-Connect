@@ -60,7 +60,7 @@
 						<div class="rapp-title-cell">
 							<a href="{{app.link}}" target="_blank"><img class="img-thumbnail thumbnail" src="{{app.thumbnail}}"></a>
 							<div class="text-center app-title-wrap app-ras">
-								<a ng-show="app.isLocal" href="/restcomm-rvd/#/designer/{{app.sid}}={{app.projectName}}" target="_blank" title="{{app.appId}}">{{app.title}}</a>
+								<a ng-show="app.isLocal" href="{{PublicConfig.rvdUrl}}/#/designer/{{app.sid}}={{app.projectName}}" target="_blank" title="{{app.appId}}">{{app.title}}</a>
 								<span ng-show="!app.isLocal">{{app.title}}</span>
 							</div>
 							<!--<div class="text-center text-muted" title="application unique id">{{app.appId}}</div>-->
@@ -68,7 +68,7 @@
 					</td>
 					<td class="title-col" ng-show="!app.isOnline" class="status-col">
 						<div class="text-center app-title-wrap">
-							<a href="/restcomm-rvd/#/designer/{{app.sid}}={{app.projectName}}" target="_blank" title="{{app.appId}}">{{app.title}}</a>
+							<a href="{{PublicConfig.rvdUrl}}/#/designer/{{app.sid}}={{app.projectName}}" target="_blank" title="{{app.appId}}">{{app.title}}</a>
 						</div>
 						<!--<div class="text-center text-muted">{{app.appId}}</div>-->
 					</td>	
