@@ -1767,10 +1767,10 @@ public final class CallManager extends UntypedActor {
         InitializeOutbound init;
         if (request.from() != null && !request.from().contains("@") && userAtDisplayedName) {
             init = new InitializeOutbound(request.from(), from, to, proxyUsername, proxyPassword, request.timeout(),
-                    request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage, webRTC);
+                    request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage, webRTC, request.mediaAttributes());
         } else {
             init = new InitializeOutbound(null, from, to, proxyUsername, proxyPassword, request.timeout(), request.isFromApi(),
-                    runtime.getString("api-version"), request.accountId(), request.type(), storage, webRTC);
+                    runtime.getString("api-version"), request.accountId(), request.type(), storage, webRTC, request.mediaAttributes());
         }
         if (request.parentCallSid() != null) {
             init.setParentCallSid(request.parentCallSid());

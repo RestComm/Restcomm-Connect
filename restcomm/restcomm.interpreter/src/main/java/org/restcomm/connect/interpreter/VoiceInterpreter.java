@@ -2180,12 +2180,18 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 fetchMediaAttributes(child);
                 //TODO lookup for callee according with the existence of video tag and replace occurrences below
+                String callee;
+                if(video(child) != null){
+                    callee = child.attribute("name").value();
+                } else {
+                    callee = child.text();
+                }
                 if (Nouns.client.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
                                 CreateCall.Type.CLIENT, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     } else {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, false, timeout(verb),
                                 CreateCall.Type.CLIENT, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     }
                 } else if (Nouns.number.equals(child.name())) {
@@ -2198,10 +2204,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (Nouns.uri.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
                                 CreateCall.Type.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     } else {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, false, timeout(verb),
                                 CreateCall.Type.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     }
                 } else if (Nouns.SIP.equals(child.name())) {
@@ -2226,10 +2232,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                     }
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), username, password, false, timeout(verb),
                                 CreateCall.Type.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     } else {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), username, password, false, timeout(verb),
                                 CreateCall.Type.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     }
                 }

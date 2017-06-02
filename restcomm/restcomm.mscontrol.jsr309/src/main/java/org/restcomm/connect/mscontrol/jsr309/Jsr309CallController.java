@@ -122,7 +122,7 @@ public class Jsr309CallController extends MediaServerController {
     private final State failed;
 
     // JSR-309 runtime stuff
-    private static final String[] CODEC_POLICY_AUDIO = new String[] { "audio" };
+    private static final String[] CODEC_POLICY_AUDIO = new String[] { "audio", "video" };
 
     private final MsControlFactory msControlFactory;
     private final MediaServerInfo mediaServerInfo;
@@ -863,7 +863,13 @@ public class Jsr309CallController extends MediaServerController {
                 // Distinguish between WebRTC and SIP calls
                 Parameters sdpParameters = mediaSession.createParameters();
                 Map<String, String> configurationData = new HashMap<String, String>();
-                configurationData.put("webrtc", webrtc ? "yes" : "no");
+                if (webrtc) {
+                    configurationData.put("webrtc", "yes");
+                    // Enable DTLS, ICE Lite and RTCP feedback
+                    configurationData.put("Supported", "dlgc-encryption-dtls, dlgc-ice, dlgc-rtcp-feedback-audiovideo");
+                } else {
+                    configurationData.put("webrtc", "no");
+                }
                 sdpParameters.put(SdpPortManager.SIP_HEADERS, configurationData);
                 networkConnection.setParameters(sdpParameters);
 
