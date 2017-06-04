@@ -32,7 +32,8 @@ ant release -f $RESTCOMM_HOME/release/build.xml -Drestcomm.release.version=$MAJO
 mv $RELEASE/Restcomm-*.zip $WORKSPACE
 ls -la $WORKSPACE/Restcomm-JBoss-AS7-$MAJOR_VERSION_NUMBER.$BUILD_NUMBER.zip
 
-curl -T $WORKSPACE/Restcomm-JBoss-AS7-$MAJOR_VERSION_NUMBER.$BUILD_NUMBER.zip -ugvagenas:$BINTRAY_API_KEY https://api.bintray.com/content/gvagenas/Restcomm-Connect/Restcomm-Connect/$MAJOR_VERSION_NUMBER.$BUILD_NUMBER/binaries
+echo "About to upload to Bintray"
+curl -T $WORKSPACE/Restcomm-JBoss-AS7-$MAJOR_VERSION_NUMBER.$BUILD_NUMBER.zip -ugvagenas:$BINTRAY_API_KEY -H "X-Bintray-Package:binaries" -H "X-Bintray-Version:8.2.0" https://api.bintray.com/content/gvagenas/Restcomm-Connect/bin/
 
 
 cd $RESTCOMM_HOME/restcomm

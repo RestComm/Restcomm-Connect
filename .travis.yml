@@ -6,3 +6,6 @@ email:
     - jean.deruelle@telestax.com
   on_success: never # default: change
   on_failure: always # default: always
+cache:
+  directories:
+  - $HOME/.m2
