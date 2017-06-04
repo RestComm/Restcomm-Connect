@@ -30,7 +30,10 @@ sed -e "s|MAJOR_VERSION_NUMBER.BUILD_NUMBER|$MAJOR_VERSION_NUMBER.$BUILD_NUMBER|
 mv $FILE.bak $FILE
 ant release -f $RESTCOMM_HOME/release/build.xml -Drestcomm.release.version=$MAJOR_VERSION_NUMBER.$BUILD_NUMBER -Drestcomm.branch.name=restcomm-release-$MAJOR_VERSION_NUMBER.$BUILD_NUMBER -Dcheckout.restcomm.dir=$RESTCOMM_HOME -Dworkspace.restcomm.dir=$RESTCOMM_HOME/restcomm -Dcheckout.dir=$DEPENDENCIES_HOME
 mv $RELEASE/Restcomm-*.zip $WORKSPACE
-ls -la $WORKSPACE
+ls -la $WORKSPACE/Restcomm-JBoss-AS7-$MAJOR_VERSION_NUMBER.$BUILD_NUMBER.zip
+
+curl -T $WORKSPACE/Restcomm-JBoss-AS7-$MAJOR_VERSION_NUMBER.$BUILD_NUMBER.zip -ugvagenas:$BINTRAY_API_KEY https://api.bintray.com/content/gvagenas/Restcomm-Connect/Restcomm-Connect/$MAJOR_VERSION_NUMBER.$BUILD_NUMBER/binaries
+
 
 cd $RESTCOMM_HOME/restcomm
 #commenting the deploy command as it eats up storage on artifactory
