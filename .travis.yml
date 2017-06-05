@@ -22,7 +22,7 @@ script:
   # other script steps might be done before running the actual SonarQube analysis
   - echo "About to run sonar-scanner"
   - cd restcomm
-  - sed -i '.bak' 's/DEBUG/OFF/g' restcomm.testsuite/src/test/resources/log4j.xml
-  - sed -i '.bak' 's/INFO/OFF/g' restcomm.testsuite/src/test/resources/log4j.xm
-  - sed -i '.bak' 's/DEBUG/OFF/g'  restcomm.testsuite/src/test/resources/akka_application.conf
+  - sed -i 's/DEBUG/OFF/g' restcomm.testsuite/src/test/resources/log4j.xml
+  - sed -i 's/INFO/OFF/g' restcomm.testsuite/src/test/resources/log4j.xm
+  - sed -i 's/DEBUG/OFF/g'  restcomm.testsuite/src/test/resources/akka_application.conf
   - mvn -q clean org.jacoco:jacoco-maven-plugin:prepare-agent surefire-report:report sonar:sonar
