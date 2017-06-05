@@ -17,4 +17,5 @@ script:
   - ./build.sh
   # other script steps might be done before running the actual SonarQube analysis
   - echo "About to run sonar-scanner"
+  - cd restcomm
   - sonar-scanner
