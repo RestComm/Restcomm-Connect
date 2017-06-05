@@ -1,5 +1,4 @@
 language: java
-script: ./build.sh
 email:
   recipients:
     - gvagenas@telestax.com
@@ -9,3 +8,11 @@ email:
 cache:
   directories:
   - $HOME/.m2
+addons:
+  sonarqube:
+    organization: "restcomm-connect" # the key of the org you chose at step #3
+script:
+  - ./build.sh
+  # other script steps might be done before running the actual SonarQube analysis
+  - echo "About to run sonar-scanner"
+  - sonar-scanner
