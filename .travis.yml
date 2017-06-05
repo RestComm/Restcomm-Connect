@@ -24,6 +24,6 @@ script:
   - cd restcomm
   - pwd
   - sed -i 's/DEBUG/OFF/g' ./restcomm.testsuite/src/test/resources/log4j.xml
-  - sed -i 's/INFO/OFF/g' ./restcomm.testsuite/src/test/resources/log4j.xm
+  - sed -i 's/INFO/OFF/g' ./restcomm.testsuite/src/test/resources/log4j.xml
   - sed -i 's/DEBUG/OFF/g'  ./restcomm.testsuite/src/test/resources/akka_application.conf
   - mvn -q clean org.jacoco:jacoco-maven-plugin:prepare-agent surefire-report:report sonar:sonar
