@@ -1,8 +1,8 @@
 package org.restcomm.connect.extension.controller;
 
-import org.restcomm.connect.extension.api.ExtensionRequest;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.IExtensionRequest;
 import org.restcomm.connect.extension.api.MessageExtensionResponse;
 import org.restcomm.connect.extension.api.NodeExtensionResponse;
 import org.restcomm.connect.extension.api.RestcommExtension;
@@ -89,7 +89,7 @@ public class ExtensionController {
         }
     }
 
-    public ExtensionResponse executePreOutboundAction(final ExtensionRequest er, List<RestcommExtensionGeneric> extensions) {
+    public ExtensionResponse executePreOutboundAction(final IExtensionRequest ier, List<RestcommExtensionGeneric> extensions) {
         //FIXME: if we have more than one extension in chain
         // and all of them are successful, we only receive the last
         // extensionResponse
@@ -101,7 +101,7 @@ public class ExtensionController {
                     logger.info( extension.getName()+" is enabled="+extension.isEnabled());
                 }
                 if (extension.isEnabled()) {
-                    response = extension.preOutboundAction(er);
+                    response = extension.preOutboundAction(ier);
                     //fail fast
                     if (!response.isAllowed()){
                         break;
@@ -112,7 +112,12 @@ public class ExtensionController {
         return response;
     }
 
-    public ExtensionResponse executePostOutboundAction(final Object er, List<RestcommExtensionGeneric> extensions) {
+    public ExtensionResponse executePostOutboundAction(Object er, List<RestcommExtensionGeneric> extensions) {
+        ExtensionResponse response = new ExtensionResponse();
+        //TODO: implement actual calls
+        return response;
+    }
+    public ExtensionResponse executePostOutboundAction(final IExtensionRequest er, List<RestcommExtensionGeneric> extensions) {
         ExtensionResponse response = new ExtensionResponse();
         //TODO: implement actual calls
         return response;
