@@ -2,23 +2,21 @@ package org.restcomm.connect.extension.api;
 
 
 import org.restcomm.connect.commons.dao.Sid;
-
+import org.restcomm.connect.commons.telephony.CreateCallType;
+//TODO: Remove, obsoleted by Interface usage
 /**
  * Created by gvagenas on 27/09/16.
  */
-public class CallRequest {
-    public enum Type {
-        CLIENT, PSTN, SIP, USSD
-    };
+public class CallRequest extends ExtensionRequest {
 
     private final String from;
     private final String to;
-    private final Type type;
+    private final CreateCallType type;
     private final Sid accountId;
     private final boolean isFromApi;
     private final boolean parentCallSidExists;
 
-    public CallRequest(String from, String to, Type type, Sid accountId, boolean isFromApi, boolean parentCallSidExists) {
+    public CallRequest(String from, String to, CreateCallType type, Sid accountId, boolean isFromApi, boolean parentCallSidExists) {
         this.from = from;
         this.to = to;
         this.type = type;
@@ -35,7 +33,7 @@ public class CallRequest {
         return to;
     }
 
-    public Type getType() {
+    public CreateCallType getType() {
         return type;
     }
 
