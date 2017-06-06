@@ -23,18 +23,36 @@ package org.restcomm.connect.extension.api;
 public class ExtensionRequest implements IExtensionRequest{
     private boolean allowed = true;
     private String accountSid;
-    public ExtensionRequest() {}
+    public ExtensionRequest() {
+        this("", true);
+    }
+    public ExtensionRequest(String accountSid, boolean allowed) {
+        this.accountSid = accountSid;
+        this.allowed = allowed;
+    }
 
+    /**
+     * IExtensionRequest
+     * @return get accountSid
+     */
     @Override
     public String getAccountSid() {
         return this.accountSid;
     }
 
+    /**
+     * IExtensionRequest
+     * @return is allowed
+     */
     @Override
     public boolean isAllowed() {
         return this.allowed;
     }
 
+    /**
+     * IExtensionRequest
+     * @param is allowed
+     */
     @Override
     public void setAllowed(boolean allowed) {
         this.allowed = allowed;

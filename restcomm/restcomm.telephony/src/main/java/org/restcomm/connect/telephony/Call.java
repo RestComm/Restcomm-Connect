@@ -1011,7 +1011,7 @@ public final class Call extends UntypedActor {
         }
 
         /**
-         *
+         * addCustomHeadersToMap
          */
         private void addCustomHeadersToMap(Map<String, String> headers) {
             if (apiVersion != null)
@@ -1022,25 +1022,29 @@ public final class Call extends UntypedActor {
         }
 
         /**
-         * @param keyPrepend TODO
-         *
+         * Replace headers
+         * @param SipServletRequest message
+         * @param Map<String, ArrayList<String> > headers
          */
         private void addHeadersToMessage(SipServletRequest message, Map<String, ArrayList<String> > headers) {
 
             if(headers!=null) {
                 for (Map.Entry<String, ArrayList<String>> entry : headers.entrySet()) {
-                    //check of header exists
+                    //check if header exists
                     String headerName = entry.getKey();
                     String headerVal = message.getHeader(headerName);
 
                     //FIXME: do getValue check first?
                     StringBuilder sb = new StringBuilder();
-                    String concatValue;
-                    for(String pair :entry.getValue()){
-                        logger.debug("pair="+pair);
-                        sb.append(";").append(pair);
+                    //if(entry.getValue() instanceof ArrayList){
+                        for(String pair : entry.getValue()){
+                            logger.debug("pair="+pair);
+                            sb.append(";").append(pair);
+                        }
+                    //}
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("headerName="+headerName+" headerVal="+headerVal+" concatValue="+sb.toString());
                     }
-                    logger.debug("headerName="+headerName+" headerVal="+headerVal+" concatValue="+sb.toString());
                     if(!headerName.equalsIgnoreCase("Request-URI")){
                         if(headerVal!=null && !headerVal.isEmpty()) {
                             message.setHeader(headerName , headerVal+sb.toString());
@@ -1049,9 +1053,10 @@ public final class Call extends UntypedActor {
                         }
                     }else{
                         //handle Request-URI
-                        //((SipServletRequest)message).getRequestURI();
                         javax.servlet.sip.URI reqURI = message.getRequestURI();
-                        logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
+                        if(logger.isDebugEnabled()) {
+                            logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
+                        }
                         for(String keyValPair :entry.getValue()){
                             String parName = "";
                             String parVal = "";
@@ -1059,14 +1064,19 @@ public final class Call extends UntypedActor {
                             parName = keyValPair.substring(0, equalsPos);
                             parVal = keyValPair.substring(equalsPos+1);
                             reqURI.setParameter(parName, parVal);
-                            logger.debug("ReqURI pars ="+parName+"="+parVal+" equalsPos="+equalsPos+" keyValPair="+keyValPair);
+                            if(logger.isDebugEnabled()) {
+                                logger.debug("ReqURI pars ="+parName+"="+parVal+" equalsPos="+equalsPos+" keyValPair="+keyValPair);
+                            }
                         }
 
                         message.setRequestURI(reqURI);
-                        logger.debug("----ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
+                        if(logger.isDebugEnabled()) {
+                            logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
+                        }
                     }
-
-                    logger.debug("--headerName="+headerName+" headerVal="+message.getHeader(headerName));
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("headerName="+headerName+" headerVal="+message.getHeader(headerName));
+                    }
                 }
             }
         }

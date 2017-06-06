@@ -8,14 +8,29 @@ import org.restcomm.connect.commons.telephony.CreateCallType;
 
 public interface IExtensionCreateCallRequest extends IExtensionRequest {
 
+    /**
+     * @return the from address
+     */
      String getFrom();
 
+     /**
+      * @return the to address
+      */
      String getTo();
 
+     /**
+      * @return the accountId
+      */
      Sid getAccountId();
 
+     /**
+      * @return boolean if is from EP
+      */
      boolean isFromApi();
 
+     /**
+      * @return boolean if this is a child call
+      */
      boolean isParentCallSidExists();
 
      /**
