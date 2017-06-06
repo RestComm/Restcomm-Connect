@@ -55,12 +55,6 @@ public final class CreateSmsSession implements IExtensionCreateSmsSessionRequest
         return to;
     }
 
-    @Override
-    public String getAccountSid() {
-        return accountSid;
-    }
-
-    //@Override
     public boolean isFromApi() {
         return isFromApi;
     }
@@ -70,21 +64,46 @@ public final class CreateSmsSession implements IExtensionCreateSmsSessionRequest
         return "From: "+from+" , To: "+to+" , AccountSid: "+accountSid+" , isFromApi: "+isFromApi;
     }
 
+    /**
+     * IExtensionRequest
+     * @return accountSid
+     */
+    @Override
+    public String getAccountSid() {
+        return accountSid;
+    }
+
+    /**
+     * IExtensionRequest
+     * @return if allowed
+     */
     @Override
     public boolean isAllowed() {
         return this.allowed;
     }
 
+    /**
+     * IExtensionRequest
+     * @param set allowed
+     */
     @Override
     public void setAllowed(boolean allowed) {
         this.allowed = allowed;
     }
 
+    /**
+     * IExtensionCreateSmsSessionRequest
+     * @param set Configuration object
+     */
     @Override
     public void setConfiguration(Configuration configuration) {
         this.configuration = configuration;
     }
 
+    /**
+     * IExtensionCreateSmsSessionRequest
+     * @return Configuration object
+     */
     @Override
     public Configuration getConfiguration() {
         return this.configuration;

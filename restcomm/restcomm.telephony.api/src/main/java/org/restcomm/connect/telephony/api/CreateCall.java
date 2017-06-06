@@ -139,102 +139,158 @@ public final class CreateCall implements IExtensionCreateCallRequest{
     public List<String> statusCallbackEvent() { return statusCallbackEvent; }
 
     /**
+     * IExtensionCreateCallRequest
      * @return the outboundProxy
      */
     public String getOutboundProxy() {
         return outboundProxy;
     }
+
     /**
+     * IExtensionCreateCallRequest
      * @param outboundProxy the outboundProxy to set
      */
     public void setOutboundProxy(String outboundProxy) {
         this.outboundProxy = outboundProxy;
     }
+
     /**
+     * IExtensionCreateCallRequest
      * @return the outboundProxyUsername
      */
     public String getOutboundProxyUsername() {
         return username;
     }
+
     /**
+     * IExtensionCreateCallRequest
      * @param outboundProxyUsername the outboundProxyUsername to set
      */
     public void setOutboundProxyUsername(String outboundProxyUsername) {
         this.username = outboundProxyUsername;
     }
+
     /**
+     * IExtensionCreateCallRequest
      * @return the outboundProxyPassword
      */
     public String getOutboundProxyPassword() {
         return password;
     }
+
     /**
+     * IExtensionCreateCallRequest
      * @param outboundProxyPassword the outboundProxyPassword to set
      */
     public void setOutboundProxyPassword(String outboundProxyPassword) {
         this.password = outboundProxyPassword;
     }
+
     /**
+     * IExtensionCreateCallRequest
      * @return the outboundProxyHeaders
      */
     public Map<String,ArrayList<String>> getOutboundProxyHeaders() {
         return outboundProxyHeaders;
     }
+
     /**
+     * IExtensionCreateCallRequest
      * @param outboundProxyHeaders the outboundProxyHeaders to set
      */
     public void setOutboundProxyHeaders(Map<String,ArrayList<String>> outboundProxyHeaders) {
         this.outboundProxyHeaders = outboundProxyHeaders;
     }
+
+    /**
+     * IExtensionCreateCallRequest
+     * @return from address
+     */
     public String getFrom() {
         return from;
     }
 
+    /**
+     * IExtensionCreateCallRequest
+     * @return to address
+     */
     public String getTo() {
         return to;
     }
 
+    /**
+     * IExtensionCreateCallRequest
+     * @return accountId
+     */
     public Sid getAccountId() {
         return accountId;
     }
 
+    /**
+     * IExtensionCreateCallRequest
+     * @return boolean fromApi
+     */
     @Override
     public boolean isFromApi() {
         return isFromApi;
     }
 
+    /**
+     * IExtensionCreateCallRequest
+     * @return boolean is child call
+     */
     @Override
     public boolean isParentCallSidExists() {
         return parentCallSid != null;
     }
 
-    @Override
-    public String toString() {
-        return "From: "+from+", To: "+to+", Type: "+callType.name()+", AccountId: "+accountId+", isFromApi: "+isFromApi+", parentCallSidExists: "+isParentCallSidExists();
-    }
-
+    /**
+     * IExtensionCreateCallRequest
+     * @return the CreateCallType
+     */
     @Override
     public CreateCallType getType() {
         return callType;
     }
 
+    /**
+     * IExtensionCreateCallRequest
+     * @return the CreateCallType
+     */
     @Override
     public String getRequestURI() {
         return this.to;
     }
 
+    /**
+     * IExtensionRequest
+     * @return accountSid
+     */
     @Override
     public String getAccountSid() {
         return this.accountId.toString();
     }
 
+    /**
+     * IExtensionRequest
+     * @return is allowed
+     */
     @Override
     public boolean isAllowed() {
         return this.allowed;
     }
 
+    /**
+     * IExtensionRequest
+     * @param set allowed
+     */
     @Override
     public void setAllowed(boolean allowed) {
         this.allowed = allowed;
+    }
+
+    @Override
+    public String toString() {
+        return "From: "+from+", To: "+to+", Type: "+callType.name()+", AccountId: "+accountId+", isFromApi: "+isFromApi+", parentCallSidExists: "+isParentCallSidExists();
     }
 }

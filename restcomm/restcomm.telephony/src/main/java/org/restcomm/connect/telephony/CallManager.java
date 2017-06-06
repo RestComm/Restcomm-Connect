@@ -486,16 +486,8 @@ public final class CallManager extends UntypedActor {
                     logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "+ toClient);
                 }
 
-//                CallRequest callRequest = new CallRequest(fromUser, toUser, CreateCallType.CLIENT,
-//                        client.getAccountSid(), false, false);
                 ExtensionController ec = ExtensionController.getInstance();
-                //ExtensionRequest er = new ExtensionRequest();
                 IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, client.getAccountSid(), null,null, null, null);
-
-//                IExtensionCreateSmsSessionRequest ier = (CreateSmsSession)message;
-//                ier.setConfiguration(this.configuration);
-//                ec.executePreOutboundAction(ier, this.extensions);
-                //ExtensionResponse extensionResponse = ec.executePreOutboundAction(er, this.extensions);
                 ec.executePreOutboundAction(er, this.extensions);
 
                 if (er.isAllowed()) {
