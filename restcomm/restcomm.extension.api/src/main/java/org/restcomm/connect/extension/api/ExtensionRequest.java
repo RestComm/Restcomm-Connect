@@ -19,28 +19,25 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.restcomm.connect.extension.api;
-import org.apache.commons.configuration.Configuration;
 
-public class ExtensionRequest {
-    private Object payload;
-    private Configuration configuration;
-
+public class ExtensionRequest implements IExtensionRequest{
+    private boolean allowed = true;
+    private String accountSid;
     public ExtensionRequest() {}
 
-    public Object getObject() {
-        return payload;
+    @Override
+    public String getAccountSid() {
+        return this.accountSid;
     }
 
-    public void setObject(Object object) {
-        this.payload = object;
+    @Override
+    public boolean isAllowed() {
+        return this.allowed;
     }
 
-    public void setConfiguration(Configuration configuration) {
-        this.configuration = configuration;
-    }
-
-    public Configuration getConfiguration() {
-        return this.configuration;
+    @Override
+    public void setAllowed(boolean allowed) {
+        this.allowed = allowed;
     }
 
 }
