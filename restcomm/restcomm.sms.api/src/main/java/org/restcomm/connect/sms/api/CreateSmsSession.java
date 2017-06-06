@@ -19,17 +19,20 @@
  */
 package org.restcomm.connect.sms.api;
 
+import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
-
+import org.restcomm.connect.extension.api.IExtensionCreateSmsSessionRequest;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
-public final class CreateSmsSession {
+public final class CreateSmsSession implements IExtensionCreateSmsSessionRequest {
     private final String from;
     private final String to;
     private final String accountSid;
     private final boolean isFromApi;
+    private Configuration configuration;
+    private boolean allowed = true;
 
 
     //This will be used to create SmsSession from
@@ -52,10 +55,12 @@ public final class CreateSmsSession {
         return to;
     }
 
+    @Override
     public String getAccountSid() {
         return accountSid;
     }
 
+    //@Override
     public boolean isFromApi() {
         return isFromApi;
     }
@@ -63,5 +68,25 @@ public final class CreateSmsSession {
     @Override
     public String toString() {
         return "From: "+from+" , To: "+to+" , AccountSid: "+accountSid+" , isFromApi: "+isFromApi;
+    }
+
+    @Override
+    public boolean isAllowed() {
+        return this.allowed;
+    }
+
+    @Override
+    public void setAllowed(boolean allowed) {
+        this.allowed = allowed;
+    }
+
+    @Override
+    public void setConfiguration(Configuration configuration) {
+        this.configuration = configuration;
+    }
+
+    @Override
+    public Configuration getConfiguration() {
+        return this.configuration;
     }
 }
