@@ -109,6 +109,10 @@ docker exec -it RESTCOMM_Container_ID bash
 
 '''''
 
+[[troubleshooting]]
+Troubleshooting
++++++++++++++++
+
 *Excessive demand on memory when exposing a big range of ports.*
 
 Due to a known https://github.com/docker/docker/issues/11185[issue] on Docker, exposing a big range of ports produce a big need in RAM. On RestComm the issue arises when a big range of RTP ports is exposed. For a system with 4Gb of RAM a range of 50 ports is a good approach (e.g -p 65000-65050:65000-65050/udp). *We are expecting that this issue will be solved soon from Docker team. 
