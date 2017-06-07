@@ -680,7 +680,7 @@ public class CallLifecycleTest {
         }
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
-        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+        assertEquals("completed", jsonObj.get("status").getAsString().toLowerCase());
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         assertNotNull(metrics);
@@ -698,8 +698,74 @@ public class CallLifecycleTest {
         assertTrue(maxConcurrentOutgoingCalls==1);
     }
 
-    private String dialNumberRcml = "<Response><Dial><Number>+131313</Number></Dial></Response>";
+    private String dialInvalidClientRcml = "<Response><Dial><Client>invalidClient</Client></Dial></Response>";
+    @Test
+    public void testDialInvalidClient() throws ParseException, InterruptedException, MalformedURLException {
 
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialInvalidClientRcml)));
+
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        logger.info("Last response: "+response);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+
+        bobCall.listenForDisconnect();
+        assertTrue(bobCall.waitForDisconnect(5000));
+        bobCall.respondToDisconnect();
+
+        Thread.sleep(1000);
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+        logger.info("LiveCalls: "+liveCalls);
+        int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls==0);
+        assertTrue(liveCallsArraySize==0);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
+        assertTrue(requests.size() == 1);
+        //        requests.get(0).g;
+        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
+        List<String> params = Arrays.asList(requestBody.split("&"));
+        String callSid = "";
+        for (String param : params) {
+            if (param.contains("CallSid")) {
+                callSid = param.split("=")[1];
+            }
+        }
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+        JsonObject jsonObj = cdr.getAsJsonObject();
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+    }
+
+    private String dialNumberRcml = "<Response><Dial><Number>+131313</Number></Dial></Response>";
     @Test
     public void testDialNumberPstn() throws ParseException, InterruptedException, MalformedURLException {
 
