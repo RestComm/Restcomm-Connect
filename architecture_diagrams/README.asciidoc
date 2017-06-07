@@ -1,0 +1,8 @@
+= Restcomm Connect Architecture Diagrams
+
+WARNING: Some of the diagrams here are outdated and are pending an update. Once updated, they will also probably be
+converted to a different format, so please don't worry too much about getting the below app (Dia Diagram Editor) 
+working on your machine to view these diagrams.
+
+This directory contains some architecture diagrams for Restcomm Connect. The application you can use for opening them is
+found at http://dia-installer.de/. 
