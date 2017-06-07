@@ -26,11 +26,13 @@ import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.AuthToken;
 import org.restcomm.connect.commons.dao.Sid;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -73,6 +75,12 @@ public final class MybatisAccountsDao implements AccountsDao {
         } finally {
             session.close();
         }
+        Iterator<AuthToken> iterator = account.getAuthToken().iterator();
+        while(iterator.hasNext()){
+            AuthToken token = iterator.next();
+            System.out.println("Adding Account tokens token:"+token);
+            addAuthToken(new AuthToken(account.getSid(), token.getAuthToken(), token.getDescription()));
+        }
     }
 
     @Override
@@ -103,7 +111,6 @@ public final class MybatisAccountsDao implements AccountsDao {
         if (account == null) {
             account = getAccount(namespace + "getAccount", name);
         }
-
         return account;
     }
 
@@ -112,7 +119,10 @@ public final class MybatisAccountsDao implements AccountsDao {
         try {
             final Map<String, Object> result = session.selectOne(selector, parameters);
             if (result != null) {
-                return toAccount(result);
+                Account account =  toAccount(result);
+                List<AuthToken> tokenList = getAuthTokens(account.getSid());
+                account = account.setAuthToken(tokenList);
+                return account;
             } else {
                 return null;
             }
@@ -120,7 +130,23 @@ public final class MybatisAccountsDao implements AccountsDao {
             session.close();
         }
     }
-
+    @Override
+    public List<AuthToken> getAuthTokens(Sid sid) {
+        final SqlSession session = sessions.openSession();
+           try {
+               final List<Map<String, String>> results =  session.selectList(namespace + "getAccountTokens", sid.toString());
+               final List<AuthToken> authTokens = new ArrayList<AuthToken>();
+               if (results != null && !results.isEmpty()) {
+                   for (final Map<String, String> result : results) {
+                      authTokens.add(new AuthToken(new Sid(result.get("account_sid").toString()), result.get("auth_token").toString(), result.get("description")));
+                   }
+               }
+               return authTokens;
+           }
+           finally {
+               session.close();
+           }
+    }
     @Override
     public List<Account> getChildAccounts(final Sid parentSid) {
         final SqlSession session = sessions.openSession();
@@ -152,12 +178,52 @@ public final class MybatisAccountsDao implements AccountsDao {
             session.close();
         }
     }
+    @Override
+    public boolean deleteAuthToken(AuthToken authToken) {
+        //Cannot delete if it is the only token in database
+        if(getAuthTokens(authToken.getSid()).size()==1)
+            return false;
+        return deleteAuthToken(namespace + "deleteAuthToken", authToken);
+    }
+    private boolean deleteAuthToken(String selector, AuthToken authToken) {
+        final SqlSession session = sessions.openSession();
+        final Map<String, String> map = new HashMap<String, String>();
+        map.put("account_sid", authToken.getSid().toString());
+        map.put("auth_token", authToken.getAuthToken());
+        int deletedRowCount = 0;
+        try {
+           deletedRowCount =  session.delete(selector, map);
+           session.commit();
+        }
+        finally {
+            session.close();
+        }
+        return (deletedRowCount!=0);
+    }
+    @Override
+    public boolean addAuthToken(AuthToken authToken) {
+        return addAuthToken(namespace + "addAuthToken", authToken);
+    }
+    private boolean addAuthToken(String selector, AuthToken authToken) {
+        final SqlSession session = sessions.openSession();
+        final Map<String, String> map = new HashMap<String, String>();
+        map.put("account_sid", authToken.getSid().toString());
+        map.put("auth_token", authToken.getAuthToken());
+        int addedRowCount = 0;
+        try {
+           addedRowCount =  session.insert(selector, map);
+           session.commit();
+        }
+        finally {
+            session.close();
+        }
+        return (addedRowCount!=0);
+    }
 
     @Override
     public void updateAccount(final Account account) {
         updateAccount(namespace + "updateAccount", account);
     }
-
     @Override
     public List<String> getSubAccountSidsRecursive(Sid parentAccountSid) {
         List<String> parentList = new ArrayList<String>();
@@ -202,7 +268,6 @@ public final class MybatisAccountsDao implements AccountsDao {
         }
         return ancestorList;
     }
-
     @Override
     public List<String> getAccountLineage(Account account) throws AccountHierarchyDepthCrossed {
         if (account == null)
@@ -234,6 +299,12 @@ public final class MybatisAccountsDao implements AccountsDao {
         } finally {
             session.close();
         }
+        Iterator<AuthToken> iterator = account.getAuthToken().iterator();
+        while(iterator.hasNext()){
+            AuthToken token = iterator.next();
+            System.out.println("Updating Account tokens token:"+token);
+            addAuthToken(new AuthToken(account.getSid(), token.getAuthToken(), token.getDescription()));
+        }
     }
 
     private Account toAccount(final Map<String, Object> map) {
@@ -245,13 +316,12 @@ public final class MybatisAccountsDao implements AccountsDao {
         final Sid parentSid = readSid(map.get("parent_sid"));
         final Account.Type type = readAccountType(map.get("type"));
         final Account.Status status = readAccountStatus(map.get("status"));
-        final String authToken = readString(map.get("auth_token"));
+       // final List<String> authToken = new ArrayList<>();//readString(map.get("auth_token"));
         final String role = readString(map.get("role"));
         final URI uri = readUri(map.get("uri"));
-        return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, parentSid, type, status, authToken,
+        return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, parentSid, type, status, null,
                 role, uri);
     }
-
     private Map<String, Object> toMap(final Account account) {
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("sid", writeSid(account.getSid()));
@@ -262,7 +332,7 @@ public final class MybatisAccountsDao implements AccountsDao {
         map.put("parent_sid", writeSid(account.getParentSid()));
         map.put("type", writeAccountType(account.getType()));
         map.put("status", writeAccountStatus(account.getStatus()));
-        map.put("auth_token", account.getAuthToken());
+        //map.put("auth_token", account.getAuthToken().get(0));
         map.put("role", account.getRole());
         map.put("uri", writeUri(account.getUri()));
         return map;

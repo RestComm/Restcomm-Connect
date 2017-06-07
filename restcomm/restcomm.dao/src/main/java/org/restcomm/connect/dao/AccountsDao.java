@@ -24,6 +24,7 @@ import java.util.List;
 import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.AuthToken;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -32,6 +33,7 @@ public interface AccountsDao {
     void addAccount(Account account);
 
     Account getAccount(Sid sid);
+    List<AuthToken> getAuthTokens(Sid sid);
 
     Account getAccount(String name);
 
@@ -106,4 +108,7 @@ public interface AccountsDao {
      * @throws AccountHierarchyDepthCrossed
      */
     List<String> getAccountLineage(Account account) throws AccountHierarchyDepthCrossed;
+
+    boolean deleteAuthToken(AuthToken authToken);
+    boolean addAuthToken(AuthToken authToken);
 }

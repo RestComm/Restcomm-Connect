@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.AuthToken;
 import org.restcomm.connect.commons.dao.Sid;
 
 public class AccountsDaoTest extends DaoTest {
@@ -27,7 +28,6 @@ public class AccountsDaoTest extends DaoTest {
         sandboxRoot = createTempDir("accountsTest");
         String mybatisFilesPath = getClass().getResource("/accountsDao").getFile();
         setupSandbox(mybatisFilesPath, sandboxRoot);
-
         String mybatisXmlPath = sandboxRoot.getPath() + "/mybatis_updated.xml";
         final InputStream data = new FileInputStream(mybatisXmlPath);
         final SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
@@ -47,6 +47,25 @@ public class AccountsDaoTest extends DaoTest {
         AccountsDao dao = manager.getAccountsDao();
         Account account = dao.getAccount(new Sid("AC00000000000000000000000000000000"));
         Assert.assertNotNull("Account not found",account);
+    }
+    @Test
+    public void readAccountAuthTokens() {
+        AccountsDao dao = manager.getAccountsDao();
+        List<AuthToken> accountTokens = dao.getAuthTokens(new Sid("AC00000000000000000000000000000000"));
+        Assert.assertTrue(accountTokens.size()>0);
+    }
+    @Test
+    public void deleteAccountAuthToken() {
+        AccountsDao dao = manager.getAccountsDao();
+        boolean result = dao.deleteAuthToken(new AuthToken(new Sid("AC00000000000000000000000000000000"), "88f8c12cc7b8f8423e5c38b035249166", "normal"));
+        Assert.assertTrue(result);
+    }
+    
+    @Test
+    public void addAccountAuthToken() {
+        AccountsDao dao = manager.getAccountsDao();
+        boolean result = dao.addAuthToken(new AuthToken(new Sid("AC00000000000000000000000000000000"), "99f8c12cc7b8f8423e5c38b035249166", "normal"));
+        Assert.assertTrue(result);
     }
 
     @Test
@@ -104,5 +123,6 @@ public class AccountsDaoTest extends DaoTest {
         // try to retrieve the lineage for an account that is in the forth level
         List<String> ancestorSids = dao.getAccountLineage(new Sid("AC11100000000000000000000000000000"));
     }
+    
 
 }

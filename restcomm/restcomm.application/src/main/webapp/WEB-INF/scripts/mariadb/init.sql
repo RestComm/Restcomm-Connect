@@ -17,10 +17,18 @@ friendly_name VARCHAR(64) NOT NULL,
 parent_sid VARCHAR(34),
 type VARCHAR(8) NOT NULL,
 status VARCHAR(16) NOT NULL,
-auth_token VARCHAR(32) NOT NULL,
 role VARCHAR(64) NOT NULL,
 uri MEDIUMTEXT NOT NULL
 );
+
+
+CREATE TABLE restcomm_accounts_auth_tokens (
+account_sid VARCHAR(34) NOT NULL,
+auth_token VARCHAR(32) NOT NULL,
+description VARCHAR(32),
+PRIMARY KEY (account_sid, auth_token)
+);
+
 
 CREATE TABLE restcomm_announcements (
 sid VARCHAR(34) NOT NULL PRIMARY KEY,
@@ -397,7 +405,6 @@ Date("2012-04-24"),
 null,
 "Full",
 "uninitialized",
-"77f8c12cc7b8f8423e5c38b035249166",
 "Administrator",
 "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf");
 
@@ -430,6 +437,7 @@ CREATE INDEX idx_cdr_conference_status ON restcomm_conference_detail_records (st
 
 DELIMITER //
 DROP PROCEDURE IF EXISTS addConferenceDetailRecord;
+
 CREATE PROCEDURE addConferenceDetailRecord(	IN in_sid VARCHAR(34),
 									IN in_date_created DATETIME,
 									IN in_date_updated DATETIME,

@@ -21,6 +21,7 @@ package org.restcomm.connect.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
@@ -34,6 +35,7 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.AccountList;
+import org.restcomm.connect.dao.entities.AuthToken;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.RestCommResponse;
@@ -133,7 +135,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
         PasswordValidator validator = PasswordValidatorFactory.createDefault();
         if (!validator.isStrongEnough(password))
             throw new PasswordTooWeak();
-        final String authToken = new Md5Hash(password).toString();
+        final List<AuthToken> authToken =new ArrayList<>();
+        authToken.add(new AuthToken(sid, new Md5Hash(password).toString(), "default") );
         final String role = data.getFirst("Role");
         final StringBuilder buffer = new StringBuilder();
         buffer.append("/").append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
@@ -446,7 +449,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 if (!validator.isStrongEnough(password))
                     throw new PasswordTooWeak();
                 final String hash = new Md5Hash(data.getFirst("Password")).toString();
-                result = result.setAuthToken(hash);
+                final List<AuthToken> authToken =new ArrayList<>();
+                authToken.add(new AuthToken(account.getSid(), hash, "default"));
+                result = result.setAuthToken(authToken);
             }
             if (newStatus != null) {
                 result = result.setStatus(newStatus);
@@ -566,7 +571,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             notifications.add(rcmlServerApi.buildAccountClosingNotification(closedAccount));
             Account notifier = userIdentityContext.getEffectiveAccount();
             try {
-                rcmlServerApi.transmitNotifications(notifications, notifier.getSid().toString(), notifier.getAuthToken());
+                rcmlServerApi.transmitNotifications(notifications, notifier.getSid().toString(), notifier.getAuthToken().get(0).getAuthToken());
             } catch (RcmlserverNotifyError e) {
                 logger.error(e.getMessage(),e); // just report
             }
@@ -620,5 +625,46 @@ public class AccountsEndpoint extends SecuredEndpoint {
             throw new NullPointerException("Password can not be null.");
         }
     }
+    protected Response getAuthTokens(MediaType responseType) {
+        checkPermission("RestComm:Read:Accounts");
+        final Sid sid = userIdentityContext.getEffectiveAccount().getSid();
+        List<AuthToken> authTokens = accountsDao.getAuthTokens(sid);
+        if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(authTokens), APPLICATION_JSON).build();
+            } else if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(authTokens);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else {
+                return null;
+            }
+    }
 
+    protected Response addAuthAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
+        //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
+        boolean result;
+        checkPermission("RestComm:Read:Accounts");
+        final Sid sid = userIdentityContext.getEffectiveAccount().getSid();
+        AuthToken authToken = new AuthToken(sid, data.getFirst("token"), data.getFirst("description"));
+        result = accountsDao.addAuthToken(authToken);
+            if(!result){
+                return status(Status.NOT_FOUND).build();
+            }
+            else{
+                return status(Status.OK).build();
+            }
+    }
+    protected Response deleteAuthToken(final MultivaluedMap<String, String> data, final MediaType responseType) {
+        //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
+        boolean result;
+        checkPermission("RestComm:Read:Accounts");
+        final Sid sid = userIdentityContext.getEffectiveAccount().getSid();
+        AuthToken authToken = new AuthToken(sid, data.getFirst("token"),"");
+        result = accountsDao.deleteAuthToken(authToken);
+        if(!result){
+            return status(Status.NOT_FOUND).build();
+        }
+        else{
+            return status(Status.OK).build();
+         }
+    }
 }

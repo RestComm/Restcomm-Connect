@@ -20,6 +20,8 @@
 package org.restcomm.connect.dao.entities;
 
 import java.net.URI;
+import java.util.Iterator;
+import java.util.List;
 
 import org.joda.time.DateTime;
 
@@ -41,12 +43,12 @@ public final class Account {
     private final Sid parentSid;
     private final Type type;
     private final Status status;
-    private final String authToken;
+    private final List<AuthToken> authToken;
     private final String role;
     private final URI uri;
 
     public Account(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String emailAddress,
-                   final String friendlyName, final Sid parentSid, final Type type, final Status status, final String authToken,
+                   final String friendlyName, final Sid parentSid, final Type type, final Status status, final List<AuthToken> authToken,
                    final String role, final URI uri) {
         super();
         this.sid = sid;
@@ -98,7 +100,7 @@ public final class Account {
         return status;
     }
 
-    public String getAuthToken() {
+    public List<AuthToken> getAuthToken() {
         return authToken;
     }
 
@@ -130,7 +132,7 @@ public final class Account {
                 role, uri);
     }
 
-    public Account setAuthToken(final String authToken) {
+    public Account setAuthToken(final List<AuthToken> authToken) {
         return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
                 role, uri);
     }
@@ -197,7 +199,7 @@ public final class Account {
         private Sid parentSid;
         private Type type;
         private Status status;
-        private String authToken;
+        private List<AuthToken> authToken;
         private String role;
         private URI uri;
 
@@ -234,7 +236,7 @@ public final class Account {
             this.status = status;
         }
 
-        public void setAuthToken(final String authToken) {
+        public void setAuthToken(final List<AuthToken> authToken) {
             this.authToken = authToken;
         }
 
@@ -245,5 +247,18 @@ public final class Account {
         public void setUri(final URI uri) {
             this.uri = uri;
         }
+    }
+    public boolean containsAuthToken(String token){
+        System.out.println("token passed for authentication:" + token);
+        System.out.println("getAuthToken class name:" + getAuthToken().getClass().getName());
+        System.out.println("getAuthToken(0)" + getAuthToken().get(0).getAuthToken().toString());
+        System.out.println("getAuthToken(0) class name:" + getAuthToken().get(0).getClass().getName());
+        Iterator<AuthToken> iterator = getAuthToken().iterator();
+        while(iterator.hasNext()){
+            AuthToken t = iterator.next();
+            if(t.getAuthToken().equals(token))
+                return true;
+        }
+        return false;
     }
 }

@@ -85,4 +85,22 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
             final MultivaluedMap<String, String> data) {
         return updateAccount(accountSid, data, APPLICATION_XML_TYPE);
     }
+
+    @Path("/addAccountAuthToken")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @POST
+    public Response addAccountAuthToken(final MultivaluedMap<String, String> data) {
+        return addAuthAccount(data, APPLICATION_XML_TYPE);
+    }
+    @Path("/deleteAccountAuthToken")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @POST
+    public Response deleteAccountAuthToken(final MultivaluedMap<String, String> data) {
+        return deleteAuthToken(data, APPLICATION_XML_TYPE);
+    }
+    @Path("/getAuthTokens")
+    @GET
+    public Response getAccountAuthToken() {
+        return getAuthTokens(APPLICATION_XML_TYPE);
+    }
 }

@@ -28,9 +28,11 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.AuthToken;
 
 import javax.ws.rs.core.MediaType;
 import java.lang.reflect.Type;
+import java.util.List;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
@@ -82,7 +84,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         writeRoleInfo(account.getRole(), object);
         writeDateCreated(account.getDateCreated(), object);
         writeDateUpdated(account.getDateUpdated(), object);
-        writeAuthToken(account, object);
+        writeAuthToken(account.getAuthToken(), object);
         writeUri(account, object);
         writeSubResourceUris(account, object);
         return object;
@@ -108,12 +110,12 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
 
     private void writeAuthToken(final Account account, final HierarchicalStreamWriter writer) {
         writer.startNode("AuthToken");
-        writer.setValue(account.getAuthToken());
+        writer.setValue(account.getAuthToken().get(0).getAuthToken());
         writer.endNode();
     }
 
-    private void writeAuthToken(final Account account, final JsonObject object) {
-        object.addProperty("auth_token", account.getAuthToken());
+    private void writeAuthToken(final List<AuthToken> authTokens, final JsonObject object) {
+        object.addProperty("auth_token", authTokens.get(0).getAuthToken());
     }
 
     private void writeAvailablePhoneNumbers(final Account account, final HierarchicalStreamWriter writer) {

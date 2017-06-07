@@ -27,6 +27,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.AuthToken;
 
 /**
  * Elementary mocking for AccountsDao to be used for endpoint unit testing mostly.
@@ -99,5 +100,22 @@ public class AccountsDaoMock implements AccountsDao {
     @Override
     public List<String> getAccountLineage(Account account) throws AccountHierarchyDepthCrossed {
         throw new NotImplementedException();
+    }
+
+	@Override
+	public List<AuthToken> getAuthTokens(Sid sid) {
+		throw new NotImplementedException();
+	}
+
+    @Override
+    public boolean deleteAuthToken(AuthToken authToken) {
+        // TODO Auto-generated method stub
+        return true;
+    }
+
+    @Override
+    public boolean addAuthToken(AuthToken authToken) {
+        // TODO Auto-generated method stub
+        return true;
     }
 }

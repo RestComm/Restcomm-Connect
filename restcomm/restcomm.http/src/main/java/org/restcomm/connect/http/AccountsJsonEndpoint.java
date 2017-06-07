@@ -32,7 +32,6 @@ import javax.ws.rs.core.Response;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
@@ -85,6 +84,21 @@ public final class AccountsJsonEndpoint extends AccountsEndpoint {
                                            final MultivaluedMap<String, String> data) {
         return updateAccount(accountSid, data, APPLICATION_JSON_TYPE);
     }
-
-
+    @Path("/addAccountAuthToken")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @POST
+    public Response addAccountAuthToken(final MultivaluedMap<String, String> data) {
+        return addAuthAccount(data, APPLICATION_JSON_TYPE);
+    }
+    @Path("/deleteAccountAuthToken")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @POST
+    public Response deleteAccountAuthToken(final MultivaluedMap<String, String> data) {
+        return deleteAuthToken(data, APPLICATION_JSON_TYPE);
+    }
+    @Path("/getAuthTokens")
+    @GET
+    public Response getAccountAuthToken() {
+        return getAuthTokens(APPLICATION_JSON_TYPE);
+    }
 }
