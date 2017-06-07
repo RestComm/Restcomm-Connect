@@ -103,7 +103,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
                String phoneRegexPattern = null;
                try {
                    if (logger.isInfoEnabled()) {
-                       final String msg = String.format("Found %d Regex IncomingPhone numbers. Will try to match a REGEX for incoming phone number for phoneNumber : " + listPhones.size(), inboundPhoneNumber);
+                       final String msg = String.format("Found %d Regex IncomingPhone numbers. Will try to match a REGEX for incoming phone number for phoneNumber : %s", listPhones.size(), inboundPhoneNumber);
                        logger.info(msg);
                    }
                    for (IncomingPhoneNumber listPhone : listPhones){
