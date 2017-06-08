@@ -249,10 +249,6 @@ public final class Account {
         }
     }
     public boolean containsAuthToken(String token){
-        System.out.println("token passed for authentication:" + token);
-        System.out.println("getAuthToken class name:" + getAuthToken().getClass().getName());
-        System.out.println("getAuthToken(0)" + getAuthToken().get(0).getAuthToken().toString());
-        System.out.println("getAuthToken(0) class name:" + getAuthToken().get(0).getClass().getName());
         Iterator<AuthToken> iterator = getAuthToken().iterator();
         while(iterator.hasNext()){
             AuthToken t = iterator.next();

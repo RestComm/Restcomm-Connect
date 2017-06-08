@@ -78,7 +78,6 @@ public final class MybatisAccountsDao implements AccountsDao {
         Iterator<AuthToken> iterator = account.getAuthToken().iterator();
         while(iterator.hasNext()){
             AuthToken token = iterator.next();
-            System.out.println("Adding Account tokens token:"+token);
             addAuthToken(new AuthToken(account.getSid(), token.getAuthToken(), token.getDescription()));
         }
     }
@@ -302,7 +301,6 @@ public final class MybatisAccountsDao implements AccountsDao {
         Iterator<AuthToken> iterator = account.getAuthToken().iterator();
         while(iterator.hasNext()){
             AuthToken token = iterator.next();
-            System.out.println("Updating Account tokens token:"+token);
             addAuthToken(new AuthToken(account.getSid(), token.getAuthToken(), token.getDescription()));
         }
     }
