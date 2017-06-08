@@ -31,8 +31,10 @@ public class IncomingPhoneNumberFilter {
     private final String accountSid;
     private final String friendlyName;
     private final String phoneNumber;
+    private final Integer limit;
+    private final Integer offset;
 
-    public IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber) {
+    public IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber,Integer limit,Integer offset) {
         this.accountSid = accountSid;
         this.friendlyName = friendlyName;
         // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
@@ -43,6 +45,8 @@ public class IncomingPhoneNumberFilter {
         }
 
         this.phoneNumber = phoneNumber;
+        this.limit = limit;
+        this.offset = offset;
     }
 
     public String getAccountSid() {
@@ -62,4 +66,19 @@ public class IncomingPhoneNumberFilter {
     public String getPhoneNumber() {
         return phoneNumber;
     }
+
+    /**
+     * @return the limit
+     */
+    public Integer getLimit() {
+        return limit;
+    }
+
+    /**
+     * @return the offset
+     */
+    public Integer getOffset() {
+        return offset;
+    }
+
 }
