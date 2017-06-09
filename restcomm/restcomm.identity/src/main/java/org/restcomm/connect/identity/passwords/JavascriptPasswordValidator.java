@@ -40,10 +40,11 @@ public class JavascriptPasswordValidator implements PasswordValidator {
             engine.put("password", password);
             engine.eval(js);
             Double result = (Double) engine.get("result");
+            //throw new ScriptException("manally thrown");
             return result.intValue();
         } catch (ScriptException e) {
             logger.error("Javascript-based password validation mechanism failed. Make sure a proper JAVA implementation is used.", e);
-            throw new RuntimeException(e);
+            return null;
         }
     }
 }
