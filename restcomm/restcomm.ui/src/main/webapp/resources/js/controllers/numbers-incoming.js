@@ -59,7 +59,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $uibModal, $dialog,
   $scope.entryLimit = 10; //max rows for data table
   $scope.noOfPages = 1; //max rows for data table
   $scope.reverse = false;
-  $scope.predicate = "date_created";
+  $scope.predicate = "phone_number";
 
   $scope.setEntryLimit = function(limit) {
     $scope.entryLimit = limit;
@@ -77,6 +77,11 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $uibModal, $dialog,
       $scope.numbersList = data.incomingPhoneNumbers;
       $scope.totalNumbers = data.total;
       $scope.noOfPages = data.num_pages;
+      $scope.start = parseInt(data.start) + 1;
+      $scope.end = parseInt(data.end)
+      if($scope.end!=$scope.totalNumbers){
+    	  $scope.end++;
+      }
     });
   }
  var createSearchParams = function() {
