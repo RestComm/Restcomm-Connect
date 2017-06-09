@@ -1,5 +1,7 @@
 package org.restcomm.connect.identity.passwords;
 
+import org.apache.log4j.Logger;
+
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -9,6 +11,7 @@ import javax.script.ScriptException;
  */
 public class JavascriptPasswordValidator implements PasswordValidator {
 
+    protected static Logger logger = Logger.getLogger(JavascriptPasswordValidator.class);
 
     @Override
     public boolean isStrongEnough(String password) {
@@ -39,7 +42,8 @@ public class JavascriptPasswordValidator implements PasswordValidator {
             Double result = (Double) engine.get("result");
             return result.intValue();
         } catch (ScriptException e) {
-            return null;
+            logger.error("Javascript-based password validation mechanism failed. Make sure a proper JAVA implementation is used.", e);
+            throw new RuntimeException(e);
         }
     }
 }
