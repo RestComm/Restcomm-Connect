@@ -65,7 +65,6 @@ Install and Run Restcomm Docker
 
 * Fill out the STATIC_ADDRESS variable as shown below
 * Start Restcomm as shown below:
-* This will start Restcomm in secure mode (https)
 
 [source,lang:default,decode:true]
 ----
