@@ -22,6 +22,7 @@ package org.restcomm.connect.http;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -86,19 +87,19 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
         return updateAccount(accountSid, data, APPLICATION_XML_TYPE);
     }
 
-    @Path("/addAccountAuthToken")
+    @Path("/tokens")
     @Consumes(APPLICATION_FORM_URLENCODED)
     @POST
     public Response addAccountAuthToken(final MultivaluedMap<String, String> data) {
         return addAuthAccount(data, APPLICATION_XML_TYPE);
     }
-    @Path("/deleteAccountAuthToken")
+    @Path("/tokens")
     @Consumes(APPLICATION_FORM_URLENCODED)
-    @POST
+    @DELETE
     public Response deleteAccountAuthToken(final MultivaluedMap<String, String> data) {
         return deleteAuthToken(data, APPLICATION_XML_TYPE);
     }
-    @Path("/getAuthTokens")
+    @Path("/tokens")
     @GET
     public Response getAccountAuthToken() {
         return getAuthTokens(APPLICATION_XML_TYPE);
