@@ -1,4 +1,7 @@
-This is a quick user guide for Restcomm - Docker. You will learn how to install and start using Restcomm in a docker container.
+= Quick Start Guide: RestComm on Docker
+:toc:
+
+This is a quick user guide for running Restcomm on Docker. You will learn how to install and start using Restcomm in a docker container.
 
 [[prerequisites]]
 Prerequisites
@@ -13,6 +16,9 @@ Prerequisites
 [[supported-tags]]
 Supported Tags
 ^^^^^^^^^^^^^^
+
+There are various versions of the Restcomm docker images available. Below you will find a description of each one.
+If you do not know which one to use, `stable` is the safest choice.
 
 * Tag "latest". Points to the latest binary from the Continuous Delivery server. Uses the https://github.com/RestComm/Restcomm-Connect[master] development branch : restcomm/restcomm:latest. *We don't advice to use "latest" tag for production as it is constantly changing, and as well new features and fixes may not be documented.
 * Tag "stable". Points to the latest/current GA release (current: https://github.com/RestComm/Restcomm-Connect/releases/tag/7.6.0.879/[7.6.0.GA]) use tag :  restcomm/restcomm:stable
