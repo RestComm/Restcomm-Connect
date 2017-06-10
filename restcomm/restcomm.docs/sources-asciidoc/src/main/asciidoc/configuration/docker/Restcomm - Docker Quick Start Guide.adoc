@@ -12,6 +12,7 @@ Prerequisites
 * Get a free API KEY VoiceRss account as explained  http://www.voicerss.org/[HERE]
 * Ensure firewall is correctly configured (*SELinux can be a problem on some systems*)
 * *SELinux has been known to cause "permission denied" issues on some Linux system, you might want to disable or set SELinux to permissive mode.* (some basic commands : getenforce, will show the type of permission you currently have )
+* The IP address you can reach docker on (this differs between Linux / MacOS, so please see relevant section below).
 
 [[supported-tags]]
 Supported Tags
@@ -31,11 +32,37 @@ To pull the "**latest**" image from the RestComm docker hub repository please us
 docker pull restcomm/restcomm:latest
 ----
 
+[[finding-the-docker-ip-address]]
+Finding the Docker IP address
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+*Linux*
+
+* Get the Docker IP address by running ifconfig command
+* Look for the line that looks similar to:
+`docker0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500 inet 172.17.42.1`
+* This is the `DOCKER_IP_ADDRESS` you will need below.
+
+*macOS*
+
+Contrary to the way the Docker networking works on Linux, there is https://docs.docker.com/docker-for-mac/networking/#there-is-no-docker0-bridge-on-macos[no docker bridge on macOS],
+meaning you *cannot* find a `DOCKER_IP_ADDRESS`. Rather, docker maps all forwarded ports to `localhost`.
+
+
+In turn, this means you should be able to use either `localhost`, or your `eth0` IP
+address (even though this is not a great idea, as it may change quite often), or
+even, following the Docker docs, attaching an unused IP to the `lo0` interface on the
+Mac; for example: `sudo ifconfig lo0 alias 10.200.10.1/24`.
+
+tl;dr
+
+Use `127.0.0.1` or your `eth0` IP address as the `DOCKER_IP_ADDRESS`.
+
+
 [[install-and-run-restcomm-docker]]
 Install and Run Restcomm Docker
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Get your "ETHERNET_IP" by running ifconfig
 * Fill out the STATIC_ADDRESS variable as shown below
 * Start Restcomm as shown below:
 * This will start Restcomm in secure mode (https)
@@ -55,9 +82,6 @@ Text-to-Speech with VoiceRSS
 [[quick-test]]
 Quick test
 ^^^^^^^^^^
-
-* Get the Docker IP address by running ifconfig command
-* docker0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500 inet 172.17.42.1
 
 1.  Go to *https://DOCKER_IP_ADDRESS/olympus*
 2.  Press "Sign in" (username alice or bob and password 1234)
