@@ -19,6 +19,7 @@ import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.loader.ObjectFactory;
 import org.restcomm.connect.commons.loader.ObjectInstantiationException;
+import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.InstanceId;
 import org.restcomm.connect.dao.entities.Organization;
@@ -117,7 +118,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         final String address = configuration.getString("media-server.address");
         final int port = configuration.getInt("media-server.port");
         final int timeout = configuration.getInt("media-server.timeout", 5);
-        return new MediaServerInfo(name, InetAddress.getByName(address), port, timeout);
+        return new MediaServerInfo(name, DNSUtils.getByName(address), port, timeout);
     }
 
     private Properties getDialogicXmsProperties(final Configuration configuration) {

@@ -49,6 +49,7 @@ import org.restcomm.connect.commons.fsm.TransitionRollbackException;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -593,8 +594,8 @@ public final class Call extends UntypedActor {
             final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
             final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
 
-            InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
-            InetAddress inetAddress = InetAddress.getByName(realIP);
+            InetAddress contactInetAddress = DNSUtils.getByName(((SipURI) contactAddr.getURI()).getHost());
+            InetAddress inetAddress = DNSUtils.getByName(realIP);
 
             int remotePort = message.getRemotePort();
             int contactPort = ((SipURI) contactAddr.getURI()).getPort();
@@ -1454,7 +1455,7 @@ public final class Call extends UntypedActor {
 //                  session.setAttribute("realInetUri", factory.createSipURI(null, realInetUri.getHost()+":"+realInetUri.getPort()));
                         session.setAttribute("realInetUri", realInetUri);
                     }
-                    final InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
+                    final InetAddress ackRURI = DNSUtils.getByName(((SipURI) ack.getRequestURI()).getHost());
                     final int ackRURIPort = ((SipURI) ack.getRequestURI()).getPort();
 
                     if (realInetUri != null
@@ -2053,7 +2054,7 @@ public final class Call extends UntypedActor {
                             if ((SipURI) session.getAttribute("realInetUri") == null) {
                                 session.setAttribute("realInetUri", realInetUri);
                             }
-                            final InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
+                            final InetAddress ackRURI = DNSUtils.getByName(((SipURI) ack.getRequestURI()).getHost());
                             final int ackRURIPort = ((SipURI) ack.getRequestURI()).getPort();
 
                             if (realInetUri != null
@@ -2153,7 +2154,7 @@ public final class Call extends UntypedActor {
                 bye.addHeader("Reason",hangup.getMessage());
             }
             SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
-            InetAddress byeRURI = InetAddress.getByName(((SipURI) bye.getRequestURI()).getHost());
+            InetAddress byeRURI = DNSUtils.getByName(((SipURI) bye.getRequestURI()).getHost());
 
             // INVITE sip:+12055305520@107.21.247.251 SIP/2.0
             // Record-Route: <sip:10.154.28.245:5065;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>

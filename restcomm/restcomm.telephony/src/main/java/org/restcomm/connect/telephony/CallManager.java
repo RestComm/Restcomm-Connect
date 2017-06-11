@@ -64,6 +64,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
@@ -465,7 +466,7 @@ public final class CallManager extends UntypedActor {
         final String toUser = CallControlHelper.getUserSipId(request, useTo);
         final String ruri = ((SipURI) request.getRequestURI()).getHost();
         final String toHost = ((SipURI) request.getTo().getURI()).getHost();
-        final String toHostIpAddress = InetAddress.getByName(toHost).getHostAddress();
+        final String toHostIpAddress = DNSUtils.getByName(toHost).getHostAddress();
         final String toPort = String.valueOf(((SipURI) request.getTo().getURI()).getPort()).equalsIgnoreCase("-1") ? "5060"
                 : String.valueOf(((SipURI) request.getTo().getURI()).getHost());
         final String transport = ((SipURI) request.getTo().getURI()).getTransportParam() == null ? "udp" : ((SipURI) request
@@ -623,7 +624,7 @@ public final class CallManager extends UntypedActor {
                 "outboudproxy-user-at-from-header", true);
 
         final String fromHost = ((SipURI) request.getFrom().getURI()).getHost();
-        final String fromHostIpAddress = InetAddress.getByName(fromHost).getHostAddress();
+        final String fromHostIpAddress = DNSUtils.getByName(fromHost).getHostAddress();
 //                    final String fromPort = String.valueOf(((SipURI) request.getFrom().getURI()).getPort()).equalsIgnoreCase("-1") ? "5060"
 //                            : String.valueOf(((SipURI) request.getFrom().getURI()).getHost());
 
@@ -769,7 +770,7 @@ public final class CallManager extends UntypedActor {
             SipURI fromInetUri = (SipURI) request.getSession().getAttribute(B2BUAHelper.FROM_INET_URI);
             InetAddress infoRURI = null;
             try {
-                infoRURI = InetAddress.getByName(((SipURI) clonedInfo.getRequestURI()).getHost());
+                infoRURI = DNSUtils.getByName(((SipURI) clonedInfo.getRequestURI()).getHost());
             } catch (UnknownHostException e) {
             }
             if (patchForNatB2BUASessions) {
@@ -1281,7 +1282,7 @@ public final class CallManager extends UntypedActor {
             if (patchForNatB2BUASessions) {
                 InetAddress ackRURI = null;
                 try {
-                    ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
+                    ackRURI = DNSUtils.getByName(((SipURI) ack.getRequestURI()).getHost());
                 } catch (UnknownHostException e) {
                 }
                 boolean isBehindLB = false;
@@ -1911,7 +1912,7 @@ public final class CallManager extends UntypedActor {
                 SipURI fromInetUri = (SipURI) request.getSession().getAttribute(B2BUAHelper.FROM_INET_URI);
                 InetAddress byeRURI = null;
                 try {
-                    byeRURI = InetAddress.getByName(((SipURI) clonedBye.getRequestURI()).getHost());
+                    byeRURI = DNSUtils.getByName(((SipURI) clonedBye.getRequestURI()).getHost());
                 } catch (UnknownHostException e) {
                 }
                 boolean isBehindLB = false;
