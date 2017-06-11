@@ -52,7 +52,6 @@ import org.restcomm.connect.mrb.api.MediaGatewayForConference;
 import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
 import org.restcomm.connect.telephony.api.ConferenceStateChanged;
 
-import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.HashMap;
