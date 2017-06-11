@@ -46,6 +46,7 @@ import org.joda.time.DateTime;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RegistrationsDao;
@@ -387,7 +388,7 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
          if (connection != null) {
              if (Connection.IN.equals(connection.getNetworkType())) {
                  if (Connection.IP4.equals(connection.getAddressType())) {
-                     final InetAddress address = InetAddress.getByName(connection.getAddress());
+                     final InetAddress address = DNSUtils.getByName(connection.getAddress());
                      if (address.isSiteLocalAddress() || address.isAnyLocalAddress() || address.isLoopbackAddress()) {
                          final String ip = address.getHostAddress();
                          connection.setAddress(externalIp);

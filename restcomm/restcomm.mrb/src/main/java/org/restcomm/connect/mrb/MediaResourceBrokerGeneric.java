@@ -34,6 +34,7 @@ import org.joda.time.DateTime;
 import org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.loader.ObjectFactory;
+import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -127,7 +128,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
      * @throws UnknownHostException
      */
     protected void bindMGCPStack(String ip, int port) throws UnknownHostException {
-        mgcpStack = new JainMgcpStackImpl(InetAddress.getByName(ip), port);
+        mgcpStack = new JainMgcpStackImpl(DNSUtils.getByName(ip), port);
         try {
             mgcpProvider = mgcpStack.createProvider();
         } catch (final CreateProviderException exception) {
@@ -169,13 +170,13 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
             logger.info("turnOnMediaGateway local ip: "+localMediaServerEntity.getLocalIpAddress()+" local port: "+localMediaServerEntity.getLocalPort()
             +" remote ip: "+mediaServerEntity.getRemoteIpAddress()+" remote port: "+mediaServerEntity.getRemotePort());
 
-        builder.setLocalIP(InetAddress.getByName(localMediaServerEntity.getLocalIpAddress()));
+        builder.setLocalIP(DNSUtils.getByName(localMediaServerEntity.getLocalIpAddress()));
         builder.setLocalPort(localMediaServerEntity.getLocalPort());
-        builder.setRemoteIP(InetAddress.getByName(mediaServerEntity.getRemoteIpAddress()));
+        builder.setRemoteIP(DNSUtils.getByName(mediaServerEntity.getRemoteIpAddress()));
         builder.setRemotePort(mediaServerEntity.getRemotePort());
 
         if (mediaServerEntity.getExternalAddress() != null) {
-            builder.setExternalIP(InetAddress.getByName(mediaServerEntity.getExternalAddress()));
+            builder.setExternalIP(DNSUtils.getByName(mediaServerEntity.getExternalAddress()));
             builder.setUseNat(true);
         } else {
             builder.setUseNat(false);

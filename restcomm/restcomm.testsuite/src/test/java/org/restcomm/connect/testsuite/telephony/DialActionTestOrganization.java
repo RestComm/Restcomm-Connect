@@ -121,7 +121,7 @@ public class DialActionTestOrganization {
     private SipPhone georgePhone;
     private String georgeContact = "sip:+131313@testdomain2.restcomm.com";
 
-    private String dialClientWithActionUrl = "sip:+12223334455@127.0.0.1:5080"; // Application: dial-client-entry_wActionUrl.xml
+    private String dialClientWithActionUrl = "sip:+12223334466@testdomain2.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
