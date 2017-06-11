@@ -64,7 +64,7 @@ public interface RestcommExtensionGeneric {
      * and either block or allow or modify the session after Restcomm process it
      * @return ExtensionResponse see ExtensionResponse
      */
-    ExtensionResponse postOutboundAction(CallRequest callRequest);
+    ExtensionResponse postOutboundAction(IExtensionRequest extensionRequest);
 
     /**
      * Method that will be executed before the process of an API action, such as DID purchase (but after security checks)

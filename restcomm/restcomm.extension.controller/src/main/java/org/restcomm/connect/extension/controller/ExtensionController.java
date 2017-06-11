@@ -3,14 +3,8 @@ package org.restcomm.connect.extension.controller;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.IExtensionRequest;
-import org.restcomm.connect.extension.api.MessageExtensionResponse;
-import org.restcomm.connect.extension.api.NodeExtensionResponse;
 import org.restcomm.connect.extension.api.RestcommExtension;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
-import org.restcomm.connect.extension.api.SessionExtensionResponse;
-import org.restcomm.connect.extension.api.SystemExtensionResponse;
-import org.restcomm.connect.extension.api.TransactionExtensionResponse;
-import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 
 import java.util.List;
@@ -121,34 +115,5 @@ public class ExtensionController {
         ExtensionResponse response = new ExtensionResponse();
         //TODO: implement actual calls
         return response;
-    }
-
-    //FIXME: there must be a fixed contract between the returned extensions object
-    // and how the system will reconfigure itself with the type of ExtensionResponse
-    // for now we will just map SessionExtensionResponse to Configuration object
-    //FIXME: method signature is too restrictive
-    public Object handleExtensionResponse(ExtensionResponse response, Configuration configuration){
-        //check type of extension
-        //FIXME: hack to default
-        Object object = configuration;
-        if(response instanceof SystemExtensionResponse){
-            //TODO:return systemwide level customization behaviour
-        }
-        if(response instanceof NodeExtensionResponse){
-            //TODO:return node level customization behaviour
-        }
-        if(response instanceof SessionExtensionResponse){
-            SessionExtensionResponse ser = (SessionExtensionResponse) response;
-            Configuration config = ser.getConfiguration();
-
-            object = config;
-        }
-        if(response instanceof TransactionExtensionResponse){
-            //TODO:return transaction level customization behaviour
-        }
-        if(response instanceof MessageExtensionResponse){
-            //TODO:return message level customization behaviour
-        }
-        return object;
     }
 }

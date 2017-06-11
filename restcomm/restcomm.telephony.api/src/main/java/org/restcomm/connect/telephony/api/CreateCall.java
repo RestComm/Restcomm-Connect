@@ -51,8 +51,6 @@ public final class CreateCall implements IExtensionCreateCallRequest{
     private final String statusCallbackMethod;
     private final List<String> statusCallbackEvent;
     private String outboundProxy;
-    private String outboundProxyUsername;
-    private String outboundProxyPassword;
     private Map<String,ArrayList<String>> outboundProxyHeaders;
     private boolean allowed = true;
 
@@ -60,12 +58,12 @@ public final class CreateCall implements IExtensionCreateCallRequest{
             final boolean isFromApi, final int timeout, final CreateCallType type, final Sid accountId, final Sid parentCallSid,
             final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent
             ) {
-        this(from, to, username, password, isFromApi, timeout, type, accountId, parentCallSid, statusCallbackUrl, statusCallbackMethod, statusCallbackEvent, "","","",null);
+        this(from, to, username, password, isFromApi, timeout, type, accountId, parentCallSid, statusCallbackUrl, statusCallbackMethod, statusCallbackEvent, "", null);
     }
     public CreateCall(final String from, final String to, final String username, final String password,
             final boolean isFromApi, final int timeout, final CreateCallType type, final Sid accountId, final Sid parentCallSid,
             final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent,
-            final String outboundProxy, final String outboundProxyUsername, final String outboundProxyPassword, final Map<String,ArrayList<String>> outboundProxyHeaders) {
+            final String outboundProxy, final Map<String,ArrayList<String>> outboundProxyHeaders) {
         super();
         this.from = from;
         this.to = to;
@@ -80,8 +78,6 @@ public final class CreateCall implements IExtensionCreateCallRequest{
         this.statusCallbackMethod = statusCallbackMethod;
         this.statusCallbackEvent = statusCallbackEvent;
         this.outboundProxy = outboundProxy;
-        this.outboundProxyUsername = outboundProxyUsername;//FIXME:unused
-        this.outboundProxyPassword = outboundProxyPassword;//FIXME:unused
         this.outboundProxyHeaders = outboundProxyHeaders;
     }
 
@@ -156,6 +152,7 @@ public final class CreateCall implements IExtensionCreateCallRequest{
 
     /**
      * IExtensionCreateCallRequest
+     * the outboundProxyUsername is a facade to the username field
      * @return the outboundProxyUsername
      */
     public String getOutboundProxyUsername() {
@@ -164,6 +161,7 @@ public final class CreateCall implements IExtensionCreateCallRequest{
 
     /**
      * IExtensionCreateCallRequest
+     * the outboundProxyUsername is a facade to the username field
      * @param outboundProxyUsername the outboundProxyUsername to set
      */
     public void setOutboundProxyUsername(String outboundProxyUsername) {
@@ -172,6 +170,7 @@ public final class CreateCall implements IExtensionCreateCallRequest{
 
     /**
      * IExtensionCreateCallRequest
+     * the outboundProxyPassword is a facade to the password field
      * @return the outboundProxyPassword
      */
     public String getOutboundProxyPassword() {
@@ -180,6 +179,7 @@ public final class CreateCall implements IExtensionCreateCallRequest{
 
     /**
      * IExtensionCreateCallRequest
+     * the outboundProxyPassword is a facade to the password field
      * @param outboundProxyPassword the outboundProxyPassword to set
      */
     public void setOutboundProxyPassword(String outboundProxyPassword) {
