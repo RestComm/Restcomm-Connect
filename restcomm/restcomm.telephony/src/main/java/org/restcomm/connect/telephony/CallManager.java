@@ -531,7 +531,28 @@ public final class CallManager extends UntypedActor {
 
                 if (isWebRTC(request)) {
                     //This is a WebRTC client that dials out
-                    proxyThroughMediaServer(request, client, toUser);
+                    ExtensionController ec = ExtensionController.getInstance();
+                    IExtensionCreateCallRequest er = new CreateCall(client.getFriendlyName(), toUser, "", "", false, 0, CreateCallType.CLIENT, client.getAccountSid(), null,null, null, null);
+                    ec.executePreOutboundAction(er, this.extensions);
+
+                    if (er.isAllowed()) {
+                        //TODO: should we inject headers for this case?
+                        proxyThroughMediaServer(request, client, toUser);
+                    } else {
+                        //Extensions didn't allow this call
+                        if (logger.isDebugEnabled()) {
+                            //FIXME: proper error message
+                            errMsg = "Client not Allowed to make this WebRTC outbound call";
+                            logger.debug(errMsg);
+                        }
+                        //FIXME: proper error message
+                        errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
+                                + " : Make sure the Client exist or is registered with Restcomm";
+                        sendNotification(errMsg, 11001, "warning", true);
+                        final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
+                        resp.send();
+                    }
+                    ec.executePostOutboundAction(er, this.extensions);
                     return;
                 }
 
@@ -1792,35 +1813,17 @@ public final class CallManager extends UntypedActor {
         final String uri = (request.getOutboundProxy()!= null && (!request.getOutboundProxy().isEmpty())) ? request.getOutboundProxy() : "";
         SipURI outboundIntf = null;
         SipURI from = null;
-        SipURI to = null;
+        SipURI to = (SipURI) sipFactory.createURI(request.to());
 
-        String toUser = "";
-        String toHost = "";
-        String scheme = "";
-        boolean isSecure = false;
-        if(request.to().contains("@") &&
-           (request.to().startsWith("sip:") || request.to().startsWith("sips:")) ){
+        if(!uri.isEmpty()){
+            //NB: we expect uri with no scheme for db outboundProxy
+            //user@host.com:port
             String [] tokens = request.to().split("[@:]");
-            scheme = tokens[0];
-            toUser = tokens[1];
-            toHost = tokens[2];
-            if(scheme.equals("sips")){
-                isSecure = true;
-            }
-        }else{
-            toUser = request.to();
+            String toUser = tokens[1];
+            boolean isSecure = to.isSecure();
+            to = sipFactory.createSipURI(toUser, uri);
+            to.setSecure(isSecure);
         }
-
-        if(!uri.isEmpty() || toHost.isEmpty()){
-            toHost = uri;
-        }else if(uri.isEmpty() && toHost.isEmpty()){
-            if(logger.isDebugEnabled()){
-                logger.debug("uri and toHost is empty!");
-            }
-        }
-
-        to = sipFactory.createSipURI(toUser, toHost);
-        to.setSecure(isSecure);
 
         String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
         outboundIntf = outboundInterface(transport);
