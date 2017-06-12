@@ -367,6 +367,4 @@ public class RestcommCallsTool {
 
         return jsonArray;
     }
-    
-    
 }
