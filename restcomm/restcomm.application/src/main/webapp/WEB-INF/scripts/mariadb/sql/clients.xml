@@ -20,7 +20,7 @@
   </select>
   
   <select id="getClients" parameterType="org.restcomm.connect.dao.entities.ClientFilter" resultType="hashmap">
-    SELECT * FROM restcomm_clients WHERE account_sid=#{account_sid};
+    SELECT * FROM restcomm_clients WHERE account_sid=#{accountSid}
     <if test="friendlyName != null">
       AND friendly_name=#{friendlyName}
     </if>

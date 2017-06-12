@@ -21,6 +21,8 @@ package org.restcomm.connect.dao.mybatis;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
@@ -32,6 +34,7 @@ import org.junit.Test;
 
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.ClientFilter;
 import org.restcomm.connect.commons.dao.Sid;
 
 /**
@@ -202,11 +205,12 @@ public final class ClientsDaoTest {
         final ClientsDao clients = manager.getClientsDao();
         // Create a new client in the data store.
         clients.addClient(client);
+        ClientFilter filter = new ClientFilter(account.toString(), null, null, null, null);
         // Get all the clients for a specific account.
-        assertTrue(clients.getClients(account).size() == 1);
+        assertTrue(clients.getClientsUsingFilter(filter).size() == 1);
         // Remove all the clients for a specific account.
         clients.removeClients(account);
         // Validate that the clients were removed.
-        assertTrue(clients.getClients(account).size() == 0);
+        assertTrue(clients.getClientsUsingFilter(filter).size() == 0);
     }
 }
