@@ -19,19 +19,29 @@
  */
 package org.restcomm.connect.http.converter;
 
-import com.thoughtworks.xstream.converters.MarshallingContext;
-import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import java.lang.reflect.Type;
 
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.ClientList;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.thoughtworks.xstream.converters.MarshallingContext;
+import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe
-public final class ClientListConverter extends AbstractConverter {
+public final class ClientListConverter extends AbstractConverter implements JsonSerializer<ClientList> {
+
+    Integer page, pageSize, total;
+    String pathUri;
+
     public ClientListConverter(final Configuration configuration) {
         super(configuration);
     }
@@ -46,9 +56,96 @@ public final class ClientListConverter extends AbstractConverter {
     public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
         final ClientList list = (ClientList) object;
         writer.startNode("Clients");
-        for (final Client client : list.getClients()) {
-            context.convertAnother(client);
+        writer.addAttribute("page", String.valueOf(page));
+        writer.addAttribute("numpages", String.valueOf(getTotalPages()));
+        writer.addAttribute("pagesize", String.valueOf(pageSize));
+        writer.addAttribute("total", String.valueOf(getTotalPages()));
+        writer.addAttribute("start", getFirstIndex());
+        writer.addAttribute("end", getLastIndex(list));
+        writer.addAttribute("uri", pathUri);
+        writer.addAttribute("firstpageuri", getFirstPageUri());
+        writer.addAttribute("previouspageuri", getPreviousPageUri());
+        writer.addAttribute("nextpageuri", getNextPageUri(list));
+        writer.addAttribute("lastpageuri", getLastPageUri());
+        for (final Client incomingPhoneNumber : list.getClients()) {
+            context.convertAnother(incomingPhoneNumber);
         }
         writer.endNode();
+    }
+
+    @Override
+    public JsonObject serialize(ClientList list, Type type, JsonSerializationContext context) {
+
+        JsonObject result = new JsonObject();
+
+        JsonArray array = new JsonArray();
+        for (Client phoneNumber : list.getClients()) {
+            array.add(context.serialize(phoneNumber));
+        }
+
+        if (total != null && pageSize != null && page != null) {
+            result.addProperty("page", page);
+            result.addProperty("num_pages", getTotalPages());
+            result.addProperty("page_size", pageSize);
+            result.addProperty("total", total);
+            result.addProperty("start", getFirstIndex());
+            result.addProperty("end", getLastIndex(list));
+            result.addProperty("uri", pathUri);
+            result.addProperty("first_page_uri", getFirstPageUri());
+            result.addProperty("previous_page_uri", getPreviousPageUri());
+            result.addProperty("next_page_uri", getNextPageUri(list));
+            result.addProperty("last_page_uri", getLastPageUri());
+        }
+
+        result.add("clients", array);
+
+        return result;
+    }
+
+    private int getTotalPages() {
+        return total / pageSize;
+    }
+
+    private String getFirstIndex() {
+        return String.valueOf(page * pageSize);
+    }
+
+    private String getLastIndex(ClientList list) {
+        return String.valueOf(
+                (page == getTotalPages()) ? (page * pageSize) + list.getClients().size() : (pageSize - 1) + (page * pageSize));
+    }
+
+    private String getFirstPageUri() {
+        return pathUri + "?Page=0&PageSize=" + pageSize;
+    }
+
+    private String getPreviousPageUri() {
+        return ((page == 0) ? "null" : pathUri + "?Page=" + (page - 1) + "&PageSize=" + pageSize);
+    }
+
+    private String getNextPageUri(ClientList list) {
+        String lastSid = (page == getTotalPages()) ? "null" : list.getClients().get(pageSize - 1).getSid().toString();
+        return (page == getTotalPages()) ? "null"
+                : pathUri + "?Page=" + (page + 1) + "&PageSize=" + pageSize + "&AfterSid=" + lastSid;
+    }
+
+    private String getLastPageUri() {
+        return pathUri + "?Page=" + getTotalPages() + "&PageSize=" + pageSize;
+    }
+
+    public void setPage(Integer page) {
+        this.page = page;
+    }
+
+    public void setPageSize(Integer pageSize) {
+        this.pageSize = pageSize;
+    }
+
+    public void setCount(Integer count) {
+        this.total = count;
+    }
+
+    public void setPathUri(String pathUri) {
+        this.pathUri = pathUri;
     }
 }

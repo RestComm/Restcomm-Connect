@@ -21,8 +21,9 @@ package org.restcomm.connect.dao;
 
 import java.util.List;
 
-import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.ClientFilter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -34,7 +35,7 @@ public interface ClientsDao {
 
     Client getClient(String user);
 
-    List<Client> getClients(Sid accountSid);
+    List<Client> getClientsUsingFilter(ClientFilter filter);
 
     List<Client> getAllClients();
 
@@ -43,4 +44,6 @@ public interface ClientsDao {
     void removeClients(Sid accountSid);
 
     void updateClient(Client client);
+
+    Integer getTotalClientsByUsingFilters(ClientFilter filter);
 }

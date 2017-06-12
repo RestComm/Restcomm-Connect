@@ -19,9 +19,27 @@
  */
 package org.restcomm.connect.http;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.thoughtworks.xstream.XStream;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.CONFLICT;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+
+import java.net.URI;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
@@ -30,33 +48,17 @@ import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.ClientFilter;
 import org.restcomm.connect.dao.entities.ClientList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.ClientConverter;
 import org.restcomm.connect.http.converter.ClientListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
-import org.restcomm.connect.identity.passwords.PasswordValidator;
-import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import java.net.URI;
-import java.util.List;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.CONFLICT;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -67,6 +69,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
     protected ServletContext context;
     protected Configuration configuration;
     protected ClientsDao dao;
+    protected ClientListConverter listConverter;
     protected Gson gson;
     protected XStream xstream;
     protected AccountsDao accountsDao;
@@ -84,14 +87,16 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         final ClientConverter converter = new ClientConverter(configuration);
+        listConverter = new ClientListConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Client.class, converter);
+        builder.registerTypeAdapter(ClientList.class, listConverter);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(converter);
-        xstream.registerConverter(new ClientListConverter(configuration));
+        xstream.registerConverter(listConverter);
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
@@ -153,14 +158,59 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response getClients(final String accountSid, final MediaType responseType) {
+    protected Response getClients(final String accountSid,UriInfo info, final MediaType responseType) {
         secure(accountsDao.getAccount(accountSid), "RestComm:Read:Clients");
-        final List<Client> clients = dao.getClients(new Sid(accountSid));
+        
+        String phoneNumberFilter = info.getQueryParameters().getFirst("Login");
+        String friendlyNameFilter = info.getQueryParameters().getFirst("FriendlyName");
+        String page = info.getQueryParameters().getFirst("Page");
+        String reverse = info.getQueryParameters().getFirst("Reverse");
+        String pageSize = info.getQueryParameters().getFirst("PageSize");
+
+        if (pageSize == null) {
+            pageSize = "50";
+        }
+
+        if (page == null) {
+            page = "0";
+        }
+
+        int limit = Integer.parseInt(pageSize);
+        int pageAsInt = Integer.parseInt(page);
+        int offset = (page == "0") ? 0 : (((pageAsInt - 1) * limit) + limit);
+        ClientFilter clientFilter = new ClientFilter(accountSid, friendlyNameFilter,
+                phoneNumberFilter, null, null);
+        final int total = dao.getTotalClientsByUsingFilters(clientFilter);
+
+        if (reverse != null) {
+            if ("true".equalsIgnoreCase(reverse)) {
+                if (total > limit) {
+                    if (total > limit * (pageAsInt + 1)) {
+                        offset = total - limit * (pageAsInt + 1);
+                    } else {
+                        offset = 0;
+                        limit = total - limit * pageAsInt;
+                    }
+                }
+            }
+        }
+
+        if (pageAsInt > (total / limit)) {
+            return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
+        }
+        clientFilter = new ClientFilter(accountSid, friendlyNameFilter, phoneNumberFilter, limit,
+                offset);
+        final List<Client> clients = dao.getClientsUsingFilter(clientFilter);
+        listConverter.setCount(total);
+        listConverter.setPage(pageAsInt);
+        listConverter.setPageSize(limit);
+        listConverter.setPathUri("/" + getApiVersion(null) + "/" + info.getPath());
+
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new ClientList(clients));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else if (APPLICATION_JSON_TYPE == responseType) {
-            return ok(gson.toJson(clients), APPLICATION_JSON).build();
+            return ok(gson.toJson(new ClientList(clients)), APPLICATION_JSON).build();
         } else {
             return null;
         }
