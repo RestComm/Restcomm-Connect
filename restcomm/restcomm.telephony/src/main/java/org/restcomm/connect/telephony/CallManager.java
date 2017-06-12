@@ -992,7 +992,10 @@ public final class CallManager extends UntypedActor {
             try {
                 formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
             } catch (NumberParseException e) {
-                logger.error("Exception when try to format : " + e);
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("Problem while trying to format number %s, exception %s ",phone, e);
+                    logger.info(msg);
+                }
             }
         }
         if (formatedPhone == null) {
