@@ -55,7 +55,8 @@ import org.restcomm.connect.http.converter.ClientConverter;
 import org.restcomm.connect.http.converter.ClientListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
-
+import org.restcomm.connect.identity.passwords.PasswordValidator;
+import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
@@ -158,9 +159,9 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response getClients(final String accountSid,UriInfo info, final MediaType responseType) {
+    protected Response getClients(final String accountSid, UriInfo info, final MediaType responseType) {
         secure(accountsDao.getAccount(accountSid), "RestComm:Read:Clients");
-        
+
         String phoneNumberFilter = info.getQueryParameters().getFirst("Login");
         String friendlyNameFilter = info.getQueryParameters().getFirst("FriendlyName");
         String page = info.getQueryParameters().getFirst("Page");
@@ -178,8 +179,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         int limit = Integer.parseInt(pageSize);
         int pageAsInt = Integer.parseInt(page);
         int offset = (page == "0") ? 0 : (((pageAsInt - 1) * limit) + limit);
-        ClientFilter clientFilter = new ClientFilter(accountSid, friendlyNameFilter,
-                phoneNumberFilter, null, null);
+        ClientFilter clientFilter = new ClientFilter(accountSid, friendlyNameFilter, phoneNumberFilter, null, null);
         final int total = dao.getTotalClientsByUsingFilters(clientFilter);
 
         if (reverse != null) {
@@ -198,8 +198,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         if (pageAsInt > (total / limit)) {
             return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
         }
-        clientFilter = new ClientFilter(accountSid, friendlyNameFilter, phoneNumberFilter, limit,
-                offset);
+        clientFilter = new ClientFilter(accountSid, friendlyNameFilter, phoneNumberFilter, limit, offset);
         final List<Client> clients = dao.getClientsUsingFilter(clientFilter);
         listConverter.setCount(total);
         listConverter.setPage(pageAsInt);
