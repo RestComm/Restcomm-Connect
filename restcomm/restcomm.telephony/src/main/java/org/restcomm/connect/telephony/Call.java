@@ -841,6 +841,9 @@ public final class Call extends UntypedActor {
                 // custom headers parsing for SIP Out
                 // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
                 rcmlHeaders = new HashMap<String, String>();
+                addCustomHeadersToMap(rcmlHeaders);
+                addHeadersToMessage(invite, rcmlHeaders, "X-");
+
                 // we keep only the to URI without the headers
                 to = (SipURI) factory.createURI(toHeaderString.substring(0, toHeaderString.lastIndexOf('?')));
                 String headersString = toHeaderString.substring(toHeaderString.lastIndexOf('?') + 1);
@@ -906,6 +909,24 @@ public final class Call extends UntypedActor {
                 }
             }
         }
+
+        /**
+         * addCustomHeadersToMap
+         */
+        private void addCustomHeadersToMap(Map<String, String> headers) {
+            if (apiVersion != null)
+                headers.put("RestComm-ApiVersion", apiVersion);
+            if (accountId != null)
+                headers.put("RestComm-AccountSid", accountId.toString());
+            headers.put("RestComm-CallSid", instanceId+"-"+id.toString());
+        }
+
+        private void addHeadersToMessage(SipServletRequest message, Map<String, String> headers, String keyPrepend) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                String headerName = keyPrepend + entry.getKey();
+                message.addHeader(headerName , entry.getValue());
+            }
+        }
     }
 
     private final class Dialing extends AbstractAction {
@@ -964,11 +985,6 @@ public final class Call extends UntypedActor {
                 invite.setHeader("User-Agent", userAgent);
             }
 
-            addCustomHeadersToMap(rcmlHeaders);
-            // adding custom headers for SIP Out
-            // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
-            addHeadersToMessage(invite, rcmlHeaders, "X-");
-
             //the extension headers will override any headers
             addHeadersToMessage(invite, extensionHeaders);
 
@@ -1000,26 +1016,6 @@ public final class Call extends UntypedActor {
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.create(timeout, TimeUnit.SECONDS));
             executeStatusCallback(CallbackState.INITIATED);
-        }
-
-        //FIXME: duplicate code
-        private void addHeadersToMessage(SipServletRequest message, Map<String, String> rcmlHeaders, String keyPrepend) {
-
-            for (Map.Entry<String, String> entry : rcmlHeaders.entrySet()) {
-                String headerName = keyPrepend + entry.getKey();
-                message.addHeader(headerName , entry.getValue());
-            }
-        }
-
-        /**
-         * addCustomHeadersToMap
-         */
-        private void addCustomHeadersToMap(Map<String, String> headers) {
-            if (apiVersion != null)
-                headers.put("RestComm-ApiVersion", apiVersion);
-            if (accountId != null)
-                headers.put("RestComm-AccountSid", accountId.toString());
-            headers.put("RestComm-CallSid", instanceId+"-"+id.toString());
         }
 
         /**
