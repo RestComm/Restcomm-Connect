@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.restcomm</groupId>
     <artifactId>restcomm-connect</artifactId>
-    <version>8.2.0-SNAPSHOT</version>
+    <version>8.2.0.MPROV_Voice2b.79</version>
   </parent>
   <artifactId>restcomm-connect.provisioning.number.api</artifactId>
   
