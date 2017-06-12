@@ -288,27 +288,26 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         }
 
         int limit = Integer.parseInt(pageSize);
-        int offset = (page == "0") ? 0
-                : (((Integer.parseInt(page) - 1) * Integer.parseInt(pageSize)) + Integer.parseInt(pageSize));
+        int pageAsInt = Integer.parseInt(page);
+        int offset = (page == "0") ? 0 : (((pageAsInt - 1) * limit) + limit);
         IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter,
                 phoneNumberFilter, null, null);
         final int total = dao.getTotalIncomingPhoneNumbers(incomingPhoneNumberFilter);
 
         if (reverse != null) {
-            if (reverse.equalsIgnoreCase("true")) {
-                if (total > Integer.parseInt(pageSize)) {
-                    if (total > Integer.parseInt(pageSize) * (Integer.parseInt(page) + 1)) {
-                        offset = total - Integer.parseInt(pageSize) * (Integer.parseInt(page) + 1);
-                        limit = Integer.parseInt(pageSize);
+            if ("true".equalsIgnoreCase(reverse)) {
+                if (total > limit) {
+                    if (total > limit * (pageAsInt + 1)) {
+                        offset = total - limit * (pageAsInt + 1);
                     } else {
                         offset = 0;
-                        limit = total - Integer.parseInt(pageSize) * Integer.parseInt(page);
+                        limit = total - limit * pageAsInt;
                     }
                 }
             }
         }
 
-        if (Integer.parseInt(page) > (total / limit)) {
+        if (pageAsInt > (total / limit)) {
             return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
         }
 
@@ -318,8 +317,8 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
 
         listConverter.setCount(total);
-        listConverter.setPage(Integer.parseInt(page));
-        listConverter.setPageSize(Integer.parseInt(pageSize));
+        listConverter.setPage(pageAsInt);
+        listConverter.setPageSize(limit);
         listConverter.setPathUri("/" + getApiVersion(null) + "/" + info.getPath());
 
         if (APPLICATION_JSON_TYPE == responseType) {
