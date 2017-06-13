@@ -639,11 +639,17 @@ public final class CallManager extends UntypedActor {
                     logger.debug("headerName="+headerName+" headerVal="+message.getHeader(headerName)+" concatValue="+sb.toString());
                 }
                 if(!headerName.equalsIgnoreCase("Request-URI")){
-                    String headerVal = message.getHeader(headerName);
-                    if(headerVal!=null && !headerVal.isEmpty()) {
-                        message.setHeader(headerName , headerVal+sb.toString());
-                    }else{
-                        message.addHeader(headerName , sb.toString());
+                    try {
+                        String headerVal = message.getHeader(headerName);
+                        if(headerVal!=null && !headerVal.isEmpty()) {
+                            message.setHeader(headerName , headerVal+sb.toString());
+                        }else{
+                            message.addHeader(headerName , sb.toString());
+                        }
+                    } catch (IllegalArgumentException iae) {
+                        if(logger.isErrorEnabled()) {
+                            logger.error("Exception while setting message header: "+iae.getMessage());
+                        }
                     }
                 }else{
                     //handle Request-URI

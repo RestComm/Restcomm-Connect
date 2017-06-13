@@ -922,6 +922,8 @@ public final class Call extends UntypedActor {
         }
 
         private void addHeadersToMessage(SipServletRequest message, Map<String, String> headers, String keyPrepend) {
+            //NB: for the current limited usage of this function,
+            //we know that no system headers will be modified so we dont need to catch an IAE
             for (Map.Entry<String, String> entry : headers.entrySet()) {
                 String headerName = keyPrepend + entry.getKey();
                 message.addHeader(headerName , entry.getValue());
@@ -1040,11 +1042,17 @@ public final class Call extends UntypedActor {
                         logger.debug("headerName="+headerName+" headerVal="+message.getHeader(headerName)+" concatValue="+sb.toString());
                     }
                     if(!headerName.equalsIgnoreCase("Request-URI")){
-                        String headerVal = message.getHeader(headerName);
-                        if(headerVal!=null && !headerVal.isEmpty()) {
-                            message.setHeader(headerName , headerVal+sb.toString());
-                        }else{
-                            message.addHeader(headerName , sb.toString());
+                        try {
+                            String headerVal = message.getHeader(headerName);
+                            if(headerVal!=null && !headerVal.isEmpty()) {
+                                message.setHeader(headerName , headerVal+sb.toString());
+                            }else{
+                                message.addHeader(headerName , sb.toString());
+                            }
+                        } catch (IllegalArgumentException iae) {
+                            if(logger.isErrorEnabled()) {
+                                logger.error("Exception while setting message header: "+iae.getMessage());
+                            }
                         }
                     }else{
                         //handle Request-URI
