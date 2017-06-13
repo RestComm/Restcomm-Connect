@@ -24,6 +24,7 @@ import javax.servlet.sip.SipURI;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -43,7 +44,7 @@ public final class InitializeOutbound {
     private final boolean isFromApi;
     private final String apiVersion;
     private final Sid accountId;
-    private final CreateCall.Type type;
+    private final CreateCallType type;
     private final DaoManager daoManager;
     private Sid parentCallSid;
     private final boolean webrtc;
@@ -55,7 +56,7 @@ public final class InitializeOutbound {
 
     public InitializeOutbound(final String name, final SipURI from, final SipURI to, final String username,
             final String password, final long timeout, final boolean isFromApi, final String apiVersion,
-            final Sid accountId, final CreateCall.Type type, final DaoManager daoManager, final boolean webrtc,
+            final Sid accountId, final CreateCallType type, final DaoManager daoManager, final boolean webrtc,
             final boolean outboundToIms, final String imsProxyAddress, final int imsProxyPort) {
         this(name, from, to, username, password, timeout, isFromApi, apiVersion, accountId, type, daoManager, webrtc);
         this.outboundToIms = outboundToIms;
@@ -65,7 +66,7 @@ public final class InitializeOutbound {
 
     public InitializeOutbound(final String name, final SipURI from, final SipURI to, final String username,
             final String password, final long timeout, final boolean isFromApi, final String apiVersion,
-            final Sid accountId, final CreateCall.Type type, final DaoManager daoManager, final boolean webrtc) {
+            final Sid accountId, final CreateCallType type, final DaoManager daoManager, final boolean webrtc) {
         super();
         this.name = name;
         this.from = from;
@@ -118,7 +119,7 @@ public final class InitializeOutbound {
         return password;
     }
 
-    public CreateCall.Type type() {
+    public CreateCallType type() {
         return type;
     }
 
