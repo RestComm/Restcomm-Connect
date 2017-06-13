@@ -524,76 +524,59 @@ public final class CallManager extends UntypedActor {
                     // This is a call to a registered DID (application)
                     return;
                 }
+
                 // This call is not a registered DID (application). Try to proxy out this call.
                 // log to console and to notification engine
                 String errMsg = "A Restcomm Client is trying to call a Number/DID that is not registered with Restcomm";
                 sendNotification(errMsg, 11002, "info", true);
 
-                if (isWebRTC(request)) {
-                    //This is a WebRTC client that dials out
-                    ExtensionController ec = ExtensionController.getInstance();
-                    IExtensionCreateCallRequest er = new CreateCall(client.getFriendlyName(), toUser, "", "", false, 0, CreateCallType.CLIENT, client.getAccountSid(), null,null, null, null);
-                    ec.executePreOutboundAction(er, this.extensions);
-
-                    if (er.isAllowed()) {
-                        //TODO: should we inject headers for this case?
-                        proxyThroughMediaServer(request, client, toUser);
-                    } else {
-                        //Extensions didn't allow this call
-                        if (logger.isDebugEnabled()) {
-                            //FIXME: proper error message
-                            errMsg = "Client not Allowed to make this WebRTC outbound call";
-                            logger.debug(errMsg);
-                        }
-                        //FIXME: proper error message
-                        errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
-                                + " : Make sure the Client exist or is registered with Restcomm";
-                        sendNotification(errMsg, 11001, "warning", true);
-                        final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
-                        resp.send();
-                    }
-                    ec.executePostOutboundAction(er, this.extensions);
-                    return;
-                }
-
-                // https://telestax.atlassian.net/browse/RESTCOMM-335
-                String proxyURI = activeProxy;
-                String proxyUsername = activeProxyUsername;
-                String proxyPassword = activeProxyPassword;
-                SipURI from = null;
-                SipURI to = null;
-                boolean callToSipUri = false;
                 ExtensionController ec = ExtensionController.getInstance();
                 IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.PSTN, client.getAccountSid(), null,null, null, null);
                 ec.executePreOutboundAction(er, this.extensions);
-                if(er.getOutboundProxy()!=null && !er.getOutboundProxy().isEmpty()){
-                    proxyURI = er.getOutboundProxy();
-                }
-                if(er.getOutboundProxyUsername()!=null && !er.getOutboundProxyUsername().isEmpty()){
-                    proxyUsername = er.getOutboundProxyUsername();
-                }
-                if(er.getOutboundProxyPassword()!=null && !er.getOutboundProxyPassword().isEmpty()){
-                    proxyUsername = er.getOutboundProxyPassword();
-                }
-                // proxy DID or number if the outbound proxy fields are not empty in the restcomm.xml
-                if (proxyURI != null && !proxyURI.isEmpty()) {
-                    if (er.isAllowed()) {
-                        //FIXME: not so nice to just inject headers here
-                        addHeadersToMessage(request, er.getOutboundProxyHeaders());
-                        proxyOut(request, client, toUser, toHost, toHostIpAddress, toPort, outboundIntf, proxyURI, proxyUsername, proxyPassword, from, to, callToSipUri);
+                if (er.isAllowed()) {
+                    if (isWebRTC(request)) {
+                        //This is a WebRTC client that dials out
+                        //TODO: should we inject headers for this case?
+                        proxyThroughMediaServer(request, client, toUser);
+
                     } else {
-                        final SipServletResponse response = request.createResponse(SC_FORBIDDEN, "Call request not allowed");
-                        response.send();
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("Call request now allowed: "+er.toString());
+                        // https://telestax.atlassian.net/browse/RESTCOMM-335
+                        String proxyURI = activeProxy;
+                        String proxyUsername = activeProxyUsername;
+                        String proxyPassword = activeProxyPassword;
+                        SipURI from = null;
+                        SipURI to = null;
+                        boolean callToSipUri = false;
+
+                        if(er.getOutboundProxy()!=null && !er.getOutboundProxy().isEmpty()){
+                            proxyURI = er.getOutboundProxy();
+                        }
+                        if(er.getOutboundProxyUsername()!=null && !er.getOutboundProxyUsername().isEmpty()){
+                            proxyUsername = er.getOutboundProxyUsername();
+                        }
+                        if(er.getOutboundProxyPassword()!=null && !er.getOutboundProxyPassword().isEmpty()){
+                            proxyUsername = er.getOutboundProxyPassword();
+                        }
+                        // proxy DID or number if the outbound proxy fields are not empty in the restcomm.xml
+                        if (proxyURI != null && !proxyURI.isEmpty()) {
+                            //FIXME: not so nice to just inject headers here
+                            addHeadersToMessage(request, er.getOutboundProxyHeaders());
+                            proxyOut(request, client, toUser, toHost, toHostIpAddress, toPort, outboundIntf, proxyURI, proxyUsername, proxyPassword, from, to, callToSipUri);
+                        } else {
+                            errMsg = "Restcomm tried to proxy this call to an outbound party but it seems the outbound proxy is not configured.";
+                            sendNotification(errMsg, 11004, "warning", true);
                         }
                     }
-                    ec.executePostOutboundAction(er, this.extensions);
-                    return;
                 } else {
-                    String msg = "Restcomm tried to proxy this call to an outbound party but it seems the outbound proxy is not configured.";
-                    sendNotification(errMsg, 11004, "warning", true);
+                    //Extensions didn't allow this call
+                    final SipServletResponse response = request.createResponse(SC_FORBIDDEN, "Call request not allowed");
+                    response.send();
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Call request not allowed: "+er.toString());
+                    }
                 }
+                ec.executePostOutboundAction(er, this.extensions);
+                return;
             }
         } else {
             // Client is null, check if this call is for a registered DID (application)

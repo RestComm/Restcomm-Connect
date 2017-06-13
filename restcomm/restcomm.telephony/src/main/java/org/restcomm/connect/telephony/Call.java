@@ -837,12 +837,10 @@ public final class Call extends UntypedActor {
             imsProxyAddress = request.getImsProxyAddress();
             imsProxyPort = request.getImsProxyPort();
             String toHeaderString = to.toString();
+            rcmlHeaders = new HashMap<String, String>();
             if (toHeaderString.indexOf('?') != -1) {
                 // custom headers parsing for SIP Out
                 // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
-                rcmlHeaders = new HashMap<String, String>();
-                addCustomHeadersToMap(rcmlHeaders);
-                addHeadersToMessage(invite, rcmlHeaders, "X-");
 
                 // we keep only the to URI without the headers
                 to = (SipURI) factory.createURI(toHeaderString.substring(0, toHeaderString.lastIndexOf('?')));
@@ -909,26 +907,6 @@ public final class Call extends UntypedActor {
                 }
             }
         }
-
-        /**
-         * addCustomHeadersToMap
-         */
-        private void addCustomHeadersToMap(Map<String, String> headers) {
-            if (apiVersion != null)
-                headers.put("RestComm-ApiVersion", apiVersion);
-            if (accountId != null)
-                headers.put("RestComm-AccountSid", accountId.toString());
-            headers.put("RestComm-CallSid", instanceId+"-"+id.toString());
-        }
-
-        private void addHeadersToMessage(SipServletRequest message, Map<String, String> headers, String keyPrepend) {
-            //NB: for the current limited usage of this function,
-            //we know that no system headers will be modified so we dont need to catch an IAE
-            for (Map.Entry<String, String> entry : headers.entrySet()) {
-                String headerName = keyPrepend + entry.getKey();
-                message.addHeader(headerName , entry.getValue());
-            }
-        }
     }
 
     private final class Dialing extends AbstractAction {
@@ -986,6 +964,10 @@ public final class Call extends UntypedActor {
             if(userAgent!=null){
                 invite.setHeader("User-Agent", userAgent);
             }
+            addCustomHeadersToMap(rcmlHeaders);
+            // adding custom headers for SIP Out
+            // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+            addHeadersToMessage(invite, rcmlHeaders, "X-");
 
             //the extension headers will override any headers
             addHeadersToMessage(invite, extensionHeaders);
@@ -1018,6 +1000,31 @@ public final class Call extends UntypedActor {
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.create(timeout, TimeUnit.SECONDS));
             executeStatusCallback(CallbackState.INITIATED);
+        }
+
+        /**
+         * addCustomHeadersToMap
+         */
+        private void addCustomHeadersToMap(Map<String, String> headers) {
+            if (apiVersion != null)
+                headers.put("RestComm-ApiVersion", apiVersion);
+            if (accountId != null)
+                headers.put("RestComm-AccountSid", accountId.toString());
+            headers.put("RestComm-CallSid", instanceId+"-"+id.toString());
+        }
+
+        //TODO: put this in a central place
+        private void addHeadersToMessage(SipServletRequest message, Map<String, String> headers, String keyPrepend) {
+            try {
+                for (Map.Entry<String, String> entry : headers.entrySet()) {
+                    String headerName = keyPrepend + entry.getKey();
+                    message.addHeader(headerName , entry.getValue());
+                }
+            } catch (IllegalArgumentException iae) {
+                if(logger.isErrorEnabled()) {
+                    logger.error("Exception while setting message header: "+iae.getMessage());
+                }
+            }
         }
 
         /**
