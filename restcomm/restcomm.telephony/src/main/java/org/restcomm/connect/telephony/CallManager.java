@@ -1822,13 +1822,7 @@ public final class CallManager extends UntypedActor {
         SipURI to = (SipURI) sipFactory.createURI(request.to());
 
         if(!uri.isEmpty()){
-            //NB: we expect uri with no scheme for db outboundProxy
-            //user@host.com:port
-            String [] tokens = request.to().split("[@:]");
-            String toUser = tokens[1];
-            boolean isSecure = to.isSecure();
-            to = sipFactory.createSipURI(toUser, uri);
-            to.setSecure(isSecure);
+            to.setHost(uri);
         }
 
         String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
