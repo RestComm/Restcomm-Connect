@@ -19,7 +19,7 @@
     SELECT * FROM restcomm_clients WHERE login=#{login};
   </select>
   
-  <select id="getClients" parameterType="org.restcomm.connect.dao.entities.ClientFilter" resultType="hashmap">
+  <select id="getClientsUsingFilter" parameterType="org.restcomm.connect.dao.entities.ClientFilter" resultType="hashmap">
     SELECT * FROM restcomm_clients WHERE account_sid=#{accountSid}
     <if test="friendlyName != null">
       AND friendly_name=#{friendlyName}

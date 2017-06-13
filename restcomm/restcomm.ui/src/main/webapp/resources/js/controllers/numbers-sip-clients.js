@@ -37,7 +37,7 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $uibModal, $dialog, 
     registerSIPClientModal.result.then(
       function () {
         // what to do on modal completion...
-        $scope.clientsList = RCommClients.query({accountSid:$scope.sid});
+    	  $scope.getClientsList(0);
       },
       function () {
         // what to do on modal dismiss...
@@ -51,7 +51,47 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $uibModal, $dialog, 
     confirmClientDelete(client, $dialog, $scope, Notifications, RCommClients);
   }
 
-  $scope.clientsList = RCommClients.query({accountSid:$scope.sid});
+//pagination support ----------------------------------------------------------------------------------------------
+
+  $scope.currentPage = 1; //current page
+  $scope.maxSize = 5; //pagination max size
+  $scope.entryLimit = 10; //max rows for data table
+  $scope.noOfPages = 1; //max rows for data table
+  $scope.reverse = false;
+  $scope.predicate = "friendly_name";
+
+  $scope.setEntryLimit = function(limit) {
+    $scope.entryLimit = limit;
+    $scope.currentPage = 1;
+    $scope.getClientsList($scope.currentPage-1);
+  };
+
+  $scope.pageChanged = function() {
+    $scope.getClientsList($scope.currentPage-1);
+  };
+
+  $scope.getClientsList = function(page) {
+   var params = createSearchParams();
+    RCommClients.get($.extend({accountSid: $scope.sid, Page: page, PageSize: $scope.entryLimit}, params), function(data) {  
+      $scope.clientsList = data.clients;
+      $scope.totalClients = data.total;
+      $scope.noOfPages = data.num_pages;
+      $scope.start = parseInt(data.start) + 1;
+      $scope.end = parseInt(data.end)
+      if($scope.end!=$scope.totalClients){
+        $scope.end++;
+      }
+    });
+  }
+ var createSearchParams = function() {
+    var params = {};
+
+    params["Reverse"] = $scope.reverse;
+
+    return params;
+  }
+  $scope.getClientsList(0);
+
 });
 
 // Numbers : RestComm Clients : Details (also used for Modal) -----------------------
@@ -175,7 +215,7 @@ var confirmClientDelete = function(client, $dialog, $scope, Notifications, RComm
               $location.path( "/numbers/clients" );
             }
             else {
-              $scope.clientsList = RCommClients.query({accountSid:$scope.sid});
+            	  $scope.getClientsList(0);
             }
           },
           function() {
