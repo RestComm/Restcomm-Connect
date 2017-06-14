@@ -283,15 +283,39 @@
 		<dependency>
 			<groupId>org.powermock</groupId>
 			<artifactId>powermock-api-mockito</artifactId>
-			<version>1.6.2</version>
+			<version>1.6.6</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+  			<groupId>org.powermock</groupId>
+  			<artifactId>powermock-module-junit4-rule-agent</artifactId>
+  			<version>1.6.6</version>
+  			<scope>test</scope>
+		</dependency>
+		<dependency>
+  			<groupId>org.powermock</groupId>
+  			<artifactId>powermock-classloading-xstream</artifactId>
+  			<version>1.6.6</version>
+  			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.powermock</groupId>
 			<artifactId>powermock-module-junit4</artifactId>
-			<version>1.6.2</version>
+			<version>1.6.6</version>
 			<scope>test</scope>
-		</dependency> 
+		</dependency>
+		<dependency>
+  			<groupId>org.powermock</groupId>
+  			<artifactId>powermock-module-junit4-rule</artifactId>
+  			<version>1.6.6</version>
+  			<scope>test</scope>
+		</dependency>
+		<!-- <dependency>
+  			<groupId>org.powermock</groupId>
+  			<artifactId>powermock-module-testng-agent</artifactId>
+  			<version>1.6.6</version>
+  			<scope>test</scope>
+		</dependency> -->
 
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
@@ -428,6 +452,17 @@
                     <useResultFile>true</useResultFile>
                     <resultFile>${project.build.directory}/duplicate-finder-result.xml</resultFile>
                     <resultFileMinClasspathCount>2</resultFileMinClasspathCount>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.4</version>
+                <configuration>
+                    <argLine>
+                        -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.6.6/powermock-module-javaagent-1.6.6.jar
+                    </argLine>
+                    <useSystemClassloader>true</useSystemClassloader>
                 </configuration>
             </plugin>
 

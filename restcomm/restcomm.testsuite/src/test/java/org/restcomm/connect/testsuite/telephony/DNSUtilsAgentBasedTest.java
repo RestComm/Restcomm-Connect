@@ -9,22 +9,23 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.agent.PowerMockAgent;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.util.DNSUtilsWrapper;
 
 
 //@RunWith(PowerMockRunner.class)
-//@PrepareForTest(DNSUtils.class)
-public class DNSUtilsTest {//extends PowerMockTestCase{
+@PrepareForTest(DNSUtils.class)
+public class DNSUtilsAgentBasedTest {//extends PowerMockTestCase{
 
 	final String domainName = "testdomain2.restcomm.com";
     final String expectedIP = "127.0.0.1";
 
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
+    //@Rule
+    //public PowerMockRule rule = new PowerMockRule();
     
-    //static {PowerMockAgent.initializeIfNeeded();}
+    static {PowerMockAgent.initializeIfNeeded();}
     
     //@Mock
     //private DNSUtils dnsUtils;
