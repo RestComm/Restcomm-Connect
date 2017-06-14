@@ -30,7 +30,7 @@
             <th class="width-10pc">&nbsp;</th>
             </thead>
             <tbody>
-            <tr class="number-row" ng-repeat="sc in filtered = (clientsList | filter:query)">
+            <tr class="number-row" ng-repeat="sc in filtered = (clientsList | filter:query | orderBy:sort:reverse)">
                 <td><h4 class=""><a href="#/numbers/clients/{{sc.sid}}">{{ sc.login  }}</a></h4></td>
                 <td class="edit-number"><h5><i class="fa fa-pencil clickable" ng-click="editingFriendlyName = sc.login"></i></h5></td>
                 <td><h4 class="" ng-hide="editingFriendlyName == sc.login">{{ sc.friendly_name  }} </h4>
@@ -57,10 +57,10 @@
                 <div class="col-md-4">
                     <form class="form-inline text-center">
                         <h6>Items / Page</h6>
-                        <div class="btn-group buttons-per-page" data-toggle="buttons-radio">
-                            <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
-                            <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
-                            <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
+                        <div class="btn-group buttons-per-page">
+                          <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit == 10}" ng-click="setEntryLimit(10)">10</button>
+                            <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit == 25}" ng-click="setEntryLimit(25)">25</button>
+                            <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit == 50}" ng-click="setEntryLimit(50)">50</button>
                         </div>
                     </form>
                 </div>
