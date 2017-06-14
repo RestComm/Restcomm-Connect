@@ -80,7 +80,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $uibModal, $dialog,
       $scope.start = parseInt(data.start) + 1;
       $scope.end = parseInt(data.end)
       if($scope.end!=$scope.totalNumbers){
-    	  $scope.end++;
+    	  ++$scope.end;
       }
     });
   }
@@ -91,6 +91,16 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $uibModal, $dialog,
 
     return params;
   }
+ 
+ $scope.sortBy = function(field) {
+     if ($scope.predicate != field) {
+         $scope.predicate = field;
+         $scope.reverse = false;
+     } else {
+         $scope.reverse = !$scope.reverse;
+     }
+ };
+ 
   $scope.getNumbersList(0);
 
 });

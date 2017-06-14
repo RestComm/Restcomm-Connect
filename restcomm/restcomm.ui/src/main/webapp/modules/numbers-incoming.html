@@ -31,7 +31,7 @@
             <th class="width-10pc">&nbsp;</th>
             </thead>
             <tbody>
-            <tr class="number-row" ng-repeat="pn in filtered = (numbersList | filter:query)">
+            <tr class="number-row" ng-repeat="pn in filtered = (numbersList | filter:query| orderBy:sort:reverse)">
                 <td><h4><a href="#/numbers/incoming/{{pn.sid}}">{{ pn.phone_number  }}</a></h4></td>
                 <td class="edit-number"><h5><i class="fa fa-pencil clickable" ng-click="editingFriendlyName = pn.phone_number"></i></h5></td>
                 <td>
@@ -66,10 +66,10 @@
                 <div class="col-md-4">
                     <form class="form-inline text-center">
                         <h6>Items / Page</h6>
-                        <div class="btn-group buttons-per-page" data-toggle="buttons-radio">
-                            <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 10 ? 'active' : ''" ng-click="setEntryLimit(10)">10</button>
-                            <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 25 ? 'active' : ''" ng-click="setEntryLimit(25)">25</button>
-                            <button type="button" class="btn btn-default btn-sm" ng-class="entryLimit == 50 ? 'active' : ''" ng-click="setEntryLimit(50)">50</button>
+                        <div class="btn-group buttons-per-page">
+                            <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 10}" ng-click="setEntryLimit(10)">10</button>
+                            <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 25}" ng-click="setEntryLimit(25)">25</button>
+                            <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 50}" ng-click="setEntryLimit(50)">50</button>
                         </div>
                     </form>
                 </div>
