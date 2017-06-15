@@ -68,17 +68,6 @@
     <if test="phoneNumber != null">
       AND "n"."phone_number" like #{phoneNumber}
     </if>
-    <choose>
-    <when test="sortBy == 'phone_number'">
-      order by "n"."phone_number" ${sortDirection}
-    </when>
-    <when test="sortBy == 'friendly_name'">
-      order by "n"."friendly_name" ${sortDirection}
-    </when>
-    <otherwise>
-      order by "n"."phone_number" ${sortDirection}
-    </otherwise>
-  </choose>   
     LIMIT #{limit} OFFSET #{offset}
   </select>
   
@@ -91,7 +80,7 @@
     <if test="phoneNumber != null">
       AND "phone_number" like #{phoneNumber}
     </if>
-    
+
 	</select>
   
 
