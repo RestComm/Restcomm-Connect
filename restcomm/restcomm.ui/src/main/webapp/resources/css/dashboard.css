@@ -206,7 +206,7 @@ form[role=login] input {
 }
 
 form[role=login] input:-webkit-autofill,
-input:-webkit-autofill:focus{
+form[role=login] input:-webkit-autofill:focus{
     box-shadow: 0 0 0 1000px white inset;
 }
 
@@ -301,6 +301,12 @@ form[role=login] button:hover {
     left: 0;
     top: 22%;
     padding: 6px 0 0 27px;
+}
+
+.login-form .form-control:focus{
+    box-shadow: inset 0 0 6px #ffffff;
+    -webkit-box-shadow: 0 0 6px #ffffff;
+    -moz-box-shadow: 0 0 6px #ffffff;
 }
 
 /* unvisited link */
