@@ -262,7 +262,8 @@
 
 	<rcmlserver-api>
 		<!-- points to Wiremock server for arquilian testing -->
-		<base-url>http://localhost:8089/restcomm-rvd/services</base-url>
+		<base-url>http://localhost:8089</base-url>
+		<api-path>/restcomm-rvd/services</api-path>
 		<notifications>true</notifications>
 	</rcmlserver-api>
 
