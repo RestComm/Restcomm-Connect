@@ -85,7 +85,7 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $uibModal, $dialog, 
   }
  var createSearchParams = function() {
     var params = {};
-
+    params["SortBy"] = $scope.predicate;
     params["Reverse"] = $scope.reverse;
 
     return params;

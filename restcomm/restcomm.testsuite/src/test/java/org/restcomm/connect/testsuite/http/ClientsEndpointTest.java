@@ -214,9 +214,8 @@ public class ClientsEndpointTest {
         JsonObject lastPage = (JsonObject) RestcommClientsTool.getInstance().getClients(deploymentUrl.toString(), developerAccountSid,
                 developeerAuthToken, firstPage.get("num_pages").getAsInt(), null, true);
         JsonArray lastPageClientsArray = lastPage.get("clients").getAsJsonArray();
-        logger.info("Testing -"+lastPageClientsArray.get(lastPageClientsArray.size() - 1).getAsJsonObject().get("sid").getAsString());
-        assertTrue(lastPageClientsArray.get(lastPageClientsArray.size() - 1).getAsJsonObject().get("sid").getAsString()
-                .equals("CLffd8c6e5f65d420baf9579a18f229679"));
+          assertTrue(lastPageClientsArray.get(lastPageClientsArray.size() - 1).getAsJsonObject().get("sid").getAsString()
+                .equals("CL00000000000000000000000000000001"));
         assertTrue(lastPageClientsArray.size() == 32);
         assertTrue(lastPage.get("start").getAsInt() == 350);
         assertTrue(lastPage.get("end").getAsInt() == 382);
@@ -245,7 +244,7 @@ public class ClientsEndpointTest {
         JsonObject lastPage = (JsonObject) RestcommClientsTool.getInstance().getClients(deploymentUrl.toString(), developerAccountSid,
                 developeerAuthToken, firstPage.get("num_pages").getAsInt(), 100, true);
         JsonArray lastPageClientsArray = lastPage.get("clients").getAsJsonArray();
-        assertEquals("CLffd8c6e5f65d420baf9579a18f229679",lastPageClientsArray.get(lastPageClientsArray.size() - 1).getAsJsonObject().get("sid").getAsString());
+        assertEquals("CL00000000000000000000000000000001",lastPageClientsArray.get(lastPageClientsArray.size() - 1).getAsJsonObject().get("sid").getAsString());
         assertTrue(lastPageClientsArray.size() == 82);
         assertTrue(lastPage.get("start").getAsInt() == 300);
         assertTrue(lastPage.get("end").getAsInt() == 382);

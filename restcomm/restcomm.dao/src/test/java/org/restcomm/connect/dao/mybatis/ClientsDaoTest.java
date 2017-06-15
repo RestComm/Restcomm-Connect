@@ -19,23 +19,20 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.InputStream;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-
 import org.junit.After;
 import org.junit.Before;
-import static org.junit.Assert.*;
 import org.junit.Test;
-
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.ClientFilter;
-import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -205,7 +202,7 @@ public final class ClientsDaoTest {
         final ClientsDao clients = manager.getClientsDao();
         // Create a new client in the data store.
         clients.addClient(client);
-        ClientFilter filter = new ClientFilter(account.toString(), null, null, null, null);
+        ClientFilter filter = new ClientFilter(account.toString(), null, null,"friendly_name","ASC", 50, 0);
         // Get all the clients for a specific account.
         assertTrue(clients.getClientsUsingFilter(filter).size() == 1);
         // Remove all the clients for a specific account.

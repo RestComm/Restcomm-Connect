@@ -167,38 +167,23 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         String page = info.getQueryParameters().getFirst("Page");
         String reverse = info.getQueryParameters().getFirst("Reverse");
         String pageSize = info.getQueryParameters().getFirst("PageSize");
+        String sortBy = info.getQueryParameters().getFirst("SortBy");
 
-        if (pageSize == null) {
-            pageSize = "50";
-        }
-
-        if (page == null) {
-            page = "0";
-        }
+        pageSize = (pageSize == null) ? "50" : pageSize;
+        page = (page == null) ? "0" : page;
+        reverse = (reverse != null && "true".equalsIgnoreCase(reverse)) ? "DESC" : "ASC";
+        sortBy = (sortBy != null) ? sortBy : "friendly_name";
 
         int limit = Integer.parseInt(pageSize);
         int pageAsInt = Integer.parseInt(page);
         int offset = (page == "0") ? 0 : (((pageAsInt - 1) * limit) + limit);
-        ClientFilter clientFilter = new ClientFilter(accountSid, friendlyNameFilter, phoneNumberFilter, null, null);
+        ClientFilter clientFilter = new ClientFilter(accountSid, friendlyNameFilter, phoneNumberFilter);
         final int total = dao.getTotalClientsByUsingFilters(clientFilter);
-
-        if (reverse != null) {
-            if ("true".equalsIgnoreCase(reverse)) {
-                if (total > limit) {
-                    if (total > limit * (pageAsInt + 1)) {
-                        offset = total - limit * (pageAsInt + 1);
-                    } else {
-                        offset = 0;
-                        limit = total - limit * pageAsInt;
-                    }
-                }
-            }
-        }
 
         if (pageAsInt > (total / limit)) {
             return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
         }
-        clientFilter = new ClientFilter(accountSid, friendlyNameFilter, phoneNumberFilter, limit, offset);
+        clientFilter = new ClientFilter(accountSid, friendlyNameFilter, phoneNumberFilter, sortBy, reverse, limit, offset);
         final List<Client> clients = dao.getClientsUsingFilter(clientFilter);
         listConverter.setCount(total);
         listConverter.setPage(pageAsInt);

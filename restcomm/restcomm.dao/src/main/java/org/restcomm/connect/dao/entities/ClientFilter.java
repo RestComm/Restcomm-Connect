@@ -30,6 +30,8 @@ public class ClientFilter {
     private final String accountSid;
     private final String friendlyName;
     private final String login;
+    private final String sortBy;
+    private final String sortDirection;
     private final Integer limit;
     private final Integer offset;
 
@@ -38,13 +40,32 @@ public class ClientFilter {
      * @param friendlyName
      * @param login
      */
-    public ClientFilter(String accountSid, String friendlyName, String login, Integer limit, Integer offset) {
+    public ClientFilter(String accountSid, String friendlyName, String login, String sortBy, String sortDirection,
+            Integer limit, Integer offset) {
         super();
         this.accountSid = accountSid;
         this.friendlyName = friendlyName;
         this.login = login;
+        this.sortBy = sortBy;
+        this.sortDirection = sortDirection;
         this.limit = limit;
         this.offset = offset;
+    }
+
+    /**
+     * @param accountSid
+     * @param friendlyName
+     * @param login
+     */
+    public ClientFilter(String accountSid, String friendlyName, String login) {
+        super();
+        this.accountSid = accountSid;
+        this.friendlyName = friendlyName;
+        this.login = login;
+        this.sortBy = null;
+        this.sortDirection = null;
+        this.limit = null;
+        this.offset = null;
     }
 
     /**
