@@ -104,7 +104,7 @@ public class IncomingPhoneNumbersEndpointTest {
                 adminAuthToken, firstPage.get("num_pages").getAsInt(), null, true);
         JsonArray lastPageNumbersArray = lastPage.get("incomingPhoneNumbers").getAsJsonArray();
         assertTrue(lastPageNumbersArray.get(lastPageNumbersArray.size() - 1).getAsJsonObject().get("sid").getAsString()
-                .equals("PNfe55cc614872498686441c32298325d7"));
+                .equals("PHae6e420f425248d6a26948c17a9e2ap8"));
           assertTrue(lastPageNumbersArray.size() == 1);
         assertTrue(lastPage.get("start").getAsInt() == 500);
         assertTrue(lastPage.get("end").getAsInt() == 501);
@@ -133,7 +133,7 @@ public class IncomingPhoneNumbersEndpointTest {
         JsonObject lastPage = (JsonObject) RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhoneNumbers(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, firstPage.get("num_pages").getAsInt(), 100, true);
         JsonArray lastPageNumbersArray = lastPage.get("incomingPhoneNumbers").getAsJsonArray();
-        assertEquals("PNfe55cc614872498686441c32298325d7",lastPageNumbersArray.get(lastPageNumbersArray.size() - 1).getAsJsonObject().get("sid").getAsString());
+        assertEquals("PHae6e420f425248d6a26948c17a9e2ap8",lastPageNumbersArray.get(lastPageNumbersArray.size() - 1).getAsJsonObject().get("sid").getAsString());
         assertTrue(lastPageNumbersArray.size() == 1);
         assertTrue(lastPage.get("start").getAsInt() == 500);
         assertTrue(lastPage.get("end").getAsInt() == 501);
@@ -981,7 +981,7 @@ public class IncomingPhoneNumbersEndpointTest {
         jsonResponse = parser.parse(response).getAsJsonObject();
         String secondPhoneNumberSid = jsonResponse.get("sid").getAsString();
         Map<String, String> filters = new HashMap<>();
-        filters.put("PhoneNumber", "867");
+        filters.put("PhoneNumber", "6902867");
         JsonObject jsonObject =  RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhoneNumbersUsingFilter(deploymentUrl.toString(), adminAccountSid, adminAuthToken, filters);
         JsonArray jsonArray = jsonObject.get("incomingPhoneNumbers").getAsJsonArray();
       
