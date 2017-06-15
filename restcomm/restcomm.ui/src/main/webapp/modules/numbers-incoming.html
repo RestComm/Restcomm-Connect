@@ -25,13 +25,13 @@
              <th class="width-20pc" ng-click="sortBy('phone_number');toggleD=!toggleD;reverse=toggleD;pageChanged()">
             Number<span class="pull-right" ng-show="predicate === 'phone_number'"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></span></th>
             <th>&nbsp;</th>
-            <th class="width-30pc" ng-click="sortBy('friendly_name');toggleC=!toggleC;reverse=toggleC;pageChanged()">Name<span class="pull-right" ng-show="predicate === 'friendly_name'"><i ng-class="{'fa fa-chevron-up':toggleC,'fa fa-chevron-down':!toggleC}"></i></span></th>
+            <th class="width-30pc" ng-click="sortBy('friendly_name');toggleC=!toggleC;reverse=toggleC">Name<span class="pull-right" ng-show="predicate === 'friendly_name'"><i ng-class="{'fa fa-chevron-up':toggleC,'fa fa-chevron-down':!toggleC}"></i></span></th>
       <th>
     			Features</th>
             <th class="width-10pc">&nbsp;</th>
             </thead>
             <tbody>
-            <tr class="number-row" ng-repeat="pn in filtered = (numbersList | filter:query| orderBy:predicate:reverse)">
+            <tr class="number-row" ng-repeat="pn in filtered = (numbersList | filter:query| orderBy:sort:reverse)">
                 <td><h4><a href="#/numbers/incoming/{{pn.sid}}">{{ pn.phone_number  }}</a></h4></td>
                 <td class="edit-number"><h5><i class="fa fa-pencil clickable" ng-click="editingFriendlyName = pn.phone_number"></i></h5></td>
                 <td>
