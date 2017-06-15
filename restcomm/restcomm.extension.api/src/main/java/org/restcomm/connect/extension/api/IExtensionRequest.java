@@ -18,10 +18,23 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-/**
- * When an Extension returns a SystemReponse, RC will reconfigure itself systemwide
- */
 package org.restcomm.connect.extension.api;
-public class SystemExtensionResponse extends ExtensionResponse {
-    //TODO: needs discussion, definition
+
+public interface IExtensionRequest {
+
+    /**
+     * @return the accountId as String
+     * FIXME: should this be at this level?
+     */
+    String getAccountSid();
+
+    /**
+     * @return whether request should proceed
+     */
+    boolean isAllowed();
+
+    /**
+     * @param set to allow/restrict request
+     */
+    void setAllowed(boolean allowed);
 }

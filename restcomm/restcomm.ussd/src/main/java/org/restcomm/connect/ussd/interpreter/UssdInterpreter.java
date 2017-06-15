@@ -29,6 +29,7 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -42,6 +43,7 @@ import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -67,7 +69,7 @@ import org.restcomm.connect.telephony.api.Answer;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
-import org.restcomm.connect.telephony.api.CreateCall;
+
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.ussd.commons.UssdInfoRequest;
 import org.restcomm.connect.ussd.commons.UssdMessageType;
@@ -75,6 +77,7 @@ import org.restcomm.connect.ussd.commons.UssdRestcommResponse;
 
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -359,7 +362,7 @@ public class UssdInterpreter extends UntypedActor {
             final String forwardedFrom = info.forwardedFrom();
             parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
             // logger.info("Type " + callInfo.type());
-            if (CreateCall.Type.SIP == info.type()) {
+            if (CreateCallType.SIP == info.type()) {
                 // Adding SIP OUT Headers and SipCallId for
                 // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
                 SipServletResponse lastResponse = info.lastResponse();

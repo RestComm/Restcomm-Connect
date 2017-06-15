@@ -8,6 +8,7 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+
 import com.cloudhopper.commons.charset.CharsetUtil;
 import com.cloudhopper.smpp.pdu.SubmitSm;
 import com.cloudhopper.smpp.type.Address;
@@ -18,6 +19,7 @@ import com.cloudhopper.smpp.type.SmppTimeoutException;
 import com.cloudhopper.smpp.type.UnrecoverablePduException;
 import com.cloudhopper.smpp.tlv.Tlv;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
+
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.UriUtils;
@@ -27,9 +29,10 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.extension.api.ExtensionRequest;
-import org.restcomm.connect.extension.api.ExtensionResponse;
+//import org.restcomm.connect.extension.api.ExtensionRequest;
+//import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.IExtensionCreateSmsSessionRequest;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
@@ -45,6 +48,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipURI;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
@@ -92,13 +96,11 @@ public class SmppMessageHandler extends UntypedActor  {
             }
             outbound((SmppOutboundMessageEntity) message);
         } else if (message instanceof CreateSmsSession) {
-            ExtensionRequest er = new ExtensionRequest();
-            er.setObject(message);
-            er.setConfiguration(this.configuration);
-            ExtensionResponse extensionResponse = ec.executePreOutboundAction(er, this.extensions);
-            if (extensionResponse.isAllowed()) {
-                Object obj = ec.handleExtensionResponse(extensionResponse, this.configuration);
-                final ActorRef session = session((Configuration)obj);
+            IExtensionCreateSmsSessionRequest ier = (CreateSmsSession)message;
+            ier.setConfiguration(this.configuration);
+            ec.executePreOutboundAction(ier, this.extensions);
+            if (ier.isAllowed()) {
+                final ActorRef session = session(ier.getConfiguration());
                 final SmsServiceResponse<ActorRef> response = new  SmsServiceResponse<ActorRef>(session);
                 sender.tell(response, self);
             } else {

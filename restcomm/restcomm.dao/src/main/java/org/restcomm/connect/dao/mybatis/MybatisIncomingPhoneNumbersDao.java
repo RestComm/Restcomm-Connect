@@ -47,6 +47,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
     private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao.";
     private final SqlSessionFactory sessions;
     private final Logger logger = Logger.getLogger(MybatisIncomingPhoneNumbersDao.class.getName());
+    private List<IncomingPhoneNumber> listPhones;
 
     public MybatisIncomingPhoneNumbersDao(final SqlSessionFactory sessions) {
         super();
@@ -74,39 +75,37 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         return getIncomingPhoneNumber("getIncomingPhoneNumberByValue", phoneNumber);
     }
 
-   private IncomingPhoneNumber getIncomingPhoneNumber(final String selector, Object parameter) {
+    private IncomingPhoneNumber getIncomingPhoneNumber(final String selector, Object parameter) {
         final SqlSession session = sessions.openSession();
         String inboundPhoneNumber = null;
-          try {
+        try {
             final Map<String, Object> result = session.selectOne(namespace + selector, parameter);
             if (result != null ) {
                 return toIncomingPhoneNumber(result);
             }
             //check if there is a Regex match only if parameter is a String aka phone Number
-            if(!(parameter instanceof Sid)){
-               inboundPhoneNumber = parameter.toString().replace("+1", "");
-                if (logger.isInfoEnabled()) {
-                    logger.info("About to check for REGEX incoming phone number for phoneNumber : " + inboundPhoneNumber);
+            listPhones = getIncomingPhoneNumbersRegex();
+            if (listPhones != null && listPhones.size() > 0) {
+                inboundPhoneNumber = ((String)parameter).replace("+1", "");
+                if (inboundPhoneNumber.matches("[\\d,*,#,+]+")) {
+                    return checkIncomingPhoneNumberRegexMatch(selector, inboundPhoneNumber);
                 }
-              return checkIncomingPhoneNumberRegexMatch(selector, inboundPhoneNumber);
-               }
-
+            }
         }finally {
-                     session.close();
-         }
-          return null;
+            session.close();
+        }
+        return null;
 
-}
+    }
 
-   public IncomingPhoneNumber checkIncomingPhoneNumberRegexMatch ( String selector, String inBoundPhoneNumber){
+   public IncomingPhoneNumber checkIncomingPhoneNumberRegexMatch ( String selector, String inboundPhoneNumber){
                final SqlSession session = sessions.openSession();
                String phoneRegexPattern = null;
                try {
-                    List<IncomingPhoneNumber> listPhones = getIncomingPhoneNumbersRegex();
-                    if (logger.isInfoEnabled()) {
-                        String msg = String.format("Found %d Regex IncomingPhone numbers",listPhones.size());
-                        logger.info(msg);
-                    }
+                   if (logger.isInfoEnabled()) {
+                       final String msg = String.format("Found %d Regex IncomingPhone numbers. Will try to match a REGEX for incoming phone number for phoneNumber : %s", listPhones.size(), inboundPhoneNumber);
+                       logger.info(msg);
+                   }
                    for (IncomingPhoneNumber listPhone : listPhones){
                        if (listPhone.getPhoneNumber().startsWith("+")){
                             phoneRegexPattern = listPhone.getPhoneNumber().replace("+", "/+");
@@ -116,24 +115,24 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
                             phoneRegexPattern = listPhone.getPhoneNumber();
                         }
                         Pattern p = Pattern.compile(phoneRegexPattern);
-                        Matcher m = p.matcher(inBoundPhoneNumber);
+                        Matcher m = p.matcher(inboundPhoneNumber);
                         if (m.find()) {
                             final Map<String, Object> resultRestcommRegexHostedNumber = session.selectOne(namespace + selector, phoneRegexPattern);
                             if (resultRestcommRegexHostedNumber != null) {
                                 if (logger.isInfoEnabled()) {
-                                    String msg = String.format("Pattern \"%s\" matched the phone number \"%s\"",phoneRegexPattern, inBoundPhoneNumber);
+                                    String msg = String.format("Pattern \"%s\" matched the phone number \"%s\"",phoneRegexPattern, inboundPhoneNumber);
                                     logger.info(msg);
                                 }
                                 return toIncomingPhoneNumber(resultRestcommRegexHostedNumber);
                             } else{
                                 if (logger.isInfoEnabled()) {
-                                    String msg = String.format("Regex \"%s\" cannot be matched for phone number \"%s\"", phoneRegexPattern, inBoundPhoneNumber);
+                                    String msg = String.format("Regex \"%s\" cannot be matched for phone number \"%s\"", phoneRegexPattern, inboundPhoneNumber);
                                     logger.info(msg);
                                 }
                             }
                         } else {
                             if (logger.isInfoEnabled()) {
-                                String msg = String.format("Regex \"%s\" cannot be matched for phone number \"%s\"", phoneRegexPattern, inBoundPhoneNumber);
+                                String msg = String.format("Regex \"%s\" cannot be matched for phone number \"%s\"", phoneRegexPattern, inboundPhoneNumber);
                                 logger.info(msg);
                             }
                         }
@@ -141,7 +140,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
                         logger.info("No matching phone number found, make sure your Restcomm Regex phone number is correctly defined");
                } catch (Exception e) {
                    if (logger.isDebugEnabled()) {
-                       String msg = String.format("Exception while trying to match for a REGEX incoming phone number");
+                       String msg = String.format("Exception while trying to match for a REGEX for incoming phone number %s, exception: %s", inboundPhoneNumber, e);
                        logger.debug(msg);
                    }
                }
