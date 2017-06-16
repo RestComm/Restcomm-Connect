@@ -22,12 +22,44 @@ package org.restcomm.connect.commons.util;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.util.mocks.InetAddressMock;
+
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
 public class DNSUtils {
 
+    private static boolean initialized = false;
+
+    private static String dnsUtilImplClassName;
+    private static final String DEFAULT_DNS_UTIL_CLASS_NAME = "java.net.InetAddress";
+
+    public static void initializeDnsUtilImplClassName(Configuration conf) {
+        synchronized (DNSUtils.class) {
+            if (!initialized) {
+                String configClass = conf.getString("dns-util[@class]");
+                dnsUtilImplClassName = configClass == null ? DEFAULT_DNS_UTIL_CLASS_NAME : configClass;
+                initialized = true;
+            }
+        }
+    }
+
     public static InetAddress getByName(String host) throws UnknownHostException {
-        return DNSUtils.getByName(host);
+        InetAddress result = null;
+        switch (dnsUtilImplClassName) {
+        case "java.net.InetAddress":
+            result = InetAddress.getByName(host);
+            break;
+        /* we can add implementation of another dns impl as well, for example dn4j etc*/
+        //case "org.restcomm.connect.commons.util.mocks.InetAddressMock":
+        case "org.restcomm.connect.testsuite.mocks.InetAddressMock":
+            result = InetAddressMock.getByName(host);
+            break;
+        default:
+            result = InetAddress.getByName(host);
+            break;
+        }
+        return result == null ? InetAddress.getByName(host): result;
     }
 }

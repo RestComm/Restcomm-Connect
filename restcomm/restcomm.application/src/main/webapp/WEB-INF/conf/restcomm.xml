@@ -328,6 +328,8 @@
 			<timeout>5</timeout>
 		</media-server>
 	</mscontrol>
+	<!-- dns-util specifies a class that will be used for implementation of ip resolution. -->
+	<dns-util class="java.net.InetAddress"/>
 
 	<!-- The media server manager is responsible for managing the media servers
 		in use by RestComm. The default way to control media servers is using the
