@@ -8,7 +8,7 @@
   <servlet>
     <servlet-name>Jersey</servlet-name>
     <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
-    <!-- Enable CORS request filter (allows all cors requests) -->
+    <!-- Enable CORS request filter -->
     <init-param>
       <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
       <param-value>org.restcomm.connect.http.cors.CorsFilter</param-value>

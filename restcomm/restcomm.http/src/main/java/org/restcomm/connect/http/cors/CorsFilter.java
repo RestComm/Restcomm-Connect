@@ -25,54 +25,39 @@ import com.sun.jersey.spi.container.ContainerResponse;
 import com.sun.jersey.spi.container.ContainerResponseFilter;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.configuration.sets.impl.RcmlserverConfigurationSetImpl;
 import org.restcomm.connect.commons.configuration.sources.ApacheConfigurationSource;
 import org.restcomm.connect.commons.configuration.sources.ConfigurationSource;
 
+import javax.servlet.ServletContext;
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
 import java.io.File;
-import java.net.URL;
 
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 @Provider
 public class CorsFilter implements ContainerResponseFilter {
+    private final Logger logger = Logger.getLogger(CorsFilter.class);
+
+    @Context
+    private HttpServletRequest servletRequest;
+
+    // we initialize this lazily upon first request since it can't be injected through the @Context annotation (it didn't work)
+    private ServletContext lazyServletContext;
 
     String allowedOrigin;
-
-    public CorsFilter() {
-        // Determine absolute path to restcomm.xml
-        URL url = CorsFilter.class.getResource(".");
-        String path = url.getFile();
-        String webInfPath = path.substring(0, path.indexOf("/WEB-INF/"));
-        String restcommXmlPath = webInfPath + "/WEB-INF/conf/restcomm.xml";
-        File restcommXmlFile = new File(restcommXmlPath);
-        // Create apache configuration
-        XMLConfiguration apacheConf = new XMLConfiguration();
-        apacheConf.setDelimiterParsingDisabled(true);
-        apacheConf.setAttributeSplittingDisabled(true);
-        try {
-            apacheConf.load(restcommXmlPath);
-        } catch (ConfigurationException e) {
-            e.printStackTrace();
-        }
-        // Create high-level configuration
-        ConfigurationSource source = new ApacheConfigurationSource(apacheConf);
-        RcmlserverConfigurationSet rcmlserverConfig = new RcmlserverConfigurationSetImpl(source);
-
-        // initialize allowedOrigin
-        String baseUrl = rcmlserverConfig.getBaseUrl();
-        if ( baseUrl != null && (! baseUrl.trim().equals(""))) {
-            // baseUrl is set. We need to return CORS allow headers
-            allowedOrigin = baseUrl;
-        }
-    }
 
     // We return Access-* headers only in case allowedOrigin is present and equals to the 'Origin' header.
     @Override
     public ContainerResponse filter(ContainerRequest cres, ContainerResponse response) {
+        initLazily(servletRequest);
         String requestOrigin = cres.getHeaderValue("Origin");
         if (requestOrigin != null) { // is this is a cors request (ajax request that targets a different domain than the one the page was loaded from)
             if (allowedOrigin != null && allowedOrigin.startsWith(requestOrigin)) {  // no cors allowances make are applied if allowedOrigins == null
@@ -85,5 +70,37 @@ public class CorsFilter implements ContainerResponseFilter {
             }
         }
         return response;
+    }
+
+    private void initLazily(ServletRequest request)  {
+        if (lazyServletContext == null) {
+            ServletContext context = request.getServletContext();
+            String rootPath = context.getRealPath("/");
+            rootPath = StringUtils.stripEnd(rootPath,"/"); // remove trailing "/" character
+            String restcommXmlPath = rootPath + "/WEB-INF/conf/restcomm.xml";
+
+            // ok, found restcomm.xml. Now let's get rcmlserver/base-url configuration setting
+            File restcommXmlFile = new File(restcommXmlPath);
+            // Create apache configuration
+            XMLConfiguration apacheConf = new XMLConfiguration();
+            apacheConf.setDelimiterParsingDisabled(true);
+            apacheConf.setAttributeSplittingDisabled(true);
+            try {
+                apacheConf.load(restcommXmlPath);
+            } catch (ConfigurationException e) {
+                e.printStackTrace();
+            }
+            // Create high-level configuration
+            ConfigurationSource source = new ApacheConfigurationSource(apacheConf);
+            RcmlserverConfigurationSet rcmlserverConfig = new RcmlserverConfigurationSetImpl(source);
+            // initialize allowedOrigin
+            String baseUrl = rcmlserverConfig.getBaseUrl();
+            if ( baseUrl != null && (! baseUrl.trim().equals(""))) {
+                // baseUrl is set. We need to return CORS allow headers
+                allowedOrigin = baseUrl;
+            }
+
+            lazyServletContext = context;
+        }
     }
 }
