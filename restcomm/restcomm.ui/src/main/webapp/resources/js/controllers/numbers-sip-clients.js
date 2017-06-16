@@ -25,7 +25,7 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $uibModal, $dialog, 
   }
 
   // add incoming client -----------------------------------------------------
-
+  $scope.loginRegx = /^[^@]+$/;
   $scope.showRegisterSIPClientModal = function () {
     var registerSIPClientModal = $uibModal.open({
       controller: 'ClientDetailsCtrl',
