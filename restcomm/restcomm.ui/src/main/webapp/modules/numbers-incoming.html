@@ -22,14 +22,16 @@
 
         <table ng-show="(numbersList | filter:query).length > 0" class="table table-hover" ng-cloak>
             <thead style="font-size: 18px;">
-            <th class="width-20pc">Number</th>
+             <th class="width-20pc" ng-click="sortBy('phone_number');toggleD=!toggleD;reverse=toggleD;pageChanged()">
+            Number<span class="pull-right" ng-show="predicate === 'phone_number'"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></span></th>
             <th>&nbsp;</th>
-            <th class="width-30pc">Name</th>
-            <th>Features</th>
+            <th class="width-30pc" ng-click="sortBy('friendly_name');toggleC=!toggleC;reverse=toggleC;pageChanged()">Name<span class="pull-right" ng-show="predicate === 'friendly_name'"><i ng-class="{'fa fa-chevron-up':toggleC,'fa fa-chevron-down':!toggleC}"></i></span></th>
+      <th>
+    			Features</th>
             <th class="width-10pc">&nbsp;</th>
             </thead>
             <tbody>
-            <tr class="number-row" ng-repeat="pn in filtered = (numbersList | filter:query)">
+            <tr class="number-row" ng-repeat="pn in filtered = (numbersList | filter:query| orderBy:predicate:reverse)">
                 <td><h4><a href="#/numbers/incoming/{{pn.sid}}">{{ pn.phone_number  }}</a></h4></td>
                 <td class="edit-number"><h5><i class="fa fa-pencil clickable" ng-click="editingFriendlyName = pn.phone_number"></i></h5></td>
                 <td>
@@ -55,6 +57,28 @@
                 </td>
             </tr>
             </tbody>
+             <tfoot>
+        <td colspan="99">
+            <div class="row">
+                <div class="col-md-4">
+                    <small class="pull-left">{{start}} to {{end}} of {{ totalNumbers }} Number{{ totalNumbers == 1 ? "" : "s" }}</small>
+                </div>
+                <div class="col-md-4">
+                    <form class="form-inline text-center">
+                        <h6>Items / Page</h6>
+                        <div class="btn-group buttons-per-page">
+                            <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 10}" ng-click="setEntryLimit(10)">10</button>
+                            <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 25}" ng-click="setEntryLimit(25)">25</button>
+                            <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 50}" ng-click="setEntryLimit(50)">50</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-4">
+                    <uib-pagination style="float:right" class="pagination pagination-sm" ng-change="pageChanged()" total-items="totalNumbers" items-per-page="entryLimit" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
+                </div>
+            </div>
+        </td>
+        </tfoot>
         </table>
 
 

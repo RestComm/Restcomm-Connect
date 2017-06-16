@@ -16,6 +16,8 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -222,7 +224,7 @@ public class DialRecordingS3UploadTest_NoneSecurity {
 				null));
 		assertTrue(aliceCall.waitForAck(50 * 1000));
 
-		Thread.sleep(3000);
+		Thread.sleep(3500);
 
 		// hangup.
 		aliceCall.listenForDisconnect();
@@ -231,12 +233,13 @@ public class DialRecordingS3UploadTest_NoneSecurity {
 		assertTrue(aliceCall.waitForDisconnect(30 * 1000));
 		assertTrue(aliceCall.respondToDisconnect());
 
+		Thread.sleep(1000);
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertTrue(duration==3.0);
+		assertEquals(3.0 , duration, 0);
 		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
 		assertTrue(recording.get(0).getAsJsonObject().get("s3_uri").getAsString().startsWith("http://127.0.0.1:8090/s3"));
@@ -337,6 +340,34 @@ public class DialRecordingS3UploadTest_NoneSecurity {
 		verify(1, putRequestedFor(urlMatching("/s3/.*")));
 	}
 
+	@Test
+	public void testGetRecordingWithOldS3Url() {
+		String callSid = "CA2d3f6354e75e46b3ac76f534129ff511";
+		DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
+		DateTime lastDateUpdate = formatter.parseDateTime("2017-04-05 12:57:35.583000");
+		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
+		assertNotNull(recording);
+		assertEquals(1, recording.size());
+		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
+		assertTrue(duration==3.0);
+		assertTrue(!recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("https://s3.amazonaws.com"));
+
+		//Wed, 5 Apr 2017 13:33:03 +0300
+		formatter = DateTimeFormat.forPattern("EEE, d MMM yyyy HH:mm:ss Z");
+
+		DateTime dateUpdated = formatter.parseDateTime(recording.get(0).getAsJsonObject().get("date_updated").getAsString());
+		assertTrue(dateUpdated.isAfter(lastDateUpdate));
+		String expectedS3Uri = "http://127.0.0.1:8090/s3/restcomm-as-a-service/logs/RE7a2345a37a2a4f18a2a715e8f352c4ed.wav";
+		assertEquals(expectedS3Uri, recording.get(0).getAsJsonObject().get("s3_uri").getAsString());
+
+		//Second time we access the recording THERE MUST BE NO update since we fixed S3_URI and FILE_URI in the previous call
+		recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
+		assertNotNull(recording);
+
+		DateTime dateUpdated2 = formatter.parseDateTime(recording.get(0).getAsJsonObject().get("date_updated").getAsString());
+		assertTrue(!dateUpdated2.isAfter(dateUpdated));
+		assertEquals(expectedS3Uri, recording.get(0).getAsJsonObject().get("s3_uri").getAsString());
+	}
 
 	@Deployment(name = "DialRecordingS3UploadTest_Secure", managed = true, testable = false)
 	public static WebArchive createWebArchiveNoGw() {
@@ -352,7 +383,7 @@ public class DialRecordingS3UploadTest_NoneSecurity {
 		archive.delete("/WEB-INF/classes/application.conf");
 		archive.addAsWebInfResource("sip.xml");
 		archive.addAsWebInfResource("restcomm_recording_s3_upload_none_security.xml", "conf/restcomm.xml");
-		archive.addAsWebInfResource("restcomm.script_dialTest_new", "data/hsql/restcomm.script");
+		archive.addAsWebInfResource("restcomm.script_DialRecording", "data/hsql/restcomm.script");
 		archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
 		logger.info("Packaged Test App");
 		return archive;

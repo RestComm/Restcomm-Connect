@@ -10,7 +10,7 @@
 
   <groupId>org.restcomm</groupId>
   <artifactId>restcomm-connect</artifactId>
-  <version>8.1.0-SNAPSHOT</version>
+  <version>8.2.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>RestComm-Connect</name>
   <description>A unified communications platform for web developers.</description>
@@ -90,7 +90,7 @@
 		<commons-codec.version>1.10</commons-codec.version>
 		<commons-lang.version>2.6</commons-lang.version>
 		<jain.mgcp.version>1.0</jain.mgcp.version>
-		<mobicents.mgcp.impl.version>3.0.2.FINAL</mobicents.mgcp.impl.version>
+		<mobicents.mgcp.impl.version>6.0.23</mobicents.mgcp.impl.version>
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
     <sipservletapi.version>3.1.761</sipservletapi.version>
@@ -129,6 +129,9 @@
 		<ch-commons-charset.version>3.0.2</ch-commons-charset.version>
 		<netty.version>3.9.6.Final</netty.version>
 		<logback.version>1.1.3</logback.version>
+		<maven-artifact.version>3.1.0</maven-artifact.version>
+		<smpp-extensions.version>1.0.13</smpp-extensions.version>
+
 	</properties>
 	<modules>
 		<!-- <module>restcomm.docs</module> -->
@@ -509,6 +512,18 @@
 				<groupId>com.amazonaws</groupId>
 				<artifactId>aws-java-sdk-s3</artifactId>
 				<version>${aws.sdk.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.maven</groupId>
+				<artifactId>maven-artifact</artifactId>
+				<version>${maven-artifact.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.restcomm.smpp</groupId>
+				<artifactId>smpp-extensions</artifactId>
+				<version>${smpp-extensions.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

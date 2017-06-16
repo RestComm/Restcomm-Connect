@@ -2,6 +2,7 @@ package org.restcomm.connect.interpreter;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
@@ -59,8 +60,6 @@ import org.restcomm.connect.tts.api.GetSpeechSynthesizerInfo;
 import org.restcomm.connect.tts.api.SpeechSynthesizerInfo;
 import org.restcomm.connect.tts.api.SpeechSynthesizerRequest;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
 
 import java.io.IOException;
 import java.net.URI;
@@ -70,9 +69,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
-import static akka.pattern.Patterns.ask;
 import static org.restcomm.connect.interpreter.rcml.Verbs.play;
 import static org.restcomm.connect.interpreter.rcml.Verbs.say;
 
@@ -149,15 +146,15 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
     private ActorRef originalInterpreter;
 
-    private ActorRef supervisor;
+    private ActorSystem system;
 
-    public ConfVoiceInterpreter(final ActorRef supervisor, final Configuration configuration, final Sid account, final String version, final URI url,
+    public ConfVoiceInterpreter(final Configuration configuration, final Sid account, final String version, final URI url,
             final String method, final String emailAddress, final ActorRef conference, final DaoManager storage,
             final CallInfo callInfo) {
 
         super();
 
-        this.supervisor = supervisor;
+        this.system = context().system();
         source = self();
         uninitialized = new State("uninitialized", null, null);
 
@@ -273,13 +270,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 return new DiskCacheFactory(configuration).getDiskCache(path, uri);
             }
         });
-        ActorRef cache = null;
-        try {
-            cache = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return cache;
+        return system.actorOf(props);
     }
 
     private ActorRef downloader() {
@@ -291,13 +282,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 return new Downloader();
             }
         });
-        ActorRef downloader = null;
-        try {
-            downloader = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return downloader;
+        return system.actorOf(props);
     }
 
     private String e164(final String number) {
@@ -313,7 +298,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
     private void invalidVerb(final Tag verb) {
         final ActorRef self = self();
         // Get the next verb.
-        final GetNextVerb next = GetNextVerb.instance();
+        final GetNextVerb next = new GetNextVerb();
         parser.tell(next, self);
     }
 
@@ -326,13 +311,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 return new EmailService(configuration);
             }
         });
-        ActorRef mailer = null;
-        try {
-            mailer = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return mailer;
+        return system.actorOf(props);
     }
 
     private Notification notification(final int log, final int error, final String message) {
@@ -531,13 +510,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 return new Parser(xml, self());
             }
         });
-        ActorRef parser = null;
-        try {
-            parser = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return parser;
+        return system.actorOf(props);
     }
 
     private void postCleanup() {
@@ -611,13 +584,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(configuration);
             }
         });
-        ActorRef tts = null;
-        try {
-            tts = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return tts;
+        return system.actorOf(props);
     }
 
     private abstract class AbstractAction implements Action {
@@ -717,7 +684,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 }
             }
             // Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
         }
     }
@@ -802,7 +769,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                     cache.tell(request, source);
                 } else {
                     // Ask the parser for the next action to take.
-                    final GetNextVerb next = GetNextVerb.instance();
+                    final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, source);
                 }
             }
@@ -938,7 +905,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 synthesizer.tell(synthesize, source);
             } else {
                 // Ask the parser for the next action to take.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
             }
         }
@@ -992,7 +959,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 downloader.tell(request, source);
             } else {
                 // Ask the parser for the next action to take.
-                final GetNextVerb next = GetNextVerb.instance();
+                final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
             }
         }

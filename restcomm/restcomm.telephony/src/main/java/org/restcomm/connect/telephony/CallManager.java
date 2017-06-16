@@ -24,22 +24,25 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
-import akka.actor.StopChild;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
+
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+
 import gov.nist.javax.sip.header.UserAgent;
+
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
@@ -57,9 +60,8 @@ import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.extension.api.CallRequest;
-import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.IExtensionCreateCallRequest;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
@@ -87,6 +89,7 @@ import org.restcomm.connect.telephony.api.SwitchProxy;
 import org.restcomm.connect.telephony.api.UpdateCallScript;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
+
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -106,11 +109,13 @@ import javax.servlet.sip.SipURI;
 import javax.servlet.sip.TelURL;
 import javax.sip.header.RouteHeader;
 import javax.sip.message.Response;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -146,7 +151,6 @@ public final class CallManager extends UntypedActor {
     static final int DEFAUL_IMS_PROXY_PORT = -1;
 
     private final ActorSystem system;
-    private final ActorRef supervisor;
     private final Configuration configuration;
     private final ServletContext context;
     private final MediaServerControllerFactory msControllerFactory;
@@ -227,12 +231,11 @@ public final class CallManager extends UntypedActor {
 
     }
 
-    public CallManager(final Configuration configuration, final ServletContext context, final ActorSystem system, final ActorRef supervisor,
+    public CallManager(final Configuration configuration, final ServletContext context,
                        final MediaServerControllerFactory msControllerFactory, final ActorRef conferences, final ActorRef bridges,
                        final ActorRef sms, final SipFactory factory, final DaoManager storage) {
         super();
-        this.system = system;
-        this.supervisor = supervisor;
+        this.system = context().system();
         this.configuration = configuration;
         this.context = context;
         this.msControllerFactory = msControllerFactory;
@@ -342,8 +345,8 @@ public final class CallManager extends UntypedActor {
 
                 @Override
                 public UntypedActor create() throws Exception {
-                    return new Call(supervisor, sipFactory, msControllerFactory.provideCallController(), configuration,
-                            null, null, null);
+                    return new Call(sipFactory, msControllerFactory.provideCallController(), configuration,
+                            null, null, null, null);
                 }
             });
         } else {
@@ -352,18 +355,12 @@ public final class CallManager extends UntypedActor {
 
                 @Override
                 public UntypedActor create() throws Exception {
-                    return new Call(supervisor, sipFactory, msControllerFactory.provideCallController(), configuration,
-                            request.statusCallback(), request.statusCallbackMethod(), request.statusCallbackEvent());
+                    return new Call(sipFactory, msControllerFactory.provideCallController(), configuration,
+                            request.statusCallback(), request.statusCallbackMethod(), request.statusCallbackEvent(), request.getOutboundProxyHeaders());
                 }
             });
         }
-        ActorRef call = null;
-        try {
-            call = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
-        return call;
+        return system.actorOf(props);
     }
 
     private boolean check(final Object message) throws IOException {
@@ -389,7 +386,7 @@ public final class CallManager extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("About to destroy call: "+request.call().path()+", call isTerminated(): "+sender().isTerminated()+", sender: "+sender());
             }
-            supervisor.tell(new StopChild(call), null);
+            system.stop(call);
         }
     }
 
@@ -471,6 +468,7 @@ public final class CallManager extends UntypedActor {
         SipURI outboundIntf = outboundInterface(transport);
 
         if(logger.isInfoEnabled()) {
+            logger.info("ToUser: " + toUser);
             logger.info("ToHost: " + toHost);
             logger.info("ruri: " + ruri);
             logger.info("myHostIp: " + myHostIp);
@@ -478,15 +476,19 @@ public final class CallManager extends UntypedActor {
             logger.info("proxyIp: " + proxyIp);
         }
 
+        Client toClient = clients.getClient(toUser);
+
         if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have little control over
-            Client toClient = clients.getClient(toUser);
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to the b2bua
                 if(logger.isInfoEnabled()) {
                     logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "+ toClient);
                 }
-                CallRequest callRequest = new CallRequest(fromUser, toUser, CallRequest.Type.CLIENT,
-                        client.getAccountSid(), false, false);
-                if (executePreOutboundAction(callRequest)) {
+
+                ExtensionController ec = ExtensionController.getInstance();
+                IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, client.getAccountSid(), null,null, null, null);
+                ec.executePreOutboundAction(er, this.extensions);
+
+                if (er.isAllowed()) {
                     if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                         if(logger.isInfoEnabled()) {
                             logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp + " toHost: "
@@ -513,56 +515,77 @@ public final class CallManager extends UntypedActor {
                     final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
                     resp.send();
                 }
-                executePostOutboundAction(callRequest);
+                ec.executePostOutboundAction(er, this.extensions);
                 return;
             } else {
                 // toClient is null or we couldn't make the b2bua call to another client. check if this call is for a registered
                 // DID (application)
-                if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
+                if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, client.getAccountSid())) {
                     // This is a call to a registered DID (application)
                     return;
                 }
+
                 // This call is not a registered DID (application). Try to proxy out this call.
                 // log to console and to notification engine
                 String errMsg = "A Restcomm Client is trying to call a Number/DID that is not registered with Restcomm";
                 sendNotification(errMsg, 11002, "info", true);
 
-                if (isWebRTC(request)) {
-                    //This is a WebRTC client that dials out
-                    proxyThroughMediaServer(request, client, toUser);
-                    return;
-                }
+                ExtensionController ec = ExtensionController.getInstance();
+                IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.PSTN, client.getAccountSid(), null,null, null, null);
+                ec.executePreOutboundAction(er, this.extensions);
+                if (er.isAllowed()) {
+                    if (isWebRTC(request)) {
+                        //This is a WebRTC client that dials out
+                        //TODO: should we inject headers for this case?
+                        proxyThroughMediaServer(request, client, toUser);
 
-                // https://telestax.atlassian.net/browse/RESTCOMM-335
-                final String proxyURI = activeProxy;
-                final String proxyUsername = activeProxyUsername;
-                final String proxyPassword = activeProxyPassword;
-                SipURI from = null;
-                SipURI to = null;
-                boolean callToSipUri = false;
-                // proxy DID or number if the outbound proxy fields are not empty in the restcomm.xml
-                if (proxyURI != null && !proxyURI.isEmpty()) {
-//                    String destination = ((SipURI)request.getTo().getURI()).getUser();
-                    CallRequest callRequest = new CallRequest(fromUser,toUser, CallRequest.Type.PSTN, client.getAccountSid(), false, false);
-                    if (executePreOutboundAction(callRequest)) {
-                        proxyOut(request, client, toUser, toHost, toHostIpAddress, toPort, outboundIntf, proxyURI, proxyUsername, proxyPassword, from, to, callToSipUri);
                     } else {
-                        final SipServletResponse response = request.createResponse(SC_FORBIDDEN, "Call request not allowed");
-                        response.send();
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("Call request now allowed: "+callRequest.toString());
+                        // https://telestax.atlassian.net/browse/RESTCOMM-335
+                        String proxyURI = activeProxy;
+                        String proxyUsername = activeProxyUsername;
+                        String proxyPassword = activeProxyPassword;
+                        SipURI from = null;
+                        SipURI to = null;
+                        boolean callToSipUri = false;
+
+                        if(er.getOutboundProxy()!=null && !er.getOutboundProxy().isEmpty()){
+                            proxyURI = er.getOutboundProxy();
+                        }
+                        if(er.getOutboundProxyUsername()!=null && !er.getOutboundProxyUsername().isEmpty()){
+                            proxyUsername = er.getOutboundProxyUsername();
+                        }
+                        if(er.getOutboundProxyPassword()!=null && !er.getOutboundProxyPassword().isEmpty()){
+                            proxyUsername = er.getOutboundProxyPassword();
+                        }
+                        // proxy DID or number if the outbound proxy fields are not empty in the restcomm.xml
+                        if (proxyURI != null && !proxyURI.isEmpty()) {
+                            //FIXME: not so nice to just inject headers here
+                            addHeadersToMessage(request, er.getOutboundProxyHeaders());
+                            proxyOut(request, client, toUser, toHost, toHostIpAddress, toPort, outboundIntf, proxyURI, proxyUsername, proxyPassword, from, to, callToSipUri);
+                        } else {
+                            errMsg = "Restcomm tried to proxy this call to an outbound party but it seems the outbound proxy is not configured.";
+                            sendNotification(errMsg, 11004, "warning", true);
                         }
                     }
-                    executePostOutboundAction(callRequest);
-                    return;
                 } else {
-                    String msg = "Restcomm tried to proxy this call to an outbound party but it seems the outbound proxy is not configured.";
-                    sendNotification(errMsg, 11004, "warning", true);
+                    //Extensions didn't allow this call
+                    final SipServletResponse response = request.createResponse(SC_FORBIDDEN, "Call request not allowed");
+                    response.send();
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Call request not allowed: "+er.toString());
+                    }
                 }
+                ec.executePostOutboundAction(er, this.extensions);
+                return;
             }
         } else {
             // Client is null, check if this call is for a registered DID (application)
-            if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
+            //        //First try to check if the call is for a client
+            if ( toClient != null) {
+                proxyDialClientThroughMediaServer(request , toClient, toClient.getLogin());
+                return;
+            }
+            if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, null)) {
                 // This is a call to a registered DID (application)
                 return;
             }
@@ -574,6 +597,71 @@ public final class CallManager extends UntypedActor {
                 + "cannot be found or there is application attached to that";
         sendNotification(errMsg, 11005, "error", true);
 
+    }
+
+    /**
+     * FIXME: duplicated code make into static function or something more optimized
+     * Replace headers
+     * @param SipServletRequest message
+     * @param Map<String, ArrayList<String> > headers
+     */
+    private void addHeadersToMessage(SipServletRequest message, Map<String, ArrayList<String> > headers) {
+
+        if(headers!=null) {
+            for (Map.Entry<String, ArrayList<String>> entry : headers.entrySet()) {
+                //check if header exists
+                String headerName = entry.getKey();
+
+                StringBuilder sb = new StringBuilder();
+                if(entry.getValue() instanceof ArrayList){
+                    for(String pair : entry.getValue()){
+                        sb.append(";").append(pair);
+                    }
+                }
+                if(logger.isDebugEnabled()) {
+                    logger.debug("headerName="+headerName+" headerVal="+message.getHeader(headerName)+" concatValue="+sb.toString());
+                }
+                if(!headerName.equalsIgnoreCase("Request-URI")){
+                    try {
+                        String headerVal = message.getHeader(headerName);
+                        if(headerVal!=null && !headerVal.isEmpty()) {
+                            message.setHeader(headerName , headerVal+sb.toString());
+                        }else{
+                            message.addHeader(headerName , sb.toString());
+                        }
+                    } catch (IllegalArgumentException iae) {
+                        if(logger.isErrorEnabled()) {
+                            logger.error("Exception while setting message header: "+iae.getMessage());
+                        }
+                    }
+                }else{
+                    //handle Request-URI
+                    javax.servlet.sip.URI reqURI = message.getRequestURI();
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
+                    }
+                    for(String keyValPair :entry.getValue()){
+                        String parName = "";
+                        String parVal = "";
+                        int equalsPos = keyValPair.indexOf("=");
+                        parName = keyValPair.substring(0, equalsPos);
+                        parVal = keyValPair.substring(equalsPos+1);
+                        reqURI.setParameter(parName, parVal);
+                        if(logger.isDebugEnabled()) {
+                            logger.debug("ReqURI pars ="+parName+"="+parVal+" equalsPos="+equalsPos+" keyValPair="+keyValPair);
+                        }
+                    }
+
+                    message.setRequestURI(reqURI);
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
+                    }
+                }
+                if(logger.isDebugEnabled()) {
+                    logger.debug("headerName="+headerName+" headerVal="+message.getHeader(headerName));
+                }
+            }
+        }
     }
 
     private boolean proxyOut(SipServletRequest request, Client client, String toUser, String toHost, String toHostIpAddress, String toPort, SipURI outboundIntf, String proxyURI, String proxyUsername, String proxyPassword, SipURI from, SipURI to, boolean callToSipUri) throws UnknownHostException {
@@ -665,7 +753,30 @@ public final class CallManager extends UntypedActor {
 
     private void proxyThroughMediaServer(final SipServletRequest request, final Client client, final String destNumber) {
         String rcml = "<Response><Dial>"+destNumber+"</Dial></Response>";
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        builder.setConfiguration(configuration);
+        builder.setStorage(storage);
+        builder.setCallManager(self());
+        builder.setConferenceManager(conferences);
+        builder.setBridgeManager(bridges);
+        builder.setSmsService(sms);
+        builder.setAccount(client.getAccountSid());
+        builder.setVersion(client.getApiVersion());
+        final Account account = storage.getAccountsDao().getAccount(client.getAccountSid());
+        builder.setEmailAddress(account.getEmailAddress());
+        builder.setRcml(rcml);
+        builder.setMonitoring(monitoring);
+        final ActorRef interpreter = builder.build();
+        final ActorRef call = call(null);
+        final SipApplicationSession application = request.getApplicationSession();
+        application.setAttribute(Call.class.getName(), call);
+        call.tell(request, self());
+        interpreter.tell(new StartInterpreter(call), self());
+    }
+
+    private void proxyDialClientThroughMediaServer(final SipServletRequest request, final Client client, final String destNumber) {
+        String rcml = "<Response><Dial><Client>"+destNumber+"</Client></Dial></Response>";
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self());
@@ -894,7 +1005,7 @@ public final class CallManager extends UntypedActor {
         existingInterpreter.tell(new StopInterpreter(true), null);
 
         // Build a new VoiceInterpreter
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self());
@@ -947,14 +1058,25 @@ public final class CallManager extends UntypedActor {
      * @param phone
      */
     private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-                                             final ApplicationsDao applications, String phone) {
+                                             final ApplicationsDao applications, String phone, Sid fromClientAccountSid) {
         boolean isFoundHostedApp = false;
         // Format the destination to an E.164 phone number.
         final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
         String formatedPhone = null;
-        try {
-            formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
-        } catch (Exception e) {
+        if (!(phone.contains("*") || phone.contains("#"))) {
+            try {
+                formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
+            } catch (NumberParseException e) {
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("Problem while trying to format number %s, exception %s ",phone, e);
+                    logger.info(msg);
+                }
+            }
+        }
+        if (formatedPhone == null) {
+            //Don't format to E.164 if phone contains # or * as this is
+            //for a Regex or USSD short number
+            formatedPhone = phone;
         }
         IncomingPhoneNumber number = null;
         try {
@@ -980,16 +1102,21 @@ public final class CallManager extends UntypedActor {
                 number = numbers.getIncomingPhoneNumber("*");
             }
             if (number != null) {
-                final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
+                final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
                 builder.setConfiguration(configuration);
                 builder.setStorage(storage);
                 builder.setCallManager(self);
                 builder.setConferenceManager(conferences);
                 builder.setBridgeManager(bridges);
                 builder.setSmsService(sms);
-                builder.setAccount(number.getAccountSid());
+                //https://github.com/RestComm/Restcomm-Connect/issues/1939
+                Sid accSid = fromClientAccountSid == null? number.getAccountSid() : fromClientAccountSid;
+                builder.setAccount(accSid);
+                builder.setPhone(number.getAccountSid());
                 builder.setVersion(number.getApiVersion());
-                final Account account = accounts.getAccount(number.getAccountSid());
+                // notifications should go to fromClientAccountSid email if not present then to number account
+                // https://github.com/RestComm/Restcomm-Connect/issues/2011
+                final Account account = accounts.getAccount(accSid);
                 builder.setEmailAddress(account.getEmailAddress());
                 final Sid sid = number.getVoiceApplicationSid();
                 if (sid != null) {
@@ -1026,7 +1153,7 @@ public final class CallManager extends UntypedActor {
             if (number != null) {
                 errMsg = "The number " + number.getPhoneNumber() + " does not have a Restcomm hosted application attached";
             } else {
-                errMsg = "The number does not have a Restcomm hosted application attached";
+                errMsg = "The number does not exist" + notANumber;
             }
             sendNotification(errMsg, 11007, "error", false);
             logger.warning(errMsg, notANumber);
@@ -1058,7 +1185,7 @@ public final class CallManager extends UntypedActor {
         boolean isClientManaged =( (applicationSid != null && !applicationSid.toString().isEmpty() && !applicationSid.toString().equals("")) ||
                 (clientAppVoiceUrl != null && !clientAppVoiceUrl.toString().isEmpty() &&  !clientAppVoiceUrl.toString().equals("")));
         if (isClientManaged) {
-            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
+            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
             builder.setConfiguration(configuration);
             builder.setStorage(storage);
             builder.setCallManager(self);
@@ -1315,7 +1442,7 @@ public final class CallManager extends UntypedActor {
     private void execute(final Object message) {
         final ExecuteCallScript request = (ExecuteCallScript) message;
         final ActorRef self = self();
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self);
@@ -1397,7 +1524,7 @@ public final class CallManager extends UntypedActor {
         existingInterpreter.tell(new StopInterpreter(true), null);
 
         // Build a new VoiceInterpreter
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self);
@@ -1458,10 +1585,11 @@ public final class CallManager extends UntypedActor {
 
     private void outbound(final Object message, final ActorRef sender) throws ServletParseException {
         final CreateCall request = (CreateCall) message;
-        CallRequest callRequest = new CallRequest(request.from(), request.to(), CallRequest.Type.valueOf(request.type().name()), request.accountId(), request.isFromApi(), request.parentCallSid() != null);
+        ExtensionController ec = ExtensionController.getInstance();
+        ec.executePreOutboundAction(request, this.extensions);
         switch (request.type()) {
             case CLIENT: {
-                if (executePreOutboundAction(callRequest)) {
+                if (request.isAllowed()) {
                     outboundToClient(request, sender);
                 } else {
                     //Extensions didn't allowed this call
@@ -1469,11 +1597,11 @@ public final class CallManager extends UntypedActor {
                     logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), this.createCallRequest), self());
                 }
-                executePostOutboundAction(callRequest);
+                ec.executePostOutboundAction(request, this.extensions);
                 break;
             }
             case PSTN: {
-                if (executePreOutboundAction(callRequest)) {
+                if (request.isAllowed()) {
                     outboundToPstn(request, sender);
                 } else {
                     //Extensions didn't allowed this call
@@ -1481,14 +1609,14 @@ public final class CallManager extends UntypedActor {
                     logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), this.createCallRequest), self());
                 }
-                executePostOutboundAction(callRequest);
+                ec.executePostOutboundAction(request, this.extensions);
                 break;
             }
             case SIP: {
                 if (actAsImsUa) {
                     outboundToIms(request, sender);
                 }
-                else if (executePreOutboundAction(callRequest)) {
+                else if (request.isAllowed()) {
                     outboundToSip(request, sender);
                 }  else {
                     //Extensions didn't allowed this call
@@ -1496,27 +1624,10 @@ public final class CallManager extends UntypedActor {
                     logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), this.createCallRequest), self());
                 }
-                executePostOutboundAction(callRequest);
+                ec.executePostOutboundAction(request, this.extensions);
                 break;
             }
         }
-    }
-
-    private boolean executePreOutboundAction(final Object message) {
-        if (extensions != null && extensions.size() > 0) {
-            for (RestcommExtensionGeneric extension : extensions) {
-                if (extension.isEnabled()) {
-                    ExtensionResponse response = extension.preOutboundAction(message);
-                    if (!response.isAllowed())
-                        return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private boolean executePostOutboundAction(final CallRequest callRequest) {
-        return false;
     }
 
     private void outboundToClient(final CreateCall request, final ActorRef sender) throws ServletParseException {
@@ -1631,7 +1742,7 @@ public final class CallManager extends UntypedActor {
     }
 
     private void outboundToPstn(final CreateCall request, final ActorRef sender) throws ServletParseException {
-        final String uri = activeProxy;
+        final String uri = (request.getOutboundProxy()!= null && (!request.getOutboundProxy().isEmpty())) ? request.getOutboundProxy() : activeProxy;
         SipURI outboundIntf = null;
         SipURI from = null;
         SipURI to = null;
@@ -1691,11 +1802,15 @@ public final class CallManager extends UntypedActor {
 
 
     private void outboundToSip(final CreateCall request, final ActorRef sender) throws ServletParseException {
+        final String uri = (request.getOutboundProxy()!= null && (!request.getOutboundProxy().isEmpty())) ? request.getOutboundProxy() : "";
         SipURI outboundIntf = null;
         SipURI from = null;
-        SipURI to = null;
+        SipURI to = (SipURI) sipFactory.createURI(request.to());
 
-        to = (SipURI) sipFactory.createURI(request.to());
+        if(!uri.isEmpty()){
+            to.setHost(uri);
+        }
+
         String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
         outboundIntf = outboundInterface(transport);
         if (request.from() == null) {
@@ -2174,7 +2289,7 @@ public final class CallManager extends UntypedActor {
                 logger.info("rcml: " + rcml);
             }
 
-            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(supervisor);
+            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
             builder.setConfiguration(configuration);
             builder.setStorage(storage);
             builder.setCallManager(self());

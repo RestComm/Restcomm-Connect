@@ -21,6 +21,7 @@ package org.restcomm.connect.mgcp;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -47,15 +48,10 @@ import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
 import org.restcomm.connect.commons.util.RevolvingCounter;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
 
 import java.net.InetAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -93,13 +89,14 @@ public class MockMediaGateway extends UntypedActor {
     private static Map<MediaSession, ActorRef> links;
     private static Map<MediaSession, ActorRef> connections;
 
-    private ActorRef supervisor;
+    private ActorSystem system;
 
     public MockMediaGateway() {
         super();
         endpoints = new ConcurrentHashMap<MediaSession, ActorRef>();
         links = new ConcurrentHashMap<MediaSession, ActorRef>();
         connections = new ConcurrentHashMap<MediaSession, ActorRef>();
+        system = context().system();
     }
 
     public static Map<MediaSession, ActorRef> getEndpointsMap() {
@@ -122,15 +119,10 @@ public class MockMediaGateway extends UntypedActor {
             private static final long serialVersionUID = 1L;
             @Override
             public UntypedActor create() throws Exception {
-                return new Connection(gateway, session, agent, timeout);
+                return new MockConnection(gateway, session, agent, timeout);
             }
         });
-        ActorRef connection = null;
-        try{
-            connection = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
+        ActorRef connection = system.actorOf(props);
         connections.put(session, connection);
         return connection;
     }
@@ -147,12 +139,7 @@ public class MockMediaGateway extends UntypedActor {
                 return new BridgeEndpoint(gateway, session, agent, domain, timeout);
             }
         });
-        ActorRef bridgeEndpoint = null;
-        try {
-            bridgeEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
+        ActorRef bridgeEndpoint = system.actorOf(props);
         endpoints.put(session, bridgeEndpoint);
         return bridgeEndpoint;
     }
@@ -173,12 +160,7 @@ public class MockMediaGateway extends UntypedActor {
                 return new ConferenceEndpoint(gateway, session, agent, domain, timeout, endpointName);
             }
         });
-        ActorRef conferenceEndpoint = null;
-        try {
-            conferenceEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
+        ActorRef conferenceEndpoint = system.actorOf(props);
         endpoints.put(session, conferenceEndpoint);
         return conferenceEndpoint;
     }
@@ -201,12 +183,7 @@ public class MockMediaGateway extends UntypedActor {
                 return new IvrEndpoint(gateway, session, agent, domain, timeout, endpointName);
             }
         });
-        ActorRef ivrEndpoint = null;
-        try {
-            ivrEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
+        ActorRef ivrEndpoint = system.actorOf(props);
         endpoints.put(session, ivrEndpoint);
         return ivrEndpoint;
     }
@@ -223,12 +200,7 @@ public class MockMediaGateway extends UntypedActor {
                 return new Link(gateway, session, agent, timeout);
             }
         });
-        ActorRef link = null;
-        try {
-            link = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
+        ActorRef link = system.actorOf(props);
         links.put(session, link);
         return link;
     }
@@ -245,12 +217,7 @@ public class MockMediaGateway extends UntypedActor {
                 return new PacketRelayEndpoint(gateway, session, agent, domain, timeout);
             }
         });
-        ActorRef packetRelayEndpoint = null;
-        try {
-            packetRelayEndpoint = (ActorRef) Await.result(ask(supervisor, props, 500), Duration.create(500, TimeUnit.MILLISECONDS));
-        } catch (Exception e) {
-            logger.error("Problem during creation of actor: "+e);
-        }
+        ActorRef packetRelayEndpoint = system.actorOf(props);
         endpoints.put(session, packetRelayEndpoint);
         return packetRelayEndpoint;
     }
@@ -293,7 +260,6 @@ public class MockMediaGateway extends UntypedActor {
         requestIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
         sessionIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
         transactionIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
-        supervisor = request.getSupervisor();
     }
 
     @Override
@@ -435,7 +401,7 @@ public class MockMediaGateway extends UntypedActor {
                         sleepTime = Integer.parseInt(param.replace("rlt=", ""));
                     }
                 }
-                if (sleepTime == 3600000) {
+                if (sleepTime == 36000) {
                     //If maxLength is not set, rlt will be rlt=3600000
                     //In that case don't sleep at all
                     sleepTime = 0;

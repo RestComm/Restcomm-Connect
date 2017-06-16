@@ -184,6 +184,7 @@ public class ClientsDialTest {
     private static SipStackTool tool7;
     private static SipStackTool tool8;
     private static SipStackTool tool9;
+    private static SipStackTool tool10;
 
     private String pstnNumber = "+151261006100";
 
@@ -235,6 +236,10 @@ public class ClientsDialTest {
     private String leftyContact = "sip:lefty@127.0.0.1:5098";
     private String leftyRestcommClientSid;
 
+    private SipStack externalSipStack;
+    private SipPhone externalPhone;
+    private String externalContact = "sip:external@127.0.0.1:5099";
+
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
@@ -249,6 +254,7 @@ public class ClientsDialTest {
         tool7 = new SipStackTool("ClientsDialTest7");
         tool8 = new SipStackTool("ClientsDialTest8");
         tool9 = new SipStackTool("ClientsDialTest9");
+        tool10 = new SipStackTool("ClientsDialTest10");
     }
 
     @Before
@@ -285,6 +291,9 @@ public class ClientsDialTest {
 
         leftySipStack = tool9.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5098", "127.0.0.1:5080");
         leftyPhone = leftySipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, leftyContact);
+
+        externalSipStack = tool10.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5099", "127.0.0.1:5080");
+        externalPhone = externalSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, externalContact);
     }
 
     @After
@@ -576,6 +585,57 @@ public class ClientsDialTest {
         Thread.sleep(3000);
         georgeCall.listenForDisconnect();
         assertTrue(mariaCall.disconnect());
+
+        //        assertTrue(georgeCall.waitForDisconnect(5 * 1000));
+        //        assertTrue(georgeCall.respondToDisconnect());
+    }
+
+    @Test //Issue: https://github.com/RestComm/Restcomm-Connect/issues/2086
+    public void testDialClientFromPstn() throws ParseException, InterruptedException {
+
+        assertNotNull(mariaRestcommClientSid);
+
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(mariaPhone.register(uri, "maria", clientPassword, mariaContact, 14400, 3600));
+        Thread.sleep(3000);
+
+        SipCall mariaCall = mariaPhone.createSipCall();
+        mariaCall.listenForIncomingCall();
+
+        final SipCall externalCall = externalPhone.createSipCall();
+        externalCall.initiateOutgoingCall(leftyContact, "sip:maria@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(externalCall);
+        assertTrue(externalCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = externalCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(externalCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, externalCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(externalCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, externalCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(externalCall.sendInviteOkAck());
+
+        assertTrue(mariaCall.waitForIncomingCall(5000));
+        assertTrue(mariaCall.sendIncomingCallResponse(Response.TRYING, "Maria-Trying", 3600));
+        assertTrue(mariaCall.sendIncomingCallResponse(Response.RINGING, "Maria-Ringing", 3600));
+        String receivedBody = new String(mariaCall.getLastReceivedRequest().getRawContent());
+        assertTrue(mariaCall.sendIncomingCallResponse(Response.OK, "Maria-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+
+
+        assertTrue(mariaCall.waitForAck(5000));
+
+
+        Thread.sleep(1000);
+
+        externalCall.listenForDisconnect();
+
+        assertTrue(mariaCall.disconnect());
+        assertTrue(externalCall.waitForDisconnect(5000));
+        assertTrue(externalCall.respondToDisconnect());
 
         //        assertTrue(georgeCall.waitForDisconnect(5 * 1000));
         //        assertTrue(georgeCall.respondToDisconnect());
@@ -1084,7 +1144,7 @@ public class ClientsDialTest {
 
         Thread.sleep(2000);
 
-        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertTrue( liveCalls == 2);
         assertTrue(liveCallsArraySize  == 2);
@@ -1099,7 +1159,7 @@ public class ClientsDialTest {
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
         assertTrue(aliceCall.respondToDisconnect());
 
-        liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertTrue(liveCalls == 0);
         assertTrue(liveCallsArraySize == 0);
@@ -1163,7 +1223,7 @@ public class ClientsDialTest {
 
         Thread.sleep(2000);
 
-        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertTrue( liveCalls == 2);
         assertTrue(liveCallsArraySize  == 2);
@@ -1178,7 +1238,7 @@ public class ClientsDialTest {
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
         assertTrue(aliceCall.respondToDisconnect());
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
     }
 

@@ -21,17 +21,20 @@ package org.restcomm.connect.http;
 
 import akka.actor.ActorRef;
 import akka.util.Timeout;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.thoughtworks.xstream.XStream;
+
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.amazonS3.RecordingSecurityLevel;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -48,6 +51,8 @@ import org.restcomm.connect.http.converter.CallDetailRecordListConverter;
 import org.restcomm.connect.http.converter.RecordingConverter;
 import org.restcomm.connect.http.converter.RecordingListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.mscontrol.api.messages.Mute;
+import org.restcomm.connect.mscontrol.api.messages.Unmute;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CallResponse;
@@ -57,6 +62,7 @@ import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.UpdateCallScript;
+
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -69,6 +75,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+
 import java.net.URI;
 import java.net.URL;
 import java.text.ParseException;
@@ -377,13 +384,13 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         CreateCall create = null;
         try {
             if (to.contains("@")) {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.SIP,
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCallType.SIP,
                         accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
             } else if (to.startsWith("client")) {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.CLIENT,
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCallType.CLIENT,
                         accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
             } else {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.PSTN,
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCallType.PSTN,
                         accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
             }
             create.setCreateCDR(false);
@@ -489,6 +496,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         String statusCallbackMethod = data.getFirst("StatusCallbackMethod");
         //Restcomm-  Move connected call leg (if exists) to the new URL
         Boolean moveConnectedCallLeg = Boolean.valueOf(data.getFirst("MoveConnectedCallLeg"));
+        Boolean mute = Boolean.valueOf(data.getFirst("Mute"));
 
         String callPath = null;
         final ActorRef call;
@@ -510,9 +518,9 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         if (method == null)
             method = "POST";
 
-        if (url != null && status != null) {
+        if (url == null && status == null && mute == null ) {
             // Throw exception. We can either redirect a running call using Url or change the state of a Call with Status
-            final String errorMessage = "You can either redirect a running call using \"Url\" or change the state of a Call with \"Status\"";
+            final String errorMessage = "You can either redirect a running call using \"Url\" or change the state of a Call with \"Status\" or mute a call using \"Mute=true\"";
             return status(javax.ws.rs.core.Response.Status.CONFLICT).entity(errorMessage).build();
         }
 
@@ -539,6 +547,14 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
                 if (call != null) {
                     call.tell(new Hangup(SipServletResponse.SC_REQUEST_TERMINATED), null);
                 }
+            }
+        }
+
+        if(mute != null && call != null){
+            try{
+                muteUnmuteCall(mute, callInfo, call, cdr, dao);
+            } catch (Exception exception) {
+                return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
             }
         }
 
@@ -611,4 +627,34 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 
     }
 
+    /**
+     * @param mute - true if we want to mute the call, false otherwise.
+     * @param callInfo - CallInfo
+     * @param call - ActorRef for the call
+     * @param cdr - CallDetailRecord of given call to update mute status in db
+     * @param dao - CallDetailRecordsDao for calls to update mute status in db
+     */
+    protected void muteUnmuteCall(Boolean mute, CallInfo callInfo, ActorRef call, CallDetailRecord cdr, CallDetailRecordsDao dao){
+        if(callInfo.state().name().equalsIgnoreCase("IN_PROGRESS") || callInfo.state().name().equalsIgnoreCase("in-progress")){
+            if(mute){
+                if(!callInfo.isMuted()){
+                    call.tell(new Mute(), null);
+                }else{
+                    if(logger.isInfoEnabled())
+                        logger.info("Call is already muted.");
+                }
+            }else{
+                if(callInfo.isMuted()){
+                    call.tell(new Unmute(), null);
+                }else{
+                    if(logger.isInfoEnabled())
+                        logger.info("Call is not muted.");
+                }
+            }
+            cdr = cdr.setMuted(mute);
+            dao.updateCallDetailRecord(cdr);
+        }else{
+            // Do Nothing. We can only mute/unMute in progress calls
+        }
+    }
 }

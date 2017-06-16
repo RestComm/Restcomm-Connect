@@ -147,12 +147,35 @@ public class RestcommCallsTool {
 
     }
 
+    /**
+     * getCall from same account
+     *
+     * @param deploymentUrl
+     * @param username
+     * @param authToken
+     * @param sid
+     * @return
+     */
     public JsonObject getCall(String deploymentUrl, String username, String authToken, String sid){
+        return getCall(deploymentUrl, username, authToken, username, sid);
+    }
+
+    /**
+     * getCall from another account's resource
+     * https://github.com/RestComm/Restcomm-Connect/issues/1939
+     * @param deploymentUrl
+     * @param username
+     * @param authToken
+     * @param resourceAccountSid
+     * @param sid
+     * @return
+     */
+    public JsonObject getCall(String deploymentUrl, String username, String authToken, String resourceAccountSid, String sid){
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
 
-        String url = getAccountsUrl(deploymentUrl, username, false);
+        String url = getAccountsUrl(deploymentUrl, resourceAccountSid, false);
 
         WebResource webResource = jerseyClient.resource(url);
 
@@ -195,11 +218,20 @@ public class RestcommCallsTool {
     }
 
     public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl) {
-        return createCall(deploymentUrl, username, authToken, from, to, rcmlUrl, null, null, null);
+        return createCall(deploymentUrl, username, authToken, from, to, rcmlUrl, null, null, null, null);
+    }
+
+    public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl, String timeout) {
+        return createCall(deploymentUrl, username, authToken, from, to, rcmlUrl, null, null, null, timeout);
     }
 
     public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl,
                                   final String statusCallback, final String statusCallbackMethod, final String statusCallbackEvent) {
+        return createCall(deploymentUrl, username, authToken, from, to, rcmlUrl, statusCallback, statusCallbackMethod, statusCallbackEvent, null);
+    }
+
+    public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl,
+                                  final String statusCallback, final String statusCallbackMethod, final String statusCallbackEvent, final String timeout) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -220,6 +252,9 @@ public class RestcommCallsTool {
         if (statusCallbackEvent != null)
             params.add("StatusCallbackEvent", statusCallbackEvent);
 
+        if (timeout != null)
+            params.add("Timeout", timeout);
+
         // webResource = webResource.queryParams(params);
         String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
         JsonParser parser = new JsonParser();
@@ -230,13 +265,53 @@ public class RestcommCallsTool {
         }
     }
 
+    /**
+     * @param deploymentUrl
+     * @param username
+     * @param authToken
+     * @param callSid
+     * @param mute
+     * @return
+     * @throws Exception
+     */
+    public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, Boolean mute) throws Exception {
+        return modifyCall(deploymentUrl, username, authToken, callSid, null, null, false, mute);
+    }
+
+    /**
+     * @param deploymentUrl
+     * @param username
+     * @param authToken
+     * @param callSid
+     * @param status
+     * @param rcmlUrl
+     * @return
+     * @throws Exception
+     */
     public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,
                                  String rcmlUrl) throws Exception {
-        return modifyCall(deploymentUrl, username, authToken, callSid, status, rcmlUrl, false);
+        return modifyCall(deploymentUrl, username, authToken, callSid, status, rcmlUrl, false, null);
     }
 
     public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,
-            String rcmlUrl, boolean moveConnectedLeg) throws Exception {
+                                 String rcmlUrl, boolean moveConnectedLeg) throws Exception {
+        return modifyCall(deploymentUrl, username, authToken, callSid, status, rcmlUrl, moveConnectedLeg, null);
+    }
+
+    /**
+     * @param deploymentUrl
+     * @param username
+     * @param authToken
+     * @param callSid
+     * @param status
+     * @param rcmlUrl
+     * @param moveConnectedLeg
+     * @param mute
+     * @return
+     * @throws Exception
+     */
+    public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,
+            String rcmlUrl, boolean moveConnectedLeg, Boolean mute) throws Exception {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -256,6 +331,12 @@ public class RestcommCallsTool {
             params.add("Url", rcmlUrl);
         if (moveConnectedLeg)
             params.add("MoveConnectedCallLeg", "true");
+        if (mute != null){
+        	if(mute)
+        		params.add("Mute", "true");
+        	else
+        		params.add("Mute", "false");
+        }
 
         JsonObject jsonObject = null;
 

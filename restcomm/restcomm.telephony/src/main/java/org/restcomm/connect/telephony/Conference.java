@@ -19,12 +19,11 @@
  */
 package org.restcomm.connect.telephony;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
+import akka.actor.ActorRef;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.dao.Sid;
@@ -60,11 +59,11 @@ import org.restcomm.connect.telephony.api.RemoveParticipant;
 import org.restcomm.connect.telephony.api.StartConference;
 import org.restcomm.connect.telephony.api.StopConference;
 
-import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -282,8 +281,9 @@ public final class Conference extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
+            ConferenceModeratorPresent msg = (ConferenceModeratorPresent)message;
             // Stop the background music if present
-            mscontroller.tell(new StopMediaGroup(), super.source);
+            mscontroller.tell(new StopMediaGroup(msg.beep()), super.source);
             updateConferenceStatus(ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT);
             // Notify the observers
             broadcast(new ConferenceStateChanged(name, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT));

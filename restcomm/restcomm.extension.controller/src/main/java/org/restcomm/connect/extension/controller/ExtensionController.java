@@ -1,6 +1,8 @@
 package org.restcomm.connect.extension.controller;
 
+import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.IExtensionRequest;
 import org.restcomm.connect.extension.api.RestcommExtension;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.apache.log4j.Logger;
@@ -79,5 +81,39 @@ public class ExtensionController {
                 }
             }
         }
+    }
+
+    public ExtensionResponse executePreOutboundAction(final IExtensionRequest ier, List<RestcommExtensionGeneric> extensions) {
+        //FIXME: if we have more than one extension in chain
+        // and all of them are successful, we only receive the last
+        // extensionResponse
+        ExtensionResponse response = new ExtensionResponse();
+        if (extensions != null && extensions.size() > 0) {
+
+            for (RestcommExtensionGeneric extension : extensions) {
+                if(logger.isInfoEnabled()) {
+                    logger.info( extension.getName()+" is enabled="+extension.isEnabled());
+                }
+                if (extension.isEnabled()) {
+                    response = extension.preOutboundAction(ier);
+                    //fail fast
+                    if (!response.isAllowed()){
+                        break;
+                    }
+                }
+            }
+        }
+        return response;
+    }
+
+    public ExtensionResponse executePostOutboundAction(Object er, List<RestcommExtensionGeneric> extensions) {
+        ExtensionResponse response = new ExtensionResponse();
+        //TODO: implement actual calls
+        return response;
+    }
+    public ExtensionResponse executePostOutboundAction(final IExtensionRequest er, List<RestcommExtensionGeneric> extensions) {
+        ExtensionResponse response = new ExtensionResponse();
+        //TODO: implement actual calls
+        return response;
     }
 }

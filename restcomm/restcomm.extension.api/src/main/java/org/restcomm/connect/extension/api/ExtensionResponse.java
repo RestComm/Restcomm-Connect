@@ -26,7 +26,7 @@ package org.restcomm.connect.extension.api;
  */
 public class ExtensionResponse {
     private Object object;
-    private boolean allowed;
+    private boolean allowed = true;
 
     public ExtensionResponse() {}
 

@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.restcomm</groupId>
         <artifactId>restcomm-connect</artifactId>
-        <version>8.1.0-SNAPSHOT</version>
+        <version>8.2.0-SNAPSHOT</version>
     </parent>
 
     <groupId>org.restcomm</groupId>
@@ -45,6 +45,20 @@
             <artifactId>sip-servlets-spec</artifactId>
             <version>${sipservletapi.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.dao</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-artifact</artifactId>
         </dependency>
     </dependencies>
 

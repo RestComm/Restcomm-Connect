@@ -20,10 +20,12 @@
 package org.restcomm.connect.interpreter;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -31,16 +33,17 @@ import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
 import org.restcomm.connect.asr.AsrResponse;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
-import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.NotificationsDao;
-import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.fax.FaxResponse;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.telephony.CreateCallType;
+import org.restcomm.connect.dao.CallDetailRecordsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.fax.FaxResponse;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
 import org.restcomm.connect.interpreter.rcml.Attribute;
@@ -56,12 +59,13 @@ import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
 import org.restcomm.connect.telephony.api.Cancel;
-import org.restcomm.connect.telephony.api.CreateCall;
+
 import org.restcomm.connect.telephony.api.DestroyCall;
 import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
 
 import javax.servlet.sip.SipServletResponse;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -91,20 +95,20 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
     private Boolean hangupOnEnd = false;
     private ActorRef originalInterpreter;
 
-    public SubVoiceInterpreter(final ActorRef supervisor, final Configuration configuration, final Sid account, final Sid phone, final String version,
+    public SubVoiceInterpreter(final ActorSystem system, final Configuration configuration, final Sid account, final Sid phone, final String version,
             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
             final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
             final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage) {
 
-        this(supervisor, configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod, statusCallback,
+        this(configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod, statusCallback,
                 statusCallbackMethod, emailAddress, callManager, conferenceManager, sms, storage, false);
     }
 
-    public SubVoiceInterpreter(final ActorRef supervisor, final Configuration configuration, final Sid account, final Sid phone, final String version,
-            final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
-            final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
-            final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage, final Boolean hangupOnEnd) {
-        super(supervisor);
+    public SubVoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
+                               final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
+                               final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
+                               final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage, final Boolean hangupOnEnd) {
+        super();
         source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
         ready = new State("ready", new Ready(source), null);
@@ -433,7 +437,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
         // Adding SIP OUT Headers and SipCallId for
         // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
-        if (CreateCall.Type.SIP == callInfo.type()) {
+        if (CreateCallType.SIP == callInfo.type()) {
             SipServletResponse lastResponse = callInfo.lastResponse();
             if (lastResponse != null) {
                 final int statusCode = lastResponse.getStatus();
@@ -512,7 +516,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
             // Ask the parser for the next action to take.
-            final GetNextVerb next = GetNextVerb.instance();
+            final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
         }
     }
