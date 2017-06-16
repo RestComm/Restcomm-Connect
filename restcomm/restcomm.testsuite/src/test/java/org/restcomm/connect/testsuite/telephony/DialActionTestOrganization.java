@@ -31,7 +31,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.text.ParseException;
@@ -60,12 +59,7 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -79,7 +73,6 @@ import com.google.gson.JsonObject;
  *
  */
 @RunWith(Arquillian.class)
-@PrepareForTest(DNSUtils.class)
 public class DialActionTestOrganization {
 
     private final static Logger logger = Logger.getLogger(DialActionTestOrganization.class.getName());
@@ -96,9 +89,6 @@ public class DialActionTestOrganization {
     private Deployer deployer;
     @ArquillianResource
     URL deploymentUrl;
-
-    @Rule
-    public PowerMockRule powerMockRule = new PowerMockRule();
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
@@ -159,28 +149,14 @@ public class DialActionTestOrganization {
         georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
         georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
 
-        PowerMockito.mockStatic(DNSUtils.class);
-        PowerMockito.when(DNSUtils.getByName(testDomain2)).thenReturn(InetAddress.getByName("127.0.0.1"));
-
     }
 
     @Test
     public void testDialActionAliceAnswers() throws ParseException, InterruptedException, UnknownHostException {
 
-        PowerMockito.mockStatic(DNSUtils.class);
-        PowerMockito.when(DNSUtils.getByName(testDomain2)).thenReturn(InetAddress.getByName("127.0.0.1"));
-        stubFor(post(urlPathMatching("/DialActionOrganization.*"))
+       stubFor(post(urlPathMatching("/DialActionOrganization.*"))
                 .willReturn(aResponse()
                     .withStatus(200)));
-
-        PowerMockito.mockStatic(DNSUtils.class);
-        PowerMockito.when(DNSUtils.getByName(testDomain2)).thenReturn(InetAddress.getByName("127.0.0.1"));
-        
-        String resultedValue = DNSUtilsWrapper.getByName(testDomain2).getHostAddress();
-        Object expectedIP="127.0.0.1";
-		System.out.println("resultedValue: "+resultedValue+" expectedIP: "+expectedIP);
-        assertEquals("Get Desired IP for any domain name: ", expectedIP, resultedValue);
-
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
@@ -254,19 +230,6 @@ public class DialActionTestOrganization {
         assertNotNull(cdr);
     }
 
-	/*@Test
-	@PrepareForTest(DNSUtils.class)
-    public void testGetHostName() throws UnknownHostException {
-        
-        PowerMockito.mockStatic(DNSUtils.class);
-        PowerMockito.when(DNSUtils.getByName(testDomain2)).thenReturn(InetAddress.getByName("127.0.0.1"));
-        
-        String resultedValue = DNSUtilsWrapper.getByName(testDomain2).getHostAddress();
-        Object expectedIP="127.0.0.1";
-		System.out.println("resultedValue: "+resultedValue+" expectedIP: "+expectedIP);
-        assertEquals("Get Desired IP for any domain name: ", expectedIP, resultedValue);
-    }*/
-
     @After
     public void after() throws Exception {
         if (bobPhone != null) {
@@ -312,7 +275,6 @@ public class DialActionTestOrganization {
         archive.delete("/WEB-INF/sip.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
-        archive.addClasses(DNSUtils.class);
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialActionTest", "data/hsql/restcomm.script");

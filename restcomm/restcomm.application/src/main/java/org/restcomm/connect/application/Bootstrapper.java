@@ -301,6 +301,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             }
             xml.setProperty("runtime-settings.home-directory", home(context));
             xml.setProperty("runtime-settings.root-uri", uri(context));
+            // initialize DnsUtilImpl ClassName
+            DNSUtils.initializeDnsUtilImplClassName(xml);
             // Create high-level restcomm configuration
             RestcommConfiguration.createOnce(xml);
             context.setAttribute(Configuration.class.getName(), xml);

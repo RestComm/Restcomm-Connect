@@ -17,20 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.telephony;
+package org.restcomm.connect.testsuite.mocks;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.restcomm.connect.commons.util.DNSUtils;
-
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
-public class DNSUtilsWrapper {
+public class InetAddressMock {
 
     public static InetAddress getByName(String host) throws UnknownHostException {
-        System.out.println("DNSUtilsWrapper.getByName called");
-        return DNSUtils.getByName(host);
+        return InetAddress.getByName("127.0.0.1");
     }
 }
