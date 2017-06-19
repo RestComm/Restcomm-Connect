@@ -194,7 +194,7 @@ public class DialActionTestOrganization {
         assertTrue(mariaPhone.register(uri, "maria", clientPassword, "sip:maria@127.0.0.1:5093", 3600, 3600));
         assertTrue(dimitriPhone.register(uri, "dimitri", clientPassword, "sip:dimitri@127.0.0.1:5094", 3600, 3600));
 
-        Credential c = new Credential("127.0.0.1", "maria", clientPassword);
+        Credential c = new Credential("testdomain2.restcomm.com", "maria", clientPassword);
         mariaPhone.addUpdateCredential(c);
 
         final SipCall dimitriCall = dimitriPhone.createSipCall();
@@ -205,7 +205,7 @@ public class DialActionTestOrganization {
         // Maria initiates a call to Dimitri
         long startTime = System.currentTimeMillis();
         final SipCall mariaCall = mariaPhone.createSipCall();
-        mariaCall.initiateOutgoingCall("sip:maria@127.0.0.1:5093", dimitriContact, null, body, "application", "sdp", null, null);
+        mariaCall.initiateOutgoingCall(mariaContact, dimitriContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(mariaCall);
         assertTrue(mariaCall.waitForAuthorisation(3000));
 
