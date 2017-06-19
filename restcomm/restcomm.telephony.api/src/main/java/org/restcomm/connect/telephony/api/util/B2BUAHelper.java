@@ -110,7 +110,7 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
                  SipURI to;
                  SipURI from;
                  to = (SipURI) sipFactory.createURI(location);
-                 Sid fromOrganizationSid = getOrganizationSidBySipURIHost((SipURI) request.getTo().getURI());
+                 Sid fromOrganizationSid = getOrganizationSidBySipURIHost((SipURI) request.getFrom().getURI());
                  // if both clients don't belong to same organization, call should not be allowed.
                  if(!toOrganizationSid.equals(fromOrganizationSid)){
                      logger.warn(String.format("B2B clients do not belong to same organization. from-client: %s belong to %s . where as to-client %s belong to %s", client.getLogin(), fromOrganizationSid, user, toOrganizationSid));
