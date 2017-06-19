@@ -102,14 +102,21 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
 
          final RegistrationsDao registrations = daoManager.getRegistrationsDao();
          try {
-             final Registration registration = registrations.getRegistration(user, getOrganizationSidBySipURIHost((SipURI) request.getTo().getURI()));
+             Sid toOrganizationSid = getOrganizationSidBySipURIHost((SipURI) request.getTo().getURI());
+             final Registration registration = registrations.getRegistration(user, toOrganizationSid);
              if (registration != null) {
                  final String location = registration.getLocation();
                  final String aor = registration.getAddressOfRecord();
                  SipURI to;
                  SipURI from;
                  to = (SipURI) sipFactory.createURI(location);
-                 from = (SipURI) sipFactory.createURI((registrations.getRegistration(client.getLogin(), getOrganizationSidBySipURIHost((SipURI) request.getTo().getURI()))).getLocation());
+                 Sid fromOrganizationSid = getOrganizationSidBySipURIHost((SipURI) request.getTo().getURI());
+                 // if both clients don't belong to same organization, call should not be allowed.
+                 if(!toOrganizationSid.equals(fromOrganizationSid)){
+                     logger.warn(String.format("B2B clients do not belong to same organization. from-client: %s belong to %s . where as to-client %s belong to %s", client.getLogin(), fromOrganizationSid, user, toOrganizationSid));
+                     return true;
+                 }
+                 from = (SipURI) sipFactory.createURI((registrations.getRegistration(client.getLogin(), fromOrganizationSid)).getLocation());
                  final SipSession incomingSession = request.getSession();
                  // create and send the outgoing invite and do the session linking
                  incomingSession.setAttribute(B2BUA_LAST_REQUEST, request);
