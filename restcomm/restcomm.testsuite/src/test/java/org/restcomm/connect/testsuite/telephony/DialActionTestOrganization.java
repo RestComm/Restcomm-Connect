@@ -142,11 +142,11 @@ public class DialActionTestOrganization {
     private String mariaContact = "sip:maria@testdomain2.restcomm.com";
     private String mariaRestcommClientSid;
 
-    // Dimitris is a Restcomm Client **without** VoiceURL. This Restcomm Client can dial anything.
-    private SipStack dimitriSipStack;
-    private SipPhone dimitriPhone;
-    private String dimitriContact = "sip:dimitri@testdomain2.restcomm.com";
-    private String dimitriRestcommClientSid;
+    // Shoaibs is a Restcomm Client **without** VoiceURL. This Restcomm Client can dial anything.
+    private SipStack shoaibSipStack;
+    private SipPhone shoaibPhone;
+    private String shoaibContact = "sip:shoaib@testdomain2.restcomm.com";
+    private String shoaibRestcommClientSid;
     private String clientPassword = "qwerty1234RT";
 
     @BeforeClass
@@ -176,11 +176,11 @@ public class DialActionTestOrganization {
         mariaSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5093", "127.0.0.1:5080");
         mariaPhone = mariaSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, mariaContact);
 
-        dimitriSipStack = tool6.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
-        dimitriPhone = dimitriSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, dimitriContact);
+        shoaibSipStack = tool6.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
+        shoaibPhone = shoaibSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, shoaibContact);
         
         mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, "maria", clientPassword, null);
-        dimitriRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, "dimitri", clientPassword, null);
+        shoaibRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, "shoaib", clientPassword, null);
 
     }
 
@@ -188,32 +188,32 @@ public class DialActionTestOrganization {
     public void testClientsCallEachOther() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
-        assertNotNull(dimitriRestcommClientSid);
+        assertNotNull(shoaibRestcommClientSid);
 
         SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(mariaPhone.register(uri, "maria", clientPassword, "sip:maria@127.0.0.1:5093", 3600, 3600));
-        assertTrue(dimitriPhone.register(uri, "dimitri", clientPassword, "sip:dimitri@127.0.0.1:5094", 3600, 3600));
+        assertTrue(shoaibPhone.register(uri, "shoaib", clientPassword, "sip:shoaib@127.0.0.1:5094", 3600, 3600));
 
         Credential c = new Credential("testdomain2.restcomm.com", "maria", clientPassword);
         mariaPhone.addUpdateCredential(c);
 
-        final SipCall dimitriCall = dimitriPhone.createSipCall();
-        dimitriCall.listenForIncomingCall();
+        final SipCall shoaibCall = shoaibPhone.createSipCall();
+        shoaibCall.listenForIncomingCall();
 
         Thread.sleep(1000);
 
-        // Maria initiates a call to Dimitri
+        // Maria initiates a call to Shoaib
         long startTime = System.currentTimeMillis();
         final SipCall mariaCall = mariaPhone.createSipCall();
-        mariaCall.initiateOutgoingCall(mariaContact, dimitriContact, null, body, "application", "sdp", null, null);
+        mariaCall.initiateOutgoingCall(mariaContact, shoaibContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(mariaCall);
         assertTrue(mariaCall.waitForAuthorisation(3000));
 
-        assertTrue(dimitriCall.waitForIncomingCall(5000));
-        assertTrue(dimitriCall.sendIncomingCallResponse(100, "Trying-Dimitri", 1800));
-        assertTrue(dimitriCall.sendIncomingCallResponse(180, "Ringing-Dimitri", 1800));
-        String receivedBody = new String(dimitriCall.getLastReceivedRequest().getRawContent());
-        assertTrue(dimitriCall.sendIncomingCallResponse(Response.OK, "OK-Dimitri", 3600, receivedBody, "application", "sdp", null,
+        assertTrue(shoaibCall.waitForIncomingCall(5000));
+        assertTrue(shoaibCall.sendIncomingCallResponse(100, "Trying-Shoaib", 1800));
+        assertTrue(shoaibCall.sendIncomingCallResponse(180, "Ringing-Shoaib", 1800));
+        String receivedBody = new String(shoaibCall.getLastReceivedRequest().getRawContent());
+        assertTrue(shoaibCall.sendIncomingCallResponse(Response.OK, "OK-Shoaib", 3600, receivedBody, "application", "sdp", null,
                 null));
 
         assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
@@ -223,7 +223,7 @@ public class DialActionTestOrganization {
         Dialog mariaDialog = null;
 
         if (responseMaria == Response.TRYING) {
-            assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+            assertTrue(mariaCall.waitOutgoingCallResponse(5 * 2000));
             assertEquals(Response.RINGING, mariaCall.getLastReceivedResponse().getStatusCode());
             mariaDialog = mariaCall.getDialog();
         }
@@ -236,15 +236,15 @@ public class DialActionTestOrganization {
 
         assertTrue(!(mariaCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        assertTrue(dimitriCall.waitForAck(3000));
+        assertTrue(shoaibCall.waitForAck(3000));
 
         //Talk time ~ 3sec
         Thread.sleep(3000);
-        dimitriCall.listenForDisconnect();
+        shoaibCall.listenForDisconnect();
         assertTrue(mariaCall.disconnect());
 
-        assertTrue(dimitriCall.waitForDisconnect(5 * 1000));
-        assertTrue(dimitriCall.respondToDisconnect());
+        assertTrue(shoaibCall.waitForDisconnect(5 * 1000));
+        assertTrue(shoaibCall.respondToDisconnect());
         long endTime   = System.currentTimeMillis();
 
         double totalTime = (endTime - startTime)/1000.0;
@@ -430,8 +430,8 @@ public class DialActionTestOrganization {
             alicePhone.dispose();
         }
 
-        if (dimitriSipStack != null) {
-            dimitriSipStack.dispose();
+        if (shoaibSipStack != null) {
+            shoaibSipStack.dispose();
         }
         if (alicePhone != null) {
             alicePhone.dispose();
