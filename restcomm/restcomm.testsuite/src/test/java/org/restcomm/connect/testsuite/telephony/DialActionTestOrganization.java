@@ -124,7 +124,7 @@ public class DialActionTestOrganization {
 
     private String dialClientWithActionUrl = "sip:+12223334466@testdomain2.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
 
-    private String testDomain2adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
+    private String testDomain2adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acg";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     
 	final static String testDomain2 = "testdomain2.restcomm.com";
@@ -162,7 +162,7 @@ public class DialActionTestOrganization {
                     .withStatus(200)));
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
 
         // Prepare second phone to receive call
         SipCall aliceCall = alicePhone.createSipCall();
@@ -232,8 +232,6 @@ public class DialActionTestOrganization {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
-
-
 
     @Test
     public void testDialActionInvalidCall() throws ParseException, InterruptedException {
@@ -362,7 +360,7 @@ public class DialActionTestOrganization {
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
 
         // Prepare second phone to receive call
         SipCall aliceCall = alicePhone.createSipCall();
@@ -440,7 +438,7 @@ public class DialActionTestOrganization {
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
 
         // Prepare second phone to receive call
         SipCall aliceCall = alicePhone.createSipCall();
@@ -518,7 +516,7 @@ public class DialActionTestOrganization {
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
 
         // Prepare second phone to receive call
         SipCall aliceCall = alicePhone.createSipCall();
@@ -593,7 +591,7 @@ public class DialActionTestOrganization {
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
 
         // Prepare second phone to receive call
         SipCall aliceCall = alicePhone.createSipCall();
@@ -668,7 +666,7 @@ public class DialActionTestOrganization {
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
 
         // Prepare second phone to receive call
         SipCall aliceCall = alicePhone.createSipCall();
@@ -741,7 +739,7 @@ public class DialActionTestOrganization {
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
 
         // Prepare second phone to receive call
         SipCall aliceCall = alicePhone.createSipCall();
@@ -827,7 +825,7 @@ public class DialActionTestOrganization {
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
 
         // Prepare second phone to receive call
         SipCall aliceCall = alicePhone.createSipCall();
@@ -919,7 +917,7 @@ public class DialActionTestOrganization {
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
 
         // Prepare second phone to receive call
         SipCall aliceCall = alicePhone.createSipCall();
@@ -1017,7 +1015,7 @@ public class DialActionTestOrganization {
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
 
         // Prepare second phone to receive call
         SipCall aliceCall = alicePhone.createSipCall();
