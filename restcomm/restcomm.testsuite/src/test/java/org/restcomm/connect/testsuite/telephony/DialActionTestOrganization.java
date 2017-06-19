@@ -364,7 +364,7 @@ public class DialActionTestOrganization {
         SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(mariaPhone.register(uri, "maria", clientPassword, "sip:maria@127.0.0.1:5093", 3600, 3600));
         assertTrue(alice2Phone.register(uri, "alice", "1234", "sip:alice2@127.0.0.1:5095", 3600, 3600));
-
+        //following realm is a cheat/hack to get through authorization and test organization related p2p logic.
         Credential c = new Credential("org3.restcomm.com", "maria", clientPassword);
         mariaPhone.addUpdateCredential(c);
 
