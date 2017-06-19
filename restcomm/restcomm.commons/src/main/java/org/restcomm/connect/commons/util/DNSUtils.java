@@ -52,8 +52,8 @@ public class DNSUtils {
             result = InetAddress.getByName(host);
             break;
         /* we can add implementation of another dns impl as well, for example dn4j etc*/
-        //case "org.restcomm.connect.commons.util.mocks.InetAddressMock":
-        case "org.restcomm.connect.testsuite.mocks.InetAddressMock":
+        case "org.restcomm.connect.commons.util.mock.InetAddressMock":
+        //case "org.restcomm.connect.testsuite.mocks.InetAddressMock":
             result = InetAddressMock.getByName(host);
             break;
         default:
