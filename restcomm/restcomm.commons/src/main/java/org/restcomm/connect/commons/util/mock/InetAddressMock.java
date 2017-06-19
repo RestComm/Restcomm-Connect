@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.testsuite.mocks;
+package org.restcomm.connect.commons.util.mock;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

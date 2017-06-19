@@ -23,7 +23,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.commons.util.mocks.InetAddressMock;
+import org.restcomm.connect.commons.util.mock.InetAddressMock;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
