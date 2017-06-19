@@ -154,7 +154,7 @@ public class DialActionTestOrganization {
     @Test
     public void testDialActionAliceAnswers() throws ParseException, InterruptedException, UnknownHostException {
 
-       stubFor(post(urlPathMatching("/DialActionOrganization.*"))
+       stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
                     .withStatus(200)));
         // Phone2 register as alice
@@ -208,7 +208,7 @@ public class DialActionTestOrganization {
         Thread.sleep(3000);
 
         logger.info("About to check the DialAction Requests");
-        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialActionOrganization.*")));
+        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
         assertEquals(1, requests.size());
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
@@ -264,7 +264,7 @@ public class DialActionTestOrganization {
         Thread.sleep(4000);
     }
 
-    @Deployment(name = "DialActionOrganization", managed = true, testable = false)
+    @Deployment(name = "DialAction", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
