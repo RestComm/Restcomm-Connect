@@ -106,6 +106,7 @@ public class DialActionTestOrganization {
     private static SipStackTool tool4;
     private static SipStackTool tool5;
     private static SipStackTool tool6;
+    private static SipStackTool tool7;
 
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
@@ -113,7 +114,7 @@ public class DialActionTestOrganization {
     private String bobContact = "sip:bob@testdomain2.restcomm.com";
 
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
-    // of the VoiceURL will be executed.
+    // of the VoiceURL will be executed. Alice belong to organization testdomain2.restcomm.com
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
     private String aliceContact = "sip:alice@testdomain2.restcomm.com";
@@ -129,6 +130,8 @@ public class DialActionTestOrganization {
     private String georgeContact = "sip:+131313@testdomain2.restcomm.com";
 
     private String dialClientWithActionUrl = "sip:+12223334455@testdomain2.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
+    
+    private String dialClientWithActionUrlOrg3 = "sip:+12223334455@org3.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml of organization: org3.restcomm.com
 
     private String testDomain2adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acg";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
@@ -149,6 +152,12 @@ public class DialActionTestOrganization {
     private String shoaibRestcommClientSid;
     private String clientPassword = "qwerty1234RT";
 
+    // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
+    // of the VoiceURL will be executed. Alice belong to organization: org3.restcomm.com
+    private SipStack alice2SipStack;
+    private SipPhone alice2Phone;
+    private String alice2Contact = "sip:alice@org3.restcomm.com";
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("DialActionTest1");
@@ -157,6 +166,7 @@ public class DialActionTestOrganization {
         tool4 = new SipStackTool("DialActionTest4");
         tool5 = new SipStackTool("DialActionTest5");
         tool6 = new SipStackTool("DialActionTest6");
+        tool7 = new SipStackTool("DialActionTest7");
     }
 
     @Before
@@ -178,6 +188,9 @@ public class DialActionTestOrganization {
 
         shoaibSipStack = tool6.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
         shoaibPhone = shoaibSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, shoaibContact);
+
+        alice2SipStack = tool7.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5095", "127.0.0.1:5080");
+        alice2Phone = alice2SipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, alice2Contact);
         
         mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, "maria", clientPassword, null);
         shoaibRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, "shoaib", clientPassword, null);
@@ -185,7 +198,86 @@ public class DialActionTestOrganization {
     }
 
     @Test
-    public void testClientsCallEachOther() throws ParseException, InterruptedException {
+    public void testDialActionDialDifferentOrganization() throws ParseException, InterruptedException, UnknownHostException {
+
+       stubFor(post(urlPathMatching("/DialAction.*"))
+                .willReturn(aResponse()
+                    .withStatus(200)));
+        //register as alice (of organization: org3.restcomm.com)
+        SipURI uri = alice2SipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alice2Phone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5095", 3600, 3600));
+
+        // Prepare first phone to receive call
+        SipCall aliceCall = alice2Phone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with second phone - bob from org testdomain2.restcomm.com
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrlOrg3, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(3000);
+
+        // hangup.
+        aliceCall.disconnect();
+
+        bobCall.listenForDisconnect();
+        assertTrue(bobCall.waitForDisconnect(30 * 1000));
+        assertTrue(bobCall.respondToDisconnect());
+        try {
+            Thread.sleep(50 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+
+        Thread.sleep(3000);
+
+        logger.info("About to check the DialAction Requests");
+        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
+        assertEquals(1, requests.size());
+        String requestBody = requests.get(0).getBodyAsString();
+        String[] params = requestBody.split("&");
+        assertTrue(requestBody.contains("DialCallStatus=completed"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
+        assertTrue(requestBody.contains("From=bob"));
+        assertTrue(requestBody.contains("DialCallDuration=3"));
+        Iterator iter = Arrays.asList(params).iterator();
+        String dialCallSid = null;
+        while (iter.hasNext()) {
+            String param = (String) iter.next();
+            if (param.startsWith("DialCallSid")) {
+                dialCallSid = param.split("=")[1];
+                break;
+            }
+        }
+        assertNotNull(dialCallSid);
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, dialCallSid);
+        assertNotNull(cdr);
+    }
+
+    @Test
+    public void testClientsCallEachOtherSameOrganization() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(shoaibRestcommClientSid);
@@ -260,6 +352,36 @@ public class DialActionTestOrganization {
         System.out.println("cdrsArray.size(): "+cdrsArray.size());
         assertTrue(cdrsArray.size() == 1);
 
+    }
+
+    @Test
+    public void testClientsCallEachOtherDifferentOrganization() throws ParseException, InterruptedException {
+
+    	// maria belongs to org: testdomain2.restcomm.com
+    	// alice2 belong to org: org3.restcomm.com
+        assertNotNull(mariaRestcommClientSid);
+
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(mariaPhone.register(uri, "maria", clientPassword, "sip:maria@127.0.0.1:5093", 3600, 3600));
+        assertTrue(alice2Phone.register(uri, "alice", "1234", "sip:alice2@127.0.0.1:5095", 3600, 3600));
+
+        Credential c = new Credential("org3.restcomm.com", "maria", clientPassword);
+        mariaPhone.addUpdateCredential(c);
+
+        final SipCall alice2Call = alice2Phone.createSipCall();
+        alice2Call.listenForIncomingCall();
+
+        Thread.sleep(1000);
+
+        // Maria initiates a call to Alice2
+        long startTime = System.currentTimeMillis();
+        final SipCall mariaCall = mariaPhone.createSipCall();
+        mariaCall.initiateOutgoingCall(mariaContact, alice2Contact, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(mariaCall);
+        assertTrue(mariaCall.waitForAuthorisation(3000));
+
+        //alice should not get the call
+        assertTrue(!alice2Call.waitForIncomingCall(5000));
     }
 
     @Test
@@ -430,11 +552,18 @@ public class DialActionTestOrganization {
             alicePhone.dispose();
         }
 
+        if (alice2SipStack != null) {
+            alice2SipStack.dispose();
+        }
+        if (alice2Phone != null) {
+            alice2Phone.dispose();
+        }
+
         if (shoaibSipStack != null) {
             shoaibSipStack.dispose();
         }
-        if (alicePhone != null) {
-            alicePhone.dispose();
+        if (shoaibPhone != null) {
+        	shoaibPhone.dispose();
         }
 
         if (henriqueSipStack != null) {
