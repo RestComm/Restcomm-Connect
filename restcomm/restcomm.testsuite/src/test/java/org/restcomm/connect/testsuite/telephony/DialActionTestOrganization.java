@@ -122,7 +122,7 @@ public class DialActionTestOrganization {
     private SipPhone georgePhone;
     private String georgeContact = "sip:+131313@testdomain2.restcomm.com";
 
-    private String dialClientWithActionUrl = "sip:+12223334466@testdomain2.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
+    private String dialClientWithActionUrl = "sip:+12223334455@testdomain2.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
 
     private String testDomain2adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acg";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
@@ -216,7 +216,7 @@ public class DialActionTestOrganization {
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
         assertTrue(requestBody.contains("DialCallStatus=completed"));
-        assertTrue(requestBody.contains("To=%2B12223334466"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=3"));
         Iterator iter = Arrays.asList(params).iterator();
@@ -273,7 +273,7 @@ public class DialActionTestOrganization {
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
         assertTrue(requestBody.contains("DialCallStatus=null"));
-        assertTrue(requestBody.contains("To=%2B12223334466"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
         Iterator iter = Arrays.asList(params).iterator();
@@ -332,7 +332,7 @@ public class DialActionTestOrganization {
         String[] params = requestBody.split("&");
         //DialCallStatus should be null since there was no call made - since Alice is not registered
         assertTrue(requestBody.contains("DialCallStatus=null"));
-        assertTrue(requestBody.contains("To=%2B12223334466"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
         assertTrue(requestBody.contains("CallStatus=completed"));
@@ -412,7 +412,7 @@ public class DialActionTestOrganization {
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
         assertTrue(requestBody.contains("DialCallStatus=completed"));
-        assertTrue(requestBody.contains("To=%2B12223334466"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=3"));
         Iterator iter = Arrays.asList(params).iterator();
@@ -490,7 +490,7 @@ public class DialActionTestOrganization {
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
         assertTrue(requestBody.contains("DialCallStatus=completed"));
-        assertTrue(requestBody.contains("To=%2B12223334466"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=3"));
         Iterator iter = Arrays.asList(params).iterator();
@@ -564,7 +564,7 @@ public class DialActionTestOrganization {
             logger.info("requestBody: \n"+"\n ---------------------- \n"+msgToPrint+"\n---------------------- ");
         }
         assertTrue(requestBody.contains("DialCallStatus=canceled"));
-        assertTrue(requestBody.contains("To=%2B12223334466"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialRingDuration=3"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
@@ -640,7 +640,7 @@ public class DialActionTestOrganization {
             logger.info("requestBody: \n"+requestBody);
         }
         assertTrue(requestBody.contains("DialCallStatus=busy"));
-        assertTrue(requestBody.contains("To=%2B12223334466"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
         Iterator iter = Arrays.asList(params).iterator();
@@ -717,7 +717,7 @@ public class DialActionTestOrganization {
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
         assertTrue(requestBody.contains("DialCallStatus=completed"));
-        assertTrue(requestBody.contains("To=%2B12223334466"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
         assertTrue(requestBody.contains("CallStatus=completed"));
