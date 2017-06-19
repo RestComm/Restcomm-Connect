@@ -39,11 +39,13 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.sip.Dialog;
 import javax.sip.address.SipURI;
 import javax.sip.header.Header;
 import javax.sip.message.Response;
 
 import org.apache.log4j.Logger;
+import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
@@ -67,6 +69,7 @@ import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 /**
@@ -155,6 +158,82 @@ public class DialActionTestOrganization {
     }
 
     @Test
+    public void testClientsCallEachOther() throws ParseException, InterruptedException {
+
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
+        assertTrue(bobPhone.register(uri, "bob", "1234", "sip:bob@127.0.0.1:5090", 3600, 3600));
+
+        Credential c = new Credential("127.0.0.1", "alice", "1234");
+        alicePhone.addUpdateCredential(c);
+
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.listenForIncomingCall();
+
+        Thread.sleep(1000);
+
+        // Alice initiates a call to Bob
+        long startTime = System.currentTimeMillis();
+        final SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.initiateOutgoingCall(aliceContact, bobContact, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(aliceCall);
+        assertTrue(aliceCall.waitForAuthorisation(3000));
+
+        assertTrue(bobCall.waitForIncomingCall(5000));
+        assertTrue(bobCall.sendIncomingCallResponse(100, "Trying-Bob", 1800));
+        assertTrue(bobCall.sendIncomingCallResponse(180, "Ringing-Bob", 1800));
+        String receivedBody = new String(bobCall.getLastReceivedRequest().getRawContent());
+        assertTrue(bobCall.sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, receivedBody, "application", "sdp", null,
+                null));
+
+        assertTrue(aliceCall.waitOutgoingCallResponse(5 * 1000));
+        int responseAlice = aliceCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseAlice == Response.TRYING || responseAlice == Response.RINGING);
+
+        Dialog aliceDialog = null;
+
+        if (responseAlice == Response.TRYING) {
+            assertTrue(aliceCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, aliceCall.getLastReceivedResponse().getStatusCode());
+            aliceDialog = aliceCall.getDialog();
+        }
+
+        assertTrue(aliceCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, aliceCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(aliceCall.getDialog().equals(aliceDialog));
+        aliceCall.sendInviteOkAck();
+        assertTrue(aliceCall.getDialog().equals(aliceDialog));
+
+        assertTrue(!(aliceCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(bobCall.waitForAck(3000));
+
+        //Talk time ~ 3sec
+        Thread.sleep(3000);
+        bobCall.listenForDisconnect();
+        assertTrue(aliceCall.disconnect());
+
+        assertTrue(bobCall.waitForDisconnect(5 * 1000));
+        assertTrue(bobCall.respondToDisconnect());
+        long endTime   = System.currentTimeMillis();
+
+        double totalTime = (endTime - startTime)/1000.0;
+        assertTrue(3.0 <= totalTime);
+        assertTrue(totalTime <= 4.0);
+
+        Thread.sleep(3000);
+
+        //Check CDR
+        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken);
+        assertNotNull(cdrs);
+        JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
+        System.out.println("cdrsArray.size(): "+cdrsArray.size());
+        assertTrue(cdrsArray.size() == 1);
+
+    }
+
+    @Test
     public void testDialActionAliceAnswers() throws ParseException, InterruptedException, UnknownHostException {
 
        stubFor(post(urlPathMatching("/DialAction.*"))
@@ -234,430 +313,6 @@ public class DialActionTestOrganization {
     }
 
     @Test
-    public void testDialActionInvalidCall() throws ParseException, InterruptedException {
-
-        stubFor(post(urlPathMatching("/DialAction.*"))
-                .willReturn(aResponse()
-                    .withStatus(200)));
-
-        // Create outgoing call with first phone
-        final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-
-        if (response == Response.TRYING) {
-            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        bobCall.sendInviteOkAck();
-        bobCall.listenForDisconnect();
-
-        assertTrue(bobCall.waitForDisconnect(40 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
-
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
-
-        logger.info("About to check the DialAction Requests");
-        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
-        assertEquals(1, requests.size());
-        String requestBody = requests.get(0).getBodyAsString();
-        String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=null"));
-        assertTrue(requestBody.contains("To=%2B12223334455"));
-        assertTrue(requestBody.contains("From=bob"));
-        assertTrue(requestBody.contains("DialCallDuration=0"));
-        Iterator iter = Arrays.asList(params).iterator();
-        String dialCallSid = null;
-        while (iter.hasNext()) {
-            String param = (String) iter.next();
-            if (param.startsWith("DialCallSid")) {
-                dialCallSid = param.split("=")[1];
-                break;
-            }
-        }
-        assertTrue(dialCallSid.equals("null"));
-        //Since ALICE is not registered, CallManager will ask to hangup the call, thus we never have outbound call
-//        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
-//        assertNotNull(cdr);
-    }
-
-    @Test //No regression test for https://github.com/Mobicents/RestComm/issues/505
-    public void testDialActionInvalidCallCheckCallStatusCompleted() throws ParseException, InterruptedException {
-
-        stubFor(post(urlPathMatching("/DialAction.*"))
-                .willReturn(aResponse()
-                    .withStatus(200)));
-
-        // Create outgoing call with first phone
-        final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-
-        if (response == Response.TRYING) {
-            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        bobCall.sendInviteOkAck();
-        bobCall.listenForDisconnect();
-
-        assertTrue(bobCall.waitForDisconnect(40 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
-
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
-
-        logger.info("About to check the DialAction Requests");
-        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
-        assertEquals(1, requests.size());
-        String requestBody = requests.get(0).getBodyAsString();
-        String[] params = requestBody.split("&");
-        //DialCallStatus should be null since there was no call made - since Alice is not registered
-        assertTrue(requestBody.contains("DialCallStatus=null"));
-        assertTrue(requestBody.contains("To=%2B12223334455"));
-        assertTrue(requestBody.contains("From=bob"));
-        assertTrue(requestBody.contains("DialCallDuration=0"));
-        assertTrue(requestBody.contains("CallStatus=completed"));
-        Iterator iter = Arrays.asList(params).iterator();
-        String dialCallSid = null;
-        while (iter.hasNext()) {
-            String param = (String) iter.next();
-            if (param.startsWith("DialCallSid")) {
-                dialCallSid = param.split("=")[1];
-                break;
-            }
-        }
-        assertTrue(dialCallSid.equals("null"));
-        //Since ALICE is not registered, CallManager will ask to hangup the call, thus we never have outbound call
-//        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
-//        assertNotNull(cdr);
-    }
-
-    @Test
-    public void testDialActionAliceAnswersAliceHangup() throws ParseException, InterruptedException {
-
-        stubFor(post(urlPathMatching("/DialAction.*"))
-                .willReturn(aResponse()
-                    .withStatus(200)));
-
-        // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
-
-        // Prepare second phone to receive call
-        SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.listenForIncomingCall();
-
-        // Create outgoing call with first phone
-        final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-
-        if (response == Response.TRYING) {
-            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
-        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
-                null));
-        assertTrue(aliceCall.waitForAck(50 * 1000));
-
-        Thread.sleep(3000);
-
-        // hangup.
-        aliceCall.disconnect();
-
-        bobCall.listenForDisconnect();
-        assertTrue(bobCall.waitForDisconnect(30 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
-
-        logger.info("About to check the DialAction Requests");
-        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
-        assertEquals(1, requests.size());
-        String requestBody = requests.get(0).getBodyAsString();
-        String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=completed"));
-        assertTrue(requestBody.contains("To=%2B12223334455"));
-        assertTrue(requestBody.contains("From=bob"));
-        assertTrue(requestBody.contains("DialCallDuration=3"));
-        Iterator iter = Arrays.asList(params).iterator();
-        String dialCallSid = null;
-        while (iter.hasNext()) {
-            String param = (String) iter.next();
-            if (param.startsWith("DialCallSid")) {
-                dialCallSid = param.split("=")[1];
-                break;
-            }
-        }
-        assertNotNull(dialCallSid);
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, dialCallSid);
-        assertNotNull(cdr);
-    }
-
-    @Test
-    public void testDialActionAliceAnswersBobDisconnects() throws ParseException, InterruptedException {
-
-        stubFor(post(urlPathMatching("/DialAction.*"))
-                .willReturn(aResponse()
-                    .withStatus(200)));
-
-        // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
-
-        // Prepare second phone to receive call
-        SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.listenForIncomingCall();
-
-        // Create outgoing call with first phone
-        final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-
-        if (response == Response.TRYING) {
-            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
-        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
-                null));
-        assertTrue(aliceCall.waitForAck(50 * 1000));
-
-        Thread.sleep(3000);
-
-        // hangup.
-        bobCall.disconnect();
-
-        aliceCall.listenForDisconnect();
-        assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-        assertTrue(aliceCall.respondToDisconnect());
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
-
-        logger.info("About to check the DialAction Requests");
-        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
-        assertEquals(1, requests.size());
-        String requestBody = requests.get(0).getBodyAsString();
-        String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=completed"));
-        assertTrue(requestBody.contains("To=%2B12223334455"));
-        assertTrue(requestBody.contains("From=bob"));
-        assertTrue(requestBody.contains("DialCallDuration=3"));
-        Iterator iter = Arrays.asList(params).iterator();
-        String dialCallSid = null;
-        while (iter.hasNext()) {
-            String param = (String) iter.next();
-            if (param.startsWith("DialCallSid")) {
-                dialCallSid = param.split("=")[1];
-                break;
-            }
-        }
-        assertNotNull(dialCallSid);
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, dialCallSid);
-        assertNotNull(cdr);
-    }
-
-    @Test
-    public void testDialActionAliceNOAnswer() throws ParseException, InterruptedException {
-
-        stubFor(post(urlPathMatching("/DialAction.*"))
-                .willReturn(aResponse()
-                    .withStatus(200)));
-
-        // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
-
-        // Prepare second phone to receive call
-        SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.listenForIncomingCall();
-
-        // Create outgoing call with first phone
-        final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-
-        if (response == Response.TRYING) {
-            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
-        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        assertTrue(aliceCall.listenForCancel());
-        SipTransaction cancelTransaction = aliceCall.waitForCancel(30 * 1000);
-        assertNotNull(cancelTransaction);
-        assertTrue(aliceCall.respondToCancel(cancelTransaction, Response.OK, "Alice-OK-2-Cancel", 3600));
-
-        Thread.sleep(3700);
-
-        assertTrue(bobCall.disconnect());
-
-        Thread.sleep(10000);
-
-        logger.info("About to check the DialAction Requests");
-        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
-        assertEquals(1, requests.size());
-        String requestBody = requests.get(0).getBodyAsString();
-        String[] params = requestBody.split("&");
-        if (!requestBody.contains("DialCallStatus=no-answer")) {
-            String msgToPrint = requestBody.replaceAll("&", "\n");
-            logger.info("requestBody: \n"+"\n ---------------------- \n"+msgToPrint+"\n---------------------- ");
-        }
-        assertTrue(requestBody.contains("DialCallStatus=canceled"));
-        assertTrue(requestBody.contains("To=%2B12223334455"));
-        assertTrue(requestBody.contains("From=bob"));
-        assertTrue(requestBody.contains("DialRingDuration=3"));
-        assertTrue(requestBody.contains("DialCallDuration=0"));
-        Iterator iter = Arrays.asList(params).iterator();
-        String dialCallSid = null;
-        while (iter.hasNext()) {
-            String param = (String) iter.next();
-            if (param.startsWith("DialCallSid")) {
-                dialCallSid = param.split("=")[1];
-                break;
-            }
-        }
-        assertNotNull(dialCallSid);
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, dialCallSid);
-        assertNotNull(cdr);
-    }
-
-    @Test
-    public void testDialActionAliceBusy() throws ParseException, InterruptedException {
-
-        stubFor(post(urlPathMatching("/DialAction.*"))
-                .willReturn(aResponse()
-                    .withStatus(200)));
-
-        // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
-
-        // Prepare second phone to receive call
-        SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.listenForIncomingCall();
-
-        // Create outgoing call with first phone
-        final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-
-        if (response == Response.TRYING) {
-            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-        bobCall.listenForDisconnect();
-
-        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.BUSY_HERE, "Busy-Alice", 3600));
-        assertTrue(aliceCall.waitForAck(50 * 1000));
-
-        assertTrue(bobCall.waitForDisconnect(50 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
-
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
-
-        logger.info("About to check the DialAction Requests");
-        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
-        assertEquals(1, requests.size());
-        String requestBody = requests.get(0).getBodyAsString();
-        String[] params = requestBody.split("&");
-        if (!requestBody.contains("DialCallStatus=busy")) {
-            logger.info("requestBody: \n"+requestBody);
-        }
-        assertTrue(requestBody.contains("DialCallStatus=busy"));
-        assertTrue(requestBody.contains("To=%2B12223334455"));
-        assertTrue(requestBody.contains("From=bob"));
-        assertTrue(requestBody.contains("DialCallDuration=0"));
-        Iterator iter = Arrays.asList(params).iterator();
-        String dialCallSid = null;
-        while (iter.hasNext()) {
-            String param = (String) iter.next();
-            if (param.startsWith("DialCallSid")) {
-                dialCallSid = param.split("=")[1];
-                break;
-            }
-        }
-        assertNotNull(dialCallSid);
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, dialCallSid);
-        assertNotNull(cdr);
-    }
-
-    @Test
     public void testDialActionHangupWithLCM() throws Exception {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
@@ -722,377 +377,6 @@ public class DialActionTestOrganization {
         assertTrue(requestBody.contains("DialCallDuration=0"));
         assertTrue(requestBody.contains("CallStatus=completed"));
         Iterator iter = Arrays.asList(params).iterator();
-    }
-
-    /**
-     * This test verifies: if Diversion header is present in INVITE, we update ForwardedFrom in cdr.
-     * 
-     * @throws ParseException
-     * @throws InterruptedException
-     */
-    @Test
-    public void testSipInviteDiversionHeader() throws ParseException, InterruptedException {
-
-        stubFor(post(urlPathMatching("/DialAction.*"))
-                .willReturn(aResponse()
-                    .withStatus(200)));
-
-        // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
-
-        // Prepare second phone to receive call
-        SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.listenForIncomingCall();
-
-        // Create outgoing call with first phone
-        final SipCall bobCall = bobPhone.createSipCall();
-        ArrayList<String> additionalHeaders = new ArrayList<String>();
-        Header diversionHeader = aliceSipStack.getHeaderFactory().createHeader("Diversion", "<sip:11223344@xyz.com>;counter=1;reason=UNKNOWN");
-        additionalHeaders.add(diversionHeader.toString());
-
-        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", additionalHeaders, null);
-        assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-
-        if (response == Response.TRYING) {
-            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
-        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-
-        // Add custom headers to the SIP INVITE
-        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null, null));
-        assertTrue(aliceCall.waitForAck(50 * 1000));
-
-        Thread.sleep(3000);
-
-        // hangup.
-        aliceCall.disconnect();
-
-        bobCall.listenForDisconnect();
-            assertTrue(bobCall.waitForDisconnect(30 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
-        try {
-            Thread.sleep(50 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
-
-        logger.info("About to check the DialAction Requests");
-        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
-        assertEquals(1, requests.size());
-        String requestBody = requests.get(0).getBodyAsString();
-        String[] params = requestBody.split("&");
-        logger.info("requestBody = "+requestBody);
-        logger.debug("requestBody = "+requestBody);
-        System.out.println("requestBody = "+requestBody);
-        assertTrue(requestBody.contains("SipHeader_Diversion=%3Csip%3A11223344%40xyz.com%3E%3Bcounter%3D1%3Breason%3DUNKNOWN"));
-        Iterator iter = Arrays.asList(params).iterator();
-        String dialCallSid = null;
-        while (iter.hasNext()) {
-            String param = (String) iter.next();
-            if (param.startsWith("CallSid")) {
-                dialCallSid = param.split("=")[1];
-                break;
-            }
-        }
-        assertNotNull(dialCallSid);
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, dialCallSid);
-        assertNotNull(cdr);
-        
-        String forwardedFrom = cdr.get("forwarded_from").getAsString();
-        assertNotNull(forwardedFrom);
-    }
-
-    @Test
-    public void testSipInviteCustomHeaders() throws ParseException, InterruptedException {
-
-        stubFor(post(urlPathMatching("/DialAction.*"))
-                .willReturn(aResponse()
-                    .withStatus(200)));
-
-        // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
-
-        // Prepare second phone to receive call
-        SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.listenForIncomingCall();
-
-        // Create outgoing call with first phone
-        final SipCall bobCall = bobPhone.createSipCall();
-        ArrayList<String> additionalHeaders = new ArrayList<String>();
-        Header customHeader = aliceSipStack.getHeaderFactory().createHeader("X-My-Custom-Header", "My Custom Value");
-        Header otherHeader = aliceSipStack.getHeaderFactory().createHeader("X-OtherHeader", "Other Value");
-        Header anotherHeader = aliceSipStack.getHeaderFactory().createHeader("X-another-header", "another value");
-        additionalHeaders.add(customHeader.toString());
-        additionalHeaders.add(otherHeader.toString());
-        additionalHeaders.add(anotherHeader.toString());
-//        bobCall.initiateOutgoingCall(fromUri, toUri, viaNonProxyRoute, body, contentType, contentSubType, additionalHeaders, replaceHeaders)
-//        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, additionalHeaders, null, body);
-        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", additionalHeaders, null);
-        assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-
-        if (response == Response.TRYING) {
-            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
-        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-
-        // Add custom headers to the SIP INVITE
-        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-//        public boolean sendIncomingCallResponse(int statusCode,
-//                String reasonPhrase, int expires, String body, String contentType,
-//                String contentSubType, ArrayList<String> additionalHeaders,
-//                ArrayList<String> replaceHeaders)
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null, null));
-//        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, null, null, receivedBody));
-        assertTrue(aliceCall.waitForAck(50 * 1000));
-
-        Thread.sleep(3000);
-
-        // hangup.
-        aliceCall.disconnect();
-
-        bobCall.listenForDisconnect();
-            assertTrue(bobCall.waitForDisconnect(30 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
-        try {
-            Thread.sleep(50 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
-
-        logger.info("About to check the DialAction Requests");
-        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
-        assertEquals(1, requests.size());
-        String requestBody = requests.get(0).getBodyAsString();
-        String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("SipHeader_X-My-Custom-Header=My+Custom+Value"));
-        assertTrue(requestBody.contains("SipHeader_X-OtherHeader=Other+Value"));
-        assertTrue(requestBody.contains("SipHeader_X-another-header=another+value"));
-        Iterator iter = Arrays.asList(params).iterator();
-        String dialCallSid = null;
-        while (iter.hasNext()) {
-            String param = (String) iter.next();
-            if (param.startsWith("DialCallSid")) {
-                dialCallSid = param.split("=")[1];
-                break;
-            }
-        }
-        assertNotNull(dialCallSid);
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, dialCallSid);
-        assertNotNull(cdr);
-    }
-
-    @Test //TODO: PASSES when run individually. to check
-    public void testDialCallDurationAliceAnswers() throws ParseException, InterruptedException {
-
-        stubFor(post(urlPathMatching("/DialAction.*"))
-                .willReturn(aResponse()
-                        .withStatus(200)));
-
-        // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
-
-        // Prepare second phone to receive call
-        SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.listenForIncomingCall();
-
-        // Create outgoing call with first phone
-        final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-
-        if (response == Response.TRYING) {
-            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
-        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        Thread.sleep(2000); //Ringing time
-        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
-                null));
-        assertTrue(aliceCall.waitForAck(50 * 1000));
-
-        Thread.sleep(3000); //Talk time
-
-        // hangup.
-        aliceCall.disconnect();
-
-        bobCall.listenForDisconnect();
-        assertTrue(bobCall.waitForDisconnect(30 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
-        try {
-            Thread.sleep(50 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
-
-
-        logger.info("About to check the DialAction Requests");
-        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
-        assertEquals(1, requests.size());
-        String requestBody = requests.get(0).getBodyAsString();
-        String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=completed"));
-        assertTrue(requestBody.contains("DialCallDuration=3"));
-        assertTrue(requestBody.contains("DialRingDuration=2"));
-
-        Iterator iter = Arrays.asList(params).iterator();
-        String callSid = null;
-        String dialCallSid = null;
-        while (iter.hasNext()) {
-            String param = (String) iter.next();
-            if (param.startsWith("CallSid")) {
-                callSid = param.split("=")[1];
-            } else if (param.startsWith("DialCallSid")) {
-                dialCallSid = param.split("=")[1];
-            }
-
-        }
-        assertNotNull(callSid);
-        assertNotNull(dialCallSid);
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, callSid);
-        JsonObject dialCdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, dialCallSid);
-        assertNotNull(cdr);
-        assertNotNull(dialCdr);
-
-        //INBOUND call has no ring_duration since Restcomm will answer imediatelly an incoming call
-        assertTrue(cdr.get("duration").getAsString().equalsIgnoreCase("5")); //Only talk time
-        assertTrue(cdr.get("direction").getAsString().equalsIgnoreCase("inbound"));
-
-        assertTrue(dialCdr.get("duration").getAsString().equalsIgnoreCase("3")); //Only talk time
-        assertTrue(dialCdr.get("ring_duration").getAsString().equalsIgnoreCase("2")); //Only Ringing time
-        assertTrue(dialCdr.get("direction").getAsString().equalsIgnoreCase("outbound-api"));
-    }
-
-
-    @Test //TODO: PASSES when run individually. to check
-    public void testDialCallDurationAliceBusy() throws ParseException, InterruptedException {
-
-
-        stubFor(post(urlPathMatching("/DialAction.*"))
-                .willReturn(aResponse()
-                        .withStatus(200)));
-
-        // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-
-        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
-
-        // Prepare second phone to receive call
-        SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.listenForIncomingCall();
-
-        // Create outgoing call with first phone
-        final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-
-        if (response == Response.TRYING) {
-            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-        bobCall.listenForDisconnect();
-
-        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        Thread.sleep(2000); //Ringing Time
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.BUSY_HERE, "Busy-Alice", 3600));
-        assertTrue(aliceCall.waitForAck(50 * 1000));
-
-        assertTrue(bobCall.waitForDisconnect(50 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
-
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
-
-
-
-        logger.info("About to check the DialAction Requests");
-        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
-        assertEquals(1, requests.size());
-        String requestBody = requests.get(0).getBodyAsString();
-        String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=busy"));
-        assertTrue(requestBody.contains("DialCallDuration=0"));
-        assertTrue(requestBody.contains("DialRingDuration=2"));
-
-        Iterator iter = Arrays.asList(params).iterator();
-        String callSid = null;
-        String dialCallSid = null;
-        while (iter.hasNext()) {
-            String param = (String) iter.next();
-            if (param.startsWith("CallSid")) {
-                callSid = param.split("=")[1];
-            } else if (param.startsWith("DialCallSid")) {
-                dialCallSid = param.split("=")[1];
-            }
-        }
-        assertNotNull(callSid);
-        assertNotNull(dialCallSid);
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, callSid);
-        JsonObject dialCdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, dialCallSid);
-        assertNotNull(cdr);
-        assertNotNull(dialCdr);
-
-        //Since the outbound call to Alice never got established the duration of the inbound call is not defined
-        //assertTrue(cdr.get("duration").getAsString().equalsIgnoreCase("0")); //Only talk time
-        //assertTrue(cdr.get("ring_duration").getAsString().equalsIgnoreCase("0"));
-        assertTrue(cdr.get("direction").getAsString().equalsIgnoreCase("inbound"));
-
-        assertTrue(dialCdr.get("duration").getAsString().equalsIgnoreCase("0")); //Only talk time
-        assertTrue(dialCdr.get("ring_duration").getAsString().equalsIgnoreCase("2")); //Only Ringing time
-        assertTrue(dialCdr.get("direction").getAsString().equalsIgnoreCase("outbound-api"));
     }
 
     @After
