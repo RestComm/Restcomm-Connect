@@ -65,6 +65,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.testsuite.http.CreateClientsTool;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -103,6 +104,8 @@ public class DialActionTestOrganization {
     private static SipStackTool tool2;
     private static SipStackTool tool3;
     private static SipStackTool tool4;
+    private static SipStackTool tool5;
+    private static SipStackTool tool6;
 
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
@@ -133,12 +136,27 @@ public class DialActionTestOrganization {
 	final static String testDomain2 = "testdomain2.restcomm.com";
     final String testDomain2ExpectedIP = "127.0.0.1";
 
+    // Maria is a Restcomm Client **without** VoiceURL. This Restcomm Client can dial anything.
+    private SipStack mariaSipStack;
+    private SipPhone mariaPhone;
+    private String mariaContact = "sip:maria@testdomain2.restcomm.com";
+    private String mariaRestcommClientSid;
+
+    // Dimitris is a Restcomm Client **without** VoiceURL. This Restcomm Client can dial anything.
+    private SipStack dimitriSipStack;
+    private SipPhone dimitriPhone;
+    private String dimitriContact = "sip:dimitri@testdomain2.restcomm.com";
+    private String dimitriRestcommClientSid;
+    private String clientPassword = "qwerty1234RT";
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("DialActionTest1");
         tool2 = new SipStackTool("DialActionTest2");
         tool3 = new SipStackTool("DialActionTest3");
         tool4 = new SipStackTool("DialActionTest4");
+        tool5 = new SipStackTool("DialActionTest5");
+        tool6 = new SipStackTool("DialActionTest6");
     }
 
     @Before
@@ -155,67 +173,78 @@ public class DialActionTestOrganization {
         georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
         georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
 
+        mariaSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5093", "127.0.0.1:5080");
+        mariaPhone = mariaSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, mariaContact);
+
+        dimitriSipStack = tool6.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
+        dimitriPhone = dimitriSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, dimitriContact);
+        
+        mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, "maria", clientPassword, null);
+        dimitriRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), testDomain2adminAccountSid, adminAuthToken, "dimitri", clientPassword, null);
+
     }
 
     @Test
     public void testClientsCallEachOther() throws ParseException, InterruptedException {
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertNotNull(mariaRestcommClientSid);
+        assertNotNull(dimitriRestcommClientSid);
 
-        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
-        assertTrue(bobPhone.register(uri, "bob", "1234", "sip:bob@127.0.0.1:5090", 3600, 3600));
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(mariaPhone.register(uri, "maria", clientPassword, "sip:maria@127.0.0.1:5093", 3600, 3600));
+        assertTrue(dimitriPhone.register(uri, "dimitri", clientPassword, "sip:dimitri@127.0.0.1:5094", 3600, 3600));
 
-        Credential c = new Credential("127.0.0.1", "alice", "1234");
-        alicePhone.addUpdateCredential(c);
+        Credential c = new Credential("127.0.0.1", "maria", clientPassword);
+        mariaPhone.addUpdateCredential(c);
 
-        final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.listenForIncomingCall();
+        final SipCall dimitriCall = dimitriPhone.createSipCall();
+        dimitriCall.listenForIncomingCall();
 
         Thread.sleep(1000);
 
-        // Alice initiates a call to Bob
+        // Maria initiates a call to Dimitri
         long startTime = System.currentTimeMillis();
-        final SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.initiateOutgoingCall(aliceContact, bobContact, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(aliceCall);
-        assertTrue(aliceCall.waitForAuthorisation(3000));
+        final SipCall mariaCall = mariaPhone.createSipCall();
+        mariaCall.initiateOutgoingCall(mariaContact, "sip:dimitri@127.0.0.1:5094", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(mariaCall);
+        assertTrue(mariaCall.waitForAuthorisation(3000));
 
-        assertTrue(bobCall.waitForIncomingCall(5000));
-        assertTrue(bobCall.sendIncomingCallResponse(100, "Trying-Bob", 1800));
-        assertTrue(bobCall.sendIncomingCallResponse(180, "Ringing-Bob", 1800));
-        String receivedBody = new String(bobCall.getLastReceivedRequest().getRawContent());
-        assertTrue(bobCall.sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, receivedBody, "application", "sdp", null,
+        assertTrue(dimitriCall.waitForIncomingCall(5000));
+        assertTrue(dimitriCall.sendIncomingCallResponse(100, "Trying-Dimitri", 1800));
+        assertTrue(dimitriCall.sendIncomingCallResponse(180, "Ringing-Dimitri", 1800));
+        String receivedBody = new String(dimitriCall.getLastReceivedRequest().getRawContent());
+        assertTrue(dimitriCall.sendIncomingCallResponse(Response.OK, "OK-Dimitri", 3600, receivedBody, "application", "sdp", null,
                 null));
 
-        assertTrue(aliceCall.waitOutgoingCallResponse(5 * 1000));
-        int responseAlice = aliceCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(responseAlice == Response.TRYING || responseAlice == Response.RINGING);
+        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+        int responseMaria = mariaCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseMaria == Response.TRYING || responseMaria == Response.RINGING);
 
-        Dialog aliceDialog = null;
+        Dialog mariaDialog = null;
 
-        if (responseAlice == Response.TRYING) {
-            assertTrue(aliceCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, aliceCall.getLastReceivedResponse().getStatusCode());
-            aliceDialog = aliceCall.getDialog();
+        if (responseMaria == Response.TRYING) {
+            assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, mariaCall.getLastReceivedResponse().getStatusCode());
+            mariaDialog = mariaCall.getDialog();
         }
 
-        assertTrue(aliceCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, aliceCall.getLastReceivedResponse().getStatusCode());
-        assertTrue(aliceCall.getDialog().equals(aliceDialog));
-        aliceCall.sendInviteOkAck();
-        assertTrue(aliceCall.getDialog().equals(aliceDialog));
+        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, mariaCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(mariaCall.getDialog().equals(mariaDialog));
+        mariaCall.sendInviteOkAck();
+        assertTrue(mariaCall.getDialog().equals(mariaDialog));
 
-        assertTrue(!(aliceCall.getLastReceivedResponse().getStatusCode() >= 400));
+        assertTrue(!(mariaCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        assertTrue(bobCall.waitForAck(3000));
+        assertTrue(dimitriCall.waitForAck(3000));
 
         //Talk time ~ 3sec
         Thread.sleep(3000);
-        bobCall.listenForDisconnect();
-        assertTrue(aliceCall.disconnect());
+        dimitriCall.listenForDisconnect();
+        assertTrue(mariaCall.disconnect());
 
-        assertTrue(bobCall.waitForDisconnect(5 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
+        assertTrue(dimitriCall.waitForDisconnect(5 * 1000));
+        assertTrue(dimitriCall.respondToDisconnect());
         long endTime   = System.currentTimeMillis();
 
         double totalTime = (endTime - startTime)/1000.0;
@@ -239,15 +268,15 @@ public class DialActionTestOrganization {
        stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
                     .withStatus(200)));
-        // Phone2 register as alice
+        //register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
 
-        // Prepare second phone to receive call
+        // Prepare first phone to receive call
         SipCall aliceCall = alicePhone.createSipCall();
         aliceCall.listenForIncomingCall();
 
-        // Create outgoing call with first phone
+        // Create outgoing call with second phone
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
@@ -387,9 +416,22 @@ public class DialActionTestOrganization {
         if (bobSipStack != null) {
             bobSipStack.dispose();
         }
+        if (mariaPhone != null) {
+            mariaPhone.dispose();
+        }
+        if (mariaSipStack != null) {
+            mariaSipStack.dispose();
+        }
 
         if (aliceSipStack != null) {
             aliceSipStack.dispose();
+        }
+        if (alicePhone != null) {
+            alicePhone.dispose();
+        }
+
+        if (dimitriSipStack != null) {
+            dimitriSipStack.dispose();
         }
         if (alicePhone != null) {
             alicePhone.dispose();
