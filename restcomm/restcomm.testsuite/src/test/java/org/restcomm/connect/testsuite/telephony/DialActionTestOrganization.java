@@ -205,7 +205,7 @@ public class DialActionTestOrganization {
         // Maria initiates a call to Dimitri
         long startTime = System.currentTimeMillis();
         final SipCall mariaCall = mariaPhone.createSipCall();
-        mariaCall.initiateOutgoingCall(mariaContact, "sip:dimitri@127.0.0.1:5094", null, body, "application", "sdp", null, null);
+        mariaCall.initiateOutgoingCall("sip:maria@127.0.0.1:5093", dimitriContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(mariaCall);
         assertTrue(mariaCall.waitForAuthorisation(3000));
 

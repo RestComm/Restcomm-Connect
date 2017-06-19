@@ -154,7 +154,7 @@ public class CreateClientsTool {
     }
 
     public String createClient(String deploymentUrl, String username, String password, String voiceUrl) throws IOException {
-    	return createClient(deploymentUrl, null, null, username, password, voiceUrl);
+    	return createClient(deploymentUrl, "ACae6e420f425248d6a26948c17a9e2acf", "77f8c12cc7b8f8423e5c38b035249166", username, password, voiceUrl);
     }
 
     public String createClient(String deploymentUrl, String accountSid, String authToken, String username, String password, String voiceUrl) throws IOException {
