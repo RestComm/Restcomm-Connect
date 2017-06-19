@@ -168,13 +168,14 @@ public class AccountsEndpointTest extends EndpointTest {
     @Test
     public void testCreateAccountWithJapaneseChars() {
         String friendlyName = "NTTアドバンステクノロジ";
+        String sid = "ACd3fd813df90d254e3572bcd1bf139842";
         JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, createdUsernanme, createdPassword, friendlyName);
+                adminUsername, adminAuthToken, "japanese@company.com", createdPassword, friendlyName);
         JsonObject getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
                 adminAuthToken, createdUsernanme);
         assertTrue(getAccountResponse.get("sid").getAsString().equals(createdAccountSid));
         assertEquals(createdAuthToken, getAccountResponse.get("auth_token").getAsString());
-        assertEquals(createdAccountSid, createAccountResponse.get("sid").getAsString());
+        assertEquals(sid, createAccountResponse.get("sid").getAsString());
         assertEquals(createdAuthToken, createAccountResponse.get("auth_token").getAsString());
         assertEquals(friendlyName, createAccountResponse.get("friendly_name").getAsString());
     }
@@ -343,7 +344,7 @@ public class AccountsEndpointTest extends EndpointTest {
             String thinhContact = "sip:lyhungthinh@127.0.0.1:5090";
             startSipStack(thinhContact);
 
-            String subAccountPassword = "mynewpassword12";
+            String subAccountPassword = "mynewpassword12654";
             String subAccountEmail = "lyhungthinh@gmail.com";
 
             JsonObject subAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
@@ -387,10 +388,10 @@ public class AccountsEndpointTest extends EndpointTest {
             String thinhContact = "sip:lyhungthinh2@127.0.0.1:5090";
             startSipStack(thinhContact);
 
-            String subAccountPassword = "mynewpassword12";
+            String subAccountPassword = "mynewpassword123432";
             String subAccountEmail = "lyhungthinh2@gmail.com";
-            String subAccountNewPassword = "latestpassword12";
-            String subAccountNewAuthToken = "81eb94645c485fc39eedc5d46522e5ba";
+            String subAccountNewPassword = "latestpassword1256235";
+            String subAccountNewAuthToken = "92d57110ffb5b08da5a6c71462fb41da";
             JsonObject subAccountResponse;
 
             SipURI reqUri = thinhSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -428,7 +429,7 @@ public class AccountsEndpointTest extends EndpointTest {
             String thinhContact = "sip:lyhungthinh3@127.0.0.1:5090";
             startSipStack(thinhContact);
 
-            String subAccountPassword = "mynewpassword12";
+            String subAccountPassword = "mynewpassword12862";
             String subAccountEmail = "lyhungthinh3@gmail.com";
             JsonObject subAccountResponse;
 
