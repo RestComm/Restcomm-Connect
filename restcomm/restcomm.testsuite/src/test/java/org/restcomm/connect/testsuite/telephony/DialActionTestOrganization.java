@@ -281,85 +281,20 @@ public class DialActionTestOrganization {
         assertNotNull(cdr);
     }
 
-    @Test
-    public void testDialActionDialDifferentOrganization() throws ParseException, InterruptedException, UnknownHostException {
-
-       stubFor(post(urlPathMatching("/DialAction.*"))
-                .willReturn(aResponse()
-                    .withStatus(200)));
-        //register as alice@org3.restcomm.com
-        SipURI uri = aliceSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhoneOrg3.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5095", 3600, 3600));
-
-        // Prepare first phone to receive call
-        SipCall aliceCall = alicePhoneOrg3.createSipCall();
-        aliceCall.listenForIncomingCall();
-
-        // Create outgoing call with second phone - bob from org org2.restcomm.com
-        final SipCall bobCall = bobPhoneOrg2.createSipCall();
-        bobCall.initiateOutgoingCall(bobContactOrg2, dialClientWithActionUrlOrg3, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-
-        if (response == Response.TRYING) {
-            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
-        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
-                null));
-        assertTrue(aliceCall.waitForAck(50 * 1000));
-
-        Thread.sleep(3000);
-
-        // hangup.
-        aliceCall.disconnect();
-
-        bobCall.listenForDisconnect();
-        assertTrue(bobCall.waitForDisconnect(30 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
-        try {
-            Thread.sleep(50 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
-
-        Thread.sleep(3000);
-
-        logger.info("About to check the DialAction Requests");
-        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
-        assertEquals(1, requests.size());
-        String requestBody = requests.get(0).getBodyAsString();
-        String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=completed"));
-        assertTrue(requestBody.contains("To=%2B12223334455"));
-        assertTrue(requestBody.contains("From=bob"));
-        assertTrue(requestBody.contains("DialCallDuration=3"));
-        Iterator iter = Arrays.asList(params).iterator();
-        String dialCallSid = null;
-        while (iter.hasNext()) {
-            String param = (String) iter.next();
-            if (param.startsWith("DialCallSid")) {
-                dialCallSid = param.split("=")[1];
-                break;
-            }
-        }
-        assertNotNull(dialCallSid);
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken, dialCallSid);
-        assertNotNull(cdr);
-    }
-
+    /**
+     * testClientsCallEachOtherSameOrganization
+     * given clients:
+     * 
+     * maria belongs to org: org2.restcomm.com
+     * shoaib belong to org: org2.restcomm.com
+     * 
+     * test case: maria calls shoaib.
+     * 
+     * result: call goes through
+     * 
+     * @throws ParseException
+     * @throws InterruptedException
+     */
     @Test
     public void testClientsCallEachOtherSameOrganization() throws ParseException, InterruptedException {
 
