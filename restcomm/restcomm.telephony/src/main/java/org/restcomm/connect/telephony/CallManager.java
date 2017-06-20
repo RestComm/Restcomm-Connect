@@ -141,6 +141,7 @@ import scala.concurrent.duration.Duration;
  * @author ivelin.ivanov@telestax.com
  * @author jean.deruelle@telestax.com
  * @author gvagenas@telestax.com
+ * @author maria.farooq@telestax.com
  */
 public final class CallManager extends UntypedActor {
 
@@ -1092,8 +1093,7 @@ public final class CallManager extends UntypedActor {
                 sourceOrganizationSid = storage.getAccountsDao().getAccount(fromClientAccountSid).getOrganizationSid();
             }
 
-            if(logger.isDebugEnabled())
-                logger.debug("getMostOptimalIncomingPhoneNumber: sourceOrganizationSid: "+sourceOrganizationSid+" : destinationOrganizationSid: "+destinationOrganizationSid);
+            logger.info("getMostOptimalIncomingPhoneNumber: sourceOrganizationSid: "+sourceOrganizationSid+" : destinationOrganizationSid: "+destinationOrganizationSid);
 
             // Format the destination to an E.164 phone number.
             final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
