@@ -63,7 +63,7 @@
     LEFT OUTER JOIN restcomm_applications a_refer ON n.refer_application_sid = a_refer.sid
     WHERE n.account_sid=#{accountSid}
     <if test="friendlyName != null">
-      AND n.friendly_name=#{friendlyName}
+      AND n.friendly_name like #{friendlyName}
     </if>
     <if test="phoneNumber != null">
       AND n.phone_number like #{phoneNumber}
