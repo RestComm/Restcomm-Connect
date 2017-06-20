@@ -440,7 +440,14 @@ public final class CallManager extends UntypedActor {
         final ApplicationsDao applications = storage.getApplicationsDao();
         // Try to find an application defined for the client.
         final SipURI fromUri = (SipURI) request.getFrom().getURI();
-        final Sid fromOrganizationSid = getOrganizationSidBySipURIHost(fromUri);
+        Sid fromOrganizationSid = getOrganizationSidBySipURIHost(fromUri);
+        if(logger.isDebugEnabled()) {
+            logger.debug("fromOrganizationSid: " + fromOrganizationSid);
+        }
+        if(fromOrganizationSid == null){
+            logger.error("Null Organization: fromUri: "+fromUri);
+            fromOrganizationSid = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization)).getSid();
+        }
         if(logger.isDebugEnabled()) {
             logger.debug("fromOrganizationSid" + fromOrganizationSid);
         }
@@ -482,9 +489,13 @@ public final class CallManager extends UntypedActor {
             logger.info("mediaExternalIp: " + mediaExternalIp);
             logger.info("proxyIp: " + proxyIp);
         }
-        final Sid toOrganizationSid = getOrganizationSidBySipURIHost((SipURI) request.getTo().getURI());
+        Sid toOrganizationSid = getOrganizationSidBySipURIHost((SipURI) request.getTo().getURI());
         if(logger.isDebugEnabled()) {
-            logger.debug("toOrganizationSid" + toOrganizationSid);
+            logger.debug("toOrganizationSid: " + toOrganizationSid);
+        }
+        if(toOrganizationSid == null){
+            logger.error("Null Organization: toUri: "+fromUri);
+            toOrganizationSid = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization)).getSid();
         }
         Client toClient = clients.getClient(toUser, toOrganizationSid);
 
@@ -607,16 +618,14 @@ public final class CallManager extends UntypedActor {
      */
     private Sid getOrganizationSidBySipURIHost(final SipURI sipURI){
         final String organizationDomainName = sipURI.getHost();
-        if(logger.isDebugEnabled())
-            logger.debug("sipURI: "+sipURI+" | organizationDomainName: "+organizationDomainName);
         Organization organization = storage.getOrganizationsDao().getOrganizationByDomainName(organizationDomainName);
         if(logger.isDebugEnabled())
-            logger.debug("organization: "+organization);
-        if(organization == null){
+            logger.debug("sipURI: "+sipURI+" | organizationDomainName: "+organizationDomainName+ " | organization: "+organization);
+        /*if(organization == null){
             organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
             logger.error("organization is null going to choose default: "+organization);
-        }
-        return organization.getSid();
+        }*/
+        return organization == null ? null : organization.getSid();
     }
     private boolean proxyOut(SipServletRequest request, Client client, String toUser, String toHost, String toHostIpAddress, String toPort, SipURI outboundIntf, String proxyURI, String proxyUsername, String proxyPassword, SipURI from, SipURI to, boolean callToSipUri) throws UnknownHostException {
         final Configuration runtime = configuration.subset("runtime-settings");
@@ -1116,38 +1125,47 @@ public final class CallManager extends UntypedActor {
         }
         numbers = getDistinctNumbersList(numbers);
         //TODO remove it before merge
-        logger.info("getMostOptimalIncomingPhoneNumber: list size"+numbers.size());
+        logger.info("getMostOptimalIncomingPhoneNumber: list size after getDistinctNumbersList: "+numbers.size());
         if(!numbers.isEmpty()){
             boolean foundNumberInSameOrganization = false;
-            boolean foundNonSipNumberInDifferntOrganization = false;
-            Sid organizationSid = getOrganizationSidBySipURIHost((SipURI)request.getTo().getURI());
-            //TODO remove it before merge
-            logger.info("getMostOptimalIncomingPhoneNumber: organizationSid: "+organizationSid);
-            // find number in same organization
-            for(IncomingPhoneNumber n : numbers){
-                //TODO remove it before merge
-                logger.info("getMostOptimalIncomingPhoneNumber: n.getOrganizationSid(): "+n.getOrganizationSid());
-                if(n.getOrganizationSid().equals(organizationSid)){
-                    //TODO remove it before merge
-                    logger.info("getMostOptimalIncomingPhoneNumber: foundNumberInSameOrganization: "+number);
-                    foundNumberInSameOrganization = true;
-                    number = n;
+            boolean foundNonSipNumberInAnyOrganization = false;
+
+            Sid toOrganizationSid = getOrganizationSidBySipURIHost((SipURI)request.getTo().getURI());
+            Sid fromOrganizationSid = getOrganizationSidBySipURIHost((SipURI)request.getFrom().getURI());
+
+            if(logger.isDebugEnabled())
+                logger.debug("getMostOptimalIncomingPhoneNumber: fromOrganizationSid: "+fromOrganizationSid+" : toOrganizationSid: "+toOrganizationSid);
+
+            //fromOrganizationSid i.e source organization can be null when someone calling from pstn.
+            if(fromOrganizationSid != null){
+                // find number in same organization
+                for(IncomingPhoneNumber n : numbers){
+                    if(n.getOrganizationSid().equals(fromOrganizationSid)){
+                        //TODO remove it before merge
+                        logger.info("getMostOptimalIncomingPhoneNumber: foundNumberInSameOrganization: "+number);
+                        foundNumberInSameOrganization = true;
+                        number = n;
+                    }
+                    if(foundNumberInSameOrganization)
+                        break;
                 }
-                if(foundNumberInSameOrganization)
-                    break;
             }
             /* if number is not found in same organization
              * then find a non sip (provider) number in a different organization
              */
-            if(!foundNumberInSameOrganization){
+            if(!foundNumberInSameOrganization || toOrganizationSid != null){
                 for(IncomingPhoneNumber n : numbers){
                     if(!n.isPureSip()){
-                        foundNonSipNumberInDifferntOrganization = true;
-                        number = n;
+                        foundNonSipNumberInAnyOrganization = true;
+                        //this condition is to support dialing out to a number of a different organization even when same number exist in our org as sip number. 
+                        if(number != null && toOrganizationSid.equals(n.getOrganizationSid())){
+                            number = n;
+                        }else
+                            number = n;
                         //TODO remove it before merge
-                        logger.info("getMostOptimalIncomingPhoneNumber: foundNonSipNumberInDifferntOrganization: "+number);
+                        logger.info("getMostOptimalIncomingPhoneNumber: foundNonSipNumberInAnyOrganization: "+number+" org: "+number.getOrganizationSid());
                     }
-                    if(foundNonSipNumberInDifferntOrganization)
+                    if(foundNonSipNumberInAnyOrganization)
                         break;
                 }
             }
@@ -2241,7 +2259,12 @@ public final class CallManager extends UntypedActor {
             logger.info("looking for registrations for number: " + formattedNumber);
         }
         final RegistrationsDao registrationsDao = storage.getRegistrationsDao();
-        List<Registration> registrations = registrationsDao.getRegistrations(formattedNumber, getOrganizationSidBySipURIHost((SipURI)regUri));
+        Sid orgSid = getOrganizationSidBySipURIHost((SipURI)regUri);
+        if(orgSid == null){
+            logger.error("Null Organization: regUri: "+regUri);
+            orgSid = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization)).getSid();
+        }
+        List<Registration> registrations = registrationsDao.getRegistrations(formattedNumber, orgSid);
 
         if(registrations == null || registrations.size() ==0){
             return null;
