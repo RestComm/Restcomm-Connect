@@ -21,9 +21,9 @@ package org.restcomm.connect.dao;
 
 import java.util.List;
 
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
-import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -47,5 +47,8 @@ public interface IncomingPhoneNumbersDao {
     void updateIncomingPhoneNumber(IncomingPhoneNumber incomingPhoneNumber);
 
     List<IncomingPhoneNumber> getAllIncomingPhoneNumbers();
+
     List<IncomingPhoneNumber> getIncomingPhoneNumbersRegex();
+
+    Integer getTotalIncomingPhoneNumbers(IncomingPhoneNumberFilter filter);
 }
