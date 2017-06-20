@@ -135,6 +135,8 @@ public class DialActionTestOrganization {
 
     private String mariaRestcommClientSidOrg2;
     private String shoaibRestcommClientSidOrg2;
+    private String bobRestcommClientSidOrg2;
+    private String bobRestcommClientSidOrg3;
     private String clientPassword = "qwerty1234RT";
 
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
@@ -150,7 +152,7 @@ public class DialActionTestOrganization {
     private String dialClientWithActionUrlOrg3 = "sip:+12223334455@org3.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml of organization: org3.restcomm.com
 
     private String adminAccountSidOrg2 = "ACae6e420f425248d6a26948c17a9e2acg";
-    private String adminAccountSidOrg3 = "ACae6e420f425248d6a26948c17a9e2acg";
+    private String adminAccountSidOrg3 = "ACae6e420f425248d6a26948c17a9e2ach";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     @BeforeClass
@@ -189,6 +191,8 @@ public class DialActionTestOrganization {
         
         mariaRestcommClientSidOrg2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken, "maria", clientPassword, null);
         shoaibRestcommClientSidOrg2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken, "shoaib", clientPassword, null);
+        bobRestcommClientSidOrg2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken, "bob", clientPassword, null);
+        bobRestcommClientSidOrg3 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), adminAccountSidOrg3, adminAuthToken, "bob", clientPassword, null);
 
     }
 
@@ -206,7 +210,7 @@ public class DialActionTestOrganization {
      * +12223334467@org2.restcomm.com is provider number and mapped on dial action to call alice@org2.
      * +12223334467@org3.restcomm.com is pure sip number and mapped on dial action to call alice@org3.
      * 
-     * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should go to alice@org2
+     * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
      * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
      * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
      * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
@@ -222,11 +226,20 @@ public class DialActionTestOrganization {
                 .willReturn(aResponse()
                     .withStatus(200)));
     	/*
-    	 * test case 1 - bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should go to alice@org2
+    	 * test case 1 - bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
     	 */
 
-        //register as alice@org2.restcomm.com, alice@org3.restcomm.com and alice@default.restcomm.com
-        SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+    	assertNotNull(bobRestcommClientSidOrg2);
+        SipURI uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
+        Credential c = new Credential("org2.restcomm.com", "bob", clientPassword);
+        bobPhoneOrg2.addUpdateCredential(c);
+        final SipCall shoaibCall = shoaibPhoneOrg2.createSipCall();
+        shoaibCall.listenForIncomingCall();
+        Thread.sleep(1000);
+
+        //register as alice@org2.restcomm.com
+        uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
         SipCall aliceCallOrg2 = alicePhoneOrg2.createSipCall();
         aliceCallOrg2.listenForIncomingCall();
@@ -235,6 +248,8 @@ public class DialActionTestOrganization {
         final SipCall bobCallOrg2 = bobPhoneOrg2.createSipCall();
         bobCallOrg2.initiateOutgoingCall(bobContactOrg2, pureSipNumberOrg3, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCallOrg2);
+        assertTrue(bobCallOrg2.waitForAuthorisation(3000));
+        
         assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCallOrg2.getLastReceivedResponse().getStatusCode();
         assertTrue(response == Response.TRYING || response == Response.RINGING);
@@ -305,7 +320,7 @@ public class DialActionTestOrganization {
      * +12223334467@org2.restcomm.com is provider number and mapped on dial action to call alice@org2.
      * +12223334467@org3.restcomm.com is pure sip number and mapped on dial action to call alice@org3.
      * 
-     * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should go to alice@org2
+     * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
      * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
      * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
      * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
@@ -404,7 +419,7 @@ public class DialActionTestOrganization {
      * +12223334467@org2.restcomm.com is provider number and mapped on dial action to call alice@org2.
      * +12223334467@org3.restcomm.com is pure sip number and mapped on dial action to call alice@org3.
      * 
-     * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should go to alice@org2
+     * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
      * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
      * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
      * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
@@ -504,7 +519,7 @@ public class DialActionTestOrganization {
      * +12223334467@org2.restcomm.com is provider number and mapped on dial action to call alice@org2.
      * +12223334467@org3.restcomm.com is pure sip number and mapped on dial action to call alice@org3.
      * 
-     * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should go to alice@org2
+     * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
      * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
      * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
      * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
@@ -574,7 +589,7 @@ public class DialActionTestOrganization {
      * +12223334467@org2.restcomm.com is provider number and mapped on dial action to call alice@org2.
      * +12223334467@org3.restcomm.com is pure sip number and mapped on dial action to call alice@org3.
      * 
-     * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should go to alice@org2
+     * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
      * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
      * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
      * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
