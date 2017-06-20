@@ -560,6 +560,24 @@ confRVD(){
 	fi
 }
 
+confRcmlserver(){
+    echo "Configuring <rcmlserver/>..."
+    local RESTCOMM_XML=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    if [ -z "$RVD_URL" ]; then
+        # remove <rcmlserver>/<base-url> element altogether
+        xmlstarlet ed -P -d "/restcomm/rcmlserver/base-url" "$RESTCOMM_XML" > "${RESTCOMM_XML}.bak"
+        mv ${RESTCOMM_XML}.bak "$RESTCOMM_XML"
+    else
+        # remove existing <base-url/> element
+        xmlstarlet ed -P -d /restcomm/rcmlserver/base-url "$RESTCOMM_XML" > "${RESTCOMM_XML}.bak"
+        mv ${RESTCOMM_XML}.bak "$RESTCOMM_XML"
+        # add it anew
+        xmlstarlet ed -P -s /restcomm/rcmlserver -t elem -n base-url -v "$RVD_URL" "${RESTCOMM_XML}" > "${RESTCOMM_XML}.bak"
+        mv "${RESTCOMM_XML}.bak" "$RESTCOMM_XML"
+    fi
+    echo "<rcmlserver/> configured"
+}
+
 #Auto Configure RMS Networking, if  MANUAL_SETUP=false.
 configRMSNetworking() {
     if [[ "$MANUAL_SETUP" == "false" || "$MANUAL_SETUP" == "FALSE" ]]; then
@@ -606,6 +624,7 @@ updateRecordingsPath
 configHypertextPort
 configOutboundProxy
 otherRestCommConf
+confRcmlserver
 confRVD
 configRMSNetworking
 echo 'Configured RestComm!'
