@@ -167,7 +167,7 @@ public class IncomingPhoneNumbersDaoTest {
     @Test
     public void applicationFriendlyNameReturned() {
         final IncomingPhoneNumbersDao dao = manager.getIncomingPhoneNumbersDao();
-        IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter("ACae6e420f425248d6a26948c17a9e2acf", null, null);
+        IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter("ACae6e420f425248d6a26948c17a9e2acf", null, null,"phone_number","ASC",50,0);
         List<IncomingPhoneNumber> phoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
         Assert.assertEquals("Only a single phone number expected",1, phoneNumbers.size());
         IncomingPhoneNumber number = phoneNumbers.get(0);
