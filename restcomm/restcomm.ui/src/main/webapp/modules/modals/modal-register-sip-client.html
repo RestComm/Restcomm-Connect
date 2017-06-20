@@ -8,10 +8,6 @@
     <h3 class="no-margins"><i class="fa fa-phone"></i> Register Client</h3>
 </div>
 <div class="modal-body">
-<div class="alert alert-danger" ng-show="clientForm.clientLogin.$error.pattern">
-  <strong>Error!</strong> <p ng-show="clientForm.clientLogin.$error.pattern && !clientForm.clientLogin.$pristine" class="help-block has-error">Not a valid login name. Please remove @ character and try again</p>
-
-</div>
     <form class="form-horizontal" name="clientForm">
         <dl class="dl-horizontal form-dl">
             <dt>Account SID</dt>
@@ -21,7 +17,7 @@
             <!--<hr class="small" />-->
             <dt>Login</dt>
             <dd>
-                <input id="new-client-login" name="clientLogin" class="form-control" ng-model="clientDetails.login" type="text" ng-pattern="loginRegx"   placeholder="eg: alice" required popover-placement="bottom" popover-trigger="focus" uib-popover="The name that is used by the user agent as the user name for registration and outbound dialing." />
+                <input id="new-client-login" name="clientLogin" class="form-control" ng-model="clientDetails.login" type="text" ng-pattern="loginRegx"   placeholder="eg: alice" required popover-placement="bottom" popover-trigger="focus" uib-popover="The name that is used by the user agent as the user name for registration and outbound dialing.Must be without @ character" />
             </dd>
             <dt>Password</dt>
             <dd id="client-password-wrap">
