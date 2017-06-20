@@ -63,6 +63,7 @@ import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -644,7 +645,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
         boolean result;
         checkPermission("RestComm:Read:Accounts");
         final Sid sid = userIdentityContext.getEffectiveAccount().getSid();
-        AuthToken authToken = new AuthToken(sid, data.getFirst("token"), data.getFirst("description"));
+        //AuthToken authToken = new AuthToken(sid, data.getFirst("token"), data.getFirst("description"));
+        AuthToken authToken = new AuthToken(sid, new Md5Hash(Integer.toString(new Random().nextInt())).toString(), data.getFirst("description"));
         result = accountsDao.addAuthToken(authToken);
             if(!result){
                 return status(Status.NOT_FOUND).build();
