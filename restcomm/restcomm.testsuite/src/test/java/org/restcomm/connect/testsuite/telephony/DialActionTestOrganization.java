@@ -136,7 +136,7 @@ public class DialActionTestOrganization {
     private SipPhone alicePhoneOrg3;
     private String aliceContactOrg3 = "sip:alice@org3.restcomm.com";
 
-    private String numberOrg2ProviderNumber = "sip:+12223334467@org2.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
+    private String providerNumberOrg2 = "sip:+12223334467@org2.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
     private String numberOrg3PureSipNumber = "sip:+12223334467@org3.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
     private String dialClientWithActionUrlOrg2 = "sip:+12223334455@org2.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
     private String dialClientWithActionUrlOrg3 = "sip:+12223334455@org3.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml of organization: org3.restcomm.com
@@ -207,17 +207,18 @@ public class DialActionTestOrganization {
         //register as alice@org2.restcomm.com
         SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
-        SipCall aliceCall = alicePhoneOrg2.createSipCall();
-        aliceCall.listenForIncomingCall();
+        SipCall aliceCallOrg2 = alicePhoneOrg2.createSipCall();
+        aliceCallOrg2.listenForIncomingCall();
+        
         //register as alice@org3.restcomm.com
         uri = aliceSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhoneOrg3.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5095", 3600, 3600));
-        SipCall alice2Call = alicePhoneOrg3.createSipCall();
-        aliceCall.listenForIncomingCall();
+        SipCall aliceCallOrg3 = alicePhoneOrg3.createSipCall();
+        aliceCallOrg3.listenForIncomingCall();
 
         // bob@org2.restcomm.com - dials a provider number in org2.
         final SipCall bobCall = bobPhoneOrg2.createSipCall();
-        bobCall.initiateOutgoingCall(bobContactOrg2, numberOrg2ProviderNumber, null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContactOrg2, providerNumberOrg2, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -234,17 +235,17 @@ public class DialActionTestOrganization {
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+        assertTrue(aliceCallOrg2.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCallOrg2.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        String receivedBody = new String(aliceCallOrg2.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCallOrg2.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
-        assertTrue(aliceCall.waitForAck(50 * 1000));
+        assertTrue(aliceCallOrg2.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
 
         // hangup.
-        aliceCall.disconnect();
+        aliceCallOrg2.disconnect();
 
         bobCall.listenForDisconnect();
         assertTrue(bobCall.waitForDisconnect(30 * 1000));
@@ -437,26 +438,38 @@ public class DialActionTestOrganization {
 
     }
 
+    /**
+     * testClientsCallEachOtherDifferentOrganization
+     * given clients:
+     * 
+     * maria belongs to org: org2.restcomm.com
+     * alice belong to org: org3.restcomm.com
+     * 
+     * test case: maria calls alice.
+     * 
+     * result: call do not go through
+     * 
+     * @throws ParseException
+     * @throws InterruptedException
+     */
     @Test
     public void testClientsCallEachOtherDifferentOrganization() throws ParseException, InterruptedException {
 
-    	// maria belongs to org: org2.restcomm.com
-    	// alice2 belong to org: org3.restcomm.com
         assertNotNull(mariaRestcommClientSidOrg2);
 
         SipURI uri = mariaSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(mariaPhoneOrg2.register(uri, "maria", clientPassword, "sip:maria@127.0.0.1:5093", 3600, 3600));
-        assertTrue(alicePhoneOrg3.register(uri, "alice", "1234", "sip:alice2@127.0.0.1:5095", 3600, 3600));
+        assertTrue(alicePhoneOrg3.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5095", 3600, 3600));
         //following realm is a cheat/hack to get through authorization and test organization related p2p logic.
         Credential c = new Credential("org3.restcomm.com", "maria", clientPassword);
         mariaPhoneOrg2.addUpdateCredential(c);
 
-        final SipCall alice2Call = alicePhoneOrg3.createSipCall();
-        alice2Call.listenForIncomingCall();
+        final SipCall aliceCallOrg3 = alicePhoneOrg3.createSipCall();
+        aliceCallOrg3.listenForIncomingCall();
 
         Thread.sleep(1000);
 
-        // Maria initiates a call to Alice2
+        // Maria initiates a call to Alice
         long startTime = System.currentTimeMillis();
         final SipCall mariaCall = mariaPhoneOrg2.createSipCall();
         mariaCall.initiateOutgoingCall(mariaContactOrg2, aliceContactOrg3, null, body, "application", "sdp", null, null);
@@ -464,24 +477,40 @@ public class DialActionTestOrganization {
         assertTrue(mariaCall.waitForAuthorisation(3000));
 
         //alice should not get the call
-        assertTrue(!alice2Call.waitForIncomingCall(5000));
+        assertTrue(!aliceCallOrg3.waitForIncomingCall(5000));
     }
 
+    /**
+     * testDialActionAliceAnswers:
+     * given: 
+     * clients:
+     * bob@org2, alice@org2.
+     * 
+     * given numbers:
+     * 12223334455@org2
+     * 12223334455@org3
+     * 
+     * test case: bob@org2 INVITE 12223334455@org2
+     * result: call goes to alice@org2.
+     * 
+     * @throws ParseException
+     * @throws InterruptedException
+     * @throws UnknownHostException
+     */
     @Test
     public void testDialActionAliceAnswers() throws ParseException, InterruptedException, UnknownHostException {
 
        stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
                     .withStatus(200)));
-        //register as alice
+        //register as alice@org2
         SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
-
-        // Prepare first phone to receive call
+        // Prepare alice's phone to receive call
         SipCall aliceCall = alicePhoneOrg2.createSipCall();
         aliceCall.listenForIncomingCall();
 
-        // Create outgoing call with second phone
+        // Create outgoing call with bob@org
         final SipCall bobCall = bobPhoneOrg2.createSipCall();
         bobCall.initiateOutgoingCall(bobContactOrg2, dialClientWithActionUrlOrg2, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
@@ -546,6 +575,27 @@ public class DialActionTestOrganization {
         assertNotNull(cdr);
     }
 
+
+    /**
+     * testDialActionHangupWithLCM:
+     * given: 
+     * clients:
+     * bob@org2, alice@org2.
+     * 
+     * given numbers:
+     * 12223334455@org2
+     * 12223334455@org3
+     * 
+     * test case1: bob@org2 INVITE 12223334455@org2
+     * result: call goes to alice@org2.
+     * 
+     * test case2: hangup using  LCM
+     * result: call completes
+     * 
+     * @throws ParseException
+     * @throws InterruptedException
+     * @throws UnknownHostException
+     */
     @Test
     public void testDialActionHangupWithLCM() throws Exception {
 
@@ -558,39 +608,39 @@ public class DialActionTestOrganization {
         assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
 
         // Prepare second phone to receive call
-        SipCall aliceCall = alicePhoneOrg2.createSipCall();
-        aliceCall.listenForIncomingCall();
+        SipCall aliceCallOrg2 = alicePhoneOrg2.createSipCall();
+        aliceCallOrg2.listenForIncomingCall();
 
         // Create outgoing call with first phone
-        final SipCall bobCall = bobPhoneOrg2.createSipCall();
-        bobCall.initiateOutgoingCall(bobContactOrg2, dialClientWithActionUrlOrg2, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        final SipCall bobCallOrg2 = bobPhoneOrg2.createSipCall();
+        bobCallOrg2.initiateOutgoingCall(bobContactOrg2, dialClientWithActionUrlOrg2, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCallOrg2);
+        assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCallOrg2.getLastReceivedResponse().getStatusCode();
         assertTrue(response == Response.TRYING || response == Response.RINGING);
 
         if (response == Response.TRYING) {
-            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+            assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCallOrg2.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCallOrg2.getLastReceivedResponse().getStatusCode());
 
-        String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+        String callSid = bobCallOrg2.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
 
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-        bobCall.listenForDisconnect();
+        bobCallOrg2.sendInviteOkAck();
+        assertTrue(!(bobCallOrg2.getLastReceivedResponse().getStatusCode() >= 400));
+        bobCallOrg2.listenForDisconnect();
 
-        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
-        aliceCall.listenForCancel();
+        assertTrue(aliceCallOrg2.waitForIncomingCall(30 * 1000));
+        aliceCallOrg2.listenForCancel();
 
         logger.info("About to execute LCM to hangup the call");
         RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(),adminAccountSidOrg2,adminAuthToken,callSid,"completed", null);
 
-        assertTrue(bobCall.waitForDisconnect(50 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
+        assertTrue(bobCallOrg2.waitForDisconnect(50 * 1000));
+        assertTrue(bobCallOrg2.respondToDisconnect());
 
 //        logger.info("&&&&&&&&&&&&&&&&&&&&&& Alice about to listen for CANCEL");
 //        SipTransaction sipTransaction = aliceCall.waitForCancel(50 * 1000);
