@@ -101,6 +101,8 @@ public class CorsFilter implements ContainerResponseFilter {
             }
 
             lazyServletContext = context;
+
+            logger.info("Initialized (lazily) CORS servlet response filter. allowedOrigin: " + allowedOrigin);
         }
     }
 }
