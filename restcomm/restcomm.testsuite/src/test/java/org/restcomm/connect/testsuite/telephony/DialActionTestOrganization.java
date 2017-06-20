@@ -137,7 +137,7 @@ public class DialActionTestOrganization {
     private String aliceContactOrg3 = "sip:alice@org3.restcomm.com";
 
     private String providerNumberOrg2 = "sip:+12223334467@org2.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
-    private String numberOrg3PureSipNumber = "sip:+12223334467@org3.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
+    private String pureSipNumberOrg3 = "sip:+12223334467@org3.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
     private String dialClientWithActionUrlOrg2 = "sip:+12223334455@org2.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
     private String dialClientWithActionUrlOrg3 = "sip:+12223334455@org3.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml of organization: org3.restcomm.com
 
@@ -181,19 +181,22 @@ public class DialActionTestOrganization {
     /**
      * testDialNumberExistingInMultipleOrganization:
      * 
-     * given we have 4 clients:
+     * given we have 5 clients:
      * 1. alice @ org2.
      * 2. alice @ org3.
      * 3. bob @ org2.
      * 4. bob @ org3.
+     * 5. alice @ defaultOrg.
      * 
-     * we have 2 number
+     * we have 2 number:
      * +12223334467@org2.restcomm.com is provider number and mapped on dial action to call alice@org2.
      * +12223334467@org3.restcomm.com is pure sip number and mapped on dial action to call alice@org3.
      * 
-     * test case 1: bob@org2 created INVITE - sip:+12223334467@org2.restcomm.com - call should go to alice@org2
-     * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com - call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip)
-     * test case 1: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com - call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
+     * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip)
+     * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
+     * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
+     * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
+     * test case 5: alice@defaultOrg created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
      * 
      * @throws ParseException
      * @throws InterruptedException
@@ -204,36 +207,36 @@ public class DialActionTestOrganization {
     	stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
                     .withStatus(200)));
-        //register as alice@org2.restcomm.com
+    	/*
+    	 * test case 1
+    	 */
+
+        //register as alice@org2.restcomm.com, alice@org3.restcomm.com and alice@default.restcomm.com
         SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
         SipCall aliceCallOrg2 = alicePhoneOrg2.createSipCall();
         aliceCallOrg2.listenForIncomingCall();
-        
-        //register as alice@org3.restcomm.com
         uri = aliceSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhoneOrg3.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5095", 3600, 3600));
         SipCall aliceCallOrg3 = alicePhoneOrg3.createSipCall();
         aliceCallOrg3.listenForIncomingCall();
 
-        // bob@org2.restcomm.com - dials a provider number in org2.
-        final SipCall bobCall = bobPhoneOrg2.createSipCall();
-        bobCall.initiateOutgoingCall(bobContactOrg2, providerNumberOrg2, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-
+        // bob@org2.restcomm.com - dials a pure sip number in org3.
+        final SipCall bobCallOrg2 = bobPhoneOrg2.createSipCall();
+        bobCallOrg2.initiateOutgoingCall(bobContactOrg2, pureSipNumberOrg3, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCallOrg2);
+        assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCallOrg2.getLastReceivedResponse().getStatusCode();
+        assertTrue(!(response == Response.TRYING || response == Response.RINGING));
         if (response == Response.TRYING) {
-            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+            assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCallOrg2.getLastReceivedResponse().getStatusCode());
         }
+        assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCallOrg2.getLastReceivedResponse().getStatusCode());
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+        bobCallOrg2.sendInviteOkAck();
+        assertTrue(!(bobCallOrg2.getLastReceivedResponse().getStatusCode() >= 400));
 
         assertTrue(aliceCallOrg2.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCallOrg2.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
@@ -247,9 +250,9 @@ public class DialActionTestOrganization {
         // hangup.
         aliceCallOrg2.disconnect();
 
-        bobCall.listenForDisconnect();
-        assertTrue(bobCall.waitForDisconnect(30 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
+        bobCallOrg2.listenForDisconnect();
+        assertTrue(bobCallOrg2.waitForDisconnect(30 * 1000));
+        assertTrue(bobCallOrg2.respondToDisconnect());
         try {
             Thread.sleep(50 * 1000);
         } catch (final InterruptedException exception) {
