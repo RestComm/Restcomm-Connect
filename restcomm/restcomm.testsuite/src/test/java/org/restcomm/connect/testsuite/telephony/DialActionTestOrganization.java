@@ -232,7 +232,7 @@ public class DialActionTestOrganization {
     	assertNotNull(bobRestcommClientSidOrg2);
         SipURI uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
-        Credential c = new Credential("org2.restcomm.com", "bob", clientPassword);
+        Credential c = new Credential("org3.restcomm.com", "bob", clientPassword);
         bobPhoneOrg2.addUpdateCredential(c);
         final SipCall shoaibCall = shoaibPhoneOrg2.createSipCall();
         shoaibCall.listenForIncomingCall();
@@ -252,7 +252,7 @@ public class DialActionTestOrganization {
         
         assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCallOrg2.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        assertTrue(!(response == Response.TRYING || response == Response.RINGING));
         if (response == Response.TRYING) {
             assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
             assertEquals(Response.RINGING, bobCallOrg2.getLastReceivedResponse().getStatusCode());

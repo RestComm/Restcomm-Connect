@@ -1141,34 +1141,23 @@ public final class CallManager extends UntypedActor {
             //TODO remove it before merge
             logger.info("getMostOptimalIncomingPhoneNumber: list size after getDistinctNumbersList: "+numbers.size());
             if(!numbers.isEmpty()){
-                boolean foundNumberInSameOrganization = false;
-                boolean foundNonSipNumberInAnyOrganization = false;
+                boolean foundNumber = false;
                 // find number in same organization
                 for(IncomingPhoneNumber n : numbers){
                     if(n.getOrganizationSid().equals(destinationOrganizationSid)){
-                        foundNumberInSameOrganization = true;
-                        number = n;
-                        //TODO remove it before merge
-                        logger.info("getMostOptimalIncomingPhoneNumber: foundNumberInSameOrganization: "+number);
-                    }
-                    if(foundNumberInSameOrganization)
-                        break;
-                }
-
-                /* if number is not found in same organization
-                 * then find a non sip (provider) number in a different organization
-                 */
-                if(!foundNumberInSameOrganization || destinationOrganizationSid != null){
-                    for(IncomingPhoneNumber n : numbers){
-                        if(!n.getSid().equals(number.getSid()) && !n.isPureSip() && n.getOrganizationSid().equals(destinationOrganizationSid)){
-                            foundNonSipNumberInAnyOrganization = true;
+                        /*
+                         * check if request is coming from same org
+                         * if not then only allow provider numbers
+                         */
+                        if((sourceOrganizationSid != null && sourceOrganizationSid.equals(destinationOrganizationSid)) || !n.isPureSip()){
+                            foundNumber = true;
                             number = n;
                             //TODO remove it before merge
-                            logger.info("getMostOptimalIncomingPhoneNumber: foundNonSipNumberInAnyOrganization: "+number+" org: "+number.getOrganizationSid());
+                            logger.info("found number: "+number+" | org: "+n.getOrganizationSid()+" | isPureSip: "+n.isPureSip());
                         }
-                        if(foundNonSipNumberInAnyOrganization)
-                            break;
                     }
+                    if(foundNumber)
+                        break;
                 }
             }
         }
