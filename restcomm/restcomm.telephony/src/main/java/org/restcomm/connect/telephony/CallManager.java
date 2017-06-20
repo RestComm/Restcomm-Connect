@@ -1141,10 +1141,10 @@ public final class CallManager extends UntypedActor {
                 // find number in same organization
                 for(IncomingPhoneNumber n : numbers){
                     if(n.getOrganizationSid().equals(fromOrganizationSid)){
-                        //TODO remove it before merge
-                        logger.info("getMostOptimalIncomingPhoneNumber: foundNumberInSameOrganization: "+number);
                         foundNumberInSameOrganization = true;
                         number = n;
+                        //TODO remove it before merge
+                        logger.info("getMostOptimalIncomingPhoneNumber: foundNumberInSameOrganization: "+number);
                     }
                     if(foundNumberInSameOrganization)
                         break;
@@ -1155,9 +1155,9 @@ public final class CallManager extends UntypedActor {
              */
             if(!foundNumberInSameOrganization || toOrganizationSid != null){
                 for(IncomingPhoneNumber n : numbers){
-                    if(!n.isPureSip()){
+                    if(!n.getSid().equals(number.getSid()) && !n.isPureSip()){
                         foundNonSipNumberInAnyOrganization = true;
-                        //this condition is to support dialing out to a number of a different organization even when same number exist in our org as sip number. 
+                        //this condition is to support dialing out to a number of a different organization even when same number exist in our org as sip number.
                         if(number != null && toOrganizationSid.equals(n.getOrganizationSid())){
                             number = n;
                         }else
