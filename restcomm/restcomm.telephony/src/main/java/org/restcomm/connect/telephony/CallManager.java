@@ -882,7 +882,7 @@ public final class CallManager extends UntypedActor {
         }
 
         String phone = cdr.getTo();
-        IncomingPhoneNumber number = getMostOptimalIncomingPhoneNumber(request, phone);
+        IncomingPhoneNumber number = getMostOptimalIncomingPhoneNumber(request, phone, cdr.getAccountSid());
 
         if (number == null || (number.getReferUrl() == null && number.getReferApplicationSid() == null)) {
             if (logger.isInfoEnabled()) {
@@ -1010,7 +1010,7 @@ public final class CallManager extends UntypedActor {
         boolean isFoundHostedApp = false;
         IncomingPhoneNumber number = null;
         try {
-            number = getMostOptimalIncomingPhoneNumber(request, phone);
+            number = getMostOptimalIncomingPhoneNumber(request, phone, fromClientAccountSid);
             if (number != null) {
                 final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
                 builder.setConfiguration(configuration);
@@ -1077,70 +1077,75 @@ public final class CallManager extends UntypedActor {
      * @param phone
      * @return
      */
-    private IncomingPhoneNumber getMostOptimalIncomingPhoneNumber(final SipServletRequest request, String phone) {
+    private IncomingPhoneNumber getMostOptimalIncomingPhoneNumber(final SipServletRequest request, String phone, Sid fromClientAccountSid) {
         //TODO remove it before merge
         logger.info("*********************** getMostOptimalIncomingPhoneNumber started ***********************: "+phone);
-        // Format the destination to an E.164 phone number.
-        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-        String formatedPhone = null;
-        if (!(phone.contains("*") || phone.contains("#"))) {
-            try {
-                formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
-            } catch (NumberParseException e) {
-                logger.error("Exception when try to format : " + e);
-            }
-        }
-        if (formatedPhone == null) {
-            //Don't format to E.164 if phone contains # or * as this is
-            //for a Regex or USSD short number
-            formatedPhone = phone;
-        }
-        List<IncomingPhoneNumber> numbers = null;
-        IncomingPhoneNumber number = null;
-        // Try to find an application defined for the phone number.
-        final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
-        //get all number with same number, by both formatedPhone and unformatedPhone
-        numbers = numbersDao.getIncomingPhoneNumber(formatedPhone);
-        //TODO remove it before merge
-        logger.info("getMostOptimalIncomingPhoneNumber: get formatedPhone result size: "+numbers.size());
-        numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
-        //TODO remove it before merge
-        logger.info("getMostOptimalIncomingPhoneNumber: get unformatedPhone result size: "+numbers.size());
-        if (phone.startsWith("+")) {
-            //remove the (+) and check if exists
-            phone= phone.replaceFirst("\\+","");
-            numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
-            //TODO remove it before merge
-            logger.info("getMostOptimalIncomingPhoneNumber: get phone without plus result size: "+numbers.size());
-        } else {
-            //Add "+" add check if number exists
-            phone = "+".concat(phone);
-            numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
-            //TODO remove it before merge
-            logger.info("getMostOptimalIncomingPhoneNumber: get phone with plus result size: "+numbers.size());
-        }
-        if(numbers.isEmpty()){
-            // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
-            numbers.addAll(numbersDao.getIncomingPhoneNumber("*"));
-        }
-        numbers = getDistinctNumbersList(numbers);
-        //TODO remove it before merge
-        logger.info("getMostOptimalIncomingPhoneNumber: list size after getDistinctNumbersList: "+numbers.size());
-        if(!numbers.isEmpty()){
-            boolean foundNumberInSameOrganization = false;
-            boolean foundNonSipNumberInAnyOrganization = false;
 
-            Sid toOrganizationSid = getOrganizationSidBySipURIHost((SipURI)request.getTo().getURI());
-            Sid fromOrganizationSid = getOrganizationSidBySipURIHost((SipURI)request.getFrom().getURI());
+        IncomingPhoneNumber number = null;
+        Sid destinationOrganizationSid = getOrganizationSidBySipURIHost((SipURI)request.getRequestURI());
+
+        if(destinationOrganizationSid == null){
+            logger.error("destinationOrganizationSid is NULL: reuest Uri is: "+(SipURI)request.getRequestURI());
+        }else{
+            Sid sourceOrganizationSid = null;
+            if(fromClientAccountSid != null){
+                sourceOrganizationSid = storage.getAccountsDao().getAccount(fromClientAccountSid).getOrganizationSid();
+            }
 
             if(logger.isDebugEnabled())
-                logger.debug("getMostOptimalIncomingPhoneNumber: fromOrganizationSid: "+fromOrganizationSid+" : toOrganizationSid: "+toOrganizationSid);
+                logger.debug("getMostOptimalIncomingPhoneNumber: sourceOrganizationSid: "+sourceOrganizationSid+" : destinationOrganizationSid: "+destinationOrganizationSid);
 
-            //fromOrganizationSid i.e source organization can be null when someone calling from pstn.
-            if(fromOrganizationSid != null){
+            // Format the destination to an E.164 phone number.
+            final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+            String formatedPhone = null;
+            if (!(phone.contains("*") || phone.contains("#"))) {
+                try {
+                    formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
+                } catch (NumberParseException e) {
+                    logger.error("Exception when try to format : " + e);
+                }
+            }
+            if (formatedPhone == null) {
+                //Don't format to E.164 if phone contains # or * as this is
+                //for a Regex or USSD short number
+                formatedPhone = phone;
+            }
+            List<IncomingPhoneNumber> numbers = null;
+            // Try to find an application defined for the phone number.
+            final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
+            //get all number with same number, by both formatedPhone and unformatedPhone
+            numbers = numbersDao.getIncomingPhoneNumber(formatedPhone);
+            //TODO remove it before merge
+            logger.info("getMostOptimalIncomingPhoneNumber: get formatedPhone result size: "+numbers.size());
+            numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+            //TODO remove it before merge
+            logger.info("getMostOptimalIncomingPhoneNumber: get unformatedPhone result size: "+numbers.size());
+            if (phone.startsWith("+")) {
+                //remove the (+) and check if exists
+                phone= phone.replaceFirst("\\+","");
+                numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+                //TODO remove it before merge
+                logger.info("getMostOptimalIncomingPhoneNumber: get phone without plus result size: "+numbers.size());
+            } else {
+                //Add "+" add check if number exists
+                phone = "+".concat(phone);
+                numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+                //TODO remove it before merge
+                logger.info("getMostOptimalIncomingPhoneNumber: get phone with plus result size: "+numbers.size());
+            }
+            if(numbers.isEmpty()){
+                // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
+                numbers.addAll(numbersDao.getIncomingPhoneNumber("*"));
+            }
+            numbers = getDistinctNumbersList(numbers);
+            //TODO remove it before merge
+            logger.info("getMostOptimalIncomingPhoneNumber: list size after getDistinctNumbersList: "+numbers.size());
+            if(!numbers.isEmpty()){
+                boolean foundNumberInSameOrganization = false;
+                boolean foundNonSipNumberInAnyOrganization = false;
                 // find number in same organization
                 for(IncomingPhoneNumber n : numbers){
-                    if(n.getOrganizationSid().equals(fromOrganizationSid)){
+                    if(n.getOrganizationSid().equals(destinationOrganizationSid)){
                         foundNumberInSameOrganization = true;
                         number = n;
                         //TODO remove it before merge
@@ -1149,24 +1154,21 @@ public final class CallManager extends UntypedActor {
                     if(foundNumberInSameOrganization)
                         break;
                 }
-            }
-            /* if number is not found in same organization
-             * then find a non sip (provider) number in a different organization
-             */
-            if(!foundNumberInSameOrganization || toOrganizationSid != null){
-                for(IncomingPhoneNumber n : numbers){
-                    if(!n.getSid().equals(number.getSid()) && !n.isPureSip()){
-                        foundNonSipNumberInAnyOrganization = true;
-                        //this condition is to support dialing out to a number of a different organization even when same number exist in our org as sip number.
-                        if(number != null && toOrganizationSid.equals(n.getOrganizationSid())){
+
+                /* if number is not found in same organization
+                 * then find a non sip (provider) number in a different organization
+                 */
+                if(!foundNumberInSameOrganization || destinationOrganizationSid != null){
+                    for(IncomingPhoneNumber n : numbers){
+                        if(!n.getSid().equals(number.getSid()) && !n.isPureSip() && n.getOrganizationSid().equals(destinationOrganizationSid)){
+                            foundNonSipNumberInAnyOrganization = true;
                             number = n;
-                        }else
-                            number = n;
-                        //TODO remove it before merge
-                        logger.info("getMostOptimalIncomingPhoneNumber: foundNonSipNumberInAnyOrganization: "+number+" org: "+number.getOrganizationSid());
+                            //TODO remove it before merge
+                            logger.info("getMostOptimalIncomingPhoneNumber: foundNonSipNumberInAnyOrganization: "+number+" org: "+number.getOrganizationSid());
+                        }
+                        if(foundNonSipNumberInAnyOrganization)
+                            break;
                     }
-                    if(foundNonSipNumberInAnyOrganization)
-                        break;
                 }
             }
         }
