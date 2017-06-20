@@ -72,7 +72,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $uibModal, $dialog,
   };
 
   $scope.getNumbersList = function(page) {
-   var params = createSearchParams();
+   var params = createSearchParams($scope.query);
     RCommNumbers.get($.extend({accountSid: $scope.sid, Page: page, PageSize: $scope.entryLimit}, params), function(data) {	
       $scope.numbersList = data.incomingPhoneNumbers;
       $scope.totalNumbers = data.total;
@@ -84,8 +84,16 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $uibModal, $dialog,
       }
     });
   }
- var createSearchParams = function() {
+ var createSearchParams = function(query) {
     var params = {};
+    if(query){
+        if(query.phone_number) {
+          params["PhoneNumber"] = query.phone_number;
+        }
+        if(query.friendly_name) {
+          params["FriendlyName"] = query.friendly_name;
+        }
+        }
     params["SortBy"] = $scope.predicate;
     params["Reverse"] = $scope.reverse;
 
