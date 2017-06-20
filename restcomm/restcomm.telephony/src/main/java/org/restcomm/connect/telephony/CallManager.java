@@ -33,6 +33,7 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -1069,7 +1070,7 @@ public final class CallManager extends UntypedActor {
      */
     private IncomingPhoneNumber getMostOptimalIncomingPhoneNumber(final SipServletRequest request, String phone) {
         //TODO remove it before merge
-        logger.info("*********************** getMostOptimalIncomingPhoneNumber started ***********************");
+        logger.info("*********************** getMostOptimalIncomingPhoneNumber started ***********************: "+phone);
         // Format the destination to an E.164 phone number.
         final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
         String formatedPhone = null;
@@ -1113,6 +1114,9 @@ public final class CallManager extends UntypedActor {
             // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
             numbers.addAll(numbersDao.getIncomingPhoneNumber("*"));
         }
+        numbers = getDistinctNumbersList(numbers);
+        //TODO remove it before merge
+        logger.info("getMostOptimalIncomingPhoneNumber: list size"+numbers.size());
         if(!numbers.isEmpty()){
             boolean foundNumberInSameOrganization = false;
             boolean foundNonSipNumberInDifferntOrganization = false;
@@ -1153,6 +1157,14 @@ public final class CallManager extends UntypedActor {
         return number;
     }
 
+    private List<IncomingPhoneNumber> getDistinctNumbersList(List<IncomingPhoneNumber> numbers){
+        List<IncomingPhoneNumber> distinctNumbers = new ArrayList<IncomingPhoneNumber>();
+        for(IncomingPhoneNumber number : numbers){
+            if(!distinctNumbers.contains(number))
+                distinctNumbers.add(number);
+        }
+        return distinctNumbers;
+    }
     /**
      * If there is VoiceUrl provided for a Client configuration, try to begin execution of the RCML app, otherwise return false.
      *
