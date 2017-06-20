@@ -252,10 +252,11 @@ public class DialActionTestOrganization {
         
         assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCallOrg2.getLastReceivedResponse().getStatusCode();
-        assertTrue(!(response == Response.TRYING || response == Response.RINGING));
+        logger.info("bobCallOrg2 response: "+response);
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
         if (response == Response.TRYING) {
             assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCallOrg2.getLastReceivedResponse().getStatusCode());
+            assertTrue(!(Response.RINGING == bobCallOrg2.getLastReceivedResponse().getStatusCode()));
         }
         assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCallOrg2.getLastReceivedResponse().getStatusCode());
