@@ -883,7 +883,7 @@ public final class CallManager extends UntypedActor {
         }
 
         String phone = cdr.getTo();
-        IncomingPhoneNumber number = getMostOptimalIncomingPhoneNumber(request, phone, cdr.getAccountSid());
+        IncomingPhoneNumber number = getMostOptimalIncomingPhoneNumber(request, phone, cdr.getAccountSid(), false);
 
         if (number == null || (number.getReferUrl() == null && number.getReferApplicationSid() == null)) {
             if (logger.isInfoEnabled()) {
@@ -1009,55 +1009,64 @@ public final class CallManager extends UntypedActor {
     private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
                                              final ApplicationsDao applications, String phone, Sid fromClientAccountSid) {
         boolean isFoundHostedApp = false;
+        boolean failCall = false;
         IncomingPhoneNumber number = null;
         try {
-            number = getMostOptimalIncomingPhoneNumber(request, phone, fromClientAccountSid);
-            if (number != null) {
-                final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
-                builder.setConfiguration(configuration);
-                builder.setStorage(storage);
-                builder.setCallManager(self);
-                builder.setConferenceManager(conferences);
-                builder.setBridgeManager(bridges);
-                builder.setSmsService(sms);
-                //https://github.com/RestComm/Restcomm-Connect/issues/1939
-                Sid accSid = fromClientAccountSid == null? number.getAccountSid() : fromClientAccountSid;
-                builder.setAccount(accSid);
-                builder.setPhone(number.getAccountSid());
-                builder.setVersion(number.getApiVersion());
-                // notifications should go to fromClientAccountSid email if not present then to number account
-                // https://github.com/RestComm/Restcomm-Connect/issues/2011
-                final Account account = accounts.getAccount(accSid);
-                builder.setEmailAddress(account.getEmailAddress());
-                final Sid sid = number.getVoiceApplicationSid();
-                if (sid != null) {
-                    final Application application = applications.getApplication(sid);
-                    builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
-                } else {
-                    builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
+            number = getMostOptimalIncomingPhoneNumber(request, phone, fromClientAccountSid, failCall);
+            //todo: remove before merge
+            logger.info("failCall: "+failCall);
+            if(failCall){
+                //number was found but organization was not proper.
+                final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
+                response.send();
+            }else{
+                if (number != null) {
+                    final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+                    builder.setConfiguration(configuration);
+                    builder.setStorage(storage);
+                    builder.setCallManager(self);
+                    builder.setConferenceManager(conferences);
+                    builder.setBridgeManager(bridges);
+                    builder.setSmsService(sms);
+                    //https://github.com/RestComm/Restcomm-Connect/issues/1939
+                    Sid accSid = fromClientAccountSid == null? number.getAccountSid() : fromClientAccountSid;
+                    builder.setAccount(accSid);
+                    builder.setPhone(number.getAccountSid());
+                    builder.setVersion(number.getApiVersion());
+                    // notifications should go to fromClientAccountSid email if not present then to number account
+                    // https://github.com/RestComm/Restcomm-Connect/issues/2011
+                    final Account account = accounts.getAccount(accSid);
+                    builder.setEmailAddress(account.getEmailAddress());
+                    final Sid sid = number.getVoiceApplicationSid();
+                    if (sid != null) {
+                        final Application application = applications.getApplication(sid);
+                        builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
+                    } else {
+                        builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
+                    }
+                    final String voiceMethod = number.getVoiceMethod();
+                    if (voiceMethod == null || voiceMethod.isEmpty()) {
+                        builder.setMethod("POST");
+                    } else {
+                        builder.setMethod(voiceMethod);
+                    }
+                    URI uri = number.getVoiceFallbackUrl();
+                    if (uri != null)
+                        builder.setFallbackUrl(UriUtils.resolve(uri));
+                    else
+                        builder.setFallbackUrl(null);
+                    builder.setFallbackMethod(number.getVoiceFallbackMethod());
+                    builder.setStatusCallback(number.getStatusCallback());
+                    builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
+                    builder.setMonitoring(monitoring);
+                    final ActorRef interpreter = builder.build();
+                    final ActorRef call = call(null);
+                    final SipApplicationSession application = request.getApplicationSession();
+                    application.setAttribute(Call.class.getName(), call);
+                    call.tell(request, self);
+                    interpreter.tell(new StartInterpreter(call), self);
+                    isFoundHostedApp = true;
                 }
-                final String voiceMethod = number.getVoiceMethod();
-                if (voiceMethod == null || voiceMethod.isEmpty()) {
-                    builder.setMethod("POST");
-                } else {
-                    builder.setMethod(voiceMethod);
-                }
-                URI uri = number.getVoiceFallbackUrl();
-                if (uri != null)
-                    builder.setFallbackUrl(UriUtils.resolve(uri));
-                else
-                    builder.setFallbackUrl(null);
-                builder.setFallbackMethod(number.getVoiceFallbackMethod());
-                builder.setStatusCallback(number.getStatusCallback());
-                builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
-                builder.setMonitoring(monitoring);
-                final ActorRef interpreter = builder.build();
-                final ActorRef call = call(null);
-                final SipApplicationSession application = request.getApplicationSession();
-                application.setAttribute(Call.class.getName(), call);
-                call.tell(request, self);
-                interpreter.tell(new StartInterpreter(call), self);
-                isFoundHostedApp = true;
             }
         } catch (Exception notANumber) {
             String errMsg;
@@ -1078,7 +1087,7 @@ public final class CallManager extends UntypedActor {
      * @param phone
      * @return
      */
-    private IncomingPhoneNumber getMostOptimalIncomingPhoneNumber(final SipServletRequest request, String phone, Sid fromClientAccountSid) {
+    private IncomingPhoneNumber getMostOptimalIncomingPhoneNumber(final SipServletRequest request, String phone, Sid fromClientAccountSid, boolean failCall) {
         //TODO remove it before merge
         logger.info("*********************** getMostOptimalIncomingPhoneNumber started ***********************: "+phone);
 
@@ -1141,7 +1150,6 @@ public final class CallManager extends UntypedActor {
             //TODO remove it before merge
             logger.info("getMostOptimalIncomingPhoneNumber: list size after getDistinctNumbersList: "+numbers.size());
             if(!numbers.isEmpty()){
-                boolean foundNumber = false;
                 // find number in same organization
                 for(IncomingPhoneNumber n : numbers){
                     if(n.getOrganizationSid().equals(destinationOrganizationSid)){
@@ -1150,15 +1158,15 @@ public final class CallManager extends UntypedActor {
                          * if not then only allow provider numbers
                          */
                         if((sourceOrganizationSid != null && sourceOrganizationSid.equals(destinationOrganizationSid)) || !n.isPureSip()){
-                            foundNumber = true;
                             number = n;
                             //TODO remove it before merge
                             logger.info("found number: "+number+" | org: "+n.getOrganizationSid()+" | isPureSip: "+n.isPureSip());
                         }
                     }
-                    if(foundNumber)
+                    if(number != null)
                         break;
                 }
+                failCall = number == null;
             }
         }
         //TODO remove it before merge
