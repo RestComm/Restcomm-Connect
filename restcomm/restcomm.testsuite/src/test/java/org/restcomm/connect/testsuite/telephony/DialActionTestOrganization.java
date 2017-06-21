@@ -23,6 +23,7 @@ package org.restcomm.connect.testsuite.telephony;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
@@ -33,6 +34,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.text.ParseException;
@@ -109,6 +111,7 @@ public class DialActionTestOrganization {
     private static SipStackTool tool5;
     private static SipStackTool tool6;
     private static SipStackTool tool7;
+    private static SipStackTool tool8;
 
     private SipStack bobSipStackOrg2;
     private SipPhone bobPhoneOrg2;
@@ -138,6 +141,11 @@ public class DialActionTestOrganization {
     private SipPhone shoaibPhoneOrg2;
     private String shoaibContactOrg2 = "sip:shoaib@org2.restcomm.com";
 
+    // pstn is a simple SIP Client. Will not register with Restcomm
+    private SipStack pstnSipStack;
+    private SipPhone pstnPhone;
+    private String pstnContact = "sip:+131313@127.0.0.1:5070";
+
     private String mariaRestcommClientSidOrg2;
     private String shoaibRestcommClientSidOrg2;
     private String bobRestcommClientSidOrg2;
@@ -150,17 +158,18 @@ public class DialActionTestOrganization {
     private SipPhone alicePhoneOrg3;
     private String aliceContactOrg3 = "sip:alice@org3.restcomm.com";
 
-    private String providerNumberOrg2 = "sip:+12223334467@org2.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
+    private String providerNumberOrg2 = "sip:+12223334467@org2.restcomm.com"; // Application: dial-number-entry_wActionUrl.xml
     private String pureSipNumberOrg3 = "sip:+12223334467@org3.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
     private String numberWithDefaultDomain = "sip:+12223334467@127.0.0.1:5080"; // Application: dial-client-entry_wActionUrl.xml
     private String dialClientWithActionUrlOrg2 = "sip:+12223334455@org2.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
     private String dialClientWithActionUrlOrg3 = "sip:+12223334455@org3.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml of organization: org3.restcomm.com
     
-    private String dialRestcommConferenceOrg2 = "sip:1111@org2.restcomm.com";
+    private String dialRestcommOrg2 = "sip:1111@org2.restcomm.com";
     private final String confRoom2 = "confRoom2";
-    private String dialConfernceRcml = "<Response><Dial><Conference>"+confRoom2+"</Conference></Dial></Response>";
-    
 
+    private String dialConfernceRcml = "<Response><Dial><Conference>"+confRoom2+"</Conference></Dial></Response>";
+    private String dialNumberRcml = "<Response><Dial><Number>+131313</Number></Dial></Response>";
+    
     private String superAdminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAccountSidOrg2 = "ACae6e420f425248d6a26948c17a9e2acg";
     private String adminAccountSidOrg3 = "ACae6e420f425248d6a26948c17a9e2ach";
@@ -175,6 +184,7 @@ public class DialActionTestOrganization {
         tool5 = new SipStackTool("DialActionTest5");
         tool6 = new SipStackTool("DialActionTest6");
         tool7 = new SipStackTool("DialActionTest7");
+        tool8 = new SipStackTool("DialActionTest8");
     }
 
     @Before
@@ -199,12 +209,94 @@ public class DialActionTestOrganization {
 
         bobSipStackDefaultOrg = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5096", "127.0.0.1:5080");
         bobPhoneDefaultOrg = bobSipStackDefaultOrg.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContactDefaultOrg);
+
+        pstnSipStack = tool8.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
+        pstnPhone = pstnSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, pstnContact);
         
         mariaRestcommClientSidOrg2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken, "maria", clientPassword, null);
         shoaibRestcommClientSidOrg2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken, "shoaib", clientPassword, null);
         bobRestcommClientSidOrg2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken, "bob", clientPassword, null);
         bobRestcommClientSidOrg3 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), adminAccountSidOrg3, adminAuthToken, "bob", clientPassword, null);
 
+    }
+
+    @Test
+    public void testDialNumberPstn() throws ParseException, InterruptedException, UnknownHostException, MalformedURLException {
+
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialNumberRcml)));
+
+    	assertNotNull(bobRestcommClientSidOrg2);
+        SipURI uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
+        Credential c = new Credential("org2.restcomm.com", "bob", clientPassword);
+        bobPhoneOrg2.addUpdateCredential(c);
+
+        //prepare pstn phone to receive call
+        SipCall pstnCall = pstnPhone.createSipCall();
+        pstnCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCallOrg2 = bobPhoneOrg2.createSipCall();
+        bobCallOrg2.initiateOutgoingCall(bobContactOrg2, dialRestcommOrg2, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCallOrg2);
+        assertTrue(bobCallOrg2.waitForAuthorisation(3000));
+        assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCallOrg2.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCallOrg2.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCallOrg2.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCallOrg2.sendInviteOkAck());
+
+        assertTrue(pstnCall.waitForIncomingCall(5000));
+        assertTrue(pstnCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
+        assertTrue(pstnCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
+        String receivedBody = new String(pstnCall.getLastReceivedRequest().getRawContent());
+        assertTrue(pstnCall.sendIncomingCallResponse(Response.OK, "George-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(pstnCall.waitForAck(5000));
+
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSidOrg2, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSidOrg2, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSidOrg2, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSidOrg2, adminAuthToken)==2);
+
+        Thread.sleep(3000);
+        bobCallOrg2.listenForDisconnect();
+
+        assertTrue(pstnCall.disconnect());
+        Thread.sleep(500);
+        assertTrue(bobCallOrg2.waitForDisconnect(5000));
+        assertTrue(bobCallOrg2.respondToDisconnect());
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
+        assertTrue(requests.size() == 1);
+        //        requests.get(0).g;
+        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
+        List<String> params = Arrays.asList(requestBody.split("&"));
+        String callSid = "";
+        for (String param : params) {
+            if (param.contains("CallSid")) {
+                callSid = param.split("=")[1];
+            }
+        }
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken, callSid);
+        JsonObject jsonObj = cdr.getAsJsonObject();
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSidOrg2, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSidOrg2, adminAuthToken)==0);
     }
 
     /**
@@ -354,7 +446,7 @@ public class DialActionTestOrganization {
         bobPhoneOrg3.addUpdateCredential(c);
 
         final SipCall bobCallOrg3 = bobPhoneOrg3.createSipCall();
-        bobCallOrg3.initiateOutgoingCall(bobContactOrg3, dialRestcommConferenceOrg2, null, body, "application", "sdp", null, null);
+        bobCallOrg3.initiateOutgoingCall(bobContactOrg3, dialRestcommOrg2, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCallOrg3);
         assertTrue(bobCallOrg3.waitForAuthorisation(3000));
         assertTrue(bobCallOrg3.waitOutgoingCallResponse(5 * 1000));
@@ -380,7 +472,7 @@ public class DialActionTestOrganization {
         bobPhoneOrg2.addUpdateCredential(c);
 
     	final SipCall bobCallOrg2 = bobPhoneOrg2.createSipCall();
-        bobCallOrg2.initiateOutgoingCall(bobContactOrg2, dialRestcommConferenceOrg2, null, body, "application", "sdp", null, null);
+        bobCallOrg2.initiateOutgoingCall(bobContactOrg2, dialRestcommOrg2, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCallOrg2);
         assertTrue(bobCallOrg2.waitForAuthorisation(3000));
         assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
@@ -603,7 +695,7 @@ public class DialActionTestOrganization {
      * @throws UnknownHostException
      */
     @Test
-    public void testDialActionAliceAnswers() throws ParseException, InterruptedException, UnknownHostException {
+    public void testDialActionDialClient() throws ParseException, InterruptedException, UnknownHostException {
 
        stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
@@ -833,6 +925,13 @@ public class DialActionTestOrganization {
         }
         if (shoaibPhoneOrg2 != null) {
         	shoaibPhoneOrg2.dispose();
+        }
+
+        if (pstnSipStack != null) {
+        	pstnSipStack.dispose();
+        }
+        if (pstnPhone != null) {
+        	pstnPhone.dispose();
         }
 
         Thread.sleep(1000);
