@@ -390,6 +390,7 @@
 		timeout-per-notification: if several notifications are sent in one step, timeout increase for each. Defaults to 500.
 	-->
 	<rcmlserver>
+		<base-url></base-url>
 		<api-path>/restcomm-rvd/services</api-path>
 		<notifications>true</notifications>
 		<timeout>5000</timeout>
