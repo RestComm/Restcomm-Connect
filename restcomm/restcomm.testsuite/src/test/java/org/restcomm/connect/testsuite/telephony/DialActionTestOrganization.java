@@ -64,6 +64,8 @@ import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.http.CreateClientsTool;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
+import org.restcomm.connect.testsuite.http.RestcommConferenceTool;
+import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
@@ -151,6 +153,7 @@ public class DialActionTestOrganization {
     private String dialClientWithActionUrlOrg2 = "sip:+12223334455@org2.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
     private String dialClientWithActionUrlOrg3 = "sip:+12223334455@org3.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml of organization: org3.restcomm.com
 
+    private String superAdminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAccountSidOrg2 = "ACae6e420f425248d6a26948c17a9e2acg";
     private String adminAccountSidOrg3 = "ACae6e420f425248d6a26948c17a9e2ach";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
@@ -212,7 +215,7 @@ public class DialActionTestOrganization {
      * 
      * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
      * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should NOT go to alice@org2 (bcz number does not exist in default.restcomm.com) - so call should FAIL
-     * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
+     * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com(a conference in org2) -> able to join conference (bcz 12223334467@org2.restcomm.com is provider number)
      * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
      * test case 5: alice@defaultOrg created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
      * 
@@ -269,7 +272,7 @@ public class DialActionTestOrganization {
      * 
      * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
      * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should FAIL (bcz defaulOrg does not have that number)
-     * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
+     * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com(a conference in org2) -> able to join conference (bcz 12223334467@org2.restcomm.com is provider number)
      * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
      * test case 5: alice@defaultOrg created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
      * 
@@ -325,7 +328,7 @@ public class DialActionTestOrganization {
      * 
      * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
      * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should FAIL (bcz defaulOrg does not have that number)
-     * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
+     * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com(a conference in org2) -> able to join conference (bcz 12223334467@org2.restcomm.com is provider number)
      * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
      * test case 5: alice@defaultOrg created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
      * 
@@ -334,84 +337,83 @@ public class DialActionTestOrganization {
      * @throws UnknownHostException
      */
     @Test
-    public void testDialNumberExistingInMultipleOrganizationCase3() throws ParseException, InterruptedException, UnknownHostException {
+    public void testDialNumberExistingInMultipleOrganizationJoinConferenceOfDifferentOrgCase3() throws ParseException, InterruptedException, UnknownHostException {
     	stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
                     .withStatus(200)));
     	/*
-    	 * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
+    	 * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com(a conference in org2) -> able to join conference (bcz 12223334467@org2.restcomm.com is provider number)
     	 */
 
-    	assertNotNull(bobRestcommClientSidOrg3);
-        SipURI uri = bobSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(bobPhoneOrg3.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
-        Credential c = new Credential("org3.restcomm.com", "bob", clientPassword);
-        bobPhoneOrg3.addUpdateCredential(c);
+    	final SipCall bobCallOrg2 = bobPhoneOrg2.createSipCall();
+        bobCallOrg2.initiateOutgoingCall(bobContactOrg2, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCallOrg2);
+        assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+        int responseBobOrg2 = bobCallOrg2.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBobOrg2 == Response.TRYING || responseBobOrg2 == Response.RINGING);
 
-        //register as alice@org2.restcomm.com
-        uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
-        SipCall aliceCallOrg2 = alicePhoneOrg2.createSipCall();
-        aliceCallOrg2.listenForIncomingCall();
+        if (responseBobOrg2 == Response.TRYING) {
+            assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCallOrg2.getLastReceivedResponse().getStatusCode());
+        }
 
-        // bob@org2.restcomm.com - dials a pure sip number in org3.
+        assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCallOrg2.getLastReceivedResponse().getStatusCode());
+        bobCallOrg2.sendInviteOkAck();
+        assertTrue(!(bobCallOrg2.getLastReceivedResponse().getStatusCode() >= 400));
+
         final SipCall bobCallOrg3 = bobPhoneOrg3.createSipCall();
-        bobCallOrg3.initiateOutgoingCall(bobContactOrg3, providerNumberOrg2, null, body, "application", "sdp", null, null);
+        bobCallOrg3.initiateOutgoingCall(bobContactOrg3, dialRestcomm, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCallOrg3);
         assertTrue(bobCallOrg3.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCallOrg3.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-        if (response == Response.TRYING) {
+        int responseBobOrg3 = bobCallOrg3.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBobOrg3 == Response.TRYING || responseBobOrg3 == Response.RINGING);
+
+        if (responseBobOrg3 == Response.TRYING) {
             assertTrue(bobCallOrg3.waitOutgoingCallResponse(5 * 1000));
             assertEquals(Response.RINGING, bobCallOrg3.getLastReceivedResponse().getStatusCode());
         }
+
         assertTrue(bobCallOrg3.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCallOrg3.getLastReceivedResponse().getStatusCode());
-
         bobCallOrg3.sendInviteOkAck();
         assertTrue(!(bobCallOrg3.getLastReceivedResponse().getStatusCode() >= 400));
 
-        assertTrue(aliceCallOrg2.waitForIncomingCall(30 * 1000));
-        assertTrue(aliceCallOrg2.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        String receivedBody = new String(aliceCallOrg2.getLastReceivedRequest().getRawContent());
-        assertTrue(aliceCallOrg2.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
-                null));
-        assertTrue(aliceCallOrg2.waitForAck(50 * 1000));
-        Thread.sleep(3000);
-        // hangup.
-        aliceCallOrg2.disconnect();
-        bobCallOrg3.listenForDisconnect();
-        assertTrue(bobCallOrg3.waitForDisconnect(30 * 1000));
-        assertTrue(bobCallOrg3.respondToDisconnect());
-        try {
-            Thread.sleep(50 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        Thread.sleep(2000);
+
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls == 2);
+        assertTrue(liveCallsArraySize == 2);
+        assertTrue(getConferencesSize()>=1);
+        int numOfParticipants = getParticipantsSize(confRoom2);
+        logger.info("Number of participants: "+numOfParticipants);
+        assertTrue(numOfParticipants==2);
 
         Thread.sleep(3000);
 
-        logger.info("About to check the DialAction Requests");
-        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
-        assertEquals(1, requests.size());
-        String requestBody = requests.get(0).getBodyAsString();
-        String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=completed"));
-        assertTrue(requestBody.contains("To=%2B12223334467"));
-        assertTrue(requestBody.contains("From=bob"));
-        assertTrue(requestBody.contains("DialCallDuration=3"));
-        Iterator iter = Arrays.asList(params).iterator();
-        String dialCallSid = null;
-        while (iter.hasNext()) {
-            String param = (String) iter.next();
-            if (param.startsWith("DialCallSid")) {
-                dialCallSid = param.split("=")[1];
-                break;
-            }
-        }
-        assertNotNull(dialCallSid);
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken, dialCallSid);
-        assertNotNull(cdr);
+        bobCallOrg3.disconnect();
+        bobCallOrg2.disconnect();
+
+        Thread.sleep(5000);
+        liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
+        liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls == 0);
+        assertTrue(liveCallsArraySize == 0);
+        assertTrue(getConferencesSize()>=1);
+        int confRoom2Participants = getParticipantsSize(confRoom2);
+        logger.info("&&&&& ConfRoom2Participants: "+confRoom2Participants);
+        assertTrue(confRoom2Participants==0);
+    }
+
+    private int getConferencesSize() {
+        JsonObject conferences = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(),superAdminAccountSid, adminAuthToken);
+        JsonArray conferenceArray = conferences.getAsJsonArray("conferences");
+        return conferenceArray.size();
     }
 
 
@@ -431,7 +433,7 @@ public class DialActionTestOrganization {
      * 
      * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
      * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should FAIL (bcz defaulOrg does not have that number)
-     * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
+     * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com(a conference in org2) -> able to join conference (bcz 12223334467@org2.restcomm.com is provider number)
      * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
      * test case 5: alice@defaultOrg created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
      * 
@@ -507,7 +509,7 @@ public class DialActionTestOrganization {
      * 
      * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
      * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should FAIL (bcz defaulOrg does not have that number)
-     * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
+     * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com(a conference in org2) -> able to join conference (bcz 12223334467@org2.restcomm.com is provider number)
      * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
      * test case 5: alice@defaultOrg created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
      * 
