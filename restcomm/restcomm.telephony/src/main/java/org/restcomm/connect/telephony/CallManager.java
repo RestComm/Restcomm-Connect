@@ -883,7 +883,8 @@ public final class CallManager extends UntypedActor {
         }
 
         String phone = cdr.getTo();
-        IncomingPhoneNumber number = getMostOptimalIncomingPhoneNumber(request, phone, cdr.getAccountSid(), false);
+        MostOptimalNumberResponse mostOptimalNumber = getMostOptimalIncomingPhoneNumber(request, phone, cdr.getAccountSid(), false);
+        IncomingPhoneNumber number = mostOptimalNumber.number();
 
         if (number == null || (number.getReferUrl() == null && number.getReferApplicationSid() == null)) {
             if (logger.isInfoEnabled()) {
@@ -1012,13 +1013,19 @@ public final class CallManager extends UntypedActor {
         boolean failCall = false;
         IncomingPhoneNumber number = null;
         try {
-            number = getMostOptimalIncomingPhoneNumber(request, phone, fromClientAccountSid, failCall);
+            MostOptimalNumberResponse mostOptimalNumber = getMostOptimalIncomingPhoneNumber(request, phone, fromClientAccountSid, failCall);
+            number = mostOptimalNumber.number();
+            failCall = mostOptimalNumber.isFailCall();
             //todo: remove before merge
             logger.info("failCall: "+failCall);
             if(failCall){
                 //number was found but organization was not proper.
                 final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
                 response.send();
+                // We found the number but organization was not proper
+                String errMsg = "We found the number but organization was not proper";
+                sendNotification(errMsg, 11005, "error", true);
+                return true;
             }else{
                 if (number != null) {
                     final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
@@ -1087,7 +1094,7 @@ public final class CallManager extends UntypedActor {
      * @param phone
      * @return
      */
-    private IncomingPhoneNumber getMostOptimalIncomingPhoneNumber(final SipServletRequest request, String phone, Sid fromClientAccountSid, boolean failCall) {
+    private MostOptimalNumberResponse getMostOptimalIncomingPhoneNumber(final SipServletRequest request, String phone, Sid fromClientAccountSid, boolean failCall) {
         //TODO remove it before merge
         logger.info("*********************** getMostOptimalIncomingPhoneNumber started ***********************: "+phone);
 
@@ -1171,7 +1178,7 @@ public final class CallManager extends UntypedActor {
         }
         //TODO remove it before merge
         logger.info("*********************** getMostOptimalIncomingPhoneNumber ended ***********************"+number);
-        return number;
+        return new MostOptimalNumberResponse(number, failCall);
     }
 
     private List<IncomingPhoneNumber> getDistinctNumbersList(List<IncomingPhoneNumber> numbers){
@@ -2388,6 +2395,22 @@ public final class CallManager extends UntypedActor {
             }
             call.tell(init, self);
             sender.tell(new CallManagerResponse<ActorRef>(call), self());
+        }
+    }
+
+    private class MostOptimalNumberResponse{
+        private final IncomingPhoneNumber number;
+        private final boolean failCall;
+        public MostOptimalNumberResponse(IncomingPhoneNumber number, boolean failCall) {
+            super();
+            this.number = number;
+            this.failCall = failCall;
+        }
+        public IncomingPhoneNumber number() {
+            return number;
+        }
+        public boolean isFailCall() {
+        return failCall;
         }
     }
 }
