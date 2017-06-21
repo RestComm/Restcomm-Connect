@@ -211,7 +211,7 @@ public class DialActionTestOrganization {
      * +12223334467@org3.restcomm.com is pure sip number and mapped on dial action to call alice@org3.
      * 
      * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
-     * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
+     * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should NOT go to alice@org2 (bcz number does not exist in default.restcomm.com) - so call should FAIL
      * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
      * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
      * test case 5: alice@defaultOrg created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
@@ -234,9 +234,6 @@ public class DialActionTestOrganization {
         assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
         Credential c = new Credential("org3.restcomm.com", "bob", clientPassword);
         bobPhoneOrg2.addUpdateCredential(c);
-        final SipCall shoaibCall = shoaibPhoneOrg2.createSipCall();
-        shoaibCall.listenForIncomingCall();
-        Thread.sleep(1000);
 
         //register as alice@org2.restcomm.com
         uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -253,58 +250,7 @@ public class DialActionTestOrganization {
         assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCallOrg2.getLastReceivedResponse().getStatusCode();
         logger.info("bobCallOrg2 response: "+response);
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-        if (response == Response.TRYING) {
-            assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
-            assertTrue(!(Response.RINGING == bobCallOrg2.getLastReceivedResponse().getStatusCode()));
-        }
-        assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCallOrg2.getLastReceivedResponse().getStatusCode());
-
-        bobCallOrg2.sendInviteOkAck();
-        assertTrue(!(bobCallOrg2.getLastReceivedResponse().getStatusCode() >= 400));
-
-        assertTrue(aliceCallOrg2.waitForIncomingCall(30 * 1000));
-        assertTrue(aliceCallOrg2.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        String receivedBody = new String(aliceCallOrg2.getLastReceivedRequest().getRawContent());
-        assertTrue(aliceCallOrg2.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
-                null));
-        assertTrue(aliceCallOrg2.waitForAck(50 * 1000));
-        Thread.sleep(3000);
-        // hangup.
-        aliceCallOrg2.disconnect();
-        bobCallOrg2.listenForDisconnect();
-        assertTrue(bobCallOrg2.waitForDisconnect(30 * 1000));
-        assertTrue(bobCallOrg2.respondToDisconnect());
-        try {
-            Thread.sleep(50 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
-
-        Thread.sleep(3000);
-
-        logger.info("About to check the DialAction Requests");
-        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
-        assertEquals(1, requests.size());
-        String requestBody = requests.get(0).getBodyAsString();
-        String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=completed"));
-        assertTrue(requestBody.contains("To=%2B12223334467"));
-        assertTrue(requestBody.contains("From=bob"));
-        assertTrue(requestBody.contains("DialCallDuration=3"));
-        Iterator iter = Arrays.asList(params).iterator();
-        String dialCallSid = null;
-        while (iter.hasNext()) {
-            String param = (String) iter.next();
-            if (param.startsWith("DialCallSid")) {
-                dialCallSid = param.split("=")[1];
-                break;
-            }
-        }
-        assertNotNull(dialCallSid);
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken, dialCallSid);
-        assertNotNull(cdr);
+        assertTrue(response == Response.NOT_FOUND);
     }
 
     /**
@@ -322,7 +268,7 @@ public class DialActionTestOrganization {
      * +12223334467@org3.restcomm.com is pure sip number and mapped on dial action to call alice@org3.
      * 
      * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
-     * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
+     * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should FAIL (bcz defaulOrg does not have that number)
      * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
      * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
      * test case 5: alice@defaultOrg created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
@@ -340,8 +286,14 @@ public class DialActionTestOrganization {
     	 * test case 2 - bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
     	 */
 
+    	assertNotNull(bobRestcommClientSidOrg2);
+        SipURI uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
+        Credential c = new Credential("127.0.0.1", "bob", clientPassword);
+        bobPhoneOrg2.addUpdateCredential(c);
+
         //register as alice@org2.restcomm.com
-        SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
         SipCall aliceCallOrg2 = alicePhoneOrg2.createSipCall();
         aliceCallOrg2.listenForIncomingCall();
@@ -350,60 +302,11 @@ public class DialActionTestOrganization {
         final SipCall bobCallOrg2 = bobPhoneOrg2.createSipCall();
         bobCallOrg2.initiateOutgoingCall(bobContactOrg2, numberWithDefaultDomain, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCallOrg2);
+        assertTrue(bobCallOrg2.waitForAuthorisation(3000));
         assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCallOrg2.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-        if (response == Response.TRYING) {
-            assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCallOrg2.getLastReceivedResponse().getStatusCode());
-        }
-        assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCallOrg2.getLastReceivedResponse().getStatusCode());
-
-        bobCallOrg2.sendInviteOkAck();
-        assertTrue(!(bobCallOrg2.getLastReceivedResponse().getStatusCode() >= 400));
-
-        assertTrue(aliceCallOrg2.waitForIncomingCall(30 * 1000));
-        assertTrue(aliceCallOrg2.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        String receivedBody = new String(aliceCallOrg2.getLastReceivedRequest().getRawContent());
-        assertTrue(aliceCallOrg2.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
-                null));
-        assertTrue(aliceCallOrg2.waitForAck(50 * 1000));
-        Thread.sleep(3000);
-        // hangup.
-        aliceCallOrg2.disconnect();
-        bobCallOrg2.listenForDisconnect();
-        assertTrue(bobCallOrg2.waitForDisconnect(30 * 1000));
-        assertTrue(bobCallOrg2.respondToDisconnect());
-        try {
-            Thread.sleep(50 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
-
-        Thread.sleep(3000);
-
-        logger.info("About to check the DialAction Requests");
-        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
-        assertEquals(1, requests.size());
-        String requestBody = requests.get(0).getBodyAsString();
-        String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=completed"));
-        assertTrue(requestBody.contains("To=%2B12223334467"));
-        assertTrue(requestBody.contains("From=bob"));
-        assertTrue(requestBody.contains("DialCallDuration=3"));
-        Iterator iter = Arrays.asList(params).iterator();
-        String dialCallSid = null;
-        while (iter.hasNext()) {
-            String param = (String) iter.next();
-            if (param.startsWith("DialCallSid")) {
-                dialCallSid = param.split("=")[1];
-                break;
-            }
-        }
-        assertNotNull(dialCallSid);
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken, dialCallSid);
-        assertNotNull(cdr);
+        logger.info("bobCallOrg2 response: "+response);
+        assertTrue(response == Response.NOT_FOUND);
     }
 
     /**
@@ -421,7 +324,7 @@ public class DialActionTestOrganization {
      * +12223334467@org3.restcomm.com is pure sip number and mapped on dial action to call alice@org3.
      * 
      * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
-     * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
+     * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should FAIL (bcz defaulOrg does not have that number)
      * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
      * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
      * test case 5: alice@defaultOrg created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
@@ -439,8 +342,14 @@ public class DialActionTestOrganization {
     	 * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
     	 */
 
+    	assertNotNull(bobRestcommClientSidOrg3);
+        SipURI uri = bobSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(bobPhoneOrg3.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
+        Credential c = new Credential("org3.restcomm.com", "bob", clientPassword);
+        bobPhoneOrg3.addUpdateCredential(c);
+
         //register as alice@org2.restcomm.com
-        SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
         SipCall aliceCallOrg2 = alicePhoneOrg2.createSipCall();
         aliceCallOrg2.listenForIncomingCall();
@@ -521,7 +430,7 @@ public class DialActionTestOrganization {
      * +12223334467@org3.restcomm.com is pure sip number and mapped on dial action to call alice@org3.
      * 
      * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
-     * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
+     * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should FAIL (bcz defaulOrg does not have that number)
      * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
      * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
      * test case 5: alice@defaultOrg created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
@@ -539,8 +448,14 @@ public class DialActionTestOrganization {
     	 * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
     	 */
 
+    	assertNotNull(bobRestcommClientSidOrg3);
+        SipURI uri = bobSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(bobPhoneOrg3.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
+        Credential c = new Credential("org3.restcomm.com", "bob", clientPassword);
+        bobPhoneOrg3.addUpdateCredential(c);
+
         //register as alice@org3.restcomm.com
-        SipURI uri = aliceSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        uri = aliceSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhoneOrg3.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
         SipCall aliceCallOrg3 = alicePhoneOrg3.createSipCall();
         aliceCallOrg3.listenForIncomingCall();
@@ -591,7 +506,7 @@ public class DialActionTestOrganization {
      * +12223334467@org3.restcomm.com is pure sip number and mapped on dial action to call alice@org3.
      * 
      * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
-     * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
+     * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should FAIL (bcz defaulOrg does not have that number)
      * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com -> call should go to alice@org2  (bcz 12223334467@org2.restcomm.com is provider number)
      * test case 4: bob@org3 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org3
      * test case 5: alice@defaultOrg created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
@@ -609,8 +524,14 @@ public class DialActionTestOrganization {
     	 * test case 1
     	 */
 
+    	assertNotNull(bobRestcommClientSidOrg2);
+        SipURI uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
+        Credential c = new Credential("org3.restcomm.com", "bob", clientPassword);
+        bobPhoneOrg2.addUpdateCredential(c);
+
         //register as alice@org2.restcomm.com, alice@org3.restcomm.com and alice@default.restcomm.com
-        SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
         SipCall aliceCallOrg2 = alicePhoneOrg2.createSipCall();
         aliceCallOrg2.listenForIncomingCall();
@@ -623,6 +544,7 @@ public class DialActionTestOrganization {
         final SipCall bobCallOrg2 = bobPhoneOrg2.createSipCall();
         bobCallOrg2.initiateOutgoingCall(bobContactOrg2, pureSipNumberOrg3, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCallOrg2);
+        assertTrue(bobCallOrg2.waitForAuthorisation(3000));
         assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCallOrg2.getLastReceivedResponse().getStatusCode();
         assertTrue(response == Response.TRYING || response == Response.RINGING);
@@ -835,8 +757,17 @@ public class DialActionTestOrganization {
        stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
                     .withStatus(200)));
-        //register as alice@org2
-        SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+
+
+
+   	    assertNotNull(bobRestcommClientSidOrg2);
+   	    SipURI uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+   	    assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
+   	    Credential c = new Credential("org3.restcomm.com", "bob", clientPassword);
+   	    bobPhoneOrg2.addUpdateCredential(c);
+       
+   	    //register as alice@org2
+        uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
         // Prepare alice's phone to receive call
         SipCall aliceCall = alicePhoneOrg2.createSipCall();
@@ -846,6 +777,7 @@ public class DialActionTestOrganization {
         final SipCall bobCall = bobPhoneOrg2.createSipCall();
         bobCall.initiateOutgoingCall(bobContactOrg2, dialClientWithActionUrlOrg2, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitForAuthorisation(3000));
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
         assertTrue(response == Response.TRYING || response == Response.RINGING);
@@ -935,8 +867,16 @@ public class DialActionTestOrganization {
                 .willReturn(aResponse()
                         .withStatus(200)));
 
+
+
+    	assertNotNull(bobRestcommClientSidOrg2);
+        SipURI uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
+        Credential c = new Credential("org3.restcomm.com", "bob", clientPassword);
+        bobPhoneOrg2.addUpdateCredential(c);
+
         // Phone2 register as alice
-        SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
 
         // Prepare second phone to receive call
@@ -947,6 +887,7 @@ public class DialActionTestOrganization {
         final SipCall bobCallOrg2 = bobPhoneOrg2.createSipCall();
         bobCallOrg2.initiateOutgoingCall(bobContactOrg2, dialClientWithActionUrlOrg2, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCallOrg2);
+        assertTrue(bobCallOrg2.waitForAuthorisation(3000));
         assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCallOrg2.getLastReceivedResponse().getStatusCode();
         assertTrue(response == Response.TRYING || response == Response.RINGING);
