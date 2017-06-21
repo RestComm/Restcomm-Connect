@@ -355,22 +355,12 @@ public class DialActionTestOrganization {
     	 * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com(a conference in org2) -> able to join conference (bcz 12223334467@org2.restcomm.com is provider number)
     	 */
 
-    	final SipCall bobCallOrg2 = bobPhoneOrg2.createSipCall();
-        bobCallOrg2.initiateOutgoingCall(bobContactOrg2, dialRestcommConferenceOrg2, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(bobCallOrg2);
-        assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
-        int responseBobOrg2 = bobCallOrg2.getLastReceivedResponse().getStatusCode();
-        assertTrue(responseBobOrg2 == Response.TRYING || responseBobOrg2 == Response.RINGING);
-
-        if (responseBobOrg2 == Response.TRYING) {
-            assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCallOrg2.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCallOrg2.getLastReceivedResponse().getStatusCode());
-        bobCallOrg2.sendInviteOkAck();
-        assertTrue(!(bobCallOrg2.getLastReceivedResponse().getStatusCode() >= 400));
+    	//bob@org3 joins conference via sip:+12223334467@org2.restcomm.com
+    	assertNotNull(bobRestcommClientSidOrg3);
+    	SipURI uri = bobSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(bobPhoneOrg3.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
+        Credential c = new Credential("org2.restcomm.com", "bob", clientPassword);
+        bobPhoneOrg3.addUpdateCredential(c);
 
         final SipCall bobCallOrg3 = bobPhoneOrg3.createSipCall();
         bobCallOrg3.initiateOutgoingCall(bobContactOrg3, dialRestcommConferenceOrg2, null, body, "application", "sdp", null, null);
@@ -388,6 +378,31 @@ public class DialActionTestOrganization {
         assertEquals(Response.OK, bobCallOrg3.getLastReceivedResponse().getStatusCode());
         bobCallOrg3.sendInviteOkAck();
         assertTrue(!(bobCallOrg3.getLastReceivedResponse().getStatusCode() >= 400));
+
+    	//bob@org2 joins conference via sip:+12223334467@org2.restcomm.com
+    	assertNotNull(bobRestcommClientSidOrg2);
+        uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
+        c = new Credential("org2.restcomm.com", "bob", clientPassword);
+        bobPhoneOrg2.addUpdateCredential(c);
+
+    	final SipCall bobCallOrg2 = bobPhoneOrg2.createSipCall();
+        bobCallOrg2.initiateOutgoingCall(bobContactOrg2, dialRestcommConferenceOrg2, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCallOrg2);
+        assertTrue(bobCallOrg2.waitForAuthorisation(3000));
+        assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+        int responseBobOrg2 = bobCallOrg2.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBobOrg2 == Response.TRYING || responseBobOrg2 == Response.RINGING);
+
+        if (responseBobOrg2 == Response.TRYING) {
+            assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCallOrg2.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCallOrg2.getLastReceivedResponse().getStatusCode());
+        bobCallOrg2.sendInviteOkAck();
+        assertTrue(!(bobCallOrg2.getLastReceivedResponse().getStatusCode() >= 400));
 
         Thread.sleep(2000);
 
