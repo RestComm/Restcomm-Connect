@@ -1158,12 +1158,14 @@ public final class CallManager extends UntypedActor {
             if(!numbers.isEmpty()){
                 // find number in same organization
                 for(IncomingPhoneNumber n : numbers){
+                    //TODO remove it before merge
+                    logger.info("getMostOptimalIncomingPhoneNumber: sourceOrganizationSid: "+sourceOrganizationSid+" destinationOrganizationSid: "+destinationOrganizationSid+" n.isPureSip(): "+n.isPureSip());
                     if(n.getOrganizationSid().equals(destinationOrganizationSid)){
                         /*
                          * check if request is coming from same org
                          * if not then only allow provider numbers
                          */
-                        if((sourceOrganizationSid != null && sourceOrganizationSid.equals(destinationOrganizationSid)) || !n.isPureSip()){
+                        if((sourceOrganizationSid != null && sourceOrganizationSid.equals(destinationOrganizationSid)) || (sourceOrganizationSid == null) || !n.isPureSip()){
                             number = n;
                             //TODO remove it before merge
                             logger.info("found number: "+number+" | org: "+n.getOrganizationSid()+" | isPureSip: "+n.isPureSip());
