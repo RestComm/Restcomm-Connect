@@ -22,9 +22,11 @@ package org.restcomm.connect.testsuite.telephony;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
@@ -64,6 +66,7 @@ import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.http.CreateClientsTool;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
+import org.restcomm.connect.testsuite.http.RestcommConferenceParticipantsTool;
 import org.restcomm.connect.testsuite.http.RestcommConferenceTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
@@ -152,6 +155,11 @@ public class DialActionTestOrganization {
     private String numberWithDefaultDomain = "sip:+12223334467@127.0.0.1:5080"; // Application: dial-client-entry_wActionUrl.xml
     private String dialClientWithActionUrlOrg2 = "sip:+12223334455@org2.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
     private String dialClientWithActionUrlOrg3 = "sip:+12223334455@org3.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml of organization: org3.restcomm.com
+    
+    private String dialRestcommConferenceOrg2 = "sip:1111@org2.restcomm.com";
+    private final String confRoom2 = "confRoom2";
+    private String dialConfernceRcml = "<Response><Dial><Conference>"+confRoom2+"</Conference></Dial></Response>";
+    
 
     private String superAdminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAccountSidOrg2 = "ACae6e420f425248d6a26948c17a9e2acg";
@@ -340,13 +348,15 @@ public class DialActionTestOrganization {
     public void testDialNumberExistingInMultipleOrganizationJoinConferenceOfDifferentOrgCase3() throws ParseException, InterruptedException, UnknownHostException {
     	stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
-                    .withStatus(200)));
+                		.withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialConfernceRcml)));
     	/*
     	 * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com(a conference in org2) -> able to join conference (bcz 12223334467@org2.restcomm.com is provider number)
     	 */
 
     	final SipCall bobCallOrg2 = bobPhoneOrg2.createSipCall();
-        bobCallOrg2.initiateOutgoingCall(bobContactOrg2, dialRestcomm, null, body, "application", "sdp", null, null);
+        bobCallOrg2.initiateOutgoingCall(bobContactOrg2, dialRestcommConferenceOrg2, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCallOrg2);
         assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
         int responseBobOrg2 = bobCallOrg2.getLastReceivedResponse().getStatusCode();
@@ -363,7 +373,7 @@ public class DialActionTestOrganization {
         assertTrue(!(bobCallOrg2.getLastReceivedResponse().getStatusCode() >= 400));
 
         final SipCall bobCallOrg3 = bobPhoneOrg3.createSipCall();
-        bobCallOrg3.initiateOutgoingCall(bobContactOrg3, dialRestcomm, null, body, "application", "sdp", null, null);
+        bobCallOrg3.initiateOutgoingCall(bobContactOrg3, dialRestcommConferenceOrg2, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCallOrg3);
         assertTrue(bobCallOrg3.waitOutgoingCallResponse(5 * 1000));
         int responseBobOrg3 = bobCallOrg3.getLastReceivedResponse().getStatusCode();
@@ -414,6 +424,23 @@ public class DialActionTestOrganization {
         JsonObject conferences = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(),superAdminAccountSid, adminAuthToken);
         JsonArray conferenceArray = conferences.getAsJsonArray("conferences");
         return conferenceArray.size();
+    }
+
+    private int getParticipantsSize(final String name) {
+        JsonObject conferences = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(),superAdminAccountSid, adminAuthToken);
+        JsonArray conferenceArray = conferences.getAsJsonArray("conferences");
+        String confSid = null;
+        for(int i = 0; i < conferenceArray.size(); i++) {
+            JsonObject confObj = conferenceArray.get(i).getAsJsonObject();
+            String confName = confObj.get("friendly_name").getAsString();
+            if (confName.equalsIgnoreCase(name)) {
+                confSid = confObj.get("sid").getAsString();
+                break;
+            }
+        }
+        JsonObject participants = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken, confSid);
+        JsonArray participantsArray = participants.getAsJsonArray("calls");
+        return participantsArray.size();
     }
 
 
