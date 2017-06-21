@@ -197,6 +197,11 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     }
 
     @Override
+    public List<CallDetailRecord> getRunningCallDetailRecordsByConferenceSid(final Sid conferenceSid) {
+        return getCallDetailRecords(namespace + "getRunningCallDetailRecordsByConferenceSid", conferenceSid.toString());
+    }
+
+    @Override
     public List<CallDetailRecord> getCallDetailRecordsByInstanceId(final Sid instanceId) {
         return getCallDetailRecords(namespace + "getCallDetailRecordsByInstanceId", instanceId.toString());
     }
