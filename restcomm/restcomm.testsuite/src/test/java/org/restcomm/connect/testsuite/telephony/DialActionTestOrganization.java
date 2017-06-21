@@ -294,7 +294,7 @@ public class DialActionTestOrganization {
                 .willReturn(aResponse()
                     .withStatus(200)));
     	/*
-    	 * test case 2 - bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should go to alice@org2
+    	 * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should FAIL (bcz defaulOrg does not have that number)
     	 */
 
     	assertNotNull(bobRestcommClientSidOrg2);
@@ -346,9 +346,9 @@ public class DialActionTestOrganization {
      */
     @Test
     public void testDialNumberExistingInMultipleOrganizationJoinConferenceOfDifferentOrgCase3() throws ParseException, InterruptedException, UnknownHostException {
-    	stubFor(post(urlPathMatching("/DialAction.*"))
+    	stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
-                		.withStatus(200)
+                        .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialConfernceRcml)));
     	/*
@@ -358,15 +358,17 @@ public class DialActionTestOrganization {
     	//bob@org3 joins conference via sip:+12223334467@org2.restcomm.com
     	assertNotNull(bobRestcommClientSidOrg3);
     	SipURI uri = bobSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(bobPhoneOrg3.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
+        assertTrue(bobPhoneOrg3.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5092", 3600, 3600));
         Credential c = new Credential("org2.restcomm.com", "bob", clientPassword);
         bobPhoneOrg3.addUpdateCredential(c);
 
         final SipCall bobCallOrg3 = bobPhoneOrg3.createSipCall();
         bobCallOrg3.initiateOutgoingCall(bobContactOrg3, dialRestcommConferenceOrg2, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCallOrg3);
+        assertTrue(bobCallOrg3.waitForAuthorisation(3000));
         assertTrue(bobCallOrg3.waitOutgoingCallResponse(5 * 1000));
         int responseBobOrg3 = bobCallOrg3.getLastReceivedResponse().getStatusCode();
+        logger.info("responseBobOrg3: "+responseBobOrg3);
         assertTrue(responseBobOrg3 == Response.TRYING || responseBobOrg3 == Response.RINGING);
 
         if (responseBobOrg3 == Response.TRYING) {
@@ -807,7 +809,7 @@ public class DialActionTestOrganization {
    	    assertNotNull(bobRestcommClientSidOrg2);
    	    SipURI uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
    	    assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
-   	    Credential c = new Credential("org3.restcomm.com", "bob", clientPassword);
+   	    Credential c = new Credential("org2.restcomm.com", "bob", clientPassword);
    	    bobPhoneOrg2.addUpdateCredential(c);
        
    	    //register as alice@org2
