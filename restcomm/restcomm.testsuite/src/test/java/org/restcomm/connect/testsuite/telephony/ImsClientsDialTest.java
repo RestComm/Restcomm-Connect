@@ -589,7 +589,6 @@ public class ImsClientsDialTest {
         assertTrue(pstnCall.sendIncomingCallResponse(Response.OK, "OK-pstn", 3600, receivedBody, "application", "sdp", null,
                 null));
 
-        System.out.println("$#$@#$ " + lastReceivedRequest.getRequestEvent().getRequest().getHeader("From").toString());
         assertTrue(lastReceivedRequest.getRequestEvent().getRequest().getHeader("From").toString().contains("bob@bob.com"));
 
         Thread.sleep(1000);
