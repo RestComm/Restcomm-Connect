@@ -26,8 +26,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -79,6 +82,65 @@ public class IncomingPhoneNumbersEndpointTest {
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
     
+    @Test
+    public void getIncomingPhoneNumbersList() {
+        JsonObject firstPage = RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhoneNumbers(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken);
+        int totalSize = firstPage.get("total").getAsInt();
+        JsonArray firstPageNumbersArray = firstPage.get("incomingPhoneNumbers").getAsJsonArray();
+        int firstPageNumbersArraySize = firstPageNumbersArray.size();
+        assertTrue(firstPageNumbersArraySize == 50);
+        assertTrue(firstPage.get("start").getAsInt() == 0);
+        assertTrue(firstPage.get("end").getAsInt() == 49);
+
+        JsonObject secondPage = (JsonObject) RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhoneNumbers(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 2, null, true);
+        JsonArray secondPageNumbersArray = secondPage.get("incomingPhoneNumbers").getAsJsonArray();
+        assertTrue(secondPageNumbersArray.size() == 50);
+        assertTrue(secondPage.get("start").getAsInt() == 100);
+        assertTrue(secondPage.get("end").getAsInt() == 149);
+
+        JsonObject lastPage = (JsonObject) RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhoneNumbers(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, firstPage.get("num_pages").getAsInt(), null, true);
+        JsonArray lastPageNumbersArray = lastPage.get("incomingPhoneNumbers").getAsJsonArray();
+        assertTrue(lastPageNumbersArray.get(lastPageNumbersArray.size() - 1).getAsJsonObject().get("sid").getAsString()
+                .equals("PHae6e420f425248d6a26948c17a9e2ap8"));
+          assertTrue(lastPageNumbersArray.size() == 1);
+        assertTrue(lastPage.get("start").getAsInt() == 500);
+        assertTrue(lastPage.get("end").getAsInt() == 501);
+
+        assertTrue(totalSize == 501);
+    }
+    
+    @Test
+    public void getIncomingPhoneNumbersListUsingPageSize() {
+        JsonObject firstPage = (JsonObject) RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhoneNumbers(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, null, 100, true);
+        int totalSize = firstPage.get("total").getAsInt();
+        JsonArray firstPageNumbersArray = firstPage.get("incomingPhoneNumbers").getAsJsonArray();
+        int firstPageNumbersArraySize = firstPageNumbersArray.size();
+        assertTrue(firstPageNumbersArraySize == 100);
+        assertTrue(firstPage.get("start").getAsInt() == 0);
+        assertTrue(firstPage.get("end").getAsInt() == 99);
+
+        JsonObject secondPage = (JsonObject) RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhoneNumbers(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 2, 100, true);
+        JsonArray secondPageNumbersArray = secondPage.get("incomingPhoneNumbers").getAsJsonArray();
+        assertTrue(secondPageNumbersArray.size() == 100);
+        assertTrue(secondPage.get("start").getAsInt() == 200);
+        assertTrue(secondPage.get("end").getAsInt() == 299);
+
+        JsonObject lastPage = (JsonObject) RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhoneNumbers(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, firstPage.get("num_pages").getAsInt(), 100, true);
+        JsonArray lastPageNumbersArray = lastPage.get("incomingPhoneNumbers").getAsJsonArray();
+        assertEquals("PHae6e420f425248d6a26948c17a9e2ap8",lastPageNumbersArray.get(lastPageNumbersArray.size() - 1).getAsJsonObject().get("sid").getAsString());
+        assertTrue(lastPageNumbersArray.size() == 1);
+        assertTrue(lastPage.get("start").getAsInt() == 500);
+        assertTrue(lastPage.get("end").getAsInt() == 501);
+
+        assertTrue(totalSize == 501);
+    }
+    
     /*
      * Check the list of available Countries
      */
@@ -94,15 +156,15 @@ public class IncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.accept("application/json").get(ClientResponse.class);
         assertTrue(clientResponse.getStatus() == 200);
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
         
-        System.out.println(jsonResponse.toString());
+        logger.info(jsonResponse.toString());
         
         assertTrue(jsonResponse.size() == 1);
-        System.out.println(jsonResponse.get(0).getAsString());
+        logger.info(jsonResponse.get(0).getAsString());
         assertTrue(jsonResponse.get(0).getAsString().equals("US"));
     }
     
@@ -144,12 +206,12 @@ public class IncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 200);
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
         
-        System.out.println(jsonResponse.toString());
+        logger.info(jsonResponse.toString());
         
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultPurchaseNumber));
     }
@@ -191,7 +253,7 @@ public class IncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 400);
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         String jsonResponse = parser.parse(response).getAsString();
@@ -235,12 +297,12 @@ public class IncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 200);
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
         
-        System.out.println(jsonResponse.toString());
+        logger.info(jsonResponse.toString());
         
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultLocalPurchaseNumber));
     }
@@ -282,7 +344,7 @@ public class IncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 400);
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         String jsonResponse = parser.parse(response).getAsString();
@@ -326,12 +388,12 @@ public class IncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 200);
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
         
-        System.out.println(jsonResponse.toString());
+        logger.info(jsonResponse.toString());
         
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultTollFreePurchaseNumber));
     }
@@ -373,7 +435,7 @@ public class IncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 400);
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         String jsonResponse = parser.parse(response).getAsString();
@@ -417,12 +479,12 @@ public class IncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 200);
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
         
-        System.out.println(jsonResponse.toString());
+        logger.info(jsonResponse.toString());
         
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultMobilePurchaseNumber));
     }
@@ -464,7 +526,7 @@ public class IncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 400);
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         String jsonResponse = parser.parse(response).getAsString();
@@ -517,11 +579,11 @@ public class IncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 200);
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-        System.out.println(jsonResponse.toString());
+        logger.info(jsonResponse.toString());
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultDeletePurchaseNumber));
         
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
@@ -575,11 +637,11 @@ public class IncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 200);
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-        System.out.println(jsonResponse.toString());
+        logger.info(jsonResponse.toString());
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultUpdatePurchaseNumber));
         
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
@@ -593,11 +655,11 @@ public class IncomingPhoneNumbersEndpointTest {
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 200);
         response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         parser = new JsonParser();
         jsonResponse = parser.parse(response).getAsJsonObject();
-        System.out.println(jsonResponse.toString());
+        logger.info(jsonResponse.toString());
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultUpdateSuccessPurchaseNumber));
     }
     
@@ -668,11 +730,11 @@ public class IncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 200);
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-        System.out.println(jsonResponse.toString());
+        logger.info(jsonResponse.toString());
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         
@@ -684,30 +746,26 @@ public class IncomingPhoneNumbersEndpointTest {
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 200);
         response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         parser = new JsonParser();
         jsonResponse = parser.parse(response).getAsJsonObject();
         String secondPhoneNumberSid = jsonResponse.get("sid").getAsString();
         
-        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        webResource = jerseyClient.resource(provisioningURL);
 //        formData = new MultivaluedMapImpl();
 //        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice2.xml");
-        clientResponse = webResource.
-//                queryParams(formData).
-                accept("application/json").get(ClientResponse.class);
-        assertTrue(clientResponse.getStatus() == 200);
-        response = clientResponse.getEntity(String.class);
-        System.out.println(response);
-        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-        parser = new JsonParser();
-        JsonArray jsonArray = parser.parse(response).getAsJsonArray();
+
+        Map<String, String> filters = new HashMap<>();
+        filters.put("FriendlyName", "My 2nd Company Line");
+        JsonObject jsonObject = RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhoneNumbersUsingFilter(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, filters);
+        JsonArray jsonArray = jsonObject.get("incomingPhoneNumbers").getAsJsonArray();
+
         
-        System.out.println(jsonArray + " \n " + jsonArray.size());
+        logger.info(jsonArray + " \n " + jsonArray.size());
         
-        assertTrue(jsonArray.size() >= 21);
-        System.out.println("testAccountAssociatedPhoneNumbers:" + (jsonArray.get(jsonArray.size()-1).getAsJsonObject().toString()));
+        assertTrue(jsonArray.size() >0);
+        logger.info("testAccountAssociatedPhoneNumbers:" + (jsonArray.get(jsonArray.size()-1).getAsJsonObject().toString()));
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(jsonArray.size()-1).getAsJsonObject().toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
         
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
@@ -788,11 +846,11 @@ public class IncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 200);
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-        System.out.println(jsonResponse.toString());
+        logger.info(jsonResponse.toString());
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         
@@ -804,28 +862,22 @@ public class IncomingPhoneNumbersEndpointTest {
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 200);
         response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         parser = new JsonParser();
         jsonResponse = parser.parse(response).getAsJsonObject();
         String secondPhoneNumberSid = jsonResponse.get("sid").getAsString();
         
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        webResource = jerseyClient.resource(provisioningURL);
-        formData = new MultivaluedMapImpl();
-        formData.add("PhoneNumber", "+15216902867");
-        clientResponse = webResource.queryParams(formData).accept("application/json").get(ClientResponse.class);
-        assertTrue(clientResponse.getStatus() == 200);
-        response = clientResponse.getEntity(String.class);
-        System.out.println(response);
-        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-        parser = new JsonParser();
-        JsonArray jsonArray = parser.parse(response).getAsJsonArray();
+        Map<String, String> filters = new HashMap<>();
+        filters.put("PhoneNumber", "+15216902867");
+        JsonObject jsonObject =  RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhoneNumbersUsingFilter(deploymentUrl.toString(), adminAccountSid, adminAuthToken, filters);
+        JsonArray jsonArray = jsonObject.get("incomingPhoneNumbers").getAsJsonArray();
         
-        System.out.println(jsonArray + " \n " + jsonArray.size());
+        logger.info(jsonArray + " \n " + jsonArray.size());
         
         assertTrue(jsonArray.size() == 1);
-        System.out.println((jsonArray.get(0).getAsJsonObject().toString()));
+        logger.info((jsonArray.get(0).getAsJsonObject().toString()));
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(0).getAsJsonObject().toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
         
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
@@ -907,11 +959,11 @@ public class IncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 200);
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-        System.out.println(jsonResponse.toString());
+        logger.info(jsonResponse.toString());
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         
@@ -923,28 +975,22 @@ public class IncomingPhoneNumbersEndpointTest {
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 200);
         response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         parser = new JsonParser();
         jsonResponse = parser.parse(response).getAsJsonObject();
         String secondPhoneNumberSid = jsonResponse.get("sid").getAsString();
-        
-        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+        Map<String, String> filters = new HashMap<>();
+        filters.put("PhoneNumber", "6902867");
+        JsonObject jsonObject =  RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhoneNumbersUsingFilter(deploymentUrl.toString(), adminAccountSid, adminAuthToken, filters);
+        JsonArray jsonArray = jsonObject.get("incomingPhoneNumbers").getAsJsonArray();
+      
         webResource = jerseyClient.resource(provisioningURL);
-        formData = new MultivaluedMapImpl();
-        formData.add("PhoneNumber", "867");
-        clientResponse = webResource.queryParams(formData).accept("application/json").get(ClientResponse.class);
-        assertTrue(clientResponse.getStatus() == 200);
-        response = clientResponse.getEntity(String.class);
-        System.out.println(response);
-        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-        parser = new JsonParser();
-        JsonArray jsonArray = parser.parse(response).getAsJsonArray();
         
-        System.out.println(jsonArray + " \n " + jsonArray.size());
+        logger.info(jsonArray + " \n " + jsonArray.size());
         
         assertTrue(jsonArray.size() >= 2);
-        System.out.println((jsonArray.get(jsonArray.size() - 1).getAsJsonObject().toString()));
+        logger.info((jsonArray.get(jsonArray.size() - 1).getAsJsonObject().toString()));
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(jsonArray.size() - 1).getAsJsonObject().toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
         
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
