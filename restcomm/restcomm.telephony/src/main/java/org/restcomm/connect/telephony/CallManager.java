@@ -1708,7 +1708,9 @@ public final class CallManager extends UntypedActor {
                 if (request.from() != null && request.from().contains("@")) {
                     // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
                     // to use it directly
-                    from = (SipURI) sipFactory.createURI(request.from());
+                    //from = (SipURI) sipFactory.createURI(request.from());
+                    String[] f = request.from().split("@");
+                    from = sipFactory.createSipURI(f[0], f[1]);
                 } else if (request.from() != null) {
                     if (outboundIntf != null) {
                         from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
@@ -2328,7 +2330,8 @@ public final class CallManager extends UntypedActor {
             if (request.from() != null && request.from().contains("@")) {
                 // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we
                 // allow to use it directly
-                from = (SipURI) sipFactory.createURI(request.from());
+                String[] f = request.from().split("@");
+                from = sipFactory.createSipURI(f[0], f[1]);
             } else {
                 from = sipFactory.createSipURI(request.from(), imsDomain);
             }
