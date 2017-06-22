@@ -569,10 +569,9 @@ public class AccountsEndpointTest extends EndpointTest {
         assertEquals(200, response.getStatus());
     }
 
-    @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
+    @Deployment(name = "AccountsEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
-        logger.info("version");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
         final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()

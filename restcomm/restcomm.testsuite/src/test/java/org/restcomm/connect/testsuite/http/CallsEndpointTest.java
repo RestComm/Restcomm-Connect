@@ -256,7 +256,7 @@ public class CallsEndpointTest {
         assertEquals("Call recordings size() should be 0", 0, callRecordings.size());
     }
 
-    @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
+    @Deployment(name = "CallsEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
