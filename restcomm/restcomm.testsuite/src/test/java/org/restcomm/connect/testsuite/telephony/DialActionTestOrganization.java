@@ -147,10 +147,6 @@ public class DialActionTestOrganization {
     private SipPhone pstnPhone;
     private String pstnContact = "sip:+131313@127.0.0.1:5070";
 
-    private String mariaRestcommClientSidOrg2;
-    private String shoaibRestcommClientSidOrg2;
-    private String bobRestcommClientSidOrg2;
-    private String bobRestcommClientSidOrg3;
     private String clientPassword = "qwerty1234RT";
 
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
@@ -216,11 +212,6 @@ public class DialActionTestOrganization {
         pstnSipStack = tool8.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
         pstnPhone = pstnSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, pstnContact);
         
-        mariaRestcommClientSidOrg2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken, "maria", clientPassword, null);
-        shoaibRestcommClientSidOrg2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken, "shoaib", clientPassword, null);
-        bobRestcommClientSidOrg2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken, "bob", clientPassword, null);
-        bobRestcommClientSidOrg3 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), adminAccountSidOrg3, adminAuthToken, "bob", clientPassword, null);
-
     }
     
     @Test
@@ -239,7 +230,6 @@ public class DialActionTestOrganization {
     	 */
 
     	//bob@org3 will dial a sip number X@org3
-    	assertNotNull(bobRestcommClientSidOrg3);
     	SipURI uri = bobSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(bobPhoneOrg3.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5092", 3600, 3600));
         Credential c = new Credential("org3.restcomm.com", "bob", clientPassword);
@@ -296,7 +286,6 @@ public class DialActionTestOrganization {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialNumberRcml)));
 
-    	assertNotNull(bobRestcommClientSidOrg2);
         SipURI uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
         Credential c = new Credential("org2.restcomm.com", "bob", clientPassword);
@@ -396,7 +385,6 @@ public class DialActionTestOrganization {
     	 * test case 1 - bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
     	 */
 
-    	assertNotNull(bobRestcommClientSidOrg2);
         SipURI uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
         Credential c = new Credential("org3.restcomm.com", "bob", clientPassword);
@@ -450,7 +438,6 @@ public class DialActionTestOrganization {
     	 * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should FAIL (bcz defaulOrg does not have that number)
     	 */
 
-    	assertNotNull(bobRestcommClientSidOrg2);
         SipURI uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
         Credential c = new Credential("127.0.0.1", "bob", clientPassword);
@@ -506,7 +493,7 @@ public class DialActionTestOrganization {
     	 */
 
     	//bob@org3 joins conference via sip:+12223334467@org2.restcomm.com
-    	assertNotNull(bobRestcommClientSidOrg3);
+    	
     	SipURI uri = bobSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(bobPhoneOrg3.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5092", 3600, 3600));
         Credential c = new Credential("org2.restcomm.com", "bob", clientPassword);
@@ -532,7 +519,7 @@ public class DialActionTestOrganization {
         assertTrue(!(bobCallOrg3.getLastReceivedResponse().getStatusCode() >= 400));
 
     	//bob@org2 joins conference via sip:+12223334467@org2.restcomm.com
-    	assertNotNull(bobRestcommClientSidOrg2);
+    	
         uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
         c = new Credential("org2.restcomm.com", "bob", clientPassword);
@@ -627,9 +614,6 @@ public class DialActionTestOrganization {
     @Test
     public void testClientsCallEachOtherSameOrganization() throws ParseException, InterruptedException {
 
-        assertNotNull(mariaRestcommClientSidOrg2);
-        assertNotNull(shoaibRestcommClientSidOrg2);
-
         SipURI uri = mariaSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(mariaPhoneOrg2.register(uri, "maria", clientPassword, "sip:maria@127.0.0.1:5093", 3600, 3600));
         assertTrue(shoaibPhoneOrg2.register(uri, "shoaib", clientPassword, "sip:shoaib@127.0.0.1:5094", 3600, 3600));
@@ -643,7 +627,6 @@ public class DialActionTestOrganization {
         Thread.sleep(1000);
 
         // Maria initiates a call to Shoaib
-        long startTime = System.currentTimeMillis();
         final SipCall mariaCall = mariaPhoneOrg2.createSipCall();
         mariaCall.initiateOutgoingCall(mariaContactOrg2, shoaibContactOrg2, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(mariaCall);
@@ -685,11 +668,6 @@ public class DialActionTestOrganization {
 
         assertTrue(shoaibCall.waitForDisconnect(5 * 1000));
         assertTrue(shoaibCall.respondToDisconnect());
-        long endTime   = System.currentTimeMillis();
-
-        double totalTime = (endTime - startTime)/1000.0;
-        assertTrue(3.0 <= totalTime);
-        assertTrue(totalTime <= 4.0);
 
         Thread.sleep(3000);
 
@@ -718,8 +696,6 @@ public class DialActionTestOrganization {
      */
     @Test
     public void testClientsCallEachOtherDifferentOrganization() throws ParseException, InterruptedException {
-
-        assertNotNull(mariaRestcommClientSidOrg2);
 
         SipURI uri = mariaSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(mariaPhoneOrg2.register(uri, "maria", clientPassword, "sip:maria@127.0.0.1:5093", 3600, 3600));
@@ -768,7 +744,6 @@ public class DialActionTestOrganization {
                 .willReturn(aResponse()
                     .withStatus(200)));
 
-   	    assertNotNull(bobRestcommClientSidOrg2);
    	    SipURI uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
    	    assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
    	    Credential c = new Credential("org2.restcomm.com", "bob", clientPassword);
@@ -875,12 +850,9 @@ public class DialActionTestOrganization {
                 .willReturn(aResponse()
                         .withStatus(200)));
 
-
-
-    	assertNotNull(bobRestcommClientSidOrg2);
         SipURI uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
-        Credential c = new Credential("org3.restcomm.com", "bob", clientPassword);
+        Credential c = new Credential("org2.restcomm.com", "bob", clientPassword);
         bobPhoneOrg2.addUpdateCredential(c);
 
         // Phone2 register as alice
