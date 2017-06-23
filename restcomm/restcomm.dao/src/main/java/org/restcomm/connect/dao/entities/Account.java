@@ -22,7 +22,6 @@ package org.restcomm.connect.dao.entities;
 import java.net.URI;
 
 import org.joda.time.DateTime;
-
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.dao.Sid;
 
@@ -41,12 +40,12 @@ public final class Account {
     private final Sid parentSid;
     private final Type type;
     private final Status status;
-    private final String authToken;
+    private final String password;
     private final String role;
     private final URI uri;
 
     public Account(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String emailAddress,
-                   final String friendlyName, final Sid parentSid, final Type type, final Status status, final String authToken,
+                   final String friendlyName, final Sid parentSid, final Type type, final Status status, final String password,
                    final String role, final URI uri) {
         super();
         this.sid = sid;
@@ -57,7 +56,7 @@ public final class Account {
         this.parentSid = parentSid;
         this.type = type;
         this.status = status;
-        this.authToken = authToken;
+        this.password = password;
         this.role = role;
         this.uri = uri;
     }
@@ -98,8 +97,8 @@ public final class Account {
         return status;
     }
 
-    public String getAuthToken() {
-        return authToken;
+    public String getPassword() {
+        return password;
     }
 
     public String getRole() {
@@ -111,32 +110,32 @@ public final class Account {
     }
 
     public Account setEmailAddress(final String emailAddress) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, password,
                 role, uri);
     }
 
     public Account setFriendlyName(final String friendlyName) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, password,
                 role, uri);
     }
 
     public Account setType(final Type type) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, password,
                 role, uri);
     }
 
     public Account setStatus(final Status status) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, password,
                 role, uri);
     }
 
-    public Account setAuthToken(final String authToken) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
+    public Account setPassword(final String password) {
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, password,
                 role, uri);
     }
 
     public Account setRole(final String role) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, password,
                 role, uri);
     }
 

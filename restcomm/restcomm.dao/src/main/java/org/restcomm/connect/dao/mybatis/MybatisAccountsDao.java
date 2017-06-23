@@ -262,7 +262,7 @@ public final class MybatisAccountsDao implements AccountsDao {
         map.put("parent_sid", writeSid(account.getParentSid()));
         map.put("type", writeAccountType(account.getType()));
         map.put("status", writeAccountStatus(account.getStatus()));
-        map.put("auth_token", account.getAuthToken());
+        map.put("password", account.getPassword());
         map.put("role", account.getRole());
         map.put("uri", writeUri(account.getUri()));
         return map;
