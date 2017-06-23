@@ -669,13 +669,13 @@ public class DialActionTestOrganization {
         assertTrue(shoaibCall.waitForDisconnect(5 * 1000));
         assertTrue(shoaibCall.respondToDisconnect());
 
-        Thread.sleep(3000);
+        Thread.sleep(5000);
 
         //Check CDR
         JsonObject cdrs = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken);
         assertNotNull(cdrs);
         JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
-        System.out.println("cdrsArray.size(): "+cdrsArray.size());
+        logger.info("cdrsArray.size(): "+cdrsArray.size());
         assertTrue(cdrsArray.size() == 1);
 
     }
