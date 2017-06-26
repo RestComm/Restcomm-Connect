@@ -216,6 +216,9 @@ public class IncomingPhoneNumbersEndpointTest {
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultPurchaseNumber));
     }
     
+   
+    
+    
     /*
      * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-post-example-1
      * Purchases a new phone number for your account.
@@ -637,7 +640,7 @@ public class IncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 200);
         String response = clientResponse.getEntity(String.class);
-        logger.info(response);
+        logger.info(response);  
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
@@ -1002,6 +1005,65 @@ public class IncomingPhoneNumbersEndpointTest {
         webResource = jerseyClient.resource(provisioningURL);
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
         assertTrue(clientResponse.getStatus() == 204);
+    }
+    
+    @Test
+    public void testPurchasePhoneNumberValidation() {
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("queryDID"))
+                .withRequestBody(containing("6508252890"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("assignDID"))
+                .withRequestBody(containing("6508252890"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "+16508252890");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "Test Number with Plus");
+        formData.add("VoiceMethod", "GET");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 200);
+        
+        formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "+0016508252890");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "Test Number with Plus and two zeros");
+        formData.add("VoiceMethod", "GET");
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 400);
+        
+        
+        formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "0016508252890");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "Test Number with two zeros");
+        formData.add("VoiceMethod", "GET");
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 400);
+        
+        
+        formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "16508252890");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "Test Number with two zeros");
+        formData.add("VoiceMethod", "GET");
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 400);
     }
     
     @Deployment(name = "IncomingPhoneNumbersEndpointTest", managed = true, testable = false)
