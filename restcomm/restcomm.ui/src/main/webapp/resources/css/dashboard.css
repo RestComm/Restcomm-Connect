@@ -208,6 +208,7 @@ form[role=login] input {
 form[role=login] input:-webkit-autofill,
 form[role=login] input:-webkit-autofill:focus{
     box-shadow: 0 0 0 1000px white inset;
+    transition-property: background-color;
 }
 
 #forgot-password {
@@ -295,6 +296,7 @@ form[role=login] button:hover {
 
 .login-form .form-control {
     padding-left: 10px;
+    background: #ffffff;
 }
 .login-form .form-control + .glyphicon {
     position: absolute;
