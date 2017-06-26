@@ -457,7 +457,13 @@ public final class Call extends UntypedActor {
 
     private CallResponse<CallInfo> info() {
         try {
-            final String from = this.from.getUser();
+            final String from;
+            if(actAsImsUa) {
+                from = this.from.getUser().concat("@").concat(this.from.getHost());
+            } else {
+                from = this.from.getUser();
+            }
+
             String to = null;
             if (this.to.isSipURI()) {
                 to = ((SipURI) this.to).getUser();
