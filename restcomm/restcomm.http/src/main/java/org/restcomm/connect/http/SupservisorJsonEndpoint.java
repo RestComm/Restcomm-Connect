@@ -20,16 +20,18 @@
  */
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -49,18 +51,25 @@ public class SupservisorJsonEndpoint extends SupervisorEndpoint{
         return pong(accountSid, APPLICATION_JSON_TYPE);
     }
 
-    //Get live calls and statistics
+    //Get statistics
     @Path("/metrics")
     @GET
-    public Response getMetrics(@PathParam("accountSid") final String accountSid) {
-        return getMetrics(accountSid, APPLICATION_JSON_TYPE);
+    public Response getMetrics(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
+        return getMetrics(accountSid, info, APPLICATION_JSON_TYPE);
+    }
+
+    //Get live calls
+    @Path("/livecalls")
+    @GET
+    public Response getLiveCalls(@PathParam("accountSid") final String accountSid) {
+        return getLiveCalls(accountSid, APPLICATION_JSON_TYPE);
     }
 
     //Register a remote location where Restcomm will send monitoring updates
     @Path("/remote")
     @POST
-    public Response registerForMetricsUpdates(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
-        return registerForUpdates(accountSid, data, APPLICATION_JSON_TYPE);
+    public Response registerForMetricsUpdates(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
+        return registerForUpdates(accountSid, info, APPLICATION_JSON_TYPE);
     }
 
     //Register a remote location where Restcomm will send monitoring updates for a specific Call

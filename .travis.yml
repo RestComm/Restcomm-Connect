@@ -1,0 +1,32 @@
+language: java
+jdk:
+  - oraclejdk8
+branches:
+  only:
+  - master
+  - /^deploy-.*$/
+email:
+  recipients:
+    - gvagenas@telestax.com
+    - jean.deruelle@telestax.com
+  on_success: never # default: change
+  on_failure: always # default: always
+cache:
+  directories:
+  - $HOME/.m2
+addons:
+  sonarqube:
+    organization: "restcomm-connect" # the key of the org you chose at step #3
+script:
+  - ./build.sh
+#  Problem to run testsuite https://github.com/travis-ci/travis-ci/issues/1382
+#  - echo "About to run sonar-scanner"
+#  - cd restcomm
+#  - pwd
+#  - sed -i 's/\<root\>/\<!--root>/g' ./restcomm.testsuite/src/test/resources/log4j.xml
+#  - sed -i 's/\<\/root\>/\<\/root-->/g' ./restcomm.testsuite/src/test/resources/log4j.xml
+#  - sed -i 's/DEBUG/OFF/g'  ./restcomm.testsuite/src/test/resources/akka_application.conf
+#  - sed -i 's/INFO/OFF/g'  ./restcomm.application/src/main/resources/application.conf
+#  - mvn -q clean org.jacoco:jacoco-maven-plugin:prepare-agent surefire-report:report sonar:sonar > ./surefire-report-output.txt
+#  - curl -T restcomm.testsuite/target/site/surefire-report.html -ugvagenas:$BINTRAY_API_KEY -H "X-Bintray-Package:binaries" -H "X-Bintray-Version:8.2.0" https://api.bintray.com/content/gvagenas/Restcomm-Connect/bin/surefire-report-$MAJOR_VERSION_NUMBER.$BUILD_NUMBER.html
+#  - curl -T ./surefire-report-output.txt -ugvagenas:$BINTRAY_API_KEY -H "X-Bintray-Package:binaries" -H "X-Bintray-Version:8.2.0" https://api.bintray.com/content/gvagenas/Restcomm-Connect/bin/surefire-report-output-$MAJOR_VERSION_NUMBER.$BUILD_NUMBER.txt
