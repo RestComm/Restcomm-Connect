@@ -19,17 +19,20 @@
  */
 package org.restcomm.connect.sms.api;
 
+import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
-
+import org.restcomm.connect.extension.api.IExtensionCreateSmsSessionRequest;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
-public final class CreateSmsSession {
+public final class CreateSmsSession implements IExtensionCreateSmsSessionRequest {
     private final String from;
     private final String to;
     private final String accountSid;
     private final boolean isFromApi;
+    private Configuration configuration;
+    private boolean allowed = true;
 
 
     //This will be used to create SmsSession from
@@ -52,10 +55,6 @@ public final class CreateSmsSession {
         return to;
     }
 
-    public String getAccountSid() {
-        return accountSid;
-    }
-
     public boolean isFromApi() {
         return isFromApi;
     }
@@ -63,5 +62,50 @@ public final class CreateSmsSession {
     @Override
     public String toString() {
         return "From: "+from+" , To: "+to+" , AccountSid: "+accountSid+" , isFromApi: "+isFromApi;
+    }
+
+    /**
+     * IExtensionRequest
+     * @return accountSid
+     */
+    @Override
+    public String getAccountSid() {
+        return accountSid;
+    }
+
+    /**
+     * IExtensionRequest
+     * @return if allowed
+     */
+    @Override
+    public boolean isAllowed() {
+        return this.allowed;
+    }
+
+    /**
+     * IExtensionRequest
+     * @param set allowed
+     */
+    @Override
+    public void setAllowed(boolean allowed) {
+        this.allowed = allowed;
+    }
+
+    /**
+     * IExtensionCreateSmsSessionRequest
+     * @param set Configuration object
+     */
+    @Override
+    public void setConfiguration(Configuration configuration) {
+        this.configuration = configuration;
+    }
+
+    /**
+     * IExtensionCreateSmsSessionRequest
+     * @return Configuration object
+     */
+    @Override
+    public Configuration getConfiguration() {
+        return this.configuration;
     }
 }
