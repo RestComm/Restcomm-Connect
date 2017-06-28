@@ -49,6 +49,9 @@ import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
 import org.restcomm.connect.commons.util.RevolvingCounter;
 
+import javax.sdp.SdpFactory;
+import javax.sdp.SdpParseException;
+import javax.sdp.SessionDescription;
 import java.net.InetAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -363,14 +366,34 @@ public class MockMediaGateway extends UntypedActor {
         final ActorRef self = self();
         final ModifyConnection mdcx = (ModifyConnection) message;
         System.out.println(mdcx.toString());
-        final ReturnCode code = ReturnCode.Transaction_Executed_Normally;
-        final ModifyConnectionResponse response = new ModifyConnectionResponse(self, code);
-        final ConnectionDescriptor descriptor = new ConnectionDescriptor(sdp);
-        response.setLocalConnectionDescriptor(descriptor);
-        final int transaction = mdcx.getTransactionHandle();
-        response.setTransactionHandle(transaction);
-        System.out.println(response.toString());
-        sender.tell(response, self);
+        ReturnCode code;
+        SessionDescription sessionDescription = null;
+        boolean isNonValidSdp = false;
+        if (mdcx.getRemoteConnectionDescriptor()!=null) {
+            try {
+                sessionDescription = SdpFactory.getInstance().createSessionDescription(mdcx.getRemoteConnectionDescriptor().toString());
+                isNonValidSdp = sessionDescription.getSessionName().getValue().contains("NonValidSDP");
+            } catch (SdpParseException e) {
+                logger.error("Error while trying to get SDP from MDCX");
+            }
+        }
+        if (sessionDescription != null && isNonValidSdp) {
+            code = ReturnCode.Protocol_Error;
+            final ModifyConnectionResponse response = new ModifyConnectionResponse(self, code);
+            final int transaction = mdcx.getTransactionHandle();
+            response.setTransactionHandle(transaction);
+            System.out.println(response.toString());
+            sender.tell(response, self);
+        } else {
+            code = ReturnCode.Transaction_Executed_Normally;
+            final ModifyConnectionResponse response = new ModifyConnectionResponse(self, code);
+            final ConnectionDescriptor descriptor = new ConnectionDescriptor(sdp);
+            response.setLocalConnectionDescriptor(descriptor);
+            final int transaction = mdcx.getTransactionHandle();
+            response.setTransactionHandle(transaction);
+            System.out.println(response.toString());
+            sender.tell(response, self);
+        }
     }
 
     private void deleteConnection(final Object message, final ActorRef sender) {

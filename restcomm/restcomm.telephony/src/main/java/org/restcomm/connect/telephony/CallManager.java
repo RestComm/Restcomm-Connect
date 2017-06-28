@@ -30,19 +30,18 @@ import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
-
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-
 import gov.nist.javax.sip.header.UserAgent;
-
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.commons.telephony.CreateCallType;
+import org.restcomm.connect.commons.telephony.ProxyRule;
 import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
@@ -89,7 +88,6 @@ import org.restcomm.connect.telephony.api.SwitchProxy;
 import org.restcomm.connect.telephony.api.UpdateCallScript;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
-
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -109,7 +107,6 @@ import javax.servlet.sip.SipURI;
 import javax.servlet.sip.TelURL;
 import javax.sip.header.RouteHeader;
 import javax.sip.message.Response;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
@@ -198,6 +195,10 @@ public final class CallManager extends UntypedActor {
     private int imsProxyPort;
     private String imsDomain;
     private String imsAccount;
+
+    private boolean actAsProxyOut;
+    private List<ProxyRule> proxyOutRules;
+    private boolean isActAsProxyOutUseFromHeader;
 
     // used for sending warning and error logs to notification engine and to the console
     private void sendNotification(String errMessage, int errCode, String errType, boolean createNotification) {
@@ -319,6 +320,32 @@ public final class CallManager extends UntypedActor {
                 }
                 this.actAsImsUa = actAsImsUa && imsProxyAddress != null && !imsProxyAddress.isEmpty()
                         && imsDomain != null && !imsDomain.isEmpty();
+            }
+        }
+        if (!runtime.subset("acting-as-proxy").isEmpty() && !runtime.subset("acting-as-proxy").subset("proxy-rules").isEmpty()) {
+            final Configuration proxyConfiguration = runtime.subset("acting-as-proxy");
+            final Configuration proxyOutRulesConf = proxyConfiguration.subset("proxy-rules");
+            this.actAsProxyOut = proxyConfiguration.getBoolean("enabled", false);
+            if (actAsProxyOut) {
+                isActAsProxyOutUseFromHeader = proxyConfiguration.getBoolean("use-from-header", true);
+                proxyOutRules = new ArrayList<ProxyRule>();
+
+                List<HierarchicalConfiguration> rulesList = ((HierarchicalConfiguration)proxyOutRulesConf).configurationsAt("rule");
+                for(HierarchicalConfiguration rule : rulesList){
+                    String fromHost = rule.getString("from-uri");
+                    String toHost  = rule.getString("to-uri");
+                    final String username = rule.getString("proxy-to-username");
+                    final String password = rule.getString("proxy-to-password");
+                    ProxyRule proxyRule = new ProxyRule(fromHost, toHost, username, password);
+                    proxyOutRules.add(proxyRule);
+                }
+
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("`ActAsProxy` feature is enabled with %d rules.",proxyOutRules.size());
+                    logger.info(msg);
+                }
+
+                actAsProxyOut = actAsProxyOut && (proxyOutRules != null) && !proxyOutRules.isEmpty();
             }
         }
         firstTimeCleanup();
@@ -534,11 +561,12 @@ public final class CallManager extends UntypedActor {
                 IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.PSTN, client.getAccountSid(), null,null, null, null);
                 ec.executePreOutboundAction(er, this.extensions);
                 if (er.isAllowed()) {
-                    if (isWebRTC(request)) {
+                    if (actAsProxyOut) {
+                        processRequestAndProxyOut(request, client, toUser);
+                    } else if (isWebRTC(request)) {
                         //This is a WebRTC client that dials out
                         //TODO: should we inject headers for this case?
-                        proxyThroughMediaServer(request, client, toUser);
-
+                        proxyThroughMediaServerAsNumber(request, client, toUser);
                     } else {
                         // https://telestax.atlassian.net/browse/RESTCOMM-335
                         String proxyURI = activeProxy;
@@ -587,6 +615,10 @@ public final class CallManager extends UntypedActor {
             }
             if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, null)) {
                 // This is a call to a registered DID (application)
+                return;
+            }
+            if (actAsProxyOut) {
+                processRequestAndProxyOut(request, client, toUser);
                 return;
             }
         }
@@ -751,7 +783,80 @@ public final class CallManager extends UntypedActor {
         return false;
     }
 
-    private void proxyThroughMediaServer(final SipServletRequest request, final Client client, final String destNumber) {
+    private void processRequestAndProxyOut (final SipServletRequest request, final Client client, final String destNumber) {
+        String requestFromHost = null;
+
+        ProxyRule matchedProxyRule = null;
+
+        SipURI fromUri = null;
+        try {
+            if (isActAsProxyOutUseFromHeader) {
+                fromUri = ((SipURI) request.getFrom().getURI());
+            } else {
+                fromUri = ((SipURI) request.getAddressHeader("Contact").getURI());
+            }
+        } catch (ServletParseException e) {
+            logger.error("Problem while trying to process an `ActAsProxy` request, "+e);
+        }
+        requestFromHost = fromUri.getHost()+":"+fromUri.getPort();
+
+        for (ProxyRule proxyRule: proxyOutRules) {
+            if (requestFromHost != null) {
+                if (requestFromHost.equalsIgnoreCase(proxyRule.getFromUri())) {
+                    matchedProxyRule = proxyRule;
+                    break;
+                }
+            }
+        }
+
+        if (matchedProxyRule != null) {
+            String sipUri = String.format("sip:%s@%s", destNumber, matchedProxyRule.getToUri());
+            String rcml;
+            if (matchedProxyRule.getUsername() != null && !matchedProxyRule.getUsername().isEmpty() && matchedProxyRule.getPassword() != null && !matchedProxyRule.getPassword().isEmpty()) {
+                rcml = String.format("<Response><Dial><Sip username=\"%s\" password=\"%s\">%s</Sip></Dial></Response>", matchedProxyRule.getUsername(), matchedProxyRule.getPassword(), sipUri);
+            } else {
+                rcml = String.format("<Response><Dial><Sip>%s</Sip></Dial></Response>", sipUri);
+            }
+
+            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+            builder.setConfiguration(configuration);
+            builder.setStorage(storage);
+            builder.setCallManager(self());
+            builder.setConferenceManager(conferences);
+            builder.setBridgeManager(bridges);
+            builder.setSmsService(sms);
+
+            Sid accountSid = null;
+            String apiVersion = null;
+            if (client != null) {
+                accountSid = client.getAccountSid();
+                apiVersion = client.getApiVersion();
+            } else {
+                //Todo get Administrators account from RestcommConfiguration
+                accountSid = new Sid("ACae6e420f425248d6a26948c17a9e2acf");
+                apiVersion = RestcommConfiguration.getInstance().getMain().getApiVersion();
+            }
+
+            builder.setAccount(accountSid);
+            builder.setVersion(apiVersion);
+            final Account account = storage.getAccountsDao().getAccount(accountSid);
+            builder.setEmailAddress(account.getEmailAddress());
+            builder.setRcml(rcml);
+            builder.setMonitoring(monitoring);
+            final ActorRef interpreter = builder.build();
+            final ActorRef call = call(null);
+            final SipApplicationSession application = request.getApplicationSession();
+            application.setAttribute(Call.class.getName(), call);
+            call.tell(request, self());
+            interpreter.tell(new StartInterpreter(call), self());
+        } else {
+            if (logger.isInfoEnabled()) {
+                logger.info("No rule matched for the `ActAsProxy` feature");
+            }
+        }
+    }
+
+    private void proxyThroughMediaServerAsNumber (final SipServletRequest request, final Client client, final String destNumber) {
         String rcml = "<Response><Dial>"+destNumber+"</Dial></Response>";
         final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
         builder.setConfiguration(configuration);
@@ -1708,7 +1813,9 @@ public final class CallManager extends UntypedActor {
                 if (request.from() != null && request.from().contains("@")) {
                     // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
                     // to use it directly
-                    from = (SipURI) sipFactory.createURI(request.from());
+                    //from = (SipURI) sipFactory.createURI(request.from());
+                    String[] f = request.from().split("@");
+                    from = sipFactory.createSipURI(f[0], f[1]);
                 } else if (request.from() != null) {
                     if (outboundIntf != null) {
                         from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
@@ -2328,7 +2435,8 @@ public final class CallManager extends UntypedActor {
             if (request.from() != null && request.from().contains("@")) {
                 // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we
                 // allow to use it directly
-                from = (SipURI) sipFactory.createURI(request.from());
+                String[] f = request.from().split("@");
+                from = sipFactory.createSipURI(f[0], f[1]);
             } else {
                 from = sipFactory.createSipURI(request.from(), imsDomain);
             }

@@ -457,7 +457,13 @@ public final class Call extends UntypedActor {
 
     private CallResponse<CallInfo> info() {
         try {
-            final String from = this.from.getUser();
+            final String from;
+            if(actAsImsUa) {
+                from = this.from.getUser().concat("@").concat(this.from.getHost());
+            } else {
+                from = this.from.getUser();
+            }
+
             String to = null;
             if (this.to.isSipURI()) {
                 to = ((SipURI) this.to).getUser();
@@ -1114,7 +1120,7 @@ public final class Call extends UntypedActor {
                     ringing.send();
                 } catch (IllegalStateException exception) {
                     if(logger.isDebugEnabled()) {
-                        logger.debug("Exception while creating 180 response to inbound invite request");
+                        logger.debug("Exception while creating 180 response to inbound invite request, "+exception);
                     }
                     fsm.transition(message, canceled);
                 }
@@ -2471,7 +2477,7 @@ public final class Call extends UntypedActor {
                 break;
 
             case FAILED:
-                if (is(initializing) || is(updatingMediaSession) || is(joining) || is(leaving)) {
+                if (is(initializing) || is(updatingMediaSession) || is(joining) || is(leaving) || is(inProgress)) {
                     fsm.transition(message, failed);
                 }
                 break;
