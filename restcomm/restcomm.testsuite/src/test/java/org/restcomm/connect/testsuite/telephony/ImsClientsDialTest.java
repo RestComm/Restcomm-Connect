@@ -98,6 +98,7 @@ public class ImsClientsDialTest {
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
+    private static SipStackTool tool4;
 
     private String pstnNumber = "+151261006100";
 
@@ -108,6 +109,11 @@ public class ImsClientsDialTest {
     private String augustContact = "sip:august@127.0.0.1:5092";
     private boolean isAugustRegistered = false;
 
+    private SipStack bobSipStack;
+    private SipPhone bobPhone;
+    private String bobContact = "sip:bob@bob.com:5095";
+    private boolean isBobRegistered = false;
+
     private SipStack juliusSipStack;
     private SipPhone juliusPhone;
     private String juliusContact = "sip:julius@127.0.0.1:5094";
@@ -117,6 +123,8 @@ public class ImsClientsDialTest {
     private SipPhone imsAugustPhone;
     private SipPhone imsAugustPhone2;
     private SipPhone imsJuliusPhone;
+    private SipPhone imsBobPhone;
+
     private String imsContact = "sip:127.0.0.1";
 
     private SipPhone pstnPhone;
@@ -130,6 +138,7 @@ public class ImsClientsDialTest {
         tool1 = new SipStackTool("ImsClientsDialTest1");
         tool2 = new SipStackTool("ImsClientsDialTest2");
         tool3 = new SipStackTool("ImsClientsDialTest3");
+        tool4 = new SipStackTool("ImsClientsDialTest4");
 
         Class.forName("org.hsqldb.jdbc.JDBCDriver");
     }
@@ -152,10 +161,19 @@ public class ImsClientsDialTest {
         imsJuliusPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, juliusContact);
         imsJuliusPhone.setLoopback(true);
 
+        bobSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5095", "127.0.0.1:5080");
+        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
+        imsBobPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
+        imsBobPhone.setLoopback(true);
+
         pstnPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, pstnContact);
 
         if(isAugustRegistered){
             unregisterAugust();
+        }
+
+        if(isBobRegistered){
+            unregisterBob();
         }
 
         if(isJuliusRegistered){
@@ -169,8 +187,20 @@ public class ImsClientsDialTest {
         if (augustPhone != null) {
             augustPhone.dispose();
         }
+
         if (augustSipStack != null) {
             augustSipStack.dispose();
+        }
+
+        if (bobPhone != null) {
+            bobPhone.dispose();
+        }
+        if (bobSipStack != null) {
+            bobSipStack.dispose();
+        }
+
+        if (imsBobPhone != null) {
+            imsBobPhone.dispose();
         }
 
         if (imsSipStack != null) {
@@ -539,6 +569,52 @@ public class ImsClientsDialTest {
         assertEquals(0, filteredCallsByStatusObject.get("calls").getAsJsonArray().size());
 
         unregisterAugust();
+    }
+
+    @Test
+    public void testWebRTCClientOutgoingOtherDomain() throws ParseException, InterruptedException, SQLException {
+
+        logger.info("testWebRTCClientOutgoingAdisconnect");
+        registerBob();
+
+        SipCall pstnCall = pstnPhone.createSipCall();
+        final SipCall bobCall = bobPhone.createSipCall();
+        initiateBob(pstnCall,pstnContact,bobCall);
+
+        assertTrue(pstnCall.waitForIncomingCall(5 * 1000));
+        assertTrue(pstnCall.sendIncomingCallResponse(Response.RINGING, "RINGING-pstn", 3600));
+
+        SipRequest lastReceivedRequest = pstnCall.getLastReceivedRequest();
+        String receivedBody = new String(lastReceivedRequest.getRawContent());
+        assertTrue(pstnCall.sendIncomingCallResponse(Response.OK, "OK-pstn", 3600, receivedBody, "application", "sdp", null,
+                null));
+
+        assertTrue(lastReceivedRequest.getRequestEvent().getRequest().getHeader("From").toString().contains("bob@bob.com"));
+
+        Thread.sleep(1000);
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertTrue( liveCalls == 2);
+        assertTrue(liveCallsArraySize  == 2);
+
+        Map<String, String> filters = new HashMap<String, String>();
+        JsonObject filteredCallsByStatusObject = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, filters);
+        assertEquals(2, filteredCallsByStatusObject.get("calls").getAsJsonArray().size());
+
+        pstnCall.listenForDisconnect();
+        assertTrue(bobCall.disconnect());
+
+        assertTrue(pstnCall.waitForDisconnect(5 * 1000));
+        assertTrue(pstnCall.respondToDisconnect());
+
+        Thread.sleep(1000);
+
+        filteredCallsByStatusObject = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, filters);
+        assertEquals(0, filteredCallsByStatusObject.get("calls").getAsJsonArray().size());
+
+        unregisterBob();
     }
 
     @Test
@@ -1135,6 +1211,37 @@ public class ImsClientsDialTest {
         Thread.sleep(1000);
     }
 
+    private void unregisterBob() throws InterruptedException{
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                imsBobPhone.listenRequestMessage();
+                RequestEvent requestEvent = imsBobPhone.waitRequest(10000);
+                assertNotNull(requestEvent);
+                try {
+                    Response response = imsSipStack.getMessageFactory().createResponse(200, requestEvent.getRequest());
+                    ContactHeader contactHeader = bobSipStack.getHeaderFactory().createContactHeader();
+                    contactHeader.setExpires(0);
+                    contactHeader.setAddress(bobSipStack.getAddressFactory().createAddress(imsContact));
+                    response.addHeader(contactHeader);
+                    imsBobPhone.sendReply(requestEvent, response);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    fail(e.getMessage());
+                } catch (InvalidArgumentException e) {
+                    e.printStackTrace();
+                    fail(e.getMessage());
+                }
+
+            }
+        });
+
+        assertTrue(bobPhone.unregister(bobContact, 3600));
+        isBobRegistered = false;
+        Thread.sleep(1000);
+    }
+
     private void unregisterJulius() throws InterruptedException{
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(new Runnable() {
@@ -1202,6 +1309,42 @@ public class ImsClientsDialTest {
         augustPhone.addUpdateCredential(c);
     }
 
+    private void registerBob() throws ParseException, InterruptedException{
+        SipURI uri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                imsBobPhone.listenRequestMessage();
+                RequestEvent requestEvent = imsBobPhone.waitRequest(10000);
+                assertNotNull(requestEvent);
+                try {
+                    Response response = imsSipStack.getMessageFactory().createResponse(200, requestEvent.getRequest());
+                    ContactHeader contactHeader = bobSipStack.getHeaderFactory().createContactHeader();
+                    contactHeader.setExpires(14400);
+                    contactHeader.setAddress(bobSipStack.getAddressFactory().createAddress(imsContact));
+                    response.addHeader(contactHeader);
+                    imsBobPhone.sendReply(requestEvent, response);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    fail(e.getMessage());
+                } catch (InvalidArgumentException e) {
+                    e.printStackTrace();
+                    fail(e.getMessage());
+                }
+
+            }
+        });
+
+        assertTrue(bobPhone.register(uri, "bob@bob.com", "1234", bobContact, 14400, 3600));
+        isBobRegistered = true;
+        Thread.sleep(1000);
+
+        Credential c = new Credential("127.0.0.1", "bob@bob.com", "1234");
+        bobPhone.addUpdateCredential(c);
+    }
+
     private void initiateAugust(SipCall toCall, String toUri, SipCall augustCall) throws ParseException, InterruptedException {
         toCall.listenForIncomingCall();
 
@@ -1253,6 +1396,71 @@ public class ImsClientsDialTest {
         dsam.initialize(); // it should read values from file, now all static
 
         ProxyAuthenticateHeader proxyAuthenticate = augustSipStack.getHeaderFactory().createProxyAuthenticateHeader(
+                dsam.getScheme());
+        proxyAuthenticate.setParameter("realm", dsam.getRealm(null));
+        proxyAuthenticate.setParameter("nonce", dsam.generateNonce());
+        // proxyAuthenticateImpl.setParameter("domain",authenticationMethod.getDomain());
+        proxyAuthenticate.setParameter("opaque", "");
+
+        proxyAuthenticate.setParameter("algorithm", dsam.getAlgorithm());
+        ArrayList<Header> headers = new ArrayList<Header>();
+        headers.add(proxyAuthenticate);
+        assertTrue(toCall.sendIncomingCallResponse(Response.PROXY_AUTHENTICATION_REQUIRED, "Non authorized", 3600, headers,
+                null, null));
+
+    }
+
+    private void initiateBob(SipCall toCall, String toUri, SipCall bobCall) throws ParseException, InterruptedException {
+        toCall.listenForIncomingCall();
+
+
+        Thread.sleep(1000);
+
+        //Change UserAgent header to "sipunit" so CallManager
+        ArrayList<String> replaceHeaders = new ArrayList<String>();
+        List<String> userAgentList = new ArrayList<String>();
+        userAgentList.add("wss-sipunit");
+        UserAgentHeader userAgentHeader = bobSipStack.getHeaderFactory().createUserAgentHeader(userAgentList);
+        replaceHeaders.add(userAgentHeader.toString());
+
+        // Bob initiates a call to pstn
+        URI uri1 = bobSipStack.getAddressFactory().createURI("sip:127.0.0.1:5080");
+        SipURI sipURI = (SipURI) uri1;
+        sipURI.setLrParam();
+        Address address = bobSipStack.getAddressFactory().createAddress(uri1);
+
+        RouteHeader routeHeader = bobSipStack.getHeaderFactory().createRouteHeader(address);
+        replaceHeaders.add(routeHeader.toString());
+        Header user = bobSipStack.getHeaderFactory().createHeader("X-RestComm-Ims-User", "myUser");
+        Header pass = bobSipStack.getHeaderFactory().createHeader("X-RestComm-Ims-Password", "myPass");
+        replaceHeaders.add(user.toString());
+        replaceHeaders.add(pass.toString());
+        bobCall.initiateOutgoingCall(bobContact, toUri, null, body, "application", "sdp", null, replaceHeaders);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+
+        Dialog bobDialog = null;
+
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+            bobDialog = bobCall.getDialog();
+            assertNotNull(bobDialog);
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+
+        assertTrue(toCall.waitForIncomingCall(5 * 1000));
+
+        DigestServerAuthenticationMethod dsam = new DigestServerAuthenticationMethod();
+        dsam.initialize(); // it should read values from file, now all static
+
+        ProxyAuthenticateHeader proxyAuthenticate = bobSipStack.getHeaderFactory().createProxyAuthenticateHeader(
                 dsam.getScheme());
         proxyAuthenticate.setParameter("realm", dsam.getRealm(null));
         proxyAuthenticate.setParameter("nonce", dsam.generateNonce());
