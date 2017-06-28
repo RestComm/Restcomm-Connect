@@ -21,17 +21,20 @@ package org.restcomm.connect.http;
 
 import akka.actor.ActorRef;
 import akka.util.Timeout;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.thoughtworks.xstream.XStream;
+
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.amazonS3.RecordingSecurityLevel;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -59,6 +62,7 @@ import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.UpdateCallScript;
+
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -71,6 +75,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+
 import java.net.URI;
 import java.net.URL;
 import java.text.ParseException;
@@ -379,13 +384,13 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         CreateCall create = null;
         try {
             if (to.contains("@")) {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.SIP,
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCallType.SIP,
                         accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
             } else if (to.startsWith("client")) {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.CLIENT,
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCallType.CLIENT,
                         accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
             } else {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.PSTN,
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCallType.PSTN,
                         accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
             }
             create.setCreateCDR(false);

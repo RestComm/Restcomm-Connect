@@ -18,27 +18,8 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-/**
- * When an Extension returns a SessionReponse, RC will reconfigure the session it is in
- */
-package org.restcomm.connect.extension.api;
-import org.apache.commons.configuration.Configuration;
-public class SessionExtensionResponse extends ExtensionResponse {
-    //TODO: needs discussion, definition
-    /**
-     * The Extension is expected to populate the session specific
-     * Configuration
-     */
-    public void setConfiguration(Configuration configuration){
-        super.setObject(configuration);
-    }
+package org.restcomm.connect.commons.telephony;
 
-    /**
-     * RC expects an Extension to populate Configuration when it returns
-     * this SessionResponse
-     * @return Configuration object
-     */
-    public Configuration getConfiguration(){
-        return (Configuration) super.getObject();
-    }
+public enum CreateCallType {
+    CLIENT, PSTN, SIP, USSD
 }

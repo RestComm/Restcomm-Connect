@@ -19,14 +19,29 @@
  */
 package org.restcomm.connect.http;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.NumberParseException.ErrorType;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-import com.thoughtworks.xstream.XStream;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.noContent;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.FORBIDDEN;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
@@ -50,26 +65,14 @@ import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManag
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
 
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.FORBIDDEN;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.noContent;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.NumberParseException.ErrorType;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -81,6 +84,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected PhoneNumberProvisioningManager phoneNumberProvisioningManager;
+    protected IncomingPhoneNumberListConverter listConverter;
     PhoneNumberParameters phoneNumberParameters;
     private IncomingPhoneNumbersDao dao;
     private XStream xstream;
@@ -127,17 +131,20 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                 callbackUrlsConfiguration.getString("ussd[@method]"));
 
         final IncomingPhoneNumberConverter converter = new IncomingPhoneNumberConverter(configuration);
+        listConverter = new IncomingPhoneNumberListConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.serializeNulls();
         builder.registerTypeAdapter(IncomingPhoneNumber.class, converter);
+        builder.registerTypeAdapter(IncomingPhoneNumberList.class, listConverter);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(converter);
-        xstream.registerConverter(new IncomingPhoneNumberListConverter(configuration));
+        xstream.registerConverter(listConverter);
         xstream.registerConverter(new AvailableCountriesConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
+
     }
 
     private IncomingPhoneNumber createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
@@ -247,7 +254,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
     protected Response getAvailableCountries(final String accountSid, final MediaType responseType) {
         secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
         List<String> countries = phoneNumberProvisioningManager.getAvailableCountries();
-        if(countries == null) {
+        if (countries == null) {
             countries = new ArrayList<String>();
             countries.add("US");
         }
@@ -261,14 +268,46 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response getIncomingPhoneNumbers(final String accountSid, final String phoneNumberFilter, final String friendlyNameFilter,
-            PhoneNumberType phoneNumberType, final MediaType responseType) {
+    protected Response getIncomingPhoneNumbers(final String accountSid, final PhoneNumberType phoneNumberType, UriInfo info,
+            final MediaType responseType) {
+
         secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
-        IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter, phoneNumberFilter);
+
+        String phoneNumberFilter = info.getQueryParameters().getFirst("PhoneNumber");
+        String friendlyNameFilter = info.getQueryParameters().getFirst("FriendlyName");
+        String page = info.getQueryParameters().getFirst("Page");
+        String reverse = info.getQueryParameters().getFirst("Reverse");
+        String pageSize = info.getQueryParameters().getFirst("PageSize");
+        String sortBy = info.getQueryParameters().getFirst("SortBy");
+
+        pageSize = (pageSize == null) ? "50" : pageSize;
+        page = (page == null) ? "0" : page;
+        reverse = (reverse != null && "true".equalsIgnoreCase(reverse)) ? "DESC" : "ASC";
+        sortBy = (sortBy != null) ? sortBy : "phone_number";
+
+        int limit = Integer.parseInt(pageSize);
+        int pageAsInt = Integer.parseInt(page);
+        int offset = (page == "0") ? 0 : (((pageAsInt - 1) * limit) + limit);
+        IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter,
+                phoneNumberFilter);
+        final int total = dao.getTotalIncomingPhoneNumbers(incomingPhoneNumberFilter);
+
+        if (pageAsInt > (total / limit)) {
+            return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
+        }
+
+        incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter, phoneNumberFilter, sortBy,
+                reverse, limit, offset);
+
         final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
 
+        listConverter.setCount(total);
+        listConverter.setPage(pageAsInt);
+        listConverter.setPageSize(limit);
+        listConverter.setPathUri("/" + getApiVersion(null) + "/" + info.getPath());
+
         if (APPLICATION_JSON_TYPE == responseType) {
-            return ok(gson.toJson(incomingPhoneNumbers), APPLICATION_JSON).build();
+            return ok(gson.toJson(new IncomingPhoneNumberList(incomingPhoneNumbers)), APPLICATION_JSON).build();
         } else if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new IncomingPhoneNumberList(incomingPhoneNumbers));
             return ok(xstream.toXML(response), APPLICATION_XML).build();

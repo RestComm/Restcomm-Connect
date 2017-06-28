@@ -10,9 +10,11 @@ https://cloud.restcomm.com/restcomm/2012-04-24
 
 The Restcomm REST API is served over HTTPS. To ensure data privacy, unencrypted HTTP is not supported.
 
-== Subresources
+== Sub-Resources
 
 Restcomm Accounts have the following subresources. Click on a link to read the API documentation for accessing or modifying each resource:
+
+=== Developer Sub-Resources
 
 * <<account-api.adoc#account,Restcomm API – Account>>
 * <<Restcomm - Multi-tenancy and Managing Sub-Accounts.adoc#restcomm-rest-api,Multi-tenancy and Managing Sub-Accounts>>
@@ -21,16 +23,19 @@ Restcomm Accounts have the following subresources. Click on a link to read the A
 * <<calls-api.adoc#calls,Restcomm API – Calls>>
 * <<clients-api.adoc#clients,Restcomm API – Clients>>
 * <<email-api.adoc#email,Restcomm API – Email>>
-* <<gateway-api.adoc#gateways,Restcomm API – Gateway>>
+* <<geolocation-api.adoc#geolocationapi, Restcomm API - Geolocation>>
 * <<incoming-phone-numbers-api.adoc#incoming-phone-numbers,Restcomm API – IncomingPhoneNumbers>>
 * <<notifications-api.adoc#notifications,Restcomm API – Notifications>>
-* <<outbound-proxy-api.adoc#outbound-proxy,Restcomm API – OutboundProxy>>
 * <<recordings-api.adoc#recordings,Restcomm API – Recordings>>
 * <<sms-api.adoc#sms,Restcomm API – SMS>>
 * <<transcriptions-api.adoc#transcriptions,Restcomm API – Transcriptions>>
 * <<usage-records-api.adoc#records,Restcomm API – Usage Records>>
 * <<ussd-push-api.adoc#uss-push,Restcomm API – UssdPush>>
-* <<monitoring-service.adoc#monitoring, Restcomm API - Supervisor/Monitoring Service>>
 * <<conferences-api.adoc#conferenceapi, Restcomm API - Conference Management>>
 * <<participants-api.adoc#participantsapi, Restcomm API - Conference Participants Management>>
-* <<geolocation-api.adoc#geolocationapi, Restcomm API - Geolocation>>
+
+=== Management Sub-Resources
+
+* <<gateway-api.adoc#gateways,Restcomm API – Gateway>>
+* <<monitoring-service.adoc#monitoring, Restcomm API - Supervisor/Monitoring Service>>
+* <<outbound-proxy-api.adoc#outbound-proxy,Restcomm API – OutboundProxy>>
