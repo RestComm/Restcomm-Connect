@@ -27,8 +27,10 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
@@ -47,9 +49,8 @@ import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Direction;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;
-import org.restcomm.connect.extension.api.ExtensionResponse;
-import org.restcomm.connect.extension.api.ExtensionRequest;
 import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.IExtensionCreateSmsSessionRequest;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
@@ -61,11 +62,9 @@ import org.restcomm.connect.sms.api.DestroySmsSession;
 import org.restcomm.connect.sms.api.SmsServiceResponse;
 import org.restcomm.connect.sms.api.SmsSessionAttribute;
 import org.restcomm.connect.sms.api.SmsSessionRequest;
-
 import org.restcomm.connect.telephony.api.TextMessage;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
-
 import org.restcomm.smpp.parameter.TlvSet;
 
 import javax.servlet.ServletConfig;
@@ -340,19 +339,11 @@ public final class SmsService extends UntypedActor {
         final ActorRef sender = sender();
         ExtensionController ec = ExtensionController.getInstance();
         if (CreateSmsSession.class.equals(klass)) {
-            //retrieve extension object
-            //FIXME:we need a real interface here rather than amending a preexisting request interface
-            ExtensionRequest er = new ExtensionRequest();
-            er.setObject(message);
-            er.setConfiguration(this.configuration);
-
-            ExtensionResponse extensionResponse = ec.executePreOutboundAction(er, this.extensions);
-            if (extensionResponse.isAllowed()) {
-                //pass in response object to sms session
-                Object obj = ec.handleExtensionResponse(extensionResponse, this.configuration);
-                //FIXME:not all instances of extensions should modify
-                //a session configuration, we should do checks here
-                final ActorRef session = session((Configuration)obj);
+            IExtensionCreateSmsSessionRequest ier = (CreateSmsSession)message;
+            ier.setConfiguration(this.configuration);
+            ec.executePreOutboundAction(ier, this.extensions);
+            if (ier.isAllowed()) {
+                final ActorRef session = session(ier.getConfiguration());
                 final SmsServiceResponse<ActorRef> response = new SmsServiceResponse<ActorRef>(session);
                 sender.tell(response, self);
             } else {
