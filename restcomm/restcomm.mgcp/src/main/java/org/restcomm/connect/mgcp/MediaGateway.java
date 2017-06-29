@@ -298,6 +298,8 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         if (logger.isDebugEnabled()){
             logger.debug("MediaGateway onReceive. self.isTerminated: "+self.isTerminated()+" | Processing "+klass.getName()+" | object snapshot: \n"+this.toString());
         }
+        if(self.isTerminated())
+            logger.error("MediaGateway is Terminated.");
         if (PowerOnMediaGateway.class.equals(klass)) {
             powerOn(message);
         } else if (PowerOffMediaGateway.class.equals(klass)) {
