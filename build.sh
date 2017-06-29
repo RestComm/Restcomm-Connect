@@ -14,8 +14,7 @@ export BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
 
 export DEPENDENCIES_HOME=$WORKSPACE/dependencies
 mkdir $DEPENDENCIES_HOME
-#export RESTCOMM_HOME=$WORKSPACE
-export RESTCOMM_HOME="/home/arslan/Restcomm-Connect"
+export RESTCOMM_HOME=$WORKSPACE
 export RELEASE=$RESTCOMM_HOME/release
 cd $RESTCOMM_HOME/restcomm
 git checkout -b restcomm-release-$MAJOR_VERSION_NUMBER.$BUILD_NUMBER
