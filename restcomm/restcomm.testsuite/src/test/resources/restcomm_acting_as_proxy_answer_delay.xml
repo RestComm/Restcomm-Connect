@@ -60,7 +60,7 @@
 
 		<!-- If set to true Restcomm will authenticate users and incoming messages
 			from those users -->
-		<authenticate>true</authenticate>
+		<authenticate>false</authenticate>
 
 		<!-- If authenticate is set to true Restcomm can work as IMS Client. To enable set act-as-ims-ua to true and
 		 configure IMS domain and IMS Proxy (e.g. P-CSCF or SBC) -->
@@ -78,20 +78,36 @@
 		<!-- using Dial SIP. If username and password are provided it will be added as part of the Dial SIP URI-->
 		<!-- Using this feature, Restcomm will keep RMS in the path-->
 		<acting-as-proxy>
-			<enabled>false</enabled>
+			<enabled>true</enabled>
 			<!-- If set to true, From header will be used to extract the From URI, otherwise Contact header will be used-->
 			<use-from-header>true</use-from-header>
 			<proxy-rules>
+				<!-- from ProxyA (5090) to RC instance A (5091)-->
 				<rule>
-					<from-uri></from-uri>
-					<to-uri></to-uri>
+					<from-uri>127.0.0.1:5090</from-uri>
+					<to-uri>127.0.0.1:5091</to-uri>
+					<!-- Optionally provide username -->
+					<proxy-to-username></proxy-to-username>
+					<proxy-to-password></proxy-to-password>
+				</rule>
+				<!-- from RC instance A (5091) to ProxyA (5090) -->
+				<rule>
+					<from-uri>127.0.0.1:5091</from-uri>
+					<to-uri>127.0.0.1:5090</to-uri>
 					<!-- Optionally provide username -->
 					<proxy-to-username></proxy-to-username>
 					<proxy-to-password></proxy-to-password>
 				</rule>
 				<rule>
-					<from-uri></from-uri>
-					<to-uri></to-uri>
+					<from-uri>127.0.0.1:5092</from-uri>
+					<to-uri>127.0.0.1:5070</to-uri>
+					<!-- Optionally provide username -->
+					<proxy-to-username></proxy-to-username>
+					<proxy-to-password></proxy-to-password>
+				</rule>
+				<rule>
+					<from-uri>127.0.0.1:5070</from-uri>
+					<to-uri>127.0.0.1:5092</to-uri>
 					<!-- Optionally provide username -->
 					<proxy-to-username></proxy-to-username>
 					<proxy-to-password></proxy-to-password>
@@ -138,7 +154,7 @@
 		<!-- If this is set to TRUE, when verb is Dial, delay 200 OK to INVITE until outbound dial answers
 			 or send appropriate response according to the response from outbound dial-->
 		<!--  https://github.com/RestComm/Restcomm-Connect/issues/1649 -->
-		<enable-200-ok-delay>false</enable-200-ok-delay>
+		<enable-200-ok-delay>true</enable-200-ok-delay>
 
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
@@ -380,16 +396,16 @@
             where the other end does not support RTCP, the timer will
             never be initiated.-->
 	<media-server-manager>
-		<mgcp-server class="org.restcomm.connect.mgcp.MediaGateway" name="Mobicents Media Server">
-            <local-address>127.0.0.1</local-address>
-            <local-port>2727</local-port>
-            <remote-address>127.0.0.1</remote-address>
-            <remote-port>2427</remote-port>
-            <response-timeout>500</response-timeout>
-            <external-address><null/></external-address>
-            <rtp-timeout>60</rtp-timeout>
-            <rtp-timeout-timer-start-time>im</rtp-timeout-timer-start-time>
-        </mgcp-server>
+		<mgcp-server class="org.restcomm.connect.mgcp.MockMediaGateway" name="Mobicents Media Server">
+			<local-address>127.0.0.1</local-address>
+			<local-port>2727</local-port>
+			<remote-address>127.0.0.1</remote-address>
+			<remote-port>2427</remote-port>
+			<response-timeout>500</response-timeout>
+			<external-address><null/></external-address>
+			<rtp-timeout>60</rtp-timeout>
+			<rtp-timeout-timer-start-time>im</rtp-timeout-timer-start-time>
+		</mgcp-server>
 		<mrb class="org.restcomm.connect.mrb.MediaResourceBrokerGeneric" name="Community MediaResourceBroker">
 		</mrb>
 	</media-server-manager>
@@ -429,11 +445,11 @@
 	</sms-aggregator>
 
 
-    <!-- by default activateSmppConnection is set to false -->
+	<!-- by default activateSmppConnection is set to false -->
 
-    <smpp class="org.restcomm.connect.sms.smpp.SmppService" activateSmppConnection ="false">
-        <connections>
-            <connection activateAddressMapping="false" sourceAddressMap="" destinationAddressMap="" tonNpiValue="1">
+	<smpp class="org.restcomm.connect.sms.smpp.SmppService" activateSmppConnection ="false">
+		<connections>
+			<connection activateAddressMapping="false" sourceAddressMap="" destinationAddressMap="" tonNpiValue="1">
 				<!-- Name must be unique for each connection -->
 				<name>test</name>
 				<systemid>test</systemid>
@@ -491,38 +507,38 @@
 	<speech-synthesizer active="voicerss"/>
 
 	<!-- The Speech Synthesizer is responsible for turning text in to speech for play back by the media gateway. -->
-		<acapela class="org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer">
-			<service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
-			<application></application>
-			<login></login>
-			<password></password>
-			<speakers>
-				<belgium-french> <female>justine8k</female> <male></male> </belgium-french>
-				<brazilian-portuguese> <female>marcia8k</female> <male></male> </brazilian-portuguese>
-				<british-english> <female>rachel8k</female> <male>graham8k</male> </british-english>
-				<canadian-french> <female>louise8k</female> <male></male> </canadian-french>
-				<czech> <female>eliska8k</female> <male></male> </czech>
-				<danish> <female>mette8k</female><male>rasmus8k</male></danish>
-				<english> <female>laura8k</female> <male>ryan8k</male> </english>
-				<finnish> <female>sanna8k</female> <male></male> </finnish>
-				<french> <female>claire8k</female> <male>bruno8k</male> </french>
-				<german> <female>sarah8k</female> <male>klaus8k</male> </german>
-				<greek> <female></female> <male>dimitris8k</male> </greek>
-				<italian> <female>chiara8k</female> <male>vittorio8k</male> </italian>
-				<netherlands-dutch> <female>jasmijn8k</female> <male>daan8k</male> </netherlands-dutch>
-				<norwegian> <female>kari8k</female> <male>olav8k</male> </norwegian>
-				<polish><female>ania8k</female> <male></male> </polish>
-				<portuguese> <female>celia8k</female><male></male> </portuguese>
-				<russian> <female>alyona8k</female> <male></male></russian>
-				<saudi-arabia-arabic> <female>salma8k</female> <male>mehdi8k</male></saudi-arabia-arabic>
-				<spain-catalan> <female>laia8k</female> <male></male> </spain-catalan>
-				<spanish> <female>maria8k</female> <male>antonio8k</male></spanish>
-				<swedish> <female>elin8k</female> <male>emil8k</male> </swedish>
-				<turkish> <female>ipek8k</female> <male></male> </turkish>
-				<mandarin-chinese> <female>lulu8k</female> <male></male> </mandarin-chinese>
-				<japanese> <female>sakura8k</female> <male></male> </japanese>
-			</speakers>
-		</acapela>
+	<acapela class="org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer">
+		<service-root>http://vaas.acapela-group.com/Services/Synthesizer</service-root>
+		<application></application>
+		<login></login>
+		<password></password>
+		<speakers>
+			<belgium-french> <female>justine8k</female> <male></male> </belgium-french>
+			<brazilian-portuguese> <female>marcia8k</female> <male></male> </brazilian-portuguese>
+			<british-english> <female>rachel8k</female> <male>graham8k</male> </british-english>
+			<canadian-french> <female>louise8k</female> <male></male> </canadian-french>
+			<czech> <female>eliska8k</female> <male></male> </czech>
+			<danish> <female>mette8k</female><male>rasmus8k</male></danish>
+			<english> <female>laura8k</female> <male>ryan8k</male> </english>
+			<finnish> <female>sanna8k</female> <male></male> </finnish>
+			<french> <female>claire8k</female> <male>bruno8k</male> </french>
+			<german> <female>sarah8k</female> <male>klaus8k</male> </german>
+			<greek> <female></female> <male>dimitris8k</male> </greek>
+			<italian> <female>chiara8k</female> <male>vittorio8k</male> </italian>
+			<netherlands-dutch> <female>jasmijn8k</female> <male>daan8k</male> </netherlands-dutch>
+			<norwegian> <female>kari8k</female> <male>olav8k</male> </norwegian>
+			<polish><female>ania8k</female> <male></male> </polish>
+			<portuguese> <female>celia8k</female><male></male> </portuguese>
+			<russian> <female>alyona8k</female> <male></male></russian>
+			<saudi-arabia-arabic> <female>salma8k</female> <male>mehdi8k</male></saudi-arabia-arabic>
+			<spain-catalan> <female>laia8k</female> <male></male> </spain-catalan>
+			<spanish> <female>maria8k</female> <male>antonio8k</male></spanish>
+			<swedish> <female>elin8k</female> <male>emil8k</male> </swedish>
+			<turkish> <female>ipek8k</female> <male></male> </turkish>
+			<mandarin-chinese> <female>lulu8k</female> <male></male> </mandarin-chinese>
+			<japanese> <female>sakura8k</female> <male></male> </japanese>
+		</speakers>
+	</acapela>
 
 	<voicerss class="org.restcomm.connect.tts.voicerss.VoiceRSSSpeechSynthesizer">
 		<service-root>http://api.voicerss.org</service-root>
@@ -559,37 +575,37 @@
 
 	<!-- AWS Polly Speech Synthesizer plugin -->
 	<awspolly class="org.restcomm.connect.tts.awspolly.AWSPollySpeechSyntetizer">
-            <aws-access-key></aws-access-key>
-            <aws-secret-key></aws-secret-key>
-            <aws-region></aws-region>
-            <speakers>
-                <ja-JP><female>Mizuki</female><male></male></ja-JP>
-                <tr-TR><female>Filiz</female><male></male></tr-TR>
-                <ru-RU><female>Tatyana</female><male>Maxim</male></ru-RU>
-                <ro-RO><female>Carmen</female><male>Maxim</male></ro-RO>
-                <pt-PT><female>Ines</female><male>Cristiano</male></pt-PT>
-                <pt-BR><female>Vitoria</female><male>Ricardo</male></pt-BR>
-                <pl-PL><female>Maja</female><male>Jan</male></pl-PL>
-                <nl-NL><female>Lotte</female><male>Ruben</male></nl-NL>
-                <nb-NO><female>Liv</female><male></male></nb-NO>
-                <it-IT><female>Carla</female><male>Giorgio</male></it-IT>
-                <is-IS><female>Dora</female><male>Karl</male></is-IS>
-                <fr-FR><female>Celine</female><male>Mathieu</male></fr-FR>
-                <fr-CA><female>Chantal</female><male></male></fr-CA>
-                <es-US><female>Penelope</female><male>Miguel</male></es-US>
-                <es-ES><female>Conchita</female><male>Enrique</male></es-ES>
-                <en-GB-WLS><female></female><male>Geraint</male></en-GB-WLS>
-                <cy-GB><female>Gwyneth</female><male></male></cy-GB>
-                <en-US><female>Joanna</female><male>Joey</male></en-US>
-                <en-IN><female>Raveena</female><male></male></en-IN>
-                <en-GB><female>Emma</female><male>Brian</male></en-GB>
-                <en-AU><female>Nicole</female><male>Russell</male></en-AU>
-                <de-DE><female>Marlene</female><male>Hans</male></de-DE>
-                <da-DK><female>Naja</female><male>Mads</male></da-DK>
-            </speakers>
+		<aws-access-key></aws-access-key>
+		<aws-secret-key></aws-secret-key>
+		<aws-region></aws-region>
+		<speakers>
+			<ja-JP><female>Mizuki</female><male></male></ja-JP>
+			<tr-TR><female>Filiz</female><male></male></tr-TR>
+			<ru-RU><female>Tatyana</female><male>Maxim</male></ru-RU>
+			<ro-RO><female>Carmen</female><male>Maxim</male></ro-RO>
+			<pt-PT><female>Ines</female><male>Cristiano</male></pt-PT>
+			<pt-BR><female>Vitoria</female><male>Ricardo</male></pt-BR>
+			<pl-PL><female>Maja</female><male>Jan</male></pl-PL>
+			<nl-NL><female>Lotte</female><male>Ruben</male></nl-NL>
+			<nb-NO><female>Liv</female><male></male></nb-NO>
+			<it-IT><female>Carla</female><male>Giorgio</male></it-IT>
+			<is-IS><female>Dora</female><male>Karl</male></is-IS>
+			<fr-FR><female>Celine</female><male>Mathieu</male></fr-FR>
+			<fr-CA><female>Chantal</female><male></male></fr-CA>
+			<es-US><female>Penelope</female><male>Miguel</male></es-US>
+			<es-ES><female>Conchita</female><male>Enrique</male></es-ES>
+			<en-GB-WLS><female></female><male>Geraint</male></en-GB-WLS>
+			<cy-GB><female>Gwyneth</female><male></male></cy-GB>
+			<en-US><female>Joanna</female><male>Joey</male></en-US>
+			<en-IN><female>Raveena</female><male></male></en-IN>
+			<en-GB><female>Emma</female><male>Brian</male></en-GB>
+			<en-AU><female>Nicole</female><male>Russell</male></en-AU>
+			<de-DE><female>Marlene</female><male>Hans</male></de-DE>
+			<da-DK><female>Naja</female><male>Mads</male></da-DK>
+		</speakers>
 	</awspolly>
 
-        <!-- AT&T Speech Synthesizer plugin -->
+	<!-- AT&T Speech Synthesizer plugin -->
 	<!-- <speech-synthesizer class="org.restcomm.connect.tts.att.AttSpeechSynthesizer">
 		<host>127.0.0.1</host> <port>7000</port> <tts-client-directory></tts-client-directory>
 		<verbose-output>false</verbose-output> <speakers> <english> <female>crystal8</female>

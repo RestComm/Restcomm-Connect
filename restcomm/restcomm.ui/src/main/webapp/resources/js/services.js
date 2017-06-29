@@ -62,7 +62,8 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
 
     // creates an auth header using a username (or sid) and a plaintext password (not already md5ed)
     function basicAuthHeader(username, password, skipHash) {
-        var auth_header = "Basic " + btoa(username + ":" + (skipHash ? password : md5.createHash(password)));
+        //var auth_header = "Basic " + btoa(username + ":" + (skipHash ? password : md5.createHash(password)));
+	var auth_header = "Basic " + btoa(username + ":" + password);
         return auth_header;
     }
 

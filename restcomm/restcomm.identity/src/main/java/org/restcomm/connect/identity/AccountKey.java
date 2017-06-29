@@ -32,8 +32,6 @@ public class AccountKey {
         if ( account != null ) {
             if ( challengedKey != null )
                 // Compare both the plaintext version of the token and md5'ed version of it
-                System.out.println("Challenged Key:" + challengedKey);
-                System.out.println("Account Password:" + account.getPassword());
                 if ( challengedKey.equals(account.getPassword()) || BCrypt.checkpw(challengedKey, account.getPassword())) {
                     verified = true;
                 }

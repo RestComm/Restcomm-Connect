@@ -17,7 +17,7 @@ friendly_name VARCHAR(64) NOT NULL,
 parent_sid VARCHAR(34),
 type VARCHAR(8) NOT NULL,
 status VARCHAR(16) NOT NULL,
-auth_token VARCHAR(32) NOT NULL,
+password VARCHAR(62) NOT NULL,
 role VARCHAR(64) NOT NULL,
 uri MEDIUMTEXT NOT NULL
 );
@@ -397,7 +397,7 @@ Date("2012-04-24"),
 null,
 "Full",
 "uninitialized",
-"77f8c12cc7b8f8423e5c38b035249166",
+"$2a$10$b6PdalY9FcHl6SKXs9P5fucCluMe1IdWklxkmjy3ML/oOY6wsCQuq",
 "Administrator",
 "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf");
 
