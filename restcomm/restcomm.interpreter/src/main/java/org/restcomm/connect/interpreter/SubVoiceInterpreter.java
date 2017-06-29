@@ -19,10 +19,12 @@
  */
 package org.restcomm.connect.interpreter;
 
+import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
+import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
@@ -40,7 +42,6 @@ import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.fax.FaxResponse;
@@ -95,19 +96,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
     private Boolean hangupOnEnd = false;
     private ActorRef originalInterpreter;
 
-    public SubVoiceInterpreter(final ActorSystem system, final Configuration configuration, final Sid account, final Sid phone, final String version,
-            final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
-            final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
-            final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage) {
-
-        this(configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod, statusCallback,
-                statusCallbackMethod, emailAddress, callManager, conferenceManager, sms, storage, false);
-    }
-
-    public SubVoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
-                               final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
-                               final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
-                               final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage, final Boolean hangupOnEnd) {
+    public SubVoiceInterpreter(SubVoiceInterpreterParams params) {
         super();
         source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
@@ -161,23 +150,23 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
         // Initialize the runtime stuff.
-        this.accountId = account;
-        this.phoneId = phone;
-        this.version = version;
-        this.url = url;
-        this.method = method;
-        this.fallbackUrl = fallbackUrl;
-        this.fallbackMethod = fallbackMethod;
-        this.viStatusCallback = statusCallback;
-        this.viStatusCallbackMethod = statusCallbackMethod;
-        this.emailAddress = emailAddress;
-        this.configuration = configuration;
-        this.callManager = callManager;
+        this.accountId = params.getAccount();
+        this.phoneId = params.getPhone();
+        this.version = params.getVersion();
+        this.url = params.getUrl();
+        this.method = params.getMethod();
+        this.fallbackUrl = params.getFallbackUrl();
+        this.fallbackMethod = params.getFallbackMethod();
+        this.viStatusCallback = params.getStatusCallback();
+        this.viStatusCallbackMethod = params.getStatusCallbackMethod();
+        this.emailAddress = params.getEmailAddress();
+        this.configuration = params.getConfiguration();
+        this.callManager = params.getCallManager();
 //        this.asrService = asr(configuration.subset("speech-recognizer"));
 //        this.faxService = fax(configuration.subset("fax-service"));
-        this.smsService = sms;
+        this.smsService = params.getSmsService();
         this.smsSessions = new HashMap<Sid, ActorRef>();
-        this.storage = storage;
+        this.storage = params.getStorage();
 //        this.synthesizer = tts(configuration.subset("speech-synthesizer"));
         final Configuration runtime = configuration.subset("runtime-settings");
 //        String path = runtime.getString("cache-path");
@@ -198,7 +187,16 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
 //        uri = uri + accountId.toString();
 //        this.cache = cache(path, uri);
         this.downloader = downloader();
-        this.hangupOnEnd = hangupOnEnd;
+        this.hangupOnEnd = params.getHangupOnEnd();
+    }
+
+    public static Props props(final SubVoiceInterpreterParams params) {
+        return new Props(new UntypedActorFactory() {
+            @Override
+            public Actor create() throws Exception {
+                return new SubVoiceInterpreter(params);
+            }
+        });
     }
 
     private Notification notification(final int log, final int error, final String message) {

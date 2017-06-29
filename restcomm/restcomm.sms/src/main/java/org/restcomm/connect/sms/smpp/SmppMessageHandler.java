@@ -1,7 +1,6 @@
 package org.restcomm.connect.sms.smpp;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -57,7 +56,6 @@ import java.util.Collection;
 public class SmppMessageHandler extends UntypedActor  {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
-    private final ActorSystem system = getContext().system();
     private final ServletContext servletContext;
     private final DaoManager storage;
     private final Configuration configuration;
@@ -160,11 +158,11 @@ public class SmppMessageHandler extends UntypedActor  {
 
                 URI appUri = number.getSmsUrl();
 
-                final SmppInterpreterBuilder builder = new SmppInterpreterBuilder(system);
+                final SmppInterpreterParams.Builder builder = new SmppInterpreterParams.Builder();
                 builder.setSmsService(self);
                 builder.setConfiguration(configuration);
                 builder.setStorage(storage);
-                builder.setAccount(number.getAccountSid());
+                builder.setAccountId(number.getAccountSid());
                 builder.setVersion(number.getApiVersion());
                 final Sid sid = number.getSmsApplicationSid();
                 if (sid != null) {
@@ -182,7 +180,8 @@ public class SmppMessageHandler extends UntypedActor  {
                     builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
                     builder.setFallbackMethod(number.getSmsFallbackMethod());
                 }
-                interpreter = builder.build();
+                final Props props = SmppInterpreter.props(builder.build());
+                interpreter = getContext().actorOf(props);
                 Configuration cfg = this.configuration;
                 //Extension
                 final ActorRef session = session(cfg);
@@ -221,7 +220,7 @@ public class SmppMessageHandler extends UntypedActor  {
                 return new SmsSession(p_configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     public void outbound(SmppOutboundMessageEntity request) throws SmppInvalidArgumentException, IOException {

@@ -39,7 +39,6 @@ import akka.actor.ActorRef;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.dao.DaoManager;
 
-import akka.actor.ActorSystem;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -57,7 +56,6 @@ import com.cloudhopper.smpp.type.Address;
 public final class SmppService extends UntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final ActorSystem system;
     private final ActorRef smppMessageHandler;
     private final Configuration configuration;
     private boolean authenticateUsers = true;
@@ -82,11 +80,10 @@ public final class SmppService extends UntypedActor {
 
     private ArrayList<Smpp> smppList = new ArrayList<Smpp>();
 
-    public SmppService(final ActorSystem system, final Configuration configuration, final SipFactory factory,
+    public SmppService(final Configuration configuration, final SipFactory factory,
                        final DaoManager storage, final ServletContext servletContext, final ActorRef smppMessageHandler) {
 
         super();
-        this.system = system;
         this.smppMessageHandler = smppMessageHandler;
         this.configuration = configuration;
         final Configuration runtime = configuration.subset("runtime-settings");

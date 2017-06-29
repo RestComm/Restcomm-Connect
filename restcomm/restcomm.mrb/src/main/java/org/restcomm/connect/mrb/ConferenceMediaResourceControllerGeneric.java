@@ -21,7 +21,6 @@
 package org.restcomm.connect.mrb;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -101,12 +100,10 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
     // Observer pattern
     protected final List<ActorRef> observers;
     protected ActorRef mrb;
-    protected ActorSystem system;
 
     public ConferenceMediaResourceControllerGeneric(ActorRef localMediaGateway, final Configuration configuration, final DaoManager storage, final ActorRef mrb){
         super();
         final ActorRef source = self();
-        this.system = context().system();
         // Initialize the states for the FSM.
         this.uninitialized = new State("uninitialized", null, null);
         this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(source), null);
@@ -382,7 +379,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
                     return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint);
                 }
             });
-            return system.actorOf(props);
+            return getContext().actorOf(props);
         }
 
         @Override
