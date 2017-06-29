@@ -33,7 +33,6 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -73,16 +72,16 @@ import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.RegistrationsDao;
+import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.MostOptimalNumberResponse;
 import org.restcomm.connect.dao.entities.Notification;
-import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.Registration;
 import org.restcomm.connect.extension.api.CallRequest;
 import org.restcomm.connect.extension.api.ExtensionRequest;
@@ -117,8 +116,6 @@ import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 
 import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
 import akka.actor.ActorContext;
 import akka.actor.ActorRef;
@@ -441,7 +438,7 @@ public final class CallManager extends UntypedActor {
         final ApplicationsDao applications = storage.getApplicationsDao();
         // Try to find an application defined for the client.
         final SipURI fromUri = (SipURI) request.getFrom().getURI();
-        Sid fromOrganizationSid = getOrganizationSidBySipURIHost(fromUri);
+        Sid fromOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromUri);
         if(logger.isDebugEnabled()) {
             logger.debug("fromOrganizationSid: " + fromOrganizationSid);
         }
@@ -490,7 +487,7 @@ public final class CallManager extends UntypedActor {
             logger.info("mediaExternalIp: " + mediaExternalIp);
             logger.info("proxyIp: " + proxyIp);
         }
-        Sid toOrganizationSid = getOrganizationSidBySipURIHost((SipURI) request.getTo().getURI());
+        Sid toOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getTo().getURI());
         if(logger.isDebugEnabled()) {
             logger.debug("toOrganizationSid: " + toOrganizationSid);
         }
@@ -611,23 +608,6 @@ public final class CallManager extends UntypedActor {
 
     }
 
-    /**
-     * getOrganizationSidBySipURIHost
-     *
-     * @param sipURI
-     * @return Sid of Organization
-     */
-    private Sid getOrganizationSidBySipURIHost(final SipURI sipURI){
-        final String organizationDomainName = sipURI.getHost();
-        Organization organization = storage.getOrganizationsDao().getOrganizationByDomainName(organizationDomainName);
-        if(logger.isDebugEnabled())
-            logger.debug("sipURI: "+sipURI+" | organizationDomainName: "+organizationDomainName+ " | organization: "+organization);
-        /*if(organization == null){
-            organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
-            logger.error("organization is null going to choose default: "+organization);
-        }*/
-        return organization == null ? null : organization.getSid();
-    }
     private boolean proxyOut(SipServletRequest request, Client client, String toUser, String toHost, String toHostIpAddress, String toPort, SipURI outboundIntf, String proxyURI, String proxyUsername, String proxyPassword, SipURI from, SipURI to, boolean callToSipUri) throws UnknownHostException {
         final Configuration runtime = configuration.subset("runtime-settings");
         final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address", false);
@@ -883,7 +863,7 @@ public final class CallManager extends UntypedActor {
         }
 
         String phone = cdr.getTo();
-        MostOptimalNumberResponse mostOptimalNumber = getMostOptimalIncomingPhoneNumber(request, phone, cdr.getAccountSid(), false);
+        MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, phone, cdr.getAccountSid(), false);
         IncomingPhoneNumber number = mostOptimalNumber.number();
 
         if (number == null || (number.getReferUrl() == null && number.getReferApplicationSid() == null)) {
@@ -1013,7 +993,7 @@ public final class CallManager extends UntypedActor {
         boolean failCall = false;
         IncomingPhoneNumber number = null;
         try {
-            MostOptimalNumberResponse mostOptimalNumber = getMostOptimalIncomingPhoneNumber(request, phone, fromClientAccountSid, failCall);
+            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, phone, fromClientAccountSid, failCall);
             number = mostOptimalNumber.number();
             failCall = mostOptimalNumber.isFailCall();
             if(failCall){
@@ -1088,108 +1068,6 @@ public final class CallManager extends UntypedActor {
         return isFoundHostedApp;
     }
 
-    /**
-     * @param SipServletRequest
-     * @param phone
-     * @return
-     */
-    private MostOptimalNumberResponse getMostOptimalIncomingPhoneNumber(final SipServletRequest request, String phone, Sid fromClientAccountSid, boolean failCall) {
-        //TODO remove it before merge
-        logger.info("*********************** getMostOptimalIncomingPhoneNumber started ***********************: "+phone);
-
-        IncomingPhoneNumber number = null;
-        Sid destinationOrganizationSid = getOrganizationSidBySipURIHost((SipURI)request.getRequestURI());
-
-        if(destinationOrganizationSid == null){
-            logger.error("destinationOrganizationSid is NULL: reuest Uri is: "+(SipURI)request.getRequestURI());
-        }else{
-            Sid sourceOrganizationSid = null;
-            if(fromClientAccountSid != null){
-                sourceOrganizationSid = storage.getAccountsDao().getAccount(fromClientAccountSid).getOrganizationSid();
-            }
-
-            logger.info("getMostOptimalIncomingPhoneNumber: sourceOrganizationSid: "+sourceOrganizationSid+" : destinationOrganizationSid: "+destinationOrganizationSid);
-
-            // Format the destination to an E.164 phone number.
-            final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-            String formatedPhone = null;
-            if (!(phone.contains("*") || phone.contains("#"))) {
-                try {
-                    formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
-                } catch (NumberParseException e) {
-                    logger.error("Exception when try to format : " + e);
-                }
-            }
-            if (formatedPhone == null) {
-                //Don't format to E.164 if phone contains # or * as this is
-                //for a Regex or USSD short number
-                formatedPhone = phone;
-            }
-            List<IncomingPhoneNumber> numbers = null;
-            // Try to find an application defined for the phone number.
-            final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
-            //get all number with same number, by both formatedPhone and unformatedPhone
-            numbers = numbersDao.getIncomingPhoneNumber(formatedPhone);
-            //TODO remove it before merge
-            logger.info("getMostOptimalIncomingPhoneNumber: get formatedPhone result size: "+numbers.size());
-            numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
-            //TODO remove it before merge
-            logger.info("getMostOptimalIncomingPhoneNumber: get unformatedPhone result size: "+numbers.size());
-            if (phone.startsWith("+")) {
-                //remove the (+) and check if exists
-                phone= phone.replaceFirst("\\+","");
-                numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
-                //TODO remove it before merge
-                logger.info("getMostOptimalIncomingPhoneNumber: get phone without plus result size: "+numbers.size());
-            } else {
-                //Add "+" add check if number exists
-                phone = "+".concat(phone);
-                numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
-                //TODO remove it before merge
-                logger.info("getMostOptimalIncomingPhoneNumber: get phone with plus result size: "+numbers.size());
-            }
-            if(numbers.isEmpty()){
-                // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
-                numbers.addAll(numbersDao.getIncomingPhoneNumber("*"));
-            }
-            numbers = getDistinctNumbersList(numbers);
-            //TODO remove it before merge
-            logger.info("getMostOptimalIncomingPhoneNumber: list size after getDistinctNumbersList: "+numbers.size());
-            if(!numbers.isEmpty()){
-                // find number in same organization
-                for(IncomingPhoneNumber n : numbers){
-                    //TODO remove it before merge
-                    logger.info("getMostOptimalIncomingPhoneNumber: sourceOrganizationSid: "+sourceOrganizationSid+" destinationOrganizationSid: "+destinationOrganizationSid+" n.isPureSip(): "+n.isPureSip());
-                    if(n.getOrganizationSid().equals(destinationOrganizationSid)){
-                        /*
-                         * check if request is coming from same org
-                         * if not then only allow provider numbers
-                         */
-                        if((sourceOrganizationSid != null && sourceOrganizationSid.equals(destinationOrganizationSid)) || (sourceOrganizationSid == null) || !n.isPureSip()){
-                            number = n;
-                            //TODO remove it before merge
-                            logger.info("found number: "+number+" | org: "+n.getOrganizationSid()+" | isPureSip: "+n.isPureSip());
-                        }
-                    }
-                    if(number != null)
-                        break;
-                }
-                failCall = number == null;
-            }
-        }
-        //TODO remove it before merge
-        logger.info("*********************** getMostOptimalIncomingPhoneNumber ended ***********************"+number);
-        return new MostOptimalNumberResponse(number, failCall);
-    }
-
-    private List<IncomingPhoneNumber> getDistinctNumbersList(List<IncomingPhoneNumber> numbers){
-        List<IncomingPhoneNumber> distinctNumbers = new ArrayList<IncomingPhoneNumber>();
-        for(IncomingPhoneNumber number : numbers){
-            if(!distinctNumbers.contains(number))
-                distinctNumbers.add(number);
-        }
-        return distinctNumbers;
-    }
     /**
      * If there is VoiceUrl provided for a Client configuration, try to begin execution of the RCML app, otherwise return false.
      *
@@ -2266,7 +2144,7 @@ public final class CallManager extends UntypedActor {
             logger.info("looking for registrations for number: " + formattedNumber);
         }
         final RegistrationsDao registrationsDao = storage.getRegistrationsDao();
-        Sid orgSid = getOrganizationSidBySipURIHost((SipURI)regUri);
+        Sid orgSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI)regUri);
         if(orgSid == null){
             logger.error("Null Organization: regUri: "+regUri);
             orgSid = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization)).getSid();
@@ -2396,22 +2274,6 @@ public final class CallManager extends UntypedActor {
             }
             call.tell(init, self);
             sender.tell(new CallManagerResponse<ActorRef>(call), self());
-        }
-    }
-
-    private class MostOptimalNumberResponse{
-        private final IncomingPhoneNumber number;
-        private final boolean failCall;
-        public MostOptimalNumberResponse(IncomingPhoneNumber number, boolean failCall) {
-            super();
-            this.number = number;
-            this.failCall = failCall;
-        }
-        public IncomingPhoneNumber number() {
-            return number;
-        }
-        public boolean isFailCall() {
-        return failCall;
         }
     }
 }

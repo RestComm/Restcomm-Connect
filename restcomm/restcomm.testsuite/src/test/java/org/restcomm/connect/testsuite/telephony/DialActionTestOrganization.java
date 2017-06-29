@@ -44,6 +44,7 @@ import java.util.List;
 
 import javax.sip.Dialog;
 import javax.sip.address.SipURI;
+import javax.sip.message.Request;
 import javax.sip.message.Response;
 
 import org.apache.log4j.Logger;
@@ -66,8 +67,9 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mobicents.ext.javax.sip.dns.DNSLookupPerformer;
+import org.mobicents.ext.javax.sip.dns.DefaultDNSLookupPerformer;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.testsuite.http.CreateClientsTool;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.http.RestcommConferenceParticipantsTool;
 import org.restcomm.connect.testsuite.http.RestcommConferenceTool;
@@ -77,6 +79,8 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Test for Dial Action attribute for organization
@@ -213,6 +217,31 @@ public class DialActionTestOrganization {
         pstnPhone = pstnSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, pstnContact);
         
     }
+
+	@Test
+	public void testMessageClientSentToOtherClientSameOrganization () throws ParseException {
+
+		SipURI uri = mariaSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+		assertTrue(mariaPhoneOrg2.register(uri, "maria", clientPassword, "sip:maria@127.0.0.1:5093", 3600, 3600));
+		Credential mariaCred = new Credential("org2.restcomm.com","maria","1234");
+		mariaPhoneOrg2.addUpdateCredential(mariaCred);
+
+		assertTrue(shoaibPhoneOrg2.register(uri,"shoaib", clientPassword,"sip:shoaib@127.0.0.1:5094", 3600, 3600));
+		Credential shoaibCread = new Credential("org2.restcomm.com","shoaib","1234");
+		shoaibPhoneOrg2.addUpdateCredential(shoaibCread);
+
+		SipCall shoaibCall = shoaibPhoneOrg2.createSipCall();
+		shoaibCall.listenForMessage();
+
+		SipCall mariaCall = mariaPhoneOrg2.createSipCall();
+		assertTrue(mariaCall.initiateOutgoingMessage("sip:shoaib@org2.restcomm.com", null, "Test Message from maria"));
+		assertTrue(mariaCall.waitForAuthorisation(5000));
+		assertTrue(mariaCall.waitOutgoingMessageResponse(5000));
+
+		assertTrue(shoaibCall.waitForMessage(5000));
+		Request msgReceived = shoaibCall.getLastReceivedMessageRequest();
+		assertTrue(new String(msgReceived.getRawContent()).equals("Test Message from maria"));
+	}
     
     @Test
     @Ignore
@@ -226,9 +255,11 @@ public class DialActionTestOrganization {
     	 * test case:
     	 * bob@org3 will dial a sip number X@org2
     	 * X is mapped on an RCML that dials sip like <Dial><Sip>sip:Y@org2.restcomm.com</Sip></Dial>
-    	 * everything goes well
+    	 * 
     	 */
 
+    	DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
+    	
     	//bob@org3 will dial a sip number X@org3
     	SipURI uri = bobSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(bobPhoneOrg3.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5092", 3600, 3600));
@@ -895,18 +926,13 @@ public class DialActionTestOrganization {
         assertTrue(bobCallOrg2.waitForDisconnect(50 * 1000));
         assertTrue(bobCallOrg2.respondToDisconnect());
 
-//        logger.info("&&&&&&&&&&&&&&&&&&&&&& Alice about to listen for CANCEL");
-//        SipTransaction sipTransaction = aliceCall.waitForCancel(50 * 1000);
-//        assertNotNull(sipTransaction);
-//        aliceCall.respondToCancel(sipTransaction,200,"Alice-OK-To-Cancel",3600);
-//        aliceCall.respondToCancel(sipTransaction,487,"Alice-Request-Terminated",3600);
-
         Thread.sleep(10 * 1000);
 
         logger.info("About to check the DialAction Requests");
         List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
         assertEquals(1, requests.size());
         String requestBody = requests.get(0).getBodyAsString();
+        logger.info("DialAction requestBody: "+requestBody);
         String[] params = requestBody.split("&");
         assertTrue(requestBody.contains("DialCallStatus=completed"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
