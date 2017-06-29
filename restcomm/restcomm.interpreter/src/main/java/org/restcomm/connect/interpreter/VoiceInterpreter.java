@@ -2998,8 +2998,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             if (!dialActionExecuted) {
                 executeDialAction(message, outboundCall);
-                callback(true);
             }
+
+            callback(true);
+
             // XXX review bridge cleanup!!
 
             // Cleanup bridge
