@@ -20,7 +20,6 @@
 package org.restcomm.connect.telephony;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -53,7 +52,6 @@ public final class ConferenceCenter extends UntypedActor {
     private final Map<String, ActorRef> conferences;
     private final Map<String, List<ActorRef>> initializing;
     private final DaoManager storage;
-    private final ActorSystem system;
 
     public ConferenceCenter(final MediaServerControllerFactory factory, final DaoManager storage) {
         super();
@@ -61,7 +59,6 @@ public final class ConferenceCenter extends UntypedActor {
         this.conferences = new HashMap<String, ActorRef>();
         this.initializing = new HashMap<String, List<ActorRef>>();
         this.storage = storage;
-        this.system = context().system();
     }
 
     private ActorRef getConference(final String name) {
@@ -71,10 +68,10 @@ public final class ConferenceCenter extends UntypedActor {
             @Override
             public UntypedActor create() throws Exception {
                 //Here Here we can pass Gateway where call is connected
-                return new Conference(name, factory.provideConferenceController(), storage);
+                return new Conference(name, factory, storage);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     @Override

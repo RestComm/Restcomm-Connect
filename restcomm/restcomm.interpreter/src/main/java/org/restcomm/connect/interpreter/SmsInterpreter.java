@@ -21,7 +21,6 @@ package org.restcomm.connect.interpreter;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -99,7 +98,6 @@ public final class SmsInterpreter extends UntypedActor {
     // Logger
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final ActorSystem system;
     // States for the FSM.
     private final State uninitialized;
     private final State acquiringLastSmsRequest;
@@ -149,12 +147,9 @@ public final class SmsInterpreter extends UntypedActor {
     private ConcurrentHashMap<String, String> customHttpHeaderMap = new ConcurrentHashMap<String, String>();
     private ConcurrentHashMap<String, String> customRequestHeaderMap;
 
-    public SmsInterpreter(final ActorRef service, final Configuration configuration, final DaoManager storage,
-            final Sid accountId, final String version, final URI url, final String method, final URI fallbackUrl,
-            final String fallbackMethod) {
+    public SmsInterpreter(final SmsInterpreterParams params) {
         super();
         final ActorRef source = self();
-        this.system = context().system();
         uninitialized = new State("uninitialized", null, null);
         acquiringLastSmsRequest = new State("acquiring last sms event", new AcquiringLastSmsEvent(source), null);
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
@@ -210,20 +205,29 @@ public final class SmsInterpreter extends UntypedActor {
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
         // Initialize the runtime stuff.
-        this.service = service;
+        this.service = params.getSmsService();
         this.downloader = downloader();
-        this.storage = storage;
-        this.emailconfiguration = configuration.subset("smtp-service");
-        this.runtime = configuration.subset("runtime-settings");
-        this.configuration = configuration.subset("sms-aggregator");
-        this.accountId = accountId;
-        this.version = version;
-        this.url = url;
-        this.method = method;
-        this.fallbackUrl = fallbackUrl;
-        this.fallbackMethod = fallbackMethod;
+        this.storage = params.getStorage();
+        this.emailconfiguration = params.getConfiguration().subset("smtp-service");
+        this.runtime = params.getConfiguration().subset("runtime-settings");
+        this.configuration = params.getConfiguration().subset("sms-aggregator");
+        this.accountId = params.getAccountId();
+        this.version = params.getVersion();
+        this.url = params.getUrl();
+        this.method = params.getMethod();
+        this.fallbackUrl = params.getFallbackUrl();
+        this.fallbackMethod = params.getFallbackMethod();
         this.sessions = new HashMap<Sid, ActorRef>();
         this.normalizeNumber = runtime.getBoolean("normalize-numbers-for-outbound-calls");
+    }
+
+    public static Props props(final SmsInterpreterParams params) {
+        return new Props(new UntypedActorFactory() {
+            @Override
+            public Actor create() throws Exception {
+                return new SmsInterpreter(params);
+            }
+        });
     }
 
     private ActorRef downloader() {
@@ -235,7 +239,7 @@ public final class SmsInterpreter extends UntypedActor {
                 return new Downloader();
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     ActorRef mailer(final Configuration configuration) {
@@ -247,7 +251,7 @@ public final class SmsInterpreter extends UntypedActor {
                 return new EmailService(configuration);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     protected String format(final String number) {
@@ -444,7 +448,7 @@ public final class SmsInterpreter extends UntypedActor {
                 return new Parser(xml, self());
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private void response(final Object message) {

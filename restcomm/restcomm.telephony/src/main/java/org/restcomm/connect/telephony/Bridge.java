@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.telephony.api.BridgeStateChanged;
 import org.restcomm.connect.telephony.api.JoinCalls;
 import org.restcomm.connect.telephony.api.StartBridge;
@@ -83,11 +84,11 @@ public class Bridge extends UntypedActor {
     // Observer pattern
     private final List<ActorRef> observers;
 
-    public Bridge(final ActorRef mscontroller) {
+    public Bridge(MediaServerControllerFactory factory) {
         final ActorRef source = self();
 
         // Media Server Controller
-        this.mscontroller = mscontroller;
+        this.mscontroller = getContext().actorOf(factory.provideBridgeControllerProps());
 
         // States for the FSM
         this.uninitialized = new State("uninitialized", null, null);

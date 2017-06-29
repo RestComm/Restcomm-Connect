@@ -145,7 +145,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
         });
-        return context().system().actorOf(props);
+        return getContext().actorOf(props);
     }
 
     /**
@@ -202,7 +202,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
                 return new ConferenceMediaResourceControllerGeneric(localMediaGateway, configuration, storage, self());
             }
         });
-        return context().system().actorOf(props);
+        return getContext().actorOf(props);
     }
 
     /**

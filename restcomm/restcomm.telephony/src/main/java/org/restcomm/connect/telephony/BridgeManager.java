@@ -22,7 +22,6 @@
 package org.restcomm.connect.telephony;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -43,12 +42,10 @@ public class BridgeManager extends UntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     private final MediaServerControllerFactory factory;
-    private final ActorSystem system;
 
     public BridgeManager(final MediaServerControllerFactory factory) {
         super();
         this.factory = factory;
-        this.system = context().system();
     }
 
     private ActorRef createBridge() {
@@ -57,10 +54,10 @@ public class BridgeManager extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Bridge(factory.provideBridgeController());
+                return new Bridge(factory);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     /*

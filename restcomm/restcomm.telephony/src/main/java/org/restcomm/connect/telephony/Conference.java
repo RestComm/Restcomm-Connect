@@ -38,6 +38,7 @@ import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
+import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.JoinCall;
 import org.restcomm.connect.mscontrol.api.messages.JoinComplete;
@@ -105,7 +106,7 @@ public final class Conference extends UntypedActor {
 
     private ConferenceStateChanged.State waitingState;
 
-    public Conference(final String name, final ActorRef msController, final DaoManager storage) {
+    public Conference(final String name, final MediaServerControllerFactory factory, final DaoManager storage) {
         super();
         final ActorRef source = self();
 
@@ -147,7 +148,7 @@ public final class Conference extends UntypedActor {
 
         //generate it later at MRB level, by watching if same conference is running on another RC instance.
         //this.sid = Sid.generate(Sid.Type.CONFERENCE);
-        this.mscontroller = msController;
+        this.mscontroller = getContext().actorOf(factory.provideConferenceControllerProps());
         this.calls = new ArrayList<ActorRef>();
         this.observers = new ArrayList<ActorRef>();
     }

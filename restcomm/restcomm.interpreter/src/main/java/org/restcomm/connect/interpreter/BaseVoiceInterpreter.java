@@ -21,7 +21,6 @@ package org.restcomm.connect.interpreter;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -139,8 +138,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
     static String EMAIL_SENDER = "restcomm@restcomm.org";
-
-    protected final ActorSystem system;
 
     // States for the FSM.
     // ==========================
@@ -260,7 +257,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     public BaseVoiceInterpreter() {
         super();
         final ActorRef source = self();
-        this.system = context().system();
         // 20 States in common
         uninitialized = new State("uninitialized", null, null);
         acquiringAsrInfo = new State("acquiring asr info", new AcquiringAsrInfo(source), null);
@@ -418,7 +414,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new ISpeechAsr(configuration);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     @SuppressWarnings("unchecked")
@@ -467,7 +463,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new InterfaxService(configuration);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     //Callback using the Akka ask pattern (http://doc.akka.io/docs/akka/2.2.5/java/untyped-actors.html#Ask__Send-And-Receive-Future) will force VoiceInterpter to wait until
@@ -536,7 +532,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new DiskCacheFactory(configuration).getDiskCache(path, uri);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     ActorRef downloader() {
@@ -548,7 +544,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new Downloader();
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     String e164(final String number) {
@@ -581,7 +577,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new EmailService(configuration);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private Notification notification(final int log, final int error, final String message) {
@@ -646,18 +642,18 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     return new Parser(xml, self());
                 }
             });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     void postCleanup() {
         if (smsSessions.isEmpty() && outstandingAsrRequests == 0) {
             final UntypedActorContext context = getContext();
             if (parser != null)
-                system.stop(parser);
+                getContext().stop(parser);
             context.stop(self());
         }
         if (downloader != null && !downloader.isTerminated()) {
-            system.stop(downloader);
+            getContext().stop(downloader);
         }
     }
 
@@ -815,7 +811,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(ttsConf);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     abstract class AbstractAction implements Action {

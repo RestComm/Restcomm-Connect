@@ -54,7 +54,8 @@ import org.restcomm.connect.extension.api.IExtensionCreateSmsSessionRequest;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
-import org.restcomm.connect.interpreter.SmsInterpreterBuilder;
+import org.restcomm.connect.interpreter.SmsInterpreter;
+import org.restcomm.connect.interpreter.SmsInterpreterParams;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.sms.api.CreateSmsSession;
@@ -291,11 +292,11 @@ public final class SmsService extends UntypedActor {
                 URI appUri = number.getSmsUrl();
                 ActorRef interpreter = null;
                 if (appUri != null || number.getSmsApplicationSid() != null) {
-                    final SmsInterpreterBuilder builder = new SmsInterpreterBuilder(system);
+                    final SmsInterpreterParams.Builder builder = new SmsInterpreterParams.Builder();
                     builder.setSmsService(self);
                     builder.setConfiguration(configuration);
                     builder.setStorage(storage);
-                    builder.setAccount(number.getAccountSid());
+                    builder.setAccountId(number.getAccountSid());
                     builder.setVersion(number.getApiVersion());
                     final Sid sid = number.getSmsApplicationSid();
                     if (sid != null) {
@@ -315,7 +316,8 @@ public final class SmsService extends UntypedActor {
                         builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
                         builder.setFallbackMethod(number.getSmsFallbackMethod());
                     }
-                    interpreter = builder.build();
+                    final Props props = SmsInterpreter.props(builder.build());
+                    interpreter = getContext().actorOf(props);
                 }
                 //TODO:do extensions check here too?
                 final ActorRef session = session(this.configuration);
@@ -420,7 +422,7 @@ public final class SmsService extends UntypedActor {
                 return new SmsSession(p_configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     // used for sending warning and error logs to notification engine and to the console

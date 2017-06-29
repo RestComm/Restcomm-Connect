@@ -21,7 +21,6 @@ package org.restcomm.connect.mgcp;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -77,13 +76,11 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
     private RevolvingCounter requestIdPool;
     private RevolvingCounter sessionIdPool;
     private RevolvingCounter transactionIdPool;
-    private ActorSystem system;
 
     public MediaGateway() {
         super();
         notificationListeners = new ConcurrentHashMap<String, ActorRef>();
         responseListeners = new ConcurrentHashMap<Integer, ActorRef>();
-        system = context().system();
     }
 
     private ActorRef getConnection(final Object message) {
@@ -99,7 +96,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
                 return new Connection(gateway, session, agent, timeout);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private ActorRef getBridgeEndpoint(final Object message) {
@@ -127,7 +124,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
                 }
             });
         }
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private ActorRef getConferenceEndpoint(final Object message) {
@@ -143,7 +140,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
                 return new ConferenceEndpoint(gateway, session, agent, domain, timeout, endpointName);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private MediaGatewayInfo getInfo(final Object message) {
@@ -163,7 +160,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
                     return new IvrEndpoint(gateway, session, agent, domain, timeout, endpointName);
                 }
             });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private ActorRef getLink(final Object message) {
@@ -179,7 +176,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
                 return new Link(gateway, session, agent, timeout, connectionIdentifier);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private ActorRef getPacketRelayEndpoint(final Object message) {
@@ -194,7 +191,7 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
                 return new PacketRelayEndpoint(gateway, session, agent, domain, timeout);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private MediaSession getSession() {

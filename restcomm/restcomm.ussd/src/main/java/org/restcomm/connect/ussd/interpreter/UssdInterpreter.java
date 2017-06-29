@@ -22,7 +22,6 @@ package org.restcomm.connect.ussd.interpreter;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -104,7 +103,6 @@ public class UssdInterpreter extends UntypedActor {
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final ActorSystem system;
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
@@ -174,13 +172,9 @@ public class UssdInterpreter extends UntypedActor {
     private final State ready;
     private final State notFound;
 
-    public UssdInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
-                           final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
-                           final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
-                           final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage) {
+    public UssdInterpreter(final UssdInterpreterParams params) {
         super();
         final ActorRef source = self();
-        this.system = context().system();
 
         uninitialized = new State("uninitialized", null, null);
         observeCall = new State("observe call", new ObserveCall(source), null);
@@ -221,19 +215,19 @@ public class UssdInterpreter extends UntypedActor {
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
         // Initialize the runtime stuff.
-        this.accountId = account;
-        this.phoneId = phone;
-        this.version = version;
-        this.url = url;
-        this.method = method;
-        this.fallbackUrl = fallbackUrl;
-        this.fallbackMethod = fallbackMethod;
-        this.statusCallback = statusCallback;
-        this.statusCallbackMethod = statusCallbackMethod;
-        this.emailAddress = emailAddress;
-        this.configuration = configuration;
+        this.accountId = params.getAccount();
+        this.phoneId = params.getPhone();
+        this.version = params.getVersion();
+        this.url = params.getUrl();
+        this.method = params.getMethod();
+        this.fallbackUrl = params.getFallbackUrl();
+        this.fallbackMethod = params.getFallbackMethod();
+        this.statusCallback = params.getStatusCallback();
+        this.statusCallbackMethod = params.getStatusCallbackMethod();
+        this.emailAddress = params.getEmailAddress();
+        this.configuration = params.getConfiguration();
 
-        this.storage = storage;
+        this.storage = params.getStorage();
         final Configuration runtime = configuration.subset("runtime-settings");
         String path = runtime.getString("cache-path");
         if (!path.endsWith("/")) {
@@ -241,6 +235,15 @@ public class UssdInterpreter extends UntypedActor {
         }
         path = path + accountId.toString();
         this.downloader = downloader();
+    }
+
+    public static Props props(final UssdInterpreterParams params) {
+        return new Props(new UntypedActorFactory() {
+            @Override
+            public Actor create() throws Exception {
+                return new UssdInterpreter(params);
+            }
+        });
     }
 
     private Notification notification(final int log, final int error, final String message) {
@@ -300,7 +303,7 @@ public class UssdInterpreter extends UntypedActor {
                 return new EmailService(configuration);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     ActorRef downloader() {
@@ -311,7 +314,7 @@ public class UssdInterpreter extends UntypedActor {
                 return new Downloader();
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     ActorRef parser(final String xml) {
@@ -323,7 +326,7 @@ public class UssdInterpreter extends UntypedActor {
                 return new Parser(xml, self());
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     void invalidVerb(final Tag verb) {

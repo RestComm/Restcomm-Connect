@@ -1,9 +1,5 @@
 package org.restcomm.connect.commons.faulttolerance.tool;
 
-import static akka.pattern.Patterns.ask;
-
-import java.util.concurrent.TimeUnit;
-
 import akka.actor.ActorSystem;
 import org.restcomm.connect.commons.faulttolerance.SupervisorActorCreationStressTest;
 
@@ -13,8 +9,6 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
 
 /**
  * MyUntypedActor represent a restcomm-connect class that request supervisor to create actor for it
