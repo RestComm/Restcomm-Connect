@@ -27,6 +27,12 @@
 		<conference-entry-audio>beep.wav</conference-entry-audio>
 		<conference-exit-audio>alert.wav</conference-exit-audio>
 
+		<!-- Speech to text drivers -->
+		<!--mg-asr-drivers default="driver1">
+			<driver>driver1</driver>
+			<driver>driver2</driver>
+		</mg-asr-drivers-->
+
 		<!-- Cache settings. -->
 		<cache-path>${restcomm:home}/cache</cache-path>
 		<cache-uri>/restcomm/cache</cache-uri>

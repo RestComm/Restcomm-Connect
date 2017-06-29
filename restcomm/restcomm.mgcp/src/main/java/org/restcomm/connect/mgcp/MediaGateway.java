@@ -18,7 +18,6 @@
  *
  */
 package org.restcomm.connect.mgcp;
-
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -39,6 +38,7 @@ import jain.protocol.ip.mgcp.message.Constants;
 import jain.protocol.ip.mgcp.message.NotificationRequest;
 import jain.protocol.ip.mgcp.message.Notify;
 import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
+import jain.protocol.ip.mgcp.message.parms.EventName;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 import org.restcomm.connect.commons.util.RevolvingCounter;
 
@@ -264,6 +264,11 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         transactionIdPool = new RevolvingCounter(1, Long.MAX_VALUE);
     }
 
+    private boolean isPartialNotify(final Notify notify) {
+        EventName[] events = notify.getObservedEvents();
+        return events != null && events.length != 0 && MgcpUtil.isPartialNotify(events[events.length - 1]);
+    }
+
     @Override
     public void processMgcpCommandEvent(final JainMgcpCommandEvent event) {
         final int value = event.getObjectIdentifier();
@@ -271,7 +276,13 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
             case Constants.CMD_NOTIFY: {
                 final Notify notify = (Notify) event;
                 final String id = notify.getRequestIdentifier().toString();
-                final ActorRef listener = notificationListeners.remove(id);
+
+                final ActorRef listener;
+                if (isPartialNotify(notify)) {
+                    listener = notificationListeners.get(id);
+                } else {
+                    listener = notificationListeners.remove(id);
+                }
                 if (listener != null) {
                     listener.tell(notify, self());
                 }
