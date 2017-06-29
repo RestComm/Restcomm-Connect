@@ -1484,10 +1484,10 @@ public class TestDialVerbPartTwo {
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.BUSY_HERE, bobCall.getLastReceivedResponse().getStatusCode());
     }
-    
+
     private String dialClientWithActionRcml = "<Response><Dial action=\"http://127.0.0.1:8090/action\" method=\"GET\"><Client>alice</Client></Dial></Response>";
     private String hangupActionRcml = "<Response><Hangup /></Response>";
-    
+
     @Test // (customised from testDialClientAliceWithRecordAndStatusCallbackForApp)
     public synchronized void testDialClientAliceWithActionAndStatusCallbackForApp() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1543,7 +1543,7 @@ public class TestDialVerbPartTwo {
         Thread.sleep(3000);
 
         // hangup (must be as alice, the callee, hanging up in order to test the specific issue found)
-        
+
         aliceCall.disconnect();
         bobCall.listenForDisconnect();
         assertTrue(bobCall.waitForDisconnect(3 * 1000));
@@ -1559,9 +1559,9 @@ public class TestDialVerbPartTwo {
         }
         assertTrue(requests.size()==3);
     }
-    
+
     private String dialTimeOutClientWithActionRcml = "<Response><Dial timeout=\"3\" action=\"http://127.0.0.1:8090/action\" method=\"GET\"><Client>alice</Client></Dial></Response>";
-    
+
     @Test // (customised from testDialClientAliceWithRecordAndStatusCallbackForApp)
     public synchronized void testDialTimeOutClientAliceWithActionAndStatusCallbackForApp() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1609,7 +1609,6 @@ public class TestDialVerbPartTwo {
 
         assertTrue(aliceCall.waitForIncomingCall(3 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
 
         aliceCall.listenForCancel();
 
@@ -1618,7 +1617,7 @@ public class TestDialVerbPartTwo {
         assertTrue(aliceCall.respondToCancel(cancelTransaction, Response.OK, "Alice-OK-2-Cancel", 3600));
 
         // hangup (must be as alice, the callee, hanging up in order to test the specific issue found)
-        
+
         bobCall.listenForDisconnect();
         assertTrue(bobCall.waitForDisconnect(3 * 1000));
         assertTrue(bobCall.respondToDisconnect());
@@ -1631,7 +1630,7 @@ public class TestDialVerbPartTwo {
         for (LoggedRequest loggedRequest : requests) {
             logger.info("Status callback received: " + loggedRequest.getUrl());
         }
-        assertTrue(requests.size()==4);
+        assertEquals(4, requests.size());
 }
 
     @Deployment(name = "TestDialVerbPartTwo", managed = true, testable = false)
