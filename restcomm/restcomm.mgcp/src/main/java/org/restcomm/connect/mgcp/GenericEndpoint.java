@@ -53,6 +53,9 @@ public abstract class GenericEndpoint extends UntypedActor {
     protected final NotifiedEntity entity;
     protected EndpointIdentifier id;
     protected AtomicBoolean destroying;
+    protected AtomicBoolean pendingDestroy;
+    protected ActorRef pendingDestroyEndpointSender;
+    protected DestroyEndpoint pendingDestroyEndpointMessage;
     protected final long timeout;
 
     protected final List<ActorRef> observers;
@@ -65,6 +68,7 @@ public abstract class GenericEndpoint extends UntypedActor {
         this.entity = entity;
         this.id = id;
         this.destroying = new AtomicBoolean(false);
+        this.pendingDestroy = new AtomicBoolean(false);
         this.observers = new ArrayList<ActorRef>(1);
         this.timeout = timeout;
     }
@@ -85,6 +89,10 @@ public abstract class GenericEndpoint extends UntypedActor {
         } else if (UpdateEndpointId.class.equals(klass)) {
             final UpdateEndpointId request = (UpdateEndpointId) message;
             id = request.id();
+            if (pendingDestroy.get()) {
+                pendingDestroy.set(false);
+                onDestroyEndpoint(pendingDestroyEndpointMessage, self(), pendingDestroyEndpointSender);
+            }
         } else if (DestroyEndpoint.class.equals(klass)) {
             onDestroyEndpoint((DestroyEndpoint) message, self, sender);
         } else if (message instanceof JainMgcpResponseEvent) {
@@ -112,12 +120,26 @@ public abstract class GenericEndpoint extends UntypedActor {
     }
 
     protected void onDestroyEndpoint(DestroyEndpoint message, ActorRef self, ActorRef sender) {
-        if (!this.destroying.get()) {
-            this.destroying.set(true);
-            DeleteConnection dlcx = new DeleteConnection(self, this.id);
-            this.gateway.tell(dlcx, self);
-            // Make sure we don't wait forever
-            getContext().setReceiveTimeout(Duration.create(timeout, TimeUnit.MILLISECONDS));
+        if (!id.getLocalEndpointName().contains("$")) {
+            if (!this.destroying.get()) {
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("About to destroy endoint %s", id);
+                    logger.info(msg);
+                }
+                this.destroying.set(true);
+                DeleteConnection dlcx = new DeleteConnection(self, this.id);
+                this.gateway.tell(dlcx, self);
+                // Make sure we don't wait forever
+                getContext().setReceiveTimeout(Duration.create(timeout, TimeUnit.MILLISECONDS));
+            }
+        } else {
+            this.pendingDestroy.set(true);
+            this.pendingDestroyEndpointSender = sender;
+            this.pendingDestroyEndpointMessage = message;
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("DestroyEndoint %s will be set to pending until previous transaction completes", id);
+                logger.info(msg);
+            }
         }
     }
 

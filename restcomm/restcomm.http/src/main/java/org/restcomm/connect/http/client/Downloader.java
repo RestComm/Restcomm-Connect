@@ -59,6 +59,8 @@ import java.util.List;
  */
 public final class Downloader extends UntypedActor {
 
+    public static final int LOGGED_RESPONSE_MAX_SIZE = 100;
+
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -74,6 +76,7 @@ public final class Downloader extends UntypedActor {
         HttpRequestDescriptor temp = descriptor;
         CloseableHttpClient client = null;
         HttpResponseDescriptor responseDescriptor = null;
+        HttpResponseDescriptor rawResponseDescriptor = null;
         try {
         do {
                 client = (CloseableHttpClient) CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
@@ -96,9 +99,11 @@ public final class Downloader extends UntypedActor {
                 }
             }
 //                HttpResponseDescriptor httpResponseDescriptor = response(request, response);
-                responseDescriptor = validateXML(response(request, response));
+                rawResponseDescriptor = response(request, response);
+                responseDescriptor = validateXML(rawResponseDescriptor);
         } while (isRedirect(code));
         if (isHttpError(code)) {
+            // TODO - usually this part of code is not reached. Error codes are part of error responses that do not pass validateXML above and an exception is thrown. We need to re-thing this
             String requestUrl = request.getRequestLine().getUri();
             String errorReason = response.getStatusLine().getReasonPhrase();
             String httpErrorMessage = String.format(
@@ -113,6 +118,22 @@ public final class Downloader extends UntypedActor {
             }
             HttpClientUtils.closeQuietly(client);
             client = null;
+        } catch (Exception e) {
+            logger.warning("Problem while trying to download RCML: {}", e);
+            String statusInfo = "n/a";
+            String responseInfo = "n/a";
+            if (response != null) {
+                // Build additional information to log. Include http status, url and a small fragment of the response.
+                statusInfo = response.getStatusLine().toString();
+                if (rawResponseDescriptor != null) {
+                    int truncatedSize = (int) Math.min(rawResponseDescriptor.getContentLength(), LOGGED_RESPONSE_MAX_SIZE);
+                    if (rawResponseDescriptor.getContentAsString() != null) {
+                        responseInfo = String.format("%s %s", rawResponseDescriptor.getContentAsString().substring(0, truncatedSize), (rawResponseDescriptor.getContentLength() < LOGGED_RESPONSE_MAX_SIZE ? "" : "..."));
+                    }
+                }
+            }
+            logger.warning(String.format("Problem while trying to download RCML. URL: %s, Status: %s, Response: %s ", request.getRequestLine(),  statusInfo, responseInfo));
+            throw e; // re-throw
         } finally {
             response.close();
             HttpClientUtils.closeQuietly(client);
@@ -159,7 +180,6 @@ public final class Downloader extends UntypedActor {
             try {
                 response = new DownloaderResponse(fetch(request));
             } catch (final Exception exception) {
-                logger.warning("Problem while trying to download RCML {}", exception);
                 response = new DownloaderResponse(exception, "Problem while trying to download RCML");
             }
             if (sender != null && !sender.isTerminated()) {

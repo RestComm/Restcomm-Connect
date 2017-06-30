@@ -68,7 +68,7 @@ public class OrganizationUtil {
                 try {
                     formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
                 } catch (NumberParseException e) {
-                    logger.error("Exception when try to format : " + e);
+                    //logger.error("Exception when try to format : " + e);
                 }
             }
             if (formatedPhone == null) {

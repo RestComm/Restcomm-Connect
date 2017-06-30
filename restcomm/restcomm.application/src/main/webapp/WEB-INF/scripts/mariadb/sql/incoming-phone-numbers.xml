@@ -49,7 +49,7 @@
   -->
 
   <!-- along with the DID it returns the application friendly name where it exists -->
-  <select id="getIncomingPhoneNumbersByFriendlyName" parameterType="string" resultType="hashmap">
+  <select id="getIncomingPhoneNumbersByFriendlyName" parameterType="org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter" resultType="hashmap">
     SELECT
     n.*,
     a_voice.friendly_name voice_application_name,
@@ -68,7 +68,30 @@
     <if test="phoneNumber != null">
       AND n.phone_number like #{phoneNumber}
     </if>
+     <choose>
+    <when test="sortBy == 'phone_number'">
+      order by n.phone_number ${sortDirection}
+    </when>
+    <when test="sortBy == 'friendly_name'">
+      order by n.friendly_name ${sortDirection}
+    </when>
+    <otherwise>
+      order by n.phone_number ${sortDirection}
+    </otherwise>
+  </choose>   
+    LIMIT #{limit} OFFSET #{offset}
   </select>
+  <select id="getTotalIncomingPhoneNumbersByUsingFilters" parameterType="org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter" resultType="int">
+		SELECT COUNT(*) FROM restcomm_incoming_phone_numbers WHERE account_sid=#{accountSid}
+
+	<if test="friendlyName != null">
+      AND friendly_name=#{friendlyName}
+    </if>
+    <if test="phoneNumber != null">
+      AND phone_number like #{phoneNumber}
+    </if>
+
+	</select>
 
   <delete id="removeIncomingPhoneNumber" parameterType="string">
     DELETE FROM restcomm_incoming_phone_numbers WHERE sid=#{sid};

@@ -18,11 +18,22 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-/**
- * When an Extension returns a TransactionReponse, RC will reconfigure the transaction it
- * is in
- */
 package org.restcomm.connect.extension.api;
-public class TransactionExtensionResponse extends ExtensionResponse {
-    //TODO: needs discussion, definition
+
+import org.apache.commons.configuration.Configuration;
+
+public interface IExtensionCreateSmsSessionRequest extends IExtensionRequest {
+    /**
+     * FIXME: potentially we will change this to be specific properties
+     * rather than a whole Config object
+     * @param set Configuration object
+     */
+    void setConfiguration(Configuration configuration);
+
+    /**
+     * FIXME: potentially we will change this to be specific properties
+     * rather than a whole Config object
+     * @return the Configuration object
+     */
+    Configuration getConfiguration();
 }
