@@ -506,16 +506,15 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
          SipServletRequest linkedRequest = (SipServletRequest) getLinkedSession(response).getAttribute(B2BUA_LAST_REQUEST);
          SipServletResponse clonedResponse = linkedRequest.createResponse(response.getStatus());
          SipURI originalURI = null;
-         Address contact = null;
          try {
              originalURI = (SipURI) response.getAddressHeader("Contact").getURI();
-             ((SipURI) clonedResponse.getAddressHeader("Contact").getURI()).setUser(originalURI.getUser());
-             contact = clonedResponse.getAddressHeader("Contact");
-         } catch (ServletParseException e1) {}
-         catch (NullPointerException e2) {}
-         if(logger.isInfoEnabled()) {
-             logger.info("Contact: " + contact);
+             if (originalURI.getUser() != null && !originalURI.getUser().isEmpty()) {
+                 ((SipURI) clonedResponse.getAddressHeader("Contact").getURI()).setUser(originalURI.getUser());
+             }
+         } catch (ServletParseException | NullPointerException e) {
+            logger.error("Problem while trying to set User part on a clones response for a P2P call, "+e);
          }
+
          CallDetailRecord callRecord = records.getCallDetailRecord((Sid) linkedRequest.getSession().getAttribute(CDR_SID));
          Sid organizationSid = daoManager.getAccountsDao().getAccount(callRecord.getAccountSid()).getOrganizationSid();
 

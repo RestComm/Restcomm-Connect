@@ -22,6 +22,7 @@ package org.restcomm.connect.http.client.rcmlserver;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -59,8 +60,16 @@ public class RcmlserverApi {
 
     public RcmlserverApi(MainConfigurationSet mainConfig, RcmlserverConfigurationSet rcmlserverConfig) {
         try {
-            // resolve() should be run lazily to work. Make sure this constructor is invoked after the JBoss connectors have been set up.
-            apiUrl = UriUtils.resolve(new URI(rcmlserverConfig.getBaseUrl()));
+            // if there is no baseUrl configured we use the resolver to guess the location of the rcml server and the path
+            if ( StringUtils.isEmpty(rcmlserverConfig.getBaseUrl()) ) {
+                // resolve() should be run lazily to work. Make sure this constructor is invoked after the JBoss connectors have been set up.
+                apiUrl = UriUtils.resolve(new URI(rcmlserverConfig.getApiPath()));
+            }
+            // if baseUrl has been configured, concat baseUrl and path to find the location of rcml server. No resolving here.
+            else {
+                String path = rcmlserverConfig.getApiPath();
+                apiUrl = new URI(rcmlserverConfig.getBaseUrl() + (path != null ? path : "") );
+            }
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }

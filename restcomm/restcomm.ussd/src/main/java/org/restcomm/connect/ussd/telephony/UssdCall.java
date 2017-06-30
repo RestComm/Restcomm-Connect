@@ -58,11 +58,12 @@ import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.commons.util.DNSUtils;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.telephony.api.Answer;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
-import org.restcomm.connect.telephony.api.CreateCall;
+
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.GetCallObservers;
 import org.restcomm.connect.telephony.api.InitializeOutbound;
@@ -112,7 +113,7 @@ public class UssdCall extends UntypedActor  {
     private String transport;
     private String username;
     private String password;
-    private CreateCall.Type type;
+    private CreateCallType type;
     private long timeout;
     private SipServletRequest invite;
     private SipServletRequest outgoingInvite;

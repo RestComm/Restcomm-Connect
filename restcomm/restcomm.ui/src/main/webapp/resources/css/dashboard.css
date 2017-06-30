@@ -191,7 +191,7 @@ form[role=login] button {
 }
 
 
-form[role=login] input {
+form[role=login] input{
     color: #6d6e70;
     background: #fafafa;
     border: none;
@@ -299,7 +299,7 @@ form[role=login] button:hover {
 }
 
 /* unvisited link */
-a:link {
+a:link, tr.number-row a{
     color: #4a4a4b;
 }
 

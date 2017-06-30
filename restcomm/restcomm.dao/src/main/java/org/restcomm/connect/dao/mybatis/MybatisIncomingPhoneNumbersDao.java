@@ -266,6 +266,15 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         }
     }
 
+    @Override
+    public Integer getTotalIncomingPhoneNumbers(IncomingPhoneNumberFilter filter) {
+
+        try (final SqlSession session = sessions.openSession();) {
+            final Integer total = session.selectOne(namespace + "getTotalIncomingPhoneNumbersByUsingFilters", filter);
+            return total;
+        }
+    }
+
     private IncomingPhoneNumber toIncomingPhoneNumber(final Map<String, Object> map) {
         final Sid sid = DaoUtils.readSid(map.get("sid"));
         final DateTime dateCreated = DaoUtils.readDateTime(map.get("date_created"));
@@ -359,4 +368,5 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         map.put("organization_sid", DaoUtils.writeSid(incomingPhoneNumber.getOrganizationSid()));
         return map;
     }
+
 }
