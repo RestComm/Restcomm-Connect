@@ -378,15 +378,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
 
     protected void cleanup() {
         try {
-            if(mediaGatewayMap != null){
-                Iterator<String> gatewayKeys = mediaGatewayMap.keySet().iterator();
-                while (gatewayKeys.hasNext()){
-                    ActorRef mg = mediaGatewayMap.get(gatewayKeys.next());
-                    mg.tell(new PowerOffMediaGateway(), self());
-                }
-            }
             if (mgcpStack != null){
-                mgcpStack.deleteProvider(mgcpProvider);
                 mgcpStack = null;
             }
             mediaGatewayMap = null;
