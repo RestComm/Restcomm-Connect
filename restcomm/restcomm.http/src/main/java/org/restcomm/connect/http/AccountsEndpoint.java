@@ -108,7 +108,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(new AccountListConverter(runtimeConfiguration));
         xstream.registerConverter(new RestCommResponseConverter(runtimeConfiguration));
         // Make sure there is an authenticated account present when this endpoint is used
-        checkAuthenticatedAccount();
     }
 
     private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) throws PasswordTooWeak {
@@ -142,6 +141,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
+        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         Account account = null;
         checkPermission("RestComm:Read:Accounts");
@@ -302,6 +302,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
 
     protected Response getAccounts(final MediaType responseType) {
+        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Read:Accounts");
         final Account account = userIdentityContext.getEffectiveAccount();
@@ -323,6 +324,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
+        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Create:Accounts");
         // check account level depth. If we're already at third level no sub-accounts are allowed to be created
@@ -476,6 +478,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response updateAccount(final String identifier, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
+        checkAuthenticatedAccount();
         // First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO
         // operations
         checkPermission("RestComm:Modify:Accounts");
