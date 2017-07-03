@@ -43,6 +43,7 @@ import akka.event.LoggingAdapter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 public abstract class GenericEndpoint extends UntypedActor {
 
