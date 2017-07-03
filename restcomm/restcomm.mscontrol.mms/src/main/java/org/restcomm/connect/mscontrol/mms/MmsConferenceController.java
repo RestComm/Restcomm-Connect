@@ -437,7 +437,9 @@ public final class MmsConferenceController extends MediaServerController {
 
     private void onEndpointStateChanged(EndpointStateChanged message, ActorRef self, ActorRef sender) throws Exception {
         if (is(stopping)) {
-            if (sender.equals(this.cnfEndpoint) && EndpointState.DESTROYED.equals(message.getState())) {
+            if (sender.equals(this.cnfEndpoint) && (EndpointState.DESTROYED.equals(message.getState()) || EndpointState.FAILED.equals(message.getState()))) {
+                if(EndpointState.FAILED.equals(message.getState()))
+                    logger.error("Could not destroy endpoint on media server. corresponding actor path is: " + this.cnfEndpoint.path());
                 this.cnfEndpoint.tell(new StopObserving(self), self);
                 context().stop(cnfEndpoint);
                 cnfEndpoint = null;
