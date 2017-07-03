@@ -34,6 +34,7 @@ import org.restcomm.connect.commons.util.RevolvingCounter;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 public abstract class AbstractMockMediaGateway extends UntypedActor {
     // Call agent.

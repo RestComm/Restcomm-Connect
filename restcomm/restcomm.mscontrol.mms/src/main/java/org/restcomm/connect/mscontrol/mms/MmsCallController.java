@@ -102,6 +102,7 @@ import java.util.Set;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  *
  */
 public class MmsCallController extends MediaServerController {
