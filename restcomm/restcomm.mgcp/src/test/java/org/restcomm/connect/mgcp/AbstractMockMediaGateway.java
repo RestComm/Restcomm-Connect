@@ -89,12 +89,13 @@ public abstract class AbstractMockMediaGateway extends UntypedActor {
         final CreateBridgeEndpoint request = (CreateBridgeEndpoint) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
+        final String endpointName = request.endpointName();
         return getContext().actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public Actor create() throws Exception {
-                return new BridgeEndpoint(gateway, session, agent, domain, timeout,null);
+                return new BridgeEndpoint(gateway, session, agent, domain, timeout, endpointName);
             }
         }));
     }
@@ -103,12 +104,13 @@ public abstract class AbstractMockMediaGateway extends UntypedActor {
         final CreateConferenceEndpoint request = (CreateConferenceEndpoint) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
+        final String endpointName = request.endpointName();
         return getContext().actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new ConferenceEndpoint(gateway, session, agent, domain, timeout,null);
+                return new ConferenceEndpoint(gateway, session, agent, domain, timeout, endpointName);
             }
         }));
     }
@@ -117,12 +119,13 @@ public abstract class AbstractMockMediaGateway extends UntypedActor {
         final CreateIvrEndpoint request = (CreateIvrEndpoint) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
+        final String endpointName = request.endpointName();
         return getContext().actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new IvrEndpoint(gateway, session, agent, domain, timeout,null);
+                return new IvrEndpoint(gateway, session, agent, domain, timeout, endpointName);
             }
         }));
     }
