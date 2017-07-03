@@ -52,7 +52,7 @@ import akka.actor.Props;
 import akka.testkit.JavaTestKit;
 
 /**
- * @author thomas.quintana@telestax.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 public class EndpointTest {
     private static ActorSystem system;
