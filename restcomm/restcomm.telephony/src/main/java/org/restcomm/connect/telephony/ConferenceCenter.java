@@ -71,7 +71,7 @@ public final class ConferenceCenter extends UntypedActor {
             @Override
             public UntypedActor create() throws Exception {
                 //Here Here we can pass Gateway where call is connected
-                return new Conference(name, factory.provideConferenceController(), storage);
+                return new Conference(name, factory.provideConferenceController(), storage, self());
             }
         });
         return system.actorOf(props);
@@ -131,6 +131,14 @@ public final class ConferenceCenter extends UntypedActor {
             }
             ActorRef conference = conferences.remove(update.name());
             context().stop(conference);
+        } else if (ConferenceStateChanged.State.STOPPING.equals(update.state())) {
+            // A conference is in stopping state
+            // Remove it from conference collection
+            // https://github.com/RestComm/Restcomm-Connect/issues/2312
+            if(logger.isInfoEnabled()) {
+                logger.info("Conference " + name + " is going to stop, will remove it from available conferences.");
+            }
+            conferences.remove(update.name());
         } else if (ConferenceStateChanged.State.FAILED.equals(update.state())) {
             if (conferences.containsKey(name)) {
                 // A conference completed with errors
