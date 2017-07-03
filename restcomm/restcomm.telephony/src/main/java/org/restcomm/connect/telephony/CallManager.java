@@ -30,10 +30,13 @@ import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
+
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+
 import gov.nist.javax.sip.header.UserAgent;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.joda.time.DateTime;
@@ -88,6 +91,7 @@ import org.restcomm.connect.telephony.api.SwitchProxy;
 import org.restcomm.connect.telephony.api.UpdateCallScript;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
+
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -107,12 +111,14 @@ import javax.servlet.sip.SipURI;
 import javax.servlet.sip.TelURL;
 import javax.sip.header.RouteHeader;
 import javax.sip.message.Response;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -1913,9 +1919,28 @@ public final class CallManager extends UntypedActor {
         SipURI outboundIntf = null;
         SipURI from = null;
         SipURI to = (SipURI) sipFactory.createURI(request.to());
+        SipURI outboundProxyURI;
 
-        if(!uri.isEmpty()){
-            to.setHost(uri);
+        try {
+            //NB: ifblock not really necessary, but we dont want
+            //exceptions all the time
+            if(!uri.isEmpty()){
+                outboundProxyURI = (SipURI) sipFactory.createSipURI(null, uri);
+                to.setHost(outboundProxyURI.getHost());
+                if(outboundProxyURI.getPort()!= -1){
+                    to.setPort(outboundProxyURI.getPort());
+                }
+
+                Iterator<String> params = outboundProxyURI.getParameterNames();
+                while(params.hasNext()){
+                    String param = params.next();
+                    to.setParameter(param, outboundProxyURI.getParameter(param));
+                }
+            }
+        } catch (Exception e) {
+            if(logger.isDebugEnabled()){
+                logger.debug("Exception: outboundProxy is "+uri+" "+e.getMessage());
+            }
         }
 
         String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
