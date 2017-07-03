@@ -25,7 +25,7 @@ package org.restcomm.connect.telephony.api;
  */
 public final class ConferenceStateChanged {
     public enum State {
-        RUNNING_INITIALIZING, RUNNING_MODERATOR_ABSENT, RUNNING_MODERATOR_PRESENT, COMPLETED, FAILED
+        RUNNING_INITIALIZING, RUNNING_MODERATOR_ABSENT, RUNNING_MODERATOR_PRESENT, STOPPING, COMPLETED, FAILED
     };
 
     private final String name;
@@ -67,6 +67,10 @@ public final class ConferenceStateChanged {
 
                 case "FAILED":
                     converetedState=State.FAILED;
+                    break;
+
+                case "STOPPING":
+                    converetedState=State.STOPPING;
                     break;
 
                 default:
