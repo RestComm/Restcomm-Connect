@@ -150,6 +150,7 @@ public abstract class GenericEndpoint extends UntypedActor {
                 broadcast(new EndpointStateChanged(EndpointState.DESTROYED));
             } else {
                 logger.error("Could not destroy endpoint " + this.id.toString() + ". Return Code: " + returnCode.toString());
+                broadcast(new EndpointStateChanged(EndpointState.FAILED));
             }
         }
     }
