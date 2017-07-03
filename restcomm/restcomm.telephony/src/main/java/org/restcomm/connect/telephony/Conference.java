@@ -105,7 +105,9 @@ public final class Conference extends UntypedActor {
 
     private ConferenceStateChanged.State waitingState;
 
-    public Conference(final String name, final ActorRef msController, final DaoManager storage) {
+    private final ActorRef conferenceCenter;
+
+    public Conference(final String name, final ActorRef msController, final DaoManager storage, final ActorRef conferenceCenter) {
         super();
         final ActorRef source = self();
 
@@ -145,6 +147,7 @@ public final class Conference extends UntypedActor {
 
         this.storage = storage;
 
+        this.conferenceCenter = conferenceCenter;
         //generate it later at MRB level, by watching if same conference is running on another RC instance.
         //this.sid = Sid.generate(Sid.Type.CONFERENCE);
         this.mscontroller = msController;
@@ -319,6 +322,10 @@ public final class Conference extends UntypedActor {
             // Ask the MS Controller to stop
             // This will stop any current media operations and clean media resources
             mscontroller.tell(new Stop(), super.source);
+
+            // Tell conferenceCentre that conference is in stopping state.
+            // https://github.com/RestComm/Restcomm-Connect/issues/2312
+            conferenceCenter.tell(ConferenceStateChanged.State.STOPPING, self());
         }
     }
 
@@ -418,6 +425,8 @@ public final class Conference extends UntypedActor {
         if (isRunning()) {
             final JoinCall joinCall = new JoinCall(message.call(), ConnectionMode.Confrnce, this.sid);
             this.mscontroller.tell(joinCall, self);
+        }else{
+            logger.error("Received AddParticipant for Call: "+message.call().path()+" but the state is: "+fsm.state().toString());
         }
     }
 
@@ -431,9 +440,7 @@ public final class Conference extends UntypedActor {
             final Leave leave = new Leave();
             call.tell(leave, self);
         } else {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Received RemoveParticipants for Call: "+message.call().path()+" but the state is: "+fsm.state().toString());
-            }
+            logger.warning("Received RemoveParticipants for Call: "+message.call().path()+" but the state is: "+fsm.state().toString());
         }
     }
 
@@ -478,7 +485,7 @@ public final class Conference extends UntypedActor {
                 }
                 break;
             default:
-                // ignore unknown state
+                logger.warning("received an unknown state from MediaServerController: "+state);
                 break;
         }
     }
