@@ -37,23 +37,14 @@ public class ConferenceTest extends ConferenceTestUtil{
 
 	@Before
     public void before() throws UnknownHostException, ConfigurationException, MalformedURLException {
-    	if(logger.isDebugEnabled())
-    		logger.debug("before");
         configurationNode1 = createCfg(CONFIG_PATH_NODE_1);
         
         startDaoManager();
-        
-    	if(logger.isDebugEnabled())
-    		logger.debug("before completed");
     }
 
 	@After
 	public void after(){
-    	if(logger.isDebugEnabled())
-    		logger.debug("after");
         daoManager.shutdown();
-    	if(logger.isDebugEnabled())
-    		logger.debug("after completed");
 	}
 	
     @Test
