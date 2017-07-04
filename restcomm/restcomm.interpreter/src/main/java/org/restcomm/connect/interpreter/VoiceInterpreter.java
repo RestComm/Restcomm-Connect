@@ -171,8 +171,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private final State finished;
 
     // FSM.
-    // The conference manager.
-    private final ActorRef conferenceManager;
+    // The conference Ceneter.
+    private final ActorRef conferenceCenter;
 
     // State for outbound calls.
     private boolean isForking;
@@ -422,7 +422,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.emailAddress = emailAddress;
         this.configuration = configuration;
         this.callManager = callManager;
-        this.conferenceManager = conferenceManager;
+        this.conferenceCenter = conferenceManager;
         this.bridgeManager = bridgeManager;
         this.smsService = sms;
         this.smsSessions = new HashMap<Sid, ActorRef>();
@@ -1991,7 +1991,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         sid = callRecord.getSid();
                     }
                     final CreateConference create = new CreateConference(buffer.toString(), sid);
-                    conferenceManager.tell(create, source);
+                    conferenceCenter.tell(create, source);
                 } else {
                     // Handle forking.
                     dialBranches = new ArrayList<ActorRef>();
@@ -2917,7 +2917,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 ConferenceStateChanged confStateChanged = (ConferenceStateChanged) message;
                 if (ConferenceStateChanged.State.COMPLETED.equals(confStateChanged.state())) {
                     DestroyConference destroyConference = new DestroyConference(conferenceInfo.name());
-                    conferenceManager.tell(destroyConference, super.source);
+                    conferenceCenter.tell(destroyConference, super.source);
                 }
             }
             conference = null;
