@@ -219,8 +219,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private String forwardedFrom;
     private Attribute action;
 
-	private String conferenceNameWithAccountAndFriendlyName;
-	private Sid callSid;
+    private String conferenceNameWithAccountAndFriendlyName;
+    private Sid callSid;
 
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI viStatusCallback,
@@ -710,7 +710,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final CreateConference create = new CreateConference(conferenceNameWithAccountAndFriendlyName, callSid);
                     conferenceCenter.tell(create, self());
                 }
-            	
+                
             default:
                 break;
         }

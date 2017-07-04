@@ -21,7 +21,6 @@ import org.restcomm.connect.mscontrol.mms.MockFailingMmsControllerFactory;
 import org.restcomm.connect.mscontrol.mms.MockMmsControllerFactory;
 import org.restcomm.connect.telephony.api.AddParticipant;
 import org.restcomm.connect.telephony.api.ConferenceCenterResponse;
-import org.restcomm.connect.telephony.api.ConferenceInfo;
 import org.restcomm.connect.telephony.api.ConferenceResponse;
 import org.restcomm.connect.telephony.api.ConferenceStateChanged;
 import org.restcomm.connect.telephony.api.CreateConference;
@@ -71,7 +70,6 @@ public class ConferenceTest extends ConferenceTestUtil{
                 final CreateConference create = new CreateConference(CONFERENCE_FRIENDLY_NAME_1, new Sid(CALL_SID));
                 conferenceCenter.tell(create, tester);
                 ConferenceCenterResponse conferenceCenterResponse = expectMsgClass(ConferenceCenterResponse.class);
-                logger.info("conferenceCenterResponse 1: "+conferenceCenterResponse);
                 ActorRef conferene = conferenceCenterResponse.get();
                 
                 // start observing conference
@@ -82,37 +80,54 @@ public class ConferenceTest extends ConferenceTestUtil{
                 // addparticipant in conference
                 conferene.tell(new AddParticipant(tester), tester);
                 //receieve sent to observers
-                ConferenceResponse<ConferenceInfo> conferenceInfo = expectMsgClass(ConferenceResponse.class);
+                expectMsgClass(ConferenceResponse.class);
                 //receieve sent to call (since we are pretending to call&VoiceInterpreter)
-                conferenceInfo = expectMsgClass(ConferenceResponse.class);
-                JoinComplete joinComplete = expectMsgClass(JoinComplete.class);
+                expectMsgClass(ConferenceResponse.class);
+                expectMsgClass(JoinComplete.class);
 
                 // stop conference
                 conferene.tell(new Left(), tester);
-                ConferenceResponse conferenceResponse = expectMsgClass(ConferenceResponse.class);
-                logger.info("conferenceResponse 2: "+conferenceResponse);
+                expectMsgClass(ConferenceResponse.class);
                 
                 // get same conference again from conferenecneter
                 conferenceCenter.tell(create, tester);
                 conferenceCenterResponse = expectMsgClass(ConferenceCenterResponse.class);
-                logger.info("conferenceCenterResponse 2: "+conferenceCenterResponse);
                 ActorRef conferene2 = conferenceCenterResponse.get();
 
-                assertTrue(!conferene2.path().equals(conferene.path()));
-                // start observing conference
-                conferene2.tell(new Observe(tester), tester);
-                observingResponse = expectMsgClass(Observing.class);
-                assertTrue(observingResponse.succeeded());
+                if(!conferene2.path().equals(conferene.path())){
+                	assertTrue(!conferene2.path().equals(conferene.path()));
+                    // start observing conference
+                    conferene2.tell(new Observe(tester), tester);
+                    observingResponse = expectMsgClass(Observing.class);
+                    assertTrue(observingResponse.succeeded());
 
-                // addparticipant in conference
-                conferene2.tell(new AddParticipant(tester), tester);
+                    // addparticipant in conference
+                    conferene2.tell(new AddParticipant(tester), tester);
 
-                conferenceInfo = expectMsgClass(ConferenceResponse.class);
-                conferenceInfo = expectMsgClass(ConferenceResponse.class);
-                joinComplete = expectMsgClass(JoinComplete.class);
+                    expectMsgClass(ConferenceResponse.class);
+                    expectMsgClass(ConferenceResponse.class);
+                    expectMsgClass(JoinComplete.class);
+                }else{
+                	logger.info("testing VI impl");
+                    // start observing conference
+                    conferene2.tell(new Observe(tester), tester);
+                    observingResponse = expectMsgClass(Observing.class);
+                    assertTrue(observingResponse.succeeded());
 
-                if(logger.isDebugEnabled())
-            		logger.debug("check existing MediaGateway, which was already in db");
+                    // addparticipant in conference
+                    conferene2.tell(new AddParticipant(tester), tester);
+
+                    ConferenceStateChanged csc = expectMsgClass(ConferenceStateChanged.class);
+                    assertTrue(csc.state().equals(ConferenceStateChanged.State.STOPPING));
+                    
+                    // get same conference again from conferenecneter
+                    conferenceCenter.tell(create, tester);
+                    conferenceCenterResponse = expectMsgClass(ConferenceCenterResponse.class);
+                    conferene2 = conferenceCenterResponse.get();
+                    
+                    assertTrue(!conferene2.path().equals(conferene.path()));
+                }
+                
             	
             }};
 	}
@@ -131,7 +146,6 @@ public class ConferenceTest extends ConferenceTestUtil{
                 final CreateConference create = new CreateConference(CONFERENCE_FRIENDLY_NAME_1, new Sid(CALL_SID));
                 conferenceCenter.tell(create, tester);
                 ConferenceCenterResponse conferenceCenterResponse = expectMsgClass(ConferenceCenterResponse.class);
-                logger.info("conferenceCenterResponse 1: "+conferenceCenterResponse);
                 ActorRef conferene = conferenceCenterResponse.get();
                 
                 // start observing conference
@@ -142,16 +156,15 @@ public class ConferenceTest extends ConferenceTestUtil{
                 // addparticipant in conference
                 conferene.tell(new AddParticipant(tester), tester);
                 //receieve sent to observers
-                ConferenceResponse<ConferenceInfo> conferenceInfo = expectMsgClass(ConferenceResponse.class);
+                expectMsgClass(ConferenceResponse.class);
                 //receieve sent to call (since we are pretending to call&VoiceInterpreter)
-                conferenceInfo = expectMsgClass(ConferenceResponse.class);
-                JoinComplete joinComplete = expectMsgClass(JoinComplete.class);
+                expectMsgClass(ConferenceResponse.class);
+                expectMsgClass(JoinComplete.class);
 
                 // stop conference
                 conferene.tell(new Left(), tester);
-                ConferenceResponse conferenceResponse = expectMsgClass(ConferenceResponse.class);
+                expectMsgClass(ConferenceResponse.class);
                 expectMsgClass(ConferenceStateChanged.class);
-                logger.info("conferenceResponse 2: "+conferenceResponse);
                 
                 // get same conference again from conferenecneter
                 conferenceCenter.tell(create, tester);
@@ -168,12 +181,9 @@ public class ConferenceTest extends ConferenceTestUtil{
                 // addparticipant in conference
                 conferene2.tell(new AddParticipant(tester), tester);
 
-                conferenceInfo = expectMsgClass(ConferenceResponse.class);
-                conferenceInfo = expectMsgClass(ConferenceResponse.class);
-                joinComplete = expectMsgClass(JoinComplete.class);
-
-                if(logger.isDebugEnabled())
-            		logger.debug("check existing MediaGateway, which was already in db");
+                expectMsgClass(ConferenceResponse.class);
+                expectMsgClass(ConferenceResponse.class);
+                expectMsgClass(JoinComplete.class);
             	
             }};
 	}
