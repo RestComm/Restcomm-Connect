@@ -19,30 +19,59 @@
  */
 package org.restcomm.connect.mscontrol.api.messages;
 
+import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+
 import java.net.URI;
 import java.util.List;
-
-import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
 public final class Collect {
+
+    public enum Type {
+        DTMF, SPEECH, DTMF_SPEECH;
+
+        public static Type parse(String name){
+            return Type.valueOf(name.toUpperCase());
+        }
+    }
+
+    private final Type type;
     private final List<URI> prompts;
     private final String pattern;
     private final int timeout;
     private final String endInputKey;
     private final int numberOfDigits;
+    private final String lang;
+    private final String hints;
+    private final String driver;
 
-    public Collect(final List<URI> prompts, final String pattern, final int timeout, final String endInputKey,
-            final int numberOfDigits) {
+    public Collect(String driver,final Type type, final List<URI> prompts, final String pattern, final int timeout, final String endInputKey,
+            final int numberOfDigits, final String lang, final String hints) {
         super();
+        this.driver = driver;
+        this.type = type;
         this.prompts = prompts;
         this.pattern = pattern;
         this.timeout = timeout;
         this.endInputKey = endInputKey;
         this.numberOfDigits = numberOfDigits;
+        this.lang = lang;
+        this.hints = hints;
+    }
+
+    public String getDriver() {
+        return driver;
+    }
+
+    public Type type() {
+        return type;
+    }
+
+    public String lang() {
+        return lang;
     }
 
     public List<URI> prompts() {
@@ -77,4 +106,7 @@ public final class Collect {
         return numberOfDigits;
     }
 
+    public String getHints() {
+        return hints;
+    }
 }

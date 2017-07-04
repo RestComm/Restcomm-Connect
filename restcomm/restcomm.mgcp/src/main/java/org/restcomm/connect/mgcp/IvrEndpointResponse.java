@@ -19,13 +19,14 @@
  */
 package org.restcomm.connect.mgcp;
 
+import org.restcomm.connect.commons.dao.CollectedResult;
 import org.restcomm.connect.commons.patterns.StandardResponse;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public class IvrEndpointResponse<T> extends StandardResponse<T> {
-    public IvrEndpointResponse(final T object) {
+public class IvrEndpointResponse extends StandardResponse<CollectedResult> {
+    public IvrEndpointResponse(final CollectedResult object) {
         super(object);
     }
 
