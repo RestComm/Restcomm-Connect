@@ -325,7 +325,7 @@ public final class Conference extends UntypedActor {
 
             // Tell conferenceCentre that conference is in stopping state.
             // https://github.com/RestComm/Restcomm-Connect/issues/2312
-            conferenceCenter.tell(ConferenceStateChanged.State.STOPPING, self());
+            conferenceCenter.tell(new ConferenceStateChanged(name, ConferenceStateChanged.State.STOPPING), self());
         }
     }
 
@@ -431,6 +431,7 @@ public final class Conference extends UntypedActor {
             this.mscontroller.tell(joinCall, self);
         }else{
             logger.error("Received AddParticipant for Call: "+message.call().path()+" but the state is: "+fsm.state().toString());
+            sender.tell(new ConferenceStateChanged(name, ConferenceStateChanged.State.STOPPING), self());
         }
     }
 
