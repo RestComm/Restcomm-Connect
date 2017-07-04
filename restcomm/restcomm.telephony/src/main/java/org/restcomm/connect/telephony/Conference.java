@@ -403,6 +403,8 @@ public final class Conference extends UntypedActor {
     private void onStartConference(StartConference message, ActorRef self, ActorRef sender) throws Exception {
         if (is(uninitialized)) {
             this.fsm.transition(message, initializing);
+        }else{
+            logger.warning("Received StartConference from sender : "+sender.path()+" but the state is: "+fsm.state().toString());
         }
     }
 
@@ -411,6 +413,8 @@ public final class Conference extends UntypedActor {
             this.fsm.transition(message, stopped);
         } else if (is(waiting) || is(running)) {
             this.fsm.transition(message, evicting);
+        }else{
+            logger.warning("Received StopConference from sender : "+sender.path()+" but the state is: "+fsm.state().toString());
         }
     }
 
@@ -448,6 +452,9 @@ public final class Conference extends UntypedActor {
         if (is(running) || is(waiting) || is(evicting)) {
             // Participant successfully left the conference.
             boolean removed = calls.remove(sender);
+            if(!removed)
+                logger.error("Call was not in conference participant list. Call: "+sender.path());
+
             int participantsNr = calls.size();
             if(logger.isInfoEnabled()) {
                 logger.info("################################## Conference " + name + " has " + participantsNr + " participants");
@@ -459,7 +466,7 @@ public final class Conference extends UntypedActor {
             }
 
             // Stop the conference when ALL participants have been evicted
-            if (removed && calls.isEmpty()) {
+            if (calls.isEmpty()) {
                 fsm.transition(message, stopping);
             }
         }
@@ -520,7 +527,7 @@ public final class Conference extends UntypedActor {
             this.mscontroller.tell(message, sender);
         } else {
             if (logger.isInfoEnabled()) {
-                logger.info("Play will not be processed for conference: "+this.name+" , number of local participants: "+this.calls.size()+ " globalNoOfParticipants: "+globalNoOfParticipants+" , isRunning: false, isModeratorPresent: "+this.moderatorPresent+ " iterations: "+message.iterations());
+                logger.info("Play will not be processed for conference since its not in running state: "+this.name+" , number of local participants: "+this.calls.size()+ " globalNoOfParticipants: "+globalNoOfParticipants+" , isRunning: false, isModeratorPresent: "+this.moderatorPresent+ " iterations: "+message.iterations());
             }
         }
     }
@@ -529,6 +536,8 @@ public final class Conference extends UntypedActor {
         if (isRunning()) {
             // Forward message to media server controller
             this.mscontroller.tell(message, sender);
+        }else{
+            logger.warning("Received StartRecording from sender : "+sender.path()+" but the state is: "+fsm.state().toString());
         }
     }
 
@@ -536,6 +545,8 @@ public final class Conference extends UntypedActor {
         if (isRunning()) {
             // Forward message to media server controller
             this.mscontroller.tell(message, sender);
+        }else{
+            logger.warning("Received StopRecording from sender : "+sender.path()+" but the state is: "+fsm.state().toString());
         }
     }
 
