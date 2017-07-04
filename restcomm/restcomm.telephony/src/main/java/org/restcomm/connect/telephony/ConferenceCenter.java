@@ -130,8 +130,9 @@ public final class ConferenceCenter extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("Conference " + name + " completed without issues");
             }
-            ActorRef conference = conferences.remove(update.name());
-            context().stop(conference);
+            conferences.remove(update.name());
+            //stop sender(conference who sent this msg) bcz it was already removed from map in Stopping state
+            context().stop(sender);
         } else if (ConferenceStateChanged.State.STOPPING.equals(update.state())) {
             // A conference is in stopping state
             // Remove it from conference collection

@@ -89,7 +89,7 @@ public class MockMmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            return new MockFMmsConferenceController(mrb);
+            return new MockMmsConferenceController(mrb);
         }
 
     }
