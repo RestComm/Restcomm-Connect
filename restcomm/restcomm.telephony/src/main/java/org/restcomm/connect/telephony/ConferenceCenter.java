@@ -44,6 +44,7 @@ import java.util.Map;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author amit.bhayani@telestax.com (Amit Bhayani)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 public final class ConferenceCenter extends UntypedActor {
 
@@ -71,7 +72,7 @@ public final class ConferenceCenter extends UntypedActor {
             @Override
             public UntypedActor create() throws Exception {
                 //Here Here we can pass Gateway where call is connected
-                return new Conference(name, factory.provideConferenceController(), storage);
+                return new Conference(name, factory.provideConferenceController(), storage, self());
             }
         });
         return system.actorOf(props);
@@ -129,8 +130,17 @@ public final class ConferenceCenter extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("Conference " + name + " completed without issues");
             }
-            ActorRef conference = conferences.remove(update.name());
-            context().stop(conference);
+            conferences.remove(update.name());
+            //stop sender(conference who sent this msg) bcz it was already removed from map in Stopping state
+            context().stop(sender);
+        } else if (ConferenceStateChanged.State.STOPPING.equals(update.state())) {
+            // A conference is in stopping state
+            // Remove it from conference collection
+            // https://github.com/RestComm/Restcomm-Connect/issues/2312
+            if(logger.isInfoEnabled()) {
+                logger.info("Conference " + name + " is going to stop, will remove it from available conferences.");
+            }
+            conferences.remove(update.name());
         } else if (ConferenceStateChanged.State.FAILED.equals(update.state())) {
             if (conferences.containsKey(name)) {
                 // A conference completed with errors
