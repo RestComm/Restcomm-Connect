@@ -710,7 +710,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final CreateConference create = new CreateConference(conferenceNameWithAccountAndFriendlyName, callSid);
                     conferenceCenter.tell(create, self());
                 }
-                
             default:
                 break;
         }
