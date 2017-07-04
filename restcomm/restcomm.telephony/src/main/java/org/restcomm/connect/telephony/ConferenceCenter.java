@@ -198,7 +198,7 @@ public final class ConferenceCenter extends UntypedActor {
             observers.add(sender);
             conference = getConference(name);
             conference.tell(new Observe(self), self);
-            conference.tell(new StartConference(request.initialitingCallSid()), self);
+            conference.tell(new StartConference(request.initialitingCallSid(), request.mediaAttributes()), self);
             initializing.put(name, observers);
 
             if(logger.isDebugEnabled()) {

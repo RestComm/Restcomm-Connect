@@ -58,9 +58,11 @@ import javax.media.mscontrol.resource.RTC;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -122,7 +124,7 @@ public class Jsr309CallController extends MediaServerController {
     private final State failed;
 
     // JSR-309 runtime stuff
-    private static final String[] CODEC_POLICY_AUDIO = new String[] { "audio" };
+    private static final String[] CODEC_POLICY_AUDIO = new String[] { "audio", "video" };
 
     private final MsControlFactory msControlFactory;
     private final MediaServerInfo mediaServerInfo;
@@ -743,6 +745,11 @@ public class Jsr309CallController extends MediaServerController {
         if (is(active)) {
             try {
                 // join call leg to bridge
+                // overlay configuration
+                MediaAttributes ma = message.mediaAttributes();
+                if (!StringUtils.isEmpty(ma.getVideoOverlay())) {
+                    mediaSession.setAttribute("CAPTION", ma.getVideoOverlay());
+                }
                 this.bridge = sender;
                 this.mediaMixer = (MediaMixer) message.getEndpoint();
                 this.networkConnection.join(Direction.DUPLEX, mediaMixer);
@@ -863,7 +870,13 @@ public class Jsr309CallController extends MediaServerController {
                 // Distinguish between WebRTC and SIP calls
                 Parameters sdpParameters = mediaSession.createParameters();
                 Map<String, String> configurationData = new HashMap<String, String>();
-                configurationData.put("webrtc", webrtc ? "yes" : "no");
+                if (webrtc) {
+                    configurationData.put("webrtc", "yes");
+                    // Enable DTLS, ICE Lite and RTCP feedback
+                    configurationData.put("Supported", "dlgc-encryption-dtls, dlgc-ice, dlgc-rtcp-feedback-audiovideo");
+                } else {
+                    configurationData.put("webrtc", "no");
+                }
                 sdpParameters.put(SdpPortManager.SIP_HEADERS, configurationData);
                 networkConnection.setParameters(sdpParameters);
 
