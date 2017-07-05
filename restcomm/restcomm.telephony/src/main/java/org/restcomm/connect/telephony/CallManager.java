@@ -1282,7 +1282,9 @@ public final class CallManager extends UntypedActor {
         URI clientAppVoiceUrl = null;
         if (applicationSid != null) {
             final Application application = applications.getApplication(applicationSid);
-            clientAppVoiceUrl = UriUtils.resolve(application.getRcmlUrl());
+            if(application != null && application.getRcmlUrl() != null){
+                clientAppVoiceUrl = UriUtils.resolve(application.getRcmlUrl());
+            }
         }
         if (clientAppVoiceUrl == null) {
             clientAppVoiceUrl = client.getVoiceUrl();
