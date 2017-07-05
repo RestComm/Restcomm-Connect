@@ -90,5 +90,10 @@
 			<artifactId>akka-testkit_2.10</artifactId>
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
+      <dependency>
+          <groupId>javax.sip</groupId>
+          <artifactId>jain-sip-ri</artifactId>
+          <scope>compile</scope>
+      </dependency>
+  </dependencies>
 </project>

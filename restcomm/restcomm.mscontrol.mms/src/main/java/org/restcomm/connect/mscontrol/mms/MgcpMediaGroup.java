@@ -358,7 +358,9 @@ public class MgcpMediaGroup extends MediaGroup {
 
     protected void onEndpointStateChanged(EndpointStateChanged message, ActorRef self, ActorRef sender) throws Exception {
         if (is(deactivating)) {
-            if (sender.equals(this.ivr) && EndpointState.DESTROYED.equals(message.getState())) {
+            if (sender.equals(this.ivr) && (EndpointState.DESTROYED.equals(message.getState()) || EndpointState.FAILED.equals(message.getState()))) {
+                if(EndpointState.FAILED.equals(message.getState()))
+                    logger.error("Could not destroy ivr endpoint on media server: " + this.ivrEndpointName + ". corresponding actor path is: " + this.ivr.path());
                 this.ivr.tell(new StopObserving(self), self);
                 this.fsm.transition(message, inactive);
             }

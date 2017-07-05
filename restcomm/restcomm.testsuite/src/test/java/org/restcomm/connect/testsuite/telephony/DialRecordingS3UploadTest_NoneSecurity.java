@@ -224,7 +224,7 @@ public class DialRecordingS3UploadTest_NoneSecurity {
 				null));
 		assertTrue(aliceCall.waitForAck(50 * 1000));
 
-		Thread.sleep(3000);
+		Thread.sleep(3500);
 
 		// hangup.
 		aliceCall.listenForDisconnect();
@@ -233,12 +233,13 @@ public class DialRecordingS3UploadTest_NoneSecurity {
 		assertTrue(aliceCall.waitForDisconnect(30 * 1000));
 		assertTrue(aliceCall.respondToDisconnect());
 
+		Thread.sleep(1000);
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertTrue(duration==3.0);
+		assertEquals(3.0 , duration, 0);
 		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
 		assertTrue(recording.get(0).getAsJsonObject().get("s3_uri").getAsString().startsWith("http://127.0.0.1:8090/s3"));
