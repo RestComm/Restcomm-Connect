@@ -48,6 +48,7 @@ import jain.protocol.ip.mgcp.pkg.PackageName;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 public final class IvrEndpoint extends GenericEndpoint {
     private static final PackageName PACKAGE_NAME = AUPackage.AU;
