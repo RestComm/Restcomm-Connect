@@ -1814,6 +1814,10 @@ public final class Call extends UntypedActor {
                 liveCallModification = true;
                 self().tell(new Leave(true), self());
             }
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Got StopMediaGroup but Call is already in state: "+fsm.state());
+            }
         }
     }
 
@@ -2193,6 +2197,13 @@ public final class Call extends UntypedActor {
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
         if(logger.isDebugEnabled()) {
             logger.debug("Got Hangup: "+message+" for Call, from: "+from+" to: "+to+" state: "+fsm.state()+" conferencing: "+conferencing +" conference: "+conference);
+        }
+
+        if (is(completed)) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Got Hangup but already in completed state");
+            }
+            return;
         }
 
         // Stop recording if necessary
