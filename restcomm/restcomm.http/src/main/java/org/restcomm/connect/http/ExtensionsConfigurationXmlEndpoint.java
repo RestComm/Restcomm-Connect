@@ -27,8 +27,11 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+
+import org.restcomm.connect.commons.dao.Sid;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 
@@ -37,8 +40,8 @@ public class ExtensionsConfigurationXmlEndpoint extends ExtensionsConfigurationE
 
     @Path("/{extensionId}")
     @GET
-    public Response getConfigurationAsXml(@PathParam("extensionId") final String extension) {
-        return getConfiguration(extension, APPLICATION_XML_TYPE);
+    public Response getConfigurationAsXml(@PathParam("extensionId") final String extension, @QueryParam("AccountSid") Sid accountSid) {
+        return getConfiguration(extension, accountSid, APPLICATION_XML_TYPE);
     }
 
     @POST

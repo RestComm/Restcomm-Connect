@@ -1,0 +1,282 @@
+= Contribute to Restcomm
+
+Multiple types of contributions are possible :
+
+  * Using it in your product or project and providing feedback.
+  * Code & Algorithms: Core Projects, Incubator projects, Frameworks
+  * Use cases, feature requests: Roadmap influence
+  * Community Support, bug fixes, forum posts: Help to be helped
+  * Documentation: Everyone needs good docs, Code is a moving targed.
+  * Testing (Perf, load, security, unit tests, interop, ...) / CI
+
+Here is specific types of contributions that requires a little more details if you want to get involved
+
+  * Fixing Bugs : See https://help.github.com/articles/closing-issues-via-commit-messages
+  * Reporting Bugs : To report a bug, if possible, provide a small example that illustrates the bug. You can pattern
+  the test case usually along the lines of ones found in the
+  link:https://github.com/Restcomm/Restcomm-Connect/tree/master/restcomm/restcomm.testsuite[testsuite].
+  Having a test case handy speeds up the bug fix. Your test case will be included in the project as a test case.
+  Open an Issue as defined in the section below so other users can know about the issue and its status.
+  Please attach your test case or bug description with debug log files there.
+  * Contributing Extensions and enhancements (i.e. support for extension RFCs and drafts that are not covered by
+  Restcomm) or Contributing code snippets and examples or Contributing test cases to be included with the
+  distribution: See Contribution Process below in Section "How to check out, change, review, and commit code".
+  Also open a thread on link:http://groups.google.com/group/restcomm[the mailing list of Restcomm google group]
+  to discuss it with the community and Restcomm Team Members.
+
+Your contributions will be acknowledged individually in the code (as a comment) and in the
+link:http://www.telestax.com/opensource/#Contribute[Acknowledgement page].
+
+
+= Opening an Issue
+
+link:https://github.com/Restcomm/Restcomm-Connect/issues/new[Open An Issue Here]
+
+= Becoming a Contributor
+
+In order to become a contributor with write access to the code, you will need to have demonstrated an understanding
+of the codebase and testsuite by participating in the design discussions and submitting patches for bugs/enchancements
+before we will grant developer access.
+
+Contributing to Restcomm requires you to accept link:http://telestax.com/opensource/[the TeleStax Contributor Agreement]
+(bottom of the page).
+
+= How to check out, change, review, and commit code
+== Introduction
+
+Restcomm projects use Git, a distributed version control system. What this means is that, even though this page hosts
+a central repository, there can be many clone repositories with changes of their own, and then some of those can be
+merged back into the main repository.
+
+*The great part is that you can start contributing and create our own clone without having write access to the
+Restcomm repository*
+
+This document describes the workflow for checking out code, making clones, reviewing patches, and committing code.
+
+== Checking out Restcomm Connect (Linux)
+
+For non-committers, checking out code is simple.
+
+=== Install Git
+
+Follow the installing Git instructions. Ubuntu users can simply type:
+
+[source,bash]
+----
+sudo apt-get install git-core
+----
+
+Configure Git to convert line endings on commit
+
+[source,bash]
+----
+git config --global core.autocrlf input
+----
+
+=== Checkout the code
+
+To check out the code  :
+
+[source,bash]
+----
+git clone git@github.com:Restcomm/Restcomm-Connect.git
+----
+
+
+=== Building Restcomm From Source
+To Build Restcomm from Source, follow those instructions : http://docs.telestax.com/restcomm-mobicents-building-from-source/
+
+
+=== Committing code
+
+The following License Header has to be placed on top of each source code file contributed
+
+[source,java]
+----
+/*
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2015, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ */
+----
+
+The model we've chosen for developing Restcomm is the following:
+
+Each contributor creates their own fork of the Restcomm project (you want to contribute to) repository.
+
+This clone is hosted on Github servers, and can be created by clicking *Fork* button from
+https://github.com/Restcomm/Restcomm-Connect
+
+The contributor then makes a local clone of their GitHub fork, which is stored on their local machine.
+Instructions for checking it out is https://github.com/<contributor_github_account>/Restcomm
+
+The contributor creates a new Issue explaining their contribution at
+https://github.com/Restcomm/Restcomm-Connect/issues/new
+
+The contributor then creates a new branch into their local clone
+
+[source,bash]
+----
+git checkout -b feature-branch
+----
+
+Do the changes into their branch for their local branch for the contribution and commit them
+
+[source,bash]
+----
+git commit -a -m "commit message"
+----
+
+**//IMPORTANT//:Please use the Github integration to use the commit message to tie the commits to the Issue you're
+working on. More information on that can be found at https://help.github.com/articles/closing-issues-via-commit-messages**
+
+**//IMPORTANT//: When your change is pulled into the main Restcomm source, the change description that you entered here
+ will show up as changes in the main Restcomm source, so please use a meaningful description - fixing bug, making
+ changes, etc. are not ok, please instead use something like fixing transform bug caused by NPE, etc. so that it makes
+ sense in the context of Restcomm as a whole, not just your clone.**
+
+If you have any new files, make sure to use the following command before committing
+
+[source,bash]
+----
+git add <file or directory>
+----
+
+Same thing if you want to remove some files
+
+[source,bash]
+----
+git rm <file or directory>
+----
+
+== Pushing changes to your online clone
+
+When a change is ready to be integrated back into the repository, that change is pushed from the developer's local
+clone to their Github Fork clone.
+
+[source,bash]
+----
+git push origin feature-branch
+----
+
+To avoid merge soup, please rebase your branch first
+
+==== Bringing in new changes from the upstream repository
+
+If the main repository has evolved since your last push to your clone repository, you will need to bring those changes
+into your repository as well as potentially merge them.
+
+You need to add a remote via which you will identify the upstream repository:
+
+[source,bash]
+----
+git remote add upstream git@github.com:Restcomm/Restcomm-Connect.git
+----
+
+Now whenever you want to merge upstream changes into your clone, do the following:
+
+[source,bash]
+----
+git fetch upstream
+git merge upstream/master
+----
+
+==== Pushing changes to your clone repository
+
+First pull in all of the latest changes from upstream, apply them to your master branch, then rebase your feature
+branch against master before merging it into master and pushing it upstream:
+
+[source,bash]
+----
+git checkout master
+git fetch upstream
+git merge upstream/master
+git checkout awesome-feature
+git rebase master
+(fix any conflicts with upstream changes)
+git push origin feature-branch
+----
+
+Browse to Source -> Changes from the project page for your clone and navigate to the page with details on the branch
+to be reviewed. For example, https://github.com/<contributor_github_account>/Restcomm/tree/development
+
+You will need to paste the URL for this page into the issue you created earlier.
+Describe the code to be reviewed, its purpose, and paste in the URL for the relevant changeset(s) or branch(es).
+
+The code will be reviewed on the contributor's clone - if any further changes are suggested, a couple of iterations
+might be needed so the contributor will need to modify the code again, commit, push and comment on the issue.
+
+Once the change is approved, a committer of Restcomm will merge it back into the main repository with the following
+commands.
+
+[source,bash]
+----
+git checkout -b feature-branch
+git pull https://github.com/<contributor_github_account>/Restcomm/ feature-branch
+git checkout master
+git merge feature-branch
+----
+
+Even though this may sound complicated, this process makes code reviews easier and allows a lot of people to work on
+changes in parallel.
+
+==== Code formatting
+
+In order to avoid merge conflicts, be it with new features or bug fixes, Restcomm takes advantage of maven code
+formatting plugin. By default, all of our projects trigger this plugin during build. It provides information on code
+style and violations of certain rules.
+Example failure may look as follows:
+
+[source,bash]
+----
+[INFO] Starting audit...
+/home/baranowb/Restcomm/git/test/src/main/java/Test.java:46: Line has trailing spaces.
+/home/baranowb/Restcomm/git/test/src/main/java/Test.java:47:1: '{' should be on the previous line.
+/home/baranowb/Restcomm/git/test/src/main/java/Test.java:50: Line has trailing spaces.
+Audit done.
+----
+
+Contributor responsibility is to provide us with code, which obeys formatting rules. If source does not pass code
+style checks, it won't be accepted!
+
+===== IDE formatting support
+
+IDEs have native support for formatting. To take advantage of it, you need to import configuration files.
+Restcomm has projects wide configuration for IDEs. It can be found here:
+http://grepcode.com/snapshot/repo1.maven.org/maven2/org.mobicents/checkstyle/1.0.0.FINAL/
+or in any tagged relase of this artifact.
+
+===== Eclipse
+To import formatter rules into eclipse perform following:
+
+ * Window > Preferences > Java > Code Style > Clean Up > 'Import' -> cleanup.xml
+ * Window > Preferences > Java > Code Style > Formatter > 'Import' -> formatter.xml
+
+Optionally:
+ * Window > Preferences > Java > Code Style > Code Templates > 'Import' -> templates.xml
+
+===== Maven checkstyle configuration
+
+The checkstyle plugin is pre-configured in mobicents-parent artifact. To enable it in any subproject which depends on it, you need to add only following lines in *plugins* section of master project pom:
+
+[source,xml]
+----
+<plugin>
+       <groupId>org.apache.maven.plugins</groupId>
+       <artifactId>maven-checkstyle-plugin</artifactId>
+</plugin>
+----

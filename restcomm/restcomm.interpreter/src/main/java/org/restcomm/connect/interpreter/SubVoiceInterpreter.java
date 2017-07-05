@@ -25,6 +25,7 @@ import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -37,6 +38,7 @@ import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.NotificationsDao;
@@ -57,12 +59,13 @@ import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
 import org.restcomm.connect.telephony.api.Cancel;
-import org.restcomm.connect.telephony.api.CreateCall;
+
 import org.restcomm.connect.telephony.api.DestroyCall;
 import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
 
 import javax.servlet.sip.SipServletResponse;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -434,7 +437,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
         // Adding SIP OUT Headers and SipCallId for
         // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
-        if (CreateCall.Type.SIP == callInfo.type()) {
+        if (CreateCallType.SIP == callInfo.type()) {
             SipServletResponse lastResponse = callInfo.lastResponse();
             if (lastResponse != null) {
                 final int statusCode = lastResponse.getStatus();

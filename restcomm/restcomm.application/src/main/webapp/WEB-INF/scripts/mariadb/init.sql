@@ -158,18 +158,18 @@ date_created DATETIME NOT NULL,
 date_updated DATETIME NOT NULL,
 account_sid VARCHAR(34) NOT NULL,
 status VARCHAR(100) NOT NULL,
-friendly_name VARCHAR(60),
+friendly_name VARCHAR(1000),
 api_version VARCHAR(10) NOT NULL,
 uri MEDIUMTEXT NOT NULL,
 master_ms_id VARCHAR(34),
-master_conference_endpoint_id VARCHAR(20),
+master_conference_endpoint_id VARCHAR(1000),
 master_present BOOLEAN NOT NULL DEFAULT TRUE,
-master_ivr_endpoint_id VARCHAR(20),
-master_ivr_endpoint_session_id VARCHAR(200),
-master_bridge_endpoint_id VARCHAR(20),
-master_bridge_endpoint_session_id VARCHAR(200),
-master_bridge_conn_id VARCHAR(200),
-master_ivr_conn_id VARCHAR(200),
+master_ivr_endpoint_id VARCHAR(1000),
+master_ivr_endpoint_session_id VARCHAR(1000),
+master_bridge_endpoint_id VARCHAR(1000),
+master_bridge_endpoint_session_id VARCHAR(1000),
+master_bridge_conn_id VARCHAR(1000),
+master_ivr_conn_id VARCHAR(1000),
 moderator_present BOOLEAN NOT NULL DEFAULT FALSE
 );
 
@@ -379,6 +379,13 @@ configuration_type VARCHAR(255) NOT NULL,
 date_created DATETIME NOT NULL,
 date_updated DATETIME,
 enabled  BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE restcomm_accounts_extensions (
+account_sid VARCHAR(34) NOT NULL,
+extension_sid VARCHAR(34) NOT NULL,
+configuration_data LONGTEXT NOT NULL,
+PRIMARY KEY (account_sid, extension_sid)
 );
 
 INSERT INTO restcomm_accounts VALUES (

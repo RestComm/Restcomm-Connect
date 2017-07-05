@@ -61,4 +61,24 @@
   <select id="getDateUpdatedBySid" parameterType="String" resultType="date">
     SELECT date_updated FROM restcomm_extensions_configuration WHERE sid=#{sid};
   </select>
+
+  <select id="getAccountExtensionConfiguration" parameterType="map" resultType="hashmap">
+    SELECT configuration_data, account_sid AS "sid", extension_sid AS "extension" FROM restcomm_accounts_extensions
+    WHERE account_sid=#{account_sid} AND extension_sid=#{extension_sid};
+  </select>
+
+  <insert id="addAccountExtensionConfiguration" parameterType="map">
+    INSERT INTO restcomm_accounts_extensions (account_sid, extension_sid, configuration_data)
+    VALUES (#{account_sid}, #{extension_sid}, #{configuration_data});
+  </insert>
+
+  <update id="updateAccountExtensionConfiguration" parameterType="map">
+    UPDATE restcomm_accounts_extensions SET configuration_data=#{configuration_data}
+    WHERE account_sid=#{account_sid} AND extension_sid=#{extension_sid};
+  </update>
+
+  <delete id="deleteAccountExtensionConfiguration" parameterType="map">
+    DELETE FROM restcomm_accounts_extensions
+    WHERE account_sid=#{account_sid} AND extension_sid=#{extension_sid};
+  </delete>
 </mapper>

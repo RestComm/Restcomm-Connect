@@ -35,10 +35,12 @@ import static org.junit.Assert.assertTrue;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import javax.sip.address.SipURI;
+import javax.sip.header.Header;
 import javax.sip.message.Response;
 
 import org.apache.log4j.Logger;
@@ -221,7 +223,7 @@ public class CallLifecycleTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialAliceRcml)));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
 
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -273,7 +275,7 @@ public class CallLifecycleTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialAliceRcml)));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
 
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -303,7 +305,7 @@ public class CallLifecycleTest {
 
 //        Thread.sleep(15000);
 //
-//        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+//        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 //        logger.info("LiveCalls: "+liveCalls);
 //        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 //        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
@@ -329,7 +331,7 @@ public class CallLifecycleTest {
         String status = jsonObj.get("status").getAsString();
         logger.info("Status: "+status);
         assertTrue(status.equalsIgnoreCase("canceled"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -378,9 +380,110 @@ public class CallLifecycleTest {
         assertTrue(aliceCall.waitForAck(5000));
 
         Thread.sleep(1000);
-        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==2);
+        assertTrue(liveIncomingCalls==1);
+        assertTrue(liveOutgoingCalls==1);
+        assertTrue(liveCallsArraySize==2);
+
+
+        Thread.sleep(3000);
+        bobCall.listenForDisconnect();
+
+        assertTrue(aliceCall.disconnect());
+        Thread.sleep(500);
+        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
+        assertTrue(requests.size() == 1);
+        //        requests.get(0).g;
+        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
+        List<String> params = Arrays.asList(requestBody.split("&"));
+        String callSid = "";
+        for (String param : params) {
+            if (param.contains("CallSid")) {
+                callSid = param.split("=")[1];
+            }
+        }
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+        JsonObject jsonObj = cdr.getAsJsonObject();
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+        logger.info("LiveCalls: "+liveCalls);
+        liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls==0);
+        assertTrue(liveCallsArraySize==0);
+        int maxConcurrentCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentCalls").getAsInt();
+        int maxConcurrentIncomingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
+        int maxConcurrentOutgoingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
+        assertTrue(maxConcurrentCalls==2);
+        assertTrue(maxConcurrentIncomingCalls==1);
+        assertTrue(maxConcurrentOutgoingCalls==1);
+    }
+
+    @Test
+    public void testDialClientAliceBehindLB() throws ParseException, InterruptedException, MalformedURLException {
+
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialAliceRcml)));
+
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        logger.info("Last response: "+response);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+
+        assertTrue(aliceCall.waitForIncomingCall(5000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Alice-Trying", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Alice-Ringing", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        ArrayList<String> additionalHeaders = new ArrayList<String>();
+        Header lbIpAddr = aliceSipStack.getHeaderFactory().createHeader("X-Sip-Balancer-InitialRemoteAddr","127.0.0.1");
+        Header lbPort = aliceSipStack.getHeaderFactory().createHeader("X-Sip-Balancer-InitialRemotePort","5091");
+        additionalHeaders.add(lbIpAddr.toString());
+        additionalHeaders.add(lbPort.toString());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "Alice-OK", 3600, receivedBody, "application", "sdp",
+                additionalHeaders, null));
+        assertTrue(aliceCall.waitForAck(5000));
+
+        Thread.sleep(1000);
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         assertTrue(liveCalls==2);
         assertTrue(liveIncomingCalls==1);
@@ -545,9 +648,9 @@ public class CallLifecycleTest {
                 null, null));
         assertTrue(aliceCall.waitForAck(5000));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         bobCall.listenForDisconnect();
@@ -561,7 +664,7 @@ public class CallLifecycleTest {
         assertTrue(bobCall.respondToDisconnect());
         assertTrue(aliceCall.respondToDisconnect());
 
-        Thread.sleep(2000);
+        Thread.sleep(1000);
 
         logger.info("About to check the Requests");
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
@@ -577,7 +680,7 @@ public class CallLifecycleTest {
         }
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
-        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+        assertEquals("completed", jsonObj.get("status").getAsString().toLowerCase());
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         assertNotNull(metrics);
@@ -595,8 +698,74 @@ public class CallLifecycleTest {
         assertTrue(maxConcurrentOutgoingCalls==1);
     }
 
-    private String dialNumberRcml = "<Response><Dial><Number>+131313</Number></Dial></Response>";
+    private String dialInvalidClientRcml = "<Response><Dial><Client>invalidClient</Client></Dial></Response>";
+    @Test
+    public void testDialInvalidClient() throws ParseException, InterruptedException, MalformedURLException {
 
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialInvalidClientRcml)));
+
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        logger.info("Last response: "+response);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+
+        bobCall.listenForDisconnect();
+        assertTrue(bobCall.waitForDisconnect(5000));
+        bobCall.respondToDisconnect();
+
+        Thread.sleep(1000);
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+        logger.info("LiveCalls: "+liveCalls);
+        int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls==0);
+        assertTrue(liveCallsArraySize==0);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
+        assertTrue(requests.size() == 1);
+        //        requests.get(0).g;
+        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
+        List<String> params = Arrays.asList(requestBody.split("&"));
+        String callSid = "";
+        for (String param : params) {
+            if (param.contains("CallSid")) {
+                callSid = param.split("=")[1];
+            }
+        }
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+        JsonObject jsonObj = cdr.getAsJsonObject();
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+    }
+
+    private String dialNumberRcml = "<Response><Dial><Number>+131313</Number></Dial></Response>";
     @Test
     public void testDialNumberPstn() throws ParseException, InterruptedException, MalformedURLException {
 
@@ -634,9 +803,9 @@ public class CallLifecycleTest {
                 null, null));
         assertTrue(georgeCall.waitForAck(5000));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         Thread.sleep(3000);
@@ -664,7 +833,7 @@ public class CallLifecycleTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -705,9 +874,9 @@ public class CallLifecycleTest {
 
         Thread.sleep(3000);
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
 
         logger.info("About to check the Requests");
@@ -725,7 +894,7 @@ public class CallLifecycleTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("failed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -773,9 +942,9 @@ public class CallLifecycleTest {
                 null, null));
         assertTrue(georgeCall.waitForAck(5000));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         aliceCall.disposeNoBye();
@@ -801,7 +970,7 @@ public class CallLifecycleTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -837,9 +1006,9 @@ public class CallLifecycleTest {
         assertTrue(georgeCall.waitForIncomingCall(5000));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         assertTrue(georgeCall.sendIncomingCallResponse(Response.FORBIDDEN, "George-Forbidden", 3600));
@@ -926,9 +1095,9 @@ public class CallLifecycleTest {
                 null, null));
         assertTrue(georgeCall.waitForAck(5000));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         Thread.sleep(3000);
@@ -967,7 +1136,7 @@ public class CallLifecycleTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -1001,9 +1170,9 @@ public class CallLifecycleTest {
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
         assertTrue(bobCall.sendInviteOkAck());
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         assertTrue(georgeCall.waitForIncomingCall(5000));
@@ -1014,9 +1183,9 @@ public class CallLifecycleTest {
                 null, null));
         assertTrue(georgeCall.waitForAck(5000));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         Thread.sleep(3000);
@@ -1049,7 +1218,7 @@ public class CallLifecycleTest {
         bobPhone = null;
         georgePhone.dispose();
         georgePhone = null;
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -1087,9 +1256,9 @@ public class CallLifecycleTest {
         assertTrue(georgeCall.waitForIncomingCall(5000));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
@@ -1121,7 +1290,7 @@ public class CallLifecycleTest {
         String status = jsonObj.get("status").getAsString();
         logger.info("Status: "+status);
         assertTrue(status.equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -1154,9 +1323,9 @@ public class CallLifecycleTest {
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
         assertTrue(bobCall.sendInviteOkAck());
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         assertTrue(georgeCall.waitForIncomingCall(5000));
@@ -1185,7 +1354,7 @@ public class CallLifecycleTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -1218,9 +1387,9 @@ public class CallLifecycleTest {
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
         assertTrue(bobCall.sendInviteOkAck());
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         assertTrue(georgeCall.waitForIncomingCall(5000));
@@ -1249,7 +1418,7 @@ public class CallLifecycleTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -1292,7 +1461,7 @@ public class CallLifecycleTest {
 
         Thread.sleep(5000);
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
 
         Thread.sleep(5000);
@@ -1312,7 +1481,7 @@ public class CallLifecycleTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -1336,13 +1505,13 @@ public class CallLifecycleTest {
 
         SipCall georgeCall = georgePhone.createSipCall();
         georgeCall.listenForIncomingCall();
-        
+
         SipURI uri = subAccountClientSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(subAccountClientPhone.register(uri, "subaccountclient", "1234", subAccountClientContact, 3600, 3600));
 
         Credential c = new Credential("127.0.0.1", "subaccountclient", "1234");
         subAccountClientPhone.addUpdateCredential(c);
-        
+
         // Create outgoing call with subAccountClient phone to parent number
         final SipCall subAccountClientCall = subAccountClientPhone.createSipCall();
         subAccountClientCall.initiateOutgoingCall(subAccountClientContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
@@ -1369,9 +1538,9 @@ public class CallLifecycleTest {
                 null, null));
         assertTrue(georgeCall.waitForAck(5000));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         Thread.sleep(3000);
@@ -1411,7 +1580,7 @@ public class CallLifecycleTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, subAccountSid, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         //subAccount/child should be able to access the CDR
         cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), subAccountSid, subAuthToken, callSid);

@@ -560,6 +560,38 @@ confRVD(){
 	fi
 }
 
+## Adds/removes <rcmlserver>/<base-url> element based on $RVD_URL
+## This version of confRcmlserver() will used xmlstarlet and will probably sed commands that rely on empty elements like <x></x> instead of <x/>
+#confRcmlserver(){
+#    echo "Configuring <rcmlserver/>..."
+#    local RESTCOMM_XML=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+#    if [ -z "$RVD_URL" ]; then
+#        # remove <rcmlserver>/<base-url> element altogether
+#        xmlstarlet ed -P -d "/restcomm/rcmlserver/base-url" "$RESTCOMM_XML" > "${RESTCOMM_XML}.bak"
+#        mv ${RESTCOMM_XML}.bak "$RESTCOMM_XML"
+#    else
+#        # remove existing <base-url/> element
+#        xmlstarlet ed -P -d /restcomm/rcmlserver/base-url "$RESTCOMM_XML" > "${RESTCOMM_XML}.bak"
+#        mv ${RESTCOMM_XML}.bak "$RESTCOMM_XML"
+#        # add it anew
+#        xmlstarlet ed -P -s /restcomm/rcmlserver -t elem -n base-url -v "$RVD_URL" "${RESTCOMM_XML}" > "${RESTCOMM_XML}.bak"
+#        mv "${RESTCOMM_XML}.bak" "$RESTCOMM_XML"
+#    fi
+#    echo "<rcmlserver/> configured"
+#}
+
+# Updates <rcmlserver>/<base-url> according to $RVD_URL
+# This version of confRcmlserver() used sed for backwards compatibility with existing sed commands in this
+confRcmlserver() {
+    echo "Configuring <rcmlserver/>..."
+    local RESTCOMM_XML=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    sed  "/<rcmlserver>/,/<\/rcmlserver>/ s|<base-url>.*</base-url>|<base-url>${RVD_URL}</base-url>|" "$RESTCOMM_XML" > "${RESTCOMM_XML}.bak"
+    mv ${RESTCOMM_XML}.bak "$RESTCOMM_XML"
+    echo "base-url set to '$RVD_URL'"
+    echo "<rcmlserver/> configured"
+}
+
+
 #Auto Configure RMS Networking, if  MANUAL_SETUP=false.
 configRMSNetworking() {
     if [[ "$MANUAL_SETUP" == "false" || "$MANUAL_SETUP" == "FALSE" ]]; then
@@ -606,6 +638,7 @@ updateRecordingsPath
 configHypertextPort
 configOutboundProxy
 otherRestCommConf
+confRcmlserver
 confRVD
 configRMSNetworking
 echo 'Configured RestComm!'

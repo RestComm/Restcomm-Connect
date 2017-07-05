@@ -45,6 +45,7 @@ import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.CallDetailRecordList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.http.converter.CallDetailRecordConverter;
 import org.restcomm.connect.http.converter.CallDetailRecordListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
@@ -124,7 +125,7 @@ public class UssdPushEndpoint extends SecuredEndpoint {
         CreateCall create = null;
         //Currently we don't support StatusCallback for USSD Push requests
         try {
-            create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.USSD,
+            create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCallType.USSD,
                     accountId, null, null, null, null);
             create.setCreateCDR(false);
             Future<Object> future = (Future<Object>) ask(ussdCallManager, create, expires);

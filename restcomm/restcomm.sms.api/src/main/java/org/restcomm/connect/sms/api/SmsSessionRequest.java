@@ -22,7 +22,7 @@ package org.restcomm.connect.sms.api;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.sip.SipServletRequest;
-
+import org.restcomm.smpp.parameter.TlvSet;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 /**
@@ -36,6 +36,7 @@ public final class SmsSessionRequest {
     private final Encoding encoding;
     private final SipServletRequest origRequest;
     private final ConcurrentHashMap<String, String> customHeaders;
+    private final TlvSet tlvSet;
 
     public enum Encoding {
         UCS_2("UCS-2"),
@@ -52,9 +53,17 @@ public final class SmsSessionRequest {
             return name;
         }
     }
+    //FIXME: all signatures should be changed, encoding, sipReq, tlvSet are optional and should come after headers
+    //(from, to, body, headers, encoding, sipReq, tlvSet)
+    //(from, to, body, headers, encoding, sipReq)
+    //(from, to, body, headers, encoding, tlvSet)
+    //(from, to, body, headers, sipReq, tlvSet)
+    //(from, to, body, headers, encoding)
+    //(from, to, body, headers, sipReq)
+    //(from, to, body, headers, tlvSet)
+    //(from, to, body)
 
-    //TODO need to check which is using the SmsSessionRequest and modify accordingly to include or not the custom headers
-    public SmsSessionRequest(final String from, final String to, final String body, final Encoding encoding, final SipServletRequest origRequest, final ConcurrentHashMap<String, String> customHeaders) {
+    public SmsSessionRequest(final String from, final String to, final String body, final Encoding encoding, final SipServletRequest origRequest, TlvSet tlvSet, final ConcurrentHashMap<String, String> customHeaders) {
         super();
         this.from = from;
         this.to = to;
@@ -62,18 +71,41 @@ public final class SmsSessionRequest {
         this.body = body;
         this.customHeaders = customHeaders;
         this.encoding = encoding;
+        this.tlvSet = tlvSet;
+
+    }
+
+    //TODO need to check which is using the SmsSessionRequest and modify accordingly to include or not the custom headers
+    public SmsSessionRequest(final String from, final String to, final String body, final Encoding encoding, final SipServletRequest origRequest, final ConcurrentHashMap<String, String> customHeaders) {
+        this(from, to, body, encoding, origRequest, null, customHeaders);
+    }
+
+    public SmsSessionRequest(final String from, final String to, final String body, final Encoding encoding, final TlvSet tlvSet, final ConcurrentHashMap<String, String> customHeaders) {
+        this(from, to, body, encoding, null, tlvSet, customHeaders);
+    }
+
+    public SmsSessionRequest(final String from, final String to, final String body, final SipServletRequest origRequest, final TlvSet tlvSet, final ConcurrentHashMap<String, String> customHeaders) {
+        this(from, to, body, Encoding.GSM, origRequest, tlvSet, customHeaders);
     }
 
     public SmsSessionRequest(final String from, final String to, final String body, final SipServletRequest origRequest, final ConcurrentHashMap<String, String> customHeaders) {
-        this(from, to, body, Encoding.GSM, origRequest, customHeaders);
+        this(from, to, body, Encoding.GSM, origRequest, null, customHeaders);
     }
 
     public SmsSessionRequest(final String from, final String to, final String body, final Encoding encoding, final ConcurrentHashMap<String, String> customHeaders) {
-        this(from, to, body, encoding, null, customHeaders);
+        this(from, to, body, encoding, null, null, customHeaders);
+    }
+
+    public SmsSessionRequest(final String from, final String to, final String body, final TlvSet tlvSet, final ConcurrentHashMap<String, String> customHeaders) {
+        this(from, to, body, Encoding.GSM, null, null, customHeaders);
     }
 
     public SmsSessionRequest(final String from, final String to, final String body, final ConcurrentHashMap<String, String> customHeaders) {
-        this(from, to, body, Encoding.GSM, null, customHeaders);
+        this(from, to, body, Encoding.GSM, null, null, customHeaders);
+    }
+
+    public SmsSessionRequest(final String from, final String to, final String body) {
+        this(from, to, body, Encoding.GSM, null, null, null);
     }
 
     public String from() {
@@ -90,6 +122,10 @@ public final class SmsSessionRequest {
 
     public Encoding encoding() {
         return encoding;
+    }
+
+    public TlvSet getTlvSet() {
+        return tlvSet;
     }
 
     public SipServletRequest getOrigRequest() {
