@@ -48,7 +48,7 @@ public final class SubVoiceInterpreterParams {
     private String statusCallbackMethod;
     private String emailAddress;
 
-    private Boolean hangupOnEnd = false;
+    private Boolean hangupOnEnd;
 
     private SubVoiceInterpreterParams(Configuration configuration, DaoManager storage, ActorRef callManager, ActorRef conferenceCenter, ActorRef smsService, Sid account, Sid phone, String version, URI url, String method, URI fallbackUrl, String fallbackMethod, URI statusCallback, String statusCallbackMethod, String emailAddress, Boolean hangupOnEnd) {
         this.configuration = configuration;
@@ -149,7 +149,7 @@ public final class SubVoiceInterpreterParams {
         private URI statusCallback;
         private String statusCallbackMethod;
         private String emailAddress;
-        private Boolean hangupOnEnd;
+        private Boolean hangupOnEnd = false;
 
         public Builder() {
         }
