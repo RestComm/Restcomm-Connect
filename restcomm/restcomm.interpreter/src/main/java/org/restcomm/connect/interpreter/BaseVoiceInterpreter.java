@@ -145,7 +145,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
-    static String EMAIL_SENDER = "restcomm@restcomm.org";
+    static final String DEFAULT_NOTIFICATION_SENDER = "restcomm@restcomm.org";
 
     // States for the FSM.
     // ==========================
@@ -182,6 +182,8 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
     String cachePath = null;
     // The downloader will fetch resources for us using HTTP.
     ActorRef downloader = null;
+    // The sender address of notification
+    String notificationSender = DEFAULT_NOTIFICATION_SENDER;
     // The mail man that will deliver e-mail.
     ActorRef mailerNotify = null;
     ActorRef mailerService = null;
@@ -724,10 +726,19 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         buffer.append(notification.getResponseHeaders()).append("</br>");
         buffer.append("<strong>").append("Response Body: ").append("</strong></br>");
         buffer.append(notification.getResponseBody()).append("</br>");
-        final Mail emailMsg = new Mail(EMAIL_SENDER,emailAddress,EMAIL_SUBJECT, buffer.toString());
+
         if (mailerNotify == null){
-            mailerNotify = mailer(configuration.subset("smtp-notify"));
+            Configuration smtpNotifyConf = configuration.subset("smtp-notify");
+            String smtpUser = smtpNotifyConf.getString("user");
+            String smtpHost = smtpNotifyConf.getString("host");
+
+            if (smtpUser != null && !smtpUser.isEmpty()
+                    && smtpHost != null && !smtpHost.isEmpty()) {
+                notificationSender = smtpUser + "@" + smtpHost;
+            }
+            mailerNotify = mailer(smtpNotifyConf);
         }
+        final Mail emailMsg = new Mail(notificationSender, emailAddress, EMAIL_SUBJECT, buffer.toString());
         mailerNotify.tell(new EmailRequest(emailMsg), self());
     }
 

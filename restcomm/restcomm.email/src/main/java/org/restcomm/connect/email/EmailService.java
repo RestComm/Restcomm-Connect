@@ -175,7 +175,7 @@ public class EmailService extends RestcommUntypedActor {
      EmailResponse send(final Mail mail) {
         try {
             InternetAddress from;
-            if (mail.from() != null || !mail.from().equalsIgnoreCase("")) {
+            if (mail.from() != null && !mail.from().equalsIgnoreCase("")) {
                 from = new InternetAddress(mail.from());
             } else {
                 from = new InternetAddress(user);

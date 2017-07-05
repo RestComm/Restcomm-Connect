@@ -76,7 +76,7 @@ import static org.restcomm.connect.interpreter.rcml.Verbs.say;
 public class ConfVoiceInterpreter extends RestcommUntypedActor {
     private static final int ERROR_NOTIFICATION = 0;
     private static final int WARNING_NOTIFICATION = 1;
-    static String EMAIL_SENDER;
+    static final String DEFAULT_NOTIFICATION_SENDER = "restcomm@restcomm.org";
 
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -105,6 +105,8 @@ public class ConfVoiceInterpreter extends RestcommUntypedActor {
     private final String cachePath;
     // The downloader will fetch resources for us using HTTP.
     private final ActorRef downloader;
+    // The sender address of notification
+    String notificationSender = DEFAULT_NOTIFICATION_SENDER;
     // The mail man that will deliver e-mail.
     private ActorRef mailerNotify = null;
 
@@ -570,10 +572,19 @@ public class ConfVoiceInterpreter extends RestcommUntypedActor {
         buffer.append(notification.getResponseHeaders()).append("</br>");
         buffer.append("<strong>").append("Response Body: ").append("</strong></br>");
         buffer.append(notification.getResponseBody()).append("</br>");
-        final Mail emailMsg = new Mail(EMAIL_SENDER,emailAddress,EMAIL_SUBJECT, buffer.toString());
+
         if (mailerNotify == null){
-            mailerNotify = mailer(configuration.subset("smtp-notify"));
+            Configuration smtpNotifyConf = configuration.subset("smtp-notify");
+            String smtpUser = smtpNotifyConf.getString("user");
+            String smtpHost = smtpNotifyConf.getString("host");
+
+            if (smtpUser != null && !smtpUser.isEmpty()
+                    && smtpHost != null && !smtpHost.isEmpty()) {
+                notificationSender = smtpUser + "@" + smtpHost;
+            }
+            mailerNotify = mailer(smtpNotifyConf);
         }
+        final Mail emailMsg = new Mail(notificationSender, emailAddress, EMAIL_SUBJECT, buffer.toString());
         mailerNotify.tell(new EmailRequest(emailMsg), self());
     }
 
