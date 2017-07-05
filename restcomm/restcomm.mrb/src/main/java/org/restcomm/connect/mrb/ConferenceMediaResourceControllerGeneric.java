@@ -41,6 +41,7 @@ import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
+import org.restcomm.connect.dao.entities.MediaType;
 import org.restcomm.connect.mgcp.MediaGatewayResponse;
 import org.restcomm.connect.mgcp.MediaSession;
 import org.restcomm.connect.mrb.api.ConferenceMediaResourceControllerStateChanged;
@@ -302,7 +303,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
             this.recordStarted = DateTime.now();
 
             // Tell media group to start recording
-            Record record = new Record(message.getRecordingUri(), timeout, maxLength, finishOnKey);
+            Record record = new Record(message.getRecordingUri(), timeout, maxLength, finishOnKey, MediaType.AUDIO_ONLY);
             this.mediaGroup.tell(record, null);
         }
     }
