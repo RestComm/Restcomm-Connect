@@ -84,6 +84,7 @@ public final class Connection extends RestcommUntypedActor {
     private ActorRef endpoint;
     private EndpointIdentifier endpointId;
     private ConnectionIdentifier connId;
+    private ConnectionIdentifier requestedConnId;
     private ConnectionDescriptor localDesc;
     private ConnectionDescriptor remoteDesc;
     private boolean webrtc;
@@ -197,6 +198,11 @@ public final class Connection extends RestcommUntypedActor {
                     fsm.transition(message, open);
                 }
             } else {
+                String err = String.format(
+                        "MGCP Transaction did not executed normally: session: %s | endpointId: %s | requestedConnId: %s | connId: %s",
+                        session.id() + "", endpointId == null ? "null" : endpointId.getLocalEndpointName(),
+                        requestedConnId, connId);
+                logger.error(err);
                 if (modifying.equals(state)) {
                     fsm.transition(message, closing);
                 } else {
@@ -269,7 +275,11 @@ public final class Connection extends RestcommUntypedActor {
             log(ConnectionStateChanged.State.CLOSED);
             // If we timed out log it.
             if (message instanceof ReceiveTimeout) {
-                logger.error("The media gateway failed to respond in the requested timout period.");
+                String err = String.format(
+                        "The media gateway failed to respond in the requested timout period. session: %s | endpointId: %s | requestedConnId: %s | connId: %s",
+                        session.id() + "", endpointId == null ? "null" : endpointId.getLocalEndpointName(),
+                        requestedConnId, connId);
+                logger.error(err);
             }
         }
     }
@@ -434,7 +444,7 @@ public final class Connection extends RestcommUntypedActor {
             final UpdateConnection request = (UpdateConnection) message;
             final String sessionId = Integer.toString(session.id());
             final CallIdentifier callId = new CallIdentifier(sessionId);
-            ConnectionIdentifier requestedConnId = request.connectionIdentifier();
+            requestedConnId = request.connectionIdentifier();
             requestedConnId = requestedConnId==null ? connId:requestedConnId;
             final ModifyConnection mdcx = new ModifyConnection(source, callId, endpointId, requestedConnId);
             final ConnectionMode mode = request.mode();

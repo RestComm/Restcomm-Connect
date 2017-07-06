@@ -146,11 +146,20 @@ public final class DiskCache extends RestcommUntypedActor {
         }
 
         final String extension = extension(uri).toLowerCase();
-        final File path = new File(cacheDir + hash + "." + extension);
-        if (!path.exists()) {
-            downloader.download(uri, path);
+        File path = null;
+        if (extension.equalsIgnoreCase("wav")) {
+            path = new File(cacheDir + hash + "." + extension);
+            if (!path.exists()) {
+                downloader.download(uri, path);
+            }
+            return URI.create(this.cacheUri + hash + "." + extension);
+        } else {
+            path = new File(cacheDir + hash + ".wav" );
+            if (!path.exists()) {
+                downloader.download(uri, path);
+            }
+            return URI.create(this.cacheUri + hash + ".wav");
         }
-        return URI.create(this.cacheUri + hash + "." + extension);
     }
 
     @Override

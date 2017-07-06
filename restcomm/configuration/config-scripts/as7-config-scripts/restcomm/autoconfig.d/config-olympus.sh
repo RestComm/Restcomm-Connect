@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 ##
 ## Description: Configures RestComm
 ## Author: Lefteris Banos (eleftherios.banos@telestax.com)
@@ -13,33 +13,28 @@ if [ ! -d "$BASEDIR/standalone/deployments/olympus.war" ]; then
     mv -f $BASEDIR/standalone/deployments/olympus-exploded.war $BASEDIR/standalone/deployments/olympus.war
 fi
 
-#Set Olympus port if WSS is used.
+# Set Olympus ports
 olympusPortConf(){
-FILE=$BASEDIR/standalone/deployments/olympus.war/resources/js/controllers/register.js
+FILE=$BASEDIR/standalone/deployments/olympus.war/resources/xml/olympus.xml
 
- #Check for Por Offset
-      local SIP_PORT_WS=$((SIP_PORT_WS + PORT_OFFSET))
-      local SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
+# Check for Port Offset
+    local SIP_PORT_WS=$((SIP_PORT_WS + PORT_OFFSET))
+    local SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
 
-   if [ -n "$SECURESSL" ]; then
-       sed -i "s|ws:|wss:|" $FILE
-       if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
-           sed -i "s|\$scope.serverAddress + ':[0-9][0-9]*'|\$scope.serverAddress + ':${LB_EXTERNAL_PORT_WSS}'|" $FILE
-           sed -i "s|\$scope.serverPort = '[0-9][0-9]*';|\$scope.serverPort = '${LB_EXTERNAL_PORT_WSS}';|" $FILE
-       else
-            sed -i "s|\$scope.serverAddress + ':[0-9][0-9]*'|\$scope.serverAddress + ':${SIP_PORT_WSS}'|" $FILE
-            sed -i "s|\$scope.serverPort = '[0-9][0-9]*';|\$scope.serverPort = '${SIP_PORT_WSS}';|" $FILE
-        fi
+    if [ -n "$SECURESSL" ]; then
+        xmlstarlet ed -L -P -u  "/olympus/server/@secure" -v "true" $FILE
    else
+        xmlstarlet ed -L -P -u  "/olympus/server/@secure" -v "false" $FILE
+    fi
 
-      if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
-            sed -i "s|\$scope.serverAddress + ':[0-9][0-9]*'|\$scope.serverAddress + ':${LB_EXTERNAL_PORT_WS}'|" $FILE
-            sed -i "s|\$scope.serverPort = '[0-9][0-9]*';|\$scope.serverPort = '${LB_EXTERNAL_PORT_WS}';|" $FILE
-       else
-            sed -i "s|\$scope.serverAddress + ':[0-9][0-9]*'|\$scope.serverAddress + ':${SIP_PORT_WS}'|" $FILE
-            sed -i "s|\$scope.serverPort = '[0-9][0-9]*';|\$scope.serverPort = '${SIP_PORT_WS}';|" $FILE
-       fi
-   fi
+    if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
+        xmlstarlet ed -L -P -u  "/olympus/server/port" -v ${LB_EXTERNAL_PORT_WS} $FILE
+        xmlstarlet ed -L -P -u  "/olympus/server/secure-port" -v ${LB_EXTERNAL_PORT_WSS} $FILE
+    else
+        xmlstarlet ed -L -P -u  "/olympus/server/port" -v ${SIP_PORT_WS} $FILE
+        xmlstarlet ed -L -P -u  "/olympus/server/secure-port" -v ${SIP_PORT_WSS} $FILE
+    fi
+
 }
 
 

@@ -23,6 +23,7 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -47,6 +48,13 @@ public final class AccountsJsonEndpoint extends AccountsEndpoint {
     @GET
     public Response getAccountAsJson(@PathParam("accountSid") final String accountSid) {
         return getAccount(accountSid, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{accountSid}")
+    @OPTIONS
+    public Response optionsAccount(@PathParam("accountSid") final String accountSid) {
+        // no authentication here since this is a pre-flight request
+        return Response.ok().build();
     }
 
     @GET

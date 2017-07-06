@@ -20,15 +20,13 @@
  */
 package org.restcomm.connect.mrb;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import jain.protocol.ip.mgcp.CreateProviderException;
-import jain.protocol.ip.mgcp.JainMgcpProvider;
-import jain.protocol.ip.mgcp.JainMgcpStack;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl;
@@ -44,7 +42,6 @@ import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
 import org.restcomm.connect.dao.entities.MediaServerEntity;
 import org.restcomm.connect.mgcp.MediaResourceBrokerResponse;
-import org.restcomm.connect.mgcp.PowerOffMediaGateway;
 import org.restcomm.connect.mgcp.PowerOnMediaGateway;
 import org.restcomm.connect.mrb.api.GetConferenceMediaResourceController;
 import org.restcomm.connect.mrb.api.GetMediaGateway;
@@ -52,13 +49,15 @@ import org.restcomm.connect.mrb.api.MediaGatewayForConference;
 import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
 import org.restcomm.connect.telephony.api.ConferenceStateChanged;
 
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.CreateProviderException;
+import jain.protocol.ip.mgcp.JainMgcpProvider;
+import jain.protocol.ip.mgcp.JainMgcpStack;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -379,15 +378,7 @@ public class MediaResourceBrokerGeneric extends RestcommUntypedActor {
 
     protected void cleanup() {
         try {
-            if(mediaGatewayMap != null){
-                Iterator<String> gatewayKeys = mediaGatewayMap.keySet().iterator();
-                while (gatewayKeys.hasNext()){
-                    ActorRef mg = mediaGatewayMap.get(gatewayKeys.next());
-                    mg.tell(new PowerOffMediaGateway(), self());
-                }
-            }
             if (mgcpStack != null){
-                mgcpStack.deleteProvider(mgcpProvider);
                 mgcpStack = null;
             }
             mediaGatewayMap = null;

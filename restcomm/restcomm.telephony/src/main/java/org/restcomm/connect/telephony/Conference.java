@@ -106,7 +106,9 @@ public final class Conference extends RestcommUntypedActor {
 
     private ConferenceStateChanged.State waitingState;
 
-    public Conference(final String name, final MediaServerControllerFactory factory, final DaoManager storage) {
+    private final ActorRef conferenceCenter;
+
+    public Conference(final String name, final MediaServerControllerFactory factory, final DaoManager storage, final ActorRef conferenceCenter) {
         super();
         final ActorRef source = self();
 
@@ -146,6 +148,7 @@ public final class Conference extends RestcommUntypedActor {
 
         this.storage = storage;
 
+        this.conferenceCenter = conferenceCenter;
         //generate it later at MRB level, by watching if same conference is running on another RC instance.
         //this.sid = Sid.generate(Sid.Type.CONFERENCE);
         this.mscontroller = getContext().actorOf(factory.provideConferenceControllerProps());
@@ -320,6 +323,10 @@ public final class Conference extends RestcommUntypedActor {
             // Ask the MS Controller to stop
             // This will stop any current media operations and clean media resources
             mscontroller.tell(new Stop(), super.source);
+
+            // Tell conferenceCentre that conference is in stopping state.
+            // https://github.com/RestComm/Restcomm-Connect/issues/2312
+            conferenceCenter.tell(new ConferenceStateChanged(name, ConferenceStateChanged.State.STOPPING), self());
         }
     }
 
@@ -397,6 +404,8 @@ public final class Conference extends RestcommUntypedActor {
     private void onStartConference(StartConference message, ActorRef self, ActorRef sender) throws Exception {
         if (is(uninitialized)) {
             this.fsm.transition(message, initializing);
+        }else{
+            logger.warning("Received StartConference from sender : "+sender.path()+" but the state is: "+fsm.state().toString());
         }
     }
 
@@ -405,6 +414,8 @@ public final class Conference extends RestcommUntypedActor {
             this.fsm.transition(message, stopped);
         } else if (is(waiting) || is(running)) {
             this.fsm.transition(message, evicting);
+        }else{
+            logger.warning("Received StopConference from sender : "+sender.path()+" but the state is: "+fsm.state().toString());
         }
     }
 
@@ -419,6 +430,9 @@ public final class Conference extends RestcommUntypedActor {
         if (isRunning()) {
             final JoinCall joinCall = new JoinCall(message.call(), ConnectionMode.Confrnce, this.sid);
             this.mscontroller.tell(joinCall, self);
+        }else{
+            logger.error("Received AddParticipant for Call: "+message.call().path()+" but the state is: "+fsm.state().toString());
+            sender.tell(new ConferenceStateChanged(name, ConferenceStateChanged.State.STOPPING), self());
         }
     }
 
@@ -432,9 +446,7 @@ public final class Conference extends RestcommUntypedActor {
             final Leave leave = new Leave();
             call.tell(leave, self);
         } else {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Received RemoveParticipants for Call: "+message.call().path()+" but the state is: "+fsm.state().toString());
-            }
+            logger.warning("Received RemoveParticipants for Call: "+message.call().path()+" but the state is: "+fsm.state().toString());
         }
     }
 
@@ -442,6 +454,9 @@ public final class Conference extends RestcommUntypedActor {
         if (is(running) || is(waiting) || is(evicting)) {
             // Participant successfully left the conference.
             boolean removed = calls.remove(sender);
+            if(!removed)
+                logger.error("Call was not in conference participant list. Call: "+sender.path());
+
             int participantsNr = calls.size();
             if(logger.isInfoEnabled()) {
                 logger.info("################################## Conference " + name + " has " + participantsNr + " participants");
@@ -453,7 +468,7 @@ public final class Conference extends RestcommUntypedActor {
             }
 
             // Stop the conference when ALL participants have been evicted
-            if (removed && calls.isEmpty()) {
+            if (calls.isEmpty()) {
                 fsm.transition(message, stopping);
             }
         }
@@ -479,7 +494,7 @@ public final class Conference extends RestcommUntypedActor {
                 }
                 break;
             default:
-                // ignore unknown state
+                logger.warning("received an unknown state from MediaServerController: "+state);
                 break;
         }
     }
@@ -514,7 +529,7 @@ public final class Conference extends RestcommUntypedActor {
             this.mscontroller.tell(message, sender);
         } else {
             if (logger.isInfoEnabled()) {
-                logger.info("Play will not be processed for conference: "+this.name+" , number of local participants: "+this.calls.size()+ " globalNoOfParticipants: "+globalNoOfParticipants+" , isRunning: false, isModeratorPresent: "+this.moderatorPresent+ " iterations: "+message.iterations());
+                logger.info("Play will not be processed for conference since its not in running state: "+this.name+" , number of local participants: "+this.calls.size()+ " globalNoOfParticipants: "+globalNoOfParticipants+" , isRunning: false, isModeratorPresent: "+this.moderatorPresent+ " iterations: "+message.iterations());
             }
         }
     }
@@ -523,6 +538,8 @@ public final class Conference extends RestcommUntypedActor {
         if (isRunning()) {
             // Forward message to media server controller
             this.mscontroller.tell(message, sender);
+        }else{
+            logger.warning("Received StartRecording from sender : "+sender.path()+" but the state is: "+fsm.state().toString());
         }
     }
 
@@ -530,6 +547,8 @@ public final class Conference extends RestcommUntypedActor {
         if (isRunning()) {
             // Forward message to media server controller
             this.mscontroller.tell(message, sender);
+        }else{
+            logger.warning("Received StopRecording from sender : "+sender.path()+" but the state is: "+fsm.state().toString());
         }
     }
 

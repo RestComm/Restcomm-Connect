@@ -101,6 +101,7 @@ import java.util.Set;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  *
  */
 public class MmsCallController extends MediaServerController {
@@ -719,7 +720,9 @@ public class MmsCallController extends MediaServerController {
 
     private void onEndpointStateChanged(EndpointStateChanged message, ActorRef self, ActorRef sender) throws Exception {
         if (is(stopping)) {
-            if (sender.equals(this.bridgeEndpoint) && EndpointState.DESTROYED.equals(message.getState())) {
+            if (sender.equals(this.bridgeEndpoint) && (EndpointState.DESTROYED.equals(message.getState()) || EndpointState.FAILED.equals(message.getState()))) {
+                if(EndpointState.FAILED.equals(message.getState()))
+                    logger.error("Could not destroy endpoint on media server. corresponding actor path is: " + this.bridgeEndpoint.path());
                 this.bridgeEndpoint.tell(new StopObserving(self), self);
                 context().stop(bridgeEndpoint);
                 bridgeEndpoint = null;

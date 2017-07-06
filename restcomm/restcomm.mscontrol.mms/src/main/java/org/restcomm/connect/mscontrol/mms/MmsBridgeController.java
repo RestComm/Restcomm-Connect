@@ -73,6 +73,7 @@ import java.util.Set;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  *
  */
 public class MmsBridgeController extends MediaServerController {
@@ -344,7 +345,9 @@ public class MmsBridgeController extends MediaServerController {
 
     private void onEndpointStateChanged(EndpointStateChanged message, ActorRef self, ActorRef sender) throws Exception {
         if (is(stopping)) {
-            if (sender.equals(this.endpoint) && EndpointState.DESTROYED.equals(message.getState())) {
+            if (sender.equals(this.endpoint) && (EndpointState.DESTROYED.equals(message.getState()) || EndpointState.FAILED.equals(message.getState()))) {
+                if(EndpointState.FAILED.equals(message.getState()))
+                    logger.error("Could not destroy endpoint on media server. corresponding actor path is: " + this.endpoint.path());
                 this.endpoint.tell(new StopObserving(self), self);
                 context().stop(endpoint);
                 endpoint = null;
