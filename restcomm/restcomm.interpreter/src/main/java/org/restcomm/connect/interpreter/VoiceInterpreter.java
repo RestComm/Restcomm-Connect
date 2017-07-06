@@ -730,6 +730,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     private void onStopInterpreter(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         this.liveCallModification = ((StopInterpreter) message).isLiveCallModification();
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("Got StopInterpreter, liveCallModification %s, CallState %s", liveCallModification, callState);
+            logger.info(msg);
+        }
         if (CallStateChanged.State.IN_PROGRESS.equals(callState) && !liveCallModification) {
             fsm.transition(message, hangingUp);
         } else {
@@ -831,10 +835,18 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private void onEndMessage(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
         if (playWaitUrlPending && conferenceWaitUris != null && conferenceWaitUris.size() > 0) {
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("End tag received, playWaitUrlPending is %s, conferenceWaitUris.size() %d",playWaitUrlPending, conferenceWaitUris.size());
+                logger.info(msg);
+            }
             fsm.transition(conferenceWaitUris, conferencing);
             return;
         }
         if (callState.equals(CallStateChanged.State.COMPLETED) || callState.equals(CallStateChanged.State.CANCELED)) {
+            if(logger.isInfoEnabled()) {
+                String msg = String.format("End tag received, Call state %s , VI state %s will move to finished state",callState, fsm.state());
+                logger.info(msg);
+            }
             fsm.transition(message, finished);
         } else {
             if (!isParserFailed) {
