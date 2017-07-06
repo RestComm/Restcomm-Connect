@@ -1797,67 +1797,72 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             final Recording recording = builder.build();
             final RecordingsDao recordings = storage.getRecordingsDao();
             recordings.addRecording(recording);
-            // Start transcription.
-            URI transcribeCallback = null;
-            Attribute attribute = verb.attribute("transcribeCallback");
-            if (attribute != null) {
-                final String value = attribute.value();
-                if (value != null && !value.isEmpty()) {
-                    try {
-                        transcribeCallback = URI.create(value);
-                    } catch (final Exception exception) {
-                        final Notification notification = notification(ERROR_NOTIFICATION, 11100, transcribeCallback
-                                + " is an invalid URI.");
-                        notifications.addNotification(notification);
-                        sendMail(notification);
-                        final StopInterpreter stop = new StopInterpreter();
-                        source.tell(stop, source);
-                        return;
-                    }
-                }
-            }
-            boolean transcribe = false;
-            if (transcribeCallback != null) {
-                transcribe = true;
-            } else {
-                attribute = verb.attribute("transcribe");
+
+            Attribute attribute = null;
+
+            if (checkAsrService()) {
+                // ASR service is enabled. Start transcription.
+                URI transcribeCallback = null;
+                attribute = verb.attribute("transcribeCallback");
                 if (attribute != null) {
                     final String value = attribute.value();
                     if (value != null && !value.isEmpty()) {
-                        transcribe = Boolean.parseBoolean(value);
+                        try {
+                            transcribeCallback = URI.create(value);
+                        } catch (final Exception exception) {
+                            final Notification notification = notification(ERROR_NOTIFICATION, 11100, transcribeCallback
+                                    + " is an invalid URI.");
+                            notifications.addNotification(notification);
+                            sendMail(notification);
+                            final StopInterpreter stop = new StopInterpreter();
+                            source.tell(stop, source);
+                            return;
+                        }
                     }
                 }
-            }
-            if (transcribe && checkAsrService()) {
-                final Sid sid = Sid.generate(Sid.Type.TRANSCRIPTION);
-                final Transcription.Builder otherBuilder = Transcription.builder();
-                otherBuilder.setSid(sid);
-                otherBuilder.setAccountSid(accountId);
-                otherBuilder.setStatus(Transcription.Status.IN_PROGRESS);
-                otherBuilder.setRecordingSid(recordingSid);
-                otherBuilder.setTranscriptionText("Transcription Text not available");
-                otherBuilder.setDuration(duration);
-                otherBuilder.setPrice(new BigDecimal("0.00"));
-                buffer = new StringBuilder();
-                buffer.append("/").append(version).append("/Accounts/").append(accountId.toString());
-                buffer.append("/Transcriptions/").append(sid.toString());
-                final URI uri = URI.create(buffer.toString());
-                otherBuilder.setUri(uri);
-                final Transcription transcription = otherBuilder.build();
-                final TranscriptionsDao transcriptions = storage.getTranscriptionsDao();
-                transcriptions.addTranscription(transcription);
-                try {
-                    final Map<String, Object> attributes = new HashMap<String, Object>();
-                    attributes.put("callback", transcribeCallback);
-                    attributes.put("transcription", transcription);
-                    getAsrService().tell(new AsrRequest(new File(recordingUri), "en", attributes), source);
-                    outstandingAsrRequests++;
-                } catch (final Exception exception) {
-                    logger.error(exception.getMessage(), exception);
+                boolean transcribe = false;
+                if (transcribeCallback != null) {
+                    transcribe = true;
+                } else {
+                    attribute = verb.attribute("transcribe");
+                    if (attribute != null) {
+                        final String value = attribute.value();
+                        if (value != null && !value.isEmpty()) {
+                            transcribe = Boolean.parseBoolean(value);
+                        }
+                    }
+                }
+                if (transcribe && checkAsrService()) {
+                    final Sid sid = Sid.generate(Sid.Type.TRANSCRIPTION);
+                    final Transcription.Builder otherBuilder = Transcription.builder();
+                    otherBuilder.setSid(sid);
+                    otherBuilder.setAccountSid(accountId);
+                    otherBuilder.setStatus(Transcription.Status.IN_PROGRESS);
+                    otherBuilder.setRecordingSid(recordingSid);
+                    otherBuilder.setTranscriptionText("Transcription Text not available");
+                    otherBuilder.setDuration(duration);
+                    otherBuilder.setPrice(new BigDecimal("0.00"));
+                    buffer = new StringBuilder();
+                    buffer.append("/").append(version).append("/Accounts/").append(accountId.toString());
+                    buffer.append("/Transcriptions/").append(sid.toString());
+                    final URI uri = URI.create(buffer.toString());
+                    otherBuilder.setUri(uri);
+                    final Transcription transcription = otherBuilder.build();
+                    final TranscriptionsDao transcriptions = storage.getTranscriptionsDao();
+                    transcriptions.addTranscription(transcription);
+                    try {
+                        final Map<String, Object> attributes = new HashMap<String, Object>();
+                        attributes.put("callback", transcribeCallback);
+                        attributes.put("transcription", transcription);
+                        getAsrService().tell(new AsrRequest(new File(recordingUri), "en", attributes), source);
+                        outstandingAsrRequests++;
+                    } catch (final Exception exception) {
+                        logger.error(exception.getMessage(), exception);
+                    }
                 }
             } else if(logger.isInfoEnabled()){
-                logger.info("AsrService activated but not properly configured. Please set api-key for AsrService");
-        }
+                logger.info("AsrService is not enabled");
+            }
 
             // If action is present redirect to the action URI.
             String action = null;
@@ -1943,11 +1948,11 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             if (CallStateChanged.class.equals(klass) ) {
                 if (action == null || action.isEmpty()) {
                     source.tell(new StopInterpreter(), source);
+                } else {
+                    // Ask the parser for the next action to take.
+                    final GetNextVerb next = new GetNextVerb();
+                    parser.tell(next, source);
                 }
-            } else {
-                // Ask the parser for the next action to take.
-                final GetNextVerb next = new GetNextVerb();
-                parser.tell(next, source);
             }
             // A little clean up.
             recordingSid = null;
