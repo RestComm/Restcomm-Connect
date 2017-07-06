@@ -70,7 +70,7 @@ public final class ConferenceCenter extends RestcommUntypedActor {
             @Override
             public UntypedActor create() throws Exception {
                 //Here Here we can pass Gateway where call is connected
-                return new Conference(name, factory, storage);
+                return new Conference(name, factory, storage, getSelf());
             }
         });
         return getContext().actorOf(props);
