@@ -19,6 +19,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -68,11 +69,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.restcomm.connect.interpreter.rcml.Verbs.email;
-import static org.restcomm.connect.interpreter.rcml.Verbs.redirect;
-import static org.restcomm.connect.interpreter.rcml.Verbs.sms;
+import static org.restcomm.connect.interpreter.rcml.Verbs.*;
 
-public class SmppInterpreter extends UntypedActor  {
+public class SmppInterpreter extends RestcommUntypedActor {
 
 
     private static final int ERROR_NOTIFICATION = 0;

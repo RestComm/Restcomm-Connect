@@ -21,10 +21,10 @@
 package org.restcomm.connect.monitoringservice;
 
 import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.dao.DaoManager;
@@ -55,7 +55,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
-public class MonitoringService extends UntypedActor{
+public class MonitoringService extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private DaoManager daoManager;

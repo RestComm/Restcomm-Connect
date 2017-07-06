@@ -27,7 +27,6 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -39,6 +38,7 @@ import org.mobicents.javax.servlet.sip.SipSessionExt;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -95,7 +95,6 @@ import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.telephony.api.RemoveParticipant;
-
 import scala.concurrent.duration.Duration;
 
 import javax.sdp.SdpException;
@@ -113,7 +112,6 @@ import javax.servlet.sip.TelURL;
 import javax.sip.header.RecordRouteHeader;
 import javax.sip.header.RouteHeader;
 import javax.sip.message.Response;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.InetAddress;
@@ -142,7 +140,7 @@ import java.util.concurrent.TimeUnit;
  *
  */
 @Immutable
-public final class Call extends UntypedActor {
+public final class Call extends RestcommUntypedActor {
 
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);

@@ -23,6 +23,7 @@ import org.restcomm.connect.commons.cache.DiskCacheRequest;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
 import org.restcomm.connect.commons.cache.HashGenerator;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -72,7 +73,7 @@ import java.util.Set;
 import static org.restcomm.connect.interpreter.rcml.Verbs.play;
 import static org.restcomm.connect.interpreter.rcml.Verbs.say;
 
-public class ConfVoiceInterpreter extends UntypedActor {
+public class ConfVoiceInterpreter extends RestcommUntypedActor {
     private static final int ERROR_NOTIFICATION = 0;
     private static final int WARNING_NOTIFICATION = 1;
     static String EMAIL_SENDER;

@@ -39,6 +39,7 @@ import jain.protocol.ip.mgcp.message.NotificationRequest;
 import jain.protocol.ip.mgcp.message.Notify;
 import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.RevolvingCounter;
 
 import java.net.InetAddress;
@@ -49,7 +50,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class MediaGateway extends UntypedActor implements JainMgcpListener {
+public final class MediaGateway extends RestcommUntypedActor implements JainMgcpListener {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // MediaGateway connection information.
     private String name;

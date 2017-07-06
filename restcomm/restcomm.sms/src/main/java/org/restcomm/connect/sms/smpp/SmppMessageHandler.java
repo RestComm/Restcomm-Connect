@@ -7,20 +7,19 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
 import com.cloudhopper.commons.charset.CharsetUtil;
 import com.cloudhopper.smpp.pdu.SubmitSm;
+import com.cloudhopper.smpp.tlv.Tlv;
 import com.cloudhopper.smpp.type.Address;
 import com.cloudhopper.smpp.type.RecoverablePduException;
 import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
 import com.cloudhopper.smpp.type.SmppTimeoutException;
 import com.cloudhopper.smpp.type.UnrecoverablePduException;
-import com.cloudhopper.smpp.tlv.Tlv;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
-
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
@@ -28,8 +27,6 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-//import org.restcomm.connect.extension.api.ExtensionRequest;
-//import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.IExtensionCreateSmsSessionRequest;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
@@ -47,13 +44,15 @@ import javax.servlet.ServletContext;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipURI;
-
 import java.io.IOException;
 import java.net.URI;
-import java.util.List;
 import java.util.Collection;
+import java.util.List;
 
-public class SmppMessageHandler extends UntypedActor  {
+//import org.restcomm.connect.extension.api.ExtensionRequest;
+//import org.restcomm.connect.extension.api.ExtensionResponse;
+
+public class SmppMessageHandler extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private final ServletContext servletContext;

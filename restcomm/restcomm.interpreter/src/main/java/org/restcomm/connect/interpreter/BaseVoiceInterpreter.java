@@ -46,6 +46,7 @@ import org.restcomm.connect.commons.cache.DiskCacheRequest;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
 import org.restcomm.connect.commons.cache.HashGenerator;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -130,7 +131,7 @@ import static akka.pattern.Patterns.ask;
  * @author gvagenas@telestax.com
  * @author pavel.slegr@telestax.com
  */
-public abstract class BaseVoiceInterpreter extends UntypedActor {
+public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 

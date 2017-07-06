@@ -26,6 +26,7 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
@@ -44,7 +45,7 @@ import java.util.Map;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author amit.bhayani@telestax.com (Amit Bhayani)
  */
-public final class ConferenceCenter extends UntypedActor {
+public final class ConferenceCenter extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 

@@ -27,6 +27,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
@@ -61,7 +62,7 @@ import static javax.servlet.sip.SipServletResponse.*;
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
-public class UssdCallManager extends UntypedActor {
+public class UssdCallManager extends RestcommUntypedActor {
 
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;

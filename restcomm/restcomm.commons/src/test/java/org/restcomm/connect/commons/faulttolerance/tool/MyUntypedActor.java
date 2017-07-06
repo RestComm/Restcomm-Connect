@@ -1,14 +1,14 @@
 package org.restcomm.connect.commons.faulttolerance.tool;
 
-import akka.actor.ActorSystem;
-import org.restcomm.connect.commons.faulttolerance.SupervisorActorCreationStressTest;
-
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
+import org.restcomm.connect.commons.faulttolerance.SupervisorActorCreationStressTest;
 
 /**
  * MyUntypedActor represent a restcomm-connect class that request supervisor to create actor for it
@@ -16,7 +16,7 @@ import akka.event.LoggingAdapter;
  * @author mariafarooq
  *
  */
-public class MyUntypedActor  extends UntypedActor {
+public class MyUntypedActor  extends RestcommUntypedActor {
     private LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
 	private final ActorSystem system;

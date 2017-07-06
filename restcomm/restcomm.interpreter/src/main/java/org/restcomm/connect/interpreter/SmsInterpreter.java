@@ -39,6 +39,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -91,7 +92,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class SmsInterpreter extends UntypedActor {
+public final class SmsInterpreter extends RestcommUntypedActor {
     private static final int ERROR_NOTIFICATION = 0;
     private static final int WARNING_NOTIFICATION = 1;
     static String EMAIL_SENDER;
