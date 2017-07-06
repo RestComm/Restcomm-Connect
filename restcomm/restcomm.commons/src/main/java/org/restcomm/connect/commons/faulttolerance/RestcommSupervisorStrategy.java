@@ -22,7 +22,7 @@ public class RestcommSupervisorStrategy implements SupervisorStrategyConfigurato
 
     final SupervisorStrategy.Directive strategy = resume();
 
-    RestcommFaultToleranceStrategy defaultStrategy = new RestcommFaultToleranceStrategy(10, Duration.create("1 minute"),
+   RestcommFaultToleranceStrategy defaultStrategy = new RestcommFaultToleranceStrategy(10, Duration.create("1 minute"),
             new RestcommFaultToleranceDecider());
 
     @Override
