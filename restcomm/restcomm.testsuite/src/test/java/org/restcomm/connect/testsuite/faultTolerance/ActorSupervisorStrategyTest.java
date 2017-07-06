@@ -3,6 +3,7 @@ package org.restcomm.connect.testsuite.faultTolerance;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import akka.actor.SupervisorStrategy;
 import akka.actor.UntypedActor;
 import akka.testkit.JavaTestKit;
 import akka.util.Timeout;
@@ -11,6 +12,7 @@ import com.typesafe.config.ConfigFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.restcomm.connect.commons.faulttolerance.RestcommSupervisorStrategy;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -83,6 +85,11 @@ public class ActorSupervisorStrategyTest {
             } else if ("check exception".equals(message)) {
                 sender().tell(receivedThrowException, self());
             }
+        }
+
+        @Override
+        public SupervisorStrategy supervisorStrategy () {
+            return RestcommSupervisorStrategy.getStrategy();
         }
     }
 
