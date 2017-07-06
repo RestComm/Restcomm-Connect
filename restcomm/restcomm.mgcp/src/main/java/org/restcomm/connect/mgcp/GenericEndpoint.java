@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 public abstract class GenericEndpoint extends RestcommUntypedActor {
 
@@ -148,6 +149,7 @@ public abstract class GenericEndpoint extends RestcommUntypedActor {
                 broadcast(new EndpointStateChanged(EndpointState.DESTROYED));
             } else {
                 logger.error("Could not destroy endpoint " + this.id.toString() + ". Return Code: " + returnCode.toString());
+                broadcast(new EndpointStateChanged(EndpointState.FAILED));
             }
         }
     }

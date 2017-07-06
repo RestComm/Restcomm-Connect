@@ -173,8 +173,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private final State finished;
 
     // FSM.
-    // The conference manager.
-    private final ActorRef conferenceManager;
+    // The conference Ceneter.
+    private final ActorRef conferenceCenter;
 
     // State for outbound calls.
     private boolean isForking;
@@ -220,6 +220,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private String imsUaPassword;
     private String forwardedFrom;
     private Attribute action;
+
+    private String conferenceNameWithAccountAndFriendlyName;
+    private Sid callSid;
 
     private VoiceInterpreter(VoiceInterpreterParams params) {
         super();
@@ -371,6 +374,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(acquiringConferenceInfo, hangingUp));
         transitions.add(new Transition(acquiringConferenceInfo, finished));
         transitions.add(new Transition(joiningConference, conferencing));
+        transitions.add(new Transition(joiningConference, acquiringConferenceInfo));
         transitions.add(new Transition(joiningConference, hangingUp));
         transitions.add(new Transition(joiningConference, finished));
         transitions.add(new Transition(conferencing, finishConferencing));
@@ -419,7 +423,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.emailAddress = params.getEmailAddress();
         this.configuration = params.getConfiguration();
         this.callManager = params.getCallManager();
-        this.conferenceManager = params.getConferenceCenter();
+        this.conferenceCenter = params.getConferenceCenter();
         this.bridgeManager = params.getBridgeManager();
         this.smsService = params.getSmsService();
         this.smsSessions = new HashMap<Sid, ActorRef>();
@@ -601,7 +605,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     private void onConferenceCenterResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
-        if (is(startDialing)) {
+        if (is(startDialing) || is(joiningConference)) {
             ConferenceCenterResponse ccReponse = (ConferenceCenterResponse)message;
             if(ccReponse.succeeded()){
                 fsm.transition(message, acquiringConferenceInfo);
@@ -703,6 +707,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (!is(finished))
                     fsm.transition(message, finishConferencing);
                 break;
+            case STOPPING:
+                conferenceState = event.state();
+                if(is(joiningConference)){
+                    if(logger.isInfoEnabled()) {
+                        logger.info("We tried to join a stopping conference. Will ask Conference Center to create a new conference for us.");
+                    }
+                    final CreateConference create = new CreateConference(conferenceNameWithAccountAndFriendlyName, callSid);
+                    conferenceCenter.tell(create, self());
+                }
             default:
                 break;
         }
@@ -1989,15 +2002,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     //https://github.com/RestComm/Restcomm-Connect/issues/1939
                     Sid conferenceAccountId = phoneId == null? accountId : phoneId;
                     buffer.append(conferenceAccountId.toString()).append(":").append(name);
-                    Sid sid = null;
+                    conferenceNameWithAccountAndFriendlyName = buffer.toString();
+                    callSid = null;
                     if (callInfo != null && callInfo.sid() != null) {
-                        sid = callInfo.sid();
+                        callSid = callInfo.sid();
                     }
-                    if (sid == null && callRecord != null) {
-                        sid = callRecord.getSid();
+                    if (callSid == null && callRecord != null) {
+                        callSid = callRecord.getSid();
                     }
-                    final CreateConference create = new CreateConference(buffer.toString(), sid);
-                    conferenceManager.tell(create, source);
+                    final CreateConference create = new CreateConference(conferenceNameWithAccountAndFriendlyName, callSid);
+                    conferenceCenter.tell(create, source);
                 } else {
                     // Handle forking.
                     dialBranches = new ArrayList<ActorRef>();
@@ -2923,7 +2937,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 ConferenceStateChanged confStateChanged = (ConferenceStateChanged) message;
                 if (ConferenceStateChanged.State.COMPLETED.equals(confStateChanged.state())) {
                     DestroyConference destroyConference = new DestroyConference(conferenceInfo.name());
-                    conferenceManager.tell(destroyConference, super.source);
+                    conferenceCenter.tell(destroyConference, super.source);
                 }
             }
             conference = null;
