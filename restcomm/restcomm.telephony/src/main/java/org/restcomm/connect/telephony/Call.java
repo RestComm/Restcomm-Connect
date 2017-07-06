@@ -378,6 +378,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.inProgress, this.leaving));
         transitions.add(new Transition(this.inProgress, this.failed));
         transitions.add(new Transition(this.inProgress, this.inDialogRequest));
+        transitions.add(new Transition(this.inProgress, this.completed));
         transitions.add(new Transition(this.joining, this.inProgress));
         transitions.add(new Transition(this.joining, this.stopping));
         transitions.add(new Transition(this.joining, this.failed));
@@ -1726,6 +1727,11 @@ public final class Call extends UntypedActor {
         public void execute(Object message) throws Exception {
             // Stops media operations and closes media session
             msController.tell(new CloseMediaSession(), source);
+            if (fail) {
+                fsm.transition(message, failed);
+            } else {
+                fsm.transition(message, completed);
+            }
         }
     }
 
@@ -2473,11 +2479,15 @@ public final class Call extends UntypedActor {
 
             case INACTIVE:
                 if (is(stopping)) {
-                    if (fail) {
-                        fsm.transition(message, failed);
-                    } else {
-                        fsm.transition(message, completed);
+                    if (logger.isDebugEnabled()) {
+                        String msg = String.format("On MediaServerContollerStateChanged, message: INACTIVE, Call state: %s, Fail: %s", fsm.state(), fail);
+                        logger.debug(msg);
                     }
+//                    if (fail) {
+//                        fsm.transition(message, failed);
+//                    } else {
+//                        fsm.transition(message, completed);
+//                    }
                 } else if (is(canceling)) {
                     fsm.transition(message, canceled);
                 } else if (is(failingBusy)) {
