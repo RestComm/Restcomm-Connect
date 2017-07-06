@@ -454,10 +454,10 @@ public class MockMediaGateway extends RestcommUntypedActor {
         final int transaction = rqnt.getTransactionHandle();
         response.setTransactionHandle(transaction);
         try {
-            Thread.sleep(sleepTime);
+            Thread.sleep(sleepTime*10);
         } catch (InterruptedException e) {
         }
-        System.out.println(response.toString());
+        logger.info("About to send MockMediaGateway response: "+response.toString());
         sender.tell(response, self);
     }
 

@@ -641,7 +641,7 @@ public class TestDialVerbPartTwo {
         Map<String, String> statusCallbacks = new HashMap<String,String>();
 
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/StatusCallBack.*")));
-        assertTrue(requests.size()==3);
+        assertEquals(3,requests.size());
 
 //        for (LoggedRequest loggedRequest : requests) {
 //            String queryParam = loggedRequest.getUrl().replaceFirst("/StatusCallBack?", "");

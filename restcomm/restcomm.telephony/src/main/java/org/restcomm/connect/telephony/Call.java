@@ -374,6 +374,7 @@ public final class Call extends RestcommUntypedActor {
         transitions.add(new Transition(this.inProgress, this.leaving));
         transitions.add(new Transition(this.inProgress, this.failed));
         transitions.add(new Transition(this.inProgress, this.inDialogRequest));
+        transitions.add(new Transition(this.inProgress, this.completed));
         transitions.add(new Transition(this.joining, this.inProgress));
         transitions.add(new Transition(this.joining, this.stopping));
         transitions.add(new Transition(this.joining, this.failed));
@@ -1722,6 +1723,11 @@ public final class Call extends RestcommUntypedActor {
         public void execute(Object message) throws Exception {
             // Stops media operations and closes media session
             msController.tell(new CloseMediaSession(), source);
+            if (fail) {
+                fsm.transition(message, failed);
+            } else {
+                fsm.transition(message, completed);
+            }
         }
     }
 
@@ -1809,6 +1815,10 @@ public final class Call extends RestcommUntypedActor {
             if (conferencing && message.isLiveCallModification()) {
                 liveCallModification = true;
                 self().tell(new Leave(true), self());
+            }
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Got StopMediaGroup but Call is already in state: "+fsm.state());
             }
         }
     }
@@ -2191,6 +2201,13 @@ public final class Call extends RestcommUntypedActor {
             logger.debug("Got Hangup: "+message+" for Call, from: "+from+" to: "+to+" state: "+fsm.state()+" conferencing: "+conferencing +" conference: "+conference);
         }
 
+        if (is(completed)) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Got Hangup but already in completed state");
+            }
+            return;
+        }
+
         // Stop recording if necessary
         if (recording) {
             recording = false;
@@ -2458,11 +2475,15 @@ public final class Call extends RestcommUntypedActor {
 
             case INACTIVE:
                 if (is(stopping)) {
-                    if (fail) {
-                        fsm.transition(message, failed);
-                    } else {
-                        fsm.transition(message, completed);
+                    if (logger.isDebugEnabled()) {
+                        String msg = String.format("On MediaServerContollerStateChanged, message: INACTIVE, Call state: %s, Fail: %s", fsm.state(), fail);
+                        logger.debug(msg);
                     }
+//                    if (fail) {
+//                        fsm.transition(message, failed);
+//                    } else {
+//                        fsm.transition(message, completed);
+//                    }
                 } else if (is(canceling)) {
                     fsm.transition(message, canceled);
                 } else if (is(failingBusy)) {
