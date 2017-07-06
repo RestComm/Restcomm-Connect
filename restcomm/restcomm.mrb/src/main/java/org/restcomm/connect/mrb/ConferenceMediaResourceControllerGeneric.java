@@ -29,6 +29,7 @@ import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -65,7 +66,7 @@ import java.util.Set;
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
-public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
+public class ConferenceMediaResourceControllerGeneric extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 

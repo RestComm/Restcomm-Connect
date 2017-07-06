@@ -27,13 +27,12 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
@@ -76,7 +75,6 @@ import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipURI;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -90,7 +88,7 @@ import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
  */
-public final class SmsService extends UntypedActor {
+public final class SmsService extends RestcommUntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     private final ActorSystem system;

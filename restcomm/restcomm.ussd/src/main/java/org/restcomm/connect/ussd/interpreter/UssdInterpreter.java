@@ -28,7 +28,6 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -37,6 +36,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -68,7 +68,6 @@ import org.restcomm.connect.telephony.api.Answer;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
-
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.ussd.commons.UssdInfoRequest;
 import org.restcomm.connect.ussd.commons.UssdMessageType;
@@ -76,7 +75,6 @@ import org.restcomm.connect.ussd.commons.UssdRestcommResponse;
 
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -91,14 +89,12 @@ import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 
-import static org.restcomm.connect.interpreter.rcml.Verbs.ussdCollect;
-import static org.restcomm.connect.interpreter.rcml.Verbs.ussdLanguage;
-import static org.restcomm.connect.interpreter.rcml.Verbs.ussdMessage;
+import static org.restcomm.connect.interpreter.rcml.Verbs.*;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
-public class UssdInterpreter extends UntypedActor {
+public class UssdInterpreter extends RestcommUntypedActor {
 
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);

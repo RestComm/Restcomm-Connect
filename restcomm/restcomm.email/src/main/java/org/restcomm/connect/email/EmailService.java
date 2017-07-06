@@ -20,19 +20,20 @@
 package org.restcomm.connect.email;
 
 import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.email.api.EmailRequest;
-import org.restcomm.connect.email.api.EmailResponse;
-import org.restcomm.connect.email.api.Mail;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.email.api.EmailRequest;
+import org.restcomm.connect.email.api.EmailResponse;
+import org.restcomm.connect.email.api.Mail;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.NoSuchProviderException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
@@ -41,13 +42,12 @@ import javax.mail.internet.MimeMessage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import javax.mail.NoSuchProviderException;
 
 
 /**
  * @author liblefty@gmail.com (Lefteris Banos)
  */
-public class EmailService extends UntypedActor  {
+public class EmailService extends RestcommUntypedActor {
 
     final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private final List<ActorRef> observers;

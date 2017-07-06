@@ -27,6 +27,7 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.telephony.api.BridgeManagerResponse;
@@ -37,7 +38,7 @@ import org.restcomm.connect.telephony.api.CreateBridge;
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *
  */
-public class BridgeManager extends UntypedActor {
+public class BridgeManager extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 

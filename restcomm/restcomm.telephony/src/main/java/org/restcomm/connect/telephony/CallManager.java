@@ -39,6 +39,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.commons.telephony.ProxyRule;
@@ -126,12 +127,7 @@ import java.util.regex.Pattern;
 
 import static akka.pattern.Patterns.ask;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_ACCEPTED;
-import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_SERVER_INTERNAL_ERROR;
+import static javax.servlet.sip.SipServletResponse.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -139,7 +135,7 @@ import static javax.servlet.sip.SipServletResponse.SC_SERVER_INTERNAL_ERROR;
  * @author jean.deruelle@telestax.com
  * @author gvagenas@telestax.com
  */
-public final class CallManager extends UntypedActor {
+public final class CallManager extends RestcommUntypedActor {
 
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;

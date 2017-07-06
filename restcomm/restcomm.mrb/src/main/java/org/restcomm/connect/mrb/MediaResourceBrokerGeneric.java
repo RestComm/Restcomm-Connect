@@ -33,6 +33,7 @@ import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.loader.ObjectFactory;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
@@ -62,7 +63,7 @@ import java.util.Map;
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
-public class MediaResourceBrokerGeneric extends UntypedActor{
+public class MediaResourceBrokerGeneric extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
