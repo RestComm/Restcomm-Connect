@@ -22,7 +22,6 @@
 package org.restcomm.connect.mscontrol.mms;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -154,7 +153,6 @@ public class MmsCallController extends MediaServerController {
     // TODO rename following variable to 'mediaGateway'
     private ActorRef mediaGateway;
     private final ActorRef mrb;
-    private final ActorSystem system;
     private MediaGatewayInfo gatewayInfo;
     private MediaSession session;
     private ActorRef bridgeEndpoint;
@@ -181,10 +179,9 @@ public class MmsCallController extends MediaServerController {
     private ConnectionIdentifier connectionIdentifier;
 
     //public MmsCallController(final List<ActorRef> mediaGateways, final Configuration configuration) {
-    public MmsCallController(final ActorRef mrb, final ActorSystem system) {
+    public MmsCallController(final ActorRef mrb) {
         super();
         final ActorRef source = self();
-        this.system = system;
 
         // Initialize the states for the FSM.
         this.uninitialized = new State("uninitialized", null, null);
@@ -315,7 +312,7 @@ public class MmsCallController extends MediaServerController {
                 return new MgcpMediaGroup(mediaGateway, session, bridgeEndpoint);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private void startRecordingCall() throws Exception {
