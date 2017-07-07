@@ -18,6 +18,7 @@ import scala.concurrent.duration.Duration;
 import java.util.concurrent.TimeUnit;
 
 import static akka.pattern.Patterns.ask;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author oleg.agafonov@telestax.com (Oleg Agafonov)
@@ -63,6 +64,11 @@ public class ActorSupervisorStrategyTest {
             Thread.sleep(5000);
             child.tell("check exception", getRef());
             expectMsgEquals(duration("1 second"), true);
+
+            system.stop(parent);
+            Thread.sleep(500);
+            assertTrue(parent.isTerminated());
+            assertTrue(child.isTerminated());
         }};
 
     }
