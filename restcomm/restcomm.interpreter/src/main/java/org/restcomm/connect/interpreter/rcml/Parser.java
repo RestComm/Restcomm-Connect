@@ -20,9 +20,12 @@
 package org.restcomm.connect.interpreter.rcml;
 
 import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
 import org.apache.log4j.Logger;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,15 +35,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
-import javax.xml.stream.XMLInputFactory;
 import static javax.xml.stream.XMLStreamConstants.*;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class Parser extends UntypedActor {
+public final class Parser extends RestcommUntypedActor {
     private static Logger logger = Logger.getLogger(Parser.class);
     private Tag document;
     private Iterator<Tag> iterator;

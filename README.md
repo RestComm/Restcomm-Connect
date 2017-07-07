@@ -28,7 +28,7 @@ Read the [Online RestComm Documentation](http://documentation.telestax.com/conne
 
 Want to Contribute ? 
 ========
-[See our Contributors Guide](https://github.com/RestComm/RestComm/wiki/Contribute-to-RestComm) and [How to build RestComm From Source](http://docs.telestax.com/restcomm-mobicents-building-from-source/) and [![Join the chat at https://gitter.im/RestComm/Restcomm-Connect](https://badges.gitter.im/RestComm/Restcomm-Connect.svg)](https://gitter.im/RestComm/Restcomm-Connect?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[See our Contributors Guide](https://github.com/RestComm/RestComm-Connect/CONTRIBUTING.asciidoc) and [How to build RestComm From Source](http://docs.telestax.com/restcomm-mobicents-building-from-source/) and [![Join the chat at https://gitter.im/RestComm/Restcomm-Connect](https://badges.gitter.im/RestComm/Restcomm-Connect.svg)](https://gitter.im/RestComm/Restcomm-Connect?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
 Issue Tracking and Roadmap

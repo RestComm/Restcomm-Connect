@@ -278,7 +278,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         String page = info.getQueryParameters().getFirst("Page");
         String reverse = info.getQueryParameters().getFirst("Reverse");
         String pageSize = info.getQueryParameters().getFirst("PageSize");
-        String sortBy = info.getQueryParameters().getFirst("PageSize");
+        String sortBy = info.getQueryParameters().getFirst("SortBy");
 
         pageSize = (pageSize == null) ? "50" : pageSize;
         page = (page == null) ? "0" : page;

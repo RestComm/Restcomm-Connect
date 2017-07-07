@@ -20,12 +20,11 @@
 
 package org.restcomm.connect.mscontrol.mms;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
+import akka.actor.ActorRef;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.restcomm.connect.commons.fsm.Action;
@@ -63,11 +62,11 @@ import org.restcomm.connect.mscontrol.api.messages.StartMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 
-import akka.actor.ActorRef;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -358,7 +357,9 @@ public class MgcpMediaGroup extends MediaGroup {
 
     protected void onEndpointStateChanged(EndpointStateChanged message, ActorRef self, ActorRef sender) throws Exception {
         if (is(deactivating)) {
-            if (sender.equals(this.ivr) && EndpointState.DESTROYED.equals(message.getState())) {
+            if (sender.equals(this.ivr) && (EndpointState.DESTROYED.equals(message.getState()) || EndpointState.FAILED.equals(message.getState()))) {
+                if(EndpointState.FAILED.equals(message.getState()))
+                    logger.error("Could not destroy ivr endpoint on media server: " + this.ivrEndpointName + ". corresponding actor path is: " + this.ivr.path());
                 this.ivr.tell(new StopObserving(self), self);
                 this.fsm.transition(message, inactive);
             }

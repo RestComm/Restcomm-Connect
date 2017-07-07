@@ -20,7 +20,6 @@
 package org.restcomm.connect.telephony;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
@@ -28,7 +27,6 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -40,6 +38,7 @@ import org.mobicents.javax.servlet.sip.SipSessionExt;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -57,6 +56,7 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.http.client.Downloader;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
+import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.messages.CloseMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.Collect;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
@@ -95,7 +95,6 @@ import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.telephony.api.RemoveParticipant;
-
 import scala.concurrent.duration.Duration;
 
 import javax.sdp.SdpException;
@@ -113,7 +112,6 @@ import javax.servlet.sip.TelURL;
 import javax.sip.header.RecordRouteHeader;
 import javax.sip.header.RouteHeader;
 import javax.sip.message.Response;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.InetAddress;
@@ -142,7 +140,7 @@ import java.util.concurrent.TimeUnit;
  *
  */
 @Immutable
-public final class Call extends UntypedActor {
+public final class Call extends RestcommUntypedActor {
 
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -267,7 +265,6 @@ public final class Call extends UntypedActor {
 
     private HttpRequestDescriptor requestCallback;
     ActorRef downloader = null;
-    ActorSystem system = null;
     private URI statusCallback;
     private String statusCallbackMethod;
     private List<String> statusCallbackEvent;
@@ -286,18 +283,17 @@ public final class Call extends UntypedActor {
         }
     };
 
-    public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration,
+    public Call(final SipFactory factory, final MediaServerControllerFactory mediaSessionControllerFactory, final Configuration configuration,
     final URI statusCallback, final String statusCallbackMethod, final List<String> statusCallbackEvent) {
-        this(factory, mediaSessionController, configuration, statusCallback, statusCallbackMethod,
+        this(factory, mediaSessionControllerFactory, configuration, statusCallback, statusCallbackMethod,
                 statusCallbackEvent, null);
     }
 
-    public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration,
+    public Call(final SipFactory factory, final MediaServerControllerFactory mediaSessionControllerFactory, final Configuration configuration,
                 final URI statusCallback, final String statusCallbackMethod, final List<String> statusCallbackEvent, Map<String, ArrayList<String>> headers)
     {
         super();
         final ActorRef source = self();
-        this.system = context().system();
         this.statusCallback = statusCallback;
         this.statusCallbackMethod = statusCallbackMethod;
         this.statusCallbackEvent = statusCallbackEvent;
@@ -378,6 +374,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.inProgress, this.leaving));
         transitions.add(new Transition(this.inProgress, this.failed));
         transitions.add(new Transition(this.inProgress, this.inDialogRequest));
+        transitions.add(new Transition(this.inProgress, this.completed));
         transitions.add(new Transition(this.joining, this.inProgress));
         transitions.add(new Transition(this.joining, this.stopping));
         transitions.add(new Transition(this.joining, this.failed));
@@ -408,7 +405,7 @@ public final class Call extends UntypedActor {
         this.conferencing = false;
 
         // Media Session Control runtime stuff.
-        this.msController = mediaSessionController;
+        this.msController = getContext().actorOf(mediaSessionControllerFactory.provideCallControllerProps());
         this.fail = false;
 
         // Initialize the runtime stuff.
@@ -440,7 +437,7 @@ public final class Call extends UntypedActor {
                 return new Downloader();
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private boolean is(State state) {
@@ -457,7 +454,13 @@ public final class Call extends UntypedActor {
 
     private CallResponse<CallInfo> info() {
         try {
-            final String from = this.from.getUser();
+            final String from;
+            if(actAsImsUa) {
+                from = this.from.getUser().concat("@").concat(this.from.getHost());
+            } else {
+                from = this.from.getUser();
+            }
+
             String to = null;
             if (this.to.isSipURI()) {
                 to = ((SipURI) this.to).getUser();
@@ -1114,7 +1117,7 @@ public final class Call extends UntypedActor {
                     ringing.send();
                 } catch (IllegalStateException exception) {
                     if(logger.isDebugEnabled()) {
-                        logger.debug("Exception while creating 180 response to inbound invite request");
+                        logger.debug("Exception while creating 180 response to inbound invite request, "+exception);
                     }
                     fsm.transition(message, canceled);
                 }
@@ -1720,6 +1723,11 @@ public final class Call extends UntypedActor {
         public void execute(Object message) throws Exception {
             // Stops media operations and closes media session
             msController.tell(new CloseMediaSession(), source);
+            if (fail) {
+                fsm.transition(message, failed);
+            } else {
+                fsm.transition(message, completed);
+            }
         }
     }
 
@@ -1807,6 +1815,10 @@ public final class Call extends UntypedActor {
             if (conferencing && message.isLiveCallModification()) {
                 liveCallModification = true;
                 self().tell(new Leave(true), self());
+            }
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Got StopMediaGroup but Call is already in state: "+fsm.state());
             }
         }
     }
@@ -2189,6 +2201,13 @@ public final class Call extends UntypedActor {
             logger.debug("Got Hangup: "+message+" for Call, from: "+from+" to: "+to+" state: "+fsm.state()+" conferencing: "+conferencing +" conference: "+conference);
         }
 
+        if (is(completed)) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Got Hangup but already in completed state");
+            }
+            return;
+        }
+
         // Stop recording if necessary
         if (recording) {
             recording = false;
@@ -2456,11 +2475,15 @@ public final class Call extends UntypedActor {
 
             case INACTIVE:
                 if (is(stopping)) {
-                    if (fail) {
-                        fsm.transition(message, failed);
-                    } else {
-                        fsm.transition(message, completed);
+                    if (logger.isDebugEnabled()) {
+                        String msg = String.format("On MediaServerContollerStateChanged, message: INACTIVE, Call state: %s, Fail: %s", fsm.state(), fail);
+                        logger.debug(msg);
                     }
+//                    if (fail) {
+//                        fsm.transition(message, failed);
+//                    } else {
+//                        fsm.transition(message, completed);
+//                    }
                 } else if (is(canceling)) {
                     fsm.transition(message, canceled);
                 } else if (is(failingBusy)) {
@@ -2471,7 +2494,7 @@ public final class Call extends UntypedActor {
                 break;
 
             case FAILED:
-                if (is(initializing) || is(updatingMediaSession) || is(joining) || is(leaving)) {
+                if (is(initializing) || is(updatingMediaSession) || is(joining) || is(leaving) || is(inProgress)) {
                     fsm.transition(message, failed);
                 }
                 break;

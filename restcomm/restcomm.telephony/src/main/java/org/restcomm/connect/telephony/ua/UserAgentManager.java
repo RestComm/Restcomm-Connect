@@ -21,13 +21,13 @@ package org.restcomm.connect.telephony.ua;
 
 import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.DigestAuthentication;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -61,16 +61,14 @@ import java.util.UUID;
 
 import static java.lang.Integer.parseInt;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
-import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
+import static javax.servlet.sip.SipServletResponse.*;
 import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
  */
-public final class UserAgentManager extends UntypedActor {
+public final class UserAgentManager extends RestcommUntypedActor {
     private static final int DEFAUL_IMS_PROXY_PORT = -1;
     private static final String REGISTER = "REGISTER";
     private static final String REQ_PARAMETER = "Req";

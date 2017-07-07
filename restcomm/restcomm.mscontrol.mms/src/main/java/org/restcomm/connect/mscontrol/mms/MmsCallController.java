@@ -22,7 +22,6 @@
 package org.restcomm.connect.mscontrol.mms;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -102,6 +101,7 @@ import java.util.Set;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  *
  */
 public class MmsCallController extends MediaServerController {
@@ -153,7 +153,6 @@ public class MmsCallController extends MediaServerController {
     // TODO rename following variable to 'mediaGateway'
     private ActorRef mediaGateway;
     private final ActorRef mrb;
-    private final ActorSystem system;
     private MediaGatewayInfo gatewayInfo;
     private MediaSession session;
     private ActorRef bridgeEndpoint;
@@ -180,10 +179,9 @@ public class MmsCallController extends MediaServerController {
     private ConnectionIdentifier connectionIdentifier;
 
     //public MmsCallController(final List<ActorRef> mediaGateways, final Configuration configuration) {
-    public MmsCallController(final ActorRef mrb, final ActorSystem system) {
+    public MmsCallController(final ActorRef mrb) {
         super();
         final ActorRef source = self();
-        this.system = system;
 
         // Initialize the states for the FSM.
         this.uninitialized = new State("uninitialized", null, null);
@@ -314,7 +312,7 @@ public class MmsCallController extends MediaServerController {
                 return new MgcpMediaGroup(mediaGateway, session, bridgeEndpoint);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private void startRecordingCall() throws Exception {
@@ -722,7 +720,9 @@ public class MmsCallController extends MediaServerController {
 
     private void onEndpointStateChanged(EndpointStateChanged message, ActorRef self, ActorRef sender) throws Exception {
         if (is(stopping)) {
-            if (sender.equals(this.bridgeEndpoint) && EndpointState.DESTROYED.equals(message.getState())) {
+            if (sender.equals(this.bridgeEndpoint) && (EndpointState.DESTROYED.equals(message.getState()) || EndpointState.FAILED.equals(message.getState()))) {
+                if(EndpointState.FAILED.equals(message.getState()))
+                    logger.error("Could not destroy endpoint on media server. corresponding actor path is: " + this.bridgeEndpoint.path());
                 this.bridgeEndpoint.tell(new StopObserving(self), self);
                 context().stop(bridgeEndpoint);
                 bridgeEndpoint = null;

@@ -27,18 +27,21 @@ import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 public final class BridgeEndpoint extends GenericEndpoint {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
+    protected static final String bridgeEndpointName = "mobicents/bridge/$";
+
     public BridgeEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain, long timeout) {
-        super(gateway, session, agent, new EndpointIdentifier("mobicents/bridge/$", domain), timeout);
+        super(gateway, session, agent, new EndpointIdentifier(bridgeEndpointName, domain), timeout);
     }
 
     public BridgeEndpoint(ActorRef gateway, MediaSession session, NotifiedEntity agent, String domain, long timeout,
             String endpointName) {
-        super(gateway, session, agent, new EndpointIdentifier(endpointName, domain), timeout);
+        super(gateway, session, agent, new EndpointIdentifier(endpointName==null?bridgeEndpointName:endpointName, domain), timeout);
     }
 
     @Override

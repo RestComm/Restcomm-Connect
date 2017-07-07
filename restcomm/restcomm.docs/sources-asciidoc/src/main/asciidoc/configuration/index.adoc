@@ -70,9 +70,10 @@ There is two different ways to install Restcomm Connect. Either through Docker o
 * <<ha/Restcomm - Using a Single Mysql Database for 2 Restcomm Servers.adoc#mysql,Using a Single Mysql Database for 2 Restcomm Connect Servers>>
 * <<ha/Restcomm - Single RVD Workspace for two Restcomm Instances.adoc#rvd,Single RVD Workspace for two Restcomm Instances>>
 
-=== IMS related features
+=== IMS GW - B2BUA
 
-* <<ims/Restcomm_IMS_GW.adoc#intro,Restcomm as a WebRTC GW to IMS >>
+* <<ims_b2bua/Restcomm_IMS_GW.adoc#intro,Restcomm-Connect as a WebRTC GW to IMS >>
+* <<ims_b2bua/Restcomm_ActAsProxy.adoc#intro, Restcomm-Connect acting as a generic Proxy>>
 
 === Amazon S3 Integration
 
