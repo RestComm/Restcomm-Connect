@@ -56,7 +56,7 @@ fi
 
 echo "Configuring RVD"
 
-if [ "$RVD_VIDEO_SUPPORT" = true || "$RVD_VIDEO_SUPPORT" = TRUE || "$RVD_VIDEO_SUPPORT" = True ] ; then
+if [[ "$RVD_VIDEO_SUPPORT" = true || "$RVD_VIDEO_SUPPORT" = TRUE || "$RVD_VIDEO_SUPPORT" = True ]] ; then
     updateVideoSupport true
 else
     updateVideoSupport false
