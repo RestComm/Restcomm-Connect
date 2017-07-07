@@ -19,17 +19,6 @@
  */
 package org.restcomm.connect.mgcp;
 
-import static org.junit.Assert.assertTrue;
-
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
-import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
-
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -44,6 +33,16 @@ import jain.protocol.ip.mgcp.message.Notify;
 import jain.protocol.ip.mgcp.message.parms.EventName;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
+import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)

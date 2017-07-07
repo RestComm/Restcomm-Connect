@@ -20,13 +20,13 @@
 package org.restcomm.connect.telephony;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
@@ -46,7 +46,7 @@ import java.util.Map;
  * @author amit.bhayani@telestax.com (Amit Bhayani)
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
-public final class ConferenceCenter extends UntypedActor {
+public final class ConferenceCenter extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -54,7 +54,6 @@ public final class ConferenceCenter extends UntypedActor {
     private final Map<String, ActorRef> conferences;
     private final Map<String, List<ActorRef>> initializing;
     private final DaoManager storage;
-    private final ActorSystem system;
 
     public ConferenceCenter(final MediaServerControllerFactory factory, final DaoManager storage) {
         super();
@@ -62,7 +61,6 @@ public final class ConferenceCenter extends UntypedActor {
         this.conferences = new HashMap<String, ActorRef>();
         this.initializing = new HashMap<String, List<ActorRef>>();
         this.storage = storage;
-        this.system = context().system();
     }
 
     private ActorRef getConference(final String name) {
@@ -72,10 +70,10 @@ public final class ConferenceCenter extends UntypedActor {
             @Override
             public UntypedActor create() throws Exception {
                 //Here Here we can pass Gateway where call is connected
-                return new Conference(name, factory.provideConferenceController(), storage, self());
+                return new Conference(name, factory, storage, getSelf());
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     @Override
