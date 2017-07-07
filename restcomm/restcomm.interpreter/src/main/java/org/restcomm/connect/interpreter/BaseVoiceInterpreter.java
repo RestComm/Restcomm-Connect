@@ -46,6 +46,8 @@ import org.restcomm.connect.commons.cache.DiskCacheFactory;
 import org.restcomm.connect.commons.cache.DiskCacheRequest;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
 import org.restcomm.connect.commons.cache.HashGenerator;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.CollectedResult;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -83,6 +85,7 @@ import org.restcomm.connect.interpreter.rcml.Parser;
 import org.restcomm.connect.interpreter.rcml.ParserFailed;
 import org.restcomm.connect.interpreter.rcml.Tag;
 import org.restcomm.connect.interpreter.rcml.Verbs;
+import org.restcomm.connect.interpreter.rcml.domain.GatherAttributes;
 import org.restcomm.connect.mscontrol.api.messages.Collect;
 import org.restcomm.connect.mscontrol.api.messages.MediaGroupResponse;
 import org.restcomm.connect.mscontrol.api.messages.Play;
@@ -122,6 +125,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import org.apache.commons.lang.StringUtils;
 
 import static akka.pattern.Patterns.ask;
 
@@ -165,6 +169,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     final State sendingSms;
     final State hangingUp;
     final State sendingEmail;
+    final State continuousGathering;
     // final State finished;
 
     // FSM.
@@ -257,8 +262,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     final Set<Transition> transitions = new HashSet<Transition>();
     int recordingDuration = -1;
 
+    protected RestcommConfiguration restcommConfiguration;
+
     public BaseVoiceInterpreter() {
         super();
+        restcommConfiguration = RestcommConfiguration.getInstance();
         final ActorRef source = self();
         this.system = context().system();
         // 20 States in common
@@ -283,6 +291,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         sendingSms = new State("sending sms", new SendingSms(source), null);
         hangingUp = new State("hanging up", new HangingUp(source), null);
         sendingEmail = new State("sending Email", new SendingEmail(source), null);
+        continuousGathering = new State("push partial result", new PartialGathering(source), null);
 
         // Initialize the transitions for the FSM.
         transitions.add(new Transition(uninitialized, acquiringAsrInfo));
@@ -362,8 +371,14 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         transitions.add(new Transition(processingGatherChildren, gathering));
         transitions.add(new Transition(processingGatherChildren, synthesizing));
         transitions.add(new Transition(processingGatherChildren, hangingUp));
+
         transitions.add(new Transition(gathering, finishGathering));
         transitions.add(new Transition(gathering, hangingUp));
+        transitions.add(new Transition(gathering, continuousGathering));
+
+        transitions.add(new Transition(continuousGathering, continuousGathering));
+        transitions.add(new Transition(continuousGathering, finishGathering));
+
         transitions.add(new Transition(finishGathering, faxing));
         transitions.add(new Transition(finishGathering, sendingEmail));
         transitions.add(new Transition(finishGathering, pausing));
@@ -528,7 +543,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         return cache;
     }
 
-    ActorRef cache(final String path, final String uri) {
+    protected ActorRef cache(final String path, final String uri) {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
             @Override
@@ -539,7 +554,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         return system.actorOf(props);
     }
 
-    ActorRef downloader() {
+    protected ActorRef downloader() {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
@@ -806,7 +821,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     ActorRef tts(final Configuration ttsConf) {
         final String classpath = ttsConf.getString("[@class]");
-
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
@@ -1184,7 +1198,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         }
         // Parse the language attribute.
         String language = "en";
-        attribute = verb.attribute("language");
+        attribute = verb.attribute(GatherAttributes.ATTRIBUTE_LANGUAGE);
         if (attribute != null) {
             language = attribute.value();
             if (language != null && !language.isEmpty()) {
@@ -1277,7 +1291,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
             final NotificationsDao notifications = storage.getNotificationsDao();
             String method = "POST";
-            Attribute attribute = verb.attribute("method");
+            Attribute attribute = verb.attribute(GatherAttributes.ATTRIBUTE_METHOD);
             if (attribute != null) {
                 method = attribute.value();
                 if (method != null && !method.isEmpty()) {
@@ -1325,7 +1339,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
         protected String finishOnKey(final Tag container) {
             String finishOnKey = "#";
-            Attribute attribute = container.attribute("finishOnKey");
+            Attribute attribute = container.attribute(GatherAttributes.ATTRIBUTE_FINISH_ON_KEY);
             if (attribute != null) {
                 finishOnKey = attribute.value();
                 if (finishOnKey != null && !finishOnKey.isEmpty()) {
@@ -1517,14 +1531,44 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
+
+            // check mandatory attribute partialResultCallback
+            Attribute resultCallbackAttr = verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK);
             final NotificationsDao notifications = storage.getNotificationsDao();
+            // parse attribute "input"
+            Attribute typeAttr = verb.attribute(GatherAttributes.ATTRIBUTE_INPUT);
+            Collect.Type inputType = Collect.Type.parseOrDefault(typeAttr.value(), Collect.Type.DTMF);
+
+            if (inputType != Collect.Type.DTMF && (resultCallbackAttr == null || StringUtils.isEmpty(resultCallbackAttr.value()))) {
+                final Notification notification = notification(ERROR_NOTIFICATION, 11101, "partialResultCallback attribute is null");
+                notifications.addNotification(notification);
+                sendMail(notification);
+                final StopInterpreter stop = new StopInterpreter();
+                source.tell(stop, source);
+                throw new IllegalStateException("Attribute partialResultCallback is null");
+            }
+
+            // parse attribute "language"
+            Attribute langAttr = verb.attribute(GatherAttributes.ATTRIBUTE_LANGUAGE);
+            String defaultLang = restcommConfiguration.getMgAsr().getDefaultLanguage();
+            String lang = parseAttrLanguage(langAttr, defaultLang);
+
+            // parse attribute "hints"
+            String hints = null;
+            Attribute hintsAttr = verb.attribute(GatherAttributes.ATTRIBUTE_HINTS);
+            if (hintsAttr != null && !StringUtils.isEmpty(hintsAttr.value())) {
+                hints = hintsAttr.value();
+            } else if (inputType != Collect.Type.DTMF) {
+                logger.warning("'{}' attribute is null or empty", GatherAttributes.ATTRIBUTE_HINTS);
+            }
+
             // Parse finish on key.
             finishOnKey = finishOnKey(verb);
             // Parse the number of digits.
-            Attribute attribute = verb.attribute("numDigits");
+            Attribute attribute = verb.attribute(GatherAttributes.ATTRIBUTE_NUM_DIGITS);
             if (attribute != null) {
                 final String value = attribute.value();
-                if (value != null && !value.isEmpty()) {
+                if (!StringUtils.isEmpty(value)) {
                     try {
                         numberOfDigits = Integer.parseInt(value);
                     } catch (final NumberFormatException exception) {
@@ -1536,10 +1580,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
             // Parse timeout.
             int timeout = 5;
-            attribute = verb.attribute("timeout");
+            attribute = verb.attribute(GatherAttributes.ATTRIBUTE_TIME_OUT);
             if (attribute != null) {
                 final String value = attribute.value();
-                if (value != null && !value.isEmpty()) {
+                if (!StringUtils.isEmpty(value)) {
                     try {
                         timeout = Integer.parseInt(value);
                     } catch (final NumberFormatException exception) {
@@ -1550,7 +1594,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
             }
             // Start gathering.
-            final Collect collect = new Collect(gatherPrompts, null, timeout, finishOnKey, numberOfDigits);
+            final Collect collect = new Collect(restcommConfiguration.getMgAsr().getDefaultDriver(), inputType, gatherPrompts, null, timeout, finishOnKey, numberOfDigits, lang, hints);
             call.tell(collect, source);
             // Some clean up.
             gatherChildren = null;
@@ -1558,10 +1602,79 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             dtmfReceived = false;
             collectedDigits = new StringBuffer("");
         }
+
+        private String parseAttrLanguage(Attribute langAttr, String defaultLang) {
+            if (langAttr != null && !StringUtils.isEmpty(langAttr.value())) {
+                return restcommConfiguration.getMgAsr().getLanguages().contains(langAttr.value()) ? langAttr.value() : defaultLang;
+            } else {
+                logger.warning("Illegal or unsupported attribute value: '{}'. Will be use default value '{}'", langAttr,
+                        defaultLang);
+                return defaultLang;
+            }
+        }
     }
 
-    final class FinishGathering extends AbstractGatherAction {
-//        StringBuffer collectedDigits = new StringBuffer("");
+    private abstract class CallbackGatherAction extends AbstractGatherAction {
+
+        public CallbackGatherAction(ActorRef source) {
+            super(source);
+        }
+
+        protected void execHttpRequest(final NotificationsDao notifications,
+                                       final Attribute callbackAttr, final Attribute methodAttr,
+                                       final List<NameValuePair> parameters) {
+            if (callbackAttr == null) {
+                final Notification notification = notification(ERROR_NOTIFICATION, 11101, "Callback attribute is null");
+                notifications.addNotification(notification);
+                sendMail(notification);
+                final StopInterpreter stop = new StopInterpreter();
+                source.tell(stop, source);
+                logger.error("CallbackAttribute is null, CallbackGatherAction failed");
+            }
+            String action = callbackAttr.value();
+            if (StringUtils.isEmpty(action)) {
+                final Notification notification = notification(ERROR_NOTIFICATION, 11101, "Callback attribute value is null or empty");
+                notifications.addNotification(notification);
+                sendMail(notification);
+                final StopInterpreter stop = new StopInterpreter();
+                source.tell(stop, source);
+                logger.error("Action url is null or empty");
+            }
+            URI target;
+            try {
+                target = URI.create(action);
+            } catch (final Exception exception) {
+                final Notification notification = notification(ERROR_NOTIFICATION, 11100, action
+                        + " is an invalid URI.");
+                notifications.addNotification(notification);
+                sendMail(notification);
+                final StopInterpreter stop = new StopInterpreter();
+                source.tell(stop, source);
+                return;
+            }
+            String method = "POST";
+            if (methodAttr != null) {
+                method = methodAttr.value();
+                if (!StringUtils.isEmpty(method)) {
+                    if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
+                        final Notification notification = notification(WARNING_NOTIFICATION, 14104, method
+                                + " is not a valid HTTP method for <Gather>");
+                        notifications.addNotification(notification);
+                        method = "POST";
+                    }
+                } else {
+                    method = "POST";
+                }
+            }
+            final URI base = request.getUri();
+            final URI uri = UriUtils.resolve(base, target);
+            request = new HttpRequestDescriptor(uri, method, parameters);
+            downloader.tell(request, source);
+        }
+    }
+
+    final class FinishGathering extends CallbackGatherAction {
+
         public FinishGathering(final ActorRef source) {
             super(source);
         }
@@ -1569,16 +1682,16 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             final NotificationsDao notifications = storage.getNotificationsDao();
-            Attribute attribute = verb.attribute("action");
+
             String digits = collectedDigits.toString();
             collectedDigits = new StringBuffer();
-            if(logger.isInfoEnabled()){
-                logger.info("Digits collected: "+digits);
+            if (logger.isInfoEnabled()) {
+                logger.info("Digits collected: " + digits);
             }
-            if (digits.equals(finishOnKey)){
+            if (digits.equals(finishOnKey)) {
                 digits = "";
             }
-            if (logger.isDebugEnabled()){
+            if (logger.isDebugEnabled()) {
                 logger.debug("Digits collected : " + digits);
             }
             // https://bitbucket.org/telestax/telscale-restcomm/issue/150/verb-is-looping-by-default-and-never
@@ -1586,57 +1699,44 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             // before entering any other digits, Twilio will not make a request to the 'action' URL but instead continue
             // processing
             // the current TwiML document with the verb immediately following the <Gather>
-            if (attribute != null && (digits != null && !digits.trim().isEmpty())) {
-                String action = attribute.value();
-                if (action != null && !action.isEmpty()) {
-                    URI target = null;
-                    try {
-                        target = URI.create(action);
-                    } catch (final Exception exception) {
-                        final Notification notification = notification(ERROR_NOTIFICATION, 11100, action
-                                + " is an invalid URI.");
-                        notifications.addNotification(notification);
-                        sendMail(notification);
-                        final StopInterpreter stop = new StopInterpreter();
-                        source.tell(stop, source);
-                        return;
-                    }
-                    final URI base = request.getUri();
-                    final URI uri = UriUtils.resolve(base, target);
-                    // Parse "method".
-                    String method = "POST";
-                    attribute = verb.attribute("method");
-                    if (attribute != null) {
-                        method = attribute.value();
-                        if (method != null && !method.isEmpty()) {
-                            if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
-                                final Notification notification = notification(WARNING_NOTIFICATION, 14104, method
-                                        + " is not a valid HTTP method for <Gather>");
-                                notifications.addNotification(notification);
-                                method = "POST";
-                            }
-                        } else {
-                            method = "POST";
-                        }
-                    }
-                    // Redirect to the action url.
-                    if (digits.endsWith(finishOnKey)) {
-                        final int finishOnKeyIndex = digits.lastIndexOf(finishOnKey);
-                        digits = digits.substring(0, finishOnKeyIndex);
-                    }
-                    final List<NameValuePair> parameters = parameters();
-                    parameters.add(new BasicNameValuePair("Digits", digits));
-                    request = new HttpRequestDescriptor(uri, method, parameters);
-                    downloader.tell(request, source);
-                    return;
+            Attribute action = verb.attribute(GatherAttributes.ATTRIBUTE_ACTION);
+            if (action != null && !digits.trim().isEmpty()) {
+                // Redirect to the action url.
+                if (digits.endsWith(finishOnKey)) {
+                    final int finishOnKeyIndex = digits.lastIndexOf(finishOnKey);
+                    digits = digits.substring(0, finishOnKeyIndex);
                 }
+                final List<NameValuePair> parameters = parameters();
+                parameters.add(new BasicNameValuePair("Digits", digits));
+
+                execHttpRequest(notifications, action, verb.attribute(GatherAttributes.ATTRIBUTE_METHOD), parameters);
+                return;
             }
-            if(logger.isInfoEnabled()){
+            if (logger.isInfoEnabled()) {
                 logger.info("Attribute, Action or Digits is null, FinishGathering failed, moving to the next available verb");
             }
             // Ask the parser for the next action to take.
             final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
+        }
+    }
+
+    final class PartialGathering extends CallbackGatherAction {
+
+        public PartialGathering(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            final MediaGroupResponse<CollectedResult> asrResponse = (MediaGroupResponse<CollectedResult>) message;
+
+            final List<NameValuePair> parameters = parameters();
+            parameters.add(new BasicNameValuePair("Speech", asrResponse.get().getResult()));
+
+            final NotificationsDao notifications = storage.getNotificationsDao();
+            execHttpRequest(notifications, verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK),
+                    verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK_METHOD), parameters);
         }
     }
 
@@ -1653,7 +1753,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
             final NotificationsDao notifications = storage.getNotificationsDao();
             String finishOnKey = "1234567890*#";
-            Attribute attribute = verb.attribute("finishOnKey");
+            Attribute attribute = verb.attribute(GatherAttributes.ATTRIBUTE_FINISH_ON_KEY);
             if (attribute != null) {
                 finishOnKey = attribute.value();
                 if (finishOnKey != null && !finishOnKey.isEmpty()) {
@@ -1695,7 +1795,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
             }
             int timeout = 5;
-            attribute = verb.attribute("timeout");
+            attribute = verb.attribute(GatherAttributes.ATTRIBUTE_TIME_OUT);
             if (attribute != null) {
                 final String value = attribute.value();
                 if (value != null && !value.isEmpty()) {
@@ -1869,7 +1969,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
             // If action is present redirect to the action URI.
             String action = null;
-            attribute = verb.attribute("action");
+            attribute = verb.attribute(GatherAttributes.ATTRIBUTE_ACTION);
             if (attribute != null) {
                 action = attribute.value();
                 if (action != null && !action.isEmpty()) {
@@ -1889,7 +1989,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     final URI uri = UriUtils.resolve(base, target);
                     // Parse "method".
                     String method = "POST";
-                    attribute = verb.attribute("method");
+                    attribute = verb.attribute(GatherAttributes.ATTRIBUTE_METHOD);
                     if (attribute != null) {
                         method = attribute.value();
                         if (method != null && !method.isEmpty()) {
