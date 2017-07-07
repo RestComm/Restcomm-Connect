@@ -14,23 +14,6 @@
 		<!-- The API version that will be used. -->
 		<api-version>2012-04-24</api-version>
 
-		<!-- ASR Supported Languages -->
-		<asr-languages default="en-US">
-			<language>en-US</language>
-			<language>en-GB</language>
-			<language>es-ES</language>
-			<language>it-IT</language>
-			<language>fr-FR</language>
-			<language>pl-PL</language>
-			<language>pt-PT</language>
-		</asr-languages>
-
-		<!-- Speech to text drivers -->
-		<mg-asr-drivers default="driver1">
-			<driver>driver1</driver>
-			<driver>driver2</driver>
-		</mg-asr-drivers>
-
 		<!-- Try to run RVD workspace projects migration to apply new naming
 			convention and synchronization with database entities. This execution
 			will occurs max one time per Restcomm version. To force a new run,

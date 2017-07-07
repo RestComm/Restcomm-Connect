@@ -19,16 +19,6 @@
  */
 package org.restcomm.connect.mgcp;
 
-import static jain.protocol.ip.mgcp.message.parms.ReturnCode.Transaction_Executed_Normally;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
-import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.StopObserving;
-
 import akka.actor.ActorRef;
 import jain.protocol.ip.mgcp.JainIPMgcpException;
 import jain.protocol.ip.mgcp.JainMgcpResponseEvent;
@@ -45,6 +35,17 @@ import jain.protocol.ip.mgcp.message.parms.RequestedEvent;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import jain.protocol.ip.mgcp.pkg.PackageName;
+import org.apache.commons.lang.StringUtils;
+import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
+import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
+import org.restcomm.connect.commons.dao.CollectedResult;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.StopObserving;
+import org.snmp4j.smi.OctetString;
+
+import java.util.Map;
+
+import static jain.protocol.ip.mgcp.message.parms.ReturnCode.Transaction_Executed_Normally;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -53,11 +54,13 @@ import jain.protocol.ip.mgcp.pkg.PackageName;
 public final class IvrEndpoint extends GenericEndpoint {
     private static final PackageName PACKAGE_NAME = AUPackage.AU;
     private static final RequestedEvent[] REQUESTED_EVENTS = new RequestedEvent[2];
+
     static {
-        final RequestedAction[] action = new RequestedAction[] { RequestedAction.NotifyImmediately };
+        final RequestedAction[] action = new RequestedAction[]{RequestedAction.NotifyImmediately};
         REQUESTED_EVENTS[0] = new RequestedEvent(new EventName(PACKAGE_NAME, AUMgcpEvent.auoc), action);
         REQUESTED_EVENTS[1] = new RequestedEvent(new EventName(PACKAGE_NAME, AUMgcpEvent.auof), action);
     }
+
     private static final String EMPTY_STRING = new String();
     private static final String DEFAULT_REQUEST_ID = "0";
 
@@ -65,8 +68,13 @@ public final class IvrEndpoint extends GenericEndpoint {
     protected static String ivrEndpointName = "mobicents/ivr/$";
 
     public IvrEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain, long timeout, String endpointName) {
-        super(gateway, session, agent, new EndpointIdentifier(endpointName==null?ivrEndpointName:endpointName, domain), timeout);
+        super(gateway, session, agent, new EndpointIdentifier(endpointName == null ? ivrEndpointName : endpointName, domain), timeout);
         this.agent = agent;
+    }
+
+    private void sendAsr(final AsrSignal message) {
+        MgcpEvent event = AsrSignal.REQUEST_ASR.withParm(message.toString());
+        sendRequest(new EventName(PACKAGE_NAME, event), REQUESTED_EVENTS);
     }
 
     private void send(final Object message) {
@@ -80,12 +88,16 @@ public final class IvrEndpoint extends GenericEndpoint {
         } else if (PlayRecord.class.equals(klass)) {
             event = AUMgcpEvent.aupr.withParm(parameters);
         }
+        sendRequest(new EventName(PACKAGE_NAME, event), REQUESTED_EVENTS);
+    }
+
+    private void sendRequest(EventName reqSignal, RequestedEvent[] reqEvents) {
         final EventName[] signal = new EventName[1];
-        signal[0] = new EventName(PACKAGE_NAME, event);
+        signal[0] = reqSignal;
         final RequestIdentifier requestId = new RequestIdentifier(DEFAULT_REQUEST_ID);
         final NotificationRequest request = new NotificationRequest(self(), id, requestId);
         request.setNotifiedEntity(agent);
-        request.setRequestedEvents(REQUESTED_EVENTS);
+        request.setRequestedEvents(reqEvents);
         request.setSignalRequests(signal);
         gateway.tell(request, self());
     }
@@ -106,7 +118,6 @@ public final class IvrEndpoint extends GenericEndpoint {
         final NotificationRequest request = new NotificationRequest(self(), id, requestId);
         request.setSignalRequests(signal);
         request.setNotifiedEntity(agent);
-//        request.setRequestedEvents(REQUESTED_EVENTS);
         gateway.tell(request, self());
     }
 
@@ -130,6 +141,8 @@ public final class IvrEndpoint extends GenericEndpoint {
             onDestroyEndpoint((DestroyEndpoint) message, self, sender);
         } else if (Play.class.equals(klass) || PlayCollect.class.equals(klass) || PlayRecord.class.equals(klass)) {
             send(message);
+        } else if (AsrSignal.class.equals(klass)) {
+            sendAsr((AsrSignal) message);
         } else if (StopEndpoint.class.equals(klass)) {
             stop(message);
         } else if (Notify.class.equals(klass)) {
@@ -147,7 +160,7 @@ public final class IvrEndpoint extends GenericEndpoint {
         final String error = Integer.toString(code);
         final String message = "The IVR request failed with the following error code " + error;
         final JainIPMgcpException exception = new JainIPMgcpException(message);
-        final IvrEndpointResponse<String> response = new IvrEndpointResponse<String>(exception);
+        final IvrEndpointResponse response = new IvrEndpointResponse(exception);
         for (final ActorRef observer : observers) {
             observer.tell(response, self);
         }
@@ -174,22 +187,39 @@ public final class IvrEndpoint extends GenericEndpoint {
         final EventName[] observedEvents = notification.getObservedEvents();
         if (observedEvents.length == 1) {
             final MgcpEvent event = observedEvents[0].getEventIdentifier();
-            final Map<String, String> parameters = parse(event.getParms());
+            final Map<String, String> parameters = MgcpUtil.parseParameters(event.getParms());
             final int code = Integer.parseInt(parameters.get("rc"));
             switch (code) {
                 case 326: // No digits
                 case 327: // No speech
                 case 328: // Spoke too long
                 case 329: // Digit pattern not matched
-                case 100: { // Success
+                case 100: { // Success(final result)
                     String digits = parameters.get("dc");
                     if (digits == null) {
                         digits = EMPTY_STRING;
                     }
-                    // Notify the observers that the event successfully completed.
-                    final IvrEndpointResponse<String> result = new IvrEndpointResponse<String>(digits);
+                    final IvrEndpointResponse result = new IvrEndpointResponse(
+                            new CollectedResult(digits, AsrSignal.REQUEST_ASR.getName().equals(event.getName()), false));
                     for (final ActorRef observer : observers) {
                         observer.tell(result, self);
+                    }
+                    break;
+                }
+                case 101: { // Success(partial result)
+                    if (parameters.containsKey("asrr")) {
+                        String asrr = parameters.get("asrr");
+                        if (!StringUtils.isEmpty(asrr)) {
+                            asrr = OctetString.fromHexString(asrr).toString();
+                        }
+                        // Notify the observers that the event successfully completed.
+                        final IvrEndpointResponse result = new IvrEndpointResponse(new CollectedResult(asrr, true, true));
+                        for (final ActorRef observer : observers) {
+                            observer.tell(result, self);
+                        }
+                    } else {
+                        logger.error("asrr parameter is missing");
+                        fail(code);
                     }
                     break;
                 }
@@ -200,17 +230,4 @@ public final class IvrEndpoint extends GenericEndpoint {
         }
     }
 
-    private Map<String, String> parse(final String input) {
-        final Map<String, String> parameters = new HashMap<String, String>();
-        final String[] tokens = input.split(" ");
-        for (final String token : tokens) {
-            final String[] values = token.split("=");
-            if (values.length == 1) {
-                parameters.put(values[0], null);
-            } else if (values.length == 2) {
-                parameters.put(values[0], values[1]);
-            }
-        }
-        return parameters;
-    }
 }
