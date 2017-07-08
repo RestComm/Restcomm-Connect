@@ -127,6 +127,7 @@ import java.util.Arrays;
 import java.util.Currency;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -2079,7 +2080,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                 URI statusCallback = null;
                 String statusCallbackMethod = "POST";
-                List<String> statusCallbackEvent = null;
+                List<String> statusCallbackEvent = new LinkedList<String>();
 
                 if (child.hasAttribute("statusCallback")) {
                     statusCallback = new URI(child.attribute("statusCallback").value());
@@ -2089,9 +2090,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         statusCallbackMethod = child.attribute("statusCallbackMethod").value();
                     }
                     if (child.hasAttribute("statusCallbackEvent")) {
-                        statusCallbackEvent = Arrays.asList(child.attribute("statusCallbackEvent").value().replaceAll("\\s+","").split(","));
+                        statusCallbackEvent.addAll(Arrays.asList(child.attribute("statusCallbackEvent").value().replaceAll("\\s+","").split(",")));
                     } else {
-                        statusCallbackEvent = new ArrayList<String>();
+                        statusCallbackEvent = new LinkedList<String>();
                         statusCallbackEvent.add("initiated");
                         statusCallbackEvent.add("ringing");
                         statusCallbackEvent.add("answered");
@@ -2300,14 +2301,20 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     @SuppressWarnings("unchecked")
     private void executeDialAction(final Object message, final ActorRef outboundCall) {
-        if (!dialActionExecuted && verb != null && Verbs.dial.equals(verb.name())) {
+        Attribute attribute = null;
+        if (verb != null && Verbs.dial.equals(verb.name())) {
+            attribute = verb.attribute("action");
+        } else {
+            if (logger.isInfoEnabled()) {
+                logger.info("Either Verb is null OR not Dial, Dial Action will not be executed");
+            }
+        }
+        if (attribute != null && !dialActionExecuted) {
             if(logger.isInfoEnabled()){
                 logger.info("Proceeding to execute Dial Action attribute");
             }
             this.dialActionExecuted = true;
             final List<NameValuePair> parameters = parameters();
-
-            Attribute attribute = verb.attribute("action");
 
             if (call != null) {
                 try {
@@ -2473,9 +2480,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     return;
                 }
             }
-        } else if (verb == null) {
-            if(logger.isInfoEnabled()) {
-                logger.info("Dial action didn't executed because verb is null");
+        } else {
+            if (logger.isInfoEnabled()) {
+                if (attribute == null) {
+                    logger.info("DialAction URL is null, DialAction will not be executed");
+                } else {
+                    logger.info("DialAction has already been executed");
+                }
             }
         }
     }
@@ -3098,7 +3109,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callManager.tell(new DestroyCall(call), super.source);
                 if (outboundCall != null) {
                     callManager.tell(new DestroyCall(outboundCall), super.source);
-                } if (sender != call) {
+                } if (sender != call && !sender.equals(self())) {
                     callManager.tell(new DestroyCall(sender), super.source);
                 }
             } else {

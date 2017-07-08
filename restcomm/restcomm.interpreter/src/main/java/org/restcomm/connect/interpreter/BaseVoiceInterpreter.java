@@ -1780,6 +1780,10 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             if (duration.equals(0.0)) {
                 final DateTime end = DateTime.now();
                 duration = new Double((end.getMillis() - callRecord.getStartTime().getMillis()) / 1000);
+                if (logger.isDebugEnabled()) {
+                    String msg = String.format("Recording duration %s, startTime %s endTime %s", duration, callRecord.getStartTime().getMillis(), end.getMillis());
+                    logger.debug(msg);
+                }
             } else if(logger.isDebugEnabled()) {
                 logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
             }
@@ -1860,8 +1864,10 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                         logger.error(exception.getMessage(), exception);
                     }
                 }
-            } else if(logger.isInfoEnabled()){
-                logger.info("AsrService is not enabled");
+            } else {
+                if(logger.isDebugEnabled()){
+                    logger.debug("AsrService is not enabled");
+                }
             }
 
             // If action is present redirect to the action URI.
@@ -1944,15 +1950,10 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
 //                    final StopInterpreter stop = new StopInterpreter();
 //                    source.tell(stop, source);
                 }
-            }
-            if (CallStateChanged.class.equals(klass) ) {
-                if (action == null || action.isEmpty()) {
-                    source.tell(new StopInterpreter(), source);
-                } else {
-                    // Ask the parser for the next action to take.
-                    final GetNextVerb next = new GetNextVerb();
-                    parser.tell(next, source);
-                }
+            } else {
+                //Action is null here
+                final GetNextVerb next = new GetNextVerb();
+                parser.tell(next, source);
             }
             // A little clean up.
             recordingSid = null;
