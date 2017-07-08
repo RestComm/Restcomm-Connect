@@ -33,7 +33,7 @@ public interface SmsMessagesDao {
     void addSmsMessage(SmsMessage smsMessage);
 
     SmsMessage getSmsMessage(Sid sid);
-    
+
     SmsMessage getSmsMessageWithSmppMsgId(String smppmessageid);
 
     List<SmsMessage> getSmsMessages(final Sid accountSid);
@@ -48,5 +48,6 @@ public interface SmsMessagesDao {
 
     // Support for filtering of message list result, Issue 1395
     Integer getTotalSmsMessage(SmsMessageFilter filter);
+
     List<SmsMessage> getSmsMessages(SmsMessageFilter filter);
 }

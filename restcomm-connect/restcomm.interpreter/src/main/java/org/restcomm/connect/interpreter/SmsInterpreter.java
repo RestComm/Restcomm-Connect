@@ -124,9 +124,9 @@ public final class SmsInterpreter extends RestcommUntypedActor {
     private final ActorRef downloader;
     // The storage engine.
     private final DaoManager storage;
-    //Email configuration
+    // Email configuration
     private final Configuration emailconfiguration;
-    //Runtime configuration
+    // Runtime configuration
     private final Configuration runtime;
     // User specific configuration.
     private final Configuration configuration;
@@ -256,7 +256,7 @@ public final class SmsInterpreter extends RestcommUntypedActor {
     }
 
     protected String format(final String number) {
-        if(normalizeNumber) {
+        if (normalizeNumber) {
             final PhoneNumberUtil numbersUtil = PhoneNumberUtil.getInstance();
             try {
                 final PhoneNumber result = numbersUtil.parse(number, "US");
@@ -334,7 +334,7 @@ public final class SmsInterpreter extends RestcommUntypedActor {
         if (StartInterpreter.class.equals(klass)) {
             fsm.transition(message, acquiringLastSmsRequest);
         } else if (SmsSessionRequest.class.equals(klass)) {
-            customRequestHeaderMap = ((SmsSessionRequest)message).headers();
+            customRequestHeaderMap = ((SmsSessionRequest) message).headers();
             fsm.transition(message, downloadingRcml);
         } else if (DownloaderResponse.class.equals(klass)) {
             final DownloaderResponse response = (DownloaderResponse) message;
@@ -368,8 +368,8 @@ public final class SmsInterpreter extends RestcommUntypedActor {
                     }
                 }
             }
-        }  else if (ParserFailed.class.equals(klass)) {
-            if(logger.isInfoEnabled()) {
+        } else if (ParserFailed.class.equals(klass)) {
+            if (logger.isInfoEnabled()) {
                 logger.info("ParserFailed received. Will stop the call");
             }
             fsm.transition(message, finished);
@@ -408,9 +408,7 @@ public final class SmsInterpreter extends RestcommUntypedActor {
         } else if (EmailResponse.class.equals(klass)) {
             final EmailResponse response = (EmailResponse) message;
             if (!response.succeeded()) {
-                logger.error(
-                        "There was an error while sending an email :" + response.error(),
-                        response.cause());
+                logger.error("There was an error while sending an email :" + response.error(), response.cause());
             }
             fsm.transition(message, ready);
         }
@@ -429,10 +427,11 @@ public final class SmsInterpreter extends RestcommUntypedActor {
         final String body = initialSessionRequest.body();
         parameters.add(new BasicNameValuePair("Body", body));
 
-        //Issue https://telestax.atlassian.net/browse/RESTCOMM-517. If Request contains custom headers pass them to the HTTP server.
-        if(customRequestHeaderMap != null && !customRequestHeaderMap.isEmpty()){
+        // Issue https://telestax.atlassian.net/browse/RESTCOMM-517. If Request contains custom headers pass them to the HTTP
+        // server.
+        if (customRequestHeaderMap != null && !customRequestHeaderMap.isEmpty()) {
             Iterator<String> iter = customRequestHeaderMap.keySet().iterator();
-            while(iter.hasNext()){
+            while (iter.hasNext()) {
                 String headerName = iter.next();
                 parameters.add(new BasicNameValuePair("SipHeader_" + headerName, customRequestHeaderMap.remove(headerName)));
             }
@@ -613,22 +612,23 @@ public final class SmsInterpreter extends RestcommUntypedActor {
                     context.stop(parser);
                     parser = null;
                 }
-                try{
-                final String type = response.getContentType();
-                final String content = response.getContentAsString();
-                if ((type != null && content != null) && (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html"))) {
-                    parser = parser(content);
-                } else {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("DownloaderResponse getContentType is null: "+response);
+                try {
+                    final String type = response.getContentType();
+                    final String content = response.getContentAsString();
+                    if ((type != null && content != null)
+                            && (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html"))) {
+                        parser = parser(content);
+                    } else {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("DownloaderResponse getContentType is null: " + response);
+                        }
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
+                        notifications.addNotification(notification);
+                        final StopInterpreter stop = new StopInterpreter();
+                        source.tell(stop, source);
+                        return;
                     }
-                    final NotificationsDao notifications = storage.getNotificationsDao();
-                    final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
-                    notifications.addNotification(notification);
-                    final StopInterpreter stop = new StopInterpreter();
-                    source.tell(stop, source);
-                    return;
-                }
                 } catch (Exception e) {
                     final NotificationsDao notifications = storage.getNotificationsDao();
                     final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
@@ -640,7 +640,7 @@ public final class SmsInterpreter extends RestcommUntypedActor {
             }
             // Ask the parser for the next action to take.
             Header[] headers = response.getHeaders();
-            for(Header header: headers) {
+            for (Header header : headers) {
                 if (header.getName().startsWith("X-")) {
                     customHttpHeaderMap.put(header.getName(), header.getValue());
                 }
@@ -665,8 +665,8 @@ public final class SmsInterpreter extends RestcommUntypedActor {
                 method = attribute.value();
                 if (method != null && !method.isEmpty()) {
                     if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
-                        final Notification notification = notification(WARNING_NOTIFICATION, 13710, method
-                                + " is not a valid HTTP method for <Redirect>");
+                        final Notification notification = notification(WARNING_NOTIFICATION, 13710,
+                                method + " is not a valid HTTP method for <Redirect>");
                         notifications.addNotification(notification);
                         method = "POST";
                     }
@@ -710,7 +710,9 @@ public final class SmsInterpreter extends RestcommUntypedActor {
             // Save <Sms> verb.
             verb = (Tag) message;
             // Create a new sms session to handle the <Sms> verb.
-            service.tell(new CreateSmsSession(initialSessionRequest.from(), initialSessionRequest.to(), accountId.toString(), false), source);
+            service.tell(
+                    new CreateSmsSession(initialSessionRequest.from(), initialSessionRequest.to(), accountId.toString(), false),
+                    source);
         }
     }
 
@@ -734,8 +736,8 @@ public final class SmsInterpreter extends RestcommUntypedActor {
                     from = format(from);
                     if (from == null) {
                         from = verb.attribute("from").value();
-                        final Notification notification = notification(ERROR_NOTIFICATION, 14102, from
-                                + " is an invalid 'from' phone number.");
+                        final Notification notification = notification(ERROR_NOTIFICATION, 14102,
+                                from + " is an invalid 'from' phone number.");
                         notifications.addNotification(notification);
                         service.tell(new DestroySmsSession(session), source);
                         final StopInterpreter stop = new StopInterpreter();
@@ -754,21 +756,21 @@ public final class SmsInterpreter extends RestcommUntypedActor {
                 if (to == null) {
                     to = initialSessionRequest.from();
                 }
-                //                if (to != null && !to.isEmpty()) {
-                //                    to = format(to);
-                //                    if (to == null) {
-                //                        to = verb.attribute("to").value();
-                //                        final Notification notification = notification(ERROR_NOTIFICATION, 14101, to
-                //                                + " is an invalid 'to' phone number.");
-                //                        notifications.addNotification(notification);
-                //                        service.tell(new DestroySmsSession(session), source);
-                //                        final StopInterpreter stop = StopInterpreter.instance();
-                //                        source.tell(stop, source);
-                //                        return;
-                //                    }
-                //                } else {
-                //                    to = initialSessionRequest.from();
-                //                }
+                // if (to != null && !to.isEmpty()) {
+                // to = format(to);
+                // if (to == null) {
+                // to = verb.attribute("to").value();
+                // final Notification notification = notification(ERROR_NOTIFICATION, 14101, to
+                // + " is an invalid 'to' phone number.");
+                // notifications.addNotification(notification);
+                // service.tell(new DestroySmsSession(session), source);
+                // final StopInterpreter stop = StopInterpreter.instance();
+                // source.tell(stop, source);
+                // return;
+                // }
+                // } else {
+                // to = initialSessionRequest.from();
+                // }
             }
             // Parse <Sms> text.
             String body = verb.text();
@@ -791,8 +793,8 @@ public final class SmsInterpreter extends RestcommUntypedActor {
                         try {
                             target = URI.create(callback);
                         } catch (final Exception exception) {
-                            final Notification notification = notification(ERROR_NOTIFICATION, 14105, callback
-                                    + " is an invalid URI.");
+                            final Notification notification = notification(ERROR_NOTIFICATION, 14105,
+                                    callback + " is an invalid URI.");
                             notifications.addNotification(notification);
                             service.tell(new DestroySmsSession(session), source);
                             final StopInterpreter stop = new StopInterpreter();
@@ -843,8 +845,8 @@ public final class SmsInterpreter extends RestcommUntypedActor {
                     try {
                         target = URI.create(action);
                     } catch (final Exception exception) {
-                        final Notification notification = notification(ERROR_NOTIFICATION, 11100, action
-                                + " is an invalid URI.");
+                        final Notification notification = notification(ERROR_NOTIFICATION, 11100,
+                                action + " is an invalid URI.");
                         notifications.addNotification(notification);
                         final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
@@ -859,8 +861,8 @@ public final class SmsInterpreter extends RestcommUntypedActor {
                         method = attribute.value();
                         if (method != null && !method.isEmpty()) {
                             if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
-                                final Notification notification = notification(WARNING_NOTIFICATION, 14104, method
-                                        + " is not a valid HTTP method for <Sms>");
+                                final Notification notification = notification(WARNING_NOTIFICATION, 14104,
+                                        method + " is not a valid HTTP method for <Sms>");
                                 notifications.addNotification(notification);
                                 method = "POST";
                             }
@@ -907,21 +909,21 @@ public final class SmsInterpreter extends RestcommUntypedActor {
     }
 
     private final class SendingEmail extends AbstractAction {
-        public SendingEmail(final ActorRef source){
+        public SendingEmail(final ActorRef source) {
             super(source);
         }
 
         @Override
-        public void execute( final Object message) throws Exception {
-            final Tag verb = (Tag)message;
+        public void execute(final Object message) throws Exception {
+            final Tag verb = (Tag) message;
             // Parse "from".
             String from;
             Attribute attribute = verb.attribute("from");
             if (attribute != null) {
                 from = attribute.value();
-            }else{
+            } else {
                 Exception error = new Exception("From attribute was not defined");
-                source.tell(new EmailResponse(error,error.getMessage()), source);
+                source.tell(new EmailResponse(error, error.getMessage()), source);
                 return;
             }
 
@@ -930,21 +932,21 @@ public final class SmsInterpreter extends RestcommUntypedActor {
             attribute = verb.attribute("to");
             if (attribute != null) {
                 to = attribute.value();
-            }else{
+            } else {
                 Exception error = new Exception("To attribute was not defined");
-                source.tell(new EmailResponse(error,error.getMessage()), source);
+                source.tell(new EmailResponse(error, error.getMessage()), source);
                 return;
             }
 
             // Parse "cc".
-            String cc="";
+            String cc = "";
             attribute = verb.attribute("cc");
             if (attribute != null) {
                 cc = attribute.value();
             }
 
             // Parse "bcc".
-            String bcc="";
+            String bcc = "";
             attribute = verb.attribute("bcc");
             if (attribute != null) {
                 bcc = attribute.value();
@@ -955,18 +957,16 @@ public final class SmsInterpreter extends RestcommUntypedActor {
             attribute = verb.attribute("subject");
             if (attribute != null) {
                 subject = attribute.value();
-            }else{
-                subject="Restcomm Email Service";
+            } else {
+                subject = "Restcomm Email Service";
             }
 
             // Send the email.
-            final Mail emailMsg = new Mail(from, to, subject, verb.text(),cc,bcc);
-            if (mailerService == null){
+            final Mail emailMsg = new Mail(from, to, subject, verb.text(), cc, bcc);
+            if (mailerService == null) {
                 mailerService = mailer(emailconfiguration);
             }
             mailerService.tell(new EmailRequest(emailMsg), self());
         }
     }
 }
-
-

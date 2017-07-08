@@ -77,8 +77,8 @@ public final class SmppService extends RestcommUntypedActor {
 
     private ArrayList<Smpp> smppList = new ArrayList<Smpp>();
 
-    public SmppService(final Configuration configuration, final SipFactory factory,
-                       final DaoManager storage, final ServletContext servletContext, final ActorRef smppMessageHandler) {
+    public SmppService(final Configuration configuration, final SipFactory factory, final DaoManager storage,
+            final ServletContext servletContext, final ActorRef smppMessageHandler) {
 
         super();
         this.smppMessageHandler = smppMessageHandler;
@@ -93,7 +93,7 @@ public final class SmppService extends RestcommUntypedActor {
         Configuration config = this.configuration.subset("smpp");
         smppActivated = config.getString("[@activateSmppConnection]");
 
-        //get smpp address map from restcomm.xml file
+        // get smpp address map from restcomm.xml file
         this.smppSourceAddressMap = config.getString("connections.connection[@sourceAddressMap]");
         this.smppDestinationAddressMap = config.getString("connections.connection[@destinationAddressMap]");
         this.smppTonNpiValue = config.getString("connections.connection[@tonNpiValue]");
@@ -101,14 +101,13 @@ public final class SmppService extends RestcommUntypedActor {
         this.initializeSmppConnections();
     }
 
-
-    public static String getSmppTonNpiValue(){
+    public static String getSmppTonNpiValue() {
         return smppTonNpiValue;
     }
 
     @Override
-    public void onReceive(Object message) throws Exception {}
-
+    public void onReceive(Object message) throws Exception {
+    }
 
     private void initializeSmppConnections() {
         Configuration smppConfiguration = this.configuration.subset("smpp");
@@ -126,8 +125,8 @@ public final class SmppService extends RestcommUntypedActor {
             String systemId = smppConfiguration.getString("connections.connection(" + count + ").systemid");
             String peerIp = smppConfiguration.getString("connections.connection(" + count + ").peerip");
             int peerPort = smppConfiguration.getInt("connections.connection(" + count + ").peerport");
-            SmppBindType bindtype = SmppBindType.valueOf(smppConfiguration.getString("connections.connection(" + count
-                    + ").bindtype"));
+            SmppBindType bindtype = SmppBindType
+                    .valueOf(smppConfiguration.getString("connections.connection(" + count + ").bindtype"));
 
             if (bindtype == null) {
                 logger.warning("Bindtype for SMPP name=" + name + " is not specified. Using default TRANSCEIVER");
@@ -153,20 +152,20 @@ public final class SmppService extends RestcommUntypedActor {
 
             long connectTimeout = smppConfiguration.getLong("connections.connection(" + count + ").connecttimeout");
             long requestExpiryTimeout = smppConfiguration.getLong("connections.connection(" + count + ").requestexpirytimeout");
-            long windowMonitorInterval = smppConfiguration.getLong("connections.connection(" + count
-                    + ").windowmonitorinterval");
+            long windowMonitorInterval = smppConfiguration
+                    .getLong("connections.connection(" + count + ").windowmonitorinterval");
             boolean logBytes = smppConfiguration.getBoolean("connections.connection(" + count + ").logbytes");
             boolean countersEnabled = smppConfiguration.getBoolean("connections.connection(" + count + ").countersenabled");
 
             long enquireLinkDelay = smppConfiguration.getLong("connections.connection(" + count + ").enquirelinkdelay");
 
             Smpp smpp = new Smpp(name, systemId, peerIp, peerPort, bindtype, password, systemType, interfaceVersion, address,
-                    connectTimeout, windowSize, windowWaitTimeout, requestExpiryTimeout, windowMonitorInterval,
-                    countersEnabled, logBytes, enquireLinkDelay);
+                    connectTimeout, windowSize, windowWaitTimeout, requestExpiryTimeout, windowMonitorInterval, countersEnabled,
+                    logBytes, enquireLinkDelay);
 
             this.smppList.add(smpp);
 
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("creating new SMPP connection " + smpp);
             }
 
@@ -210,15 +209,16 @@ public final class SmppService extends RestcommUntypedActor {
         // configurable?
         this.clientBootstrap = new DefaultSmppClient(this.executor, 25, monitorExecutor);
 
-        this.smppClientOpsThread = new SmppClientOpsThread(this.clientBootstrap, outboundInterface("udp").getPort(), smppMessageHandler);
+        this.smppClientOpsThread = new SmppClientOpsThread(this.clientBootstrap, outboundInterface("udp").getPort(),
+                smppMessageHandler);
 
         (new Thread(this.smppClientOpsThread)).start();
 
-        for(Smpp smpp : this.smppList){
+        for (Smpp smpp : this.smppList) {
             this.smppClientOpsThread.scheduleConnect(smpp);
         }
 
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("SMPP Service started");
         }
     }

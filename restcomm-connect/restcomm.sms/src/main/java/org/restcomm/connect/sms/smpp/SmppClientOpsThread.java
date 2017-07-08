@@ -39,13 +39,9 @@ import com.cloudhopper.smpp.pdu.PduResponse;
 import com.cloudhopper.smpp.type.Address;
 import com.cloudhopper.smpp.type.RecoverablePduException;
 import com.cloudhopper.smpp.type.UnrecoverablePduException;
-import com.cloudhopper.smpp.util.DeliveryReceipt;
-import com.cloudhopper.smpp.util.DeliveryReceiptException;
 import com.cloudhopper.smpp.util.SmppUtil;
 
 import org.apache.log4j.Logger;
-import org.joda.time.DateTimeZone;
-
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.Iterator;
@@ -58,8 +54,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class SmppClientOpsThread implements Runnable {
 
-    private static final Logger logger = Logger
-            .getLogger(SmppClientOpsThread.class);
+    private static final Logger logger = Logger.getLogger(SmppClientOpsThread.class);
     private static final long SCHEDULE_CONNECT_DELAY = 1000 * 30; // 30 sec
     private List<ChangeRequest> pendingChanges = new CopyOnWriteArrayList<ChangeRequest>();
     private Object waitObject = new Object();
@@ -76,7 +71,6 @@ public class SmppClientOpsThread implements Runnable {
         this.smppMessageHandler = smppMessageHandler;
     }
 
-
     protected void setStarted(boolean started) {
         this.started = started;
 
@@ -87,9 +81,8 @@ public class SmppClientOpsThread implements Runnable {
 
     protected void scheduleConnect(Smpp esme) {
         synchronized (this.pendingChanges) {
-            this.pendingChanges.add(new ChangeRequest(esme,
-                    ChangeRequest.CONNECT, System.currentTimeMillis()
-                    + SCHEDULE_CONNECT_DELAY));
+            this.pendingChanges
+                    .add(new ChangeRequest(esme, ChangeRequest.CONNECT, System.currentTimeMillis() + SCHEDULE_CONNECT_DELAY));
         }
 
         synchronized (this.waitObject) {
@@ -100,9 +93,8 @@ public class SmppClientOpsThread implements Runnable {
 
     protected void scheduleEnquireLink(Smpp esme) {
         synchronized (this.pendingChanges) {
-            this.pendingChanges.add(new ChangeRequest(esme,
-                    ChangeRequest.ENQUIRE_LINK, System.currentTimeMillis()
-                    + esme.getEnquireLinkDelay()));
+            this.pendingChanges.add(new ChangeRequest(esme, ChangeRequest.ENQUIRE_LINK,
+                    System.currentTimeMillis() + esme.getEnquireLinkDelay()));
         }
 
         synchronized (this.waitObject) {
@@ -129,8 +121,7 @@ public class SmppClientOpsThread implements Runnable {
                                     pendingChanges.remove(change);
                                     // changes.remove();
                                 } else {
-                                    if (change.getExecutionTime() <= System
-                                            .currentTimeMillis()) {
+                                    if (change.getExecutionTime() <= System.currentTimeMillis()) {
                                         pendingChanges.remove(change);
                                         // changes.remove();
                                         initiateConnection(change.getSmpp());
@@ -142,8 +133,7 @@ public class SmppClientOpsThread implements Runnable {
                                     pendingChanges.remove(change);
                                     // changes.remove();
                                 } else {
-                                    if (change.getExecutionTime() <= System
-                                            .currentTimeMillis()) {
+                                    if (change.getExecutionTime() <= System.currentTimeMillis()) {
                                         pendingChanges.remove(change);
                                         // changes.remove();
                                         enquireLink(change.getSmpp());
@@ -159,8 +149,7 @@ public class SmppClientOpsThread implements Runnable {
                 }
 
             } catch (InterruptedException e) {
-                logger.error("Error while looping SmppClientOpsThread thread",
-                        e);
+                logger.error("Error while looping SmppClientOpsThread thread", e);
             }
         }
 
@@ -178,18 +167,15 @@ public class SmppClientOpsThread implements Runnable {
 
         if (smppSession != null && smppSession.isBound()) {
             try {
-                EnquireLinkResp enquireLinkResp1 = smppSession.enquireLink(
-                        new EnquireLink(), 10000);
+                EnquireLinkResp enquireLinkResp1 = smppSession.enquireLink(new EnquireLink(), 10000);
 
                 // all ok lets scehdule another ENQUIRE_LINK
                 this.scheduleEnquireLink(esme);
                 return;
 
             } catch (RecoverablePduException e) {
-                logger.warn(
-                        String.format(
-                                "RecoverablePduException while sending the ENQURE_LINK for ESME SystemId=%s",
-                                esme.getSystemId()), e);
+                logger.warn(String.format("RecoverablePduException while sending the ENQURE_LINK for ESME SystemId=%s",
+                        esme.getSystemId()), e);
 
                 // Recoverabel exception is ok
                 // all ok lets schedule another ENQUIRE_LINK
@@ -199,9 +185,8 @@ public class SmppClientOpsThread implements Runnable {
             } catch (Exception e) {
 
                 logger.error(
-                        String.format(
-                                "Exception while trying to send ENQUIRE_LINK for ESME SystemId=%s",
-                                esme.getSystemId()), e);
+                        String.format("Exception while trying to send ENQUIRE_LINK for ESME SystemId=%s", esme.getSystemId()),
+                        e);
                 // For all other exceptions lets close session and re-try
                 // connect
                 smppSession.close();
@@ -210,10 +195,8 @@ public class SmppClientOpsThread implements Runnable {
 
         } else {
             // This should never happen
-            logger.warn(String
-                    .format("Sending ENQURE_LINK fialed for ESME SystemId=%s as SmppSession is =%s !",
-                            esme.getSystemId(), (smppSession == null ? null
-                                    : smppSession.getStateName())));
+            logger.warn(String.format("Sending ENQURE_LINK fialed for ESME SystemId=%s as SmppSession is =%s !",
+                    esme.getSystemId(), (smppSession == null ? null : smppSession.getStateName())));
 
             if (smppSession != null) {
                 smppSession.close();
@@ -229,8 +212,7 @@ public class SmppClientOpsThread implements Runnable {
         }
 
         SmppSession smppSession = esme.getSmppSession();
-        if ((smppSession != null && smppSession.isBound())
-                || (smppSession != null && smppSession.isBinding())) {
+        if ((smppSession != null && smppSession.isBound()) || (smppSession != null && smppSession.isBinding())) {
 
             // If process has already begun lets not do it again
             return;
@@ -249,8 +231,8 @@ public class SmppClientOpsThread implements Runnable {
             config0.setConnectTimeout(esme.getConnectTimeout());
             config0.setSystemId(esme.getSystemId());
             config0.setPassword(esme.getPassword());
-            //this will disable  Enquire Link heartbeat logs printed to the console
-            //TODO this can be put into the restcomm.xml for Admin use
+            // this will disable Enquire Link heartbeat logs printed to the console
+            // TODO this can be put into the restcomm.xml for Admin use
             config0.getLoggingOptions().setLogBytes(false);
             config0.getLoggingOptions().setLogPdu(false);
             // to enable monitoring (request expiration)
@@ -261,13 +243,11 @@ public class SmppClientOpsThread implements Runnable {
             Address address = esme.getAddress();
             config0.setAddressRange(address);
 
-            SmppSessionHandler sessionHandler = new ClientSmppSessionHandler(
-                    esme);
+            SmppSessionHandler sessionHandler = new ClientSmppSessionHandler(esme);
 
             session0 = clientBootstrap.bind(config0, sessionHandler);
 
-
-            //getting session to be used to process SMS received from Restcomm
+            // getting session to be used to process SMS received from Restcomm
             getSmppSession = session0;
 
             // Set in ESME
@@ -276,10 +256,8 @@ public class SmppClientOpsThread implements Runnable {
             // Finally set Enquire Link schedule
             this.scheduleEnquireLink(esme);
         } catch (Exception e) {
-            logger.error(
-                    String.format(
-                            "Exception when trying to bind client SMPP connection for ESME systemId=%s",
-                            esme.getSystemId()), e);
+            logger.error(String.format("Exception when trying to bind client SMPP connection for ESME systemId=%s",
+                    esme.getSystemId()), e);
             if (session0 != null) {
                 session0.close();
             }
@@ -287,11 +265,11 @@ public class SmppClientOpsThread implements Runnable {
         }
     }
 
-    //*************Inner Class******************
+    // *************Inner Class******************
 
     protected class ClientSmppSessionHandler implements SmppSessionHandler {
 
-        //private final Smpp esme ;
+        // private final Smpp esme ;
         private Smpp esme = null;
 
         /**
@@ -316,8 +294,7 @@ public class SmppClientOpsThread implements Runnable {
 
         @Override
         public void fireChannelUnexpectedlyClosed() {
-            logger.error("ChannelUnexpectedlyClosed for Smpp "
-                    + this.esme.getName()
+            logger.error("ChannelUnexpectedlyClosed for Smpp " + this.esme.getName()
                     + " Closing Smpp session and restrting BIND process again");
             this.esme.getSmppSession().close();
 
@@ -326,12 +303,10 @@ public class SmppClientOpsThread implements Runnable {
         }
 
         @Override
-        public void fireExpectedPduResponseReceived(
-                PduAsyncResponse pduAsyncResponse) {
+        public void fireExpectedPduResponseReceived(PduAsyncResponse pduAsyncResponse) {
             // TODO : SMPP Response received. Does RestComm need confirmation
             // for this?
-            logger.warn("ExpectedPduResponseReceived received for Smpp "
-                    + this.esme.getName() + " PduAsyncResponse="
+            logger.warn("ExpectedPduResponseReceived received for Smpp " + this.esme.getName() + " PduAsyncResponse="
                     + pduAsyncResponse);
         }
 
@@ -339,81 +314,76 @@ public class SmppClientOpsThread implements Runnable {
         public void firePduRequestExpired(PduRequest pduRequest) {
             // TODO : SMPP request Expired. RestComm needs to notify Application
             // about SMS failure
-            logger.warn("PduRequestExpired for Smpp " + this.esme.getName()
-                    + " PduRequest=" + pduRequest);
+            logger.warn("PduRequestExpired for Smpp " + this.esme.getName() + " PduRequest=" + pduRequest);
         }
 
         @Override
         public PduResponse firePduRequestReceived(PduRequest pduRequest) {
-            // TODO : SMPP request received. Let RestComm know so it calls 
-        	//coresponding App
+            // TODO : SMPP request received. Let RestComm know so it calls
+            // coresponding App
 
             PduResponse response = pduRequest.createResponse();
-            //Nexmo keeps sending enquire_link in response that causes
-            //problem with normal PDU request. This tells Restcomm SMPP to do Nothing
-            //with the request
+            // Nexmo keeps sending enquire_link in response that causes
+            // problem with normal PDU request. This tells Restcomm SMPP to do Nothing
+            // with the request
             if (pduRequest.toString().toLowerCase().contains("enquire_link")) {
-            	//logger.info("This is a response to the enquire_link, therefore, do NOTHING ");
+                // logger.info("This is a response to the enquire_link, therefore, do NOTHING ");
             } else if (pduRequest.getCommandId() == SmppConstants.CMD_ID_DELIVER_SM) {
-              	logger.info("********** Received DeliverSm ***************** ");
+                logger.info("********** Received DeliverSm ***************** ");
                 DeliverSm deliverSm = (DeliverSm) pduRequest;
                 boolean isDeliveryReceipt = false;
-                
-            	String decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
+
+                String decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
                 String destSmppAddress = deliverSm.getDestAddress().getAddress();
                 String sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
-                
+
                 Charset charset;
                 if (DataCoding.DATA_CODING_UCS2 == deliverSm.getDataCoding()) {
                     charset = CharsetUtil.CHARSET_UCS_2;
                 } else {
                     charset = CharsetUtil.CHARSET_GSM;
-                    
+
                 }
-                
-                if( SmppUtil.isMessageTypeSmscDeliveryReceipt(	deliverSm.getEsmClass()	) ) {
-                	isDeliveryReceipt = true;
-                } 
-            	
+
+                if (SmppUtil.isMessageTypeSmscDeliveryReceipt(deliverSm.getEsmClass())) {
+                    isDeliveryReceipt = true;
+                }
+
                 try {
-                    //send received SMPP PDU message to restcomm
+                    // send received SMPP PDU message to restcomm
                     try {
-                        sendSmppMessageToRestcomm(decodedPduMessage, destSmppAddress, sourceSmppAddress, charset, isDeliveryReceipt);
-                    } catch (IOException  e) {
+                        sendSmppMessageToRestcomm(decodedPduMessage, destSmppAddress, sourceSmppAddress, charset,
+                                isDeliveryReceipt);
+                    } catch (IOException e) {
                         logger.error("Exception while trying to dispatch incoming SMPP message to Restcomm: " + e);
                     }
-                    
-                    
+
                 } catch (Exception e) {
                     logger.error("Exception while trying to process incoming SMPP message to Restcomm: " + e);
                 }
-            
-            	
+
             } else {
-            	//TODO 
+                // TODO
             }
-            
+
             return response;
         }
 
-
         @Override
         public void fireRecoverablePduException(RecoverablePduException e) {
-            logger.warn("RecoverablePduException received for Smpp "
-                    + this.esme.getName(), e);
+            logger.warn("RecoverablePduException received for Smpp " + this.esme.getName(), e);
         }
 
         @Override
         public void fireUnexpectedPduResponseReceived(PduResponse pduResponse) {
-            logger.warn("UnexpectedPduResponseReceived received for Smpp "
-                    + this.esme.getName() + " PduResponse=" + pduResponse);
+            logger.warn(
+                    "UnexpectedPduResponseReceived received for Smpp " + this.esme.getName() + " PduResponse=" + pduResponse);
         }
 
         @Override
         public void fireUnknownThrowable(Throwable e) {
             logger.error("UnknownThrowable for Smpp " + this.esme.getName()
-                            + " Closing Smpp session and restarting BIND process again",
-                    e);
+                    + " Closing Smpp session and restarting BIND process again", e);
             // TODO is this ok?
 
             this.esme.getSmppSession().close();
@@ -425,11 +395,8 @@ public class SmppClientOpsThread implements Runnable {
 
         @Override
         public void fireUnrecoverablePduException(UnrecoverablePduException e) {
-            logger.error(
-                    "UnrecoverablePduException for Smpp "
-                            + this.esme.getName()
-                            + " Closing Smpp session and restrting BIND process again",
-                    e);
+            logger.error("UnrecoverablePduException for Smpp " + this.esme.getName()
+                    + " Closing Smpp session and restrting BIND process again", e);
 
             this.esme.getSmppSession().close();
 
@@ -438,17 +405,19 @@ public class SmppClientOpsThread implements Runnable {
         }
     }
 
-    //smpp session to be used for sending SMS from Restcomm to smpp endpoint
+    // smpp session to be used for sending SMS from Restcomm to smpp endpoint
     public static SmppSession getSmppSession() {
         return getSmppSession;
     }
 
-    public void sendSmppMessageToRestcomm(String smppMessage, String smppTo, String smppFrom, Charset charset, boolean isDeliveryReceipt) throws IOException, ServletException {
+    public void sendSmppMessageToRestcomm(String smppMessage, String smppTo, String smppFrom, Charset charset,
+            boolean isDeliveryReceipt) throws IOException, ServletException {
         SmppSession smppSession = SmppClientOpsThread.getSmppSession();
         String to = smppTo;
         String from = smppFrom;
         String inboundMessage = smppMessage;
-        SmppInboundMessageEntity smppInboundMessage = new SmppInboundMessageEntity(to, from, inboundMessage, charset, isDeliveryReceipt);
+        SmppInboundMessageEntity smppInboundMessage = new SmppInboundMessageEntity(to, from, inboundMessage, charset,
+                isDeliveryReceipt);
         smppMessageHandler.tell(smppInboundMessage, null);
     }
 }

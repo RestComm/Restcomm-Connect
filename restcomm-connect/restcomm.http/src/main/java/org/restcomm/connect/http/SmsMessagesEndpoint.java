@@ -187,8 +187,8 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         }
 
         int limit = Integer.parseInt(pageSize);
-        int offset = (page.equals("0")) ? 0 : (((Integer.parseInt(page) - 1) * Integer.parseInt(pageSize)) + Integer
-                .parseInt(pageSize));
+        int offset = (page.equals("0")) ? 0
+                : (((Integer.parseInt(page) - 1) * Integer.parseInt(pageSize)) + Integer.parseInt(pageSize));
 
         // Shall we query cdrs of sub-accounts too ?
         // if we do, we need to find the sub-accounts involved first
@@ -204,11 +204,11 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         try {
 
             if (localInstanceOnly) {
-                filterForTotal = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime,
-                        body, null, null);
+                filterForTotal = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime, body,
+                        null, null);
             } else {
-                filterForTotal = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime,
-                        body, null, null, instanceId);
+                filterForTotal = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime, body,
+                        null, null, instanceId);
             }
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
@@ -224,11 +224,11 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
 
         try {
             if (localInstanceOnly) {
-                filter = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime,
-                        body, limit, offset);
+                filter = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime, body, limit,
+                        offset);
             } else {
-                filter = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime,
-                        body, limit, offset, instanceId);
+                filter = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime, body, limit,
+                        offset, instanceId);
             }
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
@@ -280,7 +280,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         secure(accountsDao.getAccount(accountSid), "RestComm:Create:SmsMessages");
         try {
             validate(data);
-            if(normalizePhoneNumbers)
+            if (normalizePhoneNumbers)
                 normalize(data);
         } catch (final RuntimeException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
@@ -298,13 +298,14 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         Iterator<String> iter = data.keySet().iterator();
         while (iter.hasNext()) {
             String name = iter.next();
-            if (name.startsWith("X-")){
+            if (name.startsWith("X-")) {
                 customRestOutgoingHeaderMap.put(name, data.getFirst(name));
             }
         }
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
         try {
-            Future<Object> future = (Future<Object>) ask(aggregator, new CreateSmsSession(sender, recipient, accountSid, true), expires);
+            Future<Object> future = (Future<Object>) ask(aggregator, new CreateSmsSession(sender, recipient, accountSid, true),
+                    expires);
             Object object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
             Class<?> klass = object.getClass();
             if (SmsServiceResponse.class.equals(klass)) {
@@ -319,7 +320,8 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
                     final ActorRef observer = observer();
                     session.tell(new Observe(observer), observer);
                     session.tell(new SmsSessionAttribute("record", record), null);
-                    final SmsSessionRequest request = new SmsSessionRequest(sender, recipient, body, encoding, customRestOutgoingHeaderMap);
+                    final SmsSessionRequest request = new SmsSessionRequest(sender, recipient, body, encoding,
+                            customRestOutgoingHeaderMap);
                     session.tell(request, null);
                     if (APPLICATION_JSON_TYPE == responseType) {
                         return ok(gson.toJson(record), APPLICATION_JSON).build();
@@ -342,7 +344,8 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     }
 
     private SmsMessage sms(final Sid accountSid, final String apiVersion, final String sender, final String recipient,
-            final String body, final SmsMessage.Status status, final SmsMessage.Direction direction, final String statusCallback) {
+            final String body, final SmsMessage.Status status, final SmsMessage.Direction direction,
+            final String statusCallback) {
         final SmsMessage.Builder builder = SmsMessage.builder();
         final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
         builder.setSid(sid);
@@ -362,11 +365,11 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         buffer.append(sid.toString());
         final URI uri = URI.create(buffer.toString());
         builder.setUri(uri);
-        
-        if(statusCallback!=null) {
-        	builder.setStatusCallback( URI.create( statusCallback ) );
+
+        if (statusCallback != null) {
+            builder.setStatusCallback(URI.create(statusCallback));
         }
-        
+
         return builder.build();
     }
 
@@ -378,11 +381,11 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         } else if (!data.containsKey("Body")) {
             throw new NullPointerException("Body can not be null.");
         } else if (data.containsKey("StatusCallback")) {
-        	if(!isURL(data.getFirst("StatusCallback"))) {
-    		//TODO: apply proper throw new ValidationException("StatusCallback URL is not valid.");
-    		throw new NullPointerException("StatusCallback URL is not valid.");
-    	}
-        } 
+            if (!isURL(data.getFirst("StatusCallback"))) {
+                // TODO: apply proper throw new ValidationException("StatusCallback URL is not valid.");
+                throw new NullPointerException("StatusCallback URL is not valid.");
+            }
+        }
     }
 
     private ActorRef observer() {
@@ -398,13 +401,13 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     }
 
     private boolean isURL(String url) {
-        
+
         // Assigning the url format regular expression
-        //String urlPattern = "^http(s{0,1})://[a-zA-Z0-9_/\\-\\.]+\\.([A-Za-z/]{2,5})[a-zA-Z0-9_/\\&\\?\\=\\-\\.\\~\\%]*";
-      	String urlPattern = "^http://[a-zA-Z0-9_/\\-\\.]+\\.([A-Za-z/]{2,5})[a-zA-Z0-9_/\\&\\?\\=\\-\\.\\~\\%]*";
+        // String urlPattern = "^http(s{0,1})://[a-zA-Z0-9_/\\-\\.]+\\.([A-Za-z/]{2,5})[a-zA-Z0-9_/\\&\\?\\=\\-\\.\\~\\%]*";
+        String urlPattern = "^http://[a-zA-Z0-9_/\\-\\.]+\\.([A-Za-z/]{2,5})[a-zA-Z0-9_/\\&\\?\\=\\-\\.\\~\\%]*";
         return url.matches(urlPattern);
     }
-    
+
     private final class SmsSessionObserver extends RestcommUntypedActor {
         public SmsSessionObserver() {
             super();

@@ -39,7 +39,7 @@ import org.restcomm.connect.testsuite.sms.SmsEndpointTool;
  *
  */
 @RunWith(Arquillian.class)
-public class SmsMessagesEndpointTest extends EndpointTest{
+public class SmsMessagesEndpointTest extends EndpointTest {
     private static Logger logger = Logger.getLogger(SmsMessagesEndpointTest.class);
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
@@ -74,8 +74,8 @@ public class SmsMessagesEndpointTest extends EndpointTest{
         assertTrue(secondPage.get("start").getAsInt() == 20);
         assertTrue(secondPage.get("end").getAsInt() == 29);
 
-        JsonObject lastPage = (JsonObject) SmsEndpointTool.getInstance().getSmsMessageList(deploymentUrl.toString(), adminAccountSid,
-        adminAuthToken, firstPage.get("num_pages").getAsInt(), 10, true);
+        JsonObject lastPage = (JsonObject) SmsEndpointTool.getInstance().getSmsMessageList(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, firstPage.get("num_pages").getAsInt(), 10, true);
         JsonArray lastPageMessagesArray = lastPage.get("messages").getAsJsonArray();
         assertTrue(lastPageMessagesArray.size() == 4);
         assertTrue(lastPage.get("start").getAsInt() == 30);
@@ -88,8 +88,8 @@ public class SmsMessagesEndpointTest extends EndpointTest{
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("From", "49376%");
 
-        JsonObject filteredMessagesBySender = SmsEndpointTool.getInstance().getSmsMessageListUsingFilter(deploymentUrl.toString(),
-                adminAccountSid, adminAuthToken, filters);
+        JsonObject filteredMessagesBySender = SmsEndpointTool.getInstance()
+                .getSmsMessageListUsingFilter(deploymentUrl.toString(), adminAccountSid, adminAuthToken, filters);
 
         assertTrue(filteredMessagesBySender.get("messages").getAsJsonArray().size() == 4);
         assertTrue(filteredMessagesBySender.get("start").getAsInt() == 0);
@@ -102,8 +102,8 @@ public class SmsMessagesEndpointTest extends EndpointTest{
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("To", "13557%");
 
-        JsonObject filteredMessagesByRecipent = SmsEndpointTool.getInstance().getSmsMessageListUsingFilter(deploymentUrl.toString(),
-                adminAccountSid, adminAuthToken, filters);
+        JsonObject filteredMessagesByRecipent = SmsEndpointTool.getInstance()
+                .getSmsMessageListUsingFilter(deploymentUrl.toString(), adminAccountSid, adminAuthToken, filters);
 
         assertTrue(filteredMessagesByRecipent.get("messages").getAsJsonArray().size() == 12);
         assertTrue(filteredMessagesByRecipent.get("start").getAsInt() == 0);
@@ -115,8 +115,8 @@ public class SmsMessagesEndpointTest extends EndpointTest{
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("StartTime", "2013-07-07 18:15:12.018000000");
 
-        JsonObject filteredMessagesByStartTime = SmsEndpointTool.getInstance().getSmsMessageListUsingFilter(deploymentUrl.toString(),
-                adminAccountSid, adminAuthToken, filters);
+        JsonObject filteredMessagesByStartTime = SmsEndpointTool.getInstance()
+                .getSmsMessageListUsingFilter(deploymentUrl.toString(), adminAccountSid, adminAuthToken, filters);
 
         assertTrue(filteredMessagesByStartTime.get("messages").getAsJsonArray().size() == 24);
         assertTrue(filteredMessagesByStartTime.get("start").getAsInt() == 0);
@@ -128,8 +128,8 @@ public class SmsMessagesEndpointTest extends EndpointTest{
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("EndTime", "2013-07-09 16:22:35.146000000");
 
-        JsonObject filteredMessagesByEndTime = SmsEndpointTool.getInstance().getSmsMessageListUsingFilter(deploymentUrl.toString(),
-                adminAccountSid, adminAuthToken, filters);
+        JsonObject filteredMessagesByEndTime = SmsEndpointTool.getInstance()
+                .getSmsMessageListUsingFilter(deploymentUrl.toString(), adminAccountSid, adminAuthToken, filters);
 
         assertTrue(filteredMessagesByEndTime.get("messages").getAsJsonArray().size() == 26);
         assertTrue(filteredMessagesByEndTime.get("start").getAsInt() == 0);

@@ -114,8 +114,8 @@ public final class SmsMessageListConverter extends AbstractConverter implements 
 
     private String getNextPageUri(SmsMessageList list) {
         String lastSid = (page == getTotalPages()) ? "null" : list.getSmsMessages().get(pageSize - 1).getSid().toString();
-        return (page == getTotalPages()) ? "null" : pathUri + "?Page=" + (page + 1) + "&PageSize=" + pageSize + "&AfterSid="
-                + lastSid;
+        return (page == getTotalPages()) ? "null"
+                : pathUri + "?Page=" + (page + 1) + "&PageSize=" + pageSize + "&AfterSid=" + lastSid;
     }
 
     private String getLastPageUri() {

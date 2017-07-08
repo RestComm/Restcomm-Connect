@@ -88,12 +88,13 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
             session.close();
         }
     }
-    
+
     @Override
     public SmsMessage getSmsMessageWithSmppMsgId(final String smppmessageid) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + "getSmsMessageWithSmppMsgId", smppmessageid.toString());
+            final Map<String, Object> result = session.selectOne(namespace + "getSmsMessageWithSmppMsgId",
+                    smppmessageid.toString());
             if (result != null) {
                 return toSmsMessage(result);
             } else {
@@ -127,8 +128,7 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
         final SqlSession session = sessions.openSession();
 
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getSmsMessagesByUsingFilters",
-                    filter);
+            final List<Map<String, Object>> results = session.selectList(namespace + "getSmsMessagesByUsingFilters", filter);
             final List<SmsMessage> cdrs = new ArrayList<SmsMessage>();
 
             if (results != null && !results.isEmpty()) {
@@ -185,7 +185,7 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
 
     @Override
     public int getSmsMessagesPerAccountLastPerMinute(String accountSid) throws ParseException {
-        SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String date = formatter.format(DateTime.now().minusSeconds(60).toDate());
 
         Map<String, Object> params = new HashMap<String, Object>();
@@ -217,11 +217,11 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
         map.put("price_unit", writeCurrency(smsMessage.getPriceUnit()));
         map.put("api_version", smsMessage.getApiVersion());
         map.put("uri", writeUri(smsMessage.getUri()));
-        
-        map.put("status_callback", writeUri( smsMessage.getStatusCallback() ));
+
+        map.put("status_callback", writeUri(smsMessage.getStatusCallback()));
         map.put("smpp_messageid", smsMessage.getSmppMessageId());
         //
-        
+
         return map;
     }
 
@@ -241,7 +241,7 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
         final String apiVersion = readString(map.get("api_version"));
         final URI uri = readUri(map.get("uri"));
         final URI statuCallback = readUri(map.get("status_callback"));
-        final String	smppMessageId	=	readString(map.get("smpp_messageid"));
+        final String smppMessageId = readString(map.get("smpp_messageid"));
         return new SmsMessage(sid, dateCreated, dateUpdated, dateSent, accountSid, sender, recipient, body, status, direction,
                 price, priceUnit, apiVersion, uri, statuCallback, smppMessageId);
     }

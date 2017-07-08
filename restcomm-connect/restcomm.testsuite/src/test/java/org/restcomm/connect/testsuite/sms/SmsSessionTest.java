@@ -54,7 +54,7 @@ public final class SmsSessionTest {
     private Deployer deployer;
     @ArquillianResource
     URL deploymentUrl;
-    
+
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
 
@@ -67,7 +67,7 @@ public final class SmsSessionTest {
     private SipStack alice;
     private SipPhone alicePhone;
     private String aliceContact = "sip:alice@127.0.0.1:5092";
-    
+
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
@@ -85,7 +85,7 @@ public final class SmsSessionTest {
     public void before() throws Exception {
         receiver = tool.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
         phone = receiver.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, phoneContact);
-        
+
         alice = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
         alicePhone = alice.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
     }
@@ -98,7 +98,7 @@ public final class SmsSessionTest {
         if (receiver != null) {
             receiver.dispose();
         }
-        
+
         if (alicePhone != null) {
             alicePhone.dispose();
         }
@@ -144,7 +144,7 @@ public final class SmsSessionTest {
         assertTrue(messages.size() > 0);
         assertTrue(messages.get(0).equals("Hello World!"));
     }
-    
+
     @Test
     public void testSendSmsRedirectReceiveSms3() throws ParseException {
         // Send restcomm an sms.
@@ -163,7 +163,7 @@ public final class SmsSessionTest {
         assertTrue(messages.size() > 0);
         assertTrue(messages.get(0).equals("Hello World!"));
     }
-    
+
     @Test
     public void testAliceEchoTest() throws ParseException {
 
@@ -172,18 +172,18 @@ public final class SmsSessionTest {
 
         Credential credential = new Credential("127.0.0.1", "alice", "1234");
         alicePhone.addUpdateCredential(credential);
-        
+
         // Prepare Alice to receive call
         final SipCall aliceCall = alicePhone.createSipCall();
         aliceCall.listenForMessage();
-        
-//        // Send restcomm an sms.
+
+        // // Send restcomm an sms.
         final String proxy = phone.getStackAddress() + ":5080;lr/udp";
         final String to = "sip:2002@127.0.0.1:5080";
         final String body = "Hello, waiting your response!";
         final SipCall call = phone.createSipCall();
         call.initiateOutgoingMessage(to, proxy, body);
-        
+
         // Wait for a response sms.
         alicePhone.setLoopback(true);
         aliceCall.listenForMessage();
@@ -193,7 +193,7 @@ public final class SmsSessionTest {
         assertTrue(messageBody.equals("Hello World!"));
         aliceCall.initiateOutgoingMessage("sip:+17778889999@127.0.0.1:5091", null, "Its great to hear from you!");
         assertTrue(aliceCall.waitForAuthorisation(5000));
-        
+
         call.listenForMessage();
         assertTrue(call.waitForMessage(6 * 1000));
         call.sendMessageResponse(202, "Accepted", -1);
@@ -201,29 +201,26 @@ public final class SmsSessionTest {
         assertTrue(messages.size() > 0);
         assertTrue(messages.get(0).equals("Its great to hear from you!"));
     }
-    
+
     private String smsRcml = "<Response><Sms to=\"alice\" from=\"restcomm\">Hello World!</Sms></Response>";
+
     @Test
     public void testSmsWithCustomHeaders() throws ParseException {
-        stubFor(get(urlPathEqualTo("/rcml"))
-                .withQueryParam("SipHeader_X-MyCustom-Header1", containing("Value1"))
+        stubFor(get(urlPathEqualTo("/rcml")).withQueryParam("SipHeader_X-MyCustom-Header1", containing("Value1"))
                 .withQueryParam("SipHeader_X-MyCustom-Header2", containing("Value2"))
-                .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "text/xml")
-                    .withBody(smsRcml)));
-        
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "text/xml").withBody(smsRcml)));
+
         SipURI uri = alice.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         Credential credential = new Credential("127.0.0.1", "alice", "1234");
         alicePhone.addUpdateCredential(credential);
-        
+
         // Prepare Alice to receive call
         final SipCall aliceCall = alicePhone.createSipCall();
         aliceCall.listenForMessage();
-        
-//        // Send restcomm an sms.
+
+        // // Send restcomm an sms.
         final String proxy = phone.getStackAddress() + ":5080;lr/udp";
         final String to = "sip:2003@127.0.0.1:5080";
         final String body = "Hello, waiting your response!";
@@ -232,8 +229,8 @@ public final class SmsSessionTest {
         additionalHeaders.add(phone.getParent().getHeaderFactory().createHeader("X-MyCustom-Header1", "Value1"));
         additionalHeaders.add(phone.getParent().getHeaderFactory().createHeader("X-MyCustom-Header2", "Value2"));
         call.initiateOutgoingMessage(phoneContact, to, proxy, additionalHeaders, null, body);
-//        call.initiateOutgoingMessage(to, proxy, body);
-        
+        // call.initiateOutgoingMessage(to, proxy, body);
+
         // Wait for a response sms.
         alicePhone.setLoopback(true);
         aliceCall.listenForMessage();
@@ -243,7 +240,7 @@ public final class SmsSessionTest {
         assertTrue(messageBody.equals("Hello World!"));
         aliceCall.initiateOutgoingMessage("sip:+17778889999@127.0.0.1:5091", null, "Its great to hear from you!");
         assertTrue(aliceCall.waitForAuthorisation(5000));
-        
+
         call.listenForMessage();
         assertTrue(call.waitForMessage(6 * 1000));
         call.sendMessageResponse(202, "Accepted", -1);
@@ -251,7 +248,7 @@ public final class SmsSessionTest {
         assertTrue(messages.size() > 0);
         assertTrue(messages.get(0).equals("Its great to hear from you!"));
     }
-    
+
     @Test
     public void sendMessageUsingValidContentType() throws ParseException {
         final String proxy = phone.getStackAddress() + ":5080;lr/udp";

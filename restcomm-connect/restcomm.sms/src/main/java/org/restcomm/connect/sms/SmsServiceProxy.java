@@ -68,10 +68,10 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
         service.tell(response, null);
     }
 
-
     private ActorRef service(final Configuration configuration, final SipFactory factory, final DaoManager storage) {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
+
             @Override
             public UntypedActor create() throws Exception {
                 return new SmsService(configuration, factory, storage, context);
@@ -81,9 +81,10 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
     }
 
     private ActorRef smppService(final Configuration configuration, final SipFactory factory, final DaoManager storage,
-                                 final ServletContext context, final ActorRef smppMessageHandler) {
+            final ServletContext context, final ActorRef smppMessageHandler) {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
+
             @Override
             public UntypedActor create() throws Exception {
                 return new SmppService(configuration, factory, storage, context, smppMessageHandler);
@@ -92,9 +93,10 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
         return system.actorOf(props);
     }
 
-    private ActorRef smppMessageHandler () {
+    private ActorRef smppMessageHandler() {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
+
             @Override
             public UntypedActor create() throws Exception {
                 return new SmppMessageHandler(context);
@@ -114,11 +116,11 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
             service = service(configuration, factory, storage);
             context.setAttribute(SmsService.class.getName(), service);
             if (configuration.subset("smpp").getString("[@activateSmppConnection]", "false").equalsIgnoreCase("true")) {
-                if(logger.isInfoEnabled()) {
+                if (logger.isInfoEnabled()) {
                     logger.info("Will initialize SMPP");
                 }
                 smppMessageHandler = smppMessageHandler();
-                smppService = smppService(configuration,factory,storage,context, smppMessageHandler);
+                smppService = smppService(configuration, factory, storage, context, smppMessageHandler);
                 context.setAttribute(SmppService.class.getName(), smppService);
                 context.setAttribute(SmppMessageHandler.class.getName(), smppMessageHandler);
             }
