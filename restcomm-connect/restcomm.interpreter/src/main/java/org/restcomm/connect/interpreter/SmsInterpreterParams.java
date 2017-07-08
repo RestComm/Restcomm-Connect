@@ -42,7 +42,8 @@ public final class SmsInterpreterParams {
     private URI fallbackUrl;
     private String fallbackMethod;
 
-    private SmsInterpreterParams(Configuration configuration, ActorRef smsService, DaoManager storage, Sid accountId, String version, URI url, String method, URI fallbackUrl, String fallbackMethod) {
+    private SmsInterpreterParams(Configuration configuration, ActorRef smsService, DaoManager storage, Sid accountId,
+            String version, URI url, String method, URI fallbackUrl, String fallbackMethod) {
         this.configuration = configuration;
         this.smsService = smsService;
         this.storage = storage;
@@ -147,7 +148,8 @@ public final class SmsInterpreterParams {
         }
 
         public SmsInterpreterParams build() {
-            return new SmsInterpreterParams(configuration, smsService, storage, accountId, version, url, method, fallbackUrl, fallbackMethod);
+            return new SmsInterpreterParams(configuration, smsService, storage, accountId, version, url, method, fallbackUrl,
+                    fallbackMethod);
         }
     }
 }

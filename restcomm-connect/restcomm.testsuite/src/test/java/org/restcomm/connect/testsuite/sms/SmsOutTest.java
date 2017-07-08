@@ -55,11 +55,11 @@ public class SmsOutTest {
 
     private static SipStackTool tool1;
     private static SipStackTool tool2;
-    
+
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
     private String aliceContact = "sip:alice@127.0.0.1:5091";
-    
+
     private SipStack outboundDestSipStack;
     private SipPhone outboundDestPhone;
     private String outboundDestContact = "sip:9898989@127.0.0.1:5094";
@@ -69,7 +69,7 @@ public class SmsOutTest {
         tool1 = new SipStackTool("SmsTest1");
         tool2 = new SipStackTool("SmsTest2");
     }
-    
+
     @Before
     public void before() throws Exception {
         aliceSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
@@ -78,7 +78,7 @@ public class SmsOutTest {
         outboundDestSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
         outboundDestPhone = outboundDestSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, outboundDestContact);
     }
-    
+
     @After
     public void after() throws Exception {
         if (aliceSipStack != null) {
@@ -95,18 +95,18 @@ public class SmsOutTest {
             outboundDestPhone.dispose();
         }
     }
-    
+
     @Test
     public void testSendSmsToInvalidNumber() throws ParseException, InterruptedException {
         SipCall outboundDestCall = outboundDestPhone.createSipCall();
         outboundDestCall.listenForMessage();
-        
+
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
-        
+
         Credential credential = new Credential("127.0.0.1", "alice", "1234");
         alicePhone.addUpdateCredential(credential);
-        
+
         SipCall aliceCall = alicePhone.createSipCall();
         aliceCall.initiateOutgoingMessage(aliceContact, "sip:9898989@127.0.0.1:5080", null, null, null, "Test message");
         assertTrue(aliceCall.waitForAuthorisation(5000));
@@ -114,11 +114,11 @@ public class SmsOutTest {
         assertTrue(aliceCall.getLastReceivedResponse().getStatusCode() == 100);
 
         assertTrue(outboundDestCall.waitForMessage(5000));
-        
+
         assertTrue(outboundDestCall.sendMessageResponse(404, "Not Found", 3600, null));
 
         assertTrue(aliceCall.waitOutgoingMessageResponse(5000));
-        logger.info("Last received response status code: "+aliceCall.getLastReceivedResponse().getStatusCode());
+        logger.info("Last received response status code: " + aliceCall.getLastReceivedResponse().getStatusCode());
         assertTrue(aliceCall.getLastReceivedResponse().getStatusCode() == 404);
     }
 
@@ -144,7 +144,7 @@ public class SmsOutTest {
         assertTrue(outboundDestCall.sendMessageResponse(202, "Accepted", 3600, null));
 
         assertTrue(aliceCall.waitOutgoingMessageResponse(5000));
-        logger.info("Last received response status code: "+aliceCall.getLastReceivedResponse().getStatusCode());
+        logger.info("Last received response status code: " + aliceCall.getLastReceivedResponse().getStatusCode());
         assertTrue(aliceCall.getLastReceivedResponse().getStatusCode() == 202);
     }
 

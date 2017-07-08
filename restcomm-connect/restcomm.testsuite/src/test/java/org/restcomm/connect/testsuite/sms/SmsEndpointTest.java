@@ -116,7 +116,7 @@ public class SmsEndpointTest {
                 adminAuthToken, from, to, body, null);
         assertNotNull(callResult);
 
-//        bobPhone.setLoopback(true);
+        // bobPhone.setLoopback(true);
         assertTrue(bobCall.waitForMessage(10000));
         Request messageRequest = bobCall.getLastReceivedMessageRequest();
         assertTrue(bobCall.sendMessageResponse(202, "Accepted", 3600));
@@ -142,7 +142,7 @@ public class SmsEndpointTest {
                 adminAuthToken, from, to, body, null);
         assertNotNull(callResult);
 
-//        bobPhone.setLoopback(true);
+        // bobPhone.setLoopback(true);
         assertTrue(aliceCall.waitForMessage(10000));
         Request messageRequest = aliceCall.getLastReceivedMessageRequest();
         assertTrue(aliceCall.sendMessageResponse(202, "Accepted", 3600));
@@ -168,7 +168,7 @@ public class SmsEndpointTest {
                 adminAuthToken, from, to, body, null);
         assertNotNull(callResult);
 
-//        bobPhone.setLoopback(true);
+        // bobPhone.setLoopback(true);
         assertTrue(aliceCall.waitForMessage(10000));
         Request messageRequest = aliceCall.getLastReceivedMessageRequest();
         assertTrue(aliceCall.sendMessageResponse(202, "Accepted", 3600));
@@ -248,11 +248,11 @@ public class SmsEndpointTest {
         String messageReceived = new String(messageRequest.getRawContent());
         assertTrue(messageReceived.equals(body));
 
-        SIPHeader myFirstHeader = (SIPHeader)messageRequest.getHeader(myFirstHeaderName);
+        SIPHeader myFirstHeader = (SIPHeader) messageRequest.getHeader(myFirstHeaderName);
         assertTrue(myFirstHeader != null);
         assertTrue(myFirstHeader.getValue().equalsIgnoreCase(myFirstHeaderValue));
 
-        SIPHeader mySecondHeader = (SIPHeader)messageRequest.getHeader(mySecondHeaderName);
+        SIPHeader mySecondHeader = (SIPHeader) messageRequest.getHeader(mySecondHeaderName);
         assertTrue(mySecondHeader != null);
         assertTrue(mySecondHeader.getHeaderValue().equalsIgnoreCase(mySecondHeaderValue));
 

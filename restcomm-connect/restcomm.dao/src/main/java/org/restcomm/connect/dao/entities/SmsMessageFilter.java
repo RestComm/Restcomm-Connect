@@ -37,20 +37,20 @@ public class SmsMessageFilter {
     private final List<String> accountSidSet; // if not-null we need the cdrs that belong to several accounts
     private final String recipient;
     private final String sender;
-    private final Date startTime;  // to initialize it pass string arguments with  yyyy-MM-dd format
+    private final Date startTime; // to initialize it pass string arguments with yyyy-MM-dd format
     private final Date endTime;
     private final String body;
     private final Integer limit;
     private final Integer offset;
     private final String instanceid;
 
-    public SmsMessageFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String startTime, String endTime,
-                                  String body, Integer limit, Integer offset) throws ParseException {
-        this(accountSid, accountSidSet, recipient,sender,startTime,endTime, body, limit,offset,null);
+    public SmsMessageFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String startTime,
+            String endTime, String body, Integer limit, Integer offset) throws ParseException {
+        this(accountSid, accountSidSet, recipient, sender, startTime, endTime, body, limit, offset, null);
     }
 
-    public SmsMessageFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String startTime, String endTime,
-                                  String body, Integer limit, Integer offset, String instanceId) throws ParseException {
+    public SmsMessageFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String startTime,
+            String endTime, String body, Integer limit, Integer offset, String instanceId) throws ParseException {
         this.accountSid = accountSid;
         this.accountSidSet = accountSidSet;
 
@@ -123,5 +123,7 @@ public class SmsMessageFilter {
         return offset;
     }
 
-    public String getInstanceid() { return instanceid; }
+    public String getInstanceid() {
+        return instanceid;
+    }
 }

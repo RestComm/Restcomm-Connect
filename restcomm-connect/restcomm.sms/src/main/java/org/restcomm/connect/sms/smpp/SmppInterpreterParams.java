@@ -42,7 +42,8 @@ public final class SmppInterpreterParams {
     private URI fallbackUrl;
     private String fallbackMethod;
 
-    private SmppInterpreterParams(Configuration configuration, ActorRef smsService, DaoManager storage, Sid accountId, String version, URI url, String method, URI fallbackUrl, String fallbackMethod) {
+    private SmppInterpreterParams(Configuration configuration, ActorRef smsService, DaoManager storage, Sid accountId,
+            String version, URI url, String method, URI fallbackUrl, String fallbackMethod) {
         this.configuration = configuration;
         this.smsService = smsService;
         this.storage = storage;
@@ -147,7 +148,8 @@ public final class SmppInterpreterParams {
         }
 
         public SmppInterpreterParams build() {
-            return new SmppInterpreterParams(configuration, smsService, storage, accountId, version, url, method, fallbackUrl, fallbackMethod);
+            return new SmppInterpreterParams(configuration, smsService, storage, accountId, version, url, method, fallbackUrl,
+                    fallbackMethod);
         }
     }
 }

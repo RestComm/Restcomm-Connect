@@ -123,7 +123,7 @@ public final class SmsMessagesDaoTest {
         builder.setApiVersion("2012-04-24");
         builder.setRecipient("+12223334444");
         builder.setSender("+17778889999");
-        builder.setBody("Hello World - "+i);
+        builder.setBody("Hello World - " + i);
         builder.setStatus(SmsMessage.Status.SENDING);
         builder.setDirection(direction);
         builder.setPrice(new BigDecimal("0.00"));
@@ -141,32 +141,32 @@ public final class SmsMessagesDaoTest {
             SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_API, i);
             // Create a new sms message in the data store.
             messages.addSmsMessage(message);
-            logger.info("Created message: "+message);
+            logger.info("Created message: " + message);
         }
         for (int i = 0; i < 2; i++) {
             SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_CALL, i);
             // Create a new sms message in the data store.
             messages.addSmsMessage(message);
-            logger.info("Created message: "+message);
+            logger.info("Created message: " + message);
         }
         for (int i = 0; i < 2; i++) {
             SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_REPLY, i);
             // Create a new sms message in the data store.
             messages.addSmsMessage(message);
-            logger.info("Created message: "+message);
+            logger.info("Created message: " + message);
         }
         int lastMessages = messages.getSmsMessagesPerAccountLastPerMinute(account.toString());
-        logger.info("SMS Messages last minutes: "+lastMessages);
+        logger.info("SMS Messages last minutes: " + lastMessages);
         assertEquals(6, lastMessages);
         Thread.sleep(70000);
         for (int i = 0; i < 3; i++) {
             SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_CALL, i);
             // Create a new sms message in the data store.
             messages.addSmsMessage(message);
-            logger.info("Created message: "+message);
+            logger.info("Created message: " + message);
         }
         lastMessages = messages.getSmsMessagesPerAccountLastPerMinute(account.toString());
-        logger.info("SMS Messages last minutes: "+lastMessages);
+        logger.info("SMS Messages last minutes: " + lastMessages);
         assertEquals(3, lastMessages);
         messages.removeSmsMessages(account);
     }

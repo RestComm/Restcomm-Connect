@@ -42,7 +42,9 @@ public class SmsEndpointTool {
 
     private static SmsEndpointTool instance;
     private static String accountsUrl;
-    private SmsEndpointTool() {}
+
+    private SmsEndpointTool() {
+    }
 
     public static SmsEndpointTool getInstance() {
         if (instance == null)
@@ -62,7 +64,8 @@ public class SmsEndpointTool {
         return accountsUrl;
     }
 
-    public JsonObject createSms (String deploymentUrl, String username, String authToken, String from, String to, String body, HashMap<String, String> additionalHeaders) {
+    public JsonObject createSms(String deploymentUrl, String username, String authToken, String from, String to, String body,
+            HashMap<String, String> additionalHeaders) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -76,7 +79,7 @@ public class SmsEndpointTool {
         params.add("To", to);
         params.add("Body", body);
 
-        if (additionalHeaders != null && !additionalHeaders.isEmpty()){
+        if (additionalHeaders != null && !additionalHeaders.isEmpty()) {
             Iterator<String> iter = additionalHeaders.keySet().iterator();
             while (iter.hasNext()) {
                 String headerName = iter.next();
@@ -92,7 +95,8 @@ public class SmsEndpointTool {
         return jsonObject;
     }
 
-    public JsonObject createSms (String deploymentUrl, String username, String authToken, String from, String to, String body, HashMap<String, String> additionalHeaders, String encoding) {
+    public JsonObject createSms(String deploymentUrl, String username, String authToken, String from, String to, String body,
+            HashMap<String, String> additionalHeaders, String encoding) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -107,7 +111,7 @@ public class SmsEndpointTool {
         params.add("Encoding", encoding);
         params.add("Body", body);
 
-        if (additionalHeaders != null && !additionalHeaders.isEmpty()){
+        if (additionalHeaders != null && !additionalHeaders.isEmpty()) {
             Iterator<String> iter = additionalHeaders.keySet().iterator();
             while (iter.hasNext()) {
                 String headerName = iter.next();
@@ -136,7 +140,7 @@ public class SmsEndpointTool {
         return jsonArray;
     }
 
-    public JsonObject getSmsMessageList (String deploymentUrl, String username, String authToken) {
+    public JsonObject getSmsMessageList(String deploymentUrl, String username, String authToken) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
         String url = getAccountsUrl(deploymentUrl, username, true);
@@ -147,7 +151,8 @@ public class SmsEndpointTool {
         return jsonObject;
     }
 
-    public JsonObject getSmsMessageList (String deploymentUrl, String username, String authToken, Integer page, Integer pageSize, Boolean json) {
+    public JsonObject getSmsMessageList(String deploymentUrl, String username, String authToken, Integer page, Integer pageSize,
+            Boolean json) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -174,7 +179,8 @@ public class SmsEndpointTool {
         return jsonObject;
     }
 
-    public JsonObject getSmsMessageListUsingFilter(String deploymentUrl, String username, String authToken, Map<String, String> filters) {
+    public JsonObject getSmsMessageListUsingFilter(String deploymentUrl, String username, String authToken,
+            Map<String, String> filters) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));

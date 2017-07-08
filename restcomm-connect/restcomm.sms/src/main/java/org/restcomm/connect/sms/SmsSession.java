@@ -66,7 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
@@ -101,7 +100,7 @@ public final class SmsSession extends RestcommUntypedActor {
     private final ActorRef monitoringService;
 
     public SmsSession(final Configuration configuration, final SipFactory factory, final SipURI transport,
-                      final DaoManager storage, final ActorRef monitoringService, final ServletContext servletContext) {
+            final DaoManager storage, final ActorRef monitoringService, final ServletContext servletContext) {
         super();
         this.configuration = configuration;
         this.smsConfiguration = configuration.subset("sms-aggregator");
@@ -112,7 +111,8 @@ public final class SmsSession extends RestcommUntypedActor {
         this.storage = storage;
         this.monitoringService = monitoringService;
         this.servletContext = servletContext;
-        this.smppActivated = Boolean.parseBoolean(this.configuration.subset("smpp").getString("[@activateSmppConnection]", "false"));
+        this.smppActivated = Boolean
+                .parseBoolean(this.configuration.subset("smpp").getString("[@activateSmppConnection]", "false"));
         if (smppActivated) {
             smppMessageHandler = (ActorRef) servletContext.getAttribute(SmppMessageHandler.class.getName());
         }
@@ -122,11 +122,12 @@ public final class SmsSession extends RestcommUntypedActor {
             externalIP = defaultHost;
 
         this.tlvSet = new TlvSet();
-        if(!this.configuration.subset("outbound-sms").isEmpty()) {
-            //TODO: handle arbitrary keys instead of just TAG_DEST_NETWORK_ID
+        if (!this.configuration.subset("outbound-sms").isEmpty()) {
+            // TODO: handle arbitrary keys instead of just TAG_DEST_NETWORK_ID
             try {
                 String valStr = this.configuration.subset("outbound-sms").getString("destination_network_id");
-                this.tlvSet.addOptionalParameter(new Tlv(SmppConstants.TAG_DEST_NETWORK_ID,ByteArrayUtil.toByteArray(Integer.parseInt(valStr))));
+                this.tlvSet.addOptionalParameter(
+                        new Tlv(SmppConstants.TAG_DEST_NETWORK_ID, ByteArrayUtil.toByteArray(Integer.parseInt(valStr))));
             } catch (Exception e) {
                 logger.error("Error while parsing tlv configuration " + e);
             }
@@ -167,14 +168,15 @@ public final class SmsSession extends RestcommUntypedActor {
             final SmppInboundMessageEntity request = (SmppInboundMessageEntity) message;
 
             final SmsSessionRequest.Encoding encoding;
-            if(request.getSmppEncoding().equals(CharsetUtil.CHARSET_UCS_2)) {
+            if (request.getSmppEncoding().equals(CharsetUtil.CHARSET_UCS_2)) {
                 encoding = SmsSessionRequest.Encoding.UCS_2;
             } else {
                 encoding = SmsSessionRequest.Encoding.GSM;
             }
             // Store the last sms event.
 
-            last = new SmsSessionRequest (request.getSmppFrom(), request.getSmppTo(), request.getSmppContent(), encoding, request.getTlvSet(), null);
+            last = new SmsSessionRequest(request.getSmppFrom(), request.getSmppTo(), request.getSmppContent(), encoding,
+                    request.getTlvSet(), null);
             if (initial == null) {
                 initial = last;
             }
@@ -252,28 +254,28 @@ public final class SmsSession extends RestcommUntypedActor {
         }
         final ActorRef self = self();
         final Charset charset;
-        if(logger.isInfoEnabled()) {
-            logger.info("SMS encoding:  " + last.encoding() );
+        if (logger.isInfoEnabled()) {
+            logger.info("SMS encoding:  " + last.encoding());
         }
-        switch(last.encoding()) {
-        case GSM:
-            charset = CharsetUtil.CHARSET_GSM;
-            break;
-        case UCS_2:
-            charset = CharsetUtil.CHARSET_UCS_2;
-            break;
-        case UTF_8:
-            charset = CharsetUtil.CHARSET_UTF_8;
-            break;
-        default:
-            charset = CharsetUtil.CHARSET_GSM;
+        switch (last.encoding()) {
+            case GSM:
+                charset = CharsetUtil.CHARSET_GSM;
+                break;
+            case UCS_2:
+                charset = CharsetUtil.CHARSET_UCS_2;
+                break;
+            case UTF_8:
+                charset = CharsetUtil.CHARSET_UTF_8;
+                break;
+            default:
+                charset = CharsetUtil.CHARSET_GSM;
         }
 
         monitoringService.tell(new TextMessage(last.from(), last.to(), TextMessage.SmsState.OUTBOUND), self());
         final ClientsDao clients = storage.getClientsDao();
         String to;
         if (last.to().toLowerCase().startsWith("client")) {
-            to = last.to().replaceAll("client:","");
+            to = last.to().replaceAll("client:", "");
         } else {
             to = last.to();
         }
@@ -284,22 +286,22 @@ public final class SmsSession extends RestcommUntypedActor {
             toClientRegistration = registrations.getRegistration(toClient.getLogin());
         }
 
-//        // Try to find an application defined for the phone number.
-//        final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-//        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(to);
+        // // Try to find an application defined for the phone number.
+        // final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
+        // IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(to);
 
-        //We will send using the SMPP link only if:
+        // We will send using the SMPP link only if:
         // 1. This SMS is not for a registered client
         // 2, SMPP is activated
         if (toClient == null && smppActivated) {
-            if(logger.isInfoEnabled()) {
-                logger.info("Destination is not a local registered client, therefore, sending through SMPP to:  " + last.to() );
+            if (logger.isInfoEnabled()) {
+                logger.info("Destination is not a local registered client, therefore, sending through SMPP to:  " + last.to());
             }
             if (sendUsingSmpp(last.from(), last.to(), last.body(), tlvSet, charset))
                 return;
         }
 
-        //Turns out that SMS was not send using SMPP so we procedd as usual with SIP MESSAGE
+        // Turns out that SMS was not send using SMPP so we procedd as usual with SIP MESSAGE
         final String prefix = smsConfiguration.getString("outbound-prefix");
         final String service = smsConfiguration.getString("outbound-endpoint");
         if (service == null) {
@@ -308,7 +310,7 @@ public final class SmsSession extends RestcommUntypedActor {
 
         final SipApplicationSession application = factory.createApplicationSession();
         StringBuilder buffer = new StringBuilder();
-        //buffer.append("sip:").append(from).append("@").append(transport.getHost() + ":" + transport.getPort());
+        // buffer.append("sip:").append(from).append("@").append(transport.getHost() + ":" + transport.getPort());
         buffer.append("sip:").append(last.from()).append("@").append(externalIP + ":" + transport.getPort());
         final String sender = buffer.toString();
         buffer = new StringBuilder();
@@ -354,22 +356,25 @@ public final class SmsSession extends RestcommUntypedActor {
             logger.error(exception.getMessage(), exception);
         }
     }
+
     private boolean sendUsingSmpp(String from, String to, String body, Charset encoding) {
         return sendUsingSmpp(from, to, body, null, encoding);
     }
+
     private boolean sendUsingSmpp(String from, String to, String body, TlvSet tlvSet, Charset encoding) {
-        if ((SmppClientOpsThread.getSmppSession() != null && SmppClientOpsThread.getSmppSession().isBound()) && smppMessageHandler != null) {
-            if(logger.isInfoEnabled()) {
-                logger.info("SMPP session is available and connected, outbound message will be forwarded to :  " + to );
-                logger.info("Encoding:  " + encoding );
+        if ((SmppClientOpsThread.getSmppSession() != null && SmppClientOpsThread.getSmppSession().isBound())
+                && smppMessageHandler != null) {
+            if (logger.isInfoEnabled()) {
+                logger.info("SMPP session is available and connected, outbound message will be forwarded to :  " + to);
+                logger.info("Encoding:  " + encoding);
             }
             try {
-            	SmsMessage	smsMessage	=	(SmsMessage) attributes.get("record");
+                SmsMessage smsMessage = (SmsMessage) attributes.get("record");
                 smppMessageHandler.tell(smsMessage, null);
-            	
+
                 final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(to, from, body, encoding, tlvSet);
                 smppMessageHandler.tell(sms, null);
-            }catch (final Exception exception) {
+            } catch (final Exception exception) {
                 // Log the exception.
                 logger.error("There was an error sending SMS to SMPP endpoint : " + exception);
             }
@@ -377,7 +382,6 @@ public final class SmsSession extends RestcommUntypedActor {
         }
         return false;
     }
-
 
     private void stopObserving(final Object message) {
         final StopObserving request = (StopObserving) message;
