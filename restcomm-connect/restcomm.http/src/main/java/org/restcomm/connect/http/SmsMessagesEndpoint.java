@@ -397,15 +397,6 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         return system.actorOf(props);
     }
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
     private boolean isURL(String url) {
         
         // Assigning the url format regular expression
@@ -413,14 +404,6 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
       	String urlPattern = "^http://[a-zA-Z0-9_/\\-\\.]+\\.([A-Za-z/]{2,5})[a-zA-Z0-9_/\\&\\?\\=\\-\\.\\~\\%]*";
         return url.matches(urlPattern);
     }
-    
-    
-    
-    
-    
-    
-    
-    
     
     private final class SmsSessionObserver extends RestcommUntypedActor {
         public SmsSessionObserver() {
