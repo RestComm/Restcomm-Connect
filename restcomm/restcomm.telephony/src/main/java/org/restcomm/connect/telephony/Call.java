@@ -561,7 +561,7 @@ public final class Call extends RestcommUntypedActor {
 
     private void executeStatusCallback(final CallbackState state) {
         if (statusCallback != null) {
-            if (statusCallbackEvent.contains(state.toString())) {
+            if (statusCallbackEvent.remove(state.toString())) {
                 if (logger.isDebugEnabled()) {
                     String msg = String.format("About to execute Call StatusCallback for state %s to StatusCallback %s. Call from %s to %s direction %s", state.text, statusCallback.toString(), from.toString(), to.toString(), direction);
                     logger.debug(msg);
@@ -577,7 +577,7 @@ public final class Call extends RestcommUntypedActor {
                 }
             } else {
                 if (logger.isDebugEnabled()) {
-                    String msg = String.format("Call StatusCallback did not run because state %s no in the statusCallbackEvent list", state.text);
+                    String msg = String.format("Call StatusCallback will not be sent because its either not in the statusCallbackEvent list or already sent, state %s  . Call from %s to %s direction %s", state.text, from.toString(), to.toString(), direction);
                     logger.debug(msg);
                 }
             }
@@ -1722,10 +1722,26 @@ public final class Call extends RestcommUntypedActor {
         @Override
         public void execute(Object message) throws Exception {
             // Stops media operations and closes media session
+            if (logger.isDebugEnabled()) {
+                if (message instanceof SipServletRequest) {
+                    logger.debug("At Call Stopping state because of SipServletRequest: "+((SipServletRequest)message).getMethod());
+                } else if (message instanceof Hangup) {
+                    logger.debug("At Call Stopping state because of Hangup: "+((Hangup)message));
+                } else {
+                    logger.debug("At Call Stopping state because of Message: "+message);
+                }
+            }
+
             msController.tell(new CloseMediaSession(), source);
             if (fail) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("At Call Stopping state, moving to Failed state");
+                }
                 fsm.transition(message, failed);
             } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("At Call Stopping state, moving to Completed state");
+                }
                 fsm.transition(message, completed);
             }
         }
@@ -2198,7 +2214,7 @@ public final class Call extends RestcommUntypedActor {
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
         if(logger.isDebugEnabled()) {
-            logger.debug("Got Hangup: "+message+" for Call, from: "+from+" to: "+to+" state: "+fsm.state()+" conferencing: "+conferencing +" conference: "+conference);
+            logger.debug("Got Hangup: "+message+" for Call, from: "+from+", to: "+to+", state: "+fsm.state()+", conferencing: "+conferencing +", conference: "+conference);
         }
 
         if (is(completed)) {
@@ -2217,7 +2233,7 @@ public final class Call extends RestcommUntypedActor {
             msController.tell(new Stop(true), self);
         }
 
-        if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress) || is(completed) || is(waitingForAnswer)) {
+        if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress) || is(waitingForAnswer)) {
             if (conferencing) {
                 // Tell conference to remove the call from participants list
                 // before moving to a stopping state
@@ -2233,6 +2249,8 @@ public final class Call extends RestcommUntypedActor {
             }
         } else if (is(failingNoAnswer)) {
             fsm.transition(message, canceling);
+        } else if (is(stopping)) {
+            fsm.transition(message, completed);
         }
     }
 
