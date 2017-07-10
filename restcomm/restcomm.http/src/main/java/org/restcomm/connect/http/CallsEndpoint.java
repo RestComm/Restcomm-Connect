@@ -515,7 +515,10 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
                     Duration.create(10, TimeUnit.SECONDS));
             callInfo = response.get();
         } catch (AskTimeoutException ate) {
-            return Response.status(GONE).build();
+            final String msg ="Call is already completed.";
+            if(logger.isDebugEnabled())
+                logger.debug("Modify Call LCM for call sid:"+callSid+ " AskTimeout while getting call: "+ callPath +" restcomm will send "+GONE +" with msg: "+msg);
+            return status(GONE).entity(msg).build();
         } catch (Exception exception) {
             logger.error("Exception while trying to update call callPath: "+callPath+" callSid: "+callSid, exception);
             return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
