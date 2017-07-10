@@ -1016,7 +1016,7 @@ public final class Call extends RestcommUntypedActor {
                 headers.put("RestComm-ApiVersion", apiVersion);
             if (accountId != null)
                 headers.put("RestComm-AccountSid", accountId.toString());
-            headers.put("RestComm-CallSid", instanceId+"-"+id.toString());
+            headers.put("RestComm-CallSid", id.toString());
         }
 
         //TODO: put this in a central place
