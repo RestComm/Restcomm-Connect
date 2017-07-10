@@ -47,6 +47,7 @@ import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.RevolvingCounter;
 
 import javax.sdp.SdpFactory;
@@ -59,7 +60,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public class MockMediaGateway extends UntypedActor {
+public class MockMediaGateway extends RestcommUntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // Session description for the mock media gateway.
     private static final String sdp = "v=0\n" + "o=- 1362546170756 1 IN IP4 192.168.1.100\n" + "s=Mobicents Media Server\n"
@@ -453,10 +454,10 @@ public class MockMediaGateway extends UntypedActor {
         final int transaction = rqnt.getTransactionHandle();
         response.setTransactionHandle(transaction);
         try {
-            Thread.sleep(sleepTime);
+            Thread.sleep(sleepTime*10);
         } catch (InterruptedException e) {
         }
-        System.out.println(response.toString());
+        logger.info("About to send MockMediaGateway response: "+response.toString());
         sender.tell(response, self);
     }
 

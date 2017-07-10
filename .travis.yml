@@ -19,6 +19,10 @@ addons:
     organization: "restcomm-connect" # the key of the org you chose at step #3
 script:
   - ./build.sh
+after_success:
+  - cd restcomm
+  - mvn com.blackducksoftware.integration:hub-maven-plugin:2.0.2:build-bom -Dhub.output.directory=. -Dhub.deploy.bdio=false
+  - bash <(curl -s https://copilot.blackducksoftware.com/bash/travis) ./*_bdio.jsonld
 #  Problem to run testsuite https://github.com/travis-ci/travis-ci/issues/1382
 #  - echo "About to run sonar-scanner"
 #  - cd restcomm

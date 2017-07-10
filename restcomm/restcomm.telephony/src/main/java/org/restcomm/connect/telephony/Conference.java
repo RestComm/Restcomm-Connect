@@ -20,13 +20,13 @@
 package org.restcomm.connect.telephony;
 
 import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -38,6 +38,7 @@ import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
+import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.JoinCall;
 import org.restcomm.connect.mscontrol.api.messages.JoinComplete;
@@ -72,7 +73,7 @@ import java.util.Set;
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
-public final class Conference extends UntypedActor {
+public final class Conference extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -107,7 +108,7 @@ public final class Conference extends UntypedActor {
 
     private final ActorRef conferenceCenter;
 
-    public Conference(final String name, final ActorRef msController, final DaoManager storage, final ActorRef conferenceCenter) {
+    public Conference(final String name, final MediaServerControllerFactory factory, final DaoManager storage, final ActorRef conferenceCenter) {
         super();
         final ActorRef source = self();
 
@@ -150,7 +151,7 @@ public final class Conference extends UntypedActor {
         this.conferenceCenter = conferenceCenter;
         //generate it later at MRB level, by watching if same conference is running on another RC instance.
         //this.sid = Sid.generate(Sid.Type.CONFERENCE);
-        this.mscontroller = msController;
+        this.mscontroller = getContext().actorOf(factory.provideConferenceControllerProps());
         this.calls = new ArrayList<ActorRef>();
         this.observers = new ArrayList<ActorRef>();
     }

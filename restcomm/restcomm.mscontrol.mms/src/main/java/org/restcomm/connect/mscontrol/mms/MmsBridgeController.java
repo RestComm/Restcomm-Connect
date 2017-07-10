@@ -22,7 +22,6 @@
 package org.restcomm.connect.mscontrol.mms;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -82,7 +81,6 @@ public class MmsBridgeController extends MediaServerController {
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final ActorSystem system;
     // Finite State Machine
     private final FiniteStateMachine fsm;
     private final State uninitialized;
@@ -116,9 +114,8 @@ public class MmsBridgeController extends MediaServerController {
 
     private Sid callSid;
 
-    public MmsBridgeController(final ActorRef mrb, final ActorSystem system) {
+    public MmsBridgeController(final ActorRef mrb) {
         final ActorRef self = self();
-        this.system = system;
 
         // Finite states
         this.uninitialized = new State("uninitialized", null, null);
@@ -445,7 +442,7 @@ public class MmsBridgeController extends MediaServerController {
                     return new MgcpMediaGroup(mediaGateway, mediaSession, endpoint);
                 }
             });
-            return system.actorOf(props);
+            return getContext().actorOf(props);
         }
 
         @Override

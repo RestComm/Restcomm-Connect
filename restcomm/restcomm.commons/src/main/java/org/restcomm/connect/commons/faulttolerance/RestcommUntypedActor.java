@@ -17,20 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.interpreter;
 
-import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
+package org.restcomm.connect.commons.faulttolerance;
+
+import akka.actor.SupervisorStrategy;
+import akka.actor.UntypedActor;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author oleg.agafonov@telestax.com (Oleg Agafonov)
  */
-public final class AudioPlayerInterpreter extends RestcommUntypedActor {
-    public AudioPlayerInterpreter() {
-        super();
-    }
+public abstract class RestcommUntypedActor extends UntypedActor {
 
     @Override
-    public void onReceive(final Object message) throws Exception {
-
+    public SupervisorStrategy supervisorStrategy() {
+        return RestcommSupervisorStrategy.getStrategy();
     }
 }
