@@ -19,7 +19,7 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -30,17 +30,18 @@ import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
 
-import junit.framework.Assert;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
-import org.restcomm.connect.commons.dao.Sid;
+
+import junit.framework.Assert;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -75,14 +76,13 @@ public class CallDetailRecordsDaoTest extends DaoTest {
     @Test
     public void createReadUpdateDelete() {
         final Sid sid = Sid.generate(Sid.Type.CALL);
-        final String instanceId = Sid.generate(Sid.Type.INSTANCE).toString();
         final Sid account = Sid.generate(Sid.Type.ACCOUNT);
         final Sid parent = Sid.generate(Sid.Type.CALL);
         final Sid phone = Sid.generate(Sid.Type.PHONE_NUMBER);
         final URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
         final CallDetailRecord.Builder builder = CallDetailRecord.builder();
         builder.setSid(sid);
-        builder.setInstanceId(instanceId);
+        builder.setInstanceId(instanceId.toString());
         builder.setParentCallSid(parent);
         builder.setDateCreated(DateTime.now());
         builder.setAccountSid(account);
