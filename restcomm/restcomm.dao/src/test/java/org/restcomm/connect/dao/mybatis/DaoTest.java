@@ -20,8 +20,12 @@
 
 package org.restcomm.connect.dao.mybatis;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +38,7 @@ public class DaoTest {
 
     File sandboxRoot; // rot directory where mybatis files will be created in
 
+    protected static Sid instanceId = Sid.generate(Sid.Type.INSTANCE);
     /**
      * Create a temporary directory with random name inside the system temporary directory.
      * Provide a prefix that will be used when creating the name too.
@@ -73,5 +78,16 @@ public class DaoTest {
         String content = FileUtils.readFileToString(new File(mybatisXmlPath));
         content = content.replaceAll("MYBATIS_SANDBOX_PATH",sandboxDir.getAbsolutePath());
         FileUtils.writeStringToFile(new File(sandboxDir.getAbsolutePath() + "/mybatis_updated.xml"),content);
+        
+        XMLConfiguration xmlConfiguration = new XMLConfiguration();
+        xmlConfiguration.setDelimiterParsingDisabled(true);
+        xmlConfiguration.setAttributeSplittingDisabled(true);
+        try {
+			xmlConfiguration.load("restcomm.xml");
+	        RestcommConfiguration.createOnce(xmlConfiguration);
+	        RestcommConfiguration.getInstance().getMain().setInstanceId(instanceId.toString());
+		} catch (ConfigurationException e) {
+			e.printStackTrace();
+		}
     }
 }
