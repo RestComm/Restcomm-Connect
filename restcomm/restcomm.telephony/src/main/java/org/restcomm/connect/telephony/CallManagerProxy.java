@@ -128,14 +128,13 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
         return system.actorOf(props);
     }
 
-    private ActorRef ussdManager(final Configuration configuration, final ServletContext context, final ActorRef conferences,
-            final ActorRef bridges, final ActorRef sms, final SipFactory factory, final DaoManager storage) {
+    private ActorRef ussdManager(final Configuration configuration, final ServletContext context, final SipFactory factory, final DaoManager storage) {
 
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
             @Override
             public UntypedActor create() throws Exception {
-                return new UssdCallManager(system, configuration, context, conferences, sms, factory, storage);
+                return new UssdCallManager(configuration, context, factory, storage);
             }
         });
         return system.actorOf(props);
@@ -200,7 +199,7 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
             final ActorRef bridges = bridges(mscontrolFactory);
             final ActorRef sms = (ActorRef) context.getAttribute(SmsService.class.getName());
             manager = manager(configuration, context, mscontrolFactory, conferences, bridges, sms, factory, storage);
-            ussdManager = ussdManager(configuration, context, conferences, bridges, sms, factory, storage);
+            ussdManager = ussdManager(configuration, context, factory, storage);
             context.setAttribute(CallManager.class.getName(), manager);
             context.setAttribute(UssdCallManager.class.getName(), ussdManager);
         }

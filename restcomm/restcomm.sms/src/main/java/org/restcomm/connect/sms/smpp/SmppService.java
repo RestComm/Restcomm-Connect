@@ -20,8 +20,20 @@
 
 package org.restcomm.connect.sms.smpp;
 
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import akka.actor.ActorRef;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import com.cloudhopper.smpp.SmppBindType;
+import com.cloudhopper.smpp.impl.DefaultSmppClient;
+import com.cloudhopper.smpp.type.Address;
+import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
+import org.restcomm.connect.dao.DaoManager;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipURI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -30,23 +42,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipURI;
-
-import akka.actor.ActorRef;
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.dao.DaoManager;
-
-import akka.actor.ActorSystem;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-
-import com.cloudhopper.smpp.SmppBindType;
-import com.cloudhopper.smpp.impl.DefaultSmppClient;
-import com.cloudhopper.smpp.type.Address;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
 
 /**
  *
@@ -54,10 +50,9 @@ import com.cloudhopper.smpp.type.Address;
  * @author gvagenas@telestax.com
  *
  */
-public final class SmppService extends UntypedActor {
+public final class SmppService extends RestcommUntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final ActorSystem system;
     private final ActorRef smppMessageHandler;
     private final Configuration configuration;
     private boolean authenticateUsers = true;
@@ -82,11 +77,10 @@ public final class SmppService extends UntypedActor {
 
     private ArrayList<Smpp> smppList = new ArrayList<Smpp>();
 
-    public SmppService(final ActorSystem system, final Configuration configuration, final SipFactory factory,
+    public SmppService(final Configuration configuration, final SipFactory factory,
                        final DaoManager storage, final ServletContext servletContext, final ActorRef smppMessageHandler) {
 
         super();
-        this.system = system;
         this.smppMessageHandler = smppMessageHandler;
         this.configuration = configuration;
         final Configuration runtime = configuration.subset("runtime-settings");
