@@ -20,9 +20,9 @@ public class RestcommSupervisorStrategy implements SupervisorStrategyConfigurato
 
     private static Logger logger = Logger.getLogger(RestcommSupervisorStrategy.class);
 
-    final SupervisorStrategy.Directive strategy = resume();
+    static final SupervisorStrategy.Directive strategy = resume();
 
-    RestcommFaultToleranceStrategy defaultStrategy = new RestcommFaultToleranceStrategy(10, Duration.create("1 minute"),
+    static RestcommFaultToleranceStrategy defaultStrategy = new RestcommFaultToleranceStrategy(10, Duration.create("1 minute"),
             new RestcommFaultToleranceDecider());
 
     @Override
@@ -30,7 +30,11 @@ public class RestcommSupervisorStrategy implements SupervisorStrategyConfigurato
         return defaultStrategy;
     }
 
-    private class RestcommFaultToleranceStrategy extends OneForOneStrategy {
+    public static SupervisorStrategy getStrategy() {
+        return defaultStrategy;
+    }
+
+    private static class RestcommFaultToleranceStrategy extends OneForOneStrategy {
 
         public RestcommFaultToleranceStrategy(int maxNrOfRetries, Duration withinTimeRange, Function<Throwable, Directive> function) {
             super(maxNrOfRetries, withinTimeRange, function);
@@ -51,7 +55,7 @@ public class RestcommSupervisorStrategy implements SupervisorStrategyConfigurato
 //        }
     }
 
-    private class RestcommFaultToleranceDecider implements Function<Throwable, SupervisorStrategy.Directive> {
+    private static class RestcommFaultToleranceDecider implements Function<Throwable, SupervisorStrategy.Directive> {
 
         @Override
         // - 2nd the Supervisor strategy will execute the Decider apply() to check what to do with the exception

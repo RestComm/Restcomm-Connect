@@ -20,7 +20,6 @@
 package org.restcomm.connect.ussd.telephony;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -28,6 +27,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
@@ -43,7 +43,7 @@ import org.restcomm.connect.telephony.api.ExecuteCallScript;
 import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreter;
-import org.restcomm.connect.ussd.interpreter.UssdInterpreterBuilder;
+import org.restcomm.connect.ussd.interpreter.UssdInterpreterParams;
 
 import javax.servlet.ServletContext;
 import javax.servlet.sip.ServletParseException;
@@ -57,14 +57,12 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.*;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
-public class UssdCallManager extends UntypedActor {
+public class UssdCallManager extends RestcommUntypedActor {
 
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
@@ -85,8 +83,6 @@ public class UssdCallManager extends UntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final ActorSystem system;
-
     /**
      * @param configuration
      * @param context
@@ -95,10 +91,8 @@ public class UssdCallManager extends UntypedActor {
      * @param factory
      * @param storage
      */
-    public UssdCallManager(final ActorSystem system, Configuration configuration, ServletContext context,
-                           ActorRef conferences, ActorRef sms, SipFactory factory, DaoManager storage) {
+    public UssdCallManager(Configuration configuration, ServletContext context, SipFactory factory, DaoManager storage) {
         super();
-        this.system = system;
         this.configuration = configuration;
         this.context = context;
         this.sipFactory = factory;
@@ -113,12 +107,13 @@ public class UssdCallManager extends UntypedActor {
     private ActorRef ussdCall() {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
+
             @Override
             public UntypedActor create() throws Exception {
                 return new UssdCall(sipFactory);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private void check(final Object message) throws IOException {
@@ -148,9 +143,9 @@ public class UssdCallManager extends UntypedActor {
                 processRequest(request);
             } else if ("ACK".equalsIgnoreCase(method)) {
                 processRequest(request);
-            } else if("BYE".equalsIgnoreCase(method)) {
+            } else if ("BYE".equalsIgnoreCase(method)) {
                 processRequest(request);
-            } else if("CANCEL".equalsIgnoreCase(method)) {
+            } else if ("CANCEL".equalsIgnoreCase(method)) {
                 processRequest(request);
             }
         } else if (message instanceof SipServletResponse) {
@@ -181,7 +176,7 @@ public class UssdCallManager extends UntypedActor {
         final AccountsDao accounts = storage.getAccountsDao();
         final ApplicationsDao applications = storage.getApplicationsDao();
         final String toUser = CallControlHelper.getUserSipId(request, useTo);
-        if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)){
+        if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
             return;
         }
 
@@ -202,7 +197,7 @@ public class UssdCallManager extends UntypedActor {
      * @throws Exception
      */
     private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-            final ApplicationsDao applications, String id) throws Exception {
+                                             final ApplicationsDao applications, String id) throws Exception {
         boolean isFoundHostedApp = false;
 
         final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
@@ -212,10 +207,9 @@ public class UssdCallManager extends UntypedActor {
             // This is a USSD Invite
             number = numbersDao.getIncomingPhoneNumber(id);
             if (number != null) {
-                final UssdInterpreterBuilder builder = new UssdInterpreterBuilder(system);
+                final UssdInterpreterParams.Builder builder = new UssdInterpreterParams.Builder();
                 builder.setConfiguration(configuration);
                 builder.setStorage(storage);
-                builder.setCallManager(self);
                 builder.setAccount(number.getAccountSid());
                 builder.setVersion(number.getApiVersion());
                 final Account account = accounts.getAccount(number.getAccountSid());
@@ -238,14 +232,15 @@ public class UssdCallManager extends UntypedActor {
                 builder.setFallbackMethod(number.getUssdFallbackMethod());
                 builder.setStatusCallback(number.getStatusCallback());
                 builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
-                final ActorRef ussdInterpreter = builder.build();
+                final Props props = UssdInterpreter.props(builder.build());
+                final ActorRef ussdInterpreter = getContext().actorOf(props);
                 final ActorRef ussdCall = ussdCall();
                 ussdCall.tell(request, self);
 
                 ussdInterpreter.tell(new StartInterpreter(ussdCall), self);
 
                 SipApplicationSession applicationSession = request.getApplicationSession();
-                applicationSession.setAttribute("UssdCall","true");
+                applicationSession.setAttribute("UssdCall", "true");
                 applicationSession.setAttribute(UssdInterpreter.class.getName(), ussdInterpreter);
                 applicationSession.setAttribute(UssdCall.class.getName(), ussdCall);
                 isFoundHostedApp = true;
@@ -259,8 +254,8 @@ public class UssdCallManager extends UntypedActor {
 
     private void processRequest(SipServletRequest request) throws IOException {
         final ActorRef ussdInterpreter = (ActorRef) request.getApplicationSession().getAttribute(UssdInterpreter.class.getName());
-        if(ussdInterpreter != null) {
-            logger.info("Dispatching Request: "+request.getMethod()+" to UssdInterpreter: "+ussdInterpreter);
+        if (ussdInterpreter != null) {
+            logger.info("Dispatching Request: " + request.getMethod() + " to UssdInterpreter: " + ussdInterpreter);
             ussdInterpreter.tell(request, self());
         } else {
             final SipServletResponse notFound = request.createResponse(SipServletResponse.SC_NOT_FOUND);
@@ -275,8 +270,8 @@ public class UssdCallManager extends UntypedActor {
         final String ussdUsername = (request.username() != null) ? request.username() : ussdGatewayUsername;
         final String ussdPassword = (request.password() != null) ? request.password() : ussdGatewayPassword;
 
-        SipURI from = (SipURI)sipFactory.createSipURI(request.from(), uri);
-        SipURI to = (SipURI)sipFactory.createSipURI(request.to(), uri);
+        SipURI from = (SipURI) sipFactory.createSipURI(request.from(), uri);
+        SipURI to = (SipURI) sipFactory.createSipURI(request.to(), uri);
 
         String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
         //from = outboundInterface(transport);
@@ -293,8 +288,7 @@ public class UssdCallManager extends UntypedActor {
 
     private SipURI outboundInterface(String transport) {
         SipURI result = null;
-        @SuppressWarnings("unchecked")
-        final List<SipURI> uris = (List<SipURI>) context.getAttribute(OUTBOUND_INTERFACES);
+        @SuppressWarnings("unchecked") final List<SipURI> uris = (List<SipURI>) context.getAttribute(OUTBOUND_INTERFACES);
         for (final SipURI uri : uris) {
             final String interfaceTransport = uri.getTransportParam();
             if (transport.equalsIgnoreCase(interfaceTransport)) {
@@ -307,17 +301,17 @@ public class UssdCallManager extends UntypedActor {
     private void execute(final Object message) {
         final ExecuteCallScript request = (ExecuteCallScript) message;
         final ActorRef self = self();
-        final UssdInterpreterBuilder builder = new UssdInterpreterBuilder(system);
+        final UssdInterpreterParams.Builder builder = new UssdInterpreterParams.Builder();
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
-        builder.setCallManager(self);
         builder.setAccount(request.account());
         builder.setVersion(request.version());
         builder.setUrl(request.url());
         builder.setMethod(request.method());
         builder.setFallbackUrl(request.fallbackUrl());
         builder.setFallbackMethod(request.fallbackMethod());
-        final ActorRef interpreter = builder.build();
+        final Props props = UssdInterpreter.props(builder.build());
+        final ActorRef interpreter = getContext().actorOf(props);
         interpreter.tell(new StartInterpreter(request.call()), self);
     }
 

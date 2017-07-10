@@ -25,6 +25,7 @@ import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 public final class ConferenceEndpoint extends GenericEndpoint {
 
