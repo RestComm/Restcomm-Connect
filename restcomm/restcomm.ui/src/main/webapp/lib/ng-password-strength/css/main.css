@@ -1,0 +1,18 @@
+body {
+	padding: 20px;
+}
+
+.active {
+	background: yellow;
+}
+
+.goal {
+	background: #f6f6f6;
+	margin-left: 40px;
+	padding: 10px;
+	margin-bottom: 40px;
+}
+
+.goal * {
+	display: block;
+}

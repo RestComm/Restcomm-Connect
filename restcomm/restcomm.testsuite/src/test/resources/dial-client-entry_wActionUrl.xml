@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Dial timeLimit="10" timeout="3" action="http://127.0.0.1:8090/DialAction"
+		method="POST">
+		<Client>alice</Client>
+	</Dial>
+</Response>

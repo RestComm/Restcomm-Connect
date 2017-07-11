@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="urn:jboss:bean-deployer:2.0" xsi:schemaLocation="urn:jboss:bean-deployer:2.0 bean-deployer_2_0.xsd">
+
+	<!-- System clock -->
+	<!-- System clock -->
+	<bean class="org.mobicents.media.server.scheduler.WallClock" name="SystemClock" />
+
+	<!-- EDF scheduler -->
+	<bean class="org.mobicents.media.server.scheduler.PriorityQueueScheduler"
+		name="Scheduler">
+		<property name="clock">
+			<inject bean="SystemClock" />
+		</property>
+	</bean>
+
+	<bean class="org.mobicents.media.server.scheduler.ServiceScheduler"
+		name="ServiceScheduler" />
+
+	<!-- Network interfaces definition -->
+	<bean class="org.mobicents.media.server.io.network.UdpManager"
+		name="localhost">
+		<constructor>
+			<parameter>
+				<inject bean="ServiceScheduler" />
+			</parameter>
+		</constructor>
+		<property name="bindAddress">127.0.0.1</property>
+		<property name="localBindAddress">127.0.0.1</property>
+		<property name="externalAddress">
+			<null />
+		</property>
+		<property name="localNetwork">127.0.0.1</property>
+		<property name="localSubnet">255.255.255.255</property>
+		<property name="useSbc">false</property>
+		<property name="rtpTimeout">0</property>
+		<property name="lowestPort">34534</property>
+		<property name="highestPort">65535</property>
+	</bean>
+
+	<!-- SS7 interface definition -->
+	<!--<bean name="SS7" class="org.mobicents.media.server.io.ss7.SS7Manager"> 
+		<constructor> <parameter><inject bean="Scheduler"/></parameter> </constructor> 
+		</bean> -->
+
+	<!-- Channels manager definition -->
+	<bean class="org.mobicents.media.server.impl.rtp.ChannelsManager"
+		name="channelsManager">
+		<constructor>
+			<parameter>
+				<inject bean="localhost" />
+			</parameter>
+		</constructor>
+		<property name="scheduler">
+			<inject bean="Scheduler" />
+		</property>
+		<property name="jitterBufferSize">50</property>
+		<!--<property name="SS7Manager"><inject bean="SS7" /></property> -->
+	</bean>
+
+	<!-- Signal processor factory -->
+	<bean class="org.mobicents.media.server.component.DspFactoryImpl"
+		name="DSP">
+		<property name="codecs">
+			<list value-type="java.lang.String">
+				<value>org.mobicents.media.server.impl.dsp.audio.l16.Encoder</value>
+				<value>org.mobicents.media.server.impl.dsp.audio.l16.Decoder</value>
+				<value>org.mobicents.media.server.impl.dsp.audio.g711.alaw.Encoder</value>
+				<value>org.mobicents.media.server.impl.dsp.audio.g711.alaw.Decoder</value>
+				<value>org.mobicents.media.server.impl.dsp.audio.g711.ulaw.Encoder</value>
+				<value>org.mobicents.media.server.impl.dsp.audio.g711.ulaw.Decoder</value>
+				<value>org.mobicents.media.server.impl.dsp.audio.g729.Encoder</value>
+				<value>org.mobicents.media.server.impl.dsp.audio.g729.Decoder</value>
+				<value>org.mobicents.media.server.impl.dsp.audio.gsm.Encoder</value>
+				<value>org.mobicents.media.server.impl.dsp.audio.gsm.Decoder</value>
+			</list>
+		</property>
+	</bean>
+
+	<!-- Resources pool definition -->
+	<bean class="org.mobicents.media.core.ResourcesPool" name="resourcesPool">
+		<constructor>
+			<parameter>
+				<inject bean="Scheduler" />
+			</parameter>
+			<parameter>
+				<inject bean="channelsManager" />
+			</parameter>
+			<parameter>
+				<inject bean="DSP" />
+			</parameter>
+		</constructor>
+		<property name="defaultPlayers">5</property>
+		<property name="defaultRecorders">5</property>
+		<property name="defaultDtmfDetectors">5</property>
+		<property name="defaultDtmfGenerators">0</property>
+		<property name="defaultSignalDetectors">0</property>
+		<property name="defaultSignalGenerators">0</property>
+		<property name="defaultLocalConnections">10</property>
+		<property name="defaultRemoteConnections">10</property>
+		<property name="dtmfDetectorDbi">0</property>
+	</bean>
+
+	<!-- MGCP Controller definition -->
+	<bean class="org.mobicents.media.server.mgcp.controller.Controller"
+		name="MGCP">
+		<property name="udpInterface">
+			<inject bean="localhost" />
+		</property>
+		<property name="port">2427</property>
+		<property name="scheduler">
+			<inject bean="Scheduler" />
+		</property>
+		<property name="server">
+			<inject bean="MediaServer" />
+		</property>
+		<property name="configuration">mgcp-conf.xml</property>
+		<property name="poolSize">25</property>
+	</bean>
+
+	<!-- Media Server -->
+	<bean class="org.mobicents.media.core.Server" name="MediaServer">
+		<property name="clock">
+			<inject bean="SystemClock" />
+		</property>
+		<property name="scheduler">
+			<inject bean="Scheduler" />
+		</property>
+		<property name="udpManager">
+			<inject bean="localhost" />
+		</property>
+		<property name="resourcesPool">
+			<inject bean="resourcesPool" />
+		</property>
+		<property name="heartBeatTime">1</property>
+		<incallback method="addInstaller" />
+		<uncallback method="removeInstaller" />
+	</bean>
+
+	<!-- Endpoints -->
+	<!-- <bean name="Announcement" class="org.mobicents.media.core.endpoints.VirtualEndpointInstaller"> 
+		<property name="namePattern">mobicents/aap/</property> <property name="endpointClass">org.mobicents.media.core.endpoints.impl.AnnouncementEndpoint</property> 
+		<property name="initialSize">1</property> </bean> -->
+	<bean class="org.mobicents.media.core.endpoints.VirtualEndpointInstaller"
+		name="IVR">
+		<property name="namePattern">mobicents/ivr/</property>
+		<property name="endpointClass">org.mobicents.media.core.endpoints.impl.IvrEndpoint</property>
+		<property name="initialSize">50</property>
+	</bean>
+
+	<bean class="org.mobicents.media.core.endpoints.VirtualEndpointInstaller"
+		name="CNF">
+		<property name="namePattern">mobicents/cnf/</property>
+		<property name="endpointClass">org.mobicents.media.core.endpoints.impl.ConferenceEndpoint</property>
+		<property name="initialSize">50</property>
+	</bean>
+
+	<bean class="org.mobicents.media.core.endpoints.VirtualEndpointInstaller"
+		name="Bridge">
+		<property name="namePattern">mobicents/bridge/</property>
+		<property name="endpointClass">org.mobicents.media.core.endpoints.impl.BridgeEndpoint</property>
+		<property name="initialSize">50</property>
+	</bean>
+
+	<bean class="org.mobicents.media.core.endpoints.VirtualEndpointInstaller"
+		name="Relay">
+		<property name="namePattern">mobicents/relay/</property>
+		<property name="endpointClass">org.mobicents.media.core.endpoints.impl.PacketRelayEndpoint</property>
+		<property name="initialSize">50</property>
+	</bean>
+
+	<!-- DS0 Endpoints configuration sample -->
+	<!--<bean name="DS0" class="org.mobicents.media.core.endpoints.VirtualSS7EndpointInstaller"> 
+		<property name="namePattern">mobicents/ds0/</property> <property name="channelsManager"><inject 
+		bean="channelsManager"/></property> <property name="endpointClass">org.mobicents.media.core.endpoints.impl.Ds0Endpoint</property> 
+		<property name="startChannelID">125</property> <property name="initialSize">15</property> 
+		<property name="isALaw">true</property> </bean> -->
+
+</deployment>
