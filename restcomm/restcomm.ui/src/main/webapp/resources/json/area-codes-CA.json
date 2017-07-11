@@ -1,0 +1,100 @@
+[
+	{
+		"name": "Alberta",
+		"codes": [
+			403,
+			587,
+			780
+		]
+	},
+	{
+		"name": "British Columbia",
+		"codes": [
+			236,
+			250,
+			604,
+			778
+		]
+	},
+	{
+		"name": "Manitoba",
+		"codes": [
+			204,
+			431
+		]
+	},
+	{
+		"name": "New Brunswick",
+		"codes": [
+			506
+		]
+	},
+	{
+		"name": "Newfoundland",
+		"codes": [
+			709
+		]
+	},
+	{
+		"name": "Northwest Territories",
+		"codes": [
+			867
+		]
+	},
+	{
+		"name": "Nova Scotia",
+		"codes": [
+			902
+		]
+	},
+	{
+		"name": "Nunavut",
+		"codes": [
+			867
+		]
+	},
+	{
+		"name": "Ontario",
+		"codes": [
+			226,
+			249,
+			289,
+			343,
+			365,
+			416,
+			437,
+			519,
+			613,
+			647,
+			705,
+			807,
+			905
+		]
+	},
+	{
+		"name": "Quebec",
+		"codes": [
+			418,
+			438,
+			450,
+			514,
+			579,
+			581,
+			819,
+			873
+		]
+	},
+	{
+		"name": "Saskatchewan",
+		"codes": [
+			306,
+			639
+		]
+	},
+	{
+		"name": "Yukon",
+		"codes": [
+			867
+		]
+	}
+]

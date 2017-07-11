@@ -1,0 +1,272 @@
+<!--<rc-numbers-pills></rc-numbers-pills>-->
+
+<!--<rc-page-title icon="phone" title="NUMBERS" sub-title="REGISTER NUMBER"></rc-page-title>-->
+
+<div class="row secondary-tabs">
+	<div class="col-md-4 col-md-offset-2">
+		<a href="" ng-click="setProvider(true)"
+			ng-class="{active : isProvider}">Provider Number</a>
+	</div>
+	<div class="col-md-4 col-md-offset-2">
+		<a href="" ng-click="setProvider(false)"
+			ng-class="{active : !isProvider}">SIP Number</a>
+	</div>
+</div>
+
+<div class="row logs-search-container" ng-show="isProvider">
+	<div class="row">
+		<div class="col-md-4 logs-search-title">Country</div>
+		<div class="col-md-3 logs-search-title">Number</div>
+		<div class="col-md-2 logs-search-title">Capabilities</div>
+		<div class="col-md-2 logs-search-title">Type</div>
+	</div>
+	<div class="row">
+		<form ng-init="newNumber = {}">
+			<div class="col-md-4">
+				<!--<input type="text" class="logs-search-input" placeholder="enter a country" ng-model="query.date_created" />-->
+				<script type="text/ng-template" id="countriesTemplate.html">
+                    <a class="clickable f16" style="width: 400px;">
+                        <span class="flag {{match.model.code|lowercase}}" style="padding-left: 20px;" ng-bind-html="match.label | uibTypeaheadHighlight:query"></span>
+                    </a>
+                </script>
+				<div class="input-group f16">
+					<span class="input-group-addon countries-addon"><span
+						ng-show="newNumber.countryCode"
+						class="flag {{newNumber.countryCode.code|lowercase}}"></span><span
+						ng-hide="newNumber.countryCode"><i class="fa fa-globe"></i></span></span>
+					<input type="text" ng-model="newNumber.countryCode"
+						placeholder="Country"
+						uib-typeahead="country as (country.name + ' (' + country.dial_code + ')') for country in countries | filter:$viewValue | limitTo: 10 "
+						typeahead-template-url="countriesTemplate.html"
+						typeahead-editable="false" class="logs-search-input" autofocus>
+					<div class="input-group-btn"
+						ng-if="newNumber.countryCode.code === 'US'"
+						ng-init="newNumber.area_code = undefined">
+						<button class="btn btn-default dropdown-toggle"
+							style="width: 100px;" type="button" id="dropdownMenu1"
+							data-toggle="dropdown">
+							{{newNumber.area_code || "Area Code"}} <span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu scrollable-menu" role="menu">
+							<li role="presentation" class="dropdown-header"
+								ng-repeat-start="ac in areaCodesUS">{{ac.name}}</li>
+							<li role="presentation" ng-repeat="code in ac.codes"
+								ng-repeat-end><a role="menuitem" tabindex="-1" href=""
+								ng-click="newNumber.area_code = code">{{code}}</a></li>
+						</ul>
+					</div>
+					<div class="input-group-btn"
+						ng-if="newNumber.countryCode.code === 'CA'"
+						ng-init="newNumber.area_code = undefined">
+						<button class="btn btn-default dropdown-toggle"
+							style="width: 100px;" type="button" id="dropdownMenu1"
+							data-toggle="dropdown">
+							{{newNumber.area_code || "Area Code"}} <span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu scrollable-menu" role="menu">
+							<li role="presentation" class="dropdown-header"
+								ng-repeat-start="ac in areaCodesCA">{{ac.name}}</li>
+							<li role="presentation" ng-repeat="code in ac.codes"
+								ng-repeat-end><a role="menuitem" tabindex="-1" href=""
+								ng-click="newNumber.area_code = code">{{code}}</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-3">
+				<input type="tel" class="logs-search-input"
+					ng-disabled="!newNumber.countryCode" id="new-number-number"
+					ng-model="newNumber.phone_number" placeholder="enter a number"
+					popover-placement="bottom" popover-trigger="focus"
+					popover="How would you like your number to look like. If the entered digits are not available, try a shorter number prefix." />
+			</div>
+			<div class="col-md-2">
+				<label class="radio-inline"> <input type="radio"
+					name="cap_radio" ng-model="numberCaps" value="any"
+					ng-init="numberCaps = 'any'">Any
+				</label> <label class="radio-inline pull-right"> <input type="radio"
+					name="cap_radio" ng-model="numberCaps" value="specific">Specific
+				</label> <label class="radio-inline pull-right search-specific-checkbox"
+					ng-show="numberCaps === 'specific'"> <input type="checkbox"
+					ng-model="numberCapsVoice"> Voice
+				</label> <label class="radio-inline pull-right search-specific-checkbox"
+					ng-show="numberCaps === 'specific'"> <input type="checkbox"
+					ng-model="numberCapsSms"> SMS
+				</label>
+			</div>
+			<div class="col-md-2">
+				<label class="radio-inline"> <input type="radio"
+					name="type_radio" ng-model="numberType" value="any"
+					ng-init="numberType = 'any'">Any
+				</label> <label class="radio-inline pull-right"> <input type="radio"
+					name="type_radio" ng-model="numberType" value="specific">Specific
+				</label> <label class="radio-inline pull-right search-specific-checkbox"
+					ng-show="numberType === 'specific'"> <input type="checkbox"
+					ng-model="numberTypeLL"> Landline
+				</label> <label class="radio-inline pull-right search-specific-checkbox"
+					ng-show="numberType === 'specific'"> <input type="checkbox"
+					ng-model="numberTypeMB"> Mobile
+				</label> <label class="radio-inline pull-right search-specific-checkbox"
+					ng-show="numberType === 'specific'"> <input type="checkbox"
+					ng-model="numberTypeTF"> Toll-Free
+				</label>
+			</div>
+			<div class="col-md-1">
+				<button class="logs-search-button" style="margin-left: -8px;"
+					type="submit" ng-click="findNumbers(1)"
+					ng-disabled="!newNumber.countryCode"></button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<div class="row logs-search-container" ng-show="!isProvider">
+	<div class="row">
+		<div class="col-md-4 logs-search-title">SIP Address</div>
+		<div class="col-md-4 logs-search-title">Friendly Name</div>
+	</div>
+	<div class="row">
+		<form>
+			<div class="col-md-4">
+				<input id="new-number-sip" class="logs-search-input"
+					ng-model="newSIPNumber.phone_number" type="tel"
+					placeholder="Number" popover-placement="bottom"
+					popover-trigger="focus" popover="" />
+			</div>
+			<div class="col-sm-4">
+				<input id="new-number-friendly-name" class="logs-search-input"
+					ng-model="newSIPNumber.friendly_name" type="text"
+					placeholder="Hot Line Number" />
+			</div>
+			<div class="col-md-4 text-center">
+				<!--<button class="btn" ng-class="{'btn-primary': !searching, 'btn-default': searching}" type="button" -disabled="!newSIPNumber.phone_number"><i class="fa fa-search" ng-hide="searching"></i><i class="fa fa-spinner fa-spin" ng-show="searching"></i> Register<span ng-show="searching">ing</span> Number</button>-->
+				<a href="" class="btn-register btn-white"
+					ng-click="registerIncomingNumber(newSIPNumber, true)" ng><b>+</b>
+					Register number</a>
+			</div>
+		</form>
+	</div>
+</div>
+
+<p>&nbsp;</p>
+
+<div class="row" ng-show="isProvider">
+
+	<div class="col-md-12">
+		<!--<form class="form-horizontal">-->
+		<!--
+            <dl class="dl-horizontal form-dl">
+            <dt>Account SID</dt>
+            <dd>
+                <input type="text" class="form-control input-xlarge" id="new-number-account-sid" ng-model="sid" placeholder="Account SID" disabled />
+            </dd>
+        -->
+		<hr class="small" />
+		<div ng-show="!availableNumbers" class="no-records-alert text-center"
+			style="color: #c8c6c8;">
+			<h1>&#9432; Enter your search criteria and find a number!</h1>
+		</div>
+
+		<div ng-show="availableNumbers.length == 0 && !searching"
+			class="no-records-alert text-center">
+			<h1 style="color: #df525a;">No numbers available!</h1>
+			<h3>Change you search criteria and try again!</h3>
+		</div>
+
+		<div ng-show="searching" class="no-records-alert text-center">
+			<h1>
+				<i class="fa fa-spinner fa-spin"></i> &nbsp; Searching for your
+				number. <small>{{newNumber.countryCode.name || 'That '}} is
+					a lovely place..</small>
+			</h1>
+		</div>
+
+		<table ng-show="availableNumbers.length > 0" class="table table-hover"
+			ng-cloak>
+			<thead class="logs-table-header">
+				<th class="width-10pc">Number</th>
+				<th class="width-10pc text-center">Type</th>
+				<th class="width-30pc text-center" colspan="3">Features</th>
+				<th class="width-10pc text-center">Cost</th>
+				<th class="width-10pc">&nbsp;</th>
+			</thead>
+			<tbody>
+				<tr ng-repeat="pn in filtered = (availableNumbers | filter:query)"
+					class="logs-table-row">
+					<td><h4 class="text-center">{{ pn.friendlyName }}</h4></td>
+					<td><h5 class="text-center">-</h5></td>
+					<td>
+						<h4 class="text-center">
+							<span ng-show="pn.voiceCapable"> <i
+								class="fa fa-microphone available-feature"
+								uib-tooltip="Voice Capable"></i> <small> Voice </small>
+							</span> <span class="opacity30" ng-hide="pn.voiceCapable"><i
+								class="fa fa-microphone-slash unavailable-feature"></i> <small>
+									Not Voice Capable </small></span>
+						</h4>
+					</td>
+					<td>
+						<h4 class="text-center">
+							<span ng-show="pn.smsCapable"><i
+								class="fa fa-comment available-feature"></i> <small> SMS
+							</small></span> <span class="opacity30" ng-hide="pn.smsCapable"><i
+								class="fa fa-comment-o unavailable-feature"></i> <small>
+									No SMS </small></span>
+						</h4>
+					</td>
+					<td>
+						<h4 class="text-center">
+							<span ng-show="pn.smsCapable"><i
+								class="fa fa-picture-o available-feature"></i> <small>
+									MMS </small></span> <span class="opacity30" ng-hide="pn.smsCapable"><i
+								class="fa fa-picture-o unavailable-feature"></i> <small>
+									No MMS </small></span>
+						</h4> <!--
+                    <span ng-show="{{ $index % 4 == 1  }}"><span class="available-feature"><strong>#</strong></span> <small> {{ pn.voice_url.substring(0, pn.voice_url.indexOf("demos/") + 6) }}ussd/ussd-menu.xml </small></span>
+                    <span class="opacity30" ng-hide="{{ $index % 4 == 1  }}"><span class="unavailable-feature"><strong>#</strong></span> <small> http://www.restcomm.org/demo/ussd/</small></span>
+                    -->
+					</td>
+					<td><h5 class="text-center">${{ pn.cost || '-.--' }}</h5></td>
+					<td class="text-right">
+						<div class="btn-delete-div">
+							<button class="btn btn-default" ng-hide="pn.registered"
+								ng-click="registerIncomingNumber(pn)">Register Number</button>
+						</div>
+						<div class="btn-delete-div">
+							<button class="btn btn-success" ng-show="pn.registered"
+								ng-click="confirmNumberRegister(pn)">
+								<i class="fa fa-check"></i> Configure Number
+							</button>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+			<tfoot>
+				<tr>
+					<td colspan="7" class="text-right">
+						<div class="btn-group" role="group" aria-label="...">
+							<button type="button" class="btn btn-default btn-sm"
+								ng-if="currentPage > 1" ng-click="prevRange()">&lt;
+								Prev</button>
+							<button type="button" class="btn btn-default btn-sm" disabled>Page
+								{{currentPage}}</button>
+							<button type="button" class="btn btn-default btn-sm"
+								ng-if="availableNumbers.length === pageSize"
+								ng-click="nextRange()">Next &gt;</button>
+						</div>
+					</td>
+				</tr>
+			</tfoot>
+		</table>
+		<!--</form>-->
+
+	</div>
+</div>
+<div class="row" ng-show="!isProvider">
+	<div class="col-md-12">
+		<hr class="small" />
+		<div class="no-records-alert text-center" style="color: #c8c6c8;">
+			<h1>&#9432; Enter your favorite number or address!</h1>
+		</div>
+	</div>
+</div>

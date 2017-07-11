@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<licenseStorage>
+	<customer></customer>
+	<email></email>
+	<notification>
+		<enabled>true</enabled>
+		<hostname>smtp.googlemail.com</hostname>
+		<smtpPort>465</smtpPort>
+		<user>telscale-LI@telestax.com</user>
+		<password>ufrgwluolrorbtco</password>
+		<notifyEmail>telscale-license@telestax.com</notifyEmail>
+		<useSSL>true</useSSL>
+	</notification>
+	<license>
+		<type>online</type>
+		<product>TelScale-RestComm</product>
+		<licenseKey></licenseKey>
+		<lifetime></lifetime>
+		<creationDate></creationDate>
+		<expirationDate></expirationDate>
+	</license>
+</licenseStorage>

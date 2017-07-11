@@ -1,0 +1,170 @@
+<!--<rc-logs-pills></rc-logs-pills>-->
+
+<!--<rc-page-title icon="file-text-o" title="LOGS" sub-title="CALLS"></rc-page-title>-->
+
+<div class="row secondary-tabs">
+	<div class="col-md-10 col-md-offset-1">
+		<a href="#/logs/calls" class="active">Calls</a> <a
+			href="#/logs/messages">Messages</a> <a href="#/logs/recordings">Recordings</a>
+		<a href="#/logs/transcriptions">Transcriptions</a> <a
+			href="#/logs/notifications">Notifications</a>
+	</div>
+</div>
+
+<div class="row logs-search-container"
+	ng-show="callsLogsList.length > 0 || search">
+	<div class="row">
+		<div class="col-md-4 logs-search-title">Peers</div>
+		<div class="col-md-4 logs-search-title">Date</div>
+		<div class="col-md-3 logs-search-title">Status</div>
+	</div>
+	<div class="row">
+		<form>
+			<div class="col-md-2">
+				<input type="text" class="logs-search-input" placeholder="From"
+					ng-model="search.from" /> <span class="logs-search-checkbox-span"><input
+					type="checkbox" class="logs-search-checkbox" ng-true-value="true"
+					ng-false-value="false" ng-model="search.sub_accounts"
+					title="Includes calls from sub-accounts and displays account info">
+					Sub-Account search</span>
+			</div>
+			<div class="col-md-2">
+				<input type="text" class="logs-search-input" placeholder="To"
+					ng-model="search.to" />
+			</div>
+			<div class="col-md-2">
+				<input type="date" class="logs-search-input"
+					placeholder="Start Date" ng-model="search.start_time" />
+			</div>
+			<div class="col-md-2">
+				<input type="date" class="logs-search-input" placeholder="End Date"
+					ng-model="search.end_time" />
+			</div>
+			<div class="col-md-2">
+				<select class="selectpicker logs-search-select"
+					ng-model="search.status">
+					<option value="">Call Status</option>
+					<option value="queued">Queued</option>
+					<option value="ringing">Ringing</option>
+					<option value="in-progress">In Progress</option>
+					<option value="completed">Completed</option>
+					<option value="busy">Busy</option>
+					<option value="failed">Failed</option>
+					<option value="no-answer">No Answer</option>
+					<option value="queued">Completed</option>
+				</select>
+			</div>
+			<div class="col-md-2">
+				<button class="logs-search-button" type="submit"
+					ng-click="getCallsList()"></button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<p>&nbsp;</p>
+
+<div class="row">
+	<div ng-hide="(callsLogsList | filter:query).length > 0"
+		class="jumbotron no-records-alert">
+		<h2>
+			<i class="fa fa-exclamation-circle"></i> No call records <span
+				ng-show="callsLogsList.length == 0"></span> <span
+				ng-show="callsLogsList.length > 0">matching query</span>. <small>Call
+				your friends!</small>
+		</h2>
+	</div>
+
+	<table ng-show="(callsLogsList | filter:query).length > 0"
+		class="table table-hover" ng-cloak>
+		<thead class="logs-table-header">
+			<!--th class="width-30pc">DATE <button ng-click="toggle=!toggle"><span  ng-class="{'glyphicon glyphicon-arrow-up':toggle,'glyphicon glyphicon-arrow-down':!toggle}" ></span></button> </th-->
+			<th class="width-20pc"
+				ng-click="sortBy('date_created');toggleD=!toggleD;reverse=toggleD;pageChanged()">Date<span
+				class="pull-right" ng-show="predicate === 'date_created'"><i
+					ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></span></th>
+			<th class="width-10pc"><span class="pull-right">Direction</span></th>
+			<th ng-show="search.sub_accounts" class="width-10pc">Account</th>
+			<th class="width-10pc">From</th>
+			<th class="width-10pc">To</th>
+			<th class="width-5pc">Type</th>
+			<th class="width-10pc">Status</th>
+			<th class="width-15pc"
+				ng-click="sortBy('duration');toggleC=!toggleC;reverse=toggleC">Duration<span
+				class="pull-right" ng-show="predicate === 'duration'"><i
+					ng-class="{'fa fa-chevron-up':toggleC,'fa fa-chevron-down':!toggleC}"></i></span></th>
+			<th class="width-10pc"
+				ng-click="sortBy('cost');toggleG=!toggleG;reverse=toggleG">Cost<span
+				class="pull-right" ng-show="predicate === 'cost'"><i
+					ng-class="{'fa fa-chevron-up':toggleG,'fa fa-chevron-down':!toggleG}"></i></span></th>
+			<!--<th class="width-5pc"></th>-->
+			<!--<th <th class="width-15pc">&nbsp;</th>-->
+		</thead>
+		<tbody>
+			<tr
+				ng-repeat="call in filtered = (callsLogsList | filter:query | orderBy:sort:reverse)"
+				class="logs-table-row">
+
+				<!--<tr ng-repeat="call in callsLogsList">-->
+				<td><a href="" ng-click="showCallDetailsModal(call)">{{
+						call.date_created }}</a></td>
+				<td><div class="text-center">
+						<i
+							ng-class="call.direction == 'inbound' ? 'fa fa-sign-in' : (call.direction == 'outbound-api' ? 'fa fa-sign-out' : 'fa fa-cloud')"></i>
+						<!-- {{ call.direction ? call.direction : '?' }} -->
+					</div></td>
+				<td ng-show="search.sub_accounts"><div class="text-center"
+						title="{{call.account_sid}}">{{
+						call.account_sid.substr(0,10)+"..." }}</div></td>
+				<td><div class="text-center">{{ call.from ? call.from :
+						'?' }}</div></td>
+				<td><div class="text-center">{{ call.to ? call.to : '?'
+						}}</div></td>
+				<td><div class="text-center">
+						<i class="fa fa-phone"></i>
+					</div></td>
+				<td><div class="text-center">{{ call.status ? call.status
+						: '?' }}</div></td>
+				<td><div class="text-center">{{ call.duration ?
+						call.duration : '0' }} s</div></td>
+				<td><div class="text-center">$ {{call.cost ? call.cost :
+						'0.00' }}</div></td>
+				<!--<td><div class="text-center"><a href="" class="clean-link"><i class="fa fa-expand" uib-tooltip="Recording Available"></i></a></div></td>-->
+			</tr>
+		</tbody>
+		<tfoot>
+			<td colspan="99">
+				<div class="row">
+					<div class="col-md-4">
+						<small class="pull-left">{{ totalCalls }} Call{{
+							totalCalls == 1 ? "" : "s" }}</small>
+					</div>
+					<div class="col-md-4">
+						<form class="form-inline text-center">
+							<h6>Items / Page</h6>
+							<div class="btn-group buttons-per-page">
+								<button type="button" class="btn btn-default btn-sm"
+									ng-class="{'active':entryLimit === 10}"
+									ng-click="setEntryLimit(10)">10</button>
+								<button type="button" class="btn btn-default btn-sm"
+									ng-class="{'active':entryLimit === 25}"
+									ng-click="setEntryLimit(25)">25</button>
+								<button type="button" class="btn btn-default btn-sm"
+									ng-class="{'active':entryLimit === 50}"
+									ng-click="setEntryLimit(50)">50</button>
+							</div>
+						</form>
+					</div>
+					<div class="col-md-4">
+						<uib-pagination style="float:right"
+							class="pagination pagination-sm" ng-change="pageChanged()"
+							total-items="totalCalls" items-per-page="entryLimit"
+							ng-model="currentPage" data-boundary-links="true"
+							data-current-page="currentPage" max-size="maxSize"
+							previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
+					</div>
+				</div>
+			</td>
+		</tfoot>
+	</table>
+</div>
