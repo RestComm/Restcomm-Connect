@@ -94,7 +94,7 @@ public class S3AccessTool {
         return s3client;
     }
 
-    public URI uploadFile(final String fileToUpload) {
+    public boolean uploadFile(final String fileToUpload) {
         if (s3client == null) {
             s3client = getS3client();
         }
@@ -117,7 +117,7 @@ public class S3AccessTool {
             }
             File file = new File(fileUri);
 
-            while (!FileUtils.waitFor(file, 30)){}
+//            while (!FileUtils.waitFor(file, 30)){}
             if (file.exists()) {
                 PutObjectRequest putRequest = new PutObjectRequest(bucket.toString(), file.getName(), file);
                 ObjectMetadata metadata = new ObjectMetadata();
@@ -130,12 +130,15 @@ public class S3AccessTool {
                 if (removeOriginalFile) {
                     removeLocalFile(file);
                 }
-                URI recordingS3Uri = s3client.getUrl(bucket.toString(), file.getName()).toURI();
-                return recordingS3Uri;
-//                return downloadUrl.toURI();
+
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("File %s uploaded to S3 successfully");
+                    logger.info(msg);
+                }
+                return true;
             } else {
                 logger.error("Timeout waiting for the recording file: "+file.getAbsolutePath());
-                return null;
+                return false;
             }
          } catch (AmazonServiceException ase) {
             logger.error("Caught an AmazonServiceException");
@@ -144,18 +147,37 @@ public class S3AccessTool {
             logger.error("AWS Error Code:   " + ase.getErrorCode());
             logger.error("Error Type:       " + ase.getErrorType());
             logger.error("Request ID:       " + ase.getRequestId());
-            return null;
+            return false;
         } catch (AmazonClientException ace) {
             logger.error("Caught an AmazonClientException ");
             logger.error("Error Message: " + ace.getMessage());
-            return null;
-        } catch (URISyntaxException e) {
-            logger.error("URISyntaxException: "+e.getMessage());
-            return null;
+            return false;
         } catch (IOException e) {
             logger.error("Problem while trying to touch recording file for testing", e);
-            return null;
+            return false;
         }
+    }
+
+    public URI getS3Uri(final String fileToUpload) {
+        if (s3client == null) {
+            s3client = getS3client();
+        }
+        StringBuffer bucket = new StringBuffer();
+        bucket.append(bucketName);
+        if (folder != null && !folder.isEmpty())
+            bucket.append("/").append(folder);
+        URI fileUri = URI.create(fileToUpload);
+        File file = new File(fileUri);
+        URI recordingS3Uri = null;
+        try {
+            recordingS3Uri = s3client.getUrl(bucketName, file.getName()).toURI();
+        } catch (URISyntaxException e) {
+            logger.error("Problem during creation of S3 URI");
+        }
+        if (logger.isInfoEnabled()) {
+            logger.info("Created S3Uri for file: " + fileUri.toString());
+        }
+        return recordingS3Uri;
     }
 
     public URI getPublicUrl (String fileName) throws URISyntaxException {
