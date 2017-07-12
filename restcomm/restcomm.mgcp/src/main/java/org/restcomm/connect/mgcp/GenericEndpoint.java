@@ -19,32 +19,31 @@
  */
 package org.restcomm.connect.mgcp;
 
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.JainMgcpResponseEvent;
 import jain.protocol.ip.mgcp.message.DeleteConnection;
 import jain.protocol.ip.mgcp.message.parms.EndpointIdentifier;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
+import scala.concurrent.duration.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
-
-import scala.concurrent.duration.Duration;
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
-public abstract class GenericEndpoint extends UntypedActor {
+public abstract class GenericEndpoint extends RestcommUntypedActor {
 
     protected final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -150,6 +149,7 @@ public abstract class GenericEndpoint extends UntypedActor {
                 broadcast(new EndpointStateChanged(EndpointState.DESTROYED));
             } else {
                 logger.error("Could not destroy endpoint " + this.id.toString() + ". Return Code: " + returnCode.toString());
+                broadcast(new EndpointStateChanged(EndpointState.FAILED));
             }
         }
     }

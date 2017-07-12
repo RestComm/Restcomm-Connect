@@ -30,6 +30,7 @@ import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.loader.ObjectFactory;
 import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
@@ -61,7 +62,7 @@ import jain.protocol.ip.mgcp.JainMgcpStack;
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
-public class MediaResourceBrokerGeneric extends UntypedActor{
+public class MediaResourceBrokerGeneric extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -144,7 +145,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
         });
-        return context().system().actorOf(props);
+        return getContext().actorOf(props);
     }
 
     /**
@@ -201,7 +202,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
                 return new ConferenceMediaResourceControllerGeneric(localMediaGateway, configuration, storage, self());
             }
         });
-        return context().system().actorOf(props);
+        return getContext().actorOf(props);
     }
 
     /**
