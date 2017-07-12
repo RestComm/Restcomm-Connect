@@ -22,8 +22,6 @@
 package org.restcomm.connect.mscontrol.jsr309;
 
 import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActorFactory;
 import org.apache.log4j.Logger;
@@ -39,8 +37,6 @@ import javax.media.mscontrol.MsControlFactory;
 public class Jsr309ControllerFactory implements MediaServerControllerFactory {
 
     private static Logger logger = Logger.getLogger(Jsr309ControllerFactory.class);
-    // Actor supervisor
-    private final ActorSystem system;
 
     // JSR-309
     private final MsControlFactory msControlFactory;
@@ -53,10 +49,7 @@ public class Jsr309ControllerFactory implements MediaServerControllerFactory {
     // Media Server Info
     private final MediaServerInfo mediaServerInfo;
 
-    public Jsr309ControllerFactory(ActorSystem system, MediaServerInfo mediaServerInfo, MsControlFactory msControlFactory) {
-        // Actor supervisor
-        this.system = system;
-
+    public Jsr309ControllerFactory(MediaServerInfo mediaServerInfo, MsControlFactory msControlFactory) {
         // Factories
         this.msControlFactory = msControlFactory;
         this.callControllerFactory = new CallControllerFactory();
@@ -68,21 +61,18 @@ public class Jsr309ControllerFactory implements MediaServerControllerFactory {
     }
 
     @Override
-    public ActorRef provideCallController() {
-        final Props props = new Props(this.callControllerFactory);
-        return system.actorOf(props);
+    public Props provideCallControllerProps() {
+        return new Props(this.callControllerFactory);
     }
 
     @Override
-    public ActorRef provideConferenceController() {
-        final Props props = new Props(this.conferenceControllerFactory);
-        return system.actorOf(props);
+    public Props provideConferenceControllerProps() {
+        return new Props(this.conferenceControllerFactory);
     }
 
     @Override
-    public ActorRef provideBridgeController() {
-        final Props props = new Props(this.bridgeControllerFactory);
-        return system.actorOf(props);
+    public Props provideBridgeControllerProps() {
+        return new Props(this.bridgeControllerFactory);
     }
 
     private final class CallControllerFactory implements UntypedActorFactory {

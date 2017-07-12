@@ -507,9 +507,11 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
          SipServletResponse clonedResponse = linkedRequest.createResponse(response.getStatus());
          SipURI originalURI = null;
          try {
-             originalURI = (SipURI) response.getAddressHeader("Contact").getURI();
-             if (originalURI.getUser() != null && !originalURI.getUser().isEmpty()) {
-                 ((SipURI) clonedResponse.getAddressHeader("Contact").getURI()).setUser(originalURI.getUser());
+             if(response.getAddressHeader("Contact") != null && response.getAddressHeader("Contact").getURI() != null){
+                 originalURI = (SipURI) response.getAddressHeader("Contact").getURI();
+                 if (originalURI != null && originalURI.getUser() != null && !originalURI.getUser().isEmpty()) {
+                     ((SipURI) clonedResponse.getAddressHeader("Contact").getURI()).setUser(originalURI.getUser());
+                 }
              }
          } catch (ServletParseException | NullPointerException e) {
             logger.error("Problem while trying to set User part on a clones response for a P2P call, "+e);

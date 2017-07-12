@@ -19,45 +19,6 @@
  */
 package org.restcomm.connect.sms;
 
-import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import com.cloudhopper.commons.charset.Charset;
-import com.cloudhopper.commons.charset.CharsetUtil;
-import com.cloudhopper.commons.util.ByteArrayUtil;
-import com.cloudhopper.smpp.tlv.Tlv;
-import com.cloudhopper.smpp.SmppConstants;
-import com.google.common.collect.ImmutableMap;
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.sms.api.GetLastSmsRequest;
-import org.restcomm.connect.sms.api.SmsSessionAttribute;
-import org.restcomm.connect.sms.api.SmsSessionInfo;
-import org.restcomm.connect.sms.api.SmsSessionRequest;
-import org.restcomm.connect.sms.api.SmsSessionResponse;
-import org.restcomm.connect.dao.ClientsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.RegistrationsDao;
-import org.restcomm.connect.dao.entities.Client;
-import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
-import org.restcomm.connect.sms.smpp.SmppClientOpsThread;
-import org.restcomm.connect.sms.smpp.SmppInboundMessageEntity;
-import org.restcomm.connect.sms.smpp.SmppMessageHandler;
-import org.restcomm.connect.sms.smpp.SmppOutboundMessageEntity;
-import org.restcomm.connect.telephony.api.TextMessage;
-import org.restcomm.smpp.parameter.TlvSet;
-
-import javax.servlet.ServletContext;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,11 +27,53 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.servlet.ServletContext;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
+
+import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.RegistrationsDao;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.Registration;
+import org.restcomm.connect.sms.api.GetLastSmsRequest;
+import org.restcomm.connect.sms.api.SmsSessionAttribute;
+import org.restcomm.connect.sms.api.SmsSessionInfo;
+import org.restcomm.connect.sms.api.SmsSessionRequest;
+import org.restcomm.connect.sms.api.SmsSessionResponse;
+import org.restcomm.connect.sms.smpp.SmppClientOpsThread;
+import org.restcomm.connect.sms.smpp.SmppInboundMessageEntity;
+import org.restcomm.connect.sms.smpp.SmppMessageHandler;
+import org.restcomm.connect.sms.smpp.SmppOutboundMessageEntity;
+import org.restcomm.connect.telephony.api.TextMessage;
+import org.restcomm.smpp.parameter.TlvSet;
+
+import com.cloudhopper.commons.charset.Charset;
+import com.cloudhopper.commons.charset.CharsetUtil;
+import com.cloudhopper.commons.util.ByteArrayUtil;
+import com.cloudhopper.smpp.SmppConstants;
+import com.cloudhopper.smpp.tlv.Tlv;
+import com.google.common.collect.ImmutableMap;
+
+import akka.actor.ActorRef;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class SmsSession extends UntypedActor {
+public final class SmsSession extends RestcommUntypedActor {
     // Logger
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // Runtime stuff.

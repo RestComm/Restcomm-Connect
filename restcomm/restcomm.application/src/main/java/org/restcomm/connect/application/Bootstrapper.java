@@ -80,7 +80,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 try {
                     settings = configuration.subset("media-server-manager");
                     ActorRef mrb = mediaResourceBroker(settings, storage, loader);
-                    factory = new MmsControllerFactory(system, mrb);
+                    factory = new MmsControllerFactory(mrb);
                 } catch (UnknownHostException e) {
                     throw new ServletException(e);
                 }
@@ -100,7 +100,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                     // Create JSR 309 factory
                     MsControlFactory msControlFactory = driver.getFactory(properties);
                     MediaServerInfo mediaServerInfo = mediaServerInfo(settings);
-                    factory = new Jsr309ControllerFactory(system, mediaServerInfo, msControlFactory);
+                    factory = new Jsr309ControllerFactory(mediaServerInfo, msControlFactory);
                 } catch (UnknownHostException | MsControlException e) {
                     throw new ServletException(e);
                 }
