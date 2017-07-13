@@ -29,6 +29,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * A relative URI resolver for Rcmlserver/RVD. It values defined in rcmlserver restcomm.xml configuration
+ * section (rcmlserver.base-url, rcmlserver.api-path) to convert relative urls to absolute i.e. prepent Rcmlserver origin (http://rcmlserver.domain:port).
+ * By design, the resolver is used when resolving Application.rcmlUrl only. An additional filter prefix
+ * is used and helps the resolver affect only urls that start with "/restcomm-rvd/". This filter value is
+ * configurable through rcmlserver.api-path. It will use whatever it between the first pair of slashes "/.../".
+ * If configuration is missing or rcmlserver is deployed bundled with restcomm the resolver won't affect the
+ * uri resolved, typically leaving UriUtils class take care of it.
+ *
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 public class RcmlserverResolver {
