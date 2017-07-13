@@ -62,7 +62,7 @@ public class RcmlserverResolver {
                 filterPrefix = "/" + matcher.group(1) + "/";
             } else
                 filterPrefix = DEFAULT_FILTER_PREFIX;
-            logger.info("RcmlserverResolver initialized. Urls starting with '" + filterPrefix + "' will get prepended with '" + rvdOrigin + "'");
+            logger.info("RcmlserverResolver initialized. Urls starting with '" + filterPrefix + "' will get prepended with '" + (rvdOrigin == null ? "" : rvdOrigin) + "'");
         } else
             filterPrefix = null;
     }
