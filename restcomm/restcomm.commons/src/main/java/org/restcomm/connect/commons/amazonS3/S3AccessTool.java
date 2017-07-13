@@ -29,6 +29,7 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
@@ -86,6 +87,7 @@ public class S3AccessTool {
             s3client = new AmazonS3Client(awsCreds);
             s3client.setRegion(Region.getRegion(Regions.fromName(bucketRegion)));
             s3client.setEndpoint(testingUrl);
+            s3client.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).disableChunkedEncoding().build());
         } else {
             s3client = AmazonS3ClientBuilder.standard().withRegion(Regions.fromName(bucketRegion))
                     .withCredentials(new AWSStaticCredentialsProvider(awsCreds)).build();
@@ -102,7 +104,9 @@ public class S3AccessTool {
             logger.info("S3 Region: "+bucketRegion.toString());
         }
         try {
-            if (testing && (!testingUrl.isEmpty() || !testingUrl.equals(""))) {
+            URI fileUri = URI.create(fileToUpload);
+            File file = new File(fileUri);
+            if (!file.exists() && testing && (!testingUrl.isEmpty() || !testingUrl.equals(""))) {
 //                s3client.setEndpoint(testingUrl);
 //                s3client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
                 FileUtils.touch(new File(URI.create(fileToUpload)));
@@ -111,11 +115,9 @@ public class S3AccessTool {
             bucket.append(bucketName);
             if (folder != null && !folder.isEmpty())
                 bucket.append("/").append(folder);
-            URI fileUri = URI.create(fileToUpload);
             if (logger.isInfoEnabled()) {
                 logger.info("File to upload to S3: " + fileUri.toString());
             }
-            File file = new File(fileUri);
 
             while (!FileUtils.waitFor(file, 30)){}
             if (file.exists()) {
