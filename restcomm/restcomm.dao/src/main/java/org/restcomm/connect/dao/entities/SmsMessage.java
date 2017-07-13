@@ -50,10 +50,13 @@ public final class SmsMessage {
 
     private final String apiVersion;
     private final URI uri;
+    private final URI statusCallback;
+    private final String smppMessageId;
 
     public SmsMessage(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final DateTime dateSent,
             final Sid accountSid, final String sender, final String recipient, final String body, final Status status,
-            final Direction direction, final BigDecimal price, final Currency priceUnit, final String apiVersion, final URI uri) {
+            final Direction direction, final BigDecimal price, final Currency priceUnit, final String apiVersion, final URI uri,
+            final URI statusCallback, final String smppMessageId) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -69,6 +72,8 @@ public final class SmsMessage {
         this.priceUnit = priceUnit;
         this.apiVersion = apiVersion;
         this.uri = uri;
+        this.statusCallback = statusCallback;
+        this.smppMessageId = smppMessageId;
     }
 
     public static Builder builder() {
@@ -131,14 +136,27 @@ public final class SmsMessage {
         return uri;
     }
 
+    public URI getStatusCallback() {
+        return statusCallback;
+    }
+
+    public String getSmppMessageId() {
+        return smppMessageId;
+    }
+
     public SmsMessage setDateSent(final DateTime dateSent) {
         return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
-                direction, price, priceUnit, apiVersion, uri);
+                direction, price, priceUnit, apiVersion, uri, statusCallback, smppMessageId);
     }
 
     public SmsMessage setStatus(final Status status) {
         return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
-                direction, price, priceUnit, apiVersion, uri);
+                direction, price, priceUnit, apiVersion, uri, statusCallback, smppMessageId);
+    }
+
+    public SmsMessage setSmppMessageId(final String smppMessageId) {
+        return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
+                direction, price, priceUnit, apiVersion, uri, statusCallback, smppMessageId);
     }
 
     @NotThreadSafe
@@ -155,6 +173,8 @@ public final class SmsMessage {
         private Currency priceUnit;
         private String apiVersion;
         private URI uri;
+        private URI statusCallback;
+        private String smppMessageId;
 
         private Builder() {
             super();
@@ -163,7 +183,7 @@ public final class SmsMessage {
         public SmsMessage build() {
             final DateTime now = DateTime.now();
             return new SmsMessage(sid, now, now, dateSent, accountSid, sender, recipient, body, status, direction, price,
-                    priceUnit, apiVersion, uri);
+                    priceUnit, apiVersion, uri, statusCallback, smppMessageId);
         }
 
         public void setSid(final Sid sid) {
@@ -213,6 +233,15 @@ public final class SmsMessage {
         public void setUri(final URI uri) {
             this.uri = uri;
         }
+
+        public void setStatusCallback(final URI statusCallback) {
+            this.statusCallback = statusCallback;
+        }
+
+        public void setSmppMessageId(final String smppMessageId) {
+            this.smppMessageId = smppMessageId;
+        }
+
     }
 
     public enum Direction {
