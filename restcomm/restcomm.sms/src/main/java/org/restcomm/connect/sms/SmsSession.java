@@ -38,6 +38,7 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.Registration;
+import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.sms.api.GetLastSmsRequest;
 import org.restcomm.connect.sms.api.SmsSessionAttribute;
 import org.restcomm.connect.sms.api.SmsSessionInfo;
@@ -363,6 +364,9 @@ public final class SmsSession extends RestcommUntypedActor {
                 logger.info("Encoding:  " + encoding );
             }
             try {
+                SmsMessage smsMessage = (SmsMessage) attributes.get("record");
+                smppMessageHandler.tell(smsMessage, null);
+
                 final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(to, from, body, encoding, tlvSet);
                 smppMessageHandler.tell(sms, null);
             }catch (final Exception exception) {

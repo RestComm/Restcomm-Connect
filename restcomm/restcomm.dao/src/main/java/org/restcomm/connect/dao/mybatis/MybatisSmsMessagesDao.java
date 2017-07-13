@@ -90,6 +90,22 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
     }
 
     @Override
+    public SmsMessage getSmsMessageWithSmppMsgId(final String smppmessageid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Map<String, Object> result = session.selectOne(namespace + "getSmsMessageWithSmppMsgId",
+                    smppmessageid.toString());
+            if (result != null) {
+                return toSmsMessage(result);
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public List<SmsMessage> getSmsMessages(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
@@ -202,6 +218,8 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
         map.put("price_unit", writeCurrency(smsMessage.getPriceUnit()));
         map.put("api_version", smsMessage.getApiVersion());
         map.put("uri", writeUri(smsMessage.getUri()));
+        map.put("status_callback", writeUri(smsMessage.getStatusCallback()));
+        map.put("smpp_messageid", smsMessage.getSmppMessageId());
         return map;
     }
 
@@ -220,7 +238,9 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
         final Currency priceUnit = readCurrency(map.get("price_unit"));
         final String apiVersion = readString(map.get("api_version"));
         final URI uri = readUri(map.get("uri"));
+        final URI statuCallback = readUri(map.get("status_callback"));
+        final String smppMessageId = readString(map.get("smpp_messageid"));
         return new SmsMessage(sid, dateCreated, dateUpdated, dateSent, accountSid, sender, recipient, body, status, direction,
-                price, priceUnit, apiVersion, uri);
+                price, priceUnit, apiVersion, uri, statuCallback, smppMessageId);
     }
 }
