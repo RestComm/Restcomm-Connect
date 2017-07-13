@@ -103,8 +103,7 @@ show tables;
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'192.168.1.%' IDENTIFIED BY 'YourMysqlDBPwd' WITH GRANT OPTION;
 
 then save the changes as follows
-
-GRANT ALL PRIVILEGES;
+FLUSH PRIVILEGES;
 
 The above command will allow your use to be able to access the DB on 192.168.1.x subnet
 The is important if you have multiple Restcomm instances in the same subnet and they will need to Replicate DB on a MASTER-MASTER format
