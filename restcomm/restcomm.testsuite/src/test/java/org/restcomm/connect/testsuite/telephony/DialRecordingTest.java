@@ -2,6 +2,7 @@ package org.restcomm.connect.testsuite.telephony;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.apache.http.HttpRequest;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
@@ -22,6 +23,7 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -30,6 +32,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
+import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
@@ -39,10 +42,10 @@ import java.text.ParseException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -220,7 +223,16 @@ public class DialRecordingTest {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertTrue(duration==3.0);
+		assertEquals(3.0, duration, 0.0);
+
+		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+		assertNotNull(metrics);
+		int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+		logger.info("LiveCalls: "+liveCalls);
+		int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+		assertEquals(0,liveCalls);
+		assertEquals(0, liveCallsArraySize);
 	}
 
 	@Test
@@ -301,6 +313,15 @@ public class DialRecordingTest {
 		int code = httpResponse.getStatusLine().getStatusCode();
 		assertEquals(404, code);
 
+		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+		assertNotNull(metrics);
+		int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+		logger.info("LiveCalls: "+liveCalls);
+		int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+		assertEquals(0,liveCalls);
+		assertEquals(0, liveCallsArraySize);
+
 	}
 
 	@Test
@@ -361,6 +382,228 @@ public class DialRecordingTest {
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
 		assertTrue(duration==3.0);
+
+		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+		assertNotNull(metrics);
+		int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+		logger.info("LiveCalls: "+liveCalls);
+		int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+		assertEquals(0,liveCalls);
+		assertEquals(0, liveCallsArraySize);
+	}
+
+	final String recordCall = "<Response><Record timeout=\"15\" maxLength=\"60\"/></Response>";
+	@Test
+	public synchronized void testRecordCall() throws InterruptedException, ParseException {
+		stubFor(get(urlPathEqualTo("/1111"))
+				.willReturn(aResponse()
+						.withStatus(200)
+						.withHeader("Content-Type", "text/xml")
+						.withBody(recordCall)));
+
+		// Phone2 register as alice
+		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+		assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+		// Prepare second phone to receive call
+		SipCall aliceCall = alicePhone.createSipCall();
+		aliceCall.listenForIncomingCall();
+
+		// Create outgoing call with first phone
+		final SipCall bobCall = bobPhone.createSipCall();
+		bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+		assertLastOperationSuccess(bobCall);
+		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+		final int response = bobCall.getLastReceivedResponse().getStatusCode();
+		assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+		if (response == Response.TRYING) {
+			assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+			assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+		}
+
+		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+		bobCall.sendInviteOkAck();
+		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+
+		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+		assertNotNull(metrics);
+		int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+		logger.info("LiveCalls: "+liveCalls);
+		int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+		assertEquals(1,liveCalls);
+		assertEquals(1, liveCallsArraySize);
+
+		Thread.sleep(3000);
+
+		bobCall.disconnect();
+
+		Thread.sleep(3000);
+
+		//Check recording
+		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
+		assertNotNull(recording);
+		assertEquals(1, recording.size());
+		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
+		assertEquals(3.0, duration,1);
+
+		metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+		assertNotNull(metrics);
+		liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+		logger.info("LiveCalls: "+liveCalls);
+		liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+		assertEquals(0,liveCalls);
+		assertEquals(0, liveCallsArraySize);
+	}
+
+	final String recordCallWithAction = "<Response><Record timeout=\"15\" maxLength=\"60\" action=\"http://127.0.0.1:8090/record-action\"/></Response>";
+	final String hangupRcml = "<Response><Hangup/></Response>";
+	@Test
+	public synchronized void testRecordCallWithAction() throws InterruptedException, ParseException {
+		stubFor(get(urlPathEqualTo("/1111"))
+				.willReturn(aResponse()
+						.withStatus(200)
+						.withHeader("Content-Type", "text/xml")
+						.withBody(recordCallWithAction)));
+
+		stubFor(post(urlPathEqualTo("/record-action"))
+				.willReturn(aResponse()
+						.withStatus(200)
+						.withHeader("Content-Type", "text/xml")
+						.withBody(hangupRcml)));
+
+		// Create outgoing call with first phone
+		final SipCall bobCall = bobPhone.createSipCall();
+		bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+		assertLastOperationSuccess(bobCall);
+		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+		final int response = bobCall.getLastReceivedResponse().getStatusCode();
+		assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+		if (response == Response.TRYING) {
+			assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+			assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+		}
+
+		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+		bobCall.sendInviteOkAck();
+		DateTime start = DateTime.now();
+		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+
+		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+		assertNotNull(metrics);
+		int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+		logger.info("LiveCalls: "+liveCalls);
+		int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+		assertEquals(1,liveCalls);
+		assertEquals(1, liveCallsArraySize);
+
+		Thread.sleep(3000);
+
+		bobCall.disconnect();
+		DateTime end = DateTime.now();
+
+		Thread.sleep(500);
+
+		//Check recording
+		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
+		assertNotNull(recording);
+		assertEquals(1, recording.size());
+		double recordedDuration = (end.getMillis() - start.getMillis())/1000;
+		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
+		assertEquals(recordedDuration, duration,0);
+
+		logger.info("\n\n &&&&&& About to check liveCalls &&&&&& \n");
+
+		metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+		assertNotNull(metrics);
+		liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+		logger.info("LiveCalls: "+liveCalls);
+		liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+		assertEquals(0,liveCalls);
+		assertEquals(0, liveCallsArraySize);
+	}
+
+	@Test
+	public synchronized void testRecordCallWithActionWithMaxRecordingReached() throws InterruptedException, ParseException {
+		stubFor(get(urlPathEqualTo("/1111"))
+				.willReturn(aResponse()
+						.withStatus(200)
+						.withHeader("Content-Type", "text/xml")
+						.withBody(recordCallWithAction)));
+
+		stubFor(post(urlPathEqualTo("/record-action"))
+				.willReturn(aResponse()
+						.withStatus(200)
+						.withHeader("Content-Type", "text/xml")
+						.withBody(hangupRcml)));
+
+		// Create outgoing call with first phone
+		final SipCall bobCall = bobPhone.createSipCall();
+		bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+		assertLastOperationSuccess(bobCall);
+		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+		final int response = bobCall.getLastReceivedResponse().getStatusCode();
+		assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+		if (response == Response.TRYING) {
+			assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+			assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+		}
+
+		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+		bobCall.sendInviteOkAck();
+		DateTime start = DateTime.now();
+		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+
+		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+		assertNotNull(metrics);
+		int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+		logger.info("LiveCalls: "+liveCalls);
+		int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+		assertEquals(1,liveCalls);
+		assertEquals(1, liveCallsArraySize);
+
+		bobCall.listenForDisconnect();
+		assertTrue(bobCall.waitForDisconnect(70000));
+		assertTrue(bobCall.respondToDisconnect());
+		DateTime end = DateTime.now();
+
+		Thread.sleep(500);
+
+		//Check recording
+		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
+		assertNotNull(recording);
+		assertEquals(1, recording.size());
+		double recordedDuration = (end.getMillis() - start.getMillis())/1000;
+		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
+		assertEquals(recordedDuration, duration,0);
+
+		logger.info("\n\n &&&&&& About to check liveCalls &&&&&& \n");
+
+		metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+		assertNotNull(metrics);
+		liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+		logger.info("LiveCalls: "+liveCalls);
+		liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+		assertEquals(0,liveCalls);
+		assertEquals(0, liveCallsArraySize);
 	}
 
 	@Test

@@ -21,7 +21,6 @@
 package org.restcomm.connect.mrb;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -30,6 +29,7 @@ import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -66,7 +66,7 @@ import java.util.Set;
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
-public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
+public class ConferenceMediaResourceControllerGeneric extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -101,12 +101,10 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
     // Observer pattern
     protected final List<ActorRef> observers;
     protected ActorRef mrb;
-    protected ActorSystem system;
 
     public ConferenceMediaResourceControllerGeneric(ActorRef localMediaGateway, final Configuration configuration, final DaoManager storage, final ActorRef mrb){
         super();
         final ActorRef source = self();
-        this.system = context().system();
         // Initialize the states for the FSM.
         this.uninitialized = new State("uninitialized", null, null);
         this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(source), null);
@@ -382,7 +380,7 @@ public class ConferenceMediaResourceControllerGeneric extends UntypedActor{
                     return new MgcpMediaGroup(localMediaGateway, localMediaSession, localConfernceEndpoint);
                 }
             });
-            return system.actorOf(props);
+            return getContext().actorOf(props);
         }
 
         @Override

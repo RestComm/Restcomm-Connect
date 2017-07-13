@@ -81,6 +81,7 @@ import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -350,7 +351,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 
         URI statusCallback = null;
         String statusCallbackMethod = "POST";
-        List<String> statusCallbackEvent = new ArrayList<String>();
+        List<String> statusCallbackEvent = new LinkedList<String>();
         statusCallbackEvent.add("initiated");
         statusCallbackEvent.add("ringing");
         statusCallbackEvent.add("answered");
@@ -377,7 +378,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
                 statusCallbackMethod = data.getFirst("StatusCallbackMethod").trim();
             }
             if (data.containsKey("StatusCallbackEvent")) {
-                statusCallbackEvent = Arrays.asList(data.getFirst("StatusCallbackEvent").trim().split(","));
+                statusCallbackEvent.addAll(Arrays.asList(data.getFirst("StatusCallbackEvent").trim().split(",")));
             }
         }
 
