@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author maria.farooq@telestax.com (Maria Farooq)
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.MediaResourceBrokerDao">
+
+  <insert id="addMediaResourceBrokerEntity" parameterType="map">
+    INSERT INTO 
+    	"restcomm_media_resource_broker_entity" 
+    		("conference_sid", "slave_ms_id", "slave_ms_bridge_ep_id", "slave_ms_cnf_ep_id", 
+    		"is_bridged_together") 
+    	VALUES 
+    		(#{conference_sid}, #{slave_ms_id}, #{slave_ms_bridge_ep_id}, #{slave_ms_cnf_ep_id}, 
+    		#{is_bridged_together});
+  </insert>
+  
+  <select id="getMediaResourceBrokerEntities" resultType="hashmap">
+    SELECT * FROM "restcomm_media_resource_broker_entity";
+  </select>
+  
+  <select id="getConnectedSlaveEntitiesByConfSid" parameterType="string" resultType="hashmap">
+		SELECT * FROM "restcomm_media_resource_broker_entity" WHERE "conference_sid"=#{conference_sid} AND "is_bridged_together" is true;
+  </select>
+  <delete id="removeMediaResourceBrokerEntity" parameterType="org.restcomm.connect.dao.entities.MediaResourceBrokerEntityFilter">
+    DELETE FROM "restcomm_media_resource_broker_entity" WHERE "conference_sid"=#{conferenceSid} AND "slave_ms_id"=#{slaveMsId};
+  </delete>
+  
+  <update id="updateMediaResource" parameterType="map">
+    UPDATE "restcomm_media_resource_broker_entity" 
+    	SET "slave_ms_bridge_ep_id"=#{slave_ms_bridge_ep_id}, 
+    		"slave_ms_cnf_ep_id"=#{slave_ms_cnf_ep_id}, "is_bridged_together"=#{is_bridged_together}
+    WHERE "conference_sid"=#{conference_sid} AND "slave_ms_id"=#{slave_ms_id};
+  </update>
+
+</mapper>

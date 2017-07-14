@@ -19,14 +19,16 @@
  */
 package org.restcomm.connect.interpreter;
 
+import akka.actor.Actor;
 import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.pattern.AskTimeoutException;
 import akka.util.Timeout;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -50,7 +52,6 @@ import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.Notification;
@@ -108,7 +109,6 @@ import org.restcomm.connect.telephony.api.StartBridge;
 import org.restcomm.connect.telephony.api.StopBridge;
 import org.restcomm.connect.telephony.api.StopConference;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
-
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -117,7 +117,6 @@ import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
@@ -128,6 +127,7 @@ import java.util.Arrays;
 import java.util.Currency;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -171,8 +171,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private final State finished;
 
     // FSM.
-    // The conference manager.
-    private final ActorRef conferenceManager;
+    // The conference Ceneter.
+    private final ActorRef conferenceCenter;
 
     // State for outbound calls.
     private boolean isForking;
@@ -219,12 +219,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private String forwardedFrom;
     private Attribute action;
 
-    public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
-                            final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI viStatusCallback,
-                            final String statusCallbackMethod, final String referTarget, final String transferor, final String transferee,
-                            final String emailAddress, final ActorRef callManager,
-                            final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring, final String rcml,
-                            final boolean asImsUa, final String imsUaLogin, final String imsUaPassword) {
+    private String conferenceNameWithAccountAndFriendlyName;
+    private Sid callSid;
+
+    private VoiceInterpreter(VoiceInterpreterParams params) {
         super();
         final ActorRef source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
@@ -374,6 +372,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(acquiringConferenceInfo, hangingUp));
         transitions.add(new Transition(acquiringConferenceInfo, finished));
         transitions.add(new Transition(joiningConference, conferencing));
+        transitions.add(new Transition(joiningConference, acquiringConferenceInfo));
         transitions.add(new Transition(joiningConference, hangingUp));
         transitions.add(new Transition(joiningConference, finished));
         transitions.add(new Transition(conferencing, finishConferencing));
@@ -407,35 +406,44 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
         // Initialize the runtime stuff.
-        this.accountId = account;
-        this.phoneId = phone;
-        this.version = version;
-        this.url = url;
-        this.method = method;
-        this.fallbackUrl = fallbackUrl;
-        this.fallbackMethod = fallbackMethod;
-        this.viStatusCallback = viStatusCallback;
-        this.viStatusCallbackMethod = statusCallbackMethod;
-        this.referTarget = referTarget;
-        this.transferor = transferor;
-        this.transferee = transferee;
-        this.emailAddress = emailAddress;
-        this.configuration = configuration;
-        this.callManager = callManager;
-        this.conferenceManager = conferenceManager;
-        this.bridgeManager = bridgeManager;
-        this.smsService = sms;
+        this.accountId = params.getAccount();
+        this.phoneId = params.getPhone();
+        this.version = params.getVersion();
+        this.url = params.getUrl();
+        this.method = params.getMethod();
+        this.fallbackUrl = params.getFallbackUrl();
+        this.fallbackMethod = params.getFallbackMethod();
+        this.viStatusCallback = params.getStatusCallback();
+        this.viStatusCallbackMethod = params.getStatusCallbackMethod();
+        this.referTarget = params.getReferTarget();
+        this.transferor = params.getTransferor();
+        this.transferee = params.getTransferee();
+        this.emailAddress = params.getEmailAddress();
+        this.configuration = params.getConfiguration();
+        this.callManager = params.getCallManager();
+        this.conferenceCenter = params.getConferenceCenter();
+        this.bridgeManager = params.getBridgeManager();
+        this.smsService = params.getSmsService();
         this.smsSessions = new HashMap<Sid, ActorRef>();
-        this.storage = storage;
+        this.storage = params.getStorage();
         final Configuration runtime = configuration.subset("runtime-settings");
         playMusicForConference = Boolean.parseBoolean(runtime.getString("play-music-for-conference","false"));
         this.enable200OkDelay = this.configuration.subset("runtime-settings").getBoolean("enable-200-ok-delay",false);
         this.downloader = downloader();
-        this.monitoring = monitoring;
-        this.rcml = rcml;
-        this.asImsUa = asImsUa;
-        this.imsUaLogin = imsUaLogin;
-        this.imsUaPassword = imsUaPassword;
+        this.monitoring = params.getMonitoring();
+        this.rcml = params.getRcml();
+        this.asImsUa = params.isAsImsUa();
+        this.imsUaLogin = params.getImsUaLogin();
+        this.imsUaPassword = params.getImsUaPassword();
+    }
+
+    public static Props props(final VoiceInterpreterParams params) {
+        return new Props(new UntypedActorFactory() {
+            @Override
+            public Actor create() throws Exception {
+                return new VoiceInterpreter(params);
+            }
+        });
     }
 
     private boolean is(State state) {
@@ -595,7 +603,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     private void onConferenceCenterResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
-        if (is(startDialing)) {
+        if (is(startDialing) || is(joiningConference)) {
             ConferenceCenterResponse ccReponse = (ConferenceCenterResponse)message;
             if(ccReponse.succeeded()){
                 fsm.transition(message, acquiringConferenceInfo);
@@ -697,6 +705,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (!is(finished))
                     fsm.transition(message, finishConferencing);
                 break;
+            case STOPPING:
+                conferenceState = event.state();
+                if(is(joiningConference)){
+                    if(logger.isInfoEnabled()) {
+                        logger.info("We tried to join a stopping conference. Will ask Conference Center to create a new conference for us.");
+                    }
+                    final CreateConference create = new CreateConference(conferenceNameWithAccountAndFriendlyName, callSid);
+                    conferenceCenter.tell(create, self());
+                }
             default:
                 break;
         }
@@ -717,6 +734,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     private void onStopInterpreter(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         this.liveCallModification = ((StopInterpreter) message).isLiveCallModification();
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("Got StopInterpreter, liveCallModification %s, CallState %s", liveCallModification, callState);
+            logger.info(msg);
+        }
         if (CallStateChanged.State.IN_PROGRESS.equals(callState) && !liveCallModification) {
             fsm.transition(message, hangingUp);
         } else {
@@ -818,10 +839,18 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private void onEndMessage(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
         if (playWaitUrlPending && conferenceWaitUris != null && conferenceWaitUris.size() > 0) {
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("End tag received, playWaitUrlPending is %s, conferenceWaitUris.size() %d",playWaitUrlPending, conferenceWaitUris.size());
+                logger.info(msg);
+            }
             fsm.transition(conferenceWaitUris, conferencing);
             return;
         }
         if (callState.equals(CallStateChanged.State.COMPLETED) || callState.equals(CallStateChanged.State.CANCELED)) {
+            if(logger.isInfoEnabled()) {
+                String msg = String.format("End tag received, Call state %s , VI state %s will move to finished state",callState, fsm.state());
+                logger.info(msg);
+            }
             fsm.transition(message, finished);
         } else {
             if (!isParserFailed) {
@@ -1983,15 +2012,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     //https://github.com/RestComm/Restcomm-Connect/issues/1939
                     Sid conferenceAccountId = phoneId == null? accountId : phoneId;
                     buffer.append(conferenceAccountId.toString()).append(":").append(name);
-                    Sid sid = null;
+                    conferenceNameWithAccountAndFriendlyName = buffer.toString();
+                    callSid = null;
                     if (callInfo != null && callInfo.sid() != null) {
-                        sid = callInfo.sid();
+                        callSid = callInfo.sid();
                     }
-                    if (sid == null && callRecord != null) {
-                        sid = callRecord.getSid();
+                    if (callSid == null && callRecord != null) {
+                        callSid = callRecord.getSid();
                     }
-                    final CreateConference create = new CreateConference(buffer.toString(), sid);
-                    conferenceManager.tell(create, source);
+                    final CreateConference create = new CreateConference(conferenceNameWithAccountAndFriendlyName, callSid);
+                    conferenceCenter.tell(create, source);
                 } else {
                     // Handle forking.
                     dialBranches = new ArrayList<ActorRef>();
@@ -2050,7 +2080,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                 URI statusCallback = null;
                 String statusCallbackMethod = "POST";
-                List<String> statusCallbackEvent = null;
+                List<String> statusCallbackEvent = new LinkedList<String>();
 
                 if (child.hasAttribute("statusCallback")) {
                     statusCallback = new URI(child.attribute("statusCallback").value());
@@ -2060,9 +2090,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         statusCallbackMethod = child.attribute("statusCallbackMethod").value();
                     }
                     if (child.hasAttribute("statusCallbackEvent")) {
-                        statusCallbackEvent = Arrays.asList(child.attribute("statusCallbackEvent").value().replaceAll("\\s+","").split(","));
+                        statusCallbackEvent.addAll(Arrays.asList(child.attribute("statusCallbackEvent").value().replaceAll("\\s+","").split(",")));
                     } else {
-                        statusCallbackEvent = new ArrayList<String>();
+                        statusCallbackEvent = new LinkedList<String>();
                         statusCallbackEvent.add("initiated");
                         statusCallbackEvent.add("ringing");
                         statusCallbackEvent.add("answered");
@@ -2271,14 +2301,20 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     @SuppressWarnings("unchecked")
     private void executeDialAction(final Object message, final ActorRef outboundCall) {
-        if (!dialActionExecuted && verb != null && Verbs.dial.equals(verb.name())) {
+        Attribute attribute = null;
+        if (verb != null && Verbs.dial.equals(verb.name())) {
+            attribute = verb.attribute("action");
+        } else {
+            if (logger.isInfoEnabled()) {
+                logger.info("Either Verb is null OR not Dial, Dial Action will not be executed");
+            }
+        }
+        if (attribute != null && !dialActionExecuted) {
             if(logger.isInfoEnabled()){
                 logger.info("Proceeding to execute Dial Action attribute");
             }
             this.dialActionExecuted = true;
             final List<NameValuePair> parameters = parameters();
-
-            Attribute attribute = verb.attribute("action");
 
             if (call != null) {
                 try {
@@ -2444,9 +2480,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     return;
                 }
             }
-        } else if (verb == null) {
-            if(logger.isInfoEnabled()) {
-                logger.info("Dial action didn't executed because verb is null");
+        } else {
+            if (logger.isInfoEnabled()) {
+                if (attribute == null) {
+                    logger.info("DialAction URL is null, DialAction will not be executed");
+                } else {
+                    logger.info("DialAction has already been executed");
+                }
             }
         }
     }
@@ -2917,7 +2957,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 ConferenceStateChanged confStateChanged = (ConferenceStateChanged) message;
                 if (ConferenceStateChanged.State.COMPLETED.equals(confStateChanged.state())) {
                     DestroyConference destroyConference = new DestroyConference(conferenceInfo.name());
-                    conferenceManager.tell(destroyConference, super.source);
+                    conferenceCenter.tell(destroyConference, super.source);
                 }
             }
             conference = null;
@@ -2998,8 +3038,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             if (!dialActionExecuted) {
                 executeDialAction(message, outboundCall);
-                callback(true);
             }
+
+            callback(true);
+
             // XXX review bridge cleanup!!
 
             // Cleanup bridge
@@ -3067,7 +3109,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callManager.tell(new DestroyCall(call), super.source);
                 if (outboundCall != null) {
                     callManager.tell(new DestroyCall(outboundCall), super.source);
-                } if (sender != call) {
+                } if (sender != call && !sender.equals(self())) {
                     callManager.tell(new DestroyCall(sender), super.source);
                 }
             } else {
@@ -3119,7 +3161,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 call = null;
             }
 
-            system.stop(self());
+            getContext().stop(self());
             postCleanup();
         }
         if(asImsUa){
@@ -3186,7 +3228,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 method = "POST";
             }
 
-            final SubVoiceInterpreterBuilder builder = new SubVoiceInterpreterBuilder(system);
+            final SubVoiceInterpreterParams.Builder builder = new SubVoiceInterpreterParams.Builder();
             builder.setConfiguration(configuration);
             builder.setStorage(storage);
             builder.setCallManager(super.source);
@@ -3195,7 +3237,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             builder.setVersion(version);
             builder.setUrl(url);
             builder.setMethod(method);
-            return builder.build();
+
+            final Props props = SubVoiceInterpreter.props(builder.build());
+            return getContext().actorOf(props);
         }
 
         @Override

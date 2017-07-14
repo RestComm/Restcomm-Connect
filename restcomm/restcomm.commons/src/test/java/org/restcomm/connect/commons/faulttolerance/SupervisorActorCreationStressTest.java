@@ -16,9 +16,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.restcomm.connect.commons.faulttolerance.tool.ActorCreatingThread;
 
-import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
 
 /**
  * @author mariafarooq
@@ -46,7 +44,7 @@ public class SupervisorActorCreationStressTest {
         actorFailureCount = new AtomicInteger();
     }
 
-    @Test
+	@Test
 	public void testCreateSampleAkkaActor() throws ConfigurationException, MalformedURLException, UnknownHostException, InterruptedException {
     	ExecutorService executor = Executors.newFixedThreadPool(nThreads);
 		for (int i = 0; i < THREAD_COUNT; i++) {
