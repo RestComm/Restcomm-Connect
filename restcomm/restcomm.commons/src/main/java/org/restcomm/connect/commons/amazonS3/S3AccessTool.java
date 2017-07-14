@@ -125,7 +125,7 @@ public class S3AccessTool {
                     if (logger.isInfoEnabled()) {
                         logger.info("Will thread sleep for 1 minute simulating the long operation of FileUtils.waitFor");
                     }
-                    Thread.sleep(60000);
+                    Thread.sleep(6000);
                 } catch (Exception e) {
                     logger.error("Exception while sleepig simulating the long operation waiting for the file");
 
