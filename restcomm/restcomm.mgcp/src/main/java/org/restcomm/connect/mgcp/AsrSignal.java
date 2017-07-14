@@ -23,7 +23,7 @@ package org.restcomm.connect.mgcp;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
-import org.snmp4j.smi.OctetString;
+import org.apache.commons.codec.binary.Hex;
 
 import java.net.URI;
 import java.util.List;
@@ -104,7 +104,7 @@ public class AsrSignal {
         if (hotWords != null) {
             if (buffer.length() > 0)
                 buffer.append(SPACE_CHARACTER);
-            buffer.append("hw=").append(new OctetString(hotWords).toHexString());
+            buffer.append("hw=").append(Hex.encodeHexString(hotWords.getBytes()));
         }
         return buffer.toString();
     }

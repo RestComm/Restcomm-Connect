@@ -35,13 +35,14 @@ import jain.protocol.ip.mgcp.message.parms.RequestedEvent;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import jain.protocol.ip.mgcp.pkg.PackageName;
+import org.apache.commons.codec.DecoderException;
 import org.apache.commons.lang.StringUtils;
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
 import org.restcomm.connect.commons.dao.CollectedResult;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.StopObserving;
-import org.snmp4j.smi.OctetString;
+import org.apache.commons.codec.binary.Hex;
 
 import java.util.Map;
 
@@ -210,7 +211,12 @@ public final class IvrEndpoint extends GenericEndpoint {
                     if (parameters.containsKey("asrr")) {
                         String asrr = parameters.get("asrr");
                         if (!StringUtils.isEmpty(asrr)) {
-                            asrr = OctetString.fromHexString(asrr).toString();
+                            try {
+                                asrr = new String(Hex.decodeHex(asrr.toCharArray()));
+                            } catch (DecoderException e) {
+                                logger.error("asrr parameter cannot be decoded");
+                                fail(code);
+                            }
                         }
                         // Notify the observers that the event successfully completed.
                         final IvrEndpointResponse result = new IvrEndpointResponse(new CollectedResult(asrr, true, true));

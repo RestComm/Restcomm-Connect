@@ -39,7 +39,7 @@ import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
-import org.snmp4j.smi.OctetString;
+import org.apache.commons.codec.binary.Hex;
 
 import java.net.URI;
 import java.util.Collections;
@@ -55,7 +55,7 @@ import static org.junit.Assert.assertTrue;
 public class IvrAsrEndpointTest {
 
     private static final String ASR_RESULT_TEXT = "Super_text";
-    private static final String ASR_RESULT_TEXT_HEX = new OctetString(ASR_RESULT_TEXT).toHexString();
+    private static final String ASR_RESULT_TEXT_HEX = Hex.encodeHexString(ASR_RESULT_TEXT.getBytes());
     private static final String HINTS = "hint 1, hint 2";
 
     private static ActorSystem system;
