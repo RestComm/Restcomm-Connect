@@ -540,24 +540,49 @@ otherRestCommConf(){
     echo "End Rest RestComm configuration"
 }
 
-confRVD(){
-    echo "Configure RVD"
-	if [ -n "$RVD_LOCATION" ]; then
-  		echo "RVD_LOCATION $RVD_LOCATION"
-  		mkdir -p `echo $RVD_LOCATION`
-  		sed -i "s|<workspaceLocation>.*</workspaceLocation>|<workspaceLocation>${RVD_LOCATION}</workspaceLocation>|" $RVD_DEPLOY/WEB-INF/rvd.xml
-
-  		COPYFLAG=$RVD_LOCATION/.demos_initialized
-  		if [ -f "$COPYFLAG" ]; then
-   			#Do nothing, we already copied the demo file to the new workspace
-    		echo "RVD demo application are already copied"
-  		else
-    		echo "Will copy RVD demo applications to the new workspace $RVD_LOCATION"
-    		cp -ar $RVD_DEPLOY/workspace/* $RVD_LOCATION
-    		touch $COPYFLAG
-  		fi
-
+disableRVD() {
+	echo "disabling bundled RVD..."
+    if [ -f "$RVD_DEPLOY.deployed" ]; then
+		rm "$RVD_DEPLOY.deployed"
+    	echo "RVD un-deployed"
+	else
+		echo "RVD already not deployed"
 	fi
+}
+
+enableRVD() {
+    echo "enabling bundled RVD..."
+	if [ -f "$RVD_DEPLOY.deployed" ]; then
+		echo "RVD already deployed"
+	else
+		touch "$RVD_DEPLOY".dodeploy
+		echo "RVD enabled/deployed"
+	fi
+}
+
+confRVD(){
+    if [ -z "$RVD_URL" ]; then
+        enableRVD
+        echo "Configure bundled RVD"
+        if [ -n "$RVD_LOCATION" ]; then
+            echo "RVD_LOCATION $RVD_LOCATION"
+            mkdir -p `echo $RVD_LOCATION`
+            sed -i "s|<workspaceLocation>.*</workspaceLocation>|<workspaceLocation>${RVD_LOCATION}</workspaceLocation>|" $RVD_DEPLOY/WEB-INF/rvd.xml
+
+            COPYFLAG=$RVD_LOCATION/.demos_initialized
+            if [ -f "$COPYFLAG" ]; then
+                #Do nothing, we already copied the demo file to the new workspace
+                echo "RVD demo application are already copied"
+            else
+                echo "Will copy RVD demo applications to the new workspace $RVD_LOCATION"
+                cp -ar $RVD_DEPLOY/workspace/* $RVD_LOCATION
+                touch $COPYFLAG
+            fi
+
+        fi
+    else
+        disableRVD
+    fi
 }
 
 ## Adds/removes <rcmlserver>/<base-url> element based on $RVD_URL
