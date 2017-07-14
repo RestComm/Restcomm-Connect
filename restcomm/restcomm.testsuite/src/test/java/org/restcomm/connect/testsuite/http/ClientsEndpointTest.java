@@ -177,7 +177,7 @@ public class ClientsEndpointTest {
      */
     @Test
     public void createClientTestWithInvalidCharacters() throws ClientProtocolException, IOException, ParseException, InterruptedException {
-    	Client jersey = getClient(developerUsername, developeerAuthToken);
+        Client jersey = getClient(developerUsername, developeerAuthToken);
         WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
         params.add("Login","maria.test@telestax.com"); // login contains @ sign
@@ -185,6 +185,31 @@ public class ClientsEndpointTest {
         ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
         Assert.assertEquals(400, response.getStatus());
         Assert.assertTrue("Response should contain 'invalid' term", response.getEntity(String.class).toLowerCase().contains("invalid"));
+        // Alphanumeric login name check
+        params = new MultivaluedMapImpl();
+        params.add("Login","mbilal.testtelestax.com"); // login must be alphanumeric
+        params.add("Password","RestComm1234!");
+        response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(400, response.getStatus());
+    }
+
+    @Test
+    public void createClientTestWithEmptyorNull() throws ClientProtocolException, IOException, ParseException, InterruptedException {
+        Client jersey = getClient(developerUsername, developeerAuthToken);
+        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.add("Login","");
+        params.add("Password","RestComm1234!");
+        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(400, response.getStatus());
+        Assert.assertTrue("Response should contain 'null' term", response.getEntity(String.class).toLowerCase().contains("null"));
+        // Alphanumeric login name check
+        params = new MultivaluedMapImpl();
+        params.add("Login","mbilal.testtelestax.com"); // login must be alphanumeric
+        params.add("Password","");
+        response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(400, response.getStatus());
+        Assert.assertTrue("Response should contain 'null' term", response.getEntity(String.class).toLowerCase().contains("null"));
     }
 
     protected String getResourceUrl(String suffix) {

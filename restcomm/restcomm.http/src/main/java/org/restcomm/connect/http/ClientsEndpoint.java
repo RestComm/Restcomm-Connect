@@ -25,6 +25,7 @@ import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -190,7 +191,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         try {
             validate(data);
         } catch (final NullPointerException | IllegalArgumentException exception) {
-            return status(BAD_REQUEST).entity(exception.getMessage()).build();
+            return status(BAD_REQUEST).entity(buildErrorResponseBody(exception.getMessage(),responseType)).type(responseType).build();
         }
 
         // Issue 109: https://bitbucket.org/telestax/telscale-restcomm/issue/109
@@ -244,14 +245,15 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws RuntimeException {
-        if (!data.containsKey("Login")) {
+        if (!data.containsKey("Login") || StringUtils.isNullOrEmpty(data.getFirst("Login"))) {
             throw new NullPointerException("Login can not be null.");
-        } else if (!data.containsKey("Password")) {
+        } else if (!data.containsKey("Password") || StringUtils.isNullOrEmpty(data.getFirst("Password"))) {
             throw new NullPointerException("Password can not be null.");
         }
         // https://github.com/RestComm/Restcomm-Connect/issues/1979
-        if (data.getFirst("Login").contains("@")) {
-            throw new IllegalArgumentException("Login contains invalid character: @ "+data.getFirst("Login"));
+        if (!StringUtils.isAlphanumeric(data.getFirst("Login"))) {
+            throw new IllegalArgumentException(
+                    "Login contains invalid characters: only alphanumeric allowed  " + data.getFirst("Login"));
         }
     }
 

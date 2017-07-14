@@ -27,6 +27,9 @@ import java.util.regex.Pattern;
 
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
@@ -63,4 +66,13 @@ public final class StringUtils {
         } while (bytesRead != -1);
         return writer.getBuffer().toString();
     }
+
+    public static boolean isNullOrEmpty(final String text) {
+        return Strings.isNullOrEmpty(text);
+    }
+
+    public static boolean isAlphanumeric(final String text) {
+        return CharMatcher.JAVA_LETTER_OR_DIGIT.matchesAllOf(text);
+    }
+
 }
