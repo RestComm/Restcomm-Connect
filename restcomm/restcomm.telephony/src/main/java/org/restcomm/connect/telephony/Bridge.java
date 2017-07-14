@@ -21,19 +21,19 @@
 
 package org.restcomm.connect.telephony;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.restcomm.connect.telephony.api.BridgeStateChanged;
-import org.restcomm.connect.telephony.api.JoinCalls;
-import org.restcomm.connect.telephony.api.StartBridge;
-import org.restcomm.connect.telephony.api.StopBridge;
+import akka.actor.ActorRef;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.JoinCall;
 import org.restcomm.connect.mscontrol.api.messages.JoinComplete;
@@ -42,22 +42,22 @@ import org.restcomm.connect.mscontrol.api.messages.MediaServerControllerStateCha
 import org.restcomm.connect.mscontrol.api.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.restcomm.connect.mscontrol.api.messages.StartRecording;
 import org.restcomm.connect.mscontrol.api.messages.Stop;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.telephony.api.BridgeStateChanged;
 import org.restcomm.connect.telephony.api.BridgeStateChanged.BridgeState;
+import org.restcomm.connect.telephony.api.JoinCalls;
+import org.restcomm.connect.telephony.api.StartBridge;
+import org.restcomm.connect.telephony.api.StopBridge;
 
-import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *
  */
-public class Bridge extends UntypedActor {
+public class Bridge extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -83,11 +83,11 @@ public class Bridge extends UntypedActor {
     // Observer pattern
     private final List<ActorRef> observers;
 
-    public Bridge(final ActorRef mscontroller) {
+    public Bridge(MediaServerControllerFactory factory) {
         final ActorRef source = self();
 
         // Media Server Controller
-        this.mscontroller = mscontroller;
+        this.mscontroller = getContext().actorOf(factory.provideBridgeControllerProps());
 
         // States for the FSM
         this.uninitialized = new State("uninitialized", null, null);

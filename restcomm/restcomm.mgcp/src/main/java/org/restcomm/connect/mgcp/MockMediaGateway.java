@@ -47,8 +47,12 @@ import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.RevolvingCounter;
 
+import javax.sdp.SdpFactory;
+import javax.sdp.SdpParseException;
+import javax.sdp.SessionDescription;
 import java.net.InetAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,7 +60,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public class MockMediaGateway extends UntypedActor {
+public class MockMediaGateway extends RestcommUntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // Session description for the mock media gateway.
     private static final String sdp = "v=0\n" + "o=- 1362546170756 1 IN IP4 192.168.1.100\n" + "s=Mobicents Media Server\n"
@@ -363,14 +367,34 @@ public class MockMediaGateway extends UntypedActor {
         final ActorRef self = self();
         final ModifyConnection mdcx = (ModifyConnection) message;
         System.out.println(mdcx.toString());
-        final ReturnCode code = ReturnCode.Transaction_Executed_Normally;
-        final ModifyConnectionResponse response = new ModifyConnectionResponse(self, code);
-        final ConnectionDescriptor descriptor = new ConnectionDescriptor(sdp);
-        response.setLocalConnectionDescriptor(descriptor);
-        final int transaction = mdcx.getTransactionHandle();
-        response.setTransactionHandle(transaction);
-        System.out.println(response.toString());
-        sender.tell(response, self);
+        ReturnCode code;
+        SessionDescription sessionDescription = null;
+        boolean isNonValidSdp = false;
+        if (mdcx.getRemoteConnectionDescriptor()!=null) {
+            try {
+                sessionDescription = SdpFactory.getInstance().createSessionDescription(mdcx.getRemoteConnectionDescriptor().toString());
+                isNonValidSdp = sessionDescription.getSessionName().getValue().contains("NonValidSDP");
+            } catch (SdpParseException e) {
+                logger.error("Error while trying to get SDP from MDCX");
+            }
+        }
+        if (sessionDescription != null && isNonValidSdp) {
+            code = ReturnCode.Protocol_Error;
+            final ModifyConnectionResponse response = new ModifyConnectionResponse(self, code);
+            final int transaction = mdcx.getTransactionHandle();
+            response.setTransactionHandle(transaction);
+            System.out.println(response.toString());
+            sender.tell(response, self);
+        } else {
+            code = ReturnCode.Transaction_Executed_Normally;
+            final ModifyConnectionResponse response = new ModifyConnectionResponse(self, code);
+            final ConnectionDescriptor descriptor = new ConnectionDescriptor(sdp);
+            response.setLocalConnectionDescriptor(descriptor);
+            final int transaction = mdcx.getTransactionHandle();
+            response.setTransactionHandle(transaction);
+            System.out.println(response.toString());
+            sender.tell(response, self);
+        }
     }
 
     private void deleteConnection(final Object message, final ActorRef sender) {
@@ -430,10 +454,10 @@ public class MockMediaGateway extends UntypedActor {
         final int transaction = rqnt.getTransactionHandle();
         response.setTransactionHandle(transaction);
         try {
-            Thread.sleep(sleepTime);
+            Thread.sleep(sleepTime*10);
         } catch (InterruptedException e) {
         }
-        System.out.println(response.toString());
+        logger.info("About to send MockMediaGateway response: "+response.toString());
         sender.tell(response, self);
     }
 

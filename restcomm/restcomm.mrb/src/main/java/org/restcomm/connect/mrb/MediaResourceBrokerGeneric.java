@@ -33,6 +33,7 @@ import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.loader.ObjectFactory;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
@@ -43,7 +44,6 @@ import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
 import org.restcomm.connect.dao.entities.MediaServerEntity;
 import org.restcomm.connect.mgcp.MediaResourceBrokerResponse;
-import org.restcomm.connect.mgcp.PowerOffMediaGateway;
 import org.restcomm.connect.mgcp.PowerOnMediaGateway;
 import org.restcomm.connect.mrb.api.GetConferenceMediaResourceController;
 import org.restcomm.connect.mrb.api.GetMediaGateway;
@@ -55,14 +55,13 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
-public class MediaResourceBrokerGeneric extends UntypedActor{
+public class MediaResourceBrokerGeneric extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -145,7 +144,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
         });
-        return context().system().actorOf(props);
+        return getContext().actorOf(props);
     }
 
     /**
@@ -202,7 +201,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
                 return new ConferenceMediaResourceControllerGeneric(localMediaGateway, configuration, storage, self());
             }
         });
-        return context().system().actorOf(props);
+        return getContext().actorOf(props);
     }
 
     /**
@@ -378,15 +377,7 @@ public class MediaResourceBrokerGeneric extends UntypedActor{
 
     protected void cleanup() {
         try {
-            if(mediaGatewayMap != null){
-                Iterator<String> gatewayKeys = mediaGatewayMap.keySet().iterator();
-                while (gatewayKeys.hasNext()){
-                    ActorRef mg = mediaGatewayMap.get(gatewayKeys.next());
-                    mg.tell(new PowerOffMediaGateway(), self());
-                }
-            }
             if (mgcpStack != null){
-                mgcpStack.deleteProvider(mgcpProvider);
                 mgcpStack = null;
             }
             mediaGatewayMap = null;

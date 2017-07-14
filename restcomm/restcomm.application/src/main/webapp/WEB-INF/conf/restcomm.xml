@@ -74,6 +74,31 @@
 			<account></account>
 		</ims-authentication>
 
+		<!-- If set to true, Restcomm will proxy out any call that doesn't match hosted Voice Application, to the proxy address:port -->
+		<!-- using Dial SIP. If username and password are provided it will be added as part of the Dial SIP URI-->
+		<!-- Using this feature, Restcomm will keep RMS in the path-->
+		<acting-as-proxy>
+			<enabled>false</enabled>
+			<!-- If set to true, From header will be used to extract the From URI, otherwise Contact header will be used-->
+			<use-from-header>true</use-from-header>
+			<proxy-rules>
+				<rule>
+					<from-uri></from-uri>
+					<to-uri></to-uri>
+					<!-- Optionally provide username -->
+					<proxy-to-username></proxy-to-username>
+					<proxy-to-password></proxy-to-password>
+				</rule>
+				<rule>
+					<from-uri></from-uri>
+					<to-uri></to-uri>
+					<!-- Optionally provide username -->
+					<proxy-to-username></proxy-to-username>
+					<proxy-to-password></proxy-to-password>
+				</rule>
+			</proxy-rules>
+		</acting-as-proxy>
+
 		<!-- Interval time in seconds that Restcomm will send keepalive messages (OPTIONS) to registered clients -->
 		<ping-interval>60</ping-interval>
 

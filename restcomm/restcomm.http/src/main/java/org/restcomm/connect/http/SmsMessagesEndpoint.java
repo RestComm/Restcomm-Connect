@@ -37,6 +37,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.SmsMessagesDao;
@@ -77,13 +78,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static akka.pattern.Patterns.ask;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.MediaType.*;
+import static javax.ws.rs.core.Response.Status.*;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 
@@ -391,7 +387,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         return system.actorOf(props);
     }
 
-    private final class SmsSessionObserver extends UntypedActor {
+    private final class SmsSessionObserver extends RestcommUntypedActor {
         public SmsSessionObserver() {
             super();
         }

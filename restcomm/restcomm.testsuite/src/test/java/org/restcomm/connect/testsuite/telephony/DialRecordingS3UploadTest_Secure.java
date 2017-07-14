@@ -3,6 +3,7 @@ package org.restcomm.connect.testsuite.telephony;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -24,6 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
+import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
@@ -36,6 +38,7 @@ import java.util.List;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
@@ -237,7 +240,7 @@ public class DialRecordingS3UploadTest_Secure {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(3.0, duration, 0);
+		assertEquals(3.0, duration, 1.0);
 		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
 		//Since we are in secure mode the s3_uri shouldn't be here
@@ -339,6 +342,171 @@ public class DialRecordingS3UploadTest_Secure {
 		verify(1, putRequestedFor(urlMatching("/s3/.*")));
 	}
 
+	final String recordCall = "<Response><Record timeout=\"15\" maxLength=\"60\"/></Response>";
+	@Test
+	public synchronized void testRecordCall() throws InterruptedException, ParseException {
+		stubFor(get(urlPathEqualTo("/1111"))
+				.willReturn(aResponse()
+						.withStatus(200)
+						.withHeader("Content-Type", "text/xml")
+						.withBody(recordCall)));
+
+		stubFor(put(urlPathEqualTo("/s3"))
+				.willReturn(aResponse()
+								.withStatus(200)
+								.withHeader("x-amz-id-2","LriYPLdmOdAiIfgSm/F1YsViT1LW94/xUQxMsF7xiEb1a0wiIOIxl+zbwZ163pt7")
+								.withHeader("x-amz-request-id","0A49CE4060975EAC")
+								.withHeader("Date", DateTime.now().toString())
+								.withHeader("x-amz-expiration", "expiry-date="+DateTime.now().plusDays(3).toString()+"\", rule-id=\"1\"")
+//							.withHeader("ETag", "1b2cf535f27731c974343645a3985328")
+								.withHeader("Server", "AmazonS3")
+				));
+
+		// Phone2 register as alice
+		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+		assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+		// Prepare second phone to receive call
+		SipCall aliceCall = alicePhone.createSipCall();
+		aliceCall.listenForIncomingCall();
+
+		// Create outgoing call with first phone
+		final SipCall bobCall = bobPhone.createSipCall();
+		bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+		assertLastOperationSuccess(bobCall);
+		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+		final int response = bobCall.getLastReceivedResponse().getStatusCode();
+		assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+		if (response == Response.TRYING) {
+			assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+			assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+		}
+
+		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+		bobCall.sendInviteOkAck();
+		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+
+		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+		assertNotNull(metrics);
+		int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+		logger.info("LiveCalls: "+liveCalls);
+		int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+		assertEquals(1,liveCalls);
+		assertEquals(1, liveCallsArraySize);
+
+		Thread.sleep(3000);
+
+		bobCall.disconnect();
+
+		Thread.sleep(3000);
+
+		//Check recording
+		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
+		assertNotNull(recording);
+		assertEquals(1, recording.size());
+		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
+		assertEquals(3.0, duration,1);
+		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
+
+		//Since we are in secure mode the s3_uri shouldn't be here
+		assertNull(recording.get(0).getAsJsonObject().get("s3_uri"));
+
+		//Verify S3 Upload
+		List<LoggedRequest> requests = findAll(putRequestedFor(urlMatching("/s3/.*")));
+		assertEquals(1, requests.size());
+		verify(1, putRequestedFor(urlMatching("/s3/.*")));
+
+		metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+		assertNotNull(metrics);
+		liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+		logger.info("LiveCalls: "+liveCalls);
+		liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+		assertEquals(0,liveCalls);
+		assertEquals(0, liveCallsArraySize);
+	}
+
+	final String recordCallWithAction = "<Response><Record timeout=\"15\" maxLength=\"60\" action=\"http://127.0.0.1:8090/record-action\"/></Response>";
+	final String hangupRcml = "<Response><Hangup/></Response>";
+	@Test
+	public synchronized void testRecordCallWithAction() throws InterruptedException, ParseException {
+		stubFor(get(urlPathEqualTo("/1111"))
+				.willReturn(aResponse()
+						.withStatus(200)
+						.withHeader("Content-Type", "text/xml")
+						.withBody(recordCallWithAction)));
+
+		stubFor(post(urlPathEqualTo("/record-action"))
+				.willReturn(aResponse()
+						.withStatus(200)
+						.withHeader("Content-Type", "text/xml")
+						.withBody(hangupRcml)));
+
+		// Create outgoing call with first phone
+		final SipCall bobCall = bobPhone.createSipCall();
+		bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+		assertLastOperationSuccess(bobCall);
+		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+		final int response = bobCall.getLastReceivedResponse().getStatusCode();
+		assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+		if (response == Response.TRYING) {
+			assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+			assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+		}
+
+		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+		bobCall.sendInviteOkAck();
+		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+
+		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+		assertNotNull(metrics);
+		int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+		logger.info("LiveCalls: "+liveCalls);
+		int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+		assertEquals(1,liveCalls);
+		assertEquals(1, liveCallsArraySize);
+
+		Thread.sleep(3000);
+
+		bobCall.disconnect();
+
+		Thread.sleep(3000);
+
+		//Check recording
+		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
+		assertNotNull(recording);
+		assertEquals(1, recording.size());
+		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
+		assertEquals(3.0, duration,1);
+		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
+
+		//Since we are in secure mode the s3_uri shouldn't be here
+		assertNull(recording.get(0).getAsJsonObject().get("s3_uri"));
+
+		//Verify S3 Upload
+		List<LoggedRequest> requests = findAll(putRequestedFor(urlMatching("/s3/.*")));
+		assertEquals(1, requests.size());
+		verify(1, putRequestedFor(urlMatching("/s3/.*")));
+
+		metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+		assertNotNull(metrics);
+		liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+		logger.info("LiveCalls: "+liveCalls);
+		liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+		assertEquals(0,liveCalls);
+		assertEquals(0, liveCallsArraySize);
+	}
 
 	@Deployment(name = "DialRecordingS3UploadTest_Secure", managed = true, testable = false)
 	public static WebArchive createWebArchiveNoGw() {
