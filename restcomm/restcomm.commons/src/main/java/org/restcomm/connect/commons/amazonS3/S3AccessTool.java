@@ -120,6 +120,17 @@ public class S3AccessTool {
             }
 
             while (!FileUtils.waitFor(file, 30)){}
+            if (testing) {
+                try {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Will thread sleep for 1 minute simulating the long operation of FileUtils.waitFor");
+                    }
+                    Thread.sleep(60000);
+                } catch (Exception e) {
+                    logger.error("Exception while sleepig simulating the long operation waiting for the file");
+
+                }
+            }
             if (file.exists()) {
                 PutObjectRequest putRequest = new PutObjectRequest(bucket.toString(), file.getName(), file);
                 ObjectMetadata metadata = new ObjectMetadata();
