@@ -236,7 +236,7 @@ public class DialRecordingS3UploadTest_Secure {
 		assertTrue(aliceCall.waitForDisconnect(30 * 1000));
 		assertTrue(aliceCall.respondToDisconnect());
 
-		Thread.sleep(1000);
+		Thread.sleep(7000);
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
 		assertNotNull(recording);
@@ -327,7 +327,7 @@ public class DialRecordingS3UploadTest_Secure {
 		assertTrue(bobCall.waitForDisconnect(30 * 1000));
 		assertTrue(bobCall.respondToDisconnect());
 
-		Thread.sleep(500);
+		Thread.sleep(7000);
 
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
@@ -407,7 +407,7 @@ public class DialRecordingS3UploadTest_Secure {
 
 		bobCall.disconnect();
 
-		Thread.sleep(3000);
+		Thread.sleep(7000);
 
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
@@ -484,7 +484,7 @@ public class DialRecordingS3UploadTest_Secure {
 
 		bobCall.disconnect();
 
-		Thread.sleep(3000);
+		Thread.sleep(7000);
 
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
@@ -572,7 +572,7 @@ public class DialRecordingS3UploadTest_Secure {
 		assertTrue(bobCall.respondToDisconnect());
 		DateTime end = DateTime.now();
 
-		Thread.sleep(500);
+		Thread.sleep(7000);
 
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
