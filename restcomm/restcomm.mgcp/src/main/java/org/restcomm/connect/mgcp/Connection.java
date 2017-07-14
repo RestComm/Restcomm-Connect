@@ -19,23 +19,8 @@
  */
 package org.restcomm.connect.mgcp;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import org.restcomm.connect.commons.fsm.Action;
-import org.restcomm.connect.commons.fsm.FiniteStateMachine;
-import org.restcomm.connect.commons.fsm.State;
-import org.restcomm.connect.commons.fsm.Transition;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
-
 import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -54,12 +39,26 @@ import jain.protocol.ip.mgcp.message.parms.LocalOptionExtension;
 import jain.protocol.ip.mgcp.message.parms.LocalOptionValue;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
+import org.restcomm.connect.commons.fsm.Action;
+import org.restcomm.connect.commons.fsm.FiniteStateMachine;
+import org.restcomm.connect.commons.fsm.State;
+import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
 import scala.concurrent.duration.Duration;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class Connection extends UntypedActor {
+public final class Connection extends RestcommUntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // Finite state machine stuff.
     private final State uninitialized;
@@ -85,6 +84,7 @@ public final class Connection extends UntypedActor {
     private ActorRef endpoint;
     private EndpointIdentifier endpointId;
     private ConnectionIdentifier connId;
+    private ConnectionIdentifier requestedConnId;
     private ConnectionDescriptor localDesc;
     private ConnectionDescriptor remoteDesc;
     private boolean webrtc;
@@ -198,6 +198,11 @@ public final class Connection extends UntypedActor {
                     fsm.transition(message, open);
                 }
             } else {
+                String err = String.format(
+                        "MGCP Transaction did not executed normally: session: %s | endpointId: %s | requestedConnId: %s | connId: %s",
+                        session.id() + "", endpointId == null ? "null" : endpointId.getLocalEndpointName(),
+                        requestedConnId, connId);
+                logger.error(err);
                 if (modifying.equals(state)) {
                     fsm.transition(message, closing);
                 } else {
@@ -270,7 +275,11 @@ public final class Connection extends UntypedActor {
             log(ConnectionStateChanged.State.CLOSED);
             // If we timed out log it.
             if (message instanceof ReceiveTimeout) {
-                logger.error("The media gateway failed to respond in the requested timout period.");
+                String err = String.format(
+                        "The media gateway failed to respond in the requested timout period. session: %s | endpointId: %s | requestedConnId: %s | connId: %s",
+                        session.id() + "", endpointId == null ? "null" : endpointId.getLocalEndpointName(),
+                        requestedConnId, connId);
+                logger.error(err);
             }
         }
     }
@@ -435,7 +444,7 @@ public final class Connection extends UntypedActor {
             final UpdateConnection request = (UpdateConnection) message;
             final String sessionId = Integer.toString(session.id());
             final CallIdentifier callId = new CallIdentifier(sessionId);
-            ConnectionIdentifier requestedConnId = request.connectionIdentifier();
+            requestedConnId = request.connectionIdentifier();
             requestedConnId = requestedConnId==null ? connId:requestedConnId;
             final ModifyConnection mdcx = new ModifyConnection(source, callId, endpointId, requestedConnId);
             final ConnectionMode mode = request.mode();

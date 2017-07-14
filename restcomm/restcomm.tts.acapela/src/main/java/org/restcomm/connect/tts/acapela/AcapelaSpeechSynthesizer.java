@@ -19,13 +19,9 @@
  */
 package org.restcomm.connect.tts.acapela;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import akka.actor.ActorRef;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -37,22 +33,25 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.restcomm.connect.commons.cache.HashGenerator;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
+import org.restcomm.connect.commons.util.HttpUtils;
 import org.restcomm.connect.tts.api.GetSpeechSynthesizerInfo;
 import org.restcomm.connect.tts.api.SpeechSynthesizerException;
 import org.restcomm.connect.tts.api.SpeechSynthesizerInfo;
 import org.restcomm.connect.tts.api.SpeechSynthesizerRequest;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
-import org.restcomm.connect.commons.util.HttpUtils;
 
-import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class AcapelaSpeechSynthesizer extends UntypedActor {
+public final class AcapelaSpeechSynthesizer extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 

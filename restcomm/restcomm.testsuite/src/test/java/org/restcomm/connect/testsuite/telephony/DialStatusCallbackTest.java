@@ -52,7 +52,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
@@ -640,7 +642,7 @@ public class DialStatusCallbackTest {
         assertTrue(aliceCall.waitForDisconnect(5000));
         assertTrue(aliceCall.respondToDisconnect());
 
-        Thread.sleep(10000);
+        Thread.sleep(12000);
 
         logger.info("About to check the StatusCallback Requests");
         List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/status.*")));
@@ -946,7 +948,7 @@ public class DialStatusCallbackTest {
 
         assertTrue(alicePhone.unregister(aliceContact, 3600));
 
-        Thread.sleep(10000);
+        Thread.sleep(12000);
 
         logger.info("About to check the StatusCallback Requests");
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/status.*")));
@@ -1094,7 +1096,7 @@ public class DialStatusCallbackTest {
 
         assertTrue(alicePhone.unregister(aliceContact, 3600));
 
-        Thread.sleep(10000);
+        Thread.sleep(12000);
 
         logger.info("About to check the StatusCallback Requests");
         List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/status.*")));
@@ -1578,7 +1580,30 @@ public class DialStatusCallbackTest {
 
         logger.info("About to check the StatusCallback Requests");
         requests = findAll(getRequestedFor(urlPathMatching("/status.*")));
+        Map<String, String> requestMap = getRequestMap(requests);
         assertEquals(13, requests.size());
+    }
+
+    private Map<String, String> getRequestMap(final List<LoggedRequest> requestList) {
+        Map<String, String> resultMap = new HashMap<String, String>();
+        for(LoggedRequest request: requestList) {
+            String[] tokens = request.getUrl().split("&");
+            String to = null;
+            String callStatus = null;
+            for (String token: tokens) {
+                if (token.contains("To")) {
+                    to = token;
+                }
+                if (token.contains("SequenceNumber")) {
+                    to = to+token;
+                }
+                if (token.contains("CallStatus")) {
+                    callStatus = token;
+                }
+            }
+            resultMap.put(to,callStatus);
+        }
+        return resultMap;
     }
 
     @Deployment(name = "DialAction", managed = true, testable = false)

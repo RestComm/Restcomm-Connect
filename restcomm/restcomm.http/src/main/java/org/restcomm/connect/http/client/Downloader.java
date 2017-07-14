@@ -20,7 +20,6 @@
 package org.restcomm.connect.http.client;
 
 import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import org.apache.http.Header;
@@ -38,8 +37,9 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.common.http.CustomHttpClientBuilder;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.StringUtils;
 import org.xml.sax.InputSource;
 
@@ -57,7 +57,7 @@ import java.util.List;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class Downloader extends UntypedActor {
+public final class Downloader extends RestcommUntypedActor {
 
     public static final int LOGGED_RESPONSE_MAX_SIZE = 100;
 

@@ -21,7 +21,7 @@
 
 package org.restcomm.connect.mscontrol.api;
 
-import akka.actor.ActorRef;
+import akka.actor.Props;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -30,24 +30,24 @@ import akka.actor.ActorRef;
 public interface MediaServerControllerFactory {
 
     /**
-     * Provides a new Media Server Controller for a Call.
+     * Provides a new Media Server Controller Props for a Call.
      *
-     * @return The media server controller
+     * @return The media server controller props
      */
-    ActorRef provideCallController();
+    Props provideCallControllerProps();
 
     /**
-     * Provides a new Media Server Controller for a Conference.
+     * Provides a new Media Server Controller Props for a Conference.
      *
-     * @return The media server controller
+     * @return The media server controller props
      */
-    ActorRef provideConferenceController();
+    Props provideConferenceControllerProps();
 
     /**
-     * Provides a new Media Server Controller for a Bridge.
+     * Provides a new Media Server Controller Props for a Bridge.
      *
-     * @return The media server controller
+     * @return The media server controller props
      */
-    ActorRef provideBridgeController();
+    Props provideBridgeControllerProps();
 
 }
