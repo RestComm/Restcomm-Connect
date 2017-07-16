@@ -220,6 +220,29 @@
 				<permission>RestComm:*:Usage</permission>
 				<permission>RestComm:*:Geolocation</permission>
 			</role>
+            <role name="DeveloperUssd">
+                <permission>RestComm:*:Accounts</permission>
+                <permission>RestComm:*:Applications</permission>
+                <permission>RestComm:*:Announcements</permission>
+                <permission>RestComm:Read:AvailablePhoneNumbers</permission>
+                <permission>RestComm:*:Calls</permission>
+                <permission>RestComm:*:Clients</permission>
+                <permission>RestComm:*:Conferences</permission>
+                <permission>RestComm:Create,Delete,Read:Faxes</permission>
+                <permission>RestComm:*:IncomingPhoneNumbers</permission>
+                <permission>RestComm:Read:Notifications</permission>
+                <permission>RestComm:*:OutgoingCallerIds</permission>
+                <permission>RestComm:Delete,Read:Recordings</permission>
+                <permission>RestComm:Read,Modify:SandBoxes</permission>
+                <permission>RestComm:*:ShortCodes</permission>
+                <permission>RestComm:Read:SmsMessages</permission>
+                <permission>RestComm:Read:Transcriptions</permission>
+                <permission>RestComm:*:OutboundProxies</permission>
+                <permission>RestComm:*:EmailMessages</permission>
+                <permission>RestComm:*:Usage</permission>
+                <permission>RestComm:*:Geolocation</permission>
+                <permission>RestComm:*:Ussd</permission>
+            </role>
 		</security-roles>
 	</runtime-settings>
 

@@ -33,8 +33,7 @@ import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
 import org.restcomm.connect.http.converter.ExtensionConfigurationConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.exceptions.InsufficientPermission;
-
+import org.restcomm.connect.common.exceptions.InsufficientPermission;
 import javax.annotation.PostConstruct;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;

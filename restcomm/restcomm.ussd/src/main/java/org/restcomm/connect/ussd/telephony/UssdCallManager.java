@@ -47,6 +47,7 @@ import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreter;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreterParams;
+import org.restcomm.connect.identity.permissions.PermissionsUtil;
 
 import javax.servlet.ServletContext;
 import javax.servlet.sip.ServletParseException;
@@ -85,6 +86,7 @@ public class UssdCallManager extends RestcommUntypedActor {
     private boolean useTo;
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+    private PermissionsUtil permissionsUtil;
 
     /**
      * @param configuration
@@ -105,6 +107,7 @@ public class UssdCallManager extends RestcommUntypedActor {
         this.ussdGatewayUri = ussdGatewayConfig.getString("ussd-gateway-uri");
         this.ussdGatewayUsername = ussdGatewayConfig.getString("ussd-gateway-user");
         this.ussdGatewayPassword = ussdGatewayConfig.getString("ussd-gateway-password");
+        permissionsUtil = PermissionsUtil.getInstance(this.context);
     }
 
     private ActorRef ussdCall() {
@@ -136,6 +139,12 @@ public class UssdCallManager extends RestcommUntypedActor {
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
+        try {
+            permissionsUtil.checkPermission("Restcomm:*:Ussd");
+        } catch (Exception e) {
+            logger.debug("No permission for USSD feature "+e);
+            return;
+        }
         if (message instanceof SipServletRequest) {
             final SipServletRequest request = (SipServletRequest) message;
             final String method = request.getMethod();

@@ -35,18 +35,20 @@ import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
-import org.restcomm.connect.http.exceptions.AuthorizationException;
-import org.restcomm.connect.http.exceptions.InsufficientPermission;
+import org.restcomm.connect.commons.exceptions.AuthorizationException;
+import org.restcomm.connect.commons.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.NotAuthenticated;
 import org.restcomm.connect.http.exceptions.OperatedAccountMissing;
 import org.restcomm.connect.identity.AuthOutcome;
 import org.restcomm.connect.identity.IdentityContext;
 import org.restcomm.connect.identity.UserIdentityContext;
+import org.restcomm.connect.identity.permissions.PermissionsUtil;
 import org.restcomm.connect.identity.shiro.RestcommRoles;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
+
 import java.util.List;
 import java.util.Set;
 
@@ -84,6 +86,10 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     //List of extensions for RestAPI
     protected List<RestcommExtensionGeneric> extensions;
 
+    private PermissionsUtil permissionUtil;
+
+
+
     public SecuredEndpoint() {
         super();
     }
@@ -106,6 +112,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
                 logger.info("RestAPI extensions: "+(extensions != null ? extensions.size() : "0"));
             }
         }
+        permissionUtil = PermissionsUtil.getInstance(this.context);
     }
 
     /**
@@ -148,14 +155,13 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      */
     protected void checkPermission(final String permission) {
         //checkAuthenticatedAccount(); // ok there is a valid authenticated account
-        if ( checkPermission(permission, userIdentityContext.getEffectiveAccountRoles()) != AuthOutcome.OK )
-            throw new InsufficientPermission();
+        permissionUtil.checkPermission(permission);
     }
 
     // boolean overloaded form of checkAuthenticatedAccount(permission)
     protected boolean isSecuredByPermission(final String permission) {
         try {
-            checkPermission(permission);
+            permissionUtil.checkPermission(permission);
             return true;
         } catch (AuthorizationException e) {
             return false;
@@ -176,7 +182,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     protected void secure(final Account operatedAccount, final String permission, SecuredType type) throws AuthorizationException {
         checkAuthenticatedAccount();
-        checkPermission(permission); // check an authenticated account allowed to do "permission" is available
+        permissionUtil.checkPermission(permission); // check an authenticated account allowed to do "permission" is available
         if (operatedAccount == null) {
             // if operatedAccount is NULL, we'll probably return a 404. But let's handle that in a central place.
             throw new OperatedAccountMissing();
@@ -251,40 +257,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @return
      */
     private AuthOutcome checkPermission(String neededPermissionString, Set<String> roleNames) {
-        // if this is an administrator ask no more questions
-        if ( roleNames.contains(getAdministratorRole()))
-            return AuthOutcome.OK;
-
-        // normalize the permission string
-        //neededPermissionString = "domain:" + neededPermissionString;
-
-        WildcardPermissionResolver resolver = new WildcardPermissionResolver();
-        Permission neededPermission = resolver.resolvePermission(neededPermissionString);
-
-        // check the neededPermission against all roles of the user
-        RestcommRoles restcommRoles = identityContext.getRestcommRoles();
-        for (String roleName: roleNames) {
-            SimpleRole simpleRole = restcommRoles.getRole(roleName);
-            if ( simpleRole == null) {
-                return AuthOutcome.FAILED;
-            }
-            else {
-                Set<Permission> permissions = simpleRole.getPermissions();
-                // check the permissions one by one
-                for (Permission permission: permissions) {
-                    if (permission.implies(neededPermission)) {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("Granted access by permission " + permission.toString());
-                        }
-                        return AuthOutcome.OK;
-                    }
-                }
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Role " + roleName + " does not allow " + neededPermissionString);
-                }
-            }
-        }
-        return AuthOutcome.FAILED;
+        return permissionUtil.checkPermission(neededPermissionString, roleNames);
     }
 
     /**

@@ -72,6 +72,14 @@ public class UserIdentityContext {
             effectiveAccountRoles = extractAccountRoles(effectiveAccount);
     }
 
+    public UserIdentityContext(Account effectiveAccount, AccountsDao accountsDao) {
+        this.accountsDao = accountsDao;
+        this.accountKey = null;
+        this.effectiveAccount = effectiveAccount;
+        if (effectiveAccount != null)
+            effectiveAccountRoles = extractAccountRoles(effectiveAccount);
+    }
+
     private Set<String> extractAccountRoles(Account account) {
         if (account == null)
             return null;
