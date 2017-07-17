@@ -20,33 +20,31 @@
 
 package org.restcomm.connect.tts.att;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
+import akka.actor.ActorRef;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import naturalvoices.ClientPlayer;
 import naturalvoices.Player;
-
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.cache.HashGenerator;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.tts.api.GetSpeechSynthesizerInfo;
 import org.restcomm.connect.tts.api.SpeechSynthesizerException;
 import org.restcomm.connect.tts.api.SpeechSynthesizerInfo;
 import org.restcomm.connect.tts.api.SpeechSynthesizerRequest;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
 
-import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-public final class AttSpeechSynthesizer extends UntypedActor {
+public final class AttSpeechSynthesizer extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private final Map<String, String> men;
