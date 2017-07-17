@@ -240,7 +240,7 @@ public class DialRecordingS3UploadTest_Secure {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(3.0, duration, 0);
+		assertEquals(3.0, duration, 1.0);
 		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
 		//Since we are in secure mode the s3_uri shouldn't be here
@@ -410,7 +410,7 @@ public class DialRecordingS3UploadTest_Secure {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(6.0, duration,1);
+		assertEquals(3.0, duration,1);
 		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
 		//Since we are in secure mode the s3_uri shouldn't be here
@@ -487,7 +487,7 @@ public class DialRecordingS3UploadTest_Secure {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(6.0, duration,1);
+		assertEquals(3.0, duration,1);
 		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
 		//Since we are in secure mode the s3_uri shouldn't be here

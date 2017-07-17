@@ -38,7 +38,9 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.commons.telephony.ProxyRule;
@@ -64,9 +66,11 @@ import org.restcomm.connect.extension.api.IExtensionCreateCallRequest;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
+import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.interpreter.StopInterpreter;
-import org.restcomm.connect.interpreter.VoiceInterpreterBuilder;
+import org.restcomm.connect.interpreter.VoiceInterpreter;
+import org.restcomm.connect.interpreter.VoiceInterpreterParams;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.telephony.api.CallInfo;
@@ -125,12 +129,7 @@ import java.util.regex.Pattern;
 
 import static akka.pattern.Patterns.ask;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_ACCEPTED;
-import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_SERVER_INTERNAL_ERROR;
+import static javax.servlet.sip.SipServletResponse.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -138,7 +137,7 @@ import static javax.servlet.sip.SipServletResponse.SC_SERVER_INTERNAL_ERROR;
  * @author jean.deruelle@telestax.com
  * @author gvagenas@telestax.com
  */
-public final class CallManager extends UntypedActor {
+public final class CallManager extends RestcommUntypedActor {
 
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
@@ -372,7 +371,7 @@ public final class CallManager extends UntypedActor {
 
                 @Override
                 public UntypedActor create() throws Exception {
-                    return new Call(sipFactory, msControllerFactory.provideCallController(), configuration,
+                    return new Call(sipFactory, msControllerFactory, configuration,
                             null, null, null, null);
                 }
             });
@@ -382,12 +381,12 @@ public final class CallManager extends UntypedActor {
 
                 @Override
                 public UntypedActor create() throws Exception {
-                    return new Call(sipFactory, msControllerFactory.provideCallController(), configuration,
+                    return new Call(sipFactory, msControllerFactory, configuration,
                             request.statusCallback(), request.statusCallbackMethod(), request.statusCallbackEvent(), request.getOutboundProxyHeaders());
                 }
             });
         }
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private boolean check(final Object message) throws IOException {
@@ -413,7 +412,7 @@ public final class CallManager extends UntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("About to destroy call: "+request.call().path()+", call isTerminated(): "+sender().isTerminated()+", sender: "+sender());
             }
-            system.stop(call);
+            getContext().stop(call);
         }
     }
 
@@ -818,11 +817,11 @@ public final class CallManager extends UntypedActor {
                 rcml = String.format("<Response><Dial><Sip>%s</Sip></Dial></Response>", sipUri);
             }
 
-            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+            final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
             builder.setConfiguration(configuration);
             builder.setStorage(storage);
             builder.setCallManager(self());
-            builder.setConferenceManager(conferences);
+            builder.setConferenceCenter(conferences);
             builder.setBridgeManager(bridges);
             builder.setSmsService(sms);
 
@@ -843,7 +842,8 @@ public final class CallManager extends UntypedActor {
             builder.setEmailAddress(account.getEmailAddress());
             builder.setRcml(rcml);
             builder.setMonitoring(monitoring);
-            final ActorRef interpreter = builder.build();
+            final Props props = VoiceInterpreter.props(builder.build());
+            final ActorRef interpreter = getContext().actorOf(props);
             final ActorRef call = call(null);
             final SipApplicationSession application = request.getApplicationSession();
             application.setAttribute(Call.class.getName(), call);
@@ -858,11 +858,11 @@ public final class CallManager extends UntypedActor {
 
     private void proxyThroughMediaServerAsNumber (final SipServletRequest request, final Client client, final String destNumber) {
         String rcml = "<Response><Dial>"+destNumber+"</Dial></Response>";
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self());
-        builder.setConferenceManager(conferences);
+        builder.setConferenceCenter(conferences);
         builder.setBridgeManager(bridges);
         builder.setSmsService(sms);
         builder.setAccount(client.getAccountSid());
@@ -871,7 +871,9 @@ public final class CallManager extends UntypedActor {
         builder.setEmailAddress(account.getEmailAddress());
         builder.setRcml(rcml);
         builder.setMonitoring(monitoring);
-        final ActorRef interpreter = builder.build();
+        final Props props = VoiceInterpreter.props(builder.build());
+        final ActorRef interpreter = getContext().actorOf(props);
+
         final ActorRef call = call(null);
         final SipApplicationSession application = request.getApplicationSession();
         application.setAttribute(Call.class.getName(), call);
@@ -881,11 +883,11 @@ public final class CallManager extends UntypedActor {
 
     private void proxyDialClientThroughMediaServer(final SipServletRequest request, final Client client, final String destNumber) {
         String rcml = "<Response><Dial><Client>"+destNumber+"</Client></Dial></Response>";
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self());
-        builder.setConferenceManager(conferences);
+        builder.setConferenceCenter(conferences);
         builder.setBridgeManager(bridges);
         builder.setSmsService(sms);
         builder.setAccount(client.getAccountSid());
@@ -894,7 +896,9 @@ public final class CallManager extends UntypedActor {
         builder.setEmailAddress(account.getEmailAddress());
         builder.setRcml(rcml);
         builder.setMonitoring(monitoring);
-        final ActorRef interpreter = builder.build();
+        final Props props = VoiceInterpreter.props(builder.build());
+        final ActorRef interpreter = getContext().actorOf(props);
+
         final ActorRef call = call(null);
         final SipApplicationSession application = request.getApplicationSession();
         application.setAttribute(Call.class.getName(), call);
@@ -1110,11 +1114,11 @@ public final class CallManager extends UntypedActor {
         existingInterpreter.tell(new StopInterpreter(true), null);
 
         // Build a new VoiceInterpreter
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self());
-        builder.setConferenceManager(conferences);
+        builder.setConferenceCenter(conferences);
         builder.setBridgeManager(bridges);
         builder.setSmsService(sms);
         builder.setAccount(cdr.getAccountSid());
@@ -1122,7 +1126,9 @@ public final class CallManager extends UntypedActor {
 
         if (number.getReferApplicationSid() != null) {
             Application application = storage.getApplicationsDao().getApplication(number.getReferApplicationSid());
-            builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
+            RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+            RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+            builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
         } else {
             builder.setUrl(UriUtils.resolve(number.getReferUrl()));
         }
@@ -1139,7 +1145,8 @@ public final class CallManager extends UntypedActor {
         builder.setMonitoring(monitoring);
 
         // Ask first transferorActor leg to execute with the new Interpreter
-        final ActorRef interpreter = builder.build();
+        final  Props props = VoiceInterpreter.props(builder.build());
+        final ActorRef interpreter = getContext().actorOf(props);
         system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), interpreter,
                 new StartInterpreter(transfereeActor), system.dispatcher());
         if(logger.isInfoEnabled()) {
@@ -1207,11 +1214,11 @@ public final class CallManager extends UntypedActor {
                 number = numbers.getIncomingPhoneNumber("*");
             }
             if (number != null) {
-                final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+                final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
                 builder.setConfiguration(configuration);
                 builder.setStorage(storage);
                 builder.setCallManager(self);
-                builder.setConferenceManager(conferences);
+                builder.setConferenceCenter(conferences);
                 builder.setBridgeManager(bridges);
                 builder.setSmsService(sms);
                 //https://github.com/RestComm/Restcomm-Connect/issues/1939
@@ -1226,7 +1233,9 @@ public final class CallManager extends UntypedActor {
                 final Sid sid = number.getVoiceApplicationSid();
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
-                    builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
+                    RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+                    RcmlserverResolver rcmlserverResolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+                    builder.setUrl(UriUtils.resolve(rcmlserverResolver.resolveRelative(application.getRcmlUrl())));
                 } else {
                     builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
                 }
@@ -1245,7 +1254,9 @@ public final class CallManager extends UntypedActor {
                 builder.setStatusCallback(number.getStatusCallback());
                 builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
                 builder.setMonitoring(monitoring);
-                final ActorRef interpreter = builder.build();
+                final Props props = VoiceInterpreter.props(builder.build());
+                final ActorRef interpreter = getContext().actorOf(props);
+
                 final ActorRef call = call(null);
                 final SipApplicationSession application = request.getApplicationSession();
                 application.setAttribute(Call.class.getName(), call);
@@ -1282,7 +1293,9 @@ public final class CallManager extends UntypedActor {
         URI clientAppVoiceUrl = null;
         if (applicationSid != null) {
             final Application application = applications.getApplication(applicationSid);
-            clientAppVoiceUrl = UriUtils.resolve(application.getRcmlUrl());
+            RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+            RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+            clientAppVoiceUrl = UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl()));
         }
         if (clientAppVoiceUrl == null) {
             clientAppVoiceUrl = client.getVoiceUrl();
@@ -1290,11 +1303,11 @@ public final class CallManager extends UntypedActor {
         boolean isClientManaged =( (applicationSid != null && !applicationSid.toString().isEmpty() && !applicationSid.toString().equals("")) ||
                 (clientAppVoiceUrl != null && !clientAppVoiceUrl.toString().isEmpty() &&  !clientAppVoiceUrl.toString().equals("")));
         if (isClientManaged) {
-            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+            final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
             builder.setConfiguration(configuration);
             builder.setStorage(storage);
             builder.setCallManager(self);
-            builder.setConferenceManager(conferences);
+            builder.setConferenceCenter(conferences);
             builder.setBridgeManager(bridges);
             builder.setSmsService(sms);
             builder.setAccount(client.getAccountSid());
@@ -1311,7 +1324,8 @@ public final class CallManager extends UntypedActor {
                 builder.setFallbackUrl(null);
             builder.setFallbackMethod(client.getVoiceFallbackMethod());
             builder.setMonitoring(monitoring);
-            final ActorRef interpreter = builder.build();
+            final Props props = VoiceInterpreter.props(builder.build());
+            final ActorRef interpreter = getContext().actorOf(props);
             final ActorRef call = call(null);
             final SipApplicationSession application = request.getApplicationSession();
             application.setAttribute(Call.class.getName(), call);
@@ -1547,11 +1561,11 @@ public final class CallManager extends UntypedActor {
     private void execute(final Object message) {
         final ExecuteCallScript request = (ExecuteCallScript) message;
         final ActorRef self = self();
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self);
-        builder.setConferenceManager(conferences);
+        builder.setConferenceCenter(conferences);
         builder.setBridgeManager(bridges);
         builder.setSmsService(sms);
         builder.setAccount(request.account());
@@ -1561,7 +1575,8 @@ public final class CallManager extends UntypedActor {
         builder.setFallbackUrl(request.fallbackUrl());
         builder.setFallbackMethod(request.fallbackMethod());
         builder.setMonitoring(monitoring);
-        final ActorRef interpreter = builder.build();
+        final Props props = VoiceInterpreter.props(builder.build());
+        final ActorRef interpreter = getContext().actorOf(props);
         interpreter.tell(new StartInterpreter(request.call()), self);
     }
 
@@ -1629,11 +1644,11 @@ public final class CallManager extends UntypedActor {
         existingInterpreter.tell(new StopInterpreter(true), null);
 
         // Build a new VoiceInterpreter
-        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self);
-        builder.setConferenceManager(conferences);
+        builder.setConferenceCenter(conferences);
         builder.setBridgeManager(bridges);
         builder.setSmsService(sms);
         builder.setAccount(request.account());
@@ -1645,9 +1660,10 @@ public final class CallManager extends UntypedActor {
         builder.setStatusCallback(request.callback());
         builder.setStatusCallbackMethod(request.callbackMethod());
         builder.setMonitoring(monitoring);
+        final Props props = VoiceInterpreter.props(builder.build());
 
         // Ask first call leg to execute with the new Interpreter
-        final ActorRef interpreter = builder.build();
+        final ActorRef interpreter = getContext().actorOf(props);
         system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), interpreter,
                 new StartInterpreter(request.call()), system.dispatcher());
         // interpreter.tell(new StartInterpreter(request.call()), self);
@@ -1658,7 +1674,7 @@ public final class CallManager extends UntypedActor {
         // Check what to do with the second/outbound call leg of the call
         if (relatedCall != null && listOfRelatedCalls == null) {
             if (moveConnectedCallLeg) {
-                final ActorRef relatedInterpreter = builder.build();
+                final ActorRef relatedInterpreter = getContext().actorOf(props);
                 if(logger.isInfoEnabled()) {
                     logger.info("About to redirect related Call :" + relatedCall.path()
                         + " with 200ms delay to related interpreter: " + relatedInterpreter.path());
@@ -2396,11 +2412,11 @@ public final class CallManager extends UntypedActor {
                 logger.info("rcml: " + rcml);
             }
 
-            final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+            final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
             builder.setConfiguration(configuration);
             builder.setStorage(storage);
             builder.setCallManager(self());
-            builder.setConferenceManager(conferences);
+            builder.setConferenceCenter(conferences);
             builder.setBridgeManager(bridges);
             builder.setSmsService(sms);
             builder.setAccount(Sid.generate(Sid.Type.ACCOUNT,imsAccount));
@@ -2412,7 +2428,8 @@ public final class CallManager extends UntypedActor {
                 builder.setImsUaLogin(user);
                 builder.setImsUaPassword(password);
             }
-            final ActorRef interpreter = builder.build();
+            final Props props = VoiceInterpreter.props(builder.build());
+            final ActorRef interpreter = getContext().actorOf(props);
             final ActorRef call = call(null);
             final SipApplicationSession application = request.getApplicationSession();
             application.setAttribute(Call.class.getName(), call);

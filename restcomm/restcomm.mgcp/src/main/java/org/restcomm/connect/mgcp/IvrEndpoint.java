@@ -36,14 +36,15 @@ import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import jain.protocol.ip.mgcp.pkg.PackageName;
 import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
 import org.restcomm.connect.commons.dao.CollectedResult;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.StopObserving;
-import org.apache.commons.codec.binary.Hex;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static jain.protocol.ip.mgcp.message.parms.ReturnCode.Transaction_Executed_Normally;
@@ -55,13 +56,11 @@ import static jain.protocol.ip.mgcp.message.parms.ReturnCode.Transaction_Execute
 public final class IvrEndpoint extends GenericEndpoint {
     private static final PackageName PACKAGE_NAME = AUPackage.AU;
     private static final RequestedEvent[] REQUESTED_EVENTS = new RequestedEvent[2];
-
     static {
-        final RequestedAction[] action = new RequestedAction[]{RequestedAction.NotifyImmediately};
+        final RequestedAction[] action = new RequestedAction[] { RequestedAction.NotifyImmediately };
         REQUESTED_EVENTS[0] = new RequestedEvent(new EventName(PACKAGE_NAME, AUMgcpEvent.auoc), action);
         REQUESTED_EVENTS[1] = new RequestedEvent(new EventName(PACKAGE_NAME, AUMgcpEvent.auof), action);
     }
-
     private static final String EMPTY_STRING = new String();
     private static final String DEFAULT_REQUEST_ID = "0";
 
@@ -69,7 +68,7 @@ public final class IvrEndpoint extends GenericEndpoint {
     protected static String ivrEndpointName = "mobicents/ivr/$";
 
     public IvrEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain, long timeout, String endpointName) {
-        super(gateway, session, agent, new EndpointIdentifier(endpointName == null ? ivrEndpointName : endpointName, domain), timeout);
+        super(gateway, session, agent, new EndpointIdentifier(endpointName==null?ivrEndpointName:endpointName, domain), timeout);
         this.agent = agent;
     }
 
@@ -236,4 +235,17 @@ public final class IvrEndpoint extends GenericEndpoint {
         }
     }
 
+    private Map<String, String> parse(final String input) {
+        final Map<String, String> parameters = new HashMap<String, String>();
+        final String[] tokens = input.split(" ");
+        for (final String token : tokens) {
+            final String[] values = token.split("=");
+            if (values.length == 1) {
+                parameters.put(values[0], null);
+            } else if (values.length == 2) {
+                parameters.put(values[0], values[1]);
+            }
+        }
+        return parameters;
+    }
 }

@@ -142,8 +142,8 @@ CertConfigure(){
 MssStackConf(){
 	FILE=$RESTCOMM_CONF/mss-sip-stack.properties
 
-	if  grep -q 'gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE=Disabled' "$FILE"; then
-   		sed -i '/gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE=Disabled/,+5d' $FILE
+	if  grep -q "gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE=${TLS_CLIENT_AUTH_TYPE}" "$FILE"; then
+   		sed -i '/gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE='"$TLS_CLIENT_AUTH_TYPE"'/,+5d' $FILE
  	fi
 
 	if [[ "$TRUSTSTORE_FILE" = /* ]]; then
@@ -157,7 +157,7 @@ MssStackConf(){
 
 
     sed -i '/org.mobicents.ha.javax.sip.LOCAL_SSL_PORT='"$HTTPS_PORT"'/ a \
-    \gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE=Disabled\
+    \gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE='"$TLS_CLIENT_AUTH_TYPE"'\
     \javax.net.ssl.keyStore='"$TRUSTSTORE_LOCATION"'\
     \javax.net.ssl.keyStorePassword='" $TRUSTSTORE_PASSWORD"'\
     \javax.net.ssl.trustStorePassword='"$TRUSTSTORE_PASSWORD"'\

@@ -18,7 +18,7 @@
  *
  */
 
-package org.restcomm.connect.interpreter.rcml;
+package org.restcomm.connect.interpreter;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
@@ -51,8 +51,7 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
 import org.restcomm.connect.http.client.HttpResponseDescriptor;
-import org.restcomm.connect.interpreter.StartInterpreter;
-import org.restcomm.connect.interpreter.VoiceInterpreter;
+import org.restcomm.connect.interpreter.rcml.MockedActor;
 import org.restcomm.connect.interpreter.rcml.domain.GatherAttributes;
 import org.restcomm.connect.mscontrol.api.messages.Collect;
 import org.restcomm.connect.mscontrol.api.messages.MediaGroupResponse;
@@ -156,31 +155,22 @@ public class GatherSpeechTest {
 
         final ActorRef callManager = new MockedActor("callManager").asRef(system);
 
+        final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
+        builder.setConfiguration(configuration);
+        builder.setStorage(storage);
+        builder.setCallManager(callManager);
+        builder.setAccount(new Sid("ACae6e420f425248d6a26948c17a9e2acf"));
+        builder.setVersion("2012-04-24");
+        builder.setUrl(requestUri);
+        builder.setMethod("GET");
+        builder.setAsImsUa(false);
+
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public Actor create() throws Exception {
-                return new VoiceInterpreter(configuration,
-                        new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
-                        null,
-                        "2012-04-24",
-                        requestUri, "GET",
-                        null, null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        callManager,
-                        null,
-                        null,
-                        null,
-                        storage,
-                        null,
-                        null,
-                        false, null, null) {
+                return new VoiceInterpreter(builder.build()) {
                     @Override
                     protected ActorRef downloader() {
                         return observer;

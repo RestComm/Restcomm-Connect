@@ -21,7 +21,6 @@ package org.restcomm.connect.interpreter;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -49,6 +48,7 @@ import org.restcomm.connect.commons.cache.HashGenerator;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.CollectedResult;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -135,7 +135,7 @@ import static akka.pattern.Patterns.ask;
  * @author gvagenas@telestax.com
  * @author pavel.slegr@telestax.com
  */
-public abstract class BaseVoiceInterpreter extends UntypedActor {
+public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -143,8 +143,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
     static String EMAIL_SENDER = "restcomm@restcomm.org";
-
-    protected final ActorSystem system;
 
     // States for the FSM.
     // ==========================
@@ -268,7 +266,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         super();
         restcommConfiguration = RestcommConfiguration.getInstance();
         final ActorRef source = self();
-        this.system = context().system();
         // 20 States in common
         uninitialized = new State("uninitialized", null, null);
         acquiringAsrInfo = new State("acquiring asr info", new AcquiringAsrInfo(source), null);
@@ -433,7 +430,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new ISpeechAsr(configuration);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     @SuppressWarnings("unchecked")
@@ -482,7 +479,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new InterfaxService(configuration);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     //Callback using the Akka ask pattern (http://doc.akka.io/docs/akka/2.2.5/java/untyped-actors.html#Ask__Send-And-Receive-Future) will force VoiceInterpter to wait until
@@ -551,7 +548,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new DiskCacheFactory(configuration).getDiskCache(path, uri);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     protected ActorRef downloader() {
@@ -563,7 +560,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new Downloader();
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     String e164(final String number) {
@@ -596,7 +593,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new EmailService(configuration);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private Notification notification(final int log, final int error, final String message) {
@@ -661,18 +658,18 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     return new Parser(xml, self());
                 }
             });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     void postCleanup() {
         if (smsSessions.isEmpty() && outstandingAsrRequests == 0) {
             final UntypedActorContext context = getContext();
             if (parser != null)
-                system.stop(parser);
+                getContext().stop(parser);
             context.stop(self());
         }
         if (downloader != null && !downloader.isTerminated()) {
-            system.stop(downloader);
+            getContext().stop(downloader);
         }
     }
 
@@ -829,7 +826,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(ttsConf);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     abstract class AbstractAction implements Action {
@@ -1883,6 +1880,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (duration.equals(0.0)) {
                 final DateTime end = DateTime.now();
                 duration = new Double((end.getMillis() - callRecord.getStartTime().getMillis()) / 1000);
+                if (logger.isDebugEnabled()) {
+                    String msg = String.format("Recording duration %s, startTime %s endTime %s", duration, callRecord.getStartTime().getMillis(), end.getMillis());
+                    logger.debug(msg);
+                }
             } else if(logger.isDebugEnabled()) {
                 logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
             }
@@ -1963,8 +1964,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         logger.error(exception.getMessage(), exception);
                     }
                 }
-            } else if(logger.isInfoEnabled()){
-                logger.info("AsrService is not enabled");
+            } else {
+                if(logger.isDebugEnabled()){
+                    logger.debug("AsrService is not enabled");
+                }
             }
 
             // If action is present redirect to the action URI.
@@ -2047,15 +2050,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 //                    final StopInterpreter stop = new StopInterpreter();
 //                    source.tell(stop, source);
                 }
-            }
-            if (CallStateChanged.class.equals(klass) ) {
-                if (action == null || action.isEmpty()) {
-                    source.tell(new StopInterpreter(), source);
-                } else {
-                    // Ask the parser for the next action to take.
-                    final GetNextVerb next = new GetNextVerb();
-                    parser.tell(next, source);
-                }
+            } else {
+                //Action is null here
+                final GetNextVerb next = new GetNextVerb();
+                parser.tell(next, source);
             }
             // A little clean up.
             recordingSid = null;
