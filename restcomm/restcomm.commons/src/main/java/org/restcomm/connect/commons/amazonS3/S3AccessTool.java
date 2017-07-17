@@ -86,6 +86,7 @@ public class S3AccessTool {
             s3client = new AmazonS3Client(awsCreds);
             s3client.setRegion(Region.getRegion(Regions.fromName(bucketRegion)));
             s3client.setEndpoint(testingUrl);
+            s3client.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).disableChunkedEncoding().build());
         } else {
             s3client = AmazonS3ClientBuilder.standard().withRegion(Regions.fromName(bucketRegion))
                     .withCredentials(new AWSStaticCredentialsProvider(awsCreds)).build();
