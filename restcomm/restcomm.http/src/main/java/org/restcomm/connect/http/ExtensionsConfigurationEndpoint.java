@@ -1,5 +1,4 @@
-/*
- *  TeleStax, Open Source Cloud Communications
+/*  TeleStax, Open Source Cloud Communications
  *  Copyright 2011-2016, Telestax Inc and individual contributors
  *  by the @authors tag.
  *
@@ -33,7 +32,7 @@ import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
 import org.restcomm.connect.http.converter.ExtensionConfigurationConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.common.exceptions.InsufficientPermission;
+import org.restcomm.connect.commons.exceptions.InsufficientPermission;
 import javax.annotation.PostConstruct;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;

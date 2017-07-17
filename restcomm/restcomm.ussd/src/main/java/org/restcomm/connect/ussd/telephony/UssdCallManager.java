@@ -25,6 +25,7 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
@@ -47,6 +48,7 @@ import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreter;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreterParams;
+import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.identity.permissions.PermissionsUtil;
 
 import javax.servlet.ServletContext;
@@ -56,6 +58,7 @@ import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipURI;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -139,6 +142,19 @@ public class UssdCallManager extends RestcommUntypedActor {
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
+        final SipServletRequest req2 = (SipServletRequest) message;
+
+        //FIXME: really kludgy and ugly
+        //TODO: how to get AccountSid from SipServletRequest??
+        Account effectiveAccount = null;
+        AccountsDao accountsDao = storage.getAccountsDao();
+        if (CreateCall.class.equals(klass)) {
+            this.createCallRequest = (CreateCall) message;
+            effectiveAccount = accountsDao.getAccount(this.createCallRequest.accountId());
+        }
+
+        UserIdentityContext uic = new UserIdentityContext(effectiveAccount, accountsDao);
+        permissionsUtil.setUserIdentityContext(uic);
         try {
             permissionsUtil.checkPermission("Restcomm:*:Ussd");
         } catch (Exception e) {

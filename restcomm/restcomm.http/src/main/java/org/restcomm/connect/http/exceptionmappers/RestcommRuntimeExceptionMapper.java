@@ -22,7 +22,7 @@ package org.restcomm.connect.http.exceptionmappers;
 
 import org.apache.log4j.Logger;
 import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
-import org.restcomm.connect.common.exceptions.InsufficientPermission;
+import org.restcomm.connect.commons.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.NotAuthenticated;
 import org.restcomm.connect.http.exceptions.OperatedAccountMissing;
 import org.restcomm.connect.http.exceptions.ResourceAccountMissmatch;

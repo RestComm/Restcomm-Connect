@@ -95,4 +95,11 @@ public class PermissionsUtil {
         return "Administrator";
     }
 
+    public void setUserIdentityContext(UserIdentityContext userIdentityContext){
+        this.userIdentityContext = userIdentityContext;
+    }
+
+    public UserIdentityContext getUserIdentityContext(){
+        return this.userIdentityContext;
+    }
 }
