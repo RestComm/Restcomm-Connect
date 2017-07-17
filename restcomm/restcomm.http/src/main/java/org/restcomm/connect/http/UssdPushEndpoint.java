@@ -110,7 +110,7 @@ public class UssdPushEndpoint extends SecuredEndpoint {
     @SuppressWarnings("unchecked")
     protected Response putCall(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid accountId = new Sid(accountSid);
-        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
+        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:*:Ussd");
         try {
             validate(data);
         } catch (final RuntimeException exception) {
