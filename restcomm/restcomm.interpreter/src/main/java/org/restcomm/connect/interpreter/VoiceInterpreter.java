@@ -224,7 +224,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
     private String conferenceNameWithAccountAndFriendlyName;
     private Sid callSid;
 
-    private VoiceInterpreter(VoiceInterpreterParams params) {
+    public VoiceInterpreter(VoiceInterpreterParams params) {
         super();
         final ActorRef source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
