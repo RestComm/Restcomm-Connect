@@ -145,6 +145,7 @@ public class TestDialVerbPartTwo {
         }
         Thread.sleep(3000);
         wireMockRule.resetRequests();
+        wireMockRule.resetMappings();
         Thread.sleep(2000);
     }
 
