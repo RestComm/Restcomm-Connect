@@ -39,12 +39,16 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.sip.Dialog;
+import javax.sip.ListeningPoint;
 import javax.sip.address.Hop;
 import javax.sip.address.SipURI;
 import javax.sip.message.Request;
@@ -80,6 +84,12 @@ import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.http.RestcommConferenceParticipantsTool;
 import org.restcomm.connect.testsuite.http.RestcommConferenceTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
+import org.xbill.DNS.DClass;
+import org.xbill.DNS.NAPTRRecord;
+import org.xbill.DNS.Name;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.SRVRecord;
+import org.xbill.DNS.TextParseException;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
@@ -101,6 +111,7 @@ import static org.mockito.Mockito.when;
 public class DialActionTestOrganization {
 
     private final static Logger logger = Logger.getLogger(DialActionTestOrganization.class.getName());
+    private static final String TRANSPORT = "udp";
 
     private static final String version = Version.getVersion();
     private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
@@ -189,6 +200,9 @@ public class DialActionTestOrganization {
     private String adminAccountSidOrg2 = "ACae6e420f425248d6a26948c17a9e2acg";
     private String adminAccountSidOrg3 = "ACae6e420f425248d6a26948c17a9e2ach";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+
+    private static final String HOST_ORG2 = "org2.restcomm.com";
+    private static final String HOST_ORG3 = "org3.restcomm.com";
     
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -230,8 +244,50 @@ public class DialActionTestOrganization {
         
     }
     
+    private void mockDNSLookup(String host, String transport) throws TextParseException {
+        DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
+        //mocking the DNS Lookups to match our test cases
+        containerManager.getSipStandardService().getSipApplicationDispatcher().getDNSServerLocator().setDnsLookupPerformer(dnsLookupPerformer);
+
+        Set<String> supportedTransports = new HashSet<String>();
+        supportedTransports.add(TRANSPORT.toUpperCase());
+        supportedTransports.add(ListeningPoint.TCP.toUpperCase());
+        supportedTransports.add(ListeningPoint.TLS.toUpperCase());
+
+        Queue<Hop> hops = new ConcurrentLinkedQueue();
+        hops = new ConcurrentLinkedQueue();
+        //dont use "localhost" or DNS will not work (wouldnt be external)
+        hops.add(new HopImpl("127.0.0.1", 5080, transport));
+        when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort("localhost", 5080, transport)).thenReturn(hops);
+        when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort("localhost", 5082, transport)).thenReturn(null);
+        when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort("localhost", 5081, transport)).thenReturn(null);
+
+        List<NAPTRRecord> mockedNAPTRRecords = new LinkedList<NAPTRRecord>();
+        // mocking the name because localhost is not absolute and localhost. cannot be resolved 
+        Name name = mock(Name.class);
+        when(name.isAbsolute()).thenReturn(true);
+        when(name.toString()).thenReturn("localhost");
+        mockedNAPTRRecords.add(new NAPTRRecord(new Name(host + "."), DClass.IN, 1000, 0, 0, "s", "SIP+D2U", "", new Name("_sip._" + TRANSPORT.toLowerCase() + "." + host + ".")));
+        when(dnsLookupPerformer.performNAPTRLookup(host, false, supportedTransports)).thenReturn(mockedNAPTRRecords);
+        List<Record> mockedSRVRecords = new LinkedList<Record>();
+        mockedSRVRecords.add(new SRVRecord(new Name("_sip._" + TRANSPORT.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 1, 0, 5080, name));
+        mockedSRVRecords.add(new SRVRecord(new Name("_sip._" + TRANSPORT.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 0, 0, 5081, name));
+        when(dnsLookupPerformer.performSRVLookup("_sip._" + TRANSPORT.toLowerCase() + "." + host)).thenReturn(mockedSRVRecords);
+        List<Record> mockedSRVTCPRecords = new LinkedList<Record>();
+        mockedSRVTCPRecords.add(new SRVRecord(new Name("_sips._" + ListeningPoint.TCP.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 1, 0, 5080, name));
+        mockedSRVTCPRecords.add(new SRVRecord(new Name("_sips._" + ListeningPoint.TCP.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 0, 0, 5081, name));
+//		mockedSRVTLSRecords.add(new SRVRecord(new Name("_sips._" + ListeningPoint.TLS.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 1, 0, 5081, name));
+        when(dnsLookupPerformer.performSRVLookup("_sips._" + ListeningPoint.TCP.toLowerCase() + "." + host)).thenReturn(mockedSRVTCPRecords);
+
+        List<Record> mockedSRVTLSRecords = new LinkedList<Record>();
+        mockedSRVTLSRecords.add(new SRVRecord(new Name("_sips._" + ListeningPoint.TCP.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 1, 0, 5080, name));
+        mockedSRVTLSRecords.add(new SRVRecord(new Name("_sips._" + ListeningPoint.TCP.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 0, 0, 5081, name));
+//		mockedSRVTLSRecords.add(new SRVRecord(new Name("_sips._" + ListeningPoint.TLS.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 1, 0, 5081, name));
+        when(dnsLookupPerformer.performSRVLookup("_sips._" + ListeningPoint.TLS.toLowerCase() + "." + host)).thenReturn(mockedSRVTLSRecords);
+    }
+    
     @Test
-    public void testDialSipNumberSameAndDifferentOrganization() throws ParseException, InterruptedException, DeploymentException{
+    public void testDialSipNumberSameAndDifferentOrganization() throws ParseException, InterruptedException, DeploymentException, TextParseException{
     	stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -247,15 +303,7 @@ public class DialActionTestOrganization {
     	//Reload Context
     	//containerManagercontainerManager.reloadContext();
 
-    	DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
-    	//mocking the DNS Lookups to match our test cases
-    	containerManager.getSipStandardService().getSipApplicationDispatcher().getDNSServerLocator().setDnsLookupPerformer(dnsLookupPerformer);
-    	
-        Queue<Hop> hops = new ConcurrentLinkedQueue();
-        hops = new ConcurrentLinkedQueue();
-        //dont use "localhost" or DNS will not work (wouldnt be external)
-        hops.add(new HopImpl("127.0.0.1", 5080, "udp"));
-        when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort("localhost", 5080, "udp")).thenReturn(hops);
+    	mockDNSLookup(HOST_ORG2, TRANSPORT);
 
         //bob@org3 will dial a sip number X@org3
     	SipURI uri = bobSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
