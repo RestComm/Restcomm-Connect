@@ -30,6 +30,7 @@ import akka.event.LoggingAdapter;
 import akka.pattern.AskTimeoutException;
 import akka.util.Timeout;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -38,7 +39,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.restcomm.connect.asr.AsrResponse;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.CollectedResult;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -66,6 +67,7 @@ import org.restcomm.connect.interpreter.rcml.Nouns;
 import org.restcomm.connect.interpreter.rcml.ParserFailed;
 import org.restcomm.connect.interpreter.rcml.Tag;
 import org.restcomm.connect.interpreter.rcml.Verbs;
+import org.restcomm.connect.interpreter.rcml.domain.GatherAttributes;
 import org.restcomm.connect.mscontrol.api.messages.JoinComplete;
 import org.restcomm.connect.mscontrol.api.messages.Left;
 import org.restcomm.connect.mscontrol.api.messages.MediaGroupResponse;
@@ -142,7 +144,7 @@ import static akka.pattern.Patterns.ask;
  * @author pavel.slegr@telestax.com
  * @author maria.farooq@telestax.com
  */
-public final class VoiceInterpreter extends BaseVoiceInterpreter {
+public class VoiceInterpreter extends BaseVoiceInterpreter {
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -313,6 +315,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(finishGathering, ready));
         transitions.add(new Transition(finishGathering, finishGathering));
         transitions.add(new Transition(finishGathering, finished));
+        transitions.add(new Transition(continuousGathering, ready));
+        transitions.add(new Transition(continuousGathering, finishGathering));
+        transitions.add(new Transition(continuousGathering, finished));
         transitions.add(new Transition(creatingSmsSession, finished));
         transitions.add(new Transition(sendingSms, ready));
         transitions.add(new Transition(sendingSms, startDialing));
@@ -664,7 +669,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                 Attribute attribute = null;
                 if (verb != null) {
-                    attribute = verb.attribute("action");
+                    attribute = verb.attribute(GatherAttributes.ATTRIBUTE_ACTION);
                 }
 
                 if (attribute == null) {
@@ -691,8 +696,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
         }
     }
-
-
 
     private void onConferenceStateChanged(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         final ConferenceStateChanged event = (ConferenceStateChanged) message;
@@ -792,7 +795,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     private void onMediaGroupResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
-        final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
+        final MediaGroupResponse response = (MediaGroupResponse) message;
         if(logger.isInfoEnabled()) {
             logger.info("MediaGroupResponse, succeeded: " + response.succeeded() + "  " + response.cause());
         }
@@ -805,33 +808,38 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, finishRecording);
             } // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
             // come later
-            else if (is(gathering) || (is(finishGathering) && !super.dtmfReceived)) {
-                final MediaGroupResponse<String> dtmfResponse = (MediaGroupResponse<String>) message;
-                if (sender == call) {
-                    // DTMF using SIP INFO, check if all digits collected here
-                    collectedDigits.append(dtmfResponse.get());
-                    // Collected digits == requested num of digits the complete the collect digits
-                    if (numberOfDigits != Short.MAX_VALUE) {
-                        if (collectedDigits.length() == numberOfDigits) {
-                            dtmfReceived = true;
-                            fsm.transition(message, finishGathering);
+            else if (is(gathering) || is(continuousGathering) || is(finishGathering)) {
+                final MediaGroupResponse<CollectedResult> dtmfResponse = (MediaGroupResponse<CollectedResult>) message;
+                CollectedResult data = dtmfResponse.get();
+                if (data.isAsr() && data.isPartial()) {
+                    fsm.transition(message, continuousGathering);
+                } else if (!super.dtmfReceived) {
+                    if (sender == call) {
+                        // DTMF using SIP INFO, check if all digits collected here
+                        collectedDigits.append(dtmfResponse.get());
+                        // Collected digits == requested num of digits the complete the collect digits
+                        if (numberOfDigits != Short.MAX_VALUE) {
+                            if (collectedDigits.length() == numberOfDigits) {
+                                dtmfReceived = true;
+                                fsm.transition(message, finishGathering);
+                            } else {
+                                dtmfReceived = false;
+                                return;
+                            }
                         } else {
-                            dtmfReceived = false;
-                            return;
+                            // If collected digits have finish on key at the end then complete the collect digits
+                            if (collectedDigits.toString().endsWith(finishOnKey)) {
+                                dtmfReceived = true;
+                                fsm.transition(message, finishGathering);
+                            } else {
+                                dtmfReceived = false;
+                                return;
+                            }
                         }
                     } else {
-                        // If collected digits have finish on key at the end then complete the collect digits
-                        if (collectedDigits.toString().endsWith(finishOnKey)) {
-                            dtmfReceived = true;
-                            fsm.transition(message, finishGathering);
-                        } else {
-                            dtmfReceived = false;
-                            return;
-                        }
+                        collectedDigits.append(dtmfResponse.get().getResult());
+                        fsm.transition(message, finishGathering);
                     }
-                } else {
-                    collectedDigits.append(dtmfResponse.get());
-                    fsm.transition(message, finishGathering);
                 }
             } else if (is(bridging)) {
                 // Finally proceed with call bridging
@@ -901,7 +909,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, initializingCall);
             }
         } else if (Verbs.dial.equals(verb.name())) {
-            action = verb.attribute("action");
+            action = verb.attribute(GatherAttributes.ATTRIBUTE_ACTION);
             if (action != null && dialActionExecuted) {
                 //We have a new Dial verb that contains Dial Action URL again.
                 //We set dialActionExecuted to false in order to execute Dial Action again
@@ -1075,6 +1083,21 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
+    private boolean isEmptyDownloaderResponse(DownloaderResponse response) throws IOException {
+        final String type = response.get().getContentType();
+        if (type == null)
+            return true;
+
+        if (type.contains("audio/wav") || type.contains("audio/wave") || type.contains("audio/x-wav")) {
+            return false;
+        }
+
+        if (type.contains("text/plain") || type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html")) {
+            return StringUtils.isEmpty(response.get().getContentAsString());
+        }
+        return true;
+    }
+
     private void onDownloaderResponse(Object message, State state) throws IOException, TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         final DownloaderResponse response = (DownloaderResponse) message;
         if (logger.isDebugEnabled()) {
@@ -1083,6 +1106,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 logger.debug("statusCode " + response.get().getStatusCode());
         }
         if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
+            if (continuousGathering.equals(state) && isEmptyDownloaderResponse(response)) {
+                //no need change state
+                return;
+            }
             if (conferencing.equals(state)) {
                 //This is the downloader response for Conferencing waitUrl
                 if (parser != null) {
@@ -1480,7 +1507,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
         final String callSid = callInfo.sid().toString();
         parameters.add(new BasicNameValuePair("CallSid", callSid));
-        parameters.add(new BasicNameValuePair("InstanceId", RestcommConfiguration.getInstance().getMain().getInstanceId()));
+        parameters.add(new BasicNameValuePair("InstanceId", restcommConfiguration.getMain().getInstanceId()));
         if (outboundCallInfo != null) {
             final String outboundCallSid = outboundCallInfo.sid().toString();
             parameters.add(new BasicNameValuePair("OutboundCallSid", outboundCallSid));
@@ -1685,7 +1712,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Create a call detail record for the call.
                 final CallDetailRecord.Builder builder = CallDetailRecord.builder();
                 builder.setSid(callInfo.sid());
-                builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
+                builder.setInstanceId(restcommConfiguration.getInstance().getMain().getInstanceId());
                 builder.setDateCreated(callInfo.dateCreated());
                 builder.setAccountSid(accountId);
                 builder.setTo(callInfo.to());
@@ -1793,7 +1820,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 source.tell(verb, source);
                 return;
             } else if (downloadingRcml.equals(state) || downloadingFallbackRcml.equals(state) || redirecting.equals(state)
-                    || finishGathering.equals(state) || finishRecording.equals(state) || sendingSms.equals(state)
+                    || continuousGathering.equals(state) || finishGathering.equals(state) || finishRecording.equals(state) || sendingSms.equals(state)
                     || finishDialing.equals(state) || finishConferencing.equals(state) || is(forking)) {
                 response = ((DownloaderResponse) message).get();
                 if (parser != null) {

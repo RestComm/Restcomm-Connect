@@ -17,37 +17,42 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.interpreter.rcml;
 
-import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+package org.restcomm.connect.commons.dao;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * Created by gdubina on 6/6/17.
  */
-@Immutable
-public final class Attribute {
-    private final String name;
-    private final String value;
+public class CollectedResult {
 
-    public Attribute(final String name, final String value) {
-        super();
-        this.name = name;
-        this.value = value;
+    private final String result;
+    private final boolean isAsr;
+    private final boolean isPartial;
+
+    public CollectedResult(String result, boolean isAsr, boolean isPartial) {
+        this.result = result;
+        this.isAsr = isAsr;
+        this.isPartial = isPartial;
     }
 
-    public String name() {
-        return name;
+    public String getResult() {
+        return result;
     }
 
-    public String value() {
-        return value;
+    public boolean isAsr() {
+        return isAsr;
+    }
+
+    public boolean isPartial() {
+        return isPartial;
     }
 
     @Override
     public String toString() {
-        return "Attribute{" +
-                "name='" + name + '\'' +
-                ", value='" + value + '\'' +
+        return "CollectedResult{" +
+                "result='" + result + '\'' +
+                ", isAsr=" + isAsr +
+                ", isPartial=" + isPartial +
                 '}';
     }
 }

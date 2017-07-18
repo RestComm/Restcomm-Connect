@@ -79,6 +79,10 @@ There is two different ways to install Restcomm Connect. Either through Docker o
 
 * <<s3/Restcomm_S3.adoc#intro,Restcomm Amazon S3 Integration>>
 
+=== Automatic Speech Recognition Integration
+
+* <<asr/asr.adoc#intro,Automatic Speech Recognition Integration>>
+
 == Contributor Resources
 
 * <<How to build Restcomm-Connect from source.adoc#build-from-source,How to build Restcomm-Connect from source>>
