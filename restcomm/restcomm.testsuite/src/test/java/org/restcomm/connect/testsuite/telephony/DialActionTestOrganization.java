@@ -41,8 +41,11 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.sip.Dialog;
+import javax.sip.address.Hop;
 import javax.sip.address.SipURI;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
@@ -52,7 +55,10 @@ import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
+import org.jboss.arquillian.container.mobicents.api.annotations.GetDeployableContainer;
+import org.jboss.arquillian.container.mss.extension.ContainerManagerTool;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
+import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -79,6 +85,9 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+
+import gov.nist.javax.sip.stack.HopImpl;
+
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -105,6 +114,9 @@ public class DialActionTestOrganization {
     private Deployer deployer;
     @ArquillianResource
     URL deploymentUrl;
+
+	@GetDeployableContainer
+	private ContainerManagerTool containerManager;
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
@@ -217,35 +229,9 @@ public class DialActionTestOrganization {
         pstnPhone = pstnSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, pstnContact);
         
     }
-
-	@Test
-	public void testMessageClientSentToOtherClientSameOrganization () throws ParseException {
-
-		SipURI uri = mariaSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-		assertTrue(mariaPhoneOrg2.register(uri, "maria", clientPassword, "sip:maria@127.0.0.1:5093", 3600, 3600));
-		Credential mariaCred = new Credential("org2.restcomm.com","maria","1234");
-		mariaPhoneOrg2.addUpdateCredential(mariaCred);
-
-		assertTrue(shoaibPhoneOrg2.register(uri,"shoaib", clientPassword,"sip:shoaib@127.0.0.1:5094", 3600, 3600));
-		Credential shoaibCread = new Credential("org2.restcomm.com","shoaib","1234");
-		shoaibPhoneOrg2.addUpdateCredential(shoaibCread);
-
-		SipCall shoaibCall = shoaibPhoneOrg2.createSipCall();
-		shoaibCall.listenForMessage();
-
-		SipCall mariaCall = mariaPhoneOrg2.createSipCall();
-		assertTrue(mariaCall.initiateOutgoingMessage("sip:shoaib@org2.restcomm.com", null, "Test Message from maria"));
-		assertTrue(mariaCall.waitForAuthorisation(5000));
-		assertTrue(mariaCall.waitOutgoingMessageResponse(5000));
-
-		assertTrue(shoaibCall.waitForMessage(5000));
-		Request msgReceived = shoaibCall.getLastReceivedMessageRequest();
-		assertTrue(new String(msgReceived.getRawContent()).equals("Test Message from maria"));
-	}
     
     @Test
-    @Ignore
-    public void testDialSipNumberSameAndDifferentOrganization() throws ParseException, InterruptedException{
+    public void testDialSipNumberSameAndDifferentOrganization() throws ParseException, InterruptedException, DeploymentException{
     	stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -257,10 +243,21 @@ public class DialActionTestOrganization {
     	 * X is mapped on an RCML that dials sip like <Dial><Sip>sip:Y@org2.restcomm.com</Sip></Dial>
     	 * 
     	 */
+    	
+    	//Reload Context
+    	//containerManagercontainerManager.reloadContext();
 
     	DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
+    	//mocking the DNS Lookups to match our test cases
+    	containerManager.getSipStandardService().getSipApplicationDispatcher().getDNSServerLocator().setDnsLookupPerformer(dnsLookupPerformer);
     	
-    	//bob@org3 will dial a sip number X@org3
+        Queue<Hop> hops = new ConcurrentLinkedQueue();
+        hops = new ConcurrentLinkedQueue();
+        //dont use "localhost" or DNS will not work (wouldnt be external)
+        hops.add(new HopImpl("127.0.0.1", 5080, "udp"));
+        when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort("localhost", 5080, "udp")).thenReturn(hops);
+
+        //bob@org3 will dial a sip number X@org3
     	SipURI uri = bobSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(bobPhoneOrg3.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5092", 3600, 3600));
         Credential c = new Credential("org3.restcomm.com", "bob", clientPassword);
@@ -307,6 +304,31 @@ public class DialActionTestOrganization {
         assertTrue(liveCallsArraySize == 0);
 
     }
+
+	@Test
+	public void testMessageClientSentToOtherClientSameOrganization () throws ParseException {
+
+		SipURI uri = mariaSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+		assertTrue(mariaPhoneOrg2.register(uri, "maria", clientPassword, "sip:maria@127.0.0.1:5093", 3600, 3600));
+		Credential mariaCred = new Credential("org2.restcomm.com","maria","1234");
+		mariaPhoneOrg2.addUpdateCredential(mariaCred);
+
+		assertTrue(shoaibPhoneOrg2.register(uri,"shoaib", clientPassword,"sip:shoaib@127.0.0.1:5094", 3600, 3600));
+		Credential shoaibCread = new Credential("org2.restcomm.com","shoaib","1234");
+		shoaibPhoneOrg2.addUpdateCredential(shoaibCread);
+
+		SipCall shoaibCall = shoaibPhoneOrg2.createSipCall();
+		shoaibCall.listenForMessage();
+
+		SipCall mariaCall = mariaPhoneOrg2.createSipCall();
+		assertTrue(mariaCall.initiateOutgoingMessage("sip:shoaib@org2.restcomm.com", null, "Test Message from maria"));
+		assertTrue(mariaCall.waitForAuthorisation(5000));
+		assertTrue(mariaCall.waitOutgoingMessageResponse(5000));
+
+		assertTrue(shoaibCall.waitForMessage(5000));
+		Request msgReceived = shoaibCall.getLastReceivedMessageRequest();
+		assertTrue(new String(msgReceived.getRawContent()).equals("Test Message from maria"));
+	}
 
     @Test
     public void testOutboundPstn() throws ParseException, InterruptedException, UnknownHostException, MalformedURLException {
