@@ -339,6 +339,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(forking, hangingUp));
         transitions.add(new Transition(forking, finished));
         transitions.add(new Transition(forking, ready));
+        transitions.add(new Transition(forking, checkingCache));
+        transitions.add(new Transition(forking, caching));
         // transitions.add(new Transition(acquiringOutboundCallInfo, joiningCalls));
         transitions.add(new Transition(acquiringOutboundCallInfo, hangingUp));
         transitions.add(new Transition(acquiringOutboundCallInfo, finished));
@@ -734,6 +736,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             fsm.transition(message, finishDialing);
         } else if (is(bridging)) {
             fsm.transition(message, finishDialing);
+        } else if (is(playing)) {
+            fsm.transition(message, finished);
         }
     }
 
@@ -771,7 +775,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, ready);
             } else if (is(creatingRecording)) {
                 fsm.transition(message, finishRecording);
-            } // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
+            } else if (is(forking)){
+                // Moving to next verb since received confirmation from Stop, requested at checkDialBranch
+                final GetNextVerb next = new GetNextVerb();
+                parser.tell(next, self());
+            }
+            // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
             // come later
             else if (is(gathering) || (is(finishGathering) && !super.dtmfReceived)) {
                 final MediaGroupResponse<String> dtmfResponse = (MediaGroupResponse<String>) message;
@@ -1324,7 +1333,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (sender != null && !sender.equals(call)) {
                     callManager.tell(new DestroyCall(sender), self());
                 }
-                if (parser != null) {
+                if(is(forking)){
+                    // Stop ringing from inbound call when all branches are BUSY
+                    // Explicit Stop must be send before continue with VI
+                    final StopMediaGroup stop = new StopMediaGroup();
+                    call.tell(stop, self());
+                } else if (parser != null) {
                     final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, self());
                 }
