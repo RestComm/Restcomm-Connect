@@ -305,6 +305,10 @@ public class GatherSpeechTest {
                 interpreter.tell(new DownloaderResponse(getOkRcml(partialCallbackUri, playRcml)), observer);
 
                 //wait for new tag: Play
+                DiskCacheRequest diskCacheRequest = expectMsgClass(DiskCacheRequest.class);
+
+                interpreter.tell(new DiskCacheResponse(diskCacheRequest.uri()), observer);
+
                 expectMsgClass(Play.class);
 
                 //simulate play is finished

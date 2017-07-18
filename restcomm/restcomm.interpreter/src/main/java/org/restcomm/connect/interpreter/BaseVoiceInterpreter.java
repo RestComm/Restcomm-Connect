@@ -1534,7 +1534,12 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             final NotificationsDao notifications = storage.getNotificationsDao();
             // parse attribute "input"
             Attribute typeAttr = verb.attribute(GatherAttributes.ATTRIBUTE_INPUT);
-            Collect.Type inputType = Collect.Type.parseOrDefault(typeAttr.value(), Collect.Type.DTMF);
+            Collect.Type inputType = null;
+            if (typeAttr == null) {
+                inputType = Collect.Type.DTMF;
+            } else {
+                inputType = Collect.Type.parseOrDefault(typeAttr.value(), Collect.Type.DTMF);
+            }
 
             if (inputType != Collect.Type.DTMF && (resultCallbackAttr == null || StringUtils.isEmpty(resultCallbackAttr.value()))) {
                 final Notification notification = notification(ERROR_NOTIFICATION, 11101, "partialResultCallback attribute is null");

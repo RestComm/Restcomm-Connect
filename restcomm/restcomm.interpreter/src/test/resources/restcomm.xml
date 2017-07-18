@@ -27,6 +27,17 @@
         <conference-entry-audio>beep.wav</conference-entry-audio>
         <conference-exit-audio>alert.wav</conference-exit-audio>
 
+        <!-- ASR Supported Languages -->
+        <asr-languages default="en-US">
+            <language>en-US</language>
+            <language>en-GB</language>
+            <language>es-ES</language>
+            <language>it-IT</language>
+            <language>fr-FR</language>
+            <language>pl-PL</language>
+            <language>pt-PT</language>
+        </asr-languages>
+
         <!-- Speech to text drivers -->
         <mg-asr-drivers default="google">
             <driver>google</driver>
@@ -40,7 +51,7 @@
             If set to false RestComm will use cache for *.wav files playback.
             Default: false
         -->
-        <cache-no-wav>false</cache-no-wav>
+        <cache-no-wav>true</cache-no-wav>
 
         <!-- The path where recordings made by the <Record> verb are stored. -->
         <recordings-path>file://${restcomm:home}/recordings</recordings-path>
