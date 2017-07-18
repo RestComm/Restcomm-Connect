@@ -58,7 +58,7 @@ public class AsrSignalTest {
 
     @Test
     public void testFormatting() {
-        String expectedResult = "ip=hello.wav dr=no_name_driver ln=en-US eik=# mrt=100 wit=100 pst=50 hw=57:61:69:74";
+        String expectedResult = "ip=hello.wav dr=no_name_driver ln=en-US eik=# mrt=100 wit=100 pst=50 hw=57616974";
         AsrSignal asrSignal = new AsrSignal(driver, DEFAULT_LANG, initialPrompts, endInputKey, maximumRecTimer, waitingInputTimer,
                 timeAfterSpeech, hotWords);
         String actualResult = asrSignal.toString();
@@ -72,7 +72,7 @@ public class AsrSignalTest {
            add(URI.create("hello.wav"));
            add(URI.create("world.wav"));
         }};
-        String expectedResult = "ip=hello.wav,world.wav dr=no_name_driver ln=en-US eik=# mrt=100 wit=100 pst=50 hw=57:61:69:74";
+        String expectedResult = "ip=hello.wav,world.wav dr=no_name_driver ln=en-US eik=# mrt=100 wit=100 pst=50 hw=57616974";
         AsrSignal asrSignal = new AsrSignal(driver, DEFAULT_LANG, initialPrompts, endInputKey, maximumRecTimer, waitingInputTimer,
                 timeAfterSpeech, hotWords);
         String actualResult = asrSignal.toString();
