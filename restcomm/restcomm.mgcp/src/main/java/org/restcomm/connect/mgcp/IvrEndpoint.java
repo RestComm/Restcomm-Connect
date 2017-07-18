@@ -44,6 +44,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static jain.protocol.ip.mgcp.message.parms.ReturnCode.Transaction_Executed_Normally;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang.StringUtils;
+import org.restcomm.connect.commons.dao.CollectedResult;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -68,6 +72,11 @@ public final class IvrEndpoint extends GenericEndpoint {
         this.agent = agent;
     }
 
+    private void sendAsr(final AsrSignal message) {
+        MgcpEvent event = AsrSignal.REQUEST_ASR.withParm(message.toString());
+        sendRequest(new EventName(PACKAGE_NAME, event), REQUESTED_EVENTS);
+    }
+
     private void send(final Object message) {
         final Class<?> klass = message.getClass();
         final String parameters = message.toString();
@@ -79,12 +88,16 @@ public final class IvrEndpoint extends GenericEndpoint {
         } else if (PlayRecord.class.equals(klass)) {
             event = AUMgcpEvent.aupr.withParm(parameters);
         }
+        sendRequest(new EventName(PACKAGE_NAME, event), REQUESTED_EVENTS);
+    }
+
+    private void sendRequest(EventName reqSignal, RequestedEvent[] reqEvents) {
         final EventName[] signal = new EventName[1];
-        signal[0] = new EventName(PACKAGE_NAME, event);
+        signal[0] = reqSignal;
         final RequestIdentifier requestId = new RequestIdentifier(DEFAULT_REQUEST_ID);
         final NotificationRequest request = new NotificationRequest(self(), id, requestId);
         request.setNotifiedEntity(agent);
-        request.setRequestedEvents(REQUESTED_EVENTS);
+        request.setRequestedEvents(reqEvents);
         request.setSignalRequests(signal);
         gateway.tell(request, self());
     }
@@ -129,6 +142,8 @@ public final class IvrEndpoint extends GenericEndpoint {
             onDestroyEndpoint((DestroyEndpoint) message, self, sender);
         } else if (Play.class.equals(klass) || PlayCollect.class.equals(klass) || PlayRecord.class.equals(klass)) {
             send(message);
+        } else if (AsrSignal.class.equals(klass)) {
+            sendAsr((AsrSignal) message);
         } else if (StopEndpoint.class.equals(klass)) {
             stop(message);
         } else if (Notify.class.equals(klass)) {
@@ -146,7 +161,7 @@ public final class IvrEndpoint extends GenericEndpoint {
         final String error = Integer.toString(code);
         final String message = "The IVR request failed with the following error code " + error;
         final JainIPMgcpException exception = new JainIPMgcpException(message);
-        final IvrEndpointResponse<String> response = new IvrEndpointResponse<String>(exception);
+        final IvrEndpointResponse response = new IvrEndpointResponse(exception);
         for (final ActorRef observer : observers) {
             observer.tell(response, self);
         }
@@ -173,22 +188,44 @@ public final class IvrEndpoint extends GenericEndpoint {
         final EventName[] observedEvents = notification.getObservedEvents();
         if (observedEvents.length == 1) {
             final MgcpEvent event = observedEvents[0].getEventIdentifier();
-            final Map<String, String> parameters = parse(event.getParms());
+            final Map<String, String> parameters = MgcpUtil.parseParameters(event.getParms());
             final int code = Integer.parseInt(parameters.get("rc"));
             switch (code) {
                 case 326: // No digits
                 case 327: // No speech
                 case 328: // Spoke too long
                 case 329: // Digit pattern not matched
-                case 100: { // Success
+                case 100: { // Success(final result)
                     String digits = parameters.get("dc");
                     if (digits == null) {
                         digits = EMPTY_STRING;
                     }
-                    // Notify the observers that the event successfully completed.
-                    final IvrEndpointResponse<String> result = new IvrEndpointResponse<String>(digits);
+                    final IvrEndpointResponse result = new IvrEndpointResponse(
+                            new CollectedResult(digits, AsrSignal.REQUEST_ASR.getName().equals(event.getName()), false));
                     for (final ActorRef observer : observers) {
                         observer.tell(result, self);
+                    }
+                    break;
+                }
+                case 101: { // Success(partial result)
+                    if (parameters.containsKey("asrr")) {
+                        String asrr = parameters.get("asrr");
+                        if (!StringUtils.isEmpty(asrr)) {
+                            try {
+                                asrr = new String(Hex.decodeHex(asrr.toCharArray()));
+                            } catch (DecoderException e) {
+                                logger.error("asrr parameter cannot be decoded");
+                                fail(code);
+                            }
+                        }
+                        // Notify the observers that the event successfully completed.
+                        final IvrEndpointResponse result = new IvrEndpointResponse(new CollectedResult(asrr, true, true));
+                        for (final ActorRef observer : observers) {
+                            observer.tell(result, self);
+                        }
+                    } else {
+                        logger.error("asrr parameter is missing");
+                        fail(code);
                     }
                     break;
                 }
