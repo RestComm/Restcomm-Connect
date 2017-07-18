@@ -45,7 +45,7 @@
        Result assigned to: restcomm-rvd.download.url
   -->
   <property name="restcomm-rvd.path" value="${configuration.directory}/restcomm-rvd.war"/>
-  <condition property="restcomm-rvd.download.url" value="https://oss.sonatype.org/content/groups/public/org/restcomm/restcomm-connect-rvd/${rvd.version}/restcomm-connect-rvd-${rvd.version}.war" else="https://mobicents.ci.cloudbees.com/view/VisualDesigner/job/VisualDesigner/lastSuccessfulBuild/artifact/designer/target/restcomm-rvd.war">
+  <condition property="restcomm-rvd.download.url" value="https://oss.sonatype.org/content/groups/public/org/restcomm/restcomm-connect-rvd/${rvd.version}/restcomm-connect-rvd-${rvd.version}.war" else="https://mobicents.ci.cloudbees.com/view/VisualDesigner/job/VisualDesignerASR/lastSuccessfulBuild/artifact/designer/target/restcomm-rvd.war">
     <isset property="rvd.version"></isset>
   </condition>
   <echo>Will retrieve RVD from ${restcomm-rvd.download.url}</echo>
