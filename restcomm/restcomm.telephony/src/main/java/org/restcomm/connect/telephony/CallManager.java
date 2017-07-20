@@ -1057,7 +1057,7 @@ public final class CallManager extends RestcommUntypedActor {
         }
 
         String phone = cdr.getTo();
-        MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, phone, cdr.getAccountSid(), false);
+        MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, phone, cdr.getAccountSid());
         IncomingPhoneNumber number = mostOptimalNumber.number();
 
         if (number == null || (number.getReferUrl() == null && number.getReferApplicationSid() == null)) {
@@ -1190,7 +1190,7 @@ public final class CallManager extends RestcommUntypedActor {
         boolean failCall = false;
         IncomingPhoneNumber number = null;
         try {
-            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, phone, fromClientAccountSid, failCall);
+            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, phone, fromClientAccountSid);
             number = mostOptimalNumber.number();
             failCall = mostOptimalNumber.isFailCall();
             if(failCall){

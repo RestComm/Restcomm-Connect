@@ -221,7 +221,7 @@ public class UssdCallManager extends RestcommUntypedActor {
 
         if (request.getContentType().equals("application/vnd.3gpp.ussd+xml")) {
             // This is a USSD Invite
-            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, id, cdr.getAccountSid(), false);
+            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, id, null);
             number = mostOptimalNumber.number();
             if (number != null) {
                 final UssdInterpreterParams.Builder builder = new UssdInterpreterParams.Builder();
