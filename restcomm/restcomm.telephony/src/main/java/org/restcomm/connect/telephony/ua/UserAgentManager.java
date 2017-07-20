@@ -56,6 +56,7 @@ import org.restcomm.connect.commons.util.DigestAuthentication;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RegistrationsDao;
+import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.Registration;
@@ -414,7 +415,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
         final String qop = map.get("qop");
         final String response = map.get("response");
         final ClientsDao clients = storage.getClientsDao();
-        final Client client = clients.getClient(user, getOrganizationSidBySipURIHost(sipURI));
+        final Client client = clients.getClient(user, OrganizationUtil.getOrganizationSidBySipURIHost(storage, sipURI));
         if (client != null && Client.ENABLED == client.getStatus()) {
             final String password = client.getPassword();
             final String result = DigestAuthentication.response(algorithm, user, realm, password, nonce, nc, cnonce, method,
@@ -472,7 +473,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
             }
         }
         final RegistrationsDao registrations = storage.getRegistrationsDao();
-        Registration registration = registrations.getRegistration(((SipURI)response.getTo().getURI()).getUser(), getOrganizationSidBySipURIHost((SipURI)response.getTo().getURI()));
+        Registration registration = registrations.getRegistration(((SipURI)response.getTo().getURI()).getUser(), OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI)response.getTo().getURI()));
         //Registration here shouldn't be null. Update it
         registration = registration.updated();
         registrations.updateRegistration(registration);
@@ -565,7 +566,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
 
         boolean webRTC = isWebRTC(transport, ua);
 
-        Sid organizationSid = getOrganizationSidBySipURIHost(to);
+        Sid organizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, to);
         final Registration registration = new Registration(sid, instanceId, now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent, organizationSid);
         final RegistrationsDao registrations = storage.getRegistrationsDao();
 
@@ -789,7 +790,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
             if (ua == null)
                 ua = "GenericUA";
             boolean webRTC = isWebRTC(transport, ua);
-            Sid organizationSid = getOrganizationSidBySipURIHost(to);
+            Sid organizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, to);
             final Registration registration = new Registration(sid, RestcommConfiguration.getInstance().getMain().getInstanceId(), now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent, organizationSid);
             final RegistrationsDao registrations = storage.getRegistrationsDao();
 
@@ -875,26 +876,6 @@ public final class UserAgentManager extends RestcommUntypedActor {
         SipURI sipURI = ((SipURI)contact.getURI());
         sipURI.setPort(outgoingRequest.getLocalPort());
         sipURI.setHost(outgoingRequest.getLocalAddr());
-    }
-
-    /**
-     * getOrganizationSidBySipURIHost
-     *
-     * @param sipURI
-     * @return Sid of Organization
-     */
-    private Sid getOrganizationSidBySipURIHost(final SipURI sipURI){
-        final String organizationDomainName = sipURI.getHost();
-        if(logger.isDebugEnabled())
-            logger.debug("sipURI: "+sipURI+" | organizationDomainName: "+organizationDomainName);
-        Organization organization = storage.getOrganizationsDao().getOrganizationByDomainName(organizationDomainName);
-        if(logger.isDebugEnabled())
-            logger.debug("organization: "+organization);
-        if(organization == null){
-            organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
-            logger.error("organization is null going to choose default: "+organization);
-        }
-        return organization.getSid();
     }
 
     @Override

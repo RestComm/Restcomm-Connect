@@ -50,6 +50,7 @@ import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RegistrationsDao;
+import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.Organization;
@@ -102,7 +103,7 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
 
          final RegistrationsDao registrations = daoManager.getRegistrationsDao();
          try {
-             Sid toOrganizationSid = getOrganizationSidBySipURIHost((SipURI) request.getTo().getURI());
+             Sid toOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getTo().getURI());
              final Registration registration = registrations.getRegistration(user, toOrganizationSid);
              if (registration != null) {
                  final String location = registration.getLocation();
@@ -110,7 +111,7 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
                  SipURI to;
                  SipURI from;
                  to = (SipURI) sipFactory.createURI(location);
-                 Sid fromOrganizationSid = getOrganizationSidBySipURIHost((SipURI) request.getFrom().getURI());
+                 Sid fromOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getFrom().getURI());
                  // if both clients don't belong to same organization, call should not be allowed.
                  if(!toOrganizationSid.equals(fromOrganizationSid)){
                      logger.warn(String.format("B2B clients do not belong to same organization. from-client: %s belong to %s . where as to-client %s belong to %s", client.getLogin(), fromOrganizationSid, user, toOrganizationSid));
@@ -620,22 +621,6 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
      public static boolean isB2BUASession(SipServletMessage sipMessage) {
          SipSession linkedB2BUASession = getLinkedSession(sipMessage);
          return (linkedB2BUASession != null);
-     }
-
-     /**
-      * getOrganizationSidBySipURIHost
-      *
-      * @param sipURI
-      * @return Sid of Organization
-      */
-     private static Sid getOrganizationSidBySipURIHost(final SipURI sipURI){
-         final String organizationDomainName = sipURI.getHost();
-         if(logger.isDebugEnabled())
-             logger.debug("sipURI: "+sipURI+" | organizationDomainName: "+organizationDomainName);
-         Organization organization = daoManager.getOrganizationsDao().getOrganizationByDomainName(organizationDomainName);
-         if(logger.isDebugEnabled())
-             logger.debug("organization: "+organization);
-         return organization.getSid();
      }
 
  }

@@ -399,7 +399,6 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
             //Should it be configurable?
             final String defaultOrganization = "ORafbe225ad37541eba518a74248f0ac4c";
-            context.setAttribute("defaultOrganization", defaultOrganization);
             generateDefaultDomainName(xml.subset("http-client"), storage, defaultOrganization);
 
             context.setAttribute(InstanceId.class.getName(), instanceId);
