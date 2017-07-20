@@ -21,6 +21,7 @@ package org.restcomm.connect.dao;
 
 import java.util.List;
 
+import org.restcomm.connect.commons.amazonS3.S3AccessTool;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.RecordingFilter;
@@ -49,4 +50,6 @@ public interface RecordingsDao {
     List<Recording> getRecordings(RecordingFilter filter);
 
     void updateRecording(Recording recording);
+
+    S3AccessTool getS3AccessTool();
 }
