@@ -43,6 +43,14 @@ public class OrganizationUtil {
 
     private static Logger logger = Logger.getLogger(OrganizationUtil.class);
 
+    /**
+     * @param storage DaoManager
+     * @param request SipServletRequest
+     * @param phone
+     * @param fromClientAccountSid account Sid of request initiator
+     * @param failCall
+     * @return
+     */
     public static MostOptimalNumberResponse getMostOptimalIncomingPhoneNumber(DaoManager storage, SipServletRequest request, String phone,
             Sid fromClientAccountSid, boolean failCall) {
         //TODO remove it before merge
