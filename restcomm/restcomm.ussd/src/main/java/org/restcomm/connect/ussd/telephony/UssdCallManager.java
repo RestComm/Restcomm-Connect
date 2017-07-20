@@ -93,8 +93,6 @@ public class UssdCallManager extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final String defaultOrganization;
-
     /**
      * @param configuration
      * @param context
@@ -114,7 +112,6 @@ public class UssdCallManager extends RestcommUntypedActor {
         this.ussdGatewayUri = ussdGatewayConfig.getString("ussd-gateway-uri");
         this.ussdGatewayUsername = ussdGatewayConfig.getString("ussd-gateway-user");
         this.ussdGatewayPassword = ussdGatewayConfig.getString("ussd-gateway-password");
-        defaultOrganization = (String) context.getAttribute("defaultOrganization");
     }
 
     private ActorRef ussdCall() {
@@ -340,25 +337,5 @@ public class UssdCallManager extends RestcommUntypedActor {
             final ActorRef ussdCall = (ActorRef) application.getAttribute(UssdCall.class.getName());
             ussdCall.tell(response, self);
         }
-    }
-
-    /**
-     * getOrganizationSidBySipURIHost
-     *
-     * @param sipURI
-     * @return Sid of Organization
-     */
-    private Sid getOrganizationSidBySipURIHost(final SipURI sipURI){
-        final String organizationDomainName = sipURI.getHost();
-        if(logger.isDebugEnabled())
-            logger.debug("sipURI: "+sipURI+" | organizationDomainName: "+organizationDomainName);
-        Organization organization = storage.getOrganizationsDao().getOrganizationByDomainName(organizationDomainName);
-        if(logger.isDebugEnabled())
-            logger.debug("organization: "+organization);
-        if(organization == null){
-            organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
-            logger.error("organization is null going to choose default: "+organization);
-        }
-        return organization.getSid();
     }
 }

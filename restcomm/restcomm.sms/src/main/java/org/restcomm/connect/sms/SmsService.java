@@ -159,7 +159,7 @@ public final class SmsService extends RestcommUntypedActor {
         final SipURI fromURI = (SipURI) request.getFrom().getURI();
         final String fromUser = fromURI.getUser();
         final ClientsDao clients = storage.getClientsDao();
-        final Sid fromOrganizationSid = getOrganizationSidBySipURIHost(fromURI);
+        final Sid fromOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromURI);
         if(logger.isDebugEnabled()) {
             logger.debug("fromOrganizationSid" + fromOrganizationSid);
         }
@@ -204,7 +204,7 @@ public final class SmsService extends RestcommUntypedActor {
             // try to see if the request is destined to another registered client
             // if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we
             // have little control over
-            final Sid toOrganizationSid = getOrganizationSidBySipURIHost((SipURI) request.getTo().getURI());
+            final Sid toOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getTo().getURI());
             if(logger.isDebugEnabled()) {
                 logger.debug("toOrganizationSid" + toOrganizationSid);
             }
@@ -508,26 +508,6 @@ public final class SmsService extends RestcommUntypedActor {
         final URI uri = URI.create(buffer.toString());
         builder.setUri(uri);
         return builder.build();
-    }
-
-    /**
-     * getOrganizationSidBySipHost
-     *
-     * @param sipURI
-     * @return Sid of Organization
-     */
-    private Sid getOrganizationSidBySipURIHost(final SipURI sipURI){
-        final String organizationDomainName = sipURI.getHost();
-        if(logger.isDebugEnabled())
-            logger.debug("sipURI: "+sipURI+" | organizationDomainName: "+organizationDomainName);
-        Organization organization = storage.getOrganizationsDao().getOrganizationByDomainName(organizationDomainName);
-        if(logger.isDebugEnabled())
-            logger.debug("organization: "+organization);
-        if(organization == null){
-            organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
-            logger.error("organization is null going to choose default: "+organization);
-        }
-        return organization.getSid();
     }
 
     /**

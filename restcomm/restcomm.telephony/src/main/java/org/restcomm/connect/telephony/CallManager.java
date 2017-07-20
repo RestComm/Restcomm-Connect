@@ -203,7 +203,6 @@ public final class CallManager extends RestcommUntypedActor {
     private int imsProxyPort;
     private String imsDomain;
     private String imsAccount;
-    private final String defaultOrganization;
 
     private boolean actAsProxyOut;
     private List<ProxyRule> proxyOutRules;
@@ -331,7 +330,6 @@ public final class CallManager extends RestcommUntypedActor {
                         && imsDomain != null && !imsDomain.isEmpty();
             }
         }
-        defaultOrganization = (String) context.getAttribute("defaultOrganization");
         if (!runtime.subset("acting-as-proxy").isEmpty() && !runtime.subset("acting-as-proxy").subset("proxy-rules").isEmpty()) {
             final Configuration proxyConfiguration = runtime.subset("acting-as-proxy");
             final Configuration proxyOutRulesConf = proxyConfiguration.subset("proxy-rules");
@@ -480,7 +478,6 @@ public final class CallManager extends RestcommUntypedActor {
         }
         if(fromOrganizationSid == null){
             logger.error("Null Organization: fromUri: "+fromUri);
-            fromOrganizationSid = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization)).getSid();
         }
         if(logger.isDebugEnabled()) {
             logger.debug("fromOrganizationSid" + fromOrganizationSid);
@@ -528,8 +525,7 @@ public final class CallManager extends RestcommUntypedActor {
             logger.debug("toOrganizationSid: " + toOrganizationSid);
         }
         if(toOrganizationSid == null){
-            logger.error("Null Organization: toUri: "+fromUri);
-            toOrganizationSid = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization)).getSid();
+            logger.error("Null Organization: toUri: "+(SipURI) request.getTo().getURI());
         }
         Client toClient = clients.getClient(toUser, toOrganizationSid);
 
