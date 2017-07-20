@@ -58,7 +58,6 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Client;
-import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.Registration;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.telephony.api.GetCall;

@@ -51,7 +51,6 @@ import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.MostOptimalNumberResponse;
-import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
