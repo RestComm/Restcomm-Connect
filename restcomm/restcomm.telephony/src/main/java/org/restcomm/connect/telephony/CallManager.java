@@ -64,6 +64,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.StopObserving;
@@ -93,6 +94,7 @@ import org.restcomm.connect.extension.api.IExtensionCreateCallRequest;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
+import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.interpreter.StopInterpreter;
 import org.restcomm.connect.interpreter.VoiceInterpreter;
@@ -1139,7 +1141,9 @@ public final class CallManager extends RestcommUntypedActor {
 
         if (number.getReferApplicationSid() != null) {
             Application application = storage.getApplicationsDao().getApplication(number.getReferApplicationSid());
-            builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
+            RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+            RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+            builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
         } else {
             builder.setUrl(UriUtils.resolve(number.getReferUrl()));
         }
@@ -1219,7 +1223,9 @@ public final class CallManager extends RestcommUntypedActor {
                     final Sid sid = number.getVoiceApplicationSid();
                     if (sid != null) {
                         final Application application = applications.getApplication(sid);
-                        builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
+                        RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+                        RcmlserverResolver rcmlserverResolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+                        builder.setUrl(UriUtils.resolve(rcmlserverResolver.resolveRelative(application.getRcmlUrl())));
                     } else {
                         builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
                     }
@@ -1278,7 +1284,9 @@ public final class CallManager extends RestcommUntypedActor {
         URI clientAppVoiceUrl = null;
         if (applicationSid != null) {
             final Application application = applications.getApplication(applicationSid);
-            clientAppVoiceUrl = UriUtils.resolve(application.getRcmlUrl());
+            RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+            RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+            clientAppVoiceUrl = UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl()));
         }
         if (clientAppVoiceUrl == null) {
             clientAppVoiceUrl = client.getVoiceUrl();
