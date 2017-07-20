@@ -2352,7 +2352,6 @@ public final class CallManager extends RestcommUntypedActor {
         Sid orgSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI)regUri);
         if(orgSid == null){
             logger.error("Null Organization: regUri: "+regUri);
-            orgSid = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization)).getSid();
         }
         List<Registration> registrations = registrationsDao.getRegistrations(formattedNumber, orgSid);
 
