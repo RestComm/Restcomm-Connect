@@ -19,16 +19,24 @@
  */
 package org.restcomm.connect.sms;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Currency;
+import java.util.List;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipURI;
+
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
@@ -40,7 +48,6 @@ import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
@@ -73,23 +80,14 @@ import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 import org.restcomm.smpp.parameter.TlvSet;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServlet;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipURI;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Currency;
-import java.util.List;
-
-
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -168,9 +166,11 @@ public final class SmsService extends RestcommUntypedActor {
         final Client client = clients.getClient(fromUser, fromOrganizationSid);
         final AccountsDao accounts = storage.getAccountsDao();
         final ApplicationsDao applications = storage.getApplicationsDao();
+        Sid fromClientAccountSid = null;
 
         // Make sure we force clients to authenticate.
         if (client != null) {
+            fromClientAccountSid = client.getAccountSid();
             // Make sure we force clients to authenticate.
             if (authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
                     && !CallControlHelper.checkAuthentication(request, storage, fromOrganizationSid)) {
@@ -185,7 +185,7 @@ public final class SmsService extends RestcommUntypedActor {
         // registered
         final String toUser = CallControlHelper.getUserSipId(request, useTo);
         // Try to see if the request is destined for an application we are hosting.
-        if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
+        if (redirectToHostedSmsApp(self, request, accounts, applications, toUser, fromClientAccountSid)) {
             // Tell the sender we received the message okay.
             if(logger.isInfoEnabled()) {
                 logger.info("Message to :" + toUser + " matched to one of the hosted applications");
@@ -286,13 +286,13 @@ public final class SmsService extends RestcommUntypedActor {
      * @throws IOException
      */
     private boolean redirectToHostedSmsApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-            final ApplicationsDao applications, String id) throws IOException {
+            final ApplicationsDao applications, String id, Sid fromClientAccountSid) throws IOException {
         boolean isFoundHostedApp = false;
 
         // Handle the SMS message.
         final SipURI uri = (SipURI) request.getRequestURI();
         final String to = uri.getUser();
-        MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, to, cdr.getAccountSid(), false);
+        MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, to, fromClientAccountSid);
         IncomingPhoneNumber number = mostOptimalNumber.number();
         try {
             if (number != null) {

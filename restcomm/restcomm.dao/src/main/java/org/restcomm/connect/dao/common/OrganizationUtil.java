@@ -48,15 +48,15 @@ public class OrganizationUtil {
      * @param request SipServletRequest
      * @param phone
      * @param fromClientAccountSid account Sid of request initiator
-     * @param failCall
      * @return
      */
     public static MostOptimalNumberResponse getMostOptimalIncomingPhoneNumber(DaoManager storage, SipServletRequest request, String phone,
-            Sid fromClientAccountSid, boolean failCall) {
+            Sid fromClientAccountSid) {
         //TODO remove it before merge
         logger.info("*********************** getMostOptimalIncomingPhoneNumber started ***********************: "+phone);
 
         IncomingPhoneNumber number = null;
+        boolean failCall = false;
         Sid destinationOrganizationSid = getOrganizationSidBySipURIHost(storage, (SipURI)request.getRequestURI());
 
         if(destinationOrganizationSid == null){
