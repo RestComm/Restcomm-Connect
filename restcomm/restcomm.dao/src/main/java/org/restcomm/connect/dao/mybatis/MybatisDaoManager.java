@@ -54,7 +54,6 @@ import org.restcomm.connect.dao.ShortCodesDao;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.TranscriptionsDao;
 import org.restcomm.connect.dao.UsageDao;
-import org.restcomm.connect.dao.GeolocationDao;
 import scala.concurrent.ExecutionContext;
 
 /**
