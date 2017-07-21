@@ -4,7 +4,7 @@ This is a quick user guide for Restcomm - Docker. You will learn how to install 
 Prerequisites
 ^^^^^^^^^^^^^^
 
-*  *System requirements:* There are not any particular minimum requirements to properly run RestComm. Mostly depends on the use-case scenario and needs in resources. For a local development environment (not production) a medium station (i3,4Gb) should be enough (link:#memissue[known issue]).
+* *System requirements:* There are not any particular minimum requirements to properly run RestComm. Mostly depends on the use-case scenario and needs in resources. For a local development environment (not production) a medium station (i3,4Gb) should be enough (link:#memissue[known issue]).
 * Install docker on your sever : https://docs.docker.com/engine/installation/
 * Get a free API KEY VoiceRss account as explained  http://www.voicerss.org/[HERE]
 * Ensure firewall is correctly configured (*SELinux can be a problem on some systems*)
@@ -15,7 +15,6 @@ Supported Tags
 ^^^^^^^^^^^^^^
 
 * Tag "latest". Points to the latest binary from the Continuous Delivery server. Uses the https://github.com/RestComm/Restcomm-Connect[master] development branch : restcomm/restcomm:latest. *We don't advice to use "latest" tag for production as it is constantly changing, and as well new features and fixes may not be documented.
-* Tag "stable". Points to the latest/current GA release (current: https://github.com/RestComm/Restcomm-Connect/releases/tag/7.6.0.879/[7.6.0.GA]) use tag :  restcomm/restcomm:stable
 * Tag "7.7.0" pointing to current specific GA release (v770ga).
 
 To pull the "**latest**" image from the RestComm docker hub repository please use:
@@ -58,7 +57,7 @@ Quick test
 3.  Your browser will ask for permission to share microphone and camera, press allow
 4.  Go to "Contact", click on the "**+1234**" and press the "Audio Call" button (phone icon)
 5.  You should hear the "Welcome to RestComm, a Telestax Sponsored project" announcement
-6.  You can also make a calll to the "**+1235**" to test your Text-to-Speech configuration
+6.  You can also make a call to the "**+1235**" to test your Text-to-Speech configuration
 
 [[accessing-the-admin-ui]]
 Accessing the Admin UI
