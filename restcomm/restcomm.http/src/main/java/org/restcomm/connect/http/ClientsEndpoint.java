@@ -251,9 +251,9 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             throw new NullPointerException("Password can not be null.");
         }
         // https://github.com/RestComm/Restcomm-Connect/issues/1979
-        if (!StringUtils.isAlphanumeric(data.getFirst("Login"))) {
+        if (!StringUtils.isAlphanumericOrPeriods(data.getFirst("Login"))) {
             throw new IllegalArgumentException(
-                    "Login contains invalid characters: only alphanumeric allowed  " + data.getFirst("Login"));
+                    "Login contains invalid characters: only alphanumeric and dot(.) allowed  " + data.getFirst("Login"));
         }
     }
 

@@ -71,8 +71,8 @@ public final class StringUtils {
         return Strings.isNullOrEmpty(text);
     }
 
-    public static boolean isAlphanumeric(final String text) {
-        return CharMatcher.JAVA_LETTER_OR_DIGIT.matchesAllOf(text);
+    public static boolean isAlphanumericOrPeriods(final String text) {
+        return CharMatcher.JAVA_LETTER_OR_DIGIT.or(CharMatcher.anyOf(".")).matchesAllOf(text);
     }
 
 }

@@ -190,6 +190,13 @@ public class ClientsEndpointTest {
         params.add("Login","mbilal.testtelestax.com"); // login must be alphanumeric
         params.add("Password","RestComm1234!");
         response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(200, response.getStatus());
+        
+        // Alphanumeric login name check
+        params = new MultivaluedMapImpl();
+        params.add("Login","mbilal testtelestax.com"); // login must be alphanumeric
+        params.add("Password","RestComm1234!");
+        response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
         Assert.assertEquals(400, response.getStatus());
     }
 
@@ -205,7 +212,7 @@ public class ClientsEndpointTest {
         Assert.assertTrue("Response should contain 'null' term", response.getEntity(String.class).toLowerCase().contains("null"));
         // Alphanumeric login name check
         params = new MultivaluedMapImpl();
-        params.add("Login","mbilal.testtelestax.com"); // login must be alphanumeric
+        params.add("Login","mbilal testtelestax.com"); // login must be alphanumeric
         params.add("Password","");
         response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
         Assert.assertEquals(400, response.getStatus());
