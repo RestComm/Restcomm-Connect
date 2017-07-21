@@ -208,7 +208,11 @@ public class IncomingPhoneNumbersDaoTest {
         // Create a new incoming phone number in the data store.
         numbers.addIncomingPhoneNumber(number);
         // Read the incoming phone number from the data store.
-        IncomingPhoneNumber result = numbers.getIncomingPhoneNumber("+12223334444");
+        List<IncomingPhoneNumber> incomingPhoneNumbers = numbers.getIncomingPhoneNumber("+12223334444");
+        assert (incomingPhoneNumbers != null);
+        assert (!incomingPhoneNumbers.isEmpty());
+        assert (incomingPhoneNumbers.size()==1);
+        IncomingPhoneNumber result = incomingPhoneNumbers.get(0);
         assert (result != null);
         assertTrue(result.getSid().equals(number.getSid()));
         // Delete the incoming phone number.

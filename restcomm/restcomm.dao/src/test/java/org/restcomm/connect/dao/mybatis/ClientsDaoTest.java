@@ -133,6 +133,7 @@ public final class ClientsDaoTest {
     @Test
     public void readByUser() {
         final Sid account = Sid.generate(Sid.Type.ACCOUNT);
+        final Sid org = Sid.generate(Sid.Type.ORGANIZATION);
         final Sid sid = Sid.generate(Sid.Type.CLIENT);
         Sid application = Sid.generate(Sid.Type.APPLICATION);
         URI url = URI.create("hello-world.xml");
@@ -156,7 +157,7 @@ public final class ClientsDaoTest {
         // Create a new client in the data store.
         clients.addClient(client);
         // Read the client from the data store using the user name.
-        final Client result = clients.getClient("tom");
+        final Client result = clients.getClient("tom", org);
         // Validate the result.
         assertTrue(result.getSid().equals(client.getSid()));
         assertTrue(result.getAccountSid().equals(client.getAccountSid()));
