@@ -1,4 +1,7 @@
-This is a quick user guide for Restcomm - Docker. You will learn how to install and start using Restcomm in a docker container.
+= Quick Start Guide: RestComm on Docker
+:toc:
+
+This is a quick user guide for running Restcomm on Docker. You will learn how to install and start using Restcomm in a docker container.
 
 [[prerequisites]]
 Prerequisites
@@ -9,10 +12,14 @@ Prerequisites
 * Get a free API KEY VoiceRss account as explained  http://www.voicerss.org/[HERE]
 * Ensure firewall is correctly configured (*SELinux can be a problem on some systems*)
 * *SELinux has been known to cause "permission denied" issues on some Linux system, you might want to disable or set SELinux to permissive mode.* (some basic commands : getenforce, will show the type of permission you currently have )
+* The IP address you can reach docker on (this differs between Linux / MacOS, so please see relevant section below).
 
 [[supported-tags]]
 Supported Tags
 ^^^^^^^^^^^^^^
+
+There are various versions of the Restcomm docker images available. Below you will find a description of each one.
+If you do not know which one to use, `stable` is the safest choice.
 
 * Tag "latest". Points to the latest binary from the Continuous Delivery server. Uses the https://github.com/RestComm/Restcomm-Connect[master] development branch : restcomm/restcomm:latest. *We don't advice to use "latest" tag for production as it is constantly changing, and as well new features and fixes may not be documented.
 * Tag "stable". Points to the latest/current GA release (current: https://github.com/RestComm/Restcomm-Connect/releases/tag/7.6.0.879/[7.6.0.GA]) use tag :  restcomm/restcomm:stable
@@ -25,18 +32,43 @@ To pull the "**latest**" image from the RestComm docker hub repository please us
 docker pull restcomm/restcomm:latest
 ----
 
+[[finding-the-docker-ip-address]]
+Finding the Docker IP address
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+*Linux*
+
+* Get the Docker IP address by running ifconfig command
+* Look for the line that looks similar to:
+`docker0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500 inet 172.17.42.1`
+* This is the `DOCKER_IP_ADDRESS` you will need below.
+
+*macOS*
+
+Contrary to the way the Docker networking works on Linux, there is https://docs.docker.com/docker-for-mac/networking/#there-is-no-docker0-bridge-on-macos[no docker bridge on macOS],
+meaning you *cannot* find a `DOCKER_IP_ADDRESS`. Rather, docker maps all forwarded ports to `localhost`.
+
+
+In turn, this means you should be able to use either `localhost`, or your `eth0` IP
+address (even though this is not a great idea, as it may change quite often), or
+even, following the Docker docs, attaching an unused IP to the `lo0` interface on the
+Mac; for example: `sudo ifconfig lo0 alias 10.200.10.1/24`.
+
+tl;dr
+
+Use `127.0.0.1` or your `eth0` IP address as the `DOCKER_IP_ADDRESS`.
+
+
 [[install-and-run-restcomm-docker]]
 Install and Run Restcomm Docker
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Get your "ETHERNET_IP" by running ifconfig
 * Fill out the STATIC_ADDRESS variable as shown below
 * Start Restcomm as shown below:
-* This will start Restcomm in secure mode (https)
 
 [source,lang:default,decode:true]
 ----
-docker run  -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/restcomm/ -e RCBCONF_STATIC_ADDRESS="YOUR_ETHERNET_IP" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh" -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+docker run  -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/restcomm/ -e RCBCONF_STATIC_ADDRESS="DOCKER_IP_ADDRESS" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh" -p 80:80 -p 443:443 -p 8080:8080 -p 9990:9990 -p 5080:5080 -p 5081:5081 -p 5082:5082 -p 5083:5083 -p 5080:5080/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
 ----
 
 [[text-to-speech-with-voicerss]]
@@ -49,9 +81,6 @@ Text-to-Speech with VoiceRSS
 [[quick-test]]
 Quick test
 ^^^^^^^^^^
-
-* Get the Docker IP address by running ifconfig command
-* docker0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500 inet 172.17.42.1
 
 1.  Go to *https://DOCKER_IP_ADDRESS/olympus*
 2.  Press "Sign in" (username alice or bob and password 1234)
@@ -98,7 +127,7 @@ You can start the container and get a bash console to manually setup Restcomm an
 
 [source,lang:default,decode:true]
 ----
-docker run --name=restcomm-myInstance --entrypoint=/bin/bash -it -p 80:80 -p 5060:5060 -p 5082:5082 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+docker run --name=restcomm-myInstance --entrypoint=/bin/bash -it -p 80:80 -p 5080:5080 -p 5082:5082 -p 5080:5080/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
 ----
 
 Get a bash console for a running RestComm container:
@@ -108,6 +137,10 @@ docker exec -it RESTCOMM_Container_ID bash
 ----
 
 '''''
+
+[[troubleshooting]]
+Troubleshooting
++++++++++++++++
 
 *Excessive demand on memory when exposing a big range of ports.*
 
@@ -126,11 +159,11 @@ When using a SIP client that is not running on the same local machine as the Res
 
 [source,lang:default,decode:true]
 ----
-docker run  -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/restcomm/ -e RCBCONF_STATIC_ADDRESS="YOUR_ETHERNET_IP" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/scripts/restcomm_env_locally.sh" -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+docker run  -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/restcomm/ -e RCBCONF_STATIC_ADDRESS="YOUR_ETHERNET_IP" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/scripts/restcomm_env_locally.sh" -p 80:80 -p 443:443 -p 9990:9990 -p 5080:5080 -p 5081:5081 -p 5082:5082 -p 5083:5083 -p 5080:5080/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
 ----
 
 *Known Issue on Firefox when running RestComm Olympus*
 
 It is possible that you will not be able to log in to olympus the first time that you will try to connect using Firefox. To fix this problem please follow the solution provided by http://stackoverflow.com/users/379916/faisal-mq[Faisal Mq] (http://stackoverflow.com/questions/11542460/secure-websocket-wss-doesnt-work-on-firefox[stackoverflow]).
 
-* When you would try to open up wss say using wss://IP:5063, Firefox will keep on giving you error until you open up a separate Firefox tab and do try hitting URL [https]://IP:5063 and Confirm Security Exception (like you do on Firefox normally for any https based connection). This only happens in Firefox.
+* When you would try to open up wss say using wss://IP:5083, Firefox will keep on giving you error until you open up a separate Firefox tab and do try hitting URL [https]://IP:5083 and Confirm Security Exception (like you do on Firefox normally for any https based connection). This only happens in Firefox.
