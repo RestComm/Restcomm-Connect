@@ -21,7 +21,7 @@ FILE=$BASEDIR/standalone/deployments/olympus.war/resources/xml/olympus.xml
     local SIP_PORT_WS=$((SIP_PORT_WS + PORT_OFFSET))
     local SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
 
-    if [ -n "$SECURESSL" ]; then
+    if [ "$SECURESSL" = "SELF" ] || [ "$SECURESSL" = "AUTH" ]; then
         xmlstarlet ed -L -P -u  "/olympus/server/@secure" -v "true" $FILE
    else
         xmlstarlet ed -L -P -u  "/olympus/server/@secure" -v "false" $FILE
