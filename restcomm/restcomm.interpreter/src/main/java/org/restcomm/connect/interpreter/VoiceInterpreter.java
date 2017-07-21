@@ -775,10 +775,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, ready);
             } else if (is(creatingRecording)) {
                 fsm.transition(message, finishRecording);
-            } else if (is(forking)){
-                // Moving to next verb since received confirmation from Stop, requested at checkDialBranch
-                final GetNextVerb next = new GetNextVerb();
-                parser.tell(next, self());
             }
             // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
             // come later
@@ -814,6 +810,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Finally proceed with call bridging
                 final JoinCalls bridgeCalls = new JoinCalls(call, outboundCall);
                 bridge.tell(bridgeCalls, self());
+            } else if (is(forking)){
+                if(dialBranches == null || dialBranches.size() == 0){
+                    final GetNextVerb next = new GetNextVerb();
+                    parser.tell(next, self());
+                }
             }
         } else {
             fsm.transition(message, hangingUp);
@@ -1156,6 +1157,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             removeDialBranch(message, sender);
                         }
                         checkDialBranch(message, sender, action);
+                        if (dialBranches == null || dialBranches.size() == 0){
+                            final StopMediaGroup stop = new StopMediaGroup();
+                            call.tell(stop, sender);
+                        }
                         return;
                     }
                 } if (is(initializingCall)) {
@@ -1333,12 +1338,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (sender != null && !sender.equals(call)) {
                     callManager.tell(new DestroyCall(sender), self());
                 }
-                if(is(forking)){
-                    // Stop ringing from inbound call when all branches are BUSY
-                    // Explicit Stop must be send before continue with VI
-                    final StopMediaGroup stop = new StopMediaGroup();
-                    call.tell(stop, self());
-                } else if (parser != null) {
+                if (parser != null && !is(forking)) {
                     final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, self());
                 }
