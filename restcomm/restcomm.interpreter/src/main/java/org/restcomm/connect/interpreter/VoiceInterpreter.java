@@ -340,6 +340,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(processingDialChildren, faxing));
         transitions.add(new Transition(processingDialChildren, sendingSms));
         transitions.add(new Transition(processingDialChildren, playing));
+        transitions.add(new Transition(processingDialChildren, pausing));
         transitions.add(new Transition(processingDialChildren, ready));
         transitions.add(new Transition(processingDialChildren, hangingUp));
         transitions.add(new Transition(processingDialChildren, finished));
