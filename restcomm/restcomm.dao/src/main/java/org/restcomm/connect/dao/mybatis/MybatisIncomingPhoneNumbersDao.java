@@ -68,41 +68,32 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
 
     @Override
     public IncomingPhoneNumber getIncomingPhoneNumber(final Sid sid) {
-        return getIncomingPhoneNumber("getIncomingPhoneNumber", sid.toString());
+        final List<IncomingPhoneNumber> incomingPhoneNumbers = getIncomingPhoneNumber("getIncomingPhoneNumber", sid.toString());
+        return (incomingPhoneNumbers == null || incomingPhoneNumbers.isEmpty()) ? null : incomingPhoneNumbers.get(0);
     }
 
     @Override
     public List<IncomingPhoneNumber> getIncomingPhoneNumber(final String phoneNumber) {
-        final SqlSession session = sessions.openSession();
-        try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getIncomingPhoneNumberByValue",
-                    phoneNumber);
-            final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
-            if (results != null && !results.isEmpty()) {
-                for (final Map<String, Object> result : results) {
-                    incomingPhoneNumbers.add(toIncomingPhoneNumber(result));
-                }
-            }
-            return incomingPhoneNumbers;
-        } finally {
-            session.close();
-        }
+        return getIncomingPhoneNumber("getIncomingPhoneNumberByValue", phoneNumber);
     }
 
-    private IncomingPhoneNumber getIncomingPhoneNumber(final String selector, Object parameter) {
+    private List<IncomingPhoneNumber> getIncomingPhoneNumber(final String selector, Object parameter) {
         final SqlSession session = sessions.openSession();
         String inboundPhoneNumber = null;
+        final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + selector, parameter);
-            if (result != null ) {
-                return toIncomingPhoneNumber(result);
+            final List<Map<String, Object>> resultList = session.selectOne(namespace + selector, parameter);
+            if (resultList != null && !resultList.isEmpty()) {
+                for (final Map<String, Object> result : resultList) {
+                    incomingPhoneNumbers.add(toIncomingPhoneNumber(result));
+                }
             }
             //check if there is a Regex match only if parameter is a String aka phone Number
             listPhones = getIncomingPhoneNumbersRegex();
             if (listPhones != null && listPhones.size() > 0) {
                 inboundPhoneNumber = ((String)parameter).replace("+1", "");
                 if (inboundPhoneNumber.matches("[\\d,*,#,+]+")) {
-                    return checkIncomingPhoneNumberRegexMatch(selector, inboundPhoneNumber);
+                    incomingPhoneNumbers.add(checkIncomingPhoneNumberRegexMatch(selector, inboundPhoneNumber));
                 }
             }
         }finally {
