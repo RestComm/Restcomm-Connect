@@ -247,8 +247,11 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
      * @param configuration
      * @param storage
      */
-    private void generateDefaultDomainName (final Configuration configuration, final DaoManager storage, String defaultOrganization) {
+    private boolean generateDefaultDomainName (final Configuration configuration, final DaoManager storage) {
         try{
+            //Should it be configurable?
+            final String defaultOrganization = "ORafbe225ad37541eba518a74248f0ac4c";
+
             final String hostname = configuration.getString("hostname");
             Organization organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
             if(organization != null){
@@ -259,13 +262,17 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                     storage.getOrganizationsDao().updateOrganization(organization);
                 }else{
                     logger.error("Unable to generateDefaultDomainName hostname property is null in restcomm.xml");
+                    return false;
                 }
             }else{
                 logger.error("Unable to generateDefaultDomainName default org not found");
+                return false;
             }
         }catch(Exception e){
             logger.error("Unable to generateDefaultDomainName {}", e);
+            return false;
         }
+        return true;
     }
     @Override
     public void servletInitialized(SipServletContextEvent event) {
@@ -399,13 +406,12 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 logger.error("UnknownHostException during the generation of InstanceId: "+e);
             }
 
-            //Should it be configurable?
-            final String defaultOrganization = "ORafbe225ad37541eba518a74248f0ac4c";
-            generateDefaultDomainName(xml.subset("http-client"), storage, defaultOrganization);
-
             context.setAttribute(InstanceId.class.getName(), instanceId);
             monitoring.tell(instanceId, null);
             RestcommConfiguration.getInstance().getMain().setInstanceId(instanceId.getId().toString());
+
+            generateDefaultDomainName(xml.subset("http-client"), storage);
+
             // https://github.com/RestComm/Restcomm-Connect/issues/1285 Pass InstanceId to the Load Balancer for LCM stickiness
             SipConnector[] connectors = (SipConnector[]) context.getAttribute("org.mobicents.servlet.sip.SIP_CONNECTORS");
             Properties loadBalancerCustomInfo = new Properties();
