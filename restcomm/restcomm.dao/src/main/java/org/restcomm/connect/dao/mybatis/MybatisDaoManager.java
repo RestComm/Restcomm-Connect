@@ -53,6 +53,7 @@ import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.TranscriptionsDao;
 import org.restcomm.connect.dao.UsageDao;
 import org.restcomm.connect.dao.GeolocationDao;
+import scala.concurrent.ExecutionContext;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -87,15 +88,18 @@ public final class MybatisDaoManager implements DaoManager {
     private ExtensionsConfigurationDao extensionsConfigurationDao;
     private GeolocationDao geolocationDao;
 
+    private ExecutionContext ec;
+
     public MybatisDaoManager() {
         super();
     }
 
     @Override
-    public void configure(final Configuration configuration, Configuration daoManagerConfiguration) {
+    public void configure(final Configuration configuration, Configuration daoManagerConfiguration, final ExecutionContext ec) {
         this.configuration = daoManagerConfiguration.subset("dao-manager");
         this.amazonS3Configuration = configuration.subset("amazon-s3");
         this.runtimeConfiguration = configuration.subset("runtime-settings");
+        this.ec = ec;
     }
 
     @Override
@@ -272,7 +276,7 @@ public final class MybatisDaoManager implements DaoManager {
         presenceRecordsDao = new MybatisRegistrationsDao(sessions);
         if (s3AccessTool != null) {
             final String recordingPath = runtimeConfiguration.getString("recordings-path");
-            recordingsDao = new MybatisRecordingsDao(sessions, s3AccessTool, recordingPath);
+            recordingsDao = new MybatisRecordingsDao(sessions, s3AccessTool, recordingPath, ec);
         } else {
             recordingsDao = new MybatisRecordingsDao(sessions);
         }
