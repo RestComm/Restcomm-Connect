@@ -51,6 +51,7 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
     private String hostname;
     private String instanceId;
     private String apiVersion;
+    private int recordingMaxDelay;
 
     public static final String BYPASS_LB_FOR_CLIENTS = "bypass-lb-for-clients";
     private boolean bypassLbForClients = false;
@@ -94,6 +95,8 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
         this.hostname = resolveRelativeUrlHostname;
         bypassLbForClients = bypassLb;
         apiVersion = source.getProperty("runtime-settings.api-version");
+
+        this.recordingMaxDelay = Integer.parseInt(source.getProperty("runtime-setting.recording-max-delay", "2000"));
     }
 
     public MainConfigurationSetImpl(SslMode sslMode, int responseTimeout, boolean useHostnameToResolveRelativeUrls, String hostname, String instanceId, boolean bypassLbForClients) {
@@ -159,5 +162,10 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
 
     public String getApiVersion() {
         return apiVersion;
+    }
+
+    @Override
+    public int getRecordingMaxDelay () {
+        return recordingMaxDelay;
     }
 }

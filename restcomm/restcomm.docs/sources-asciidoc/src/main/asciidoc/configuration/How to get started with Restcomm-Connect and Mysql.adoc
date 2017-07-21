@@ -15,9 +15,9 @@ the following tutorial will show how to get started with Restcomm and Mysql._
 
 == Step 1 - Download Mysql Java Connector and Configure Java Connector
 * Download mysql java connector as explained link:http://mvnrepository.com/artifact/mysql/mysql-connector-java[HERE]
-* Create the following folder stucture mkdir -p $RESTCOMM_HOME/modules/org/mariadb/jdbc/main
-* Download the myqls jar file into the main directory, cp mysql-connector-java-5.1.40.jar $RESTCOMM_HOME/modules/org/mariadb/jdbc/main
-* create a the file module.xml  *vi $RESTCOMM_HOME/modules/org/mariadb/jdbc/main/module.xml* make sure the content of the module.xml looks like the one below with the appropriate mysql connector jar file name. 
+* Create the following folder stucture mkdir -p $RESTCOMM_HOME/modules/org/mysql/jdbc/main
+* Download the myqls jar file into the main directory, cp mysql-connector-java-5.1.40.jar $RESTCOMM_HOME/modules/org/mysql/jdbc/main
+* create a the file module.xml  *vi $RESTCOMM_HOME/modules/org/mysql/jdbc/main/module.xml* make sure the content of the module.xml looks like the one below with the appropriate mysql connector jar file name. 
 [source,bash]
 ----
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -103,8 +103,7 @@ show tables;
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'192.168.1.%' IDENTIFIED BY 'YourMysqlDBPwd' WITH GRANT OPTION;
 
 then save the changes as follows
-
-GRANT ALL PRIVILEGES;
+FLUSH PRIVILEGES;
 
 The above command will allow your use to be able to access the DB on 192.168.1.x subnet
 The is important if you have multiple Restcomm instances in the same subnet and they will need to Replicate DB on a MASTER-MASTER format
