@@ -1,7 +1,10 @@
 = Restcomm Configuration
 
-If you don't use the hosted version of Restcomm, then you will need to install Restcomm in a local environment. The various guides below will guide you on how to do that and install, configure and start Restcomm to fit your local environment
+If you don't use the hosted version of Restcomm, then you will need to install Restcomm in a local environment. The tutorials below will guide you on how to do that and install, configure and start Restcomm to fit your local environment
 
+=== Supported Operating System and Language
+Please note that English is the only supported Linux Operating System Language. In most production deployment, most of our customers use the following English language Linux distribution : Red Hat Enterprise Linux and Ubuntu LTS 
+  
 == Basic Configuration Resources
 
 There is two different ways to install Restcomm Connect. Either through Docker or through binary. You will find below instructions for both
