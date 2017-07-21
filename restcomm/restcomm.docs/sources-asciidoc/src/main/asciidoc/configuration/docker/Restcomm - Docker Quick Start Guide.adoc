@@ -4,7 +4,7 @@ This is a quick user guide for Restcomm - Docker. You will learn how to install 
 Prerequisites
 ^^^^^^^^^^^^^^
 
-* *System requirements:* There are not any particular minimum requirements to properly run RestComm. Mostly depends on the use-case scenario and needs in resources. For a local development environment (not production) a medium station (i3,4Gb) should be enough (link:#memissue[known issue]).
+* *System requirements:* Please, check RAM dedicated to your Docker container. Restcomm requires minimum *3GB* to start 2 java processes: Jboss with Restcomm services and standalone mediaserver
 * Install docker on your sever : https://docs.docker.com/engine/installation/
 * Get a free API KEY VoiceRss account as explained  http://www.voicerss.org/[HERE]
 * Ensure firewall is correctly configured (*SELinux can be a problem on some systems*)
@@ -28,8 +28,8 @@ docker pull restcomm/restcomm:latest
 Install and Run Restcomm Docker
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Get your "ETHERNET_IP" by running ifconfig
-* Fill out the STATIC_ADDRESS variable as shown below
+* Get your "ETHERNET_IP" by running ifconfig. Use 127.0.0.1 as "ETHERNET_IP" if you are running container on Docker for Mac.
+* Fill out the STATIC_ADDRESS variable as shown below.
 * Start Restcomm as shown below:
 * This will start Restcomm in secure mode (https)
 
@@ -49,7 +49,7 @@ Text-to-Speech with VoiceRSS
 Quick test
 ^^^^^^^^^^
 
-* Get the Docker IP address by running ifconfig command
+* Get the Docker IP address by running ifconfig command. Use any address (for instance 127.0.0.1) if you are running container on Docker for Mac.
 * docker0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500 inet 172.17.42.1
 
 1.  Go to *https://DOCKER_IP_ADDRESS:8443/olympus*
@@ -63,7 +63,7 @@ Quick test
 Accessing the Admin UI
 ^^^^^^^^^^^^^^^^^^^^^^
 
-1.  Go to https://DOCKER_IP_ADDRESS
+1.  Go to *https://DOCKER_IP_ADDRESS:8443*
 2.  Username = administrator@company.com
 3.  Password = RestComm
 4.  Change the default password
