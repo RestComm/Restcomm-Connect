@@ -224,7 +224,7 @@ public class DialActionTest {
         assertEquals(1, requests.size());
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=null"));
+        assertTrue(requestBody.contains("DialCallStatus=failed"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
@@ -283,11 +283,12 @@ public class DialActionTest {
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
         //DialCallStatus should be null since there was no call made - since Alice is not registered
-        assertTrue(requestBody.contains("DialCallStatus=null"));
+        assertTrue(requestBody.contains("DialCallStatus=failed"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
-        assertTrue(requestBody.contains("CallStatus=completed"));
+        //When the Dial finish and since the Dialbranch = 0, the Dial Action is executed while Call is in progress
+        assertTrue(requestBody.contains("CallStatus=in-progress"));
         Iterator iter = Arrays.asList(params).iterator();
         String dialCallSid = null;
         while (iter.hasNext()) {
@@ -758,7 +759,7 @@ public class DialActionTest {
 
     /**
      * This test verifies: if Diversion header is present in INVITE, we update ForwardedFrom in cdr.
-     * 
+     *
      * @throws ParseException
      * @throws InterruptedException
      */
@@ -843,7 +844,7 @@ public class DialActionTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         logger.info("cdr = "+cdr);
         assertNotNull(cdr);
-        
+
         String forwardedFrom = cdr.get("forwarded_from").getAsString();
         assertNotNull(forwardedFrom);
     }

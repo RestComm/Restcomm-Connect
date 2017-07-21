@@ -1758,6 +1758,8 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
+            boolean amazonS3Enabled = configuration.subset("amazon-s3").getBoolean("enabled");
+
             final Class<?> klass = message.getClass();
             if (CallStateChanged.class.equals(klass)) {
                 final CallStateChanged event = (CallStateChanged) message;
@@ -1786,6 +1788,10 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 }
             } else if(logger.isDebugEnabled()) {
                 logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
+            }
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Recording duration: "+duration);
             }
 
             final Recording.Builder builder = Recording.builder();
@@ -1907,7 +1913,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                         }
                     }
                     final List<NameValuePair> parameters = parameters();
-                    boolean amazonS3Enabled = configuration.subset("amazon-s3").getBoolean("enabled");
                     if (amazonS3Enabled) {
                         //If Amazon S3 is enabled the Recordings DAO uploaded the wav file to S3 and changed the URI
                         parameters.add(new BasicNameValuePair("RecordingUrl", recording.getFileUri().toURL().toString()));
@@ -1932,10 +1937,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                             logger.info("About to execute Record action to: "+uri);
                         }
                         downloader.tell(request, self());
-                        // A little clean up.
-                        recordingSid = null;
-                        recordingUri = null;
-                        return;
                     } else if (CallStateChanged.class.equals(klass)) {
                         parameters.add(new BasicNameValuePair("Digits", "hangup"));
                         request = new HttpRequestDescriptor(uri, method, parameters);
@@ -1943,9 +1944,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                             logger.info("About to execute Record action to: "+uri);
                         }
                         downloader.tell(request, self());
-                        // A little clean up.
-                        recordingSid = null;
-                        recordingUri = null;
                     }
 //                    final StopInterpreter stop = new StopInterpreter();
 //                    source.tell(stop, source);
