@@ -26,4 +26,5 @@ package org.restcomm.connect.commons.configuration.sources;
  */
 public interface ConfigurationSource {
     String getProperty(String key);
+    String getProperty (String key, String defValue);
 }

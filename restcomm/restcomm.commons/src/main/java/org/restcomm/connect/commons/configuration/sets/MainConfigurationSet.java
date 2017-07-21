@@ -41,4 +41,6 @@ public interface MainConfigurationSet {
     String getInstanceId();
 
     String getApiVersion();
+
+    int getRecordingMaxDelay ();
 }
