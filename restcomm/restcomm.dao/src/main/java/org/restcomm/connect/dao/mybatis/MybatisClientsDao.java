@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.ClientFilter;
 import org.restcomm.connect.commons.dao.Sid;
 
 import java.net.URI;
@@ -91,10 +92,10 @@ public final class MybatisClientsDao implements ClientsDao {
     }
 
     @Override
-    public List<Client> getClients(final Sid accountSid) {
+    public List<Client> getClientsUsingFilter(final ClientFilter filter) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getClients", accountSid.toString());
+            final List<Map<String, Object>> results = session.selectList(namespace + "getClientsUsingFilter", filter);
             final List<Client> clients = new ArrayList<Client>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -152,6 +153,14 @@ public final class MybatisClientsDao implements ClientsDao {
             session.commit();
         } finally {
             session.close();
+        }
+    }
+
+    @Override
+    public Integer getTotalClientsByUsingFilters(ClientFilter filter) {
+        try (final SqlSession session = sessions.openSession();) {
+            final Integer total = session.selectOne(namespace + "getTotalClientsByUsingFilters", filter);
+            return total;
         }
     }
 

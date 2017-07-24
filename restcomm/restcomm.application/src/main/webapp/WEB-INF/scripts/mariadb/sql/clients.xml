@@ -19,13 +19,42 @@
     SELECT * FROM restcomm_clients WHERE login=#{login};
   </select>
   
-  <select id="getClients" parameterType="string" resultType="hashmap">
-    SELECT * FROM restcomm_clients WHERE account_sid=#{account_sid};
+  <select id="getClientsUsingFilter" parameterType="org.restcomm.connect.dao.entities.ClientFilter" resultType="hashmap">
+    SELECT * FROM restcomm_clients WHERE account_sid=#{accountSid}
+    <if test="friendlyName != null">
+      AND friendly_name=#{friendlyName}
+    </if>
+    <if test="login != null">
+      AND login=#{login}
+    </if>
+    <choose>
+    <when test="sortBy == 'login'">
+      order by login ${sortDirection}
+    </when>
+    <when test="sortBy == 'friendly_name'">
+      order by friendly_name ${sortDirection}
+    </when>
+    <otherwise>
+      order by friendly_name ${sortDirection}
+    </otherwise>
+  </choose>   
+    LIMIT #{limit} OFFSET #{offset}
   </select>
   
   <select id="getAllClients" resultType="hashmap">
   	SELECT * FROM restcomm_clients;
   </select>
+  
+  <select id="getTotalClientsByUsingFilters" parameterType="org.restcomm.connect.dao.entities.ClientFilter" resultType="int">
+   	SELECT COUNT(*) FROM restcomm_clients WHERE account_sid=#{accountSid}
+
+	<if test="friendlyName != null">
+      AND friendly_name=#{friendlyName}
+    </if>
+    <if test="login != null">
+      AND login=#{login}
+    </if>
+   </select>
   
   <delete id="removeClient" parameterType="string">
     DELETE FROM restcomm_clients WHERE sid=#{sid};

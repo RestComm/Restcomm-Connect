@@ -149,36 +149,36 @@ XML GET Response
 [source,lang:xml,decode:true]
 ----
 <RestcommResponse>
-  <Clients>
-    <Client>
-      <Sid>CL3003328d0de04ba68f38de85b732ed56</Sid>
-      <DateCreated>Mon, 4 Nov 2013 16:33:39 -0500</DateCreated>
-      <DateUpdated>Mon, 4 Nov 2013 16:33:39 -0500</DateUpdated>
-      <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-      <ApiVersion>2012-04-24</ApiVersion>
-      <FriendlyName>bob</FriendlyName>
-      <Login>bob</Login>
-      <Password>i-1c8468a2</Password>
-      <Status>1</Status>
-      <VoiceMethod>POST</VoiceMethod>
-      <VoiceFallbackMethod>POST</VoiceFallbackMethod>
-      <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL3003328d0de04ba68f38de85b732ed56</Uri>
-    </Client>
-    <Client>
-      <Sid>CLa2b99142e111427fbb489c3de357f60a</Sid>
-      <DateCreated>Mon, 4 Nov 2013 12:52:44 -0500</DateCreated>
-      <DateUpdated>Mon, 4 Nov 2013 12:52:44 -0500</DateUpdated>
-      <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
-      <ApiVersion>2012-04-24</ApiVersion>
-      <FriendlyName>alice</FriendlyName>
-      <Login>alice</Login>
-      <Password>i-1c8468a2</Password>
-      <Status>1</Status>
-      <VoiceMethod>POST</VoiceMethod>
-      <VoiceFallbackMethod>POST</VoiceFallbackMethod>
-      <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa2b99142e111427fbb489c3de357f60a</Uri>
-    </Client>
-  </Clients>
+    <Clients page="0" numpages="0" pagesize="50" total="0" start="0" end="2" uri="/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients" firstpageuri="/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients?Page=0&amp;PageSize=50" previouspageuri="null" nextpageuri="null" lastpageuri="/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients?Page=0&amp;PageSize=50">
+        <Client>
+            <Sid>CL3003328d0de04ba68f38de85b732ed56</Sid>
+            <DateCreated>Mon, 4 Nov 2013 16:33:39 +1300</DateCreated>
+            <DateUpdated>Mon, 4 Nov 2013 16:33:39 +1300</DateUpdated>
+            <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+            <ApiVersion>2012-04-24</ApiVersion>
+            <FriendlyName>bob</FriendlyName>
+            <Login>bob</Login>
+            <Password>1234</Password>
+            <Status>1</Status>
+            <VoiceMethod>POST</VoiceMethod>
+            <VoiceFallbackMethod>POST</VoiceFallbackMethod>
+            <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL3003328d0de04ba68f38de85b732ed56</Uri>
+        </Client>
+        <Client>
+            <Sid>CLa2b99142e111427fbb489c3de357f60a</Sid>
+            <DateCreated>Mon, 4 Nov 2013 12:52:44 +1300</DateCreated>
+            <DateUpdated>Mon, 4 Nov 2013 12:52:44 +1300</DateUpdated>
+            <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+            <ApiVersion>2012-04-24</ApiVersion>
+            <FriendlyName>alice</FriendlyName>
+            <Login>alice</Login>
+            <Password>1234</Password>
+            <Status>1</Status>
+            <VoiceMethod>POST</VoiceMethod>
+            <VoiceFallbackMethod>POST</VoiceFallbackMethod>
+            <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa2b99142e111427fbb489c3de357f60a</Uri>
+        </Client>
+    </Clients>
 </RestcommResponse>
 ----
 
@@ -191,34 +191,77 @@ curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:R3stC0mm@127.0.0.1/restco
 JSON GET Response
 
 ----
-[
-  {
-    "sid": "CL3003328d0de04ba68f38de85b732ed56",
-    "date_created": "Mon, 4 Nov 2013 16:33:39 -0500",
-    "date_updated": "Mon, 4 Nov 2013 16:33:39 -0500",
-    "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
-    "api_version": "2012-04-24",
-    "friendly_name": "bob",
-    "login": "bob",
-    "password": "i-1c8468a2",
-    "status": "1",
-    "voice_method": "POST",
-    "voice_fallback_method": "POST",
-    "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL3003328d0de04ba68f38de85b732ed56.json"
-  },
-  {
-    "sid": "CLa2b99142e111427fbb489c3de357f60a",
-    "date_created": "Mon, 4 Nov 2013 12:52:44 -0500",
-    "date_updated": "Mon, 4 Nov 2013 12:52:44 -0500",
-    "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
-    "api_version": "2012-04-24",
-    "friendly_name": "alice",
-    "login": "alice",
-    "password": "i-1c8468a2",
-    "status": "1",
-    "voice_method": "POST",
-    "voice_fallback_method": "POST",
-    "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa2b99142e111427fbb489c3de357f60a.json"
-  }
-]
+{
+   "page": 0,
+   "num_pages": 0,
+   "page_size": 50,
+   "total": 2,
+   "start": "0",
+   "end": "2",
+   "uri": "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json",
+   "first_page_uri": "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json?Page=0&PageSize=50",
+   "previous_page_uri": null,
+   "next_page_uri": null,
+   "last_page_uri": "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json?Page=0&PageSize=50",
+   "clients": [
+      {
+         "sid": "CL3003328d0de04ba68f38de85b732ed56",
+         "date_created": "Mon, 4 Nov 2013 16:33:39 +1300",
+         "date_updated": "Mon, 4 Nov 2013 16:33:39 +1300",
+         "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+         "api_version": "2012-04-24",
+         "friendly_name": "bob",
+         "login": "bob",
+         "password": "1234",
+         "status": "1",
+         "voice_method": "POST",
+         "voice_fallback_method": "POST",
+         "uri": "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL3003328d0de04ba68f38de85b732ed56.json"
+      },
+      {
+         "sid": "CLa2b99142e111427fbb489c3de357f60a",
+         "date_created": "Mon, 4 Nov 2013 12:52:44 +1300",
+         "date_updated": "Mon, 4 Nov 2013 12:52:44 +1300",
+         "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+         "api_version": "2012-04-24",
+         "friendly_name": "alice",
+         "login": "alice",
+         "password": "1234",
+         "status": "1",
+         "voice_method": "POST",
+         "voice_fallback_method": "POST",
+         "uri": "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa2b99142e111427fbb489c3de357f60a.json"
+      }
+   ]
+}
 ----
+If the system doesn't have any client, you will see output below 
+
+[source,lang:xml,decode:true]
+----
+<RestcommResponse>
+    <Clients page="0" numpages="0" pagesize="50" total="0" start="0" end="0" uri="/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients" firstpageuri="/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients?Page=0&amp;PageSize=50" previouspageuri="null" nextpageuri="null" lastpageuri="/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients?Page=0&amp;PageSize=50"/>
+</RestcommResponse>
+----
+== Additional Paging Information.
+
+The API returns current page, number of pages, page size, total number of records, index of first record, index of last record end, URIs to the next, previous, first and last pages of the returned list as shown in the table below:
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|============================================================
+|Parameter |Description
+|Page |The current page number. Zero-indexed, so the first page is 0.
+|NumPages |The total number of pages.
+|PageSize |How many items are in each page
+|Total |The total number of items in the list.
+|Start |The position in the overall list of the first item in this page.
+|End |The position in the overall list of the last item in this page.
+|Uri |The URI of the current page.
+|Firstpageuri |The URI for the first page of this list.
+|Nextpageuri |The URI for the next page of this list.
+|Previouspageuri |The URI for the previous page of this list.
+|Lastpageuri |The URI for the last page of this list.
+|============================================================
+

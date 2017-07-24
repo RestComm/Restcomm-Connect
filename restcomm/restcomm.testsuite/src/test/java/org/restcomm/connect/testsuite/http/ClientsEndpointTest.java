@@ -1,25 +1,21 @@
 package org.restcomm.connect.testsuite.http;
 
+import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.sip.address.SipURI;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-import junit.framework.Assert;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
@@ -33,10 +29,20 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+
+import junit.framework.Assert;
+
 
 /**
  *
@@ -47,7 +53,7 @@ import org.restcomm.connect.commons.Version;
 public class ClientsEndpointTest {
 
     private static final String version = Version.getVersion();
-
+    private static Logger logger = Logger.getLogger(ClientsEndpointTest.class);
     @ArquillianResource
     private Deployer deployer;
     @ArquillianResource
@@ -186,6 +192,91 @@ public class ClientsEndpointTest {
         Assert.assertEquals(400, response.getStatus());
         Assert.assertTrue("Response should contain 'invalid' term", response.getEntity(String.class).toLowerCase().contains("invalid"));
     }
+    
+    @Test
+    public void getClientsList() {
+        JsonObject firstPage = RestcommClientsTool.getInstance().getClients(deploymentUrl.toString(), developerAccountSid,
+                developeerAuthToken);
+        int totalSize = firstPage.get("total").getAsInt();
+        JsonArray firstPageClientsArray = firstPage.get("clients").getAsJsonArray();
+        int firstPageClientsArraySize = firstPageClientsArray.size();
+        assertTrue(firstPageClientsArraySize == 50);
+        assertTrue(firstPage.get("start").getAsInt() == 0);
+        assertTrue(firstPage.get("end").getAsInt() == 49);
+
+        JsonObject secondPage = (JsonObject) RestcommClientsTool.getInstance().getClients(deploymentUrl.toString(),
+                developerAccountSid, developeerAuthToken, 2, null, true);
+        JsonArray secondPageClientsArray = secondPage.get("clients").getAsJsonArray();
+        assertTrue(secondPageClientsArray.size() == 50);
+        assertTrue(secondPage.get("start").getAsInt() == 100);
+        assertTrue(secondPage.get("end").getAsInt() == 149);
+
+        JsonObject lastPage = (JsonObject) RestcommClientsTool.getInstance().getClients(deploymentUrl.toString(), developerAccountSid,
+                developeerAuthToken, firstPage.get("num_pages").getAsInt(), null, true);
+        JsonArray lastPageClientsArray = lastPage.get("clients").getAsJsonArray();
+          assertTrue(lastPageClientsArray.get(lastPageClientsArray.size() - 1).getAsJsonObject().get("sid").getAsString()
+                .equals("CL00000000000000000000000000000001"));
+        assertTrue(lastPageClientsArray.size() == 32);
+        assertTrue(lastPage.get("start").getAsInt() == 350);
+        assertTrue(lastPage.get("end").getAsInt() == 382);
+
+        assertTrue(totalSize == 382);
+    }
+
+    @Test
+    public void getClientsListUsingPageSize() {
+        JsonObject firstPage = (JsonObject) RestcommClientsTool.getInstance().getClients(deploymentUrl.toString(), developerAccountSid,
+                developeerAuthToken, null, 100, true);
+        int totalSize = firstPage.get("total").getAsInt();
+        JsonArray firstPageClientsArray = firstPage.get("clients").getAsJsonArray();
+        int firstPageClientsArraySize = firstPageClientsArray.size();
+        assertTrue(firstPageClientsArraySize == 100);
+        assertTrue(firstPage.get("start").getAsInt() == 0);
+        assertTrue(firstPage.get("end").getAsInt() == 99);
+
+        JsonObject secondPage = (JsonObject) RestcommClientsTool.getInstance().getClients(deploymentUrl.toString(),
+                developerAccountSid, developeerAuthToken, 2, 100, true);
+        JsonArray secondPageClientsArray = secondPage.get("clients").getAsJsonArray();
+        assertTrue(secondPageClientsArray.size() == 100);
+        assertTrue(secondPage.get("start").getAsInt() == 200);
+        assertTrue(secondPage.get("end").getAsInt() == 299);
+
+        JsonObject lastPage = (JsonObject) RestcommClientsTool.getInstance().getClients(deploymentUrl.toString(), developerAccountSid,
+                developeerAuthToken, firstPage.get("num_pages").getAsInt(), 100, true);
+        JsonArray lastPageClientsArray = lastPage.get("clients").getAsJsonArray();
+        assertEquals("CL00000000000000000000000000000001",lastPageClientsArray.get(lastPageClientsArray.size() - 1).getAsJsonObject().get("sid").getAsString());
+        assertTrue(lastPageClientsArray.size() == 82);
+        assertTrue(lastPage.get("start").getAsInt() == 300);
+        assertTrue(lastPage.get("end").getAsInt() == 382);
+
+        assertTrue(totalSize == 382);
+    }
+    
+    @Test
+    public void getClientsListUsingFilters() {
+
+        Map<String, String> filter = new HashMap<>();
+        filter.put("FriendlyName", "Test Client 442");
+        JsonObject clients = (JsonObject) RestcommClientsTool.getInstance().getClientsUsingFilter(deploymentUrl.toString(),
+                developerAccountSid, developeerAuthToken, filter);
+        int totalSize = clients.get("total").getAsInt();
+        JsonArray clientsArray = clients.get("clients").getAsJsonArray();
+        assertTrue(totalSize == 1);
+        assertEquals("CL18b46c008f2e4a5fb56cc5d0b5d26208",
+                clientsArray.get(clientsArray.size() - 1).getAsJsonObject().get("sid").getAsString());
+
+        filter = new HashMap<>();
+        filter.put("Login", "login459");
+        clients = (JsonObject) RestcommClientsTool.getInstance().getClientsUsingFilter(deploymentUrl.toString(),
+                developerAccountSid, developeerAuthToken, filter);
+        totalSize = clients.get("total").getAsInt();
+        clientsArray = clients.get("clients").getAsJsonArray();
+        assertTrue(totalSize == 1);
+        assertEquals("CL6b390313af834fee8fab0b2790a77287",
+                clientsArray.get(clientsArray.size() - 1).getAsJsonObject().get("sid").getAsString());
+
+    }
+    
 
     protected String getResourceUrl(String suffix) {
         String urlString = deploymentUrl.toString();
