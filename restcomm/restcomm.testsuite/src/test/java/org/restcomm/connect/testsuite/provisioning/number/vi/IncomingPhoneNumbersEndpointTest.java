@@ -657,6 +657,7 @@ public class IncomingPhoneNumbersEndpointTest {
         formData.add("VoiceMethod", "POST");
         formData.add("SMSMethod", "GET");
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        logger.info(clientResponse);
         assertTrue(clientResponse.getStatus() == 200);
         response = clientResponse.getEntity(String.class);
         logger.info(response);
