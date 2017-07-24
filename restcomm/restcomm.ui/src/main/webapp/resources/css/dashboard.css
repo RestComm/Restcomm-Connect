@@ -209,6 +209,7 @@ form[role=login] input:-webkit-autofill,
 form[role=login] input:-webkit-autofill:focus{
     box-shadow: 0 0 0 1000px white inset;
     transition-property: background-color;
+    -webkit-text-fill-color: #6d6e70;
 }
 
 #forgot-password {
