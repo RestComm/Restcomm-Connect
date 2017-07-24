@@ -92,7 +92,7 @@ public class OrganizationUtil {
                 //get all number with same number, by both formatedPhone and unformatedPhone
                 numbers = numbersDao.getIncomingPhoneNumber(formatedPhone);
                 if(numbers == null){
-                	numbers = numbersDao.getIncomingPhoneNumber(phone);
+                    numbers = numbersDao.getIncomingPhoneNumber(phone);
                 }else{
                     numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
                 }
@@ -100,7 +100,7 @@ public class OrganizationUtil {
                     //remove the (+) and check if exists
                     phone= phone.replaceFirst("\\+","");
                     if(numbers == null){
-                    	numbers = numbersDao.getIncomingPhoneNumber(phone);
+                        numbers = numbersDao.getIncomingPhoneNumber(phone);
                     }else{
                         numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
                     }
@@ -108,14 +108,14 @@ public class OrganizationUtil {
                     //Add "+" add check if number exists
                     phone = "+".concat(phone);
                     if(numbers == null){
-                    	numbers = numbersDao.getIncomingPhoneNumber(phone);
+                        numbers = numbersDao.getIncomingPhoneNumber(phone);
                     }else{
                         numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
                     }
                 }
                 if(numbers == null || numbers.isEmpty()){
                     // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
-                	numbers = numbersDao.getIncomingPhoneNumber("*");
+                    numbers = numbersDao.getIncomingPhoneNumber("*");
                 }
                 if(numbers != null && !numbers.isEmpty()){
                     // find number in same organization
