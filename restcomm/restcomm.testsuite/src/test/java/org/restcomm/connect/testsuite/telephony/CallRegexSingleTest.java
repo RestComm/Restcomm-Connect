@@ -217,6 +217,7 @@ public class CallRegexSingleTest {
     public void testDial7777RegexOfDifferentOrganization() throws ParseException, InterruptedException, MalformedURLException {
         //matches regex expression "7777|8888" but belongs to domain 127.0.0.1 
     	// hence anyone from org1.restcomm.com should not be allowed to reach this regex
+    	// https://github.com/RestComm/Restcomm-Connect/issues/2293
         stubFor(get(urlPathEqualTo("/regex"))
                 .willReturn(aResponse()
                         .withStatus(200)
