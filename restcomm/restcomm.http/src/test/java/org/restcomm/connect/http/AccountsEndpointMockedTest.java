@@ -21,10 +21,21 @@
 package org.restcomm.connect.http;
 
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.http.HttpStatus;
 import org.junit.Test;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.AuthToken;
 import org.restcomm.connect.http.exceptions.NotAuthenticated;
 
+import junit.framework.Assert;
+
 import static org.mockito.Mockito.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * A sample unit test for accounts endpoint. It illustrates the use of the EndpointMockedTest.
@@ -45,6 +56,5 @@ public class AccountsEndpointMockedTest extends EndpointMockedTest {
         when(request.getHeader("Authorization")).thenReturn(null); // override Authorization header to null
         AccountsEndpoint endpoint = new AccountsEndpoint(servletContext,request);
         endpoint.init();
-    }
-
+     }
 }

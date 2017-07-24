@@ -28,6 +28,7 @@ import org.restcomm.connect.dao.AccountsDaoMock;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.DaoManagerMock;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.AuthToken;
 import org.restcomm.connect.commons.dao.Sid;
 import org.mockito.Mockito;
 
@@ -73,7 +74,9 @@ public class EndpointMockedTest {
         when(servletContext.getAttribute(Configuration.class.getName())).thenReturn(conf);
         // mock accountsDao
         accounts = new ArrayList<Account>();
-        accounts.add(new Account(new Sid("AC00000000000000000000000000000000"),null,null,"administrator@company.com","Administrator",null,null,null,"77f8c12cc7b8f8423e5c38b035249166",null,null));
+        List<AuthToken> authTokens = new ArrayList<>();
+        authTokens.add(new AuthToken(new Sid("AC00000000000000000000000000000000"), "77f8c12cc7b8f8423e5c38b035249166", "default"));
+        accounts.add(new Account(new Sid("AC00000000000000000000000000000000"),null,null,"administrator@company.com","Administrator",null,null,null,authTokens,null,null));
         accountsDao = new AccountsDaoMock(accounts);
         // mock DaoManager
         daoManager = new DaoManagerMock(accountsDao);

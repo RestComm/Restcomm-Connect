@@ -96,7 +96,7 @@ public final class Realm extends AuthorizingRealm {
             }
 
             if (account != null) {
-                authToken = account.getAuthToken();
+                authToken = account.getAuthToken().get(0).getAuthToken();//Not sure if this is the right approach
                 return new SimpleAuthenticationInfo(sid.toString(), authToken.toCharArray(), getName());
             } else {
                 return null;

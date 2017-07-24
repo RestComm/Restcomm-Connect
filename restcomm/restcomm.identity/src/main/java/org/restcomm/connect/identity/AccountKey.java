@@ -32,7 +32,9 @@ public class AccountKey {
         if ( account != null ) {
             if ( challengedKey != null )
                 // Compare both the plaintext version of the token and md5'ed version of it
-                if ( challengedKey.equals(account.getAuthToken()) || DigestUtils.md5Hex(challengedKey).equals(account.getAuthToken())  ) {
+                //The magic happens here
+                //if ( challengedKey.equals(account.getAuthToken().get(0)) || DigestUtils.md5Hex(challengedKey).equals(account.getAuthToken().get(0))  ) {
+                if (account.containsAuthToken(challengedKey) || account.containsAuthToken(DigestUtils.md5Hex(challengedKey))) {
                     verified = true;
                 }
         }
