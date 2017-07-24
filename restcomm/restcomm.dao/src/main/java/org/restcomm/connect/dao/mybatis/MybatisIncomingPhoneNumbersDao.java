@@ -99,8 +99,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         }finally {
             session.close();
         }
-        return null;
-
+        return incomingPhoneNumbers;
     }
 
    public IncomingPhoneNumber checkIncomingPhoneNumberRegexMatch ( String selector, String inboundPhoneNumber){
