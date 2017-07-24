@@ -41,7 +41,7 @@
 		<recordings-path>file://${restcomm:home}/recordings</recordings-path>
 		<recordings-uri>/restcomm/recordings</recordings-uri>
 
-		<!-- -->
+		<!-- if S3AccessTool takes more than the duration here, then Restcomm will report this -->
 		<recording-max-delay>2000</recording-max-delay>
 
 		<!-- The URL to the errors dictionary. -->
