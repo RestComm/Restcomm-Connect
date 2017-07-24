@@ -91,31 +91,33 @@ public class OrganizationUtil {
                 final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
                 //get all number with same number, by both formatedPhone and unformatedPhone
                 numbers = numbersDao.getIncomingPhoneNumber(formatedPhone);
-                //TODO remove it before merge
-                logger.info("getMostOptimalIncomingPhoneNumber: get formatedPhone result size: "+numbers.size());
-                numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
-                //TODO remove it before merge
-                logger.info("getMostOptimalIncomingPhoneNumber: get unformatedPhone result size: "+numbers.size());
+                if(numbers == null){
+                	numbers = numbersDao.getIncomingPhoneNumber(phone);
+                }else{
+                    numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+                }
                 if (phone.startsWith("+")) {
                     //remove the (+) and check if exists
                     phone= phone.replaceFirst("\\+","");
-                    numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
-                    //TODO remove it before merge
-                    logger.info("getMostOptimalIncomingPhoneNumber: get phone without plus result size: "+numbers.size());
+                    if(numbers == null){
+                    	numbers = numbersDao.getIncomingPhoneNumber(phone);
+                    }else{
+                        numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+                    }
                 } else {
                     //Add "+" add check if number exists
                     phone = "+".concat(phone);
-                    numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
-                    //TODO remove it before merge
-                    logger.info("getMostOptimalIncomingPhoneNumber: get phone with plus result size: "+numbers.size());
+                    if(numbers == null){
+                    	numbers = numbersDao.getIncomingPhoneNumber(phone);
+                    }else{
+                        numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
+                    }
                 }
-                if(numbers.isEmpty()){
+                if(numbers == null || numbers.isEmpty()){
                     // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
-                    numbers.addAll(numbersDao.getIncomingPhoneNumber("*"));
+                	numbers = numbersDao.getIncomingPhoneNumber("*");
                 }
-                //TODO remove it before merge
-                logger.info("getMostOptimalIncomingPhoneNumber: list size after getDistinctNumbersList: "+numbers.size());
-                if(!numbers.isEmpty()){
+                if(numbers != null && !numbers.isEmpty()){
                     // find number in same organization
                     for(IncomingPhoneNumber n : numbers){
                         //TODO remove it before merge
@@ -141,7 +143,7 @@ public class OrganizationUtil {
             logger.error("Error while trying to retrive getMostOptimalIncomingPhoneNumber: ", e);
         }
         //TODO remove it before merge
-        logger.info("*********************** getMostOptimalIncomingPhoneNumber ended ***********************"+number);
+        logger.info("*********************** getMostOptimalIncomingPhoneNumber ended *********************** "+number);
         return new MostOptimalNumberResponse(number, failCall);
     }
 
