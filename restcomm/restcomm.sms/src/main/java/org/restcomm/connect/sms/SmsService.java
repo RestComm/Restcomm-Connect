@@ -159,21 +159,22 @@ public final class SmsService extends RestcommUntypedActor {
         final SipURI fromURI = (SipURI) request.getFrom().getURI();
         final String fromUser = fromURI.getUser();
         final ClientsDao clients = storage.getClientsDao();
-        final Sid fromOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromURI);
+        final Sid sourceOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromURI);
         if(logger.isDebugEnabled()) {
-            logger.debug("fromOrganizationSid" + fromOrganizationSid);
+            logger.debug("sourceOrganizationSid: " + sourceOrganizationSid);
         }
-        final Client client = clients.getClient(fromUser, fromOrganizationSid);
+        if(sourceOrganizationSid == null){
+            logger.error("Null Organization: fromUri: "+fromURI);
+        }
+        final Client client = clients.getClient(fromUser, sourceOrganizationSid);
         final AccountsDao accounts = storage.getAccountsDao();
         final ApplicationsDao applications = storage.getApplicationsDao();
-        Sid fromClientAccountSid = null;
 
         // Make sure we force clients to authenticate.
         if (client != null) {
-            fromClientAccountSid = client.getAccountSid();
             // Make sure we force clients to authenticate.
             if (authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
-                    && !CallControlHelper.checkAuthentication(request, storage, fromOrganizationSid)) {
+                    && !CallControlHelper.checkAuthentication(request, storage, sourceOrganizationSid)) {
                 if(logger.isInfoEnabled()) {
                     logger.info("Client " + client.getLogin() + " failed to authenticate");
                 }
@@ -185,7 +186,7 @@ public final class SmsService extends RestcommUntypedActor {
         // registered
         final String toUser = CallControlHelper.getUserSipId(request, useTo);
         // Try to see if the request is destined for an application we are hosting.
-        if (redirectToHostedSmsApp(self, request, accounts, applications, toUser, fromClientAccountSid)) {
+        if (redirectToHostedSmsApp(self, request, accounts, applications, toUser, sourceOrganizationSid)) {
             // Tell the sender we received the message okay.
             if(logger.isInfoEnabled()) {
                 logger.info("Message to :" + toUser + " matched to one of the hosted applications");
@@ -230,7 +231,7 @@ public final class SmsService extends RestcommUntypedActor {
                 final SipServletResponse trying = request.createResponse(SipServletResponse.SC_TRYING);
                 trying.send();
                 //TODO:do extensions check here too?
-                ActorRef session = session(this.configuration, fromOrganizationSid);
+                ActorRef session = session(this.configuration, sourceOrganizationSid);
 
                 // Create an SMS detail record.
                 final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
@@ -286,13 +287,13 @@ public final class SmsService extends RestcommUntypedActor {
      * @throws IOException
      */
     private boolean redirectToHostedSmsApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-            final ApplicationsDao applications, String id, Sid fromClientAccountSid) throws IOException {
+            final ApplicationsDao applications, String id, Sid sourceOrganizationSid) throws IOException {
         boolean isFoundHostedApp = false;
 
         // Handle the SMS message.
         final SipURI uri = (SipURI) request.getRequestURI();
         final String to = uri.getUser();
-        MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, to, fromClientAccountSid);
+        MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, to, sourceOrganizationSid);
         IncomingPhoneNumber number = mostOptimalNumber.number();
         try {
             if (number != null) {

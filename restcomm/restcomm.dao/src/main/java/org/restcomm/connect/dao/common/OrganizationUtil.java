@@ -48,26 +48,24 @@ public class OrganizationUtil {
      * @param storage DaoManager
      * @param request SipServletRequest
      * @param phone
-     * @param fromClientAccountSid account Sid of request initiator
+     * @param sourceOrganizationSid organization Sid of request initiator
      * @return
      */
     public static MostOptimalNumberResponse getMostOptimalIncomingPhoneNumber(DaoManager storage, SipServletRequest request, String phone,
-            Sid fromClientAccountSid) {
+            Sid sourceOrganizationSid) {
         //TODO remove it before merge
         logger.info("*********************** getMostOptimalIncomingPhoneNumber started ***********************: "+phone);
 
         IncomingPhoneNumber number = null;
         boolean failCall = false;
+        List<IncomingPhoneNumber> numbers = new ArrayList<IncomingPhoneNumber>();
+        final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
         try{
             Sid destinationOrganizationSid = getOrganizationSidBySipURIHost(storage, (SipURI)request.getRequestURI());
 
             if(destinationOrganizationSid == null){
                 logger.error("destinationOrganizationSid is NULL: reuest Uri is: "+(SipURI)request.getRequestURI());
             }else{
-                Sid sourceOrganizationSid = null;
-                if(fromClientAccountSid != null){
-                    sourceOrganizationSid = storage.getAccountsDao().getAccount(fromClientAccountSid).getOrganizationSid();
-                }
 
                 logger.info("getMostOptimalIncomingPhoneNumber: sourceOrganizationSid: "+sourceOrganizationSid+" : destinationOrganizationSid: "+destinationOrganizationSid);
 
@@ -85,13 +83,11 @@ public class OrganizationUtil {
                     //Don't format to E.164 if phone contains # or * as this is
                     //for a Regex or USSD short number
                     formatedPhone = phone;
+                }else {
+                    //get all number with same number, by both formatedPhone and unformatedPhone
+                    numbers = numbersDao.getIncomingPhoneNumber(formatedPhone);
                 }
-                List<IncomingPhoneNumber> numbers = new ArrayList<IncomingPhoneNumber>();
-                // Try to find an application defined for the phone number.
-                final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
-                //get all number with same number, by both formatedPhone and unformatedPhone
-                numbers = numbersDao.getIncomingPhoneNumber(formatedPhone);
-                if(numbers == null){
+                if(numbers == null || numbers.isEmpty()){
                     numbers = numbersDao.getIncomingPhoneNumber(phone);
                 }else{
                     numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
@@ -99,7 +95,7 @@ public class OrganizationUtil {
                 if (phone.startsWith("+")) {
                     //remove the (+) and check if exists
                     phone= phone.replaceFirst("\\+","");
-                    if(numbers == null){
+                    if(numbers == null || numbers.isEmpty()){
                         numbers = numbersDao.getIncomingPhoneNumber(phone);
                     }else{
                         numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
@@ -107,7 +103,7 @@ public class OrganizationUtil {
                 } else {
                     //Add "+" add check if number exists
                     phone = "+".concat(phone);
-                    if(numbers == null){
+                    if(numbers == null || numbers.isEmpty()){
                         numbers = numbersDao.getIncomingPhoneNumber(phone);
                     }else{
                         numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));

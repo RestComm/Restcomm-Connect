@@ -185,7 +185,15 @@ public class UssdCallManager extends RestcommUntypedActor {
         final AccountsDao accounts = storage.getAccountsDao();
         final ApplicationsDao applications = storage.getApplicationsDao();
         final String toUser = CallControlHelper.getUserSipId(request, useTo);
-        if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
+        final SipURI fromUri = (SipURI) request.getFrom().getURI();
+        Sid sourceOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromUri);
+        if(logger.isDebugEnabled()) {
+            logger.debug("sourceOrganizationSid: " + sourceOrganizationSid);
+        }
+        if(sourceOrganizationSid == null){
+            logger.error("Null Organization: fromUri: "+fromUri);
+        }
+        if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, sourceOrganizationSid)) {
             return;
         }
 
@@ -206,7 +214,7 @@ public class UssdCallManager extends RestcommUntypedActor {
      * @throws Exception
      */
     private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-                                             final ApplicationsDao applications, String id) throws Exception {
+                                             final ApplicationsDao applications, String id, Sid sourceOrganizationSid) throws Exception {
         boolean isFoundHostedApp = false;
 
         final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
@@ -214,7 +222,7 @@ public class UssdCallManager extends RestcommUntypedActor {
 
         if (request.getContentType().equals("application/vnd.3gpp.ussd+xml")) {
             // This is a USSD Invite
-            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, id, null);
+            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, id, sourceOrganizationSid);
             number = mostOptimalNumber.number();
             if (number != null) {
                 final UssdInterpreterParams.Builder builder = new UssdInterpreterParams.Builder();

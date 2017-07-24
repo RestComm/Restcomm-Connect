@@ -472,23 +472,23 @@ public final class CallManager extends RestcommUntypedActor {
         final ApplicationsDao applications = storage.getApplicationsDao();
         // Try to find an application defined for the client.
         final SipURI fromUri = (SipURI) request.getFrom().getURI();
-        Sid fromOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromUri);
+        Sid sourceOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromUri);
         if(logger.isDebugEnabled()) {
-            logger.debug("fromOrganizationSid: " + fromOrganizationSid);
+            logger.debug("sourceOrganizationSid: " + sourceOrganizationSid);
         }
-        if(fromOrganizationSid == null){
+        if(sourceOrganizationSid == null){
             logger.error("Null Organization: fromUri: "+fromUri);
         }
         if(logger.isDebugEnabled()) {
-            logger.debug("fromOrganizationSid" + fromOrganizationSid);
+            logger.debug("sourceOrganizationSid: " + sourceOrganizationSid);
         }
         String fromUser = fromUri.getUser();
         final ClientsDao clients = storage.getClientsDao();
-        final Client client = clients.getClient(fromUser,fromOrganizationSid);
+        final Client client = clients.getClient(fromUser,sourceOrganizationSid);
         if (client != null) {
             // Make sure we force clients to authenticate.
             if (!authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
-                    || CallControlHelper.checkAuthentication(request, storage, fromOrganizationSid)) {
+                    || CallControlHelper.checkAuthentication(request, storage, sourceOrganizationSid)) {
                 // if the client has authenticated, try to redirect to the Client VoiceURL app
                 // otherwise continue trying to process the Client invite
                 if (redirectToClientVoiceApp(self, request, accounts, applications, client)) {
@@ -571,7 +571,7 @@ public final class CallManager extends RestcommUntypedActor {
             } else {
                 // toClient is null or we couldn't make the b2bua call to another client. check if this call is for a registered
                 // DID (application)
-                if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, client.getAccountSid())) {
+                if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, client.getAccountSid(), sourceOrganizationSid)) {
                     // This is a call to a registered DID (application)
                     return;
                 }
@@ -637,7 +637,7 @@ public final class CallManager extends RestcommUntypedActor {
                 proxyDialClientThroughMediaServer(request , toClient, toClient.getLogin());
                 return;
             }
-            if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, null)) {
+            if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, null, sourceOrganizationSid)) {
                 // This is a call to a registered DID (application)
                 return;
             }
@@ -1053,7 +1053,7 @@ public final class CallManager extends RestcommUntypedActor {
         }
 
         String phone = cdr.getTo();
-        MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, phone, cdr.getAccountSid());
+        MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, phone, storage.getAccountsDao().getAccount(cdr.getAccountSid()).getOrganizationSid());
         IncomingPhoneNumber number = mostOptimalNumber.number();
 
         if (number == null || (number.getReferUrl() == null && number.getReferApplicationSid() == null)) {
@@ -1181,12 +1181,12 @@ public final class CallManager extends RestcommUntypedActor {
      * @param phone
      */
     private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-                                             final ApplicationsDao applications, String phone, Sid fromClientAccountSid) {
+                                             final ApplicationsDao applications, String phone, Sid fromClientAccountSid, Sid sourceOrganizationSid) {
         boolean isFoundHostedApp = false;
         boolean failCall = false;
         IncomingPhoneNumber number = null;
         try {
-            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, phone, fromClientAccountSid);
+            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, phone, sourceOrganizationSid);
             number = mostOptimalNumber.number();
             failCall = mostOptimalNumber.isFailCall();
             if(failCall){
