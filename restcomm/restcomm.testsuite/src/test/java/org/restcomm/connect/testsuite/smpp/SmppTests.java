@@ -4,6 +4,7 @@ import com.cloudhopper.commons.charset.CharsetUtil;
 import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import junit.framework.Assert;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
@@ -168,6 +169,52 @@ public class SmppTests {
 		logger.info("getSmppContent: " + inboundMessageEntity.getSmppContent());
 		assertTrue(inboundMessageEntity.getSmppContent().equals(msgBodyRespUCS2));
 	}
+
+	private String morningMessage = "morning - μέρα";
+	private String nightMessage = "night - νύχτα";
+	private String rcmlWithEncodingAttribute = "<Response><Sms to=\""+from+"\" from=\""+to+"\" encoding=\"UCS-2\">night - νύχτα</Sms></Response>";
+	@Test
+	public void testSendMessageResponseWithEncodingAttribute () throws SmppInvalidArgumentException, IOException, InterruptedException {
+
+		stubFor(get(urlPathEqualTo("/smsApp"))
+				.willReturn(aResponse()
+						.withStatus(200)
+						.withHeader("Content-Type", "text/xml")
+						.withBody(rcmlWithEncodingAttribute)));
+
+		mockSmppServer.sendSmppMessageToRestcomm(morningMessage,to,from,CharsetUtil.CHARSET_UCS_2);
+		Thread.sleep(2000);
+		assertTrue(mockSmppServer.isMessageSent());
+		Thread.sleep(8000);
+		assertTrue(mockSmppServer.isMessageReceived());
+		SmppInboundMessageEntity inboundMessageEntity = mockSmppServer.getSmppInboundMessageEntity();
+		assertNotNull(inboundMessageEntity);
+		Assert.assertEquals(nightMessage,inboundMessageEntity.getSmppContent());
+		Assert.assertEquals(CharsetUtil.CHARSET_UCS_2, inboundMessageEntity.getSmppEncoding());
+	}
+
+	private String rcmlWithoutEncodingAttribute = "<Response><Sms to=\""+from+"\" from=\""+to+"\">night - νύχτα</Sms></Response>";
+	@Test
+	public void testSendMessageResponseWithoutEncodingAttribute () throws SmppInvalidArgumentException, IOException, InterruptedException {
+
+		stubFor(get(urlPathEqualTo("/smsApp"))
+				.willReturn(aResponse()
+						.withStatus(200)
+						.withHeader("Content-Type", "text/xml")
+						.withBody(rcmlWithEncodingAttribute)));
+
+		mockSmppServer.sendSmppMessageToRestcomm(morningMessage,to,from,CharsetUtil.CHARSET_UCS_2);
+		Thread.sleep(2000);
+		assertTrue(mockSmppServer.isMessageSent());
+		Thread.sleep(8000);
+		assertTrue(mockSmppServer.isMessageReceived());
+		SmppInboundMessageEntity inboundMessageEntity = mockSmppServer.getSmppInboundMessageEntity();
+		assertNotNull(inboundMessageEntity);
+		Assert.assertEquals(nightMessage,inboundMessageEntity.getSmppContent());
+		Assert.assertEquals(CharsetUtil.CHARSET_GSM7, inboundMessageEntity.getSmppEncoding());
+	}
+
+
 
 	@Test
 	public void testClientSentToOtherClient () throws ParseException {

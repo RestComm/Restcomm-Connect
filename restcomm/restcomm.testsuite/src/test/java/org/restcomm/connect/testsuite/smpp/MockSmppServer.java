@@ -8,6 +8,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.cloudhopper.commons.charset.UCS2Charset;
 import com.cloudhopper.commons.util.windowing.WindowFuture;
 import com.cloudhopper.smpp.pdu.DeliverSm;
 import com.cloudhopper.smpp.pdu.DeliverSmResp;
@@ -216,7 +217,21 @@ public class MockSmppServer {
 
                 try {
                     SubmitSm deliverSm = (SubmitSm) pduRequest;
-                    decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
+                    // Why always use UTF8 encoding when decoding ? - otsakir
+                    //decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
+                    switch (deliverSm.getDataCoding()) {
+                        case DataCoding.DATA_CODING_UCS2:
+                            decodedPduMessage = CharsetUtil.decode(deliverSm.getShortMessage(), CharsetUtil.CHARSET_UCS_2);
+                            break;
+                        case DataCoding.DATA_CODING_GSM8:
+                            decodedPduMessage = CharsetUtil.decode(deliverSm.getShortMessage(), CharsetUtil.CHARSET_GSM8);
+                            break;
+                        case DataCoding.DATA_CODING_GSM7:
+                        default:
+                            // by default use GSM7
+                            decodedPduMessage = CharsetUtil.decode(deliverSm.getShortMessage(), CharsetUtil.CHARSET_GSM7);
+                            break;
+                    }
                     destSmppAddress = deliverSm.getDestAddress().getAddress();
                     sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
                     logger.info("getDataCoding: " + deliverSm.getDataCoding());
