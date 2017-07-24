@@ -808,12 +808,12 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, finishRecording);
             } // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
             // come later
-            else if (is(gathering) || is(continuousGathering) || is(finishGathering)) {
-                final MediaGroupResponse<CollectedResult> dtmfResponse = (MediaGroupResponse<CollectedResult>) message;
-                CollectedResult data = dtmfResponse.get();
-                if (data.isAsr() && data.isPartial()) {
+            else if (is(gathering) || is(continuousGathering) || (is(finishGathering) && !super.dtmfReceived)) {
+                final MediaGroupResponse dtmfResponse = (MediaGroupResponse) message;
+                Object data = dtmfResponse.get();
+                if (data instanceof CollectedResult && ((CollectedResult)data).isAsr() && ((CollectedResult)data).isPartial()) {
                     fsm.transition(message, continuousGathering);
-                } else if (!super.dtmfReceived) {
+                } else {
                     if (sender == call) {
                         // DTMF using SIP INFO, check if all digits collected here
                         collectedDigits.append(dtmfResponse.get());
@@ -837,7 +837,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                             }
                         }
                     } else {
-                        collectedDigits.append(dtmfResponse.get().getResult());
+                        collectedDigits.append(data);
                         fsm.transition(message, finishGathering);
                     }
                 }
