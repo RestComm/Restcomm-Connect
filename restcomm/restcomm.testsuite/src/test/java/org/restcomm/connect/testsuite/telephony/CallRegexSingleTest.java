@@ -112,14 +112,14 @@ public class CallRegexSingleTest {
     private String aliceContact = "sip:alice@127.0.0.1:5091";
 
     // Henrique is a simple SIP Client. Will not register with Restcomm
-    private SipStack henriqueSipStack;
-    private SipPhone henriquePhone;
-    private String henriqueContact = "sip:henrique@127.0.0.1:5092";
+    private SipStack bobSipStackOrg1;
+    private SipPhone bobPhoneOrg1;
+    private String bobContactOrg1 = "sip:bob@org1.restcomm.com";
 
     // George is a simple SIP Client. Will not register with Restcomm
-    private SipStack georgeSipStack;
-    private SipPhone georgePhone;
-    private String georgeContact = "sip:+131313@127.0.0.1:5070";
+    private SipStack aliceSipStackOrg1;
+    private SipPhone alicePhoneOrg1;
+    private String aliceContactOrg1 = "sip:alice@org1.restcomm.com";
 
     // subaccountclient is a simple SIP Client. Will register with Restcomm
     private SipStack subAccountClientSipStack;
@@ -149,11 +149,11 @@ public class CallRegexSingleTest {
         aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
         alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
 
-        henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
-        henriquePhone = henriqueSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, henriqueContact);
+        bobSipStackOrg1 = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
+        bobPhoneOrg1 = bobSipStackOrg1.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContactOrg1);
 
-        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
-        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
+        aliceSipStackOrg1 = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
+        alicePhoneOrg1 = aliceSipStackOrg1.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContactOrg1);
 
         subAccountClientSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5093", "127.0.0.1:5080");
         subAccountClientPhone = subAccountClientSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, subAccountClientContact);
@@ -175,18 +175,18 @@ public class CallRegexSingleTest {
             alicePhone.dispose();
         }
 
-        if (henriqueSipStack != null) {
-            henriqueSipStack.dispose();
+        if (bobSipStackOrg1 != null) {
+            bobSipStackOrg1.dispose();
         }
-        if (henriquePhone != null) {
-            henriquePhone.dispose();
+        if (bobPhoneOrg1 != null) {
+            bobPhoneOrg1.dispose();
         }
 
-        if (georgePhone != null) {
-            georgePhone.dispose();
+        if (alicePhoneOrg1 != null) {
+            alicePhoneOrg1.dispose();
         }
-        if (georgeSipStack != null) {
-            georgeSipStack.dispose();
+        if (aliceSipStackOrg1 != null) {
+            aliceSipStackOrg1.dispose();
         }
 
         if (subAccountClientPhone != null) {
@@ -208,6 +208,37 @@ public class CallRegexSingleTest {
 
     private String dialAliceRcml = "<Response><Dial><Client>alice</Client></Dial></Response>";
 
+    /**
+     * @throws ParseException
+     * @throws InterruptedException
+     * @throws MalformedURLException
+     */
+    @Test
+    public void testDialClientAlice7777Organization() throws ParseException, InterruptedException, MalformedURLException {
+        //matches regex expression "7777|8888" but belongs to domain 127.0.0.1 
+    	// hence anyone from org1.restcomm.com should not be allowed to reach this regex
+        stubFor(get(urlPathEqualTo("/regex"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialAliceRcml)));
+
+        // Create outgoing call with first phone
+        final SipCall bobCallOrg1 = bobPhoneOrg1.createSipCall();
+        bobCallOrg1.initiateOutgoingCall(bobContactOrg1, "sip:7777@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCallOrg1);
+        assertTrue(bobCallOrg1.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCallOrg1.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        logger.info("Last response: " + response);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCallOrg1.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.NOT_FOUND, bobCallOrg1.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: " + bobCallOrg1.getLastReceivedResponse().getStatusCode());
+        }
+    }
+    
     @Test
     public void testDialClientAlice7777() throws ParseException, InterruptedException, MalformedURLException {
         //matches regex expression "7777|8888"

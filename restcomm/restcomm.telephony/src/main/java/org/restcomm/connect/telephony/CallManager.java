@@ -1193,9 +1193,10 @@ public final class CallManager extends RestcommUntypedActor {
                 //number was found but organization was not proper.
                 final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
                 response.send();
+                String sourceDomainName = storage.getOrganizationsDao().getOrganization(sourceOrganizationSid).getDomainName();
                 // We found the number but organization was not proper
-                String errMsg = String.format("provided number %s does not belong to desired domain %s.", phone, request.getRequestURI());
-                logger.warning(errMsg);
+                String errMsg = String.format("provided number %s does not belong to your domain %s.", phone, sourceDomainName);
+                logger.warning(errMsg+" Requiested URI was: "+ request.getRequestURI());
                 sendNotification(errMsg, 11005, "error", true);
                 return true;
             }else{
