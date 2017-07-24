@@ -214,7 +214,7 @@ public class CallRegexSingleTest {
      * @throws MalformedURLException
      */
     @Test
-    public void testDialClientAlice7777Organization() throws ParseException, InterruptedException, MalformedURLException {
+    public void testDial7777RegexOfDifferentOrganization() throws ParseException, InterruptedException, MalformedURLException {
         //matches regex expression "7777|8888" but belongs to domain 127.0.0.1 
     	// hence anyone from org1.restcomm.com should not be allowed to reach this regex
         stubFor(get(urlPathEqualTo("/regex"))
