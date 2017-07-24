@@ -245,10 +245,10 @@ public final class MybatisAccountsDao implements AccountsDao {
         final Sid parentSid = readSid(map.get("parent_sid"));
         final Account.Type type = readAccountType(map.get("type"));
         final Account.Status status = readAccountStatus(map.get("status"));
-        final String authToken = readString(map.get("auth_token"));
+        final String password = readString(map.get("password"));
         final String role = readString(map.get("role"));
         final URI uri = readUri(map.get("uri"));
-        return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, parentSid, type, status, authToken,
+        return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, parentSid, type, status, password,
                 role, uri);
     }
 
@@ -262,7 +262,7 @@ public final class MybatisAccountsDao implements AccountsDao {
         map.put("parent_sid", writeSid(account.getParentSid()));
         map.put("type", writeAccountType(account.getType()));
         map.put("status", writeAccountStatus(account.getStatus()));
-        map.put("auth_token", account.getAuthToken());
+        map.put("password", account.getPassword());
         map.put("role", account.getRole());
         map.put("uri", writeUri(account.getUri()));
         return map;

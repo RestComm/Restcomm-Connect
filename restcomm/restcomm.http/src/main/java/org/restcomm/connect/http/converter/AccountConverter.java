@@ -108,12 +108,12 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
 
     private void writeAuthToken(final Account account, final HierarchicalStreamWriter writer) {
         writer.startNode("AuthToken");
-        writer.setValue(account.getAuthToken());
+        writer.setValue(account.getPassword());
         writer.endNode();
     }
 
     private void writeAuthToken(final Account account, final JsonObject object) {
-        object.addProperty("auth_token", account.getAuthToken());
+        object.addProperty("auth_token", account.getPassword());
     }
 
     private void writeAvailablePhoneNumbers(final Account account, final HierarchicalStreamWriter writer) {

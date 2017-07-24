@@ -1,6 +1,6 @@
 package org.restcomm.connect.identity;
 
-import org.apache.commons.codec.digest.DigestUtils;
+import org.mindrot.jbcrypt.BCrypt;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
 
@@ -32,7 +32,7 @@ public class AccountKey {
         if ( account != null ) {
             if ( challengedKey != null )
                 // Compare both the plaintext version of the token and md5'ed version of it
-                if ( challengedKey.equals(account.getAuthToken()) || DigestUtils.md5Hex(challengedKey).equals(account.getAuthToken())  ) {
+                if ( challengedKey.equals(account.getPassword()) || BCrypt.checkpw(challengedKey, account.getPassword())) {
                     verified = true;
                 }
         }

@@ -26,6 +26,7 @@ import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
+import org.mindrot.jbcrypt.BCrypt;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
@@ -442,8 +443,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 PasswordValidator validator = PasswordValidatorFactory.createDefault();
                 if (!validator.isStrongEnough(password))
                     throw new PasswordTooWeak();
-                final String hash = new Md5Hash(data.getFirst("Password")).toString();
-                result = result.setAuthToken(hash);
+                final String hash = BCrypt.hashpw(data.getFirst("Password"), BCrypt.gensalt(10));
+                result = result.setPassword(hash);
             }
             if (newStatus != null) {
                 result = result.setStatus(newStatus);
@@ -564,7 +565,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             notifications.add(rcmlServerApi.buildAccountClosingNotification(closedAccount));
             Account notifier = userIdentityContext.getEffectiveAccount();
             try {
-                rcmlServerApi.transmitNotifications(notifications, notifier.getSid().toString(), notifier.getAuthToken());
+                rcmlServerApi.transmitNotifications(notifications, notifier.getSid().toString(), notifier.getPassword());
             } catch (RcmlserverNotifyError e) {
                 logger.error(e.getMessage(),e); // just report
             }

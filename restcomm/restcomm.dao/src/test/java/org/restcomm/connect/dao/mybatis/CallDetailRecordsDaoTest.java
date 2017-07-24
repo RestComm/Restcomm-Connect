@@ -367,8 +367,8 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         // Create a new CDR in the data store.
         cdrs.addCallDetailRecord(cdr);
         // Validate the results.
-        assertTrue(cdrs.getCallDetailRecordsByEndTime(now).size() == 1);
-        assertTrue(cdrs.getCallDetailRecordsByStarTimeAndEndTime(now).size() == 1);
+        assertTrue(cdrs.getCallDetailRecordsByEndTime(now).size() > 1);
+        assertTrue(cdrs.getCallDetailRecordsByStartTime(now).size() == 1);
         // Delete the CDR.
         cdrs.removeCallDetailRecord(sid);
         // Validate that the CDRs were removed.
