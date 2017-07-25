@@ -113,8 +113,8 @@ CREATE TABLE "restcomm_applications" (
 );
 
 CREATE TABLE "restcomm_call_detail_records" (
-"sid" VARCHAR(34) NOT NULL PRIMARY KEY,
-"parent_call_sid" VARCHAR(34),
+"sid" VARCHAR(1000) NOT NULL PRIMARY KEY,
+"parent_call_sid" VARCHAR(1000),
 "date_created" DATETIME NOT NULL,
 "date_updated" DATETIME NOT NULL,
 "account_sid" VARCHAR(34) NOT NULL,
@@ -221,7 +221,7 @@ CREATE TABLE "restcomm_recordings" (
 "date_created" DATETIME NOT NULL,
 "date_updated" DATETIME NOT NULL,
 "account_sid" VARCHAR(34) NOT NULL,
-"call_sid" VARCHAR(34) NOT NULL,
+"call_sid" VARCHAR(1000) NOT NULL,
 "duration" DOUBLE NOT NULL,
 "api_version" VARCHAR(10) NOT NULL,
 "uri" MEDIUMTEXT NOT NULL
@@ -245,7 +245,7 @@ CREATE TABLE "restcomm_notifications" (
 "date_created" DATETIME NOT NULL,
 "date_updated" DATETIME NOT NULL,
 "account_sid" VARCHAR(34) NOT NULL,
-"call_sid" VARCHAR(34),
+"call_sid" VARCHAR(1000),
 "api_version" VARCHAR(10) NOT NULL,
 "log" TINYINT NOT NULL,
 "error_code" SMALLINT NOT NULL,
