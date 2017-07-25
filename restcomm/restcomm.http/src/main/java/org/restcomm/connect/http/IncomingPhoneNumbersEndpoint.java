@@ -49,6 +49,7 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.loader.ObjectInstantiationException;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
+import org.restcomm.connect.dao.OrganizationsDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
@@ -87,7 +88,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
     protected PhoneNumberProvisioningManager phoneNumberProvisioningManager;
     protected IncomingPhoneNumberListConverter listConverter;
     PhoneNumberParameters phoneNumberParameters;
+    String callbackPort = "";
     private IncomingPhoneNumbersDao dao;
+    private OrganizationsDao organizationsDao;
     private XStream xstream;
     protected Gson gson;
 
@@ -102,6 +105,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         super.init(configuration.subset("runtime-settings"));
         dao = storage.getIncomingPhoneNumbersDao();
         accountsDao = storage.getAccountsDao();
+        organizationsDao = storage.getOrganizationsDao();
 
         /*
         phoneNumberProvisioningManager = (PhoneNumberProvisioningManager) context.getAttribute("PhoneNumberProvisioningManager");
@@ -121,8 +125,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         phoneNumberProvisioningManager = new PhoneNumberProvisioningManagerProvider(configuration, context).get();
 
         Configuration callbackUrlsConfiguration = configuration.subset("phone-number-provisioning").subset("callback-urls");
+        String voiceUrl = callbackUrlsConfiguration.getString("voice[@url]");
+        if(voiceUrl != null) {
+            String[] voiceUrlArr = voiceUrl.split(":");
+            if(voiceUrlArr != null && voiceUrlArr.length==2)
+                callbackPort = voiceUrlArr[1];
+        }
         phoneNumberParameters = new PhoneNumberParameters(
-                callbackUrlsConfiguration.getString("voice[@url]"),
+                voiceUrl,
                 callbackUrlsConfiguration.getString("voice[@method]"), false,
                 callbackUrlsConfiguration.getString("sms[@url]"),
                 callbackUrlsConfiguration.getString("sms[@method]"),
@@ -357,6 +367,8 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         }
         if (available) {
             IncomingPhoneNumber incomingPhoneNumber = createFrom(new Sid(accountSid), data, account.getOrganizationSid());
+            String domainName = organizationsDao.getOrganization(account.getOrganizationSid()).getDomainName();
+            phoneNumberParameters.setVoiceUrl(domainName+":"+callbackPort);
             phoneNumberParameters.setPhoneNumberType(phoneNumberType);
 
             org.restcomm.connect.provisioning.number.api.PhoneNumber phoneNumber = convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber);
@@ -365,6 +377,8 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                 ApiRequest apiRequest = new ApiRequest(accountSid, data, ApiRequest.Type.INCOMINGPHONENUMBER);
                 //Before proceed to buy the DID, check with the extensions if the purchase is allowed or not
                 if (executePreApiAction(apiRequest)) {
+                    if(logger.isDebugEnabled())
+                        logger.debug("buyNumber " + phoneNumber +" phoneNumberParameters: " + phoneNumberParameters);
                     hasSuceeded = phoneNumberProvisioningManager.buyNumber(phoneNumber, phoneNumberParameters);
                 } else {
                     //Extensions didn't allowed this API action
@@ -407,9 +421,15 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         Account operatedAccount = accountsDao.getAccount(accountSid);
         secure(operatedAccount, "RestComm:Modify:IncomingPhoneNumbers");
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
+        if(logger.isDebugEnabled())
+            logger.debug("incomingPhoneNumber " + incomingPhoneNumber);
         secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD );
         boolean updated = true;
         if(phoneNumberProvisioningManager != null && (incomingPhoneNumber.isPureSip() == null || !incomingPhoneNumber.isPureSip())) {
+            String domainName = organizationsDao.getOrganization(operatedAccount.getOrganizationSid()).getDomainName();
+            phoneNumberParameters.setVoiceUrl(domainName+":"+callbackPort);
+            if(logger.isDebugEnabled())
+                logger.debug("updateNumber " + incomingPhoneNumber +" phoneNumberParameters: " + phoneNumberParameters);
             updated = phoneNumberProvisioningManager.updateNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber), phoneNumberParameters);
         }
         if(updated) {
