@@ -47,6 +47,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.loader.ObjectInstantiationException;
+import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Account;
@@ -78,7 +79,9 @@ import com.thoughtworks.xstream.XStream;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author gvagenas@gmail.com
  * @author jean.deruelle@telestax.com
+ * @author muhammad.bilal19@gmail.com (Muhammad Bilal)
  */
+
 @NotThreadSafe
 public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
     @Context
@@ -327,12 +330,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         String number = data.getFirst("PhoneNumber");
         String isSIP = data.getFirst("isSIP");
         // cater to SIP numbers
-        if(isSIP == null) {
+        if (isSIP == null) {
             try {
-                number = e164(number);
-            } catch (NumberParseException e) {}
+                number =  e164(number);
+            } catch (NumberParseException e) {
+            }
         }
-        IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(number);
+        String phoneFilter  = StringUtils.trimLeadingFrom("+00", number);
+        IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(phoneFilter);
         if (incomingPhoneNumber == null) {
             incomingPhoneNumber = createFrom(new Sid(accountSid), data);
             phoneNumberParameters.setPhoneNumberType(phoneNumberType);
@@ -403,7 +408,6 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         }
         return status(BAD_REQUEST).entity("21452").build();
     }
-
     private void validate(final MultivaluedMap<String, String> data) throws RuntimeException {
         if (!data.containsKey("PhoneNumber") && !data.containsKey("AreaCode")) {
             throw new NullPointerException("Phone number can not be null.");
