@@ -253,6 +253,8 @@ public class DialRecordingS3UploadTest_NoneSecurity {
 
 		assertEquals(200, connection.getResponseCode());
 
+		Thread.sleep(6000);
+
 		//Verify S3 Upload
 		List<LoggedRequest> requests = findAll(putRequestedFor(urlMatching("/s3/.*")));
 		assertEquals(1, requests.size());
@@ -322,6 +324,8 @@ public class DialRecordingS3UploadTest_NoneSecurity {
 
 		assertTrue(bobCall.waitForDisconnect(30 * 1000));
 		assertTrue(bobCall.respondToDisconnect());
+
+		Thread.sleep(7000);
 
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
