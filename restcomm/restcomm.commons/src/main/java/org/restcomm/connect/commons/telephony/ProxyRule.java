@@ -9,12 +9,14 @@ public class ProxyRule {
     private final String toUri;
     private final String username;
     private final String password;
+    private final boolean patchSdp;
 
-    public ProxyRule (final String fromUri, final String toUri, final String username, final String password) {
+    public ProxyRule (final String fromUri, final String toUri, final String username, final String password, final boolean patchSdp) {
         this.fromUri = fromUri;
         this.toUri = toUri;
         this.username = username;
         this.password = password;
+        this.patchSdp = patchSdp;
     }
 
     public String getFromUri () {
@@ -31,5 +33,9 @@ public class ProxyRule {
 
     public String getUsername () {
         return username;
+    }
+
+    public boolean isPatchSdp () {
+        return patchSdp;
     }
 }

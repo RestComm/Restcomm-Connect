@@ -22,6 +22,9 @@ import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
+import javax.sdp.SdpFactory;
+import javax.sdp.SdpParseException;
+import javax.sdp.SessionDescription;
 import javax.sip.message.Response;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -60,12 +63,28 @@ public class RestcommActingAsProxyAnswerDelayTest {
     }
 
     private static final String version = Version.getVersion();
-    private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
-            53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
-            48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49,
-            13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65,
-            86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10 };
-    private static final String body = new String(bytes);
+//    private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
+//            53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
+//            48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49,
+//            13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65,
+//            86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10 };
+//    private final String body = new String(bytes);
+
+    private final String body = "v=0\n" +
+            "o=user1 53655765 2353687637 IN IP4 10.100.10.99\n" +
+            "s=- RestcommTestsuite\n" +
+            "c=IN IP4 10.100.10.99\n" +
+            "t=0 0\n" +
+            "m=audio 6000 RTP/AVP 0\n" +
+            "a=rtpmap:0 PCMU/8000";
+
+    private final String body2 = "v=0\n" +
+            "o=user1 53655765 2353687637 IN IP4 172.10.9.111\n" +
+            "s=- RestcommTestsuite\n" +
+            "c=IN IP4 172.10.9.111\n" +
+            "t=0 0\n" +
+            "m=audio 6000 RTP/AVP 0\n" +
+            "a=rtpmap:0 PCMU/8000";
 
     @ArquillianResource
     private Deployer deployer;
@@ -181,11 +200,14 @@ public class RestcommActingAsProxyAnswerDelayTest {
         Thread.sleep(4000);
     }
 
-
     @Test
-    public void testDialNumberToProxyFromClient() throws ParseException, InterruptedException, MalformedURLException {
+    public void testDialNumberToProxyFromClient() throws ParseException, InterruptedException, MalformedURLException, SdpParseException {
         SipCall otherRestcommCall = otherRestcommPhone.createSipCall();
         otherRestcommCall.listenForIncomingCall();
+
+        // Bob (5090) -> Restcomm (5080) -> proxy out to otherRestcomm (5091)
+        // otherRestcomm (5091) 200 OK -> Restcomm (5080) -> Bob (5090)
+
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
@@ -193,10 +215,11 @@ public class RestcommActingAsProxyAnswerDelayTest {
         assertLastOperationSuccess(bobCall);
 
         assertTrue(otherRestcommCall.waitForIncomingCall(10000));
+        SessionDescription sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(otherRestcommCall.getLastReceivedRequest().getRequestEvent().getRequest().getRawContent()));
+        assertTrue(!sessionDescription.getConnection().getAddress().matches("192.168.11.99"));
         assertTrue(otherRestcommCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
         assertTrue(otherRestcommCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
-        String receivedBody = new String(otherRestcommCall.getLastReceivedRequest().getRawContent());
-        assertTrue(otherRestcommCall.sendIncomingCallResponse(Response.OK, "George-OK", 3600, receivedBody, "application", "sdp",
+        assertTrue(otherRestcommCall.sendIncomingCallResponse(Response.OK, "George-OK", 3600, body2, "application", "sdp",
                 null, null));
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -205,6 +228,8 @@ public class RestcommActingAsProxyAnswerDelayTest {
             assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
             response = bobCall.getLastReceivedResponse().getStatusCode();
         }
+        sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(bobCall.getLastReceivedResponse().getResponseEvent().getResponse().getRawContent()));
+        assertTrue(!sessionDescription.getConnection().getAddress().matches("192.168.11.99"));
         assertTrue(bobCall.sendInviteOkAck());
 
         assertTrue(otherRestcommCall.waitForAck(50000));
@@ -245,7 +270,7 @@ public class RestcommActingAsProxyAnswerDelayTest {
     }
 
     @Test
-    public void testDialNumberToProxyFromNonClient() throws ParseException, InterruptedException, MalformedURLException {
+    public void testDialNumberToProxyFromNonClient() throws ParseException, InterruptedException, MalformedURLException, SdpParseException {
         SipCall georgeCall = georgePhone.createSipCall();
         georgeCall.listenForIncomingCall();
 
@@ -255,10 +280,11 @@ public class RestcommActingAsProxyAnswerDelayTest {
         assertLastOperationSuccess(henriqueCall);
 
         assertTrue(georgeCall.waitForIncomingCall(10000));
+        SessionDescription sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(georgeCall.getLastReceivedRequest().getRequestEvent().getRequest().getRawContent()));
+        assertTrue(sessionDescription.getConnection().getAddress().matches("192.168.11.99"));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
-        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
-        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "George-OK", 3600, receivedBody, "application", "sdp",
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "George-OK", 3600, body2, "application", "sdp",
                 null, null));
 
         assertTrue(henriqueCall.waitOutgoingCallResponse(5 * 1000));
@@ -267,7 +293,8 @@ public class RestcommActingAsProxyAnswerDelayTest {
             assertTrue(henriqueCall.waitOutgoingCallResponse(5 * 1000));
             response = henriqueCall.getLastReceivedResponse().getStatusCode();
         }
-
+        sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(henriqueCall.getLastReceivedResponse().getResponseEvent().getResponse().getRawContent()));
+        assertTrue(sessionDescription.getConnection().getAddress().matches("192.168.11.99"));
         assertTrue(henriqueCall.sendInviteOkAck());
 
         assertTrue(georgeCall.waitForAck(50000));

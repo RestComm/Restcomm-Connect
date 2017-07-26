@@ -80,7 +80,7 @@
 		<acting-as-proxy>
 			<enabled>true</enabled>
 			<!-- If set to true, From header will be used to extract the From URI, otherwise Contact header will be used-->
-			<use-from-header>true</use-from-header>
+			<use-contact-header>false</use-contact-header>
 			<proxy-rules>
 				<!-- from ProxyA (5090) to RC instance A (5091)-->
 				<rule>
@@ -89,6 +89,8 @@
 					<!-- Optionally provide username -->
 					<proxy-to-username></proxy-to-username>
 					<proxy-to-password></proxy-to-password>
+					<!-- Control whether or not to patch the SDP for this rule. Default value is true -->
+					<patch-sdp>false</patch-sdp>
 				</rule>
 				<!-- from RC instance A (5091) to ProxyA (5090) -->
 				<rule>
@@ -97,6 +99,8 @@
 					<!-- Optionally provide username -->
 					<proxy-to-username></proxy-to-username>
 					<proxy-to-password></proxy-to-password>
+					<!-- Control whether or not to patch the SDP for this rule. Default value is true -->
+					<patch-sdp>false</patch-sdp>
 				</rule>
 				<rule>
 					<from-uri>127.0.0.1:5092</from-uri>
@@ -104,6 +108,8 @@
 					<!-- Optionally provide username -->
 					<proxy-to-username></proxy-to-username>
 					<proxy-to-password></proxy-to-password>
+					<!-- Control whether or not to patch the SDP for this rule. Default value is true -->
+					<patch-sdp>true</patch-sdp>
 				</rule>
 				<rule>
 					<from-uri>127.0.0.1:5070</from-uri>
@@ -111,6 +117,8 @@
 					<!-- Optionally provide username -->
 					<proxy-to-username></proxy-to-username>
 					<proxy-to-password></proxy-to-password>
+					<!-- Control whether or not to patch the SDP for this rule. Default value is true -->
+					<patch-sdp>true</patch-sdp>
 				</rule>
 			</proxy-rules>
 		</acting-as-proxy>
@@ -402,7 +410,7 @@
 			<remote-address>127.0.0.1</remote-address>
 			<remote-port>2427</remote-port>
 			<response-timeout>500</response-timeout>
-			<external-address><null/></external-address>
+			<external-address>192.168.11.99</external-address>
 			<rtp-timeout>60</rtp-timeout>
 			<rtp-timeout-timer-start-time>im</rtp-timeout-timer-start-time>
 		</mgcp-server>

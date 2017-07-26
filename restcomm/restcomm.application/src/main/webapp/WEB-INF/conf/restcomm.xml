@@ -82,8 +82,8 @@
 		<!-- Using this feature, Restcomm will keep RMS in the path-->
 		<acting-as-proxy>
 			<enabled>false</enabled>
-			<!-- If set to true, From header will be used to extract the From URI, otherwise Contact header will be used-->
-			<use-from-header>true</use-from-header>
+			<!-- If set to true, From header will be used to extract the From URI, otherwise Contact header will be used. Default value is true-->
+			<use-contact-header>false</use-contact-header>
 			<proxy-rules>
 				<rule>
 					<from-uri></from-uri>
@@ -91,6 +91,8 @@
 					<!-- Optionally provide username -->
 					<proxy-to-username></proxy-to-username>
 					<proxy-to-password></proxy-to-password>
+					<!-- Control whether or not to patch the SDP for this rule. Default value is true and Restcomm will patch SDP -->
+					<patch-sdp>true</patch-sdp>
 				</rule>
 				<rule>
 					<from-uri></from-uri>
@@ -98,6 +100,8 @@
 					<!-- Optionally provide username -->
 					<proxy-to-username></proxy-to-username>
 					<proxy-to-password></proxy-to-password>
+					<!-- Control whether or not to patch the SDP for this rule. Default value is true and Restcomm will patch SDP -->
+					<patch-sdp>true</patch-sdp>
 				</rule>
 			</proxy-rules>
 		</acting-as-proxy>
