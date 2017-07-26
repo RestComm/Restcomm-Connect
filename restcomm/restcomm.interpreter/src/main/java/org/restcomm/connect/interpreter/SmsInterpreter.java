@@ -774,14 +774,13 @@ public final class SmsInterpreter extends RestcommUntypedActor {
             // Parse "encoding"
             SmsSessionRequest.Encoding encoding = null;
             attribute = verb.attribute("encoding");
-            encoding = SmsSessionRequest.Encoding.GSM; // default
             if (attribute != null) {
                 String encodingString = attribute.value();
                 if (!StringUtils.isEmpty(encodingString)) {
                     try {
                         encoding = SmsSessionRequest.Encoding.valueOf(encodingString);
                     } catch (Exception e) {
-                        logger.warning("Wrong enconding specified in SMS verb: '" + encodingString + "'. Will fallback to GSM.");
+                        logger.warning("Wrong enconding specified in SMS verb: '" + encodingString + "'. Will fallback to default.");
                     }
                 }
             }

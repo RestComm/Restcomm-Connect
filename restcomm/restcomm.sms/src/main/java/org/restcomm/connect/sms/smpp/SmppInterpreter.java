@@ -11,6 +11,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -730,6 +731,18 @@ public class SmppInterpreter extends RestcommUntypedActor {
                     to = initialSessionRequest.from();
                 }
             }
+            // Parse "encoding"
+            attribute = verb.attribute("encoding");
+            if (attribute != null) {
+                String encodingString = attribute.value();
+                if (!StringUtils.isEmpty(encodingString)) {
+                    try {
+                        encoding = SmsSessionRequest.Encoding.valueOf(encodingString);
+                    } catch (Exception e) {
+                        logger.warn("Wrong enconding specified in SMS verb: '" + encodingString + "'. Will use initial session encoding.");
+                    }
+                }
+            }
             // Parse <Sms> text.
             String body = verb.text();
             if (body == null || body.isEmpty()) {
@@ -790,7 +803,8 @@ public class SmppInterpreter extends RestcommUntypedActor {
                 // Store the sms record in the sms session.
                 session.tell(new  SmsSessionAttribute("record", record), source);
                 // Send the SMS.
-                final SmsSessionRequest sms = new SmsSessionRequest(from, to, body, encoding, customHttpHeaderMap);
+                final SmsSessionRequest sms = new SmsSessionRequest(from, to, body, encoding, null, null, customHttpHeaderMap);
+
                 session.tell(sms, source);
                 sessions.put(sid, session);
             }
