@@ -193,7 +193,7 @@ public class SmppTests {
 		Assert.assertEquals(CharsetUtil.CHARSET_UCS_2, inboundMessageEntity.getSmppEncoding());
 	}
 
-	private String rcmlWithoutEncodingAttribute = "<Response><Sms to=\""+from+"\" from=\""+to+"\">night - νύχτα</Sms></Response>";
+	private String rcmlWithoutEncodingAttribute = "<Response><Sms to=\""+from+"\" from=\""+to+"\">night</Sms></Response>";
 	@Test
 	public void testSendMessageResponseWithoutEncodingAttribute () throws SmppInvalidArgumentException, IOException, InterruptedException {
 
@@ -201,16 +201,16 @@ public class SmppTests {
 				.willReturn(aResponse()
 						.withStatus(200)
 						.withHeader("Content-Type", "text/xml")
-						.withBody(rcmlWithEncodingAttribute)));
+						.withBody(rcmlWithoutEncodingAttribute)));
 
-		mockSmppServer.sendSmppMessageToRestcomm(morningMessage,to,from,CharsetUtil.CHARSET_UCS_2);
+		mockSmppServer.sendSmppMessageToRestcomm("night",to,from,CharsetUtil.CHARSET_GSM7);
 		Thread.sleep(2000);
 		assertTrue(mockSmppServer.isMessageSent());
 		Thread.sleep(8000);
 		assertTrue(mockSmppServer.isMessageReceived());
 		SmppInboundMessageEntity inboundMessageEntity = mockSmppServer.getSmppInboundMessageEntity();
 		assertNotNull(inboundMessageEntity);
-		Assert.assertEquals(nightMessage,inboundMessageEntity.getSmppContent());
+		Assert.assertEquals("night",inboundMessageEntity.getSmppContent());
 		Assert.assertEquals(CharsetUtil.CHARSET_GSM7, inboundMessageEntity.getSmppEncoding());
 	}
 
