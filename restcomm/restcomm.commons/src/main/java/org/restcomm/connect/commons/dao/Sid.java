@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -30,6 +31,7 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 @Immutable
 public final class Sid {
     public static final Pattern pattern = Pattern.compile("[a-zA-Z0-9]{34}");
+    public static final Pattern callSidPattern = Pattern.compile("ID[a-zA-Z0-9]{32}-CA[a-zA-Z0-9]{32}");
     private final String id;
 
     public enum Type {
@@ -40,7 +42,8 @@ public final class Sid {
 
     public Sid(final String id) throws IllegalArgumentException {
         super();
-        if (pattern.matcher(id).matches()) {
+        //https://github.com/RestComm/Restcomm-Connect/issues/1907
+        if (callSidPattern.matcher(id).matches() || pattern.matcher(id).matches()) {
             this.id = id;
         } else {
             throw new IllegalArgumentException(id + " is an INVALID_SID sid value.");
@@ -91,7 +94,8 @@ public final class Sid {
                 return new Sid("AN" + uuid);
             }
             case CALL: {
-                return new Sid("CA" + uuid);
+                //https://github.com/RestComm/Restcomm-Connect/issues/1907
+                return new Sid(RestcommConfiguration.getInstance().getMain().getInstanceId() + "-CA" + uuid);
             }
             case CLIENT: {
                 return new Sid("CL" + uuid);

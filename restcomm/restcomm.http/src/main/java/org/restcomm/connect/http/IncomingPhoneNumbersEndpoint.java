@@ -421,8 +421,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         Account operatedAccount = accountsDao.getAccount(accountSid);
         secure(operatedAccount, "RestComm:Modify:IncomingPhoneNumbers");
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
-        if(logger.isDebugEnabled())
-            logger.debug("incomingPhoneNumber " + incomingPhoneNumber);
+        if (incomingPhoneNumber == null) {
+            return status(NOT_FOUND).build();
+        }
         secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD );
         boolean updated = true;
         if(phoneNumberProvisioningManager != null && (incomingPhoneNumber.isPureSip() == null || !incomingPhoneNumber.isPureSip())) {
@@ -581,6 +582,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         Account operatedAccount = accountsDao.getAccount(accountSid);
         secure(operatedAccount, "RestComm:Delete:IncomingPhoneNumbers");
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
+        if (incomingPhoneNumber == null) {
+            return status(NOT_FOUND).build();
+        }
         secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD);
         if(phoneNumberProvisioningManager != null && (incomingPhoneNumber.isPureSip() == null || !incomingPhoneNumber.isPureSip())) {
             phoneNumberProvisioningManager.cancelNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber));

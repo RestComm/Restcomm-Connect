@@ -24,6 +24,8 @@ import static org.junit.Assert.*;
 import java.io.InputStream;
 import java.net.URI;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.joda.time.DateTime;
@@ -32,6 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 
 /**
@@ -39,6 +42,8 @@ import org.restcomm.connect.commons.dao.Sid;
  */
 public final class NotificationsDaoTest {
     private static MybatisDaoManager manager;
+
+    protected static Sid instanceId = Sid.generate(Sid.Type.INSTANCE);
 
     public NotificationsDaoTest() {
         super();
@@ -51,6 +56,17 @@ public final class NotificationsDaoTest {
         final SqlSessionFactory factory = builder.build(data);
         manager = new MybatisDaoManager();
         manager.start(factory);
+
+        XMLConfiguration xmlConfiguration = new XMLConfiguration();
+        xmlConfiguration.setDelimiterParsingDisabled(true);
+        xmlConfiguration.setAttributeSplittingDisabled(true);
+        try {
+			xmlConfiguration.load("restcomm.xml");
+	        RestcommConfiguration.createOnce(xmlConfiguration);
+	        RestcommConfiguration.getInstance().getMain().setInstanceId(instanceId.toString());
+		} catch (ConfigurationException e) {
+			e.printStackTrace();
+		}
     }
 
     @After
