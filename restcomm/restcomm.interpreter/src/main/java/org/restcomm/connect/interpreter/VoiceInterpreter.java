@@ -341,6 +341,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(forking, ready));
         transitions.add(new Transition(forking, checkingCache));
         transitions.add(new Transition(forking, caching));
+        transitions.add(new Transition(forking, faxing));
+        transitions.add(new Transition(forking, sendingEmail));
+        transitions.add(new Transition(forking, pausing));
+        transitions.add(new Transition(forking, synthesizing));
+        transitions.add(new Transition(forking, redirecting));
+        transitions.add(new Transition(forking, processingGatherChildren));
+        transitions.add(new Transition(forking, creatingRecording));
+        transitions.add(new Transition(forking, creatingSmsSession));
         // transitions.add(new Transition(acquiringOutboundCallInfo, joiningCalls));
         transitions.add(new Transition(acquiringOutboundCallInfo, hangingUp));
         transitions.add(new Transition(acquiringOutboundCallInfo, finished));
