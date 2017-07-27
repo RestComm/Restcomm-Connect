@@ -541,22 +541,21 @@ otherRestCommConf(){
 }
 
 disableRVD() {
-	echo "disabling bundled RVD..."
-    if [ -f "$RVD_DEPLOY.deployed" ]; then
-		rm "$RVD_DEPLOY.deployed"
-    	echo "RVD un-deployed"
+    if [[ -f "$RVD_DEPLOY.deployed" || -f "$RVD_DEPLOY.dodeploy" ]]; then
+		rm -f "$RVD_DEPLOY.deployed"
+		rm -f "$RVD_DEPLOY.dodeploy"
+    	echo "RVD undeployed (or not deployed at all)"
 	else
-		echo "RVD already not deployed"
+		echo "RVD not deployed"
 	fi
 }
 
 enableRVD() {
-    echo "enabling bundled RVD..."
 	if [ -f "$RVD_DEPLOY.deployed" ]; then
 		echo "RVD already deployed"
 	else
 		touch "$RVD_DEPLOY".dodeploy
-		echo "RVD enabled/deployed"
+		echo "RVD deployed"
 	fi
 }
 
