@@ -116,7 +116,7 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "application/json")
                     .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
 
-        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/US/14156902867.*"))
+        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/US/14156902867.*voiceCallbackValue=localhost:5080.*"))
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")
@@ -184,18 +184,19 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         Assert.assertEquals(200, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info("testDeletePhoneNumberSuccess response for buyNumber: "+response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
 
-        System.out.println(jsonResponse.toString());
+        logger.info("testDeletePhoneNumberSuccess jsonResponse for buyNumber: "+jsonResponse.toString());
         assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultDeletePurchaseNumber));
 
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
         webResource = jerseyClient.resource(provisioningURL);
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        logger.info("testDeletePhoneNumberSuccess delete response: "+clientResponse);
         assertTrue(clientResponse.getStatus() == 204);
     }
 
