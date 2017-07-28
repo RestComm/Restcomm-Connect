@@ -82,7 +82,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         String inboundPhoneNumber = null;
         final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
         try {
-            final List<Map<String, Object>> resultList = session.selectOne(namespace + selector, parameter);
+            final List<Map<String, Object>> resultList = session.selectList(namespace + selector, parameter);
             if (resultList != null && !resultList.isEmpty()) {
                 for (final Map<String, Object> result : resultList) {
                     incomingPhoneNumbers.add(toIncomingPhoneNumber(result));
