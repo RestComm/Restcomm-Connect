@@ -2138,7 +2138,7 @@ public final class Call extends RestcommUntypedActor {
 
                 // XXX shouldnt it move to failingBusy IF dialing ????
 //                if (is(dialing)) {
-//                    break;
+//                    break;get
 //                } else {
 //                    fsm.transition(message, failingBusy);
 //                }
@@ -2261,7 +2261,7 @@ public final class Call extends RestcommUntypedActor {
 
         for (ProxyRule proxyRule : proxyRules) {
             if (requestFromHost != null) {
-                if (requestFromHost.equalsIgnoreCase(proxyRule.getFromUri())) {
+                if (proxyRule.getToUri().contains(requestFromHost)) {
                     matchedProxyRule = proxyRule;
                     break;
                 }
