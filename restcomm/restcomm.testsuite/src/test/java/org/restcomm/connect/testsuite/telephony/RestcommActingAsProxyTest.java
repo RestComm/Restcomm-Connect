@@ -63,12 +63,28 @@ public class RestcommActingAsProxyTest {
     }
 
     private static final String version = Version.getVersion();
-    private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
-            53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
-            48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49,
-            13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65,
-            86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10 };
-    private static final String body = new String(bytes);
+//    private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
+//            53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
+//            48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49,
+//            13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65,
+//            86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10 };
+//    private static final String body = new String(bytes);
+
+    private final String body = "v=0\n" +
+            "o=user1 53655765 2353687637 IN IP4 10.100.10.99\n" +
+            "s=- RestcommTestsuite\n" +
+            "c=IN IP4 10.100.10.99\n" +
+            "t=0 0\n" +
+            "m=audio 6000 RTP/AVP 0\n" +
+            "a=rtpmap:0 PCMU/8000";
+
+    private final String body2 = "v=0\n" +
+            "o=user1 53655765 2353687637 IN IP4 172.10.9.111\n" +
+            "s=- RestcommTestsuite\n" +
+            "c=IN IP4 172.10.9.111\n" +
+            "t=0 0\n" +
+            "m=audio 6000 RTP/AVP 0\n" +
+            "a=rtpmap:0 PCMU/8000";
 
     @ArquillianResource
     private Deployer deployer;
@@ -201,13 +217,11 @@ public class RestcommActingAsProxyTest {
             assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
             response = bobCall.getLastReceivedResponse().getStatusCode();
         }
-        SessionDescription sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(bobCall.getLastReceivedResponse().getResponseEvent().getResponse().getRawContent()));
-        assertTrue(!sessionDescription.getConnection().getAddress().matches("192.168.11.99"));
         assertTrue(bobCall.sendInviteOkAck());
 
         assertTrue(otherRestcommCall.waitForIncomingCall(10000));
-        sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(otherRestcommCall.getLastReceivedRequest().getRequestEvent().getRequest().getRawContent()));
-        assertTrue(!sessionDescription.getConnection().getAddress().matches("192.168.11.99"));
+        SessionDescription sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(otherRestcommCall.getLastReceivedRequest().getRequestEvent().getRequest().getRawContent()));
+        assertTrue(sessionDescription.getConnection().getAddress().equalsIgnoreCase("127.0.0.1"));
         assertTrue(otherRestcommCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
         assertTrue(otherRestcommCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
         String receivedBody = new String(otherRestcommCall.getLastReceivedRequest().getRawContent());
