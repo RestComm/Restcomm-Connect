@@ -91,8 +91,8 @@
 					<!-- Optionally provide username -->
 					<proxy-to-username></proxy-to-username>
 					<proxy-to-password></proxy-to-password>
-					<!-- Control whether or not to patch the SDP for this rule. Default value is true and Restcomm will patch SDP -->
-					<patch-sdp>true</patch-sdp>
+					<!-- Control whether or not to patch the SDP for this rule. Default value is null and Restcomm will patch SDP -->
+					<patch-sdp></patch-sdp>
 				</rule>
 				<rule>
 					<from-uri></from-uri>
@@ -100,8 +100,8 @@
 					<!-- Optionally provide username -->
 					<proxy-to-username></proxy-to-username>
 					<proxy-to-password></proxy-to-password>
-					<!-- Control whether or not to patch the SDP for this rule. Default value is true and Restcomm will patch SDP -->
-					<patch-sdp>true</patch-sdp>
+					<!-- Control whether or not to patch the SDP for this rule. Default value is null and Restcomm will patch SDP -->
+					<patch-sdp></patch-sdp>
 				</rule>
 			</proxy-rules>
 		</acting-as-proxy>
