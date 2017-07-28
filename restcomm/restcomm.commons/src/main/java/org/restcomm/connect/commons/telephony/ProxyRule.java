@@ -38,4 +38,10 @@ public class ProxyRule {
     public boolean isPatchSdp () {
         return patchSdp;
     }
+
+    @Override
+    public String toString () {
+        String msg = String.format("Proxy rule-> FromUri %s | ToUri %s | Username %s | Password: %s | PatchSDP %s", fromUri, toUri, username, password, patchSdp);
+        return msg;
+    }
 }
