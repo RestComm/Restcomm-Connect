@@ -70,6 +70,30 @@ Note the encoding used *%2B13216549878* instead of the **+13216549878**  The *+
 curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B13216549878" -d "From=%2B19876543212" -d "Body=This is a test from RestComm"
 ....
 
+== Send SMS Messages With a StatusCallback URL
+
+To track the delivery status of SMS messages sent to SMSc you can provide URL with parameter name "**StatusCallback**". RestComm will post status of final delivery. From the bash terminal, you can run the command below:
+
+....
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B13216549878" -d "From=%2B19876543212" -d "Body=This is a test from RestComm" -d "StatusCallback=http%3A%2F%2Fposttestserver.com%2Fpost.php"
+....
+
+For testing http://posttestserver.com/post.php  or any other online url can be used.
+
+On StatusCallback URL SmsSid and SmsStatus parameters will be posted, SmsSid value can be correlate with early acknowledgement message.
+
+Following would be the values of SmsStatus
+
+* DELIVRD
+* EXPIRED
+* DELETED
+* UNDELIV
+* ACCEPTD
+* UNKNOWN
+* REJECTD
+* ENROUTE
+* BADSTAT
+
 == Get list of SMS Messages
 
 This will display list of message sent
