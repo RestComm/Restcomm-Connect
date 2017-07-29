@@ -19,6 +19,7 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
+import akka.dispatch.Futures;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
@@ -30,6 +31,8 @@ import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.dao.entities.RecordingFilter;
+import scala.concurrent.ExecutionContext;
+import scala.concurrent.Future;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -37,6 +40,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -47,26 +51,41 @@ public final class MybatisRecordingsDao implements RecordingsDao {
     private final SqlSessionFactory sessions;
     private S3AccessTool s3AccessTool;
     private String recordingPath;
+    private ExecutionContext ec;
 
     public MybatisRecordingsDao(final SqlSessionFactory sessions) {
         super();
         this.sessions = sessions;
     }
 
-    public MybatisRecordingsDao(final SqlSessionFactory sessions, final S3AccessTool s3AccessTool, final String recordingPath) {
+    public MybatisRecordingsDao(final SqlSessionFactory sessions, final S3AccessTool s3AccessTool, final String recordingPath, final ExecutionContext ec) {
         super();
         this.sessions = sessions;
         this.s3AccessTool = s3AccessTool;
         this.recordingPath = recordingPath;
+        this.ec = ec;
+    }
+
+    @Override
+    public S3AccessTool getS3AccessTool () {
+        return s3AccessTool;
     }
 
     @Override
     public void addRecording(Recording recording) {
-        if (s3AccessTool != null) {
-            URI s3Uri = s3AccessTool.uploadFile(recordingPath+"/"+recording.getSid().toString()+".wav");
+        if (s3AccessTool != null && ec != null) {
+            final String recordingSid = recording.getSid().toString();
+            URI s3Uri = s3AccessTool.getS3Uri(recordingPath+"/"+recordingSid+".wav");
+                    //s3AccessTool.uploadFile(recordingPath+"/"+recording.getSid().toString()+".wav");
             if (s3Uri != null) {
                 recording = recording.setS3Uri(s3Uri);
             }
+            Future<Boolean> f = Futures.future(new Callable<Boolean>() {
+                @Override
+                public Boolean call () throws Exception {
+                    return s3AccessTool.uploadFile(recordingPath+"/"+recordingSid+".wav");
+                }
+            }, ec);
         }
         String fileUrl = String.format("/restcomm/%s/Accounts/%s/Recordings/%s",recording.getApiVersion(),recording.getAccountSid(),recording.getSid());
         recording = recording.updateFileUri(generateLocalFileUri(fileUrl));
