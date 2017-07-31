@@ -50,6 +50,20 @@ public class AsrSignal {
     private final int minNumber;
     private final int maxNumber;
 
+    /**
+     *
+     * @param driver ASR driver
+     * @param lang speech language
+     * @param initialPrompts Initial prompt
+     * @param endInputKey end input key, if present stop ASR with dtmf signal
+     * @param maximumRecTimer maximum recognition time
+     * @param waitingInputTimer waiting time to detect user input (gather timeout)
+     * @param timeAfterSpeech amount of silence necessary after the end of speech (gather timeout)
+     * @param hotWords hints for speech analyzer tool
+     * @param input "dtmf", "speech", "dtmf speech"
+     * @param numberOfDigits number of digits system expects from User
+     */
+
     public AsrSignal(String driver, String lang, List<URI> initialPrompts, String endInputKey, long maximumRecTimer, long waitingInputTimer,
                      long timeAfterSpeech, String hotWords, String input, int numberOfDigits) {
         this.driver = driver;

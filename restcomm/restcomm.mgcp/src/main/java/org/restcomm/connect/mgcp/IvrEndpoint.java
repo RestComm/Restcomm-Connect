@@ -182,7 +182,7 @@ public final class IvrEndpoint extends GenericEndpoint {
                 try {
                     asrr = new String(Hex.decodeHex(asrr.toCharArray()));
                 } catch (DecoderException e) {
-                    logger.error("asrr parameter cannot be decoded");
+                    logger.error("asrr parameter cannot be decoded: " + e.getStackTrace());
                     fail(code);
                 }
             }
