@@ -767,7 +767,10 @@ public final class Call extends RestcommUntypedActor {
             message.addHeader("X-RestComm-ApiVersion", apiVersion);
         if (accountId != null)
             message.addHeader("X-RestComm-AccountSid", accountId.toString());
-        message.addHeader("X-RestComm-CallSid", instanceId+"-"+id.toString());
+        // no need to append instance id, it will already be part of call sid by default
+        // https://github.com/RestComm/Restcomm-Connect/issues/1907
+        // message.addHeader("X-RestComm-CallSid", instanceId+"-"+id.toString());
+        message.addHeader("X-RestComm-CallSid", id.toString());
     }
 
     // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
@@ -1013,7 +1016,7 @@ public final class Call extends RestcommUntypedActor {
                 headers.put("RestComm-ApiVersion", apiVersion);
             if (accountId != null)
                 headers.put("RestComm-AccountSid", accountId.toString());
-            headers.put("RestComm-CallSid", instanceId+"-"+id.toString());
+            headers.put("RestComm-CallSid", id.toString());
         }
 
         //TODO: put this in a central place
