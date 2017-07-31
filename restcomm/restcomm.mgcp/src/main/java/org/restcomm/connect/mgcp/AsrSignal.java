@@ -75,6 +75,7 @@ public class AsrSignal {
         this.hotWords = hotWords;
         this.lang = lang;
         this.input = input;
+        //RMS expects two parameters but Collect in RVD has only one
         this.minNumber = numberOfDigits;
         this.maxNumber = numberOfDigits;
     }
