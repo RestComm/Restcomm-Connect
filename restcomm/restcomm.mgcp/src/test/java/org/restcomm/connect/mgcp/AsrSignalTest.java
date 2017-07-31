@@ -44,6 +44,8 @@ public class AsrSignalTest {
     private long waitingInputTimer;
     private long timeAfterSpeech;
     private String hotWords;
+    private String input;
+    private int numberOfDigits;
 
     @Before
     public void init() {
@@ -54,13 +56,15 @@ public class AsrSignalTest {
         waitingInputTimer = 10L;
         timeAfterSpeech = 5L;
         hotWords = "Wait";
+        input = "dtmf_speech";
+        numberOfDigits = 1;
     }
 
     @Test
     public void testFormatting() {
-        String expectedResult = "ip=hello.wav dr=no_name_driver ln=en-US eik=# mrt=100 wit=100 pst=50 hw=57616974";
+        String expectedResult = "ip=hello.wav dr=no_name_driver ln=en-US eik=# mrt=100 wit=100 pst=50 hw=57616974 in=dtmf_speech mn=1 mx=1";
         AsrSignal asrSignal = new AsrSignal(driver, DEFAULT_LANG, initialPrompts, endInputKey, maximumRecTimer, waitingInputTimer,
-                timeAfterSpeech, hotWords);
+                timeAfterSpeech, hotWords, input, numberOfDigits);
         String actualResult = asrSignal.toString();
 
         assertEquals(expectedResult, actualResult);
@@ -72,9 +76,9 @@ public class AsrSignalTest {
            add(URI.create("hello.wav"));
            add(URI.create("world.wav"));
         }};
-        String expectedResult = "ip=hello.wav,world.wav dr=no_name_driver ln=en-US eik=# mrt=100 wit=100 pst=50 hw=57616974";
+        String expectedResult = "ip=hello.wav,world.wav dr=no_name_driver ln=en-US eik=# mrt=100 wit=100 pst=50 hw=57616974 in=dtmf_speech mn=1 mx=1";
         AsrSignal asrSignal = new AsrSignal(driver, DEFAULT_LANG, initialPrompts, endInputKey, maximumRecTimer, waitingInputTimer,
-                timeAfterSpeech, hotWords);
+                timeAfterSpeech, hotWords, input, numberOfDigits);
         String actualResult = asrSignal.toString();
 
         assertEquals(expectedResult, actualResult);
