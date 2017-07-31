@@ -813,6 +813,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 Object data = dtmfResponse.get();
                 if (data instanceof CollectedResult && ((CollectedResult)data).isAsr() && ((CollectedResult)data).isPartial()) {
                     fsm.transition(message, continuousGathering);
+                } else if (data instanceof CollectedResult && ((CollectedResult)data).isAsr() && !((CollectedResult)data).isPartial() && collectedDigits.length() == 0) {
+                    speechResult = ((CollectedResult)data).getResult();
+                    fsm.transition(message, finishGathering);
                 } else {
                     if (sender == call) {
                         // DTMF using SIP INFO, check if all digits collected here

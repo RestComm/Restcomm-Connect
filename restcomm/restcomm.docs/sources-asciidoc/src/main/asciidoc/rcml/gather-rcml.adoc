@@ -29,6 +29,7 @@ The *<Gather>* verb supports two modes: *DTMF* and *SPEECH*. In DTMF mode it "ga
 |=======================================================================
 |Parameter |Description
 |Digits |The digits the caller pressed, excluding the finishOnKey digit.
+|SpeechResult |The transcribed result of the speech.
 |=======================================================================
 
 
@@ -44,7 +45,7 @@ The *<Gather>* verb supports two modes: *DTMF* and *SPEECH*. In DTMF mode it "ga
 [cols=",",options="header",]
 |=======================================================================
 |Parameter |Description
-|Speech |Partially recognized speech the caller said.
+|UnstableSpeechResult |Partially recognized speech the caller said.
 |=======================================================================
 
 
