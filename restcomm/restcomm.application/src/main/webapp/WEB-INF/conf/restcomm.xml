@@ -11,6 +11,10 @@
 	MA 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
 <restcomm>
 	<runtime-settings>
+        <client-algorithm>MD5</client-algorithm>
+        <client-qop>auth</client-qop>
+        <client-algorithm-sess>false</client-algorithm-sess>
+        <realm>localhost</realm>
 		<!-- The API version that will be used. -->
 		<api-version>2012-04-24</api-version>
 
