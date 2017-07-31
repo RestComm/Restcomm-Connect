@@ -218,8 +218,8 @@ public class MgcpMediaGroup extends MediaGroup {
             this.lastEvent = AUMgcpEvent.aupc;
         } else {
             this.lastEvent = AsrSignal.REQUEST_ASR;
-            signal = new AsrSignal(request.getDriver(), request.lang(), request.prompts(), request.endInputKey(), request.timeout(), request.timeout(),
-                    request.timeout(), request.getHints());
+            signal = new AsrSignal(request.getDriver(), request.lang(), request.prompts(), request.endInputKey(), 60, request.timeout(),
+                    request.timeout(), request.getHints(), request.type().toString() ,request.numberOfDigits());
         }
         this.originator = sender();
         ivr.tell(signal, self);

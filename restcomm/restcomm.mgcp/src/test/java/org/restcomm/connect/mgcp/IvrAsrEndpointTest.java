@@ -98,7 +98,7 @@ public class IvrAsrEndpointTest {
                 final Observing observingResponse = expectMsgClass(Observing.class);
                 assertTrue(observingResponse.succeeded());
 
-                AsrSignal asr = new AsrSignal("no_name_driver", "en-US", Collections.singletonList(URI.create("hello.wav")), "#", 10, 10, 10, HINTS);
+                AsrSignal asr = new AsrSignal("no_name_driver", "en-US", Collections.singletonList(URI.create("hello.wav")), "#", 10, 10, 10, HINTS, "dtmf_speech", 1);
                 endpoint.tell(asr, observer);
                 final IvrEndpointResponse ivrResponse = expectMsgClass(IvrEndpointResponse.class);
                 assertTrue(ivrResponse.succeeded());
@@ -146,7 +146,7 @@ public class IvrAsrEndpointTest {
                 final Observing observingResponse = expectMsgClass(Observing.class);
                 assertTrue(observingResponse.succeeded());
 
-                AsrSignal asr = new AsrSignal("no_name_driver", "en-US", Collections.singletonList(URI.create("hello.wav")), "#", 10, 10, 10, HINTS);
+                AsrSignal asr = new AsrSignal("no_name_driver", "en-US", Collections.singletonList(URI.create("hello.wav")), "#", 10, 10, 10, HINTS, "dtmf_speech", 1);
                 endpoint.tell(asr, observer);
                 final IvrEndpointResponse ivrResponse = expectMsgClass(IvrEndpointResponse.class);
                 assertFalse(ivrResponse.succeeded());
@@ -181,7 +181,7 @@ public class IvrAsrEndpointTest {
                 final Observing observingResponse = expectMsgClass(Observing.class);
                 assertTrue(observingResponse.succeeded());
 
-                AsrSignal asr = new AsrSignal("no_name_driver", "en-US", Collections.singletonList(URI.create("hello.wav")), "#", 10, 10, 10, ASR_RESULT_TEXT);
+                AsrSignal asr = new AsrSignal("no_name_driver", "en-US", Collections.singletonList(URI.create("hello.wav")), "#", 10, 10, 10, ASR_RESULT_TEXT, "dtmf_speech", 1);
                 endpoint.tell(asr, observer);
                 final IvrEndpointResponse ivrResponse = expectMsgClass(IvrEndpointResponse.class);
                 assertTrue(ivrResponse.succeeded());

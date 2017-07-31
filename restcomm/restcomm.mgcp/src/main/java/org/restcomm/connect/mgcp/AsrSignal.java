@@ -46,9 +46,12 @@ public class AsrSignal {
     private final long timeAfterSpeech;
     private final String hotWords;
     private final String lang;
+    private final String input;
+    private final int minNumber;
+    private final int maxNumber;
 
     public AsrSignal(String driver, String lang, List<URI> initialPrompts, String endInputKey, long maximumRecTimer, long waitingInputTimer,
-                     long timeAfterSpeech, String hotWords) {
+                     long timeAfterSpeech, String hotWords, String input, int numberOfDigits) {
         this.driver = driver;
         this.initialPrompts = initialPrompts;
         this.endInputKey = endInputKey;
@@ -57,6 +60,9 @@ public class AsrSignal {
         this.timeAfterSpeech = timeAfterSpeech;
         this.hotWords = hotWords;
         this.lang = lang;
+        this.input = input;
+        this.minNumber = numberOfDigits;
+        this.maxNumber = numberOfDigits;
     }
 
     @Override
@@ -105,6 +111,21 @@ public class AsrSignal {
             if (buffer.length() > 0)
                 buffer.append(SPACE_CHARACTER);
             buffer.append("hw=").append(Hex.encodeHexString(hotWords.getBytes()));
+        }
+        if (input != null) {
+            if (buffer.length() > 0)
+                buffer.append(SPACE_CHARACTER);
+            buffer.append("in=").append(input);
+        }
+        if (minNumber > 0) {
+            if (buffer.length() > 0)
+                buffer.append(SPACE_CHARACTER);
+            buffer.append("mn=").append(minNumber);
+        }
+        if (maxNumber > 0) {
+            if (buffer.length() > 0)
+                buffer.append(SPACE_CHARACTER);
+            buffer.append("mx=").append(maxNumber);
         }
         return buffer.toString();
     }
