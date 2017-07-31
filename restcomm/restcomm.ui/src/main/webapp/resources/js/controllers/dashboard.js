@@ -36,8 +36,8 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
     angular.forEach(data, function(value,key){
       //console.log(value.start_date, value.count, value.usage);
       $scope.callsData[0].values.push([value.start_date, value.count || 0]);
-      $scope.callsData[1].values.push([value.start_date, Math.floor(value.usage/60*10)/10 || 0]);
-      maxDuration = Math.max(maxDuration, Math.floor(value.usage/60*10)/10);
+      $scope.callsData[1].values.push([value.start_date, value.usage || 0]);
+      maxDuration = Math.max(maxDuration, value.usage);
       maxCalls = Math.max(maxCalls, value.count);
     });
     $scope.options.chart.lines.yDomain = [0, maxDuration];
