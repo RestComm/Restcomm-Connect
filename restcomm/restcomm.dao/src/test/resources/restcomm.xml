@@ -27,23 +27,6 @@
 		<conference-entry-audio>beep.wav</conference-entry-audio>
 		<conference-exit-audio>alert.wav</conference-exit-audio>
 
-		<!-- ASR Supported Languages -->
-		<asr-languages default="en-US">
-			<language>en-US</language>
-			<language>en-GB</language>
-			<language>es-ES</language>
-			<language>it-IT</language>
-			<language>fr-FR</language>
-			<language>pl-PL</language>
-			<language>pt-PT</language>
-		</asr-languages>
-
-		<!-- Speech to text drivers -->
-		<!--mg-asr-drivers default="driver1">
-			<driver>driver1</driver>
-			<driver>driver2</driver>
-		</mg-asr-drivers-->
-
 		<!-- Cache settings. -->
 		<cache-path>${restcomm:home}/cache</cache-path>
 		<cache-uri>/restcomm/cache</cache-uri>
@@ -57,9 +40,6 @@
 		<!-- The path where recordings made by the <Record> verb are stored. -->
 		<recordings-path>file://${restcomm:home}/recordings</recordings-path>
 		<recordings-uri>/restcomm/recordings</recordings-uri>
-
-		<!-- if S3AccessTool takes more than the duration here, then Restcomm will report this -->
-		<recording-max-delay>2000</recording-max-delay>
 
 		<!-- The URL to the errors dictionary. -->
 		<error-dictionary-uri>/restcomm/errors</error-dictionary-uri>
