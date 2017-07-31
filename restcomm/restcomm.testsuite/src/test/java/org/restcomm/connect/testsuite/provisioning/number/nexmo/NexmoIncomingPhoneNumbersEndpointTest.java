@@ -116,7 +116,7 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "application/json")
                     .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
 
-        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/US/14156902867.*voiceCallbackValue=localhost:5080.*"))
+        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/US/14156902867.*"))
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")
@@ -249,7 +249,7 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "application/json")
                     .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
 
-        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/FR/33911067000.*"))
+        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/FR/33911067000.*voiceCallbackValue=%2B33911067000%40127.0.0.1%3A5080.*"))
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")
