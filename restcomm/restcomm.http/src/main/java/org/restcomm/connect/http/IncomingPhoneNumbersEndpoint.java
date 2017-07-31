@@ -127,7 +127,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
 
         Configuration callbackUrlsConfiguration = configuration.subset("phone-number-provisioning").subset("callback-urls");
         String voiceUrl = callbackUrlsConfiguration.getString("voice[@url]");
-        if(voiceUrl != null) {
+        if(voiceUrl != null && !voiceUrl.trim().isEmpty()) {
             String[] voiceUrlArr = voiceUrl.split(":");
             if(voiceUrlArr != null && voiceUrlArr.length==2)
                 callbackPort = voiceUrlArr[1];
@@ -380,7 +380,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             if (available) {
                 IncomingPhoneNumber incomingPhoneNumber = createFrom(new Sid(accountSid), data, account.getOrganizationSid());
                 String domainName = organizationsDao.getOrganization(account.getOrganizationSid()).getDomainName();
-                phoneNumberParameters.setVoiceUrl(domainName+":"+callbackPort);
+                phoneNumberParameters.setVoiceUrl((callbackPort == null || callbackPort.trim().isEmpty()) ? domainName : domainName+":"+callbackPort);
                 phoneNumberParameters.setPhoneNumberType(phoneNumberType);
 
                 org.restcomm.connect.provisioning.number.api.PhoneNumber phoneNumber = convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber);
@@ -445,7 +445,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             boolean updated = true;
             if(phoneNumberProvisioningManager != null && (incomingPhoneNumber.isPureSip() == null || !incomingPhoneNumber.isPureSip())) {
                 String domainName = organizationsDao.getOrganization(operatedAccount.getOrganizationSid()).getDomainName();
-                phoneNumberParameters.setVoiceUrl(domainName+":"+callbackPort);
+                phoneNumberParameters.setVoiceUrl((callbackPort == null || callbackPort.trim().isEmpty()) ? domainName : domainName+":"+callbackPort);
                 if(logger.isDebugEnabled())
                     logger.debug("updateNumber " + incomingPhoneNumber +" phoneNumberParameters: " + phoneNumberParameters);
                 updated = phoneNumberProvisioningManager.updateNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber), phoneNumberParameters);

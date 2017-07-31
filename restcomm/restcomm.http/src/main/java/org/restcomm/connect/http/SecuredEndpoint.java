@@ -28,7 +28,9 @@ import org.apache.shiro.authz.permission.WildcardPermissionResolver;
 import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.OrganizationsDao;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.extension.api.ApiRequest;
 import org.restcomm.connect.extension.api.ExtensionResponse;
@@ -75,6 +77,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     protected UserIdentityContext userIdentityContext;
     protected AccountsDao accountsDao;
+    protected OrganizationsDao organizationsDao;
     protected IdentityContext identityContext;
     @Context
     protected ServletContext context;
@@ -98,6 +101,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         super.init(configuration);
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.accountsDao = storage.getAccountsDao();
+        this.organizationsDao = storage.getOrganizationsDao();
         this.identityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
         this.userIdentityContext = new UserIdentityContext(request, accountsDao);
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.RestApi);
@@ -177,6 +181,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     protected void secure(final Account operatedAccount, final String permission, SecuredType type) throws AuthorizationException {
         checkAuthenticatedAccount();
         checkPermission(permission); // check an authenticated account allowed to do "permission" is available
+        checkOrganization(operatedAccount); // check if valid organization is attached with this account.
         if (operatedAccount == null) {
             // if operatedAccount is NULL, we'll probably return a 404. But let's handle that in a central place.
             throw new OperatedAccountMissing();
@@ -192,6 +197,25 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         if (type == SecuredType.SECURED_ACCOUNT) {
             if (secureLevelControlAccounts(operatedAccount) != AuthOutcome.OK)
                 throw new InsufficientPermission();
+        }
+    }
+
+    /**
+     * @param account
+     * @throws IllegalStateException
+     */
+    private void checkOrganization(Account account) throws IllegalStateException {
+        Sid organizationSid = account.getOrganizationSid();
+        if(organizationSid == null){
+            String errorMsg = "there is no organization assosiate with this account: "+account.getSid();
+            logger.error(errorMsg);
+            throw new IllegalStateException(errorMsg);
+        }
+        Organization organization = organizationsDao.getOrganization(organizationSid);
+        if(organization == null || organization.getDomainName() == null || organization.getDomainName().trim().isEmpty()){
+            String errorMsg = "Invalid or Null Organization: "+organization +" for account: "+account.getSid();
+            logger.error(errorMsg);
+            throw new IllegalStateException(errorMsg);
         }
     }
 

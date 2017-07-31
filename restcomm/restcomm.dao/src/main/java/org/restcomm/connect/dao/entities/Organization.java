@@ -34,8 +34,19 @@ public final class Organization {
     private final DateTime dateCreated;
     private final DateTime dateUpdated;
 
-    public Organization(final Sid sid, final String domainName, final DateTime dateCreated, final DateTime dateUpdated) {
+    /**
+     * @param sid
+     * @param domainName
+     * @param dateCreated
+     * @param dateUpdated
+     * @throws IllegalArgumentException if sid or domainName are null/empty
+     */
+    public Organization(final Sid sid, final String domainName, final DateTime dateCreated, final DateTime dateUpdated) throws IllegalArgumentException {
         super();
+        if(domainName == null || domainName.trim().isEmpty())
+            throw new IllegalArgumentException("Organization domainName can not be empty.");
+        if(sid == null)
+            throw new IllegalArgumentException("Organization sid can not be empty.");
         this.sid = sid;
         this.domainName = domainName;
         this.dateCreated = dateCreated;
@@ -62,7 +73,14 @@ public final class Organization {
         return dateUpdated;
     }
 
-    public Organization setDomainName(final String domainName) {
+    /**
+     * @param domainName
+     * @return
+     * @throws IllegalArgumentException in case provided domainName is empty or null
+     */
+    public Organization setDomainName(final String domainName) throws IllegalArgumentException {
+        if(domainName == null || domainName.trim().isEmpty())
+            throw new IllegalArgumentException("Organization domainName can not be empty.");
         return new Organization(sid, domainName, dateCreated, DateTime.now());
     }
 
@@ -89,7 +107,7 @@ public final class Organization {
             this.sid = sid;
         }
 
-        public void setSomainName(final String domainName) {
+        public void setDomainName(final String domainName) {
             this.domainName = domainName;
         }
 
