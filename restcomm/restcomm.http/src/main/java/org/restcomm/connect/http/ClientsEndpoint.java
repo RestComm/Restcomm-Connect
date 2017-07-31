@@ -22,9 +22,11 @@ package org.restcomm.connect.http;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.DigestAuthentication;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -45,6 +47,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+
 import java.net.URI;
 import java.util.List;
 
@@ -102,13 +105,17 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         builder.setApiVersion(getApiVersion(data));
         builder.setFriendlyName(getFriendlyName(data.getFirst("Login"), data));
         builder.setAccountSid(accountSid);
-        builder.setLogin(data.getFirst("Login"));
+        String username = data.getFirst("Login");
+        builder.setLogin(username);
         // Validate the password. Should be strong enough
         String password = data.getFirst("Password");
         PasswordValidator validator = PasswordValidatorFactory.createDefault();
         if (!validator.isStrongEnough(password))
             throw new PasswordTooWeak();
-        builder.setPassword(password);
+        String realm = configuration.getString("realm");
+        String algorithm = configuration.getString("client-algorithm");
+
+        builder.setPassword(DigestAuthentication.HA1(username, realm, password, algorithm));
         builder.setStatus(getStatus(data));
         URI voiceUrl = getUrl("VoiceUrl", data);
         if (voiceUrl != null && voiceUrl.toString().equals("")) {

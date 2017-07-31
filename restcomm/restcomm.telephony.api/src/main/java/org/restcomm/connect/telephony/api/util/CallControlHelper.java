@@ -47,6 +47,10 @@ import org.restcomm.connect.commons.util.DigestAuthentication;
 public class CallControlHelper {
 
     static boolean permitted(final String authorization, final String method, DaoManager daoManager) {
+        return permitted(authorization, method, daoManager, "MD5");
+    }
+
+    static boolean permitted(final String authorization, final String method, DaoManager daoManager, String algo) {
         final Map<String, String> map = authHeaderToMap(authorization);
         final String user = map.get("username");
         final String algorithm = map.get("algorithm");
@@ -60,9 +64,9 @@ public class CallControlHelper {
         final ClientsDao clients = daoManager.getClientsDao();
         final Client client = clients.getClient(user);
         if (client != null && Client.ENABLED == client.getStatus()) {
-            final String password = client.getPassword();
-            final String result = DigestAuthentication.response(algorithm, user, realm, password, nonce, nc, cnonce, method,
-                    uri, null, qop);
+            final String password2 = client.getPassword();
+            final String result = DigestAuthentication.response(algorithm, user, realm, "", password2, nonce, nc, cnonce,
+                    method, uri, null, qop);
             return result.equals(response);
         } else {
             return false;
@@ -77,11 +81,23 @@ public class CallControlHelper {
      * @throws IOException
      */
     public static boolean checkAuthentication(SipServletRequest request, DaoManager storage) throws IOException {
+        return checkAuthentication(request, storage, "MD5");
+    }
+
+    /**
+     *
+     * Check if a client is authenticated. If so, return true. Otherwise request authentication and return false;
+     * @param algo TODO
+     *
+     * @return
+     * @throws IOException
+     */
+    public static boolean checkAuthentication(SipServletRequest request, DaoManager storage, String algo) throws IOException {
         // Make sure we force clients to authenticate.
         final String authorization = request.getHeader("Proxy-Authorization");
         final String method = request.getMethod();
-        if (authorization == null || !CallControlHelper.permitted(authorization, method, storage)) {
-            authenticate(request);
+        if (authorization == null || !CallControlHelper.permitted(authorization, method, storage, algo)) {
+            authenticate(request, algo);
             return false;
         } else {
             return true;
@@ -89,11 +105,17 @@ public class CallControlHelper {
     }
 
     static void authenticate(final SipServletRequest request) throws IOException {
+        authenticate(request, "MD5");
+    }
+
+    static void authenticate(final SipServletRequest request, String algo) throws IOException {
         final SipServletResponse response = request.createResponse(SC_PROXY_AUTHENTICATION_REQUIRED);
         final String nonce = nonce();
         final SipURI uri = (SipURI) request.getTo().getURI();
+        //TODO: fetch from config
         final String realm = uri.getHost();
-        final String header = header(nonce, realm, "Digest");
+        //TODO: loop through algorithms list and add additional headers
+        final String header = header(nonce, realm, "Digest", algo);
         response.addHeader("Proxy-Authenticate", header);
         response.send();
     }
@@ -118,8 +140,18 @@ public class CallControlHelper {
     }
 
     static String header(final String nonce, final String realm, final String scheme) {
+        return header(nonce, realm, scheme, "MD5");
+    }
+
+    static String header(final String nonce, final String realm, final String scheme, String algo) {
         final StringBuilder buffer = new StringBuilder();
         buffer.append(scheme).append(" ");
+        if(!algo.isEmpty()){
+            //TODO: check algorithm-session
+            buffer.append("algorithm=\"").append(algo).append("\", ");
+            //TODO: fetch from config
+            buffer.append("qop=\"").append("auth").append("\", ");
+        }
         buffer.append("realm=\"").append(realm).append("\", ");
         buffer.append("nonce=\"").append(nonce).append("\"");
         return buffer.toString();
