@@ -254,6 +254,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
     String finishOnKey;
     int numberOfDigits = Short.MAX_VALUE;
     StringBuffer collectedDigits;
+    String speechResult;
     //Monitoring service
     ActorRef monitoring;
 
@@ -1702,7 +1703,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             // processing
             // the current TwiML document with the verb immediately following the <Gather>
             Attribute action = verb.attribute(GatherAttributes.ATTRIBUTE_ACTION);
-            if (action != null && !digits.trim().isEmpty()) {
+            if (action != null && (!digits.trim().isEmpty() || !StringUtils.isEmpty(speechResult))) {
                 // Redirect to the action url.
                 if (digits.endsWith(finishOnKey)) {
                     final int finishOnKeyIndex = digits.lastIndexOf(finishOnKey);
@@ -1710,6 +1711,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 }
                 final List<NameValuePair> parameters = parameters();
                 parameters.add(new BasicNameValuePair("Digits", digits));
+                parameters.add(new BasicNameValuePair("SpeechResult", speechResult));
 
                 execHttpRequest(notifications, action, verb.attribute(GatherAttributes.ATTRIBUTE_METHOD), parameters);
                 return;
@@ -1734,7 +1736,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             final MediaGroupResponse<CollectedResult> asrResponse = (MediaGroupResponse<CollectedResult>) message;
 
             final List<NameValuePair> parameters = parameters();
-            parameters.add(new BasicNameValuePair("Speech", asrResponse.get().getResult()));
+            parameters.add(new BasicNameValuePair("UnstableSpeechResult", asrResponse.get().getResult()));
 
             final NotificationsDao notifications = storage.getNotificationsDao();
             execHttpRequest(notifications, verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK),

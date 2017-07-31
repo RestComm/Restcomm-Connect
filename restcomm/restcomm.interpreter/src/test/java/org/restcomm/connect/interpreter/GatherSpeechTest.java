@@ -232,7 +232,7 @@ public class GatherSpeechTest {
 
                 callback = expectMsgClass(HttpRequestDescriptor.class);
                 assertEquals(callback.getUri(), partialCallbackUri);
-                assertEquals(findParam(callback.getParameters(), "Speech").getValue(), "1");
+                assertEquals(findParam(callback.getParameters(), "UnstableSpeechResult").getValue(), "1");
 
                 interpreter.tell(new DownloaderResponse(getOkRcml(partialCallbackUri, "")), observer);
 
@@ -241,7 +241,14 @@ public class GatherSpeechTest {
 
                 callback = expectMsgClass(HttpRequestDescriptor.class);
                 assertEquals(callback.getUri(), partialCallbackUri);
-                assertEquals(findParam(callback.getParameters(), "Speech").getValue(), "12");
+                assertEquals(findParam(callback.getParameters(), "UnstableSpeechResult").getValue(), "12");
+
+                //generate final response
+                interpreter.tell(new MediaGroupResponse(new CollectedResult("Hello. World.", true, false)), observer);
+
+                callback = expectMsgClass(HttpRequestDescriptor.class);
+                assertEquals(callback.getUri(), actionCallbackUri);
+                assertEquals(findParam(callback.getParameters(), "SpeechResult").getValue(), "Hello. World.");
 
                 interpreter.tell(new DownloaderResponse(getOkRcml(partialCallbackUri, endRcml)), observer);
 
@@ -291,7 +298,7 @@ public class GatherSpeechTest {
 
                 callback = expectMsgClass(HttpRequestDescriptor.class);
                 assertEquals(callback.getUri(), partialCallbackUri);
-                assertEquals(findParam(callback.getParameters(), "Speech").getValue(), "1");
+                assertEquals(findParam(callback.getParameters(), "UnstableSpeechResult").getValue(), "1");
 
                 interpreter.tell(new DownloaderResponse(getOkRcml(partialCallbackUri, "")), observer);
 
@@ -300,7 +307,14 @@ public class GatherSpeechTest {
 
                 callback = expectMsgClass(HttpRequestDescriptor.class);
                 assertEquals(callback.getUri(), partialCallbackUri);
-                assertEquals(findParam(callback.getParameters(), "Speech").getValue(), "12");
+                assertEquals(findParam(callback.getParameters(), "UnstableSpeechResult").getValue(), "12");
+
+                //generate final response
+                interpreter.tell(new MediaGroupResponse(new CollectedResult("Hello. World.", true, false)), observer);
+
+                callback = expectMsgClass(HttpRequestDescriptor.class);
+                assertEquals(callback.getUri(), actionCallbackUri);
+                assertEquals(findParam(callback.getParameters(), "SpeechResult").getValue(), "Hello. World.");
 
                 interpreter.tell(new DownloaderResponse(getOkRcml(partialCallbackUri, playRcml)), observer);
 

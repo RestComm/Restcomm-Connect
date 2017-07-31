@@ -40,7 +40,6 @@ import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.StopObserving;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static jain.protocol.ip.mgcp.message.parms.ReturnCode.Transaction_Executed_Normally;
@@ -176,6 +175,28 @@ public final class IvrEndpoint extends GenericEndpoint {
         }
     }
 
+    private void handleAsrr(final Map<String, String> parameters, int code) {
+        if (parameters.containsKey("asrr")) {
+            String asrr = parameters.get("asrr");
+            if (!StringUtils.isEmpty(asrr)) {
+                try {
+                    asrr = new String(Hex.decodeHex(asrr.toCharArray()));
+                } catch (DecoderException e) {
+                    logger.error("asrr parameter cannot be decoded.", e);
+                    fail(code);
+                }
+            }
+            // Notify the observers that the event successfully completed.
+            final IvrEndpointResponse result = new IvrEndpointResponse(new CollectedResult(asrr, true, code == 101));
+            for (final ActorRef observer : observers) {
+                observer.tell(result, self());
+            }
+        } else {
+            logger.error("asrr parameter is missing");
+            fail(code);
+        }
+    }
+
     private void notification(final Object message) {
         final Notify notification = (Notify) message;
         final ActorRef self = self();
@@ -195,38 +216,22 @@ public final class IvrEndpoint extends GenericEndpoint {
                 case 327: // No speech
                 case 328: // Spoke too long
                 case 329: // Digit pattern not matched
+                case 331: // Speech pattern not detected
                 case 100: { // Success(final result)
                     String digits = parameters.get("dc");
-                    if (digits == null) {
-                        digits = EMPTY_STRING;
-                    }
-                    final IvrEndpointResponse result = new IvrEndpointResponse(
-                            new CollectedResult(digits, AsrSignal.REQUEST_ASR.getName().equals(event.getName()), false));
-                    for (final ActorRef observer : observers) {
-                        observer.tell(result, self);
+                    if (digits == null && parameters.get("asrr") != null) {
+                        handleAsrr(parameters, code);
+                    } else {
+                        final IvrEndpointResponse result = new IvrEndpointResponse(
+                                new CollectedResult(digits == null ? EMPTY_STRING : digits, AsrSignal.REQUEST_ASR.getName().equals(event.getName()), false));
+                        for (final ActorRef observer : observers) {
+                            observer.tell(result, self);
+                        }
                     }
                     break;
                 }
                 case 101: { // Success(partial result)
-                    if (parameters.containsKey("asrr")) {
-                        String asrr = parameters.get("asrr");
-                        if (!StringUtils.isEmpty(asrr)) {
-                            try {
-                                asrr = new String(Hex.decodeHex(asrr.toCharArray()));
-                            } catch (DecoderException e) {
-                                logger.error("asrr parameter cannot be decoded");
-                                fail(code);
-                            }
-                        }
-                        // Notify the observers that the event successfully completed.
-                        final IvrEndpointResponse result = new IvrEndpointResponse(new CollectedResult(asrr, true, true));
-                        for (final ActorRef observer : observers) {
-                            observer.tell(result, self);
-                        }
-                    } else {
-                        logger.error("asrr parameter is missing");
-                        fail(code);
-                    }
+                    handleAsrr(parameters, code);
                     break;
                 }
                 default: {
@@ -234,19 +239,5 @@ public final class IvrEndpoint extends GenericEndpoint {
                 }
             }
         }
-    }
-
-    private Map<String, String> parse(final String input) {
-        final Map<String, String> parameters = new HashMap<String, String>();
-        final String[] tokens = input.split(" ");
-        for (final String token : tokens) {
-            final String[] values = token.split("=");
-            if (values.length == 1) {
-                parameters.put(values[0], null);
-            } else if (values.length == 2) {
-                parameters.put(values[0], values[1]);
-            }
-        }
-        return parameters;
     }
 }
