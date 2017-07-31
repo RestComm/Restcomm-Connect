@@ -818,8 +818,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Finally proceed with call bridging
                 final JoinCalls bridgeCalls = new JoinCalls(call, outboundCall);
                 bridge.tell(bridgeCalls, self());
-            } else if (is(forking)){
-                if(dialBranches == null || dialBranches.size() == 0){
+            } else if (is(forking) || is(finishDialing) || is(finished)){
+                // Move to next verb once media server completed Play
+                if((dialBranches == null || dialBranches.size() == 0) && parser != null){
                     final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, self());
                 }
@@ -1249,6 +1250,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         } else {
                             checkDialBranch(message, sender(), action);
                         }
+                        final StopMediaGroup stop = new StopMediaGroup();
+                        call.tell(stop, sender);
                         break;
                     } else if (is(conferencing) || is(finishConferencing)) {
                         //If the CallStateChanged.Completed event from the Call arrived before the ConferenceStateChange.Completed
@@ -1346,7 +1349,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (sender != null && !sender.equals(call)) {
                     callManager.tell(new DestroyCall(sender), self());
                 }
-                if (parser != null && !is(forking)) {
+                // VI cannot move to next verb if media still being reproduced by media server
+                // GetNextVerb is skipped and StopMediaGroup is requested right away
+                // RCML Parser/VI activity continues when media server successful response is received
+                final boolean activeParser = parser != null;
+                final boolean notForking = !is(forking);
+                final boolean notCanceledByForkingTimeout = !(is(finishDialing) && state.equals(CallStateChanged.State.CANCELED));
+                if (activeParser && notForking && notCanceledByForkingTimeout) {
                     final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, self());
                 }
