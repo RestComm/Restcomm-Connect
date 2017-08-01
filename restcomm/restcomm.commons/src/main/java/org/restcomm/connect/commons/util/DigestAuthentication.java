@@ -41,12 +41,8 @@ public final class DigestAuthentication {
             if (cnonce == null || cnonce.length() == 0) {
                 throw new NullPointerException("The cnonce parameter may not be null.");
             }
-            return H(user + ":" + realm + ":" + password) + ":" + nonce + ":" + cnonce;
+            return H(user + ":" + realm + ":" + password, algorithm) + ":" + nonce + ":" + cnonce;
         }
-    }
-
-    private static String A2(final String method, final String uri, String body, final String qop) {
-        return A2("MD5", method, uri, body, qop);
     }
 
     private static String A2(String algorithm, final String method, final String uri, String body, final String qop) {
@@ -86,10 +82,6 @@ public final class DigestAuthentication {
         }
     }
 
-    private static String H(final String data) {
-        return H(data, "MD5");
-    }
-
     private static String H(final String data, String algorithm) {
         try {
             final MessageDigest digest = MessageDigest.getInstance(algorithm);
@@ -101,17 +93,8 @@ public final class DigestAuthentication {
         }
     }
 
-    private static String KD(final String secret, final String data) {
-        return KD(secret, data, "MD5");
-    }
-
     private static String KD(final String secret, final String data, String algorithm) {
         return H(secret + ":" + data, algorithm);
-    }
-
-    private static void validate(final String user, final String realm, final String password, final String nonce,
-    final String method, final String uri) {
-        validate(user, realm, password, nonce, method, uri, "MD5");
     }
 
     private static void validate(final String user, final String realm, final String password, final String nonce,
