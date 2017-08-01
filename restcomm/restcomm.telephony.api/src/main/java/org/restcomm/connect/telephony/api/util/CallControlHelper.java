@@ -46,10 +46,6 @@ import org.restcomm.connect.commons.util.DigestAuthentication;
  */
 public class CallControlHelper {
 
-    static boolean permitted(final String authorization, final String method, DaoManager daoManager) {
-        return permitted(authorization, method, daoManager, "MD5");
-    }
-
     static boolean permitted(final String authorization, final String method, DaoManager daoManager, String algo) {
         final Map<String, String> map = authHeaderToMap(authorization);
         final String user = map.get("username");
@@ -63,7 +59,8 @@ public class CallControlHelper {
         final String response = map.get("response");
         final ClientsDao clients = daoManager.getClientsDao();
         final Client client = clients.getClient(user);
-        if (client != null && Client.ENABLED == client.getStatus()) {
+        //only allow if client algo is identical to system algo
+        if (client != null && Client.ENABLED == client.getStatus() && algorithm.equals(algo)) {
             final String password2 = client.getPassword();
             final String result = DigestAuthentication.response(algorithm, user, realm, "", password2, nonce, nc, cnonce,
                     method, uri, null, qop);
@@ -76,46 +73,29 @@ public class CallControlHelper {
     /**
      *
      * Check if a client is authenticated. If so, return true. Otherwise request authentication and return false;
-     *
-     * @return
-     * @throws IOException
-     */
-    public static boolean checkAuthentication(SipServletRequest request, DaoManager storage) throws IOException {
-        return checkAuthentication(request, storage, "MD5");
-    }
-
-    /**
-     *
-     * Check if a client is authenticated. If so, return true. Otherwise request authentication and return false;
      * @param algo TODO
-     *
+     * @param qop TODO
      * @return
      * @throws IOException
      */
-    public static boolean checkAuthentication(SipServletRequest request, DaoManager storage, String algo) throws IOException {
+    public static boolean checkAuthentication(SipServletRequest request, DaoManager storage, String algo, String qop) throws IOException {
         // Make sure we force clients to authenticate.
         final String authorization = request.getHeader("Proxy-Authorization");
         final String method = request.getMethod();
         if (authorization == null || !CallControlHelper.permitted(authorization, method, storage, algo)) {
-            authenticate(request, algo);
+            authenticate(request, algo, qop);
             return false;
         } else {
             return true;
         }
     }
 
-    static void authenticate(final SipServletRequest request) throws IOException {
-        authenticate(request, "MD5");
-    }
-
-    static void authenticate(final SipServletRequest request, String algo) throws IOException {
+    static void authenticate(final SipServletRequest request, String algo, String qop) throws IOException {
         final SipServletResponse response = request.createResponse(SC_PROXY_AUTHENTICATION_REQUIRED);
         final String nonce = nonce();
         final SipURI uri = (SipURI) request.getTo().getURI();
-        //TODO: fetch from config
         final String realm = uri.getHost();
-        //TODO: loop through algorithms list and add additional headers
-        final String header = header(nonce, realm, "Digest", algo);
+        final String header = header(nonce, realm, "Digest", algo, qop);
         response.addHeader("Proxy-Authenticate", header);
         response.send();
     }
@@ -139,18 +119,13 @@ public class CallControlHelper {
         return new String(hex).substring(0, 31);
     }
 
-    static String header(final String nonce, final String realm, final String scheme) {
-        return header(nonce, realm, scheme, "MD5");
-    }
-
-    static String header(final String nonce, final String realm, final String scheme, String algo) {
+    static String header(final String nonce, final String realm, final String scheme, String algo, String qop) {
         final StringBuilder buffer = new StringBuilder();
         buffer.append(scheme).append(" ");
         if(!algo.isEmpty()){
-            //TODO: check algorithm-session
+            //NB: we dont support "algorithm-sess" yet
             buffer.append("algorithm=\"").append(algo).append("\", ");
-            //TODO: fetch from config
-            buffer.append("qop=\"").append("auth").append("\", ");
+            buffer.append("qop=\"").append(qop).append("\", ");
         }
         buffer.append("realm=\"").append(realm).append("\", ");
         buffer.append("nonce=\"").append(nonce).append("\"");

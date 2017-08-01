@@ -27,8 +27,10 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
@@ -78,6 +80,7 @@ import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipURI;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -104,6 +107,7 @@ public final class SmsService extends RestcommUntypedActor {
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     private String clientAlgorithm;
+    private String clientQop;
 
     private final ActorRef monitoringService;
 
@@ -125,6 +129,7 @@ public final class SmsService extends RestcommUntypedActor {
         final Configuration runtime = configuration.subset("runtime-settings");
         this.authenticateUsers = runtime.getBoolean("authenticate");
         clientAlgorithm = runtime.getString("client-algorithm");
+        clientQop = runtime.getString("client-qop");
         this.servletConfig = (ServletConfig) configuration.getProperty(ServletConfig.class.getName());
         this.sipFactory = factory;
         this.storage = storage;
@@ -164,7 +169,7 @@ public final class SmsService extends RestcommUntypedActor {
         if (client != null) {
             // Make sure we force clients to authenticate.
             if (authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
-                    && !CallControlHelper.checkAuthentication(request, storage, clientAlgorithm)) {
+                    && !CallControlHelper.checkAuthentication(request, storage, clientAlgorithm, clientQop)) {
                 if(logger.isInfoEnabled()) {
                     logger.info("Client " + client.getLogin() + " failed to authenticate");
                 }
