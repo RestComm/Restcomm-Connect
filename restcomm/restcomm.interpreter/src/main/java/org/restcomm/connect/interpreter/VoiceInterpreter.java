@@ -30,7 +30,6 @@ import akka.event.LoggingAdapter;
 import akka.pattern.AskTimeoutException;
 import akka.util.Timeout;
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -1087,21 +1086,6 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
-    private boolean isEmptyDownloaderResponse(DownloaderResponse response) throws IOException {
-        final String type = response.get().getContentType();
-        if (type == null)
-            return true;
-
-        if (type.contains("audio/wav") || type.contains("audio/wave") || type.contains("audio/x-wav")) {
-            return false;
-        }
-
-        if (type.contains("text/plain") || type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html")) {
-            return StringUtils.isEmpty(response.get().getContentAsString());
-        }
-        return true;
-    }
-
     private void onDownloaderResponse(Object message, State state) throws IOException, TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         final DownloaderResponse response = (DownloaderResponse) message;
         if (logger.isDebugEnabled()) {
@@ -1110,7 +1094,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 logger.debug("statusCode " + response.get().getStatusCode());
         }
         if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
-            if (continuousGathering.equals(state) && isEmptyDownloaderResponse(response)) {
+            if (continuousGathering.equals(state)) {
                 //no need change state
                 return;
             }
