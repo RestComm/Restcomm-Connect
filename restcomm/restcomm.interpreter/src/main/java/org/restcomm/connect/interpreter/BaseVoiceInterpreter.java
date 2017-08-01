@@ -1724,14 +1724,17 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            final MediaGroupResponse<CollectedResult> asrResponse = (MediaGroupResponse<CollectedResult>) message;
+            if (verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK) != null
+                    && !StringUtils.isEmpty(verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK).value())) {
+                final MediaGroupResponse<CollectedResult> asrResponse = (MediaGroupResponse<CollectedResult>) message;
 
-            final List<NameValuePair> parameters = parameters();
-            parameters.add(new BasicNameValuePair("UnstableSpeechResult", asrResponse.get().getResult()));
+                final List<NameValuePair> parameters = parameters();
+                parameters.add(new BasicNameValuePair("UnstableSpeechResult", asrResponse.get().getResult()));
 
-            final NotificationsDao notifications = storage.getNotificationsDao();
-            execHttpRequest(notifications, verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK),
-                    verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK_METHOD), parameters);
+                final NotificationsDao notifications = storage.getNotificationsDao();
+                execHttpRequest(notifications, verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK),
+                        verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK_METHOD), parameters);
+            }
         }
     }
 
