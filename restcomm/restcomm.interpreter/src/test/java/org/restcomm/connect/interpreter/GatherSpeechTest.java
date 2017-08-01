@@ -84,10 +84,16 @@ public class GatherSpeechTest {
 
     private String endRcml = "<Response><Hangup/></Response>";
     private String playRcml = "<Response><Play>" + playUri + "</Play></Response>";
-    private String gatherRcml = "<Response><Gather " +
+    private String gatherRcmlPartial = "<Response><Gather " +
             GatherAttributes.ATTRIBUTE_INPUT + "=\"speech\" " +
             GatherAttributes.ATTRIBUTE_ACTION + "=\"" + actionCallbackUri + "\" " +
             GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK + "=\"" + partialCallbackUri + "\" " +
+            GatherAttributes.ATTRIBUTE_NUM_DIGITS + "=\"1\" " +
+            GatherAttributes.ATTRIBUTE_TIME_OUT + "=\"60\">" +
+            "</Gather></Response>";
+    private String gatherRcmlNoPartial = "<Response><Gather " +
+            GatherAttributes.ATTRIBUTE_INPUT + "=\"speech\" " +
+            GatherAttributes.ATTRIBUTE_ACTION + "=\"" + actionCallbackUri + "\" " +
             GatherAttributes.ATTRIBUTE_NUM_DIGITS + "=\"1\" " +
             GatherAttributes.ATTRIBUTE_TIME_OUT + "=\"60\">" +
             "</Gather></Response>";
@@ -223,7 +229,7 @@ public class GatherSpeechTest {
                 HttpRequestDescriptor callback = expectMsgClass(HttpRequestDescriptor.class);
                 assertEquals(callback.getUri(), requestUri);
 
-                interpreter.tell(new DownloaderResponse(getOkRcml(requestUri, gatherRcml)), observer);
+                interpreter.tell(new DownloaderResponse(getOkRcml(requestUri, gatherRcmlPartial)), observer);
 
                 expectMsgClass(Collect.class);
 
@@ -250,7 +256,57 @@ public class GatherSpeechTest {
                 assertEquals(callback.getUri(), actionCallbackUri);
                 assertEquals(findParam(callback.getParameters(), "SpeechResult").getValue(), "Hello. World.");
 
-                interpreter.tell(new DownloaderResponse(getOkRcml(partialCallbackUri, endRcml)), observer);
+                interpreter.tell(new DownloaderResponse(getOkRcml(actionCallbackUri, endRcml)), observer);
+
+                expectMsgClass(Hangup.class);
+            }
+        };
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testFinalResultAndHangupScenario() throws Exception {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                final ActorRef interpreter = createVoiceInterpreter(observer);
+                interpreter.tell(new StartInterpreter(observer), observer);
+
+                expectMsgClass(GetCallInfo.class);
+                interpreter.tell(new CallResponse(new CallInfo(
+                        new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
+                        CallStateChanged.State.IN_PROGRESS,
+                        CreateCallType.SIP,
+                        "inbound",
+                        new DateTime(),
+                        null,
+                        "test", "test",
+                        "testTo",
+                        null,
+                        null,
+                        false,
+                        false,
+                        false,
+                        new DateTime())), observer);
+
+                expectMsgClass(Observe.class);
+
+                //wait for rcml downloading
+                HttpRequestDescriptor callback = expectMsgClass(HttpRequestDescriptor.class);
+                assertEquals(callback.getUri(), requestUri);
+
+                interpreter.tell(new DownloaderResponse(getOkRcml(requestUri, gatherRcmlNoPartial)), observer);
+
+                expectMsgClass(Collect.class);
+
+                //generate final response
+                interpreter.tell(new MediaGroupResponse(new CollectedResult("Hello. World.", true, false)), observer);
+
+                callback = expectMsgClass(HttpRequestDescriptor.class);
+                assertEquals(callback.getUri(), actionCallbackUri);
+                assertEquals(findParam(callback.getParameters(), "SpeechResult").getValue(), "Hello. World.");
+
+                interpreter.tell(new DownloaderResponse(getOkRcml(actionCallbackUri, endRcml)), observer);
 
                 expectMsgClass(Hangup.class);
             }
@@ -289,7 +345,7 @@ public class GatherSpeechTest {
                 HttpRequestDescriptor callback = expectMsgClass(HttpRequestDescriptor.class);
                 assertEquals(callback.getUri(), requestUri);
 
-                interpreter.tell(new DownloaderResponse(getOkRcml(requestUri, gatherRcml)), observer);
+                interpreter.tell(new DownloaderResponse(getOkRcml(requestUri, gatherRcmlPartial)), observer);
 
                 expectMsgClass(Collect.class);
 
@@ -316,7 +372,67 @@ public class GatherSpeechTest {
                 assertEquals(callback.getUri(), actionCallbackUri);
                 assertEquals(findParam(callback.getParameters(), "SpeechResult").getValue(), "Hello. World.");
 
-                interpreter.tell(new DownloaderResponse(getOkRcml(partialCallbackUri, playRcml)), observer);
+                interpreter.tell(new DownloaderResponse(getOkRcml(actionCallbackUri, playRcml)), observer);
+
+                //wait for new tag: Play
+                DiskCacheRequest diskCacheRequest = expectMsgClass(DiskCacheRequest.class);
+
+                interpreter.tell(new DiskCacheResponse(diskCacheRequest.uri()), observer);
+
+                expectMsgClass(Play.class);
+
+                //simulate play is finished
+                interpreter.tell(new MediaGroupResponse(new CollectedResult("", false, false)), observer);
+
+                expectMsgClass(Hangup.class);
+            }
+        };
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testFinalResultAndPlayScenario() throws Exception {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                final ActorRef interpreter = createVoiceInterpreter(observer);
+                interpreter.tell(new StartInterpreter(observer), observer);
+
+                expectMsgClass(GetCallInfo.class);
+                interpreter.tell(new CallResponse(new CallInfo(
+                        new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
+                        CallStateChanged.State.IN_PROGRESS,
+                        CreateCallType.SIP,
+                        "inbound",
+                        new DateTime(),
+                        null,
+                        "test", "test",
+                        "testTo",
+                        null,
+                        null,
+                        false,
+                        false,
+                        false,
+                        new DateTime())), observer);
+
+                expectMsgClass(Observe.class);
+
+                //wait for rcml downloading
+                HttpRequestDescriptor callback = expectMsgClass(HttpRequestDescriptor.class);
+                assertEquals(callback.getUri(), requestUri);
+
+                interpreter.tell(new DownloaderResponse(getOkRcml(requestUri, gatherRcmlNoPartial)), observer);
+
+                expectMsgClass(Collect.class);
+
+                //generate final response
+                interpreter.tell(new MediaGroupResponse(new CollectedResult("Hello. World.", true, false)), observer);
+
+                callback = expectMsgClass(HttpRequestDescriptor.class);
+                assertEquals(callback.getUri(), actionCallbackUri);
+                assertEquals(findParam(callback.getParameters(), "SpeechResult").getValue(), "Hello. World.");
+
+                interpreter.tell(new DownloaderResponse(getOkRcml(actionCallbackUri, playRcml)), observer);
 
                 //wait for new tag: Play
                 DiskCacheRequest diskCacheRequest = expectMsgClass(DiskCacheRequest.class);

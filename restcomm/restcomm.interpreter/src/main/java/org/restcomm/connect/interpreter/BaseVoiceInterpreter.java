@@ -1542,15 +1542,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 inputType = Collect.Type.parseOrDefault(typeAttr.value(), Collect.Type.DTMF);
             }
 
-            if (inputType != Collect.Type.DTMF && (resultCallbackAttr == null || StringUtils.isEmpty(resultCallbackAttr.value()))) {
-                final Notification notification = notification(ERROR_NOTIFICATION, 11101, "partialResultCallback attribute is null");
-                notifications.addNotification(notification);
-                sendMail(notification);
-                final StopInterpreter stop = new StopInterpreter();
-                source.tell(stop, source);
-                throw new IllegalStateException("Attribute partialResultCallback is null");
-            }
-
             // parse attribute "language"
             Attribute langAttr = verb.attribute(GatherAttributes.ATTRIBUTE_LANGUAGE);
             String defaultLang = restcommConfiguration.getMgAsr().getDefaultLanguage();
