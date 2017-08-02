@@ -1705,11 +1705,13 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 parameters.add(new BasicNameValuePair("SpeechResult", speechResult));
 
                 execHttpRequest(notifications, action, verb.attribute(GatherAttributes.ATTRIBUTE_METHOD), parameters);
+                speechResult = null;
                 return;
             }
             if (logger.isInfoEnabled()) {
                 logger.info("Attribute, Action or Digits is null, FinishGathering failed, moving to the next available verb");
             }
+            speechResult = null;
             // Ask the parser for the next action to take.
             final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
