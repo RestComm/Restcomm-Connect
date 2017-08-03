@@ -28,6 +28,7 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.CollectedResult;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -218,7 +219,7 @@ public class MgcpMediaGroup extends MediaGroup {
             this.lastEvent = AUMgcpEvent.aupc;
         } else {
             this.lastEvent = AsrSignal.REQUEST_ASR;
-            signal = new AsrSignal(request.getDriver(), request.lang(), request.prompts(), request.endInputKey(), request.timeout(), request.timeout(),
+            signal = new AsrSignal(request.getDriver(), request.lang(), request.prompts(), request.endInputKey(), RestcommConfiguration.getInstance().getMgAsr().getAsrMRT(), request.timeout(),
                     request.timeout(), request.getHints(), request.type().toString() ,request.numberOfDigits());
         }
         this.originator = sender();
