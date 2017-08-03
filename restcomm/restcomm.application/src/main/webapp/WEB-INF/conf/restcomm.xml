@@ -29,13 +29,95 @@
 
 		<!-- ASR Supported Languages -->
 		<asr-languages default="en-US">
-			<language>en-US</language>
+			<language>af-ZA</language>
+			<language>id-ID</language>
+			<language>ms-MY</language>
+			<language>ca-ES</language>
+			<language>cs-CZ</language>
+			<language>da-DK</language>
+			<language>de-DE</language>
+			<language>en-AU</language>
+			<language>en-CA</language>
 			<language>en-GB</language>
+			<language>en-IN</language>
+			<language>en-IE</language>
+			<language>en-NZ</language>
+			<language>en-PH</language>
+			<language>en-ZA</language>
+			<language>en-US</language>
+			<language>es-AR</language>
+			<language>es-BO</language>
+			<language>es-CL</language>
+			<language>es-CO</language>
+			<language>es-CR</language>
+			<language>es-EC</language>
+			<language>es-SV</language>
 			<language>es-ES</language>
-			<language>it-IT</language>
+			<language>es-US</language>
+			<language>es-GT</language>
+			<language>es-HN</language>
+			<language>es-MX</language>
+			<language>es-NI</language>
+			<language>es-PA</language>
+			<language>es-PY</language>
+			<language>es-PE</language>
+			<language>es-PR</language>
+			<language>es-DO</language>
+			<language>es-UY</language>
+			<language>es-VE</language>
+			<language>eu-ES</language>
+			<language>fil-PH</language>
+			<language>fr-CA</language>
 			<language>fr-FR</language>
+			<language>gl-ES</language>
+			<language>hr-HR</language>
+			<language>zu-ZA</language>
+			<language>is-IS</language>
+			<language>it-IT</language>
+			<language>lt-LT</language>
+			<language>hu-HU</language>
+			<language>nl-NL</language>
+			<language>nb-NO</language>
 			<language>pl-PL</language>
+			<language>pt-BR</language>
 			<language>pt-PT</language>
+			<language>ro-RO</language>
+			<language>sk-SK</language>
+			<language>sl-SI</language>
+			<language>fi-FI</language>
+			<language>sv-SE</language>
+			<language>vi-VN</language>
+			<language>tr-TR</language>
+			<language>el-GR</language>
+			<language>bg-BG</language>
+			<language>ru-RU</language>
+			<language>sr-RS</language>
+			<language>uk-UA</language>
+			<language>he-IL</language>
+			<language>ar-IL</language>
+			<language>ar-JO</language>
+			<language>ar-AE</language>
+			<language>ar-BH</language>
+			<language>ar-DZ</language>
+			<language>ar-SA</language>
+			<language>ar-IQ</language>
+			<language>ar-KW</language>
+			<language>ar-MA</language>
+			<language>ar-TN</language>
+			<language>ar-OM</language>
+			<language>ar-PS</language>
+			<language>ar-QA</language>
+			<language>ar-LB</language>
+			<language>ar-EG</language>
+			<language>fa-IR</language>
+			<language>hi-IN</language>
+			<language>th-TH</language>
+			<language>ko-KR</language>
+			<language>cmn-Hant-TW</language>
+			<language>yue-Hant-HK</language>
+			<language>ja-JP</language>
+			<language>cmn-Hans-HK</language>
+			<language>cmn-Hans-CN</language>
 		</asr-languages>
 
 		<!-- Speech to text drivers -->
