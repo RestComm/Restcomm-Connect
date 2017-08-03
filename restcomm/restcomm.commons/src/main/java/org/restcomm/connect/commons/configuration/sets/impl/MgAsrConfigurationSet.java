@@ -35,6 +35,8 @@ public class MgAsrConfigurationSet extends ConfigurationSet {
     private final String defaultDriver;
     private final List<String> languages;
     private final String defaultLanguage;
+    private final int asrMRT;
+    private final int defaultGatheringTimeout;
 
     public MgAsrConfigurationSet(ConfigurationSource source, Configuration config) {
         super(source);
@@ -42,6 +44,8 @@ public class MgAsrConfigurationSet extends ConfigurationSet {
         defaultDriver = config.getString("runtime-settings.mg-asr-drivers[@default]");
         languages = Collections.unmodifiableList(config.getList("runtime-settings.asr-languages.language"));
         defaultLanguage = config.getString("runtime-settings.asr-languages[@default]");
+        asrMRT = config.containsKey("runtime-settings.asr-mrt-timeout") ? config.getInt("runtime-settings.asr-mrt-timeout") : 60;
+        defaultGatheringTimeout = config.containsKey("runtime-settings.default-gathering-timeout") ? config.getInt("runtime-settings.default-gathering-timeout") : 5;
     }
 
     public List<String> getDrivers() {
@@ -58,5 +62,13 @@ public class MgAsrConfigurationSet extends ConfigurationSet {
 
     public String getDefaultLanguage() {
         return defaultLanguage;
+    }
+
+    public int getAsrMRT() {
+        return asrMRT;
+    }
+
+    public int getDefaultGatheringTimeout() {
+        return defaultGatheringTimeout;
     }
 }

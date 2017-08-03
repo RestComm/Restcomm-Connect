@@ -40,9 +40,9 @@ public class AsrSignalTest {
     private String driver;
     private List<URI> initialPrompts;
     private String endInputKey;
-    private long maximumRecTimer;
-    private long waitingInputTimer;
-    private long timeAfterSpeech;
+    private int maximumRecTimer;
+    private int waitingInputTimer;
+    private int timeAfterSpeech;
     private String hotWords;
     private String input;
     private int numberOfDigits;
@@ -52,9 +52,9 @@ public class AsrSignalTest {
         driver = "no_name_driver";
         initialPrompts = Collections.singletonList(URI.create("hello.wav"));
         endInputKey = "#";
-        maximumRecTimer = 10L;
-        waitingInputTimer = 10L;
-        timeAfterSpeech = 5L;
+        maximumRecTimer = 10;
+        waitingInputTimer = 10;
+        timeAfterSpeech = 5;
         hotWords = "Wait";
         input = "dtmf_speech";
         numberOfDigits = 1;

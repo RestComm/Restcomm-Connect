@@ -38,6 +38,12 @@
 			<language>pt-PT</language>
 		</asr-languages>
 
+		<!-- ASR Maximum Recognition Time -->
+		<asr-mrt-timeout>60</asr-mrt-timeout>
+
+		<!-- Default Gathering Timeout. Also is used as default WIT and PST in ASR -->
+		<default-gathering-timeout>5</default-gathering-timeout>
+
 		<!-- Speech to text drivers -->
 		<!--mg-asr-drivers default="driver1">
 			<driver>driver1</driver>
