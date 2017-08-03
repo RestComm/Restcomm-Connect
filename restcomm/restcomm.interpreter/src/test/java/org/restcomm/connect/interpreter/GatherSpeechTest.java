@@ -26,6 +26,7 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActorFactory;
 import akka.testkit.JavaTestKit;
+import akka.testkit.TestActorRef;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -38,12 +39,13 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.restcomm.connect.commons.cache.DiskCacheRequest;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.CollectedResult;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.fsm.FiniteStateMachine;
+import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
@@ -67,6 +69,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.mockito.Mockito.*;
 
 /**
  * Created by gdubina on 6/24/17.
@@ -146,13 +149,13 @@ public class GatherSpeechTest {
         return builder.build();
     }
 
-    private ActorRef createVoiceInterpreter(final ActorRef observer) {
+    private TestActorRef<VoiceInterpreter> createVoiceInterpreter(final ActorRef observer) {
         //dao
-        final CallDetailRecordsDao recordsDao = Mockito.mock(CallDetailRecordsDao.class);
-        Mockito.when(recordsDao.getCallDetailRecord(Mockito.any(Sid.class))).thenReturn(null);
+        final CallDetailRecordsDao recordsDao = mock(CallDetailRecordsDao.class);
+        when(recordsDao.getCallDetailRecord(any(Sid.class))).thenReturn(null);
 
-        final DaoManager storage = Mockito.mock(DaoManager.class);
-        Mockito.when(storage.getCallDetailRecordsDao()).thenReturn(recordsDao);
+        final DaoManager storage = mock(DaoManager.class);
+        when(storage.getCallDetailRecordsDao()).thenReturn(recordsDao);
 
         //actors
         final ActorRef downloader = new MockedActor("downloader")
@@ -194,7 +197,7 @@ public class GatherSpeechTest {
                 };
             }
         });
-        return system.actorOf(props);
+        return TestActorRef.create(system, props, "VoiceInterpreter" + System.currentTimeMillis());//system.actorOf(props);
     }
 
     @Test
@@ -488,6 +491,38 @@ public class GatherSpeechTest {
                 assertEquals("#", collect.endInputKey());
                 assertSame(5, collect.timeout());
                 assertEquals("google", collect.getDriver());
+            }
+        };
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testOnMediaGroupResponseEmptyCollectedResult() throws Exception {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                final TestActorRef<VoiceInterpreter> interpreterRef = createVoiceInterpreter(observer);
+                VoiceInterpreter interpreter = interpreterRef.underlyingActor();
+                interpreter.fsm = spy(new FiniteStateMachine(interpreter.continuousGathering, interpreter.transitions));
+                doNothing().when(interpreter.fsm).transition(any(), eq(interpreter.finishGathering));
+                interpreter.collectedDigits = new StringBuffer();
+                interpreterRef.tell(new MediaGroupResponse(new CollectedResult("", false, false)), observer);
+                assertSame(0, interpreter.collectedDigits.length());
+            }
+        };
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testIgnoreRcmlFromPartialCallback() throws Exception {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                final TestActorRef<VoiceInterpreter> interpreterRef = createVoiceInterpreter(observer);
+                VoiceInterpreter interpreter = interpreterRef.underlyingActor();
+                interpreter.fsm = spy(new FiniteStateMachine(interpreter.continuousGathering, interpreter.transitions));
+                interpreterRef.tell(new DownloaderResponse(getOkRcml(partialCallbackUri, playRcml)), observer);
+                verify(interpreter.fsm, never()).transition(any(), any(State.class));
             }
         };
     }

@@ -120,6 +120,25 @@
 			<language>cmn-Hans-CN</language>
 		</asr-languages>
 
+		<!--
+		Timeouts description:
+
+		wit: waiting time to detect user input (gather timeout)
+		We fire failure event if we haven't received any user input during wit timeout. 
+		This timeout is very similar to fdt (First Digit Timer) for DTMF
+
+		pst: amount of silence necessary after the end of speech (gather timeout)
+		We stop speech recognition if user has suspended input for pst timeout. We fire success event if we have recognized something. We return failure event if we haven't recognized anything.
+		This timeout is very similar to idt (Inter Digit Timer) for DTMF
+
+		mrt: maximum recognition time
+		We stop speech recognition on pst timeout after user started input.We fire success event if we have recognized something. We return failure event if we haven't recognized anything.
+		-->
+		<!-- Default Gathering Timeout. Also is used as default WIT and PST in ASR -->
+		<default-gathering-timeout>5</default-gathering-timeout>
+		<!-- ASR Maximum Recognition Time -->
+		<asr-mrt-timeout>60</asr-mrt-timeout>
+
 		<!-- Speech to text drivers -->
 		<!--mg-asr-drivers default="driver1">
 			<driver>driver1</driver>

@@ -1573,7 +1573,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 }
             }
             // Parse timeout.
-            int timeout = 5;
+            int timeout = restcommConfiguration.getMgAsr().getDefaultGatheringTimeout();
             attribute = verb.attribute(GatherAttributes.ATTRIBUTE_TIME_OUT);
             if (attribute != null) {
                 final String value = attribute.value();

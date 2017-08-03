@@ -31,6 +31,12 @@
 			<driver>driver2</driver>
 		</mg-asr-drivers>
 
+		<!-- ASR Maximum Recognition Time -->
+		<asr-mrt-timeout>60</asr-mrt-timeout>
+
+		<!-- Default Gathering Timeout. Also is used as default WIT and PST in ASR -->
+		<default-gathering-timeout>5</default-gathering-timeout>
+
 		<!-- Try to run RVD workspace projects migration to apply new naming
 			convention and synchronization with database entities. This execution
 			will occurs max one time per Restcomm version. To force a new run,
