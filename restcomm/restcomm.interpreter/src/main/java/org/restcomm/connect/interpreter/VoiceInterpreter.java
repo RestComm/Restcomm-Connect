@@ -841,6 +841,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                             }
                         }
                     } else {
+                        // Skip digits collecting if empty CollectResult received
                         if (!(data instanceof CollectedResult) || !StringUtils.isEmpty(((CollectedResult)data).getResult())) {
                             collectedDigits.append(data);
                         }

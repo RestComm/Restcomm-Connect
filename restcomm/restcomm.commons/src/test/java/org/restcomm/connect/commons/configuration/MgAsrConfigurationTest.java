@@ -33,9 +33,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class MgAsrConfigurationTest {
 
@@ -77,6 +75,18 @@ public class MgAsrConfigurationTest {
 
         assertTrue(CollectionUtils.isEqualCollection(expectedLanguages, conf.getLanguages()));
         assertEquals("en-US", conf.getDefaultLanguage());
+    }
+
+    @Test
+    public void checkAsrMRT() throws ConfigurationException, MalformedURLException {
+        MgAsrConfigurationSet conf = createCfg("/restcomm.xml").getMgAsr();
+        assertSame(60, conf.getAsrMRT());
+    }
+
+    @Test
+    public void checkDefaultGatheringTimeout() throws ConfigurationException, MalformedURLException {
+        MgAsrConfigurationSet conf = createCfg("/restcomm.xml").getMgAsr();
+        assertSame(5, conf.getDefaultGatheringTimeout());
     }
 
 }

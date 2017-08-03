@@ -41,9 +41,9 @@ public class AsrSignal {
     private final String driver;
     private final List<URI> initialPrompts;
     private final String endInputKey;
-    private final long maximumRecTimer;
-    private final long waitingInputTimer;
-    private final long timeAfterSpeech;
+    private final int maximumRecTimer;
+    private final int waitingInputTimer;
+    private final int timeAfterSpeech;
     private final String hotWords;
     private final String lang;
     private final String input;
@@ -64,8 +64,8 @@ public class AsrSignal {
      * @param numberOfDigits number of digits system expects from User
      */
 
-    public AsrSignal(String driver, String lang, List<URI> initialPrompts, String endInputKey, long maximumRecTimer, long waitingInputTimer,
-                     long timeAfterSpeech, String hotWords, String input, int numberOfDigits) {
+    public AsrSignal(String driver, String lang, List<URI> initialPrompts, String endInputKey, int maximumRecTimer, int waitingInputTimer,
+                     int timeAfterSpeech, String hotWords, String input, int numberOfDigits) {
         this.driver = driver;
         this.initialPrompts = initialPrompts;
         this.endInputKey = endInputKey;
