@@ -215,6 +215,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private String forwardedFrom;
     private Attribute action;
 
+    // Controls if VI will wait MS response to move to the next verb
+    protected boolean msResponsePending;
+
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI viStatusCallback,
                             final String statusCallbackMethod, final String referTarget, final String transferor, final String transferee,
@@ -442,6 +445,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.asImsUa = asImsUa;
         this.imsUaLogin = imsUaLogin;
         this.imsUaPassword = imsUaPassword;
+        this.msResponsePending = false;
     }
 
     private boolean is(State state) {
@@ -824,9 +828,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, self());
                 }
-            } else if (is(finishDialing)) {
-                if (parser != null) {
-                    // Move to next verb once media server completed Play
+            } else if (msResponsePending) {
+                msResponsePending = false;
+                if((dialBranches == null || dialBranches.size() == 0) && parser != null){
                     final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, self());
                 }
@@ -1358,8 +1362,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // RCML Parser/VI activity continues when media server successful response is received
                 final boolean activeParser = parser != null;
                 final boolean notForking = !is(forking);
-                final boolean notCanceledByForkingTimeout = !(is(finishDialing) && state.equals(CallStateChanged.State.CANCELED));
-                if (activeParser && notForking && notCanceledByForkingTimeout) {
+                //final boolean notCanceledByForkingTimeout = !(is(finishDialing) && state.equals(CallStateChanged.State.CANCELED));
+                if (activeParser && notForking && !msResponsePending) {
                     final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, self());
                 }
@@ -2514,7 +2518,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             logger.info("Canceled branch: " + branch.path()+", isTerminated: "+branch.isTerminated());
                         }
                     }
-                    // Stop playing the ringing audio from inbound call
+                    // Stop playing the ringing tone from inbound call
+                    msResponsePending = true;
                     call.tell(new StopMediaGroup(), self());
                 } else if (outboundCall != null) {
                     outboundCall.tell(new Cancel(), source);
