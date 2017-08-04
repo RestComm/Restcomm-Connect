@@ -824,9 +824,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Finally proceed with call bridging
                 final JoinCalls bridgeCalls = new JoinCalls(call, outboundCall);
                 bridge.tell(bridgeCalls, self());
-            } else if (is(forking) || is(finishDialing) || is(finished)){
+            } else if (is(forking)){
                 // Move to next verb once media server completed Play
                 if((dialBranches == null || dialBranches.size() == 0) && parser != null){
+                    final GetNextVerb next = new GetNextVerb();
+                    parser.tell(next, self());
+                }
+            } else if (is(finishDialing)) {
+                if (parser != null) {
+                    // Move to next verb once media server completed Play
                     final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, self());
                 }
@@ -1252,8 +1258,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         } else {
                             checkDialBranch(message, sender(), attribute);
                         }
-                        final StopMediaGroup stop = new StopMediaGroup();
-                        call.tell(stop, sender);
                         break;
                     } else if (is(conferencing) || is(finishConferencing)) {
                         //If the CallStateChanged.Completed event from the Call arrived before the ConferenceStateChange.Completed
@@ -2522,6 +2526,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             logger.info("Canceled branch: " + branch.path()+", isTerminated: "+branch.isTerminated());
                         }
                     }
+                    // Stop playing the ringing audio from inbound call
+                    call.tell(new StopMediaGroup(), self());
                 } else if (outboundCall != null) {
                     outboundCall.tell(new Cancel(), source);
                     call.tell(new Hangup(outboundCallResponse), self());
