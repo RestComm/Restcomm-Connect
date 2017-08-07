@@ -131,6 +131,9 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         buffer.append("/").append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
                 .append("/Clients/").append(sid.toString());
         builder.setUri(URI.create(buffer.toString()));
+        if (data.containsKey("IsPushEnabled") && getBoolean("IsPushEnabled", data)) {
+            builder.setPushClientIdentity(sid.toString());
+        }
         return builder.build();
     }
 
@@ -291,6 +294,9 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             } else {
                 result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
             }
+        }
+        if (data.containsKey("IsPushEnabled") && getBoolean("IsPushEnabled", data)) {
+            result.setPushClientIdentity(client.getSid().toString());
         }
         return result;
     }
