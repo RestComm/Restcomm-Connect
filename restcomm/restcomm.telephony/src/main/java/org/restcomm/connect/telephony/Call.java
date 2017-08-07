@@ -1022,17 +1022,28 @@ public final class Call extends RestcommUntypedActor {
                 } else {
                     msg = String.format("on Dialing method will patchSdp=%s for the outgoing INVITE, mediaSessionInfo.usesNat() is %s, and matchedProxyRule is NULL", patchSdp, mediaSessionInfo.usesNat());
                 }
+                logger.info(msg);
             }
 
             if (patchSdp) {
                 final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
                 final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
                 offer = SdpUtils.patch("application/sdp", sdp, externalIp);
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("on Dialing method, SDP patched with external address %s", externalIp);
+                    logger.info(msg);
+                }
             } else if (matchedProxyRule != null && isProxyRuleSdpUri) {
                 final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
                 offer = SdpUtils.patch("application/sdp", sdp, matchedProxyRule.getPatchSdpUri());
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("on Dialing method, SDP patched with matched proxy rule address %s", matchedProxyRule.getPatchSdpUri());
+                    logger.info(msg);
+                }
             } else {
                 offer = mediaSessionInfo.getLocalSdp();
+                String msg = String.format("On Dialing method, SDP NOT patched");
+                logger.info(msg);
             }
             offer = SdpUtils.endWithNewLine(offer);
             invite.setContent(offer, "application/sdp");
