@@ -71,9 +71,9 @@ import com.google.gson.JsonObject;
 /**
  * Test for Dial Action attribute. Reference: https://www.twilio.com/docs/api/twiml/dial#attributes-action The 'action'
  * attribute takes a URL as an argument. When the dialed call ends, Restcomm will make a GET or POST request to this URL
- * 
+ *
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
- * 
+ *
  */
 @RunWith(Arquillian.class)
 public class DialActionAnswerDelayTest {
@@ -92,7 +92,7 @@ public class DialActionAnswerDelayTest {
     private Deployer deployer;
     @ArquillianResource
     URL deploymentUrl;
-    
+
     //Dial Action URL: http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/DialAction Method: POST
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
@@ -187,7 +187,7 @@ public class DialActionAnswerDelayTest {
 
     @Test
     public void testDialActionInvalidCall() throws ParseException, InterruptedException {
-        
+
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
                     .withStatus(200)));
@@ -219,7 +219,7 @@ public class DialActionAnswerDelayTest {
         assertTrue(requests.size() == 1);
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=null"));
+        assertTrue(requestBody.contains("DialCallStatus=failed"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
@@ -237,10 +237,10 @@ public class DialActionAnswerDelayTest {
 //        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
 //        assertNotNull(cdr);
     }
-    
+
     @Test //No regression test for https://github.com/Mobicents/RestComm/issues/505
     public void testDialActionInvalidCallCheckCallStatusCompleted() throws ParseException, InterruptedException {
-        
+
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
                     .withStatus(200)));
@@ -261,11 +261,7 @@ public class DialActionAnswerDelayTest {
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.SERVER_INTERNAL_ERROR, bobCall.getLastReceivedResponse().getStatusCode());
 
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        Thread.sleep(10 * 1000);
 
         logger.info("About to check the DialAction Requests");
         List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
@@ -273,11 +269,11 @@ public class DialActionAnswerDelayTest {
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
         //DialCallStatus should be null since there was no call made - since Alice is not registered
-        assertTrue(requestBody.contains("DialCallStatus=null"));
+        assertTrue(requestBody.contains("DialCallStatus=failed"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
-        assertTrue(requestBody.contains("CallStatus=completed"));
+        assertTrue(requestBody.contains("CallStatus=wait-for-answer"));
         Iterator iter = Arrays.asList(params).iterator();
         String dialCallSid = null;
         while (iter.hasNext()) {
@@ -299,7 +295,7 @@ public class DialActionAnswerDelayTest {
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
                     .withStatus(200)));
-        
+
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -379,7 +375,7 @@ public class DialActionAnswerDelayTest {
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
                     .withStatus(200)));
-        
+
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -450,14 +446,14 @@ public class DialActionAnswerDelayTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
-    
+
     @Test
     public void testDialActionAliceAnswersBobDisconnects() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
                     .withStatus(200)));
-        
+
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -528,14 +524,14 @@ public class DialActionAnswerDelayTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
-    
+
     @Test
     public void testDialActionAliceNOAnswer() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
                     .withStatus(200)));
-        
+
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -566,11 +562,11 @@ public class DialActionAnswerDelayTest {
 
         assertTrue(bobCall.waitOutgoingCallResponse(120 * 1000));
         assertEquals(Response.REQUEST_TIMEOUT, bobCall.getLastReceivedResponse().getStatusCode());
-        
+
         Thread.sleep(3700);
 
         Thread.sleep(10000);
-        
+
         logger.info("About to check the DialAction Requests");
         List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
         assertTrue(requests.size() == 1);
@@ -605,7 +601,7 @@ public class DialActionAnswerDelayTest {
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
                     .withStatus(200)));
-        
+
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -640,7 +636,7 @@ public class DialActionAnswerDelayTest {
         } catch (final InterruptedException exception) {
             exception.printStackTrace();
         }
-        
+
         logger.info("About to check the DialAction Requests");
         List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
         assertTrue(requests.size() == 1);
@@ -666,14 +662,14 @@ public class DialActionAnswerDelayTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
-    
+
     @Test
     public void testSipInviteCustomHeaders() throws ParseException, InterruptedException {
-        
+
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
                     .withStatus(200)));
-        
+
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -706,7 +702,7 @@ public class DialActionAnswerDelayTest {
 
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        
+
         // Add custom headers to the SIP INVITE
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
 //        public boolean sendIncomingCallResponse(int statusCode,
