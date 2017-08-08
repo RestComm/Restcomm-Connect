@@ -665,7 +665,7 @@ public class CallLifecycleTest {
         assertTrue(bobCall.respondToDisconnect());
         assertTrue(aliceCall.respondToDisconnect());
 
-        Thread.sleep(1000);
+        Thread.sleep(2000);
 
         logger.info("About to check the Requests");
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
@@ -681,7 +681,9 @@ public class CallLifecycleTest {
         }
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
-        assertEquals("completed", jsonObj.get("status").getAsString().toLowerCase());
+        String cdrStatus = jsonObj.get("status").getAsString().toLowerCase();
+        logger.info("CDR Status: "+ cdrStatus);
+        assertEquals("completed", cdrStatus);
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         assertNotNull(metrics);
