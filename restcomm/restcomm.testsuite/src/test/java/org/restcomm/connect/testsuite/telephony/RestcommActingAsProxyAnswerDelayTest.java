@@ -29,6 +29,7 @@ import javax.sip.message.Response;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
 
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
@@ -270,6 +271,78 @@ public class RestcommActingAsProxyAnswerDelayTest {
     }
 
     @Test
+    public void testDialNumberToProxyFromClientThroughLB() throws ParseException, InterruptedException, MalformedURLException, SdpParseException {
+        SipCall otherRestcommCall = otherRestcommPhone.createSipCall();
+        otherRestcommCall.listenForIncomingCall();
+
+        // Bob (5090) -> Restcomm (5080) -> proxy out to otherRestcomm (5091)
+        // otherRestcomm (5091) 200 OK -> Restcomm (5080) -> Bob (5090)
+
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        ArrayList<String> additionalHeaders = new ArrayList<String>();
+        additionalHeaders.add("X-Sip-Balancer-InitialRemoteAddr: 10.0.0.26");
+        additionalHeaders.add("X-Sip-Balancer-InitialRemotePort: 5090");
+        bobCall.initiateOutgoingCall(bobContact, "sip:+15126008888@127.0.0.1:5080", null, body, "application", "sdp", additionalHeaders, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(otherRestcommCall.waitForIncomingCall(10000));
+        SessionDescription sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(otherRestcommCall.getLastReceivedRequest().getRequestEvent().getRequest().getRawContent()));
+        assertTrue(sessionDescription.getConnection().getAddress().equalsIgnoreCase("127.0.0.1"));
+        assertTrue(otherRestcommCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
+        assertTrue(otherRestcommCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
+        assertTrue(otherRestcommCall.sendIncomingCallResponse(Response.OK, "George-OK", 3600, body2, "application", "sdp",
+                null, null));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int response = bobCall.getLastReceivedResponse().getStatusCode();
+        while (response != Response.OK) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            response = bobCall.getLastReceivedResponse().getStatusCode();
+        }
+        sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(bobCall.getLastReceivedResponse().getResponseEvent().getResponse().getRawContent()));
+        assertTrue(sessionDescription.getConnection().getAddress().equalsIgnoreCase("127.0.0.1"));
+        assertTrue(bobCall.sendInviteOkAck());
+
+        assertTrue(otherRestcommCall.waitForAck(50000));
+
+        assertEquals(2, MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+        assertEquals(1, MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+        assertEquals(1, MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+        assertEquals(2, MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+
+        Thread.sleep(1000);
+
+        otherRestcommCall.listenForDisconnect();
+        assertTrue(bobCall.disconnect());
+        assertTrue(otherRestcommCall.waitForDisconnect(5000));
+        otherRestcommCall.respondToDisconnect();
+
+        Thread.sleep(10000);
+
+//        logger.info("About to check the Requests");
+//        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
+//        assertTrue(requests.size() == 1);
+//        //        requests.get(0).g;
+//        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
+//        List<String> params = Arrays.asList(requestBody.split("&"));
+//        String callSid = "";
+//        for (String param : params) {
+//            if (param.contains("CallSid")) {
+//                callSid = param.split("=")[1];
+//            }
+//        }
+//        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+//        JsonObject jsonObj = cdr.getAsJsonObject();
+//        String status = jsonObj.get("status").getAsString();
+//        logger.info("Status: "+status);
+//        assertTrue(status.equalsIgnoreCase("completed"));
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+    }
+
+    @Test
     public void testDialNumberToProxyFromNonClient() throws ParseException, InterruptedException, MalformedURLException, SdpParseException {
         SipCall georgeCall = georgePhone.createSipCall();
         georgeCall.listenForIncomingCall();
@@ -334,4 +407,71 @@ public class RestcommActingAsProxyAnswerDelayTest {
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
+    @Test
+    public void testDialNumberToProxyFromNonClientThroughLB() throws ParseException, InterruptedException, MalformedURLException, SdpParseException {
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall henriqueCall = henriquePhone.createSipCall();
+        ArrayList<String> additionalHeaders = new ArrayList<String>();
+        additionalHeaders.add("X-Sip-Balancer-InitialRemoteAddr: 10.0.0.26");
+        additionalHeaders.add("X-Sip-Balancer-InitialRemotePort: 5090");
+        henriqueCall.initiateOutgoingCall(henriqueContact, "sip:+15126008888@127.0.0.1:5080", null, body, "application", "sdp", additionalHeaders, null);
+        assertLastOperationSuccess(henriqueCall);
+
+        assertTrue(georgeCall.waitForIncomingCall(10000));
+        SessionDescription sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(georgeCall.getLastReceivedRequest().getRequestEvent().getRequest().getRawContent()));
+        assertTrue(sessionDescription.getConnection().getAddress().matches("192.168.11.99"));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "George-OK", 3600, body2, "application", "sdp",
+                null, null));
+
+        assertTrue(henriqueCall.waitOutgoingCallResponse(5 * 1000));
+        int response = henriqueCall.getLastReceivedResponse().getStatusCode();
+        while (response != Response.OK) {
+            assertTrue(henriqueCall.waitOutgoingCallResponse(5 * 1000));
+            response = henriqueCall.getLastReceivedResponse().getStatusCode();
+        }
+        sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(henriqueCall.getLastReceivedResponse().getResponseEvent().getResponse().getRawContent()));
+        assertTrue(sessionDescription.getConnection().getAddress().matches("192.168.11.99"));
+        assertTrue(henriqueCall.sendInviteOkAck());
+
+        assertTrue(georgeCall.waitForAck(50000));
+
+        assertEquals(2, MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+        assertEquals(1, MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+        assertEquals(1, MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+        assertEquals(2, MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+
+        Thread.sleep(1000);
+
+        georgeCall.listenForDisconnect();
+        assertTrue(henriqueCall.disconnect());
+        assertTrue(georgeCall.waitForDisconnect(5000));
+        georgeCall.respondToDisconnect();
+
+        Thread.sleep(10000);
+
+//        logger.info("About to check the Requests");
+//        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
+//        assertTrue(requests.size() == 1);
+//        //        requests.get(0).g;
+//        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
+//        List<String> params = Arrays.asList(requestBody.split("&"));
+//        String callSid = "";
+//        for (String param : params) {
+//            if (param.contains("CallSid")) {
+//                callSid = param.split("=")[1];
+//            }
+//        }
+//        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+//        JsonObject jsonObj = cdr.getAsJsonObject();
+//        String status = jsonObj.get("status").getAsString();
+//        logger.info("Status: "+status);
+//        assertTrue(status.equalsIgnoreCase("completed"));
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+    }
 }
