@@ -2801,6 +2801,7 @@ public final class Call extends RestcommUntypedActor {
                 } else {
                     msg = String.format("on sendInviteOk() method will patchSdp=%s of the 200 OK to sent received with the external IP Address from Response, mediaSessionInfo.usesNat() is %s, and matchedProxyRule is NULL", patchSdp, mediaSessionInfo.usesNat());
                 }
+                logger.info(msg);
             }
 
             final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
@@ -2808,10 +2809,22 @@ public final class Call extends RestcommUntypedActor {
             if (patchSdp) {
                 final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
                 answer = SdpUtils.patch("application/sdp", sdp, externalIp);
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("on sendInviteOk() method, SDP patched with external address %s", externalIp);
+                    logger.info(msg);
+                }
             } else if (matchedProxyRule != null && isProxyRuleSdpUri) {
                 answer = SdpUtils.patch("application/sdp", sdp, matchedProxyRule.getPatchSdpUri());
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("on sendInviteOk() method, SDP patched with matched proxy rule ip address %s", matchedProxyRule.getPatchSdpUri());
+                    logger.info(msg);
+                }
             } else {
                 answer = mediaSessionInfo.getLocalSdp().toString();
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("on sendInviteOk() method, SDP WILL NOT patched");
+                    logger.info(msg);
+                }
             }
             // Issue #215:
             // https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
