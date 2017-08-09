@@ -174,9 +174,8 @@ public class SmsEndpointTest {
     }
 
     /**
-     * Try to send sms to client in org2.restcomm.com from 
+     * Try to send sms to client in organization (org2.restcomm.com) from 
      * 1. same organization account
-     * 2. diff organization account
      * @throws ParseException
      */
     @Test
@@ -194,22 +193,43 @@ public class SmsEndpointTest {
         String body = "Hello Alice!";
 
         //send msg from same account
-        JsonObject callResult = SmsEndpointTool.getInstance().createSms(deploymentUrl.toString(), adminAccountSidOrg2,
+        JsonObject msgResult = SmsEndpointTool.getInstance().createSms(deploymentUrl.toString(), adminAccountSidOrg2,
                 adminAuthToken, from, to, body, null);
-        assertNotNull(callResult);
+        assertNotNull(msgResult);
 
         assertTrue(aliceCallOrg2.waitForMessage(10000));
         Request messageRequest = aliceCallOrg2.getLastReceivedMessageRequest();
         assertTrue(aliceCallOrg2.sendMessageResponse(202, "Accepted", 3600));
         String messageReceived = new String(messageRequest.getRawContent());
         assertTrue(messageReceived.equals(body));
-        
-        //send msg from different account
-        callResult = SmsEndpointTool.getInstance().createSms(deploymentUrl.toString(), adminAccountSid,
-                adminAuthToken, from, to, body, null);
-        assertNotNull(callResult);
+    }
 
-        logger.info("callResult send msg from different account: "+callResult);        
+    /**
+     * Try to send sms to client in organization (org2.restcomm.com) from 
+     * 2. diff organization account
+     * @throws ParseException
+     */
+    @Test
+    public void sendSmsTestToClientAliceDifferentOrganization() throws ParseException {
+
+        SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5092", 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCallOrg2 = alicePhoneOrg2.createSipCall();
+        aliceCallOrg2.listenForMessage();
+
+        String from = "+15126002188";
+        String to = "client:alice";
+        String body = "Hello Alice!";
+
+        //send msg from same account
+        JsonObject msgResult = SmsEndpointTool.getInstance().createSms(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, body, null);
+        assertNotNull(msgResult);
+        logger.info("msgResult send msg from different account: "+msgResult); 
+
+        assertTrue(!aliceCallOrg2.waitForMessage(10000));
     }
 
     @Test

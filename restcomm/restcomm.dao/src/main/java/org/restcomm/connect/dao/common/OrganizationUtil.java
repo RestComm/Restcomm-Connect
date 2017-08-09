@@ -155,4 +155,13 @@ public class OrganizationUtil {
         Organization organization = storage.getOrganizationsDao().getOrganizationByDomainName(organizationDomainName);
         return organization == null ? null : organization.getSid();
     }
+
+    /**
+     * getOrganizationSidByAccountSid
+     * @param accountSid
+     * @return Sid of Organization
+     */
+    public static Sid getOrganizationSidByAccountSid(DaoManager storage, final Sid accountSid){
+    	return storage.getAccountsDao().getAccount(accountSid).getOrganizationSid();
+    }
 }

@@ -118,8 +118,6 @@ public final class SmsService extends RestcommUntypedActor {
     //List of extensions for SmsService
     List<RestcommExtensionGeneric> extensions;
 
-    private final String defaultOrganization;
-
     public SmsService(final Configuration configuration, final SipFactory factory,
             final DaoManager storage, final ServletContext servletContext) {
         super();
@@ -140,7 +138,6 @@ public final class SmsService extends RestcommUntypedActor {
         if (logger.isInfoEnabled()) {
             logger.info("SmsService extensions: "+(extensions != null ? extensions.size() : "0"));
         }
-        defaultOrganization = (String) servletContext.getAttribute("defaultOrganization");
     }
 
     private void message(final Object message) throws IOException {
@@ -366,7 +363,7 @@ public final class SmsService extends RestcommUntypedActor {
             ec.executePreOutboundAction(ier, this.extensions);
             if (ier.isAllowed()) {
                 CreateSmsSession createSmsSession = (CreateSmsSession) message;
-                final ActorRef session = session(ier.getConfiguration(), getOrganizationSidByAccountSid(new Sid(createSmsSession.getAccountSid())));
+                final ActorRef session = session(ier.getConfiguration(), OrganizationUtil.getOrganizationSidByAccountSid(storage, new Sid(createSmsSession.getAccountSid())));
                 final SmsServiceResponse<ActorRef> response = new SmsServiceResponse<ActorRef>(session);
                 sender.tell(response, self);
             } else {
@@ -515,19 +512,5 @@ public final class SmsService extends RestcommUntypedActor {
         final URI uri = URI.create(buffer.toString());
         builder.setUri(uri);
         return builder.build();
-    }
-
-    /**
-     * getOrganizationSidByAccountSid
-     * @param accountSid
-     * @return Sid of Organization
-     */
-    private Sid getOrganizationSidByAccountSid(final Sid accountSid){
-        if(accountSid != null){
-            return storage.getAccountsDao().getAccount(accountSid).getOrganizationSid();
-        }
-        Organization organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
-        logger.error("organization is null going to choose default: "+organization);
-        return organization.getSid();
     }
 }
