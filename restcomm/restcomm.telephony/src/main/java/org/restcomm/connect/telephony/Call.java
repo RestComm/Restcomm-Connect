@@ -1564,9 +1564,14 @@ public final class Call extends RestcommUntypedActor {
                 logger.info(msg);
             }
         } else if (matchedProxyRule != null && isProxyRuleSdpUri) {
-            offer = SdpUtils.patch(sipMessage.getContentType(), sdp, matchedProxyRule.getPatchSdpUri());
+//            offer = SdpUtils.patch(sipMessage.getContentType(), sdp, matchedProxyRule.getPatchSdpUri());
             if (logger.isInfoEnabled()) {
-                String msg = String.format("on generateRequest for updatingMediaSession method, SDP patched with matched proxy rule address %s", matchedProxyRule.getPatchSdpUri());
+                String msg = String.format("on generateRequest for updatingMediaSession method, matchedProxyRule.isPatchSdp() is %s WILL NOT patch SDP", isProxyRuleSdpUri);
+                logger.info(msg);
+            }
+        } else {
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("on generateRequest for updatingMediaSession method, WILL NOT patch SDP");
                 logger.info(msg);
             }
         }
