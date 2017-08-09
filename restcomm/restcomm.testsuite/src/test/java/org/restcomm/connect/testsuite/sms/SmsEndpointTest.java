@@ -75,13 +75,21 @@ public class SmsEndpointTest {
     private SipPhone alicePhone;
     private String aliceContact = "sip:alice@127.0.0.1:5091";
 
+    private static SipStackTool tool3;
+    private SipStack aliceSipStackOrg2;
+    private SipPhone alicePhoneOrg2;
+    private String aliceContactOrg2 = "sip:alice@org2.restcomm.com";
+
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+
+    private String adminAccountSidOrg2 = "ACae6e420f425248d6a26948c17a9e2acg";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("SmsTest1");
         tool2 = new SipStackTool("SmsTest2");
+        tool3 = new SipStackTool("SmsTest3");
     }
 
     @Before
@@ -91,6 +99,9 @@ public class SmsEndpointTest {
 
         aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
         alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
+
+        aliceSipStackOrg2 = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
+        alicePhoneOrg2 = aliceSipStackOrg2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContactOrg2);
     }
 
     @After
@@ -100,6 +111,18 @@ public class SmsEndpointTest {
         }
         if (bobSipStack != null) {
             bobSipStack.dispose();
+        }
+        if (alicePhone != null) {
+        	alicePhone.dispose();
+        }
+        if (aliceSipStack != null) {
+        	aliceSipStack.dispose();
+        }
+        if (alicePhoneOrg2 != null) {
+        	alicePhoneOrg2.dispose();
+        }
+        if (aliceSipStackOrg2 != null) {
+        	aliceSipStackOrg2.dispose();
         }
     }
 
@@ -148,6 +171,45 @@ public class SmsEndpointTest {
         assertTrue(aliceCall.sendMessageResponse(202, "Accepted", 3600));
         String messageReceived = new String(messageRequest.getRawContent());
         assertTrue(messageReceived.equals(body));
+    }
+
+    /**
+     * Try to send sms to client in org2.restcomm.com from 
+     * 1. same organization account
+     * 2. diff organization account
+     * @throws ParseException
+     */
+    @Test
+    public void sendSmsTestToClientAliceSameOrganization() throws ParseException {
+
+        SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5092", 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCallOrg2 = alicePhoneOrg2.createSipCall();
+        aliceCallOrg2.listenForMessage();
+
+        String from = "+15126002188";
+        String to = "client:alice";
+        String body = "Hello Alice!";
+
+        //send msg from same account
+        JsonObject callResult = SmsEndpointTool.getInstance().createSms(deploymentUrl.toString(), adminAccountSidOrg2,
+                adminAuthToken, from, to, body, null);
+        assertNotNull(callResult);
+
+        assertTrue(aliceCallOrg2.waitForMessage(10000));
+        Request messageRequest = aliceCallOrg2.getLastReceivedMessageRequest();
+        assertTrue(aliceCallOrg2.sendMessageResponse(202, "Accepted", 3600));
+        String messageReceived = new String(messageRequest.getRawContent());
+        assertTrue(messageReceived.equals(body));
+        
+        //send msg from different account
+        callResult = SmsEndpointTool.getInstance().createSms(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, body, null);
+        assertNotNull(callResult);
+
+        logger.info("callResult send msg from different account: "+callResult);        
     }
 
     @Test
