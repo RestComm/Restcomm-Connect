@@ -20,6 +20,7 @@ import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
+import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Organization;
@@ -72,15 +73,12 @@ public class SmppMessageHandler extends RestcommUntypedActor {
     //List of extensions for SmsService
     List<RestcommExtensionGeneric> extensions;
 
-    private final String defaultOrganization;
-
     public SmppMessageHandler(final ServletContext servletContext) {
         this.servletContext = servletContext;
         this.storage = (DaoManager) servletContext.getAttribute(DaoManager.class.getName());
         this.configuration = (Configuration) servletContext.getAttribute(Configuration.class.getName());
         this.sipFactory = (SipFactory) servletContext.getAttribute(SipFactory.class.getName());
         this.monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
-        defaultOrganization = (String) servletContext.getAttribute("defaultOrganization");
         //FIXME:Should new ExtensionType.SmppMessageHandler be defined?
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.SmsService);
         if (logger.isInfoEnabled()) {
@@ -110,7 +108,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             ec.executePreOutboundAction(ier, this.extensions);
             if (ier.isAllowed()) {
                 CreateSmsSession createSmsSession = (CreateSmsSession) message;
-                final ActorRef session = session(ier.getConfiguration(), getOrganizationSidByAccountSid(new Sid(createSmsSession.getAccountSid())));
+                final ActorRef session = session(ier.getConfiguration(), OrganizationUtil.getOrganizationSidByAccountSid(storage, new Sid(createSmsSession.getAccountSid())));
                 final SmsServiceResponse<ActorRef> response = new  SmsServiceResponse<ActorRef>(session);
                 sender.tell(response, self);
             } else {
@@ -293,19 +291,5 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 | InterruptedException e) {
             logger.error("SMPP message cannot be sent : " + e );
         }
-    }
-
-    /**
-     * getOrganizationSidByAccountSid
-     * @param accountSid
-     * @return Sid of Organization
-     */
-    private Sid getOrganizationSidByAccountSid(final Sid accountSid){
-        if(accountSid != null){
-            return storage.getAccountsDao().getAccount(accountSid).getOrganizationSid();
-        }
-        Organization organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
-        logger.error("organization is null going to choose default: "+organization);
-        return organization.getSid();
     }
 }

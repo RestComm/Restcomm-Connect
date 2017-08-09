@@ -92,7 +92,6 @@ public final class UserAgentManager extends RestcommUntypedActor {
     private String imsProxyAddress;
     private int imsProxyPort;
     private String imsDomain;
-    private final String defaultOrganization;
 
     public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage,
             final ServletContext servletContext) {
@@ -126,7 +125,6 @@ public final class UserAgentManager extends RestcommUntypedActor {
             }
         }
 
-        defaultOrganization = (String) servletContext.getAttribute("defaultOrganization");
         firstTimeCleanup();
     }
 
