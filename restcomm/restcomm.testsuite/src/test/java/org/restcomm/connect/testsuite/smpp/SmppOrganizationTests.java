@@ -29,6 +29,8 @@ import org.restcomm.connect.sms.smpp.SmppInboundMessageEntity;
 
 import javax.sip.address.SipURI;
 import javax.sip.message.Request;
+import javax.sip.message.Response;
+
 import java.io.IOException;
 import java.text.ParseException;
 
@@ -159,9 +161,10 @@ public class SmppOrganizationTests {
 		assertTrue(mariaCall.waitForAuthorisation(5000));
 		assertTrue(mariaCall.waitOutgoingMessageResponse(5000));
 
-		assertTrue(mariaOrg3Call.waitForMessage(5000));
-		Request msgReceived = mariaOrg3Call.getLastReceivedMessageRequest();
-		assertTrue(new String(msgReceived.getRawContent()).equals("Test Message from maria"));
+		int responseMariaCall = mariaCall.getLastReceivedResponse().getStatusCode();
+        logger.info("responseMariaCall: "+responseMariaCall);
+        assertTrue(responseMariaCall == Response.NOT_FOUND);
+
 	}
 
 	@Test
