@@ -70,9 +70,9 @@ public class SmppOrganizationTests {
 	private String shoaibContact = "sip:shoaib@org2.restcomm.com";
 
 	private static SipStackTool tool4;
-	private SipStack aliceSipStack;
-	private SipPhone alicePhone;
-	private String aliceContact = "sip:alice@127.0.0.1:5094";
+	private SipStack mariaOrg3SipStack;
+	private SipPhone mariaOrg3Phone;
+	private String mariaOrg3Contact = "sip:maria@org3.restcomm.com";
 
 	private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
 	private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
@@ -100,8 +100,8 @@ public class SmppOrganizationTests {
 		shoaibSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5093", "127.0.0.1:5080");
 		shoaibPhone = shoaibSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, shoaibContact);
 
-		aliceSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
-		alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
+		mariaOrg3SipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
+		mariaOrg3Phone = mariaOrg3SipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, mariaOrg3Contact);
 
 		mockSmppServer.cleanup();
 		Thread.sleep(5000);
@@ -128,11 +128,11 @@ public class SmppOrganizationTests {
 			mariaSipStack.dispose();
 		}
 
-		if (alicePhone != null) {
-			alicePhone.dispose();
+		if (mariaOrg3Phone != null) {
+			mariaOrg3Phone.dispose();
 		}
-		if (aliceSipStack != null) {
-			aliceSipStack.dispose();
+		if (mariaOrg3SipStack != null) {
+			mariaOrg3SipStack.dispose();
 		}
 		Thread.sleep(2000);
         wireMockRule.resetRequests();
@@ -144,23 +144,23 @@ public class SmppOrganizationTests {
 
 		SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 		assertTrue(mariaPhone.register(uri, "maria", "qwerty1234RT", "sip:maria@127.0.0.1:5092", 3600, 3600));
-		Credential mariaCred = new Credential("127.0.0.1","maria","qwerty1234RT");
+		Credential mariaCred = new Credential("org3.restcomm.com","maria","qwerty1234RT");
 		mariaPhone.addUpdateCredential(mariaCred);
 
-		assertTrue(alicePhone.register(uri,"alice","1234","sip:alice@127.0.0.1:5094", 3600, 3600));
-		Credential aliceCread = new Credential("127.0.0.1","alice","1234");
-		alicePhone.addUpdateCredential(aliceCread);
+		assertTrue(mariaOrg3Phone.register(uri,"maria","1234","sip:maria@127.0.0.1:5094", 3600, 3600));
+		Credential mariaOrg3Cread = new Credential("org3.restcomm.com","maria","1234");
+		mariaOrg3Phone.addUpdateCredential(mariaOrg3Cread);
 
-		SipCall aliceCall = alicePhone.createSipCall();
-		aliceCall.listenForMessage();
+		SipCall mariaOrg3Call = mariaOrg3Phone.createSipCall();
+		mariaOrg3Call.listenForMessage();
 
 		SipCall mariaCall = mariaPhone.createSipCall();
-		assertTrue(mariaCall.initiateOutgoingMessage(aliceContact, null, "Test Message from maria"));
+		assertTrue(mariaCall.initiateOutgoingMessage(mariaOrg3Contact, null, "Test Message from maria"));
 		assertTrue(mariaCall.waitForAuthorisation(5000));
 		assertTrue(mariaCall.waitOutgoingMessageResponse(5000));
 
-		assertTrue(aliceCall.waitForMessage(5000));
-		Request msgReceived = aliceCall.getLastReceivedMessageRequest();
+		assertTrue(mariaOrg3Call.waitForMessage(5000));
+		Request msgReceived = mariaOrg3Call.getLastReceivedMessageRequest();
 		assertTrue(new String(msgReceived.getRawContent()).equals("Test Message from maria"));
 	}
 
