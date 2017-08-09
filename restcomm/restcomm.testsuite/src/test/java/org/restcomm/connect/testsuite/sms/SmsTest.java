@@ -80,6 +80,8 @@ public class SmsTest {
     private static SipStackTool tool2;
     private static SipStackTool tool3;
     private static SipStackTool tool4;
+    private static SipStackTool tool5;
+    private static SipStackTool tool6;
     
     private SipStack bobSipStack;
     private SipPhone bobPhone;
@@ -97,12 +99,21 @@ public class SmsTest {
     private SipPhone fotiniPhone;
     private String fotiniContact = "sip:fotini@127.0.0.1:5093";
     
+    private SipStack aliceSipStackOrg2;
+    private SipPhone alicePhoneOrg2;
+    private String aliceContactOrg2 = "sip:alice@org2.restcomm.com";
+    
+    private SipStack bobSipStackOrg2;
+    private SipPhone bobPhoneOrg2;
+    private String bobContactOrg2 = "sip:bob@org2.restcomm.com";
+    
     private String dialSendSMS = "sip:+12223334444@127.0.0.1:5080";
     private String dialSendSMS2 = "sip:+12223334445@127.0.0.1:5080";
     private String dialSendSMS2_Greek = "sip:+12223334447@127.0.0.1:5080";
     private String dialSendSMS2_Greek_Huge = "sip:+12223334448@127.0.0.1:5080";
     private String dialSendSMS3 = "sip:+12223334446@127.0.0.1:5080";
     private String dialSendSMSwithCustomHeaders = "sip:+12223334449@127.0.0.1:5080";
+    private String dialSendSMS2Org2 = "sip:+12223334445@org2.restcomm.com";
 
     private String greekHugeMessage = "Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα "
             + "Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα "
@@ -116,6 +127,8 @@ public class SmsTest {
         tool2 = new SipStackTool("SmsTest2");
         tool3 = new SipStackTool("SmsTest3");
         tool4 = new SipStackTool("SmsTest4");
+        tool5 = new SipStackTool("SmsTest5");
+        tool6 = new SipStackTool("SmsTest6");
     }
     
     @Before
@@ -131,6 +144,12 @@ public class SmsTest {
         
         fotiniSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5093", "127.0.0.1:5080");
         fotiniPhone = fotiniSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, fotiniContact);
+        
+        aliceSipStackOrg2 = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
+        alicePhoneOrg2 = aliceSipStackOrg2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContactOrg2);
+        
+        bobSipStackOrg2 = tool6.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5095", "127.0.0.1:5080");
+        bobPhoneOrg2 = bobSipStackOrg2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContactOrg2);
     }
     
     @After
@@ -231,6 +250,32 @@ public class SmsTest {
         String msgReceived = new String(aliceCall.getLastReceivedMessageRequest().getRawContent());
         assertTrue("Hello World!".equals(msgReceived));
         aliceCall.sendMessageResponse(200, "OK-From-Alice", 3600);
+    }
+    
+    @Test
+    public void TestIncomingSmsSendToClientAliceOfOrganization2() throws ParseException, InterruptedException {
+        SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5094", 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCallOrg2 = alicePhoneOrg2.createSipCall();
+        aliceCallOrg2.listenForMessage();
+        
+        // Create outgoing call with first phone
+        final SipCall bobCallOrg2 = bobPhoneOrg2.createSipCall();
+        bobCallOrg2.initiateOutgoingMessage(dialSendSMS2Org2, null, "Hello from Bob!");
+        assertLastOperationSuccess(bobCallOrg2);
+        assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCallOrg2.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.ACCEPTED);
+
+        //Restcomm receives the SMS message from Bob, matches the DID with an RCML application, and executes it.
+        //The new RCML application sends an SMS to Alice with body "Hello World!"
+        
+        assertTrue(aliceCallOrg2.waitForMessage(5 * 1000));
+        String msgReceived = new String(aliceCallOrg2.getLastReceivedMessageRequest().getRawContent());
+        assertTrue("Hello World!".equals(msgReceived));
+        aliceCallOrg2.sendMessageResponse(200, "OK-From-Alice", 3600);
     }
     
     @Test
