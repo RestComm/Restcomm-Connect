@@ -494,7 +494,7 @@ public class SmsTest {
         georgePhoneOrg2.addUpdateCredential(georgeCredentialsOrg2);
 
         //Register Fotini phone
-        assertTrue(fotiniPhoneOrg2.register(uri, "fotini", "1234", fotiniContact, 3600, 3600));
+        assertTrue(fotiniPhoneOrg2.register(uri, "fotini", "1234", "sip:fotini@127.0.0.1:5097", 3600, 3600));
         Credential fotiniCredentials = new Credential("org2.restcomm.com", "fotini", "1234");
         fotiniPhoneOrg2.addUpdateCredential(fotiniCredentials);
         
