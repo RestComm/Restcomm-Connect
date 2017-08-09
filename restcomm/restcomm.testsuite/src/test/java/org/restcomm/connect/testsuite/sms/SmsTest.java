@@ -490,12 +490,12 @@ public class SmsTest {
         SipURI uri = georgeSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         //Register George phone
         assertTrue(georgePhoneOrg2.register(uri, "george", "1234", "sip:george@127.0.0.1:5096", 3600, 3600));
-        Credential georgeCredentialsOrg2 = new Credential("127.0.0.1", "george", "1234");
+        Credential georgeCredentialsOrg2 = new Credential("org2.restcomm.com", "george", "1234");
         georgePhoneOrg2.addUpdateCredential(georgeCredentialsOrg2);
 
         //Register Fotini phone
         assertTrue(fotiniPhoneOrg2.register(uri, "fotini", "1234", fotiniContact, 3600, 3600));
-        Credential fotiniCredentials = new Credential("127.0.0.1", "fotini", "1234");
+        Credential fotiniCredentials = new Credential("org2.restcomm.com", "fotini", "1234");
         fotiniPhoneOrg2.addUpdateCredential(fotiniCredentials);
         
         //Prepare Fotini to receive message
