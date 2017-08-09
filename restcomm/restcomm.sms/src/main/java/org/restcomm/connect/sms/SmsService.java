@@ -221,6 +221,12 @@ public final class SmsService extends RestcommUntypedActor {
                     }
                     monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_CLIENT), self);
                     return;
+                } else {
+                    String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
+                            + " : Make sure the Client exist or is registered with Restcomm";
+                    sendNotification(errMsg, 11001, "warning", true);
+                    final SipServletResponse resp = request.createResponse(SC_NOT_FOUND, "Cannot complete P2P messages");
+                    resp.send();
                 }
             } else {
                 // Since toUser is null, try to route the message outside using the SMS Aggregator
