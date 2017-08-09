@@ -174,19 +174,25 @@ public class SmsEndpointTest {
     }
 
     /**
-     * Try to send sms to client in organization (org2.restcomm.com) from 
-     * 1. same organization account
+     * Try to send sms to alice: 
+     * alice exist in both org1 and org2 
+     * make sure only proper alice gets the msg (the one that exists in source account's organization)
      * @throws ParseException
      */
     @Test
-    public void sendSmsTestToClientAliceSameOrganization() throws ParseException {
+    public void sendSmsTestToClientExistingInDifferentOrganizations() throws ParseException {
     	// Prepare alice org2 phone to receive call
         SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5092", 3600, 3600));
-
         SipCall aliceCallOrg2 = alicePhoneOrg2.createSipCall();
         aliceCallOrg2.listenForMessage();
 
+        // Prepare alice org1 phone to receive call
+        SipURI urialiceSipStack = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(urialiceSipStack, "alice", "1234", aliceContact, 3600, 3600));
+    	SipCall aliceCall = alicePhone.createSipCall();
+    	aliceCall.listenForMessage();
+        
         String from = "+15126002188";
         String to = "client:alice";
         String body = "Hello Alice!";
@@ -201,39 +207,7 @@ public class SmsEndpointTest {
         assertTrue(aliceCallOrg2.sendMessageResponse(202, "Accepted", 3600));
         String messageReceived = new String(messageRequest.getRawContent());
         assertTrue(messageReceived.equals(body));
-    }
-
-    /**
-     * Try to send sms to client in organization (org2.restcomm.com) from 
-     * 2. diff organization account
-     * @throws ParseException
-     */
-    @Test
-    public void sendSmsTestToClientAliceDifferentOrganization() throws ParseException {
-        // Prepare alice org2 phone to receive call
-        SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5092", 3600, 3600));
-    	SipCall aliceCallOrg2 = alicePhoneOrg2.createSipCall();
-        aliceCallOrg2.listenForMessage();
-
-        // Prepare alice org1 phone to receive call
-        SipURI urialiceSipStack = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(urialiceSipStack, "alice", "1234", aliceContact, 3600, 3600));
-    	SipCall aliceCall = alicePhone.createSipCall();
-    	aliceCall.listenForMessage();
         
-        String from = "+15126002188";
-        String to = "client:alice";
-        String body = "Hello Alice!";
-
-        //send msg from different org account
-        JsonObject msgResult = SmsEndpointTool.getInstance().createSms(deploymentUrl.toString(), adminAccountSid,
-                adminAuthToken, from, to, body, null);
-        assertNotNull(msgResult);
-        logger.info("msgResult send msg from different account: "+msgResult); 
-
-        // make sure none of org1/org2 clients receive msg 
-        assertTrue(!aliceCallOrg2.waitForMessage(10000));
         assertTrue(!aliceCall.waitForMessage(10000));
     }
 
