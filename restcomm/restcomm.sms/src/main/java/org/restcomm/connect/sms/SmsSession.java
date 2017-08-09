@@ -103,9 +103,10 @@ public final class SmsSession extends RestcommUntypedActor {
 
     private final ActorRef monitoringService;
 
-    private final Sid organizationSid;
+    private final Sid fromOrganizationSid;
+
     public SmsSession(final Configuration configuration, final SipFactory factory, final SipURI transport,
-                      final DaoManager storage, final ActorRef monitoringService, final ServletContext servletContext, final Sid organizationSid) {
+                      final DaoManager storage, final ActorRef monitoringService, final ServletContext servletContext, final Sid fromOrganizationSid) {
         super();
         this.configuration = configuration;
         this.smsConfiguration = configuration.subset("sms-aggregator");
@@ -124,7 +125,7 @@ public final class SmsSession extends RestcommUntypedActor {
         this.externalIP = this.configuration.subset("runtime-settings").getString("external-ip");
         if (externalIP == null || externalIP.isEmpty() || externalIP.equals(""))
             externalIP = defaultHost;
-        this.organizationSid = organizationSid;
+        this.fromOrganizationSid = fromOrganizationSid;
 
         this.tlvSet = new TlvSet();
         if(!this.configuration.subset("outbound-sms").isEmpty()) {
@@ -282,11 +283,11 @@ public final class SmsSession extends RestcommUntypedActor {
         } else {
             to = last.to();
         }
-        final Client toClient = clients.getClient(to, organizationSid);
+        final Client toClient = clients.getClient(to, fromOrganizationSid);
         Registration toClientRegistration = null;
         if (toClient != null) {
             final RegistrationsDao registrations = storage.getRegistrationsDao();
-            toClientRegistration = registrations.getRegistration(toClient.getLogin(), organizationSid);
+            toClientRegistration = registrations.getRegistration(toClient.getLogin(), fromOrganizationSid);
         }
 
 //        // Try to find an application defined for the phone number.
