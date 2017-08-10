@@ -23,7 +23,6 @@ import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.dao.entities.Organization;
 //import org.restcomm.connect.extension.api.ExtensionRequest;
 //import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
