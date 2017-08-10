@@ -27,7 +27,7 @@ status VARCHAR(16) NOT NULL,
 auth_token VARCHAR(32) NOT NULL,
 role VARCHAR(64) NOT NULL,
 uri MEDIUMTEXT NOT NULL,
-organization_sid VARCHAR(34) NOT NULL DEFAULT "ORafbe225ad37541eba518a74248f0ac4c"
+organization_sid VARCHAR(34) NOT NULL
 );
 
 CREATE TABLE restcomm_announcements (
