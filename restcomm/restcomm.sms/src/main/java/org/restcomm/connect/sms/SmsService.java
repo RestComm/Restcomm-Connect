@@ -56,7 +56,6 @@ import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.MostOptimalNumberResponse;
 import org.restcomm.connect.dao.entities.Notification;
-import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Direction;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;
