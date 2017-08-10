@@ -162,6 +162,6 @@ public class OrganizationUtil {
      * @return Sid of Organization
      */
     public static Sid getOrganizationSidByAccountSid(DaoManager storage, final Sid accountSid){
-    	return storage.getAccountsDao().getAccount(accountSid).getOrganizationSid();
+        return storage.getAccountsDao().getAccount(accountSid).getOrganizationSid();
     }
 }

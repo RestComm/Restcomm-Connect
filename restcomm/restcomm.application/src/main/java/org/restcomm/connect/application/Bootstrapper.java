@@ -249,7 +249,6 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
      */
     private boolean generateDefaultDomainName (final Configuration configuration, final DaoManager storage) {
         try{
-            //Should it be configurable?
             final String defaultOrganization = "ORafbe225ad37541eba518a74248f0ac4c";
 
             final String hostname = configuration.getString("hostname");
