@@ -529,7 +529,7 @@ public class GatherSpeechTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testDtmfUsingSipInfo() throws Exception {
+    public void testDtmfFromMediaServer() throws Exception {
         new JavaTestKit(system) {
             {
                 final ActorRef observer = getRef();
@@ -538,7 +538,6 @@ public class GatherSpeechTest {
                 interpreter.fsm = spy(new FiniteStateMachine(interpreter.continuousGathering, interpreter.transitions));
                 doNothing().when(interpreter.fsm).transition(any(), eq(interpreter.finishGathering));
                 interpreter.collectedDigits = new StringBuffer();
-                interpreter.call = getRef();
                 interpreter.finishOnKey="#";
                 interpreterRef.tell(new MediaGroupResponse(new CollectedResult("5", false, false)), observer);
                 assertEquals("5", interpreter.collectedDigits.toString());

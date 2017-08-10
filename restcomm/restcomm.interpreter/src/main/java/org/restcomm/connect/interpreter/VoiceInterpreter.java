@@ -820,7 +820,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 } else {
                     if (sender == call) {
                         // DTMF using SIP INFO, check if all digits collected here
-                        collectedDigits.append(data instanceof CollectedResult ? ((CollectedResult)data).getResult() : data);
+                        collectedDigits.append(dtmfResponse.get());
                         // Collected digits == requested num of digits the complete the collect digits
                         if (numberOfDigits != Short.MAX_VALUE) {
                             if (collectedDigits.length() == numberOfDigits) {
@@ -841,10 +841,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                             }
                         }
                     } else {
-                        // Skip digits collecting if empty CollectResult received
-                        if (!(data instanceof CollectedResult) || !StringUtils.isEmpty(((CollectedResult)data).getResult())) {
-                            collectedDigits.append(data);
-                        }
+                        collectedDigits.append(((CollectedResult)data).getResult());
                         fsm.transition(message, finishGathering);
                     }
                 }
