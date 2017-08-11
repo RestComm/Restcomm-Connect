@@ -21,21 +21,24 @@ package org.restcomm.connect.dao.mybatis;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import static org.junit.Assert.*;
 import org.junit.Test;
-
+import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria farooq
  */
 public final class ClientsDaoTest {
     private static MybatisDaoManager manager;
@@ -132,15 +135,24 @@ public final class ClientsDaoTest {
 
     @Test
     public void readByUser() {
-        final Sid account = Sid.generate(Sid.Type.ACCOUNT);
+    	AccountsDao dao = manager.getAccountsDao();
+        Sid accountSid = Sid.generate(Sid.Type.ACCOUNT);
         final Sid org = Sid.generate(Sid.Type.ORGANIZATION);
+        try {
+			dao.addAccount(new Account(accountSid, new DateTime(), new DateTime(), "test@telestax.com", "Top Level Account", new Sid("AC00000000000000000000000000000000"),Account.Type.FULL,Account.Status.ACTIVE,"77f8c12cc7b8f8423e5c38b035249166","Administrator",new URI("/2012-04-24/Accounts/AC00000000000000000000000000000000"), org));
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+
         final Sid sid = Sid.generate(Sid.Type.CLIENT);
         Sid application = Sid.generate(Sid.Type.APPLICATION);
         URI url = URI.create("hello-world.xml");
         String method = "GET";
         final Client.Builder builder = Client.builder();
         builder.setSid(sid);
-        builder.setAccountSid(account);
+        builder.setAccountSid(accountSid);
         builder.setApiVersion("2012-04-24");
         builder.setFriendlyName("Tom");
         builder.setLogin("tom");
