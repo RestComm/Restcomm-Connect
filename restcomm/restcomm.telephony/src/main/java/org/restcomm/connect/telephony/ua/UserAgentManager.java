@@ -470,9 +470,11 @@ public final class UserAgentManager extends RestcommUntypedActor {
             }
         }
         final RegistrationsDao registrations = storage.getRegistrationsDao();
-        Registration registration = registrations.getRegistration(((SipURI)response.getTo().getURI()).getUser(), OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI)response.getTo().getURI()));
+        SipURI toUri = (SipURI)response.getTo().getURI();
+        String location = "%"+toUri.getHost()+":"+toUri.getPort();
+        List<Registration> registrationList = registrations.getRegistrationsByLocation(toUri.getUser(), location);
         //Registration here shouldn't be null. Update it
-        registration = registration.updated();
+        Registration registration = registrationList.get(0).updated();
         registrations.updateRegistration(registration);
     }
 

@@ -110,7 +110,7 @@ public final class UserAgentManagerTest {
     private static SipStackTool tool7;
     private SipStack sipStack7;
     private SipPhone phone7;
-    private String aliceContact7 = "sip:alice@127.0.0.1:5074";
+    private String aliceContact7 = "sip:alice@127.0.0.1:5075";
 
     public UserAgentManagerTest() {
         super();
