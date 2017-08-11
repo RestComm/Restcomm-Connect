@@ -22,7 +22,6 @@ package org.restcomm.connect.ussd.interpreter;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -37,11 +36,13 @@ import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -67,7 +68,6 @@ import org.restcomm.connect.telephony.api.Answer;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
-import org.restcomm.connect.telephony.api.CreateCall;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.ussd.commons.UssdInfoRequest;
 import org.restcomm.connect.ussd.commons.UssdMessageType;
@@ -89,19 +89,16 @@ import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 
-import static org.restcomm.connect.interpreter.rcml.Verbs.ussdCollect;
-import static org.restcomm.connect.interpreter.rcml.Verbs.ussdLanguage;
-import static org.restcomm.connect.interpreter.rcml.Verbs.ussdMessage;
+import static org.restcomm.connect.interpreter.rcml.Verbs.*;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
-public class UssdInterpreter extends UntypedActor {
+public class UssdInterpreter extends RestcommUntypedActor {
 
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final ActorSystem system;
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
@@ -171,13 +168,9 @@ public class UssdInterpreter extends UntypedActor {
     private final State ready;
     private final State notFound;
 
-    public UssdInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
-                           final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
-                           final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
-                           final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage) {
+    public UssdInterpreter(final UssdInterpreterParams params) {
         super();
         final ActorRef source = self();
-        this.system = context().system();
 
         uninitialized = new State("uninitialized", null, null);
         observeCall = new State("observe call", new ObserveCall(source), null);
@@ -218,19 +211,19 @@ public class UssdInterpreter extends UntypedActor {
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
         // Initialize the runtime stuff.
-        this.accountId = account;
-        this.phoneId = phone;
-        this.version = version;
-        this.url = url;
-        this.method = method;
-        this.fallbackUrl = fallbackUrl;
-        this.fallbackMethod = fallbackMethod;
-        this.statusCallback = statusCallback;
-        this.statusCallbackMethod = statusCallbackMethod;
-        this.emailAddress = emailAddress;
-        this.configuration = configuration;
+        this.accountId = params.getAccount();
+        this.phoneId = params.getPhone();
+        this.version = params.getVersion();
+        this.url = params.getUrl();
+        this.method = params.getMethod();
+        this.fallbackUrl = params.getFallbackUrl();
+        this.fallbackMethod = params.getFallbackMethod();
+        this.statusCallback = params.getStatusCallback();
+        this.statusCallbackMethod = params.getStatusCallbackMethod();
+        this.emailAddress = params.getEmailAddress();
+        this.configuration = params.getConfiguration();
 
-        this.storage = storage;
+        this.storage = params.getStorage();
         final Configuration runtime = configuration.subset("runtime-settings");
         String path = runtime.getString("cache-path");
         if (!path.endsWith("/")) {
@@ -238,6 +231,15 @@ public class UssdInterpreter extends UntypedActor {
         }
         path = path + accountId.toString();
         this.downloader = downloader();
+    }
+
+    public static Props props(final UssdInterpreterParams params) {
+        return new Props(new UntypedActorFactory() {
+            @Override
+            public Actor create() throws Exception {
+                return new UssdInterpreter(params);
+            }
+        });
     }
 
     private Notification notification(final int log, final int error, final String message) {
@@ -297,7 +299,7 @@ public class UssdInterpreter extends UntypedActor {
                 return new EmailService(configuration);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     ActorRef downloader() {
@@ -308,7 +310,7 @@ public class UssdInterpreter extends UntypedActor {
                 return new Downloader();
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     ActorRef parser(final String xml) {
@@ -320,7 +322,7 @@ public class UssdInterpreter extends UntypedActor {
                 return new Parser(xml, self());
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     void invalidVerb(final Tag verb) {
@@ -359,7 +361,7 @@ public class UssdInterpreter extends UntypedActor {
             final String forwardedFrom = info.forwardedFrom();
             parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
             // logger.info("Type " + callInfo.type());
-            if (CreateCall.Type.SIP == info.type()) {
+            if (CreateCallType.SIP == info.type()) {
                 // Adding SIP OUT Headers and SipCallId for
                 // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
                 SipServletResponse lastResponse = info.lastResponse();

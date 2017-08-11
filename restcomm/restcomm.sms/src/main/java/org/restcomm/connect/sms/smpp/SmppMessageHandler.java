@@ -1,7 +1,6 @@
 package org.restcomm.connect.sms.smpp;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -10,16 +9,19 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import com.cloudhopper.commons.charset.CharsetUtil;
 import com.cloudhopper.smpp.pdu.SubmitSm;
+import com.cloudhopper.smpp.tlv.Tlv;
 import com.cloudhopper.smpp.type.Address;
 import com.cloudhopper.smpp.type.RecoverablePduException;
 import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
 import com.cloudhopper.smpp.type.SmppTimeoutException;
 import com.cloudhopper.smpp.type.UnrecoverablePduException;
-import com.cloudhopper.smpp.tlv.Tlv;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
@@ -27,12 +29,12 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.extension.api.ExtensionRequest;
-import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.IExtensionCreateSmsSessionRequest;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
+import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.sms.SmsSession;
@@ -47,13 +49,15 @@ import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipURI;
 import java.io.IOException;
 import java.net.URI;
-import java.util.List;
 import java.util.Collection;
+import java.util.List;
 
-public class SmppMessageHandler extends UntypedActor  {
+//import org.restcomm.connect.extension.api.ExtensionRequest;
+//import org.restcomm.connect.extension.api.ExtensionResponse;
+
+public class SmppMessageHandler extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
-    private final ActorSystem system = getContext().system();
     private final ServletContext servletContext;
     private final DaoManager storage;
     private final Configuration configuration;
@@ -92,13 +96,11 @@ public class SmppMessageHandler extends UntypedActor  {
             }
             outbound((SmppOutboundMessageEntity) message);
         } else if (message instanceof CreateSmsSession) {
-            ExtensionRequest er = new ExtensionRequest();
-            er.setObject(message);
-            er.setConfiguration(this.configuration);
-            ExtensionResponse extensionResponse = ec.executePreOutboundAction(er, this.extensions);
-            if (extensionResponse.isAllowed()) {
-                Object obj = ec.handleExtensionResponse(extensionResponse, this.configuration);
-                final ActorRef session = session((Configuration)obj);
+            IExtensionCreateSmsSessionRequest ier = (CreateSmsSession)message;
+            ier.setConfiguration(this.configuration);
+            ec.executePreOutboundAction(ier, this.extensions);
+            if (ier.isAllowed()) {
+                final ActorRef session = session(ier.getConfiguration());
                 final SmsServiceResponse<ActorRef> response = new  SmsServiceResponse<ActorRef>(session);
                 sender.tell(response, self);
             } else {
@@ -126,7 +128,7 @@ public class SmppMessageHandler extends UntypedActor  {
             }
             return;
         } else {
-            logger.error("SMPP Message Rejected : No Restcomm Hosted App Found for inbound number : " + to );
+            logger.warning("SMPP Message Rejected : No Restcomm Hosted App Found for inbound number : " + to );
         }
     }
 
@@ -158,16 +160,18 @@ public class SmppMessageHandler extends UntypedActor  {
 
                 URI appUri = number.getSmsUrl();
 
-                final SmppInterpreterBuilder builder = new SmppInterpreterBuilder(system);
+                final SmppInterpreterParams.Builder builder = new SmppInterpreterParams.Builder();
                 builder.setSmsService(self);
                 builder.setConfiguration(configuration);
                 builder.setStorage(storage);
-                builder.setAccount(number.getAccountSid());
+                builder.setAccountId(number.getAccountSid());
                 builder.setVersion(number.getApiVersion());
                 final Sid sid = number.getSmsApplicationSid();
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
-                    builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
+                    RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+                    RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+                    builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
                 } else if (appUri != null) {
                     builder.setUrl(UriUtils.resolve(appUri));
                 } else {
@@ -180,7 +184,8 @@ public class SmppMessageHandler extends UntypedActor  {
                     builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
                     builder.setFallbackMethod(number.getSmsFallbackMethod());
                 }
-                interpreter = builder.build();
+                final Props props = SmppInterpreter.props(builder.build());
+                interpreter = getContext().actorOf(props);
                 Configuration cfg = this.configuration;
                 //Extension
                 final ActorRef session = session(cfg);
@@ -219,7 +224,7 @@ public class SmppMessageHandler extends UntypedActor  {
                 return new SmsSession(p_configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     public void outbound(SmppOutboundMessageEntity request) throws SmppInvalidArgumentException, IOException {

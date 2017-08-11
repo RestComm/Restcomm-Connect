@@ -24,6 +24,7 @@ package org.restcomm.connect.commons.configuration.sets;
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 public interface RcmlserverConfigurationSet {
+    String getApiPath();
     String getBaseUrl();
     Boolean getNotify();
     Integer getTimeout(); // how much to wait for response to a notification request before giving up

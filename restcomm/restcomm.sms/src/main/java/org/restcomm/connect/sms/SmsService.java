@@ -31,7 +31,10 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
@@ -47,13 +50,14 @@ import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Direction;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;
-import org.restcomm.connect.extension.api.ExtensionResponse;
-import org.restcomm.connect.extension.api.ExtensionRequest;
 import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.IExtensionCreateSmsSessionRequest;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
-import org.restcomm.connect.interpreter.SmsInterpreterBuilder;
+import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
+import org.restcomm.connect.interpreter.SmsInterpreter;
+import org.restcomm.connect.interpreter.SmsInterpreterParams;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.sms.api.CreateSmsSession;
@@ -61,11 +65,9 @@ import org.restcomm.connect.sms.api.DestroySmsSession;
 import org.restcomm.connect.sms.api.SmsServiceResponse;
 import org.restcomm.connect.sms.api.SmsSessionAttribute;
 import org.restcomm.connect.sms.api.SmsSessionRequest;
-
 import org.restcomm.connect.telephony.api.TextMessage;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
-
 import org.restcomm.smpp.parameter.TlvSet;
 
 import javax.servlet.ServletConfig;
@@ -76,7 +78,6 @@ import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipURI;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -90,7 +91,7 @@ import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
  */
-public final class SmsService extends UntypedActor {
+public final class SmsService extends RestcommUntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     private final ActorSystem system;
@@ -292,16 +293,18 @@ public final class SmsService extends UntypedActor {
                 URI appUri = number.getSmsUrl();
                 ActorRef interpreter = null;
                 if (appUri != null || number.getSmsApplicationSid() != null) {
-                    final SmsInterpreterBuilder builder = new SmsInterpreterBuilder(system);
+                    final SmsInterpreterParams.Builder builder = new SmsInterpreterParams.Builder();
                     builder.setSmsService(self);
                     builder.setConfiguration(configuration);
                     builder.setStorage(storage);
-                    builder.setAccount(number.getAccountSid());
+                    builder.setAccountId(number.getAccountSid());
                     builder.setVersion(number.getApiVersion());
                     final Sid sid = number.getSmsApplicationSid();
                     if (sid != null) {
                         final Application application = applications.getApplication(sid);
-                        builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
+                        RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+                        RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+                        builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
                     } else {
                         builder.setUrl(UriUtils.resolve(appUri));
                     }
@@ -316,7 +319,8 @@ public final class SmsService extends UntypedActor {
                         builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
                         builder.setFallbackMethod(number.getSmsFallbackMethod());
                     }
-                    interpreter = builder.build();
+                    final Props props = SmsInterpreter.props(builder.build());
+                    interpreter = getContext().actorOf(props);
                 }
                 //TODO:do extensions check here too?
                 final ActorRef session = session(this.configuration);
@@ -340,19 +344,11 @@ public final class SmsService extends UntypedActor {
         final ActorRef sender = sender();
         ExtensionController ec = ExtensionController.getInstance();
         if (CreateSmsSession.class.equals(klass)) {
-            //retrieve extension object
-            //FIXME:we need a real interface here rather than amending a preexisting request interface
-            ExtensionRequest er = new ExtensionRequest();
-            er.setObject(message);
-            er.setConfiguration(this.configuration);
-
-            ExtensionResponse extensionResponse = ec.executePreOutboundAction(er, this.extensions);
-            if (extensionResponse.isAllowed()) {
-                //pass in response object to sms session
-                Object obj = ec.handleExtensionResponse(extensionResponse, this.configuration);
-                //FIXME:not all instances of extensions should modify
-                //a session configuration, we should do checks here
-                final ActorRef session = session((Configuration)obj);
+            IExtensionCreateSmsSessionRequest ier = (CreateSmsSession)message;
+            ier.setConfiguration(this.configuration);
+            ec.executePreOutboundAction(ier, this.extensions);
+            if (ier.isAllowed()) {
+                final ActorRef session = session(ier.getConfiguration());
                 final SmsServiceResponse<ActorRef> response = new SmsServiceResponse<ActorRef>(session);
                 sender.tell(response, self);
             } else {
@@ -429,7 +425,7 @@ public final class SmsService extends UntypedActor {
                 return new SmsSession(p_configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     // used for sending warning and error logs to notification engine and to the console

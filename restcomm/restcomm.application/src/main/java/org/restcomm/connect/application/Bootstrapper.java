@@ -29,6 +29,7 @@ import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.MediaServerInfo;
 import org.restcomm.connect.mscontrol.jsr309.Jsr309ControllerFactory;
 import org.restcomm.connect.mscontrol.mms.MmsControllerFactory;
+import scala.concurrent.ExecutionContext;
 
 import javax.media.mscontrol.MsControlException;
 import javax.media.mscontrol.MsControlFactory;
@@ -56,6 +57,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     private static final Logger logger = Logger.getLogger(Bootstrapper.class);
 
     private ActorSystem system;
+    private ExecutionContext ec;
 
     public Bootstrapper() {
         super();
@@ -78,7 +80,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 try {
                     settings = configuration.subset("media-server-manager");
                     ActorRef mrb = mediaResourceBroker(settings, storage, loader);
-                    factory = new MmsControllerFactory(system, mrb);
+                    factory = new MmsControllerFactory(mrb);
                 } catch (UnknownHostException e) {
                     throw new ServletException(e);
                 }
@@ -98,7 +100,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                     // Create JSR 309 factory
                     MsControlFactory msControlFactory = driver.getFactory(properties);
                     MediaServerInfo mediaServerInfo = mediaServerInfo(settings);
-                    factory = new Jsr309ControllerFactory(system, mediaServerInfo, msControlFactory);
+                    factory = new Jsr309ControllerFactory(mediaServerInfo, msControlFactory);
                 } catch (UnknownHostException | MsControlException e) {
                     throw new ServletException(e);
                 }
@@ -212,10 +214,10 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         }
     }
 
-    private DaoManager storage(final Configuration configuration, Configuration daoManagerConfiguration, final ClassLoader loader) throws ObjectInstantiationException {
+    private DaoManager storage(final Configuration configuration, Configuration daoManagerConfiguration, final ClassLoader loader, final ExecutionContext ec) throws ObjectInstantiationException {
         final String classpath = daoManagerConfiguration.getString("dao-manager[@class]");
         final DaoManager daoManager = (DaoManager) new ObjectFactory(loader).getObjectInstance(classpath);
-        daoManager.configure(configuration, daoManagerConfiguration );
+        daoManager.configure(configuration, daoManagerConfiguration, ec );
         daoManager.start();
         return daoManager;
     }
@@ -286,10 +288,11 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             system = ActorSystem.create("RestComm", settings, loader);
             // Share the actor system with other servlets.
             context.setAttribute(ActorSystem.class.getName(), system);
+            ec = system.dispatchers().lookup("restcomm-blocking-dispatcher");
             // Create the storage system.
             DaoManager storage = null;
             try {
-                storage = storage(xml, daoManagerConf, loader);
+                storage = storage(xml, daoManagerConf, loader, ec);
             } catch (final ObjectInstantiationException exception) {
                 logger.error("ObjectInstantiationException during initialization: ", exception);
             }

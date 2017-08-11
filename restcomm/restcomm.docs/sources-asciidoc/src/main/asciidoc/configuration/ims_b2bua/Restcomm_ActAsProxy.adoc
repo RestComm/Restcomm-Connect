@@ -1,0 +1,137 @@
+[[intro]]
+= Restcomm as a generic Proxy
+
+Restcomm can be configured to act as B2BUA and proxy out irencoming calls (that didn't matched a registered application or a registered client) based on certain rules.
+
+On incoming call, the feature will be executed after Restcomm-Connect finish checking:
+
+1. Call to a registered Application/DID
+2. Call to a registered Client
+
+Restcomm-Connect will use Dial SIP RCML to proxy the call to the destination which means that media server will be in the call path.
+
+== Configuration
+
+To enable this feature you will need to modify the **restcomm.xml** configuation file, and edit the **ims-authentication** section:
+
+[source,xml]
+----
+		<acting-as-proxy>
+			<enabled>false</enabled>
+			<use-contact-header>false</use-contact-header>
+			<proxy-rules>
+				<rule>
+					<from-uri></from-uri>
+					<to-uri></to-uri>
+					<!-- Optionally provide username -->
+					<proxy-to-username></proxy-to-username>
+					<proxy-to-password></proxy-to-password>
+					<!-- Control whether or not to patch the SDP for this rule. Default value is true and Restcomm will patch SDP -->
+                    <patch-sdp>true</patch-sdp>
+				</rule>
+				<rule>
+					<from-uri></from-uri>
+					<to-uri></to-uri>
+					<!-- Optionally provide username -->
+					<proxy-to-username></proxy-to-username>
+					<proxy-to-password></proxy-to-password>
+                    <!-- Control whether or not to patch the SDP for this rule. Default value is true and Restcomm will patch SDP -->
+                    <patch-sdp>true</patch-sdp>
+				</rule>
+			</proxy-rules>
+		</acting-as-proxy>
+----
+
+
+=== Options
+
+* `enabled` set to **true** to enable the feature
+* `use-contact-header` if set to **true**, Contact header will be used to determine the From URI. Default **false** (do not use the Contact header)
+* `proxy-rules` Define the rules to match incoming traffic. You can define as many rules as you need
+** `from-uri` Define the **From URI** that will be used to match the incoming traffic
+** `to-uri` Define the **To URI** which will be used to proxy out incoming traffic that matched the rule
+** `proxy-to-username` (Optional) Username for proxy
+** `proxy-to-password` (Optional) Password for proxy
+** `patch-sdp` To control whether or not to patch the SDP with the external IP Address of the media server, for traffic in this rule. Default value is true and Restcomm will patch SDP
+
+
+When enabled, the feature will try to match incoming traffic from **from-uri** and if matched will proxy it to **to-uri**
+
+=== Example configuration
+
+Given
+
+* ClientA: **192.168.100.10:5060**
+* Restcomm InstanceA: **192.168.100.11:5080**
+* Restcomm InstanceB: **192.168.200.11:5080**
+
+The configuration should be:
+
+[source,xml]
+----
+		<acting-as-proxy>
+			<enabled>true</enabled>
+            <use-contact-header>false</use-contact-header>
+			<proxy-rules>
+				<rule>
+					<from-uri>192.168.100.10:5060</from-uri>
+					<to-uri>192.168.200.11:5080</to-uri>
+					<!-- Optionally provide username -->
+					<proxy-to-username></proxy-to-username>
+					<proxy-to-password></proxy-to-password>
+                    <!-- Control whether or not to patch the SDP for this rule. Default value is true and Restcomm will patch SDP -->
+                    <patch-sdp>false</patch-sdp>
+				</rule>
+				<rule>
+					<from-uri>192.168.200.11:5080</from-uri>
+					<to-uri>192.168.100.10:5060</to-uri>
+					<!-- Optionally provide username -->
+					<proxy-to-username></proxy-to-username>
+					<proxy-to-password></proxy-to-password>
+                    <!-- Control whether or not to patch the SDP for this rule. Default value is true and Restcomm will patch SDP -->
+                    <patch-sdp>false</patch-sdp>
+				</rule>
+			</proxy-rules>
+		</acting-as-proxy>
+----
+
+
+
+The first rule:
+[source,xml]
+----
+				<rule>
+					<from-uri>192.168.100.10:5060</from-uri>
+					<to-uri>192.168.200.11:5080</to-uri>
+					<!-- Optionally provide username -->
+					<proxy-to-username></proxy-to-username>
+					<proxy-to-password></proxy-to-password>
+                    <!-- Control whether or not to patch the SDP for this rule. Default value is true and Restcomm will patch SDP -->
+                    <patch-sdp>false</patch-sdp>
+				</rule>
+----
+
+Will match traffic from **192.168.100.10:5060** (**ClientA**) and will proxy out to **192.168.200.11:5080** (**Restcomm InstanceB**). Also it will NOT patch the SDP with the external IP of media server
+
+
+
+The second rule:
+[source,xml]
+----
+				<rule>
+					<from-uri>192.168.200.11:5080</from-uri>
+					<to-uri>192.168.100.10:5060</to-uri>
+					<!-- Optionally provide username -->
+					<proxy-to-username></proxy-to-username>
+					<proxy-to-password></proxy-to-password>
+                    <!-- Control whether or not to patch the SDP for this rule. Default value is true and Restcomm will patch SDP -->
+                    <patch-sdp>false</patch-sdp>
+				</rule>
+----
+Will match traffic from **192.168.200.11:5080** (**Restcomm InstanceB**) and will proxy out to **192.168.100.10:5060** (**ClientA**). Also it will NOT patch the SDP with the external IP of media server
+
+== Call flows
+
+Following a call flow for how the feature is used
+
+image::images/RestcommB2BUA.png[Restcomm B2BUA]

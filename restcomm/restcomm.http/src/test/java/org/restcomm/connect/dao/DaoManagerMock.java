@@ -21,6 +21,7 @@
 package org.restcomm.connect.dao;
 
 import org.apache.commons.configuration.Configuration;
+import scala.concurrent.ExecutionContext;
 
 /**
  * DaoManager mock class to be used for unit-testing endpoints. Add further Daos if needed.
@@ -151,7 +152,7 @@ public class DaoManagerMock implements DaoManager {
     }
 
     @Override
-    public void configure(Configuration configuration, Configuration daoManagerConfiguration) {
+    public void configure(Configuration configuration, Configuration daoManagerConfiguration, ExecutionContext ec) {
 
     }
 

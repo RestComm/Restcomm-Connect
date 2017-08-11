@@ -13,3 +13,4 @@ bin
 **/*~
 csv
 .metadata
+.idea

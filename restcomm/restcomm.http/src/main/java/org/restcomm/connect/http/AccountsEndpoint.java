@@ -62,13 +62,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.CONFLICT;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.MediaType.*;
+import static javax.ws.rs.core.Response.Status.*;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 
@@ -108,7 +103,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(new AccountListConverter(runtimeConfiguration));
         xstream.registerConverter(new RestCommResponseConverter(runtimeConfiguration));
         // Make sure there is an authenticated account present when this endpoint is used
-        checkAuthenticatedAccount();
     }
 
     private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) throws PasswordTooWeak {
@@ -142,6 +136,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
+        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         Account account = null;
         checkPermission("RestComm:Read:Accounts");
@@ -302,6 +297,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
 
     protected Response getAccounts(final MediaType responseType) {
+        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Read:Accounts");
         final Account account = userIdentityContext.getEffectiveAccount();
@@ -323,6 +319,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
+        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Create:Accounts");
         // check account level depth. If we're already at third level no sub-accounts are allowed to be created
@@ -476,6 +473,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response updateAccount(final String identifier, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
+        checkAuthenticatedAccount();
         // First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO
         // operations
         checkPermission("RestComm:Modify:Accounts");

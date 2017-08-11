@@ -19,16 +19,6 @@
  */
 package org.restcomm.connect.mgcp;
 
-import static jain.protocol.ip.mgcp.message.parms.ReturnCode.Transaction_Executed_Normally;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
-import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.StopObserving;
-
 import akka.actor.ActorRef;
 import jain.protocol.ip.mgcp.JainIPMgcpException;
 import jain.protocol.ip.mgcp.JainMgcpResponseEvent;
@@ -45,9 +35,19 @@ import jain.protocol.ip.mgcp.message.parms.RequestedEvent;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import jain.protocol.ip.mgcp.pkg.PackageName;
+import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
+import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.StopObserving;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static jain.protocol.ip.mgcp.message.parms.ReturnCode.Transaction_Executed_Normally;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 public final class IvrEndpoint extends GenericEndpoint {
     private static final PackageName PACKAGE_NAME = AUPackage.AU;

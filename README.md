@@ -1,5 +1,6 @@
 RestComm
 ========
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FRestComm%2FRestcomm-Connect.svg?type=shield)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FRestComm%2FRestcomm-Connect?ref=badge_shield)
 
 The Open Source Cloud Communications Platform
 
@@ -28,7 +29,7 @@ Read the [Online RestComm Documentation](http://documentation.telestax.com/conne
 
 Want to Contribute ? 
 ========
-[See our Contributors Guide](https://github.com/RestComm/RestComm/wiki/Contribute-to-RestComm) and [How to build RestComm From Source](http://docs.telestax.com/restcomm-mobicents-building-from-source/) and [![Join the chat at https://gitter.im/RestComm/Restcomm-Connect](https://badges.gitter.im/RestComm/Restcomm-Connect.svg)](https://gitter.im/RestComm/Restcomm-Connect?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[See our Contributors Guide](https://github.com/RestComm/RestComm-Connect/CONTRIBUTING.asciidoc) and [How to build RestComm From Source](http://docs.telestax.com/restcomm-mobicents-building-from-source/) and [![Join the chat at https://gitter.im/RestComm/Restcomm-Connect](https://badges.gitter.im/RestComm/Restcomm-Connect.svg)](https://gitter.im/RestComm/Restcomm-Connect?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
 Issue Tracking and Roadmap
@@ -46,6 +47,8 @@ License
 RestComm is lead by [TeleStax](http://www.telestax.com/), Inc. and developed collaboratively by a community of individual and enterprise contributors.
 
 RestComm is licensed under dual license policy. The default license is the Free Open Source GNU Affero GPL v3.0. Alternatively a commercial license can be obtained from Telestax ([contact form](http://www.telestax.com/contactus/#InquiryForm))
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FRestComm%2FRestcomm-Connect.svg?type=large)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FRestComm%2FRestcomm-Connect?ref=badge_large)
 
 Continuous Integration and Delivery
 ========

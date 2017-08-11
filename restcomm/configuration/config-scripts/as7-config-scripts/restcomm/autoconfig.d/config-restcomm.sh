@@ -540,25 +540,81 @@ otherRestCommConf(){
     echo "End Rest RestComm configuration"
 }
 
-confRVD(){
-    echo "Configure RVD"
-	if [ -n "$RVD_LOCATION" ]; then
-  		echo "RVD_LOCATION $RVD_LOCATION"
-  		mkdir -p `echo $RVD_LOCATION`
-  		sed -i "s|<workspaceLocation>.*</workspaceLocation>|<workspaceLocation>${RVD_LOCATION}</workspaceLocation>|" $RVD_DEPLOY/WEB-INF/rvd.xml
-
-  		COPYFLAG=$RVD_LOCATION/.demos_initialized
-  		if [ -f "$COPYFLAG" ]; then
-   			#Do nothing, we already copied the demo file to the new workspace
-    		echo "RVD demo application are already copied"
-  		else
-    		echo "Will copy RVD demo applications to the new workspace $RVD_LOCATION"
-    		cp -ar $RVD_DEPLOY/workspace/* $RVD_LOCATION
-    		touch $COPYFLAG
-  		fi
-
+disableRVD() {
+    if [[ -f "$RVD_DEPLOY.deployed" || -f "$RVD_DEPLOY.dodeploy" ]]; then
+		rm -f "$RVD_DEPLOY.deployed"
+		rm -f "$RVD_DEPLOY.dodeploy"
+    	echo "RVD undeployed (or not deployed at all)"
+	else
+		echo "RVD not deployed"
 	fi
 }
+
+enableRVD() {
+	if [ -f "$RVD_DEPLOY.deployed" ]; then
+		echo "RVD already deployed"
+	else
+		touch "$RVD_DEPLOY".dodeploy
+		echo "RVD deployed"
+	fi
+}
+
+confRVD(){
+    if [ -z "$RVD_URL" ]; then
+        enableRVD
+        echo "Configure bundled RVD"
+        if [ -n "$RVD_LOCATION" ]; then
+            echo "RVD_LOCATION $RVD_LOCATION"
+            mkdir -p `echo $RVD_LOCATION`
+            sed -i "s|<workspaceLocation>.*</workspaceLocation>|<workspaceLocation>${RVD_LOCATION}</workspaceLocation>|" $RVD_DEPLOY/WEB-INF/rvd.xml
+
+            COPYFLAG=$RVD_LOCATION/.demos_initialized
+            if [ -f "$COPYFLAG" ]; then
+                #Do nothing, we already copied the demo file to the new workspace
+                echo "RVD demo application are already copied"
+            else
+                echo "Will copy RVD demo applications to the new workspace $RVD_LOCATION"
+                cp -ar $RVD_DEPLOY/workspace/* $RVD_LOCATION
+                touch $COPYFLAG
+            fi
+
+        fi
+    else
+        disableRVD
+    fi
+}
+
+## Adds/removes <rcmlserver>/<base-url> element based on $RVD_URL
+## This version of confRcmlserver() will used xmlstarlet and will probably sed commands that rely on empty elements like <x></x> instead of <x/>
+#confRcmlserver(){
+#    echo "Configuring <rcmlserver/>..."
+#    local RESTCOMM_XML=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+#    if [ -z "$RVD_URL" ]; then
+#        # remove <rcmlserver>/<base-url> element altogether
+#        xmlstarlet ed -P -d "/restcomm/rcmlserver/base-url" "$RESTCOMM_XML" > "${RESTCOMM_XML}.bak"
+#        mv ${RESTCOMM_XML}.bak "$RESTCOMM_XML"
+#    else
+#        # remove existing <base-url/> element
+#        xmlstarlet ed -P -d /restcomm/rcmlserver/base-url "$RESTCOMM_XML" > "${RESTCOMM_XML}.bak"
+#        mv ${RESTCOMM_XML}.bak "$RESTCOMM_XML"
+#        # add it anew
+#        xmlstarlet ed -P -s /restcomm/rcmlserver -t elem -n base-url -v "$RVD_URL" "${RESTCOMM_XML}" > "${RESTCOMM_XML}.bak"
+#        mv "${RESTCOMM_XML}.bak" "$RESTCOMM_XML"
+#    fi
+#    echo "<rcmlserver/> configured"
+#}
+
+# Updates <rcmlserver>/<base-url> according to $RVD_URL
+# This version of confRcmlserver() used sed for backwards compatibility with existing sed commands in this
+confRcmlserver() {
+    echo "Configuring <rcmlserver/>..."
+    local RESTCOMM_XML=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    sed  "/<rcmlserver>/,/<\/rcmlserver>/ s|<base-url>.*</base-url>|<base-url>${RVD_URL}</base-url>|" "$RESTCOMM_XML" > "${RESTCOMM_XML}.bak"
+    mv ${RESTCOMM_XML}.bak "$RESTCOMM_XML"
+    echo "base-url set to '$RVD_URL'"
+    echo "<rcmlserver/> configured"
+}
+
 
 #Auto Configure RMS Networking, if  MANUAL_SETUP=false.
 configRMSNetworking() {
@@ -606,6 +662,7 @@ updateRecordingsPath
 configHypertextPort
 configOutboundProxy
 otherRestCommConf
+confRcmlserver
 confRVD
 configRMSNetworking
 echo 'Configured RestComm!'

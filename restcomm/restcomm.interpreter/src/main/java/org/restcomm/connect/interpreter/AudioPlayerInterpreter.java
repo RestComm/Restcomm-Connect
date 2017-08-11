@@ -19,12 +19,12 @@
  */
 package org.restcomm.connect.interpreter;
 
-import akka.actor.UntypedActor;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class AudioPlayerInterpreter extends UntypedActor {
+public final class AudioPlayerInterpreter extends RestcommUntypedActor {
     public AudioPlayerInterpreter() {
         super();
     }

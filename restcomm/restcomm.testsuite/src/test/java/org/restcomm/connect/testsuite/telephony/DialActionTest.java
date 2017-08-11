@@ -224,7 +224,7 @@ public class DialActionTest {
         assertEquals(1, requests.size());
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=null"));
+        assertTrue(requestBody.contains("DialCallStatus=failed"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
@@ -283,11 +283,12 @@ public class DialActionTest {
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
         //DialCallStatus should be null since there was no call made - since Alice is not registered
-        assertTrue(requestBody.contains("DialCallStatus=null"));
+        assertTrue(requestBody.contains("DialCallStatus=failed"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
-        assertTrue(requestBody.contains("CallStatus=completed"));
+        //When the Dial finish and since the Dialbranch = 0, the Dial Action is executed while Call is in progress
+        assertTrue(requestBody.contains("CallStatus=in-progress"));
         Iterator iter = Arrays.asList(params).iterator();
         String dialCallSid = null;
         while (iter.hasNext()) {
@@ -720,7 +721,7 @@ public class DialActionTest {
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
 
-        String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+        String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
@@ -758,7 +759,7 @@ public class DialActionTest {
 
     /**
      * This test verifies: if Diversion header is present in INVITE, we update ForwardedFrom in cdr.
-     * 
+     *
      * @throws ParseException
      * @throws InterruptedException
      */
@@ -828,7 +829,6 @@ public class DialActionTest {
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
         logger.info("requestBody = "+requestBody);
-        logger.debug("requestBody = "+requestBody);
         System.out.println("requestBody = "+requestBody);
         assertTrue(requestBody.contains("SipHeader_Diversion=%3Csip%3A11223344%40xyz.com%3E%3Bcounter%3D1%3Breason%3DUNKNOWN"));
         Iterator iter = Arrays.asList(params).iterator();
@@ -842,8 +842,9 @@ public class DialActionTest {
         }
         assertNotNull(dialCallSid);
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
+        logger.info("cdr = "+cdr);
         assertNotNull(cdr);
-        
+
         String forwardedFrom = cdr.get("forwarded_from").getAsString();
         assertNotNull(forwardedFrom);
     }
