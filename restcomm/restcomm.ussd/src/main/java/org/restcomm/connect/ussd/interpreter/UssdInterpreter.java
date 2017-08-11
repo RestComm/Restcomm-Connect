@@ -903,7 +903,7 @@ public class UssdInterpreter extends RestcommUntypedActor {
 
             UssdInfoRequest ussdInfoRequest = new UssdInfoRequest(info);
             String ussdText = ussdInfoRequest.getMessage();
-            if (ussdCollectAction != null && !ussdCollectAction.isEmpty() && ussdText != null) {
+            if (ussdCollectAction != null && !ussdCollectAction.isEmpty() && ussdText != null && !ussdInfoRequest.getUssdMessageType().equals(UssdMessageType.unstructuredSSNotify_Response)) {
                 URI target = null;
                 try {
                     target = URI.create(ussdCollectAction);
