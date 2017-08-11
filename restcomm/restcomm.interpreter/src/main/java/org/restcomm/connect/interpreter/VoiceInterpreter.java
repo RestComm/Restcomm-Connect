@@ -418,6 +418,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(hangingUp, finished));
         transitions.add(new Transition(hangingUp, finishConferencing));
         transitions.add(new Transition(hangingUp, finishDialing));
+        transitions.add(new Transition(hangingUp, ready));
         transitions.add(new Transition(uninitialized, finished));
         transitions.add(new Transition(notFound, finished));
         // Initialize the FSM.
@@ -829,15 +830,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Finally proceed with call bridging
                 final JoinCalls bridgeCalls = new JoinCalls(call, outboundCall);
                 bridge.tell(bridgeCalls, self());
-            } else if (is(forking)){
-                // Move to next verb once media server completed Play
-                if((dialBranches == null || dialBranches.size() == 0) && parser != null){
-                    final GetNextVerb next = new GetNextVerb();
-                    parser.tell(next, self());
-                }
             } else if (msResponsePending) {
+                // Move to next verb once media server completed Play
                 msResponsePending = false;
-                if((dialBranches == null || dialBranches.size() == 0) && parser != null){
+                final boolean noBranches = dialBranches == null || dialBranches.size() == 0;
+                final boolean activeParser = parser != null;
+                final boolean noDialAction = action == null;
+                if (noBranches && activeParser && noDialAction) {
                     final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, self());
                 }
@@ -1182,11 +1181,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         if (dialBranches != null && dialBranches.contains(sender)) {
                             removeDialBranch(message, sender);
                         }
-                        checkDialBranch(message, sender, action);
                         if (dialBranches == null || dialBranches.size() == 0){
-                            final StopMediaGroup stop = new StopMediaGroup();
-                            call.tell(stop, sender);
+                            // Stop playing the ringing tone from inbound call
+                            msResponsePending = true;
+                            call.tell(new StopMediaGroup(), self());
                         }
+                        checkDialBranch(message, sender, action);
                         return;
                     }
                 } else {
@@ -1360,12 +1360,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     callManager.tell(new DestroyCall(sender), self());
                 }
                 // VI cannot move to next verb if media still being reproduced by media server
-                // GetNextVerb is skipped and StopMediaGroup is requested right away
+                // GetNextVerb is skipped while StopMediaGroup request is sent to media server
                 // RCML Parser/VI activity continues when media server successful response is received
-                final boolean activeParser = parser != null;
-                final boolean notForking = !is(forking);
-                //final boolean notCanceledByForkingTimeout = !(is(finishDialing) && state.equals(CallStateChanged.State.CANCELED));
-                if (activeParser && notForking && !msResponsePending) {
+                if (parser != null && !msResponsePending) {
                     final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, self());
                 }
