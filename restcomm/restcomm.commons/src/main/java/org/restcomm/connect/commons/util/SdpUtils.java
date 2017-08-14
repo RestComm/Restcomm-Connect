@@ -1,9 +1,5 @@
 package org.restcomm.connect.commons.util;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Vector;
-
 import javax.sdp.Connection;
 import javax.sdp.MediaDescription;
 import javax.sdp.Origin;
@@ -11,6 +7,8 @@ import javax.sdp.SdpException;
 import javax.sdp.SdpFactory;
 import javax.sdp.SdpParseException;
 import javax.sdp.SessionDescription;
+import java.net.UnknownHostException;
+import java.util.Vector;
 
 //import ThreadSafe;
 
@@ -99,17 +97,18 @@ public class SdpUtils {
         if (origin != null) {
             if (Connection.IN.equals(origin.getNetworkType())) {
                 if (Connection.IP4.equals(origin.getAddressType())) {
-                    final InetAddress address;
-                    try {
-                        address = InetAddress.getByName(origin.getAddress());
-                        final String ip = address.getHostAddress();
-                        if (!IPUtils.isRoutableAddress(ip)) {
-                            origin.setAddress(externalIp);
-                        }
-                    } catch (UnknownHostException e) {
-                        // TODO do nothing cause domain name is unknown
-                        // origin.setAddress(externalIp); to remove
-                    }
+                    origin.setAddress(externalIp);
+//                    final InetAddress address;
+//                    try {
+//                        address = InetAddress.getByName(origin.getAddress());
+//                        final String ip = address.getHostAddress();
+//                        if (!IPUtils.isRoutableAddress(ip)) {
+//                            origin.setAddress(externalIp);
+//                        }
+//                    } catch (UnknownHostException e) {
+//                        // TODO do nothing cause domain name is unknown
+//                        // origin.setAddress(externalIp); to remove
+//                    }
                 }
             }
         }
@@ -119,11 +118,12 @@ public class SdpUtils {
         if (connection != null) {
             if (Connection.IN.equals(connection.getNetworkType())) {
                 if (Connection.IP4.equals(connection.getAddressType())) {
-                    final InetAddress address = InetAddress.getByName(connection.getAddress());
-                    final String ip = address.getHostAddress();
-                    if (!IPUtils.isRoutableAddress(ip)) {
-                        connection.setAddress(externalIp);
-                    }
+                    connection.setAddress(externalIp);
+//                    final InetAddress address = InetAddress.getByName(connection.getAddress());
+//                    final String ip = address.getHostAddress();
+//                    if (!IPUtils.isRoutableAddress(ip)) {
+//                        connection.setAddress(externalIp);
+//                    }
                 }
             }
         }
