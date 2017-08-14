@@ -22,8 +22,6 @@ package org.restcomm.connect.testsuite.telephony.push;
 
 import com.github.tomakehurst.wiremock.http.RequestListener;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
@@ -45,9 +43,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.http.CreateClientsTool;
-import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
-import javax.sip.Dialog;
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
 import java.io.IOException;
@@ -58,7 +54,6 @@ import java.text.ParseException;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -228,10 +223,9 @@ public class PushNotificationServerTest {
 
         CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", CLIENT_PASSWORD, null);
 
-        assertTrue(bobPhone.register(uri, "bob", CLIENT_PASSWORD, bobContact, 3600, 3600));
-
         Credential c = new Credential("127.0.0.1", "bob", CLIENT_PASSWORD);
         bobPhone.addUpdateCredential(c);
+        assertTrue(bobPhone.register(uri, "bob", CLIENT_PASSWORD, bobContact, 3600, 3600));
 
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, aliceContact, null, BODY, "application", "sdp", null, null);
@@ -239,22 +233,21 @@ public class PushNotificationServerTest {
         assertTrue(bobCall.waitForAuthorisation(3000));
 
         assertTrue(aliceCall.waitForIncomingCall(5000));
-        assertTrue(aliceCall.sendIncomingCallResponse(100, "Trying-Alice", 1800));
-        assertTrue(aliceCall.sendIncomingCallResponse(180, "Ringing-Alice", 1800));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Alice-Trying", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Alice-Ringing", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
-                null));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "Alice-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-        logger.info("Last response: " + response);
-
-        if (response == Response.TRYING) {
+        int response;
+        do {
             assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-            logger.info("Last response: " + bobCall.getLastReceivedResponse().getStatusCode());
-        }
+            response = bobCall.getLastReceivedResponse().getStatusCode();
+            assertTrue(response == Response.TRYING || response == Response.RINGING);
+            logger.info("Last response: " + response);
+        } while (response == Response.TRYING);
+        assertEquals(Response.RINGING, response);
+        logger.info("Last response: " + response);
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
