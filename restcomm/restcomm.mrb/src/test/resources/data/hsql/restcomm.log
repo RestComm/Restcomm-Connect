@@ -2,3 +2,18 @@
 DELETE FROM "restcomm_media_servers" WHERE "ms_id"=2 AND "local_ip"='127.0.0.1' AND "local_port"=2727 AND "remote_ip"='127.0.0.1' AND "remote_port"=2427 AND "compatibility" IS NULL AND "response_timeout"='1500' AND "external_address" IS NULL
 INSERT INTO "restcomm_media_servers" VALUES(2,'127.0.0.1',2727,'127.0.0.1',2427,NULL,'1500',NULL)
 COMMIT
+DELETE FROM "restcomm_call_detail_records" WHERE "sid"='CA01a09068a1f348269b6670ef599a6e57'
+INSERT INTO "restcomm_call_detail_records" VALUES('CA01a09068a1f348269b6670ef599a6e57',NULL,'2013-08-23 14:30:07.820000','2017-08-15 02:52:40.637000','ACae6e420f425248d6a26948c17a9e2acf','Anonymous','+15126002188',NULL,'in-progress','2013-08-23 14:30:08.081000',NULL,NULL,'0.00','inbound',NULL,'2012-04-24',NULL,NULL,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA01a09068a1f348269b6670ef599a6e57',NULL,NULL,'IN1',NULL,NULL,NULL,NULL,NULL,'2')
+COMMIT
+DISCONNECT
+/*C4*/SET SCHEMA PUBLIC
+DELETE FROM "restcomm_media_servers" WHERE "ms_id"=2 AND "local_ip"='127.0.0.1' AND "local_port"=2727 AND "remote_ip"='127.0.0.1' AND "remote_port"=2427 AND "compatibility" IS NULL AND "response_timeout"='1500' AND "external_address" IS NULL
+INSERT INTO "restcomm_media_servers" VALUES(2,'127.0.0.1',2727,'127.0.0.1',2427,NULL,'1500',NULL)
+COMMIT
+DISCONNECT
+/*C5*/SET SCHEMA PUBLIC
+DELETE FROM "restcomm_media_servers" WHERE "ms_id"=2 AND "local_ip"='127.0.0.1' AND "local_port"=2727 AND "remote_ip"='127.0.0.1' AND "remote_port"=2427 AND "compatibility" IS NULL AND "response_timeout"='1500' AND "external_address" IS NULL
+INSERT INTO "restcomm_media_servers" VALUES(2,'127.0.0.1',2727,'127.0.0.1',2427,NULL,'1500',NULL)
+COMMIT
+INSERT INTO "restcomm_conference_detail_records" VALUES('CF676b57b334364d648999e9b5724b5a11','2017-08-15 02:52:41.495000','2017-08-15 02:52:41.496000','ACae6e420f425248d6a26948c17a9e2acf','RUNNING_INITIALIZING','d814f4f4ded34e389e283859f7bf3db6','2012-04-24','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Conferences/CF676b57b334364d648999e9b5724b5a11','2',NULL,TRUE,NULL,NULL,NULL,NULL,NULL,NULL)
+COMMIT
