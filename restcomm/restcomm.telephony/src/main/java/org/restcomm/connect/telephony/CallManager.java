@@ -531,23 +531,25 @@ public final class CallManager extends RestcommUntypedActor {
 
         if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have little control over
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to the b2bua
-                long delay = sendPushNotificationIfNeeded(toClient.getPushClientIdentity());
-                system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            if (logger.isInfoEnabled()) {
-                                logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: " + toClient);
-                            }
+                if (logger.isInfoEnabled()) {
+                    logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: " + toClient);
+                }
 
-                            ExtensionController ec = ExtensionController.getInstance();
-                            IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, client.getAccountSid(), null, null, null, null);
+                ExtensionController ec = ExtensionController.getInstance();
+                final IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, client.getAccountSid(), null, null, null, null);
 
-                            createCallRequest = (CreateCall) er;
+                this.createCallRequest = (CreateCall) er;
 
-                            ec.executePreOutboundAction(er, extensions);
+                ec.executePreOutboundAction(er, extensions);
 
-                            if (er.isAllowed()) {
+                if (er.isAllowed()) {
+                    long delay = sendPushNotificationIfNeeded(toClient.getPushClientIdentity());
+                    system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                createCallRequest = (CreateCall) er;
+
                                 if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                                     if (logger.isInfoEnabled()) {
                                         logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp + " toHost: "
@@ -562,24 +564,26 @@ public final class CallManager extends RestcommUntypedActor {
                                     final SipServletResponse resp = request.createResponse(SC_NOT_FOUND, "Cannot complete P2P call");
                                     resp.send();
                                 }
-                            } else {
-                                //Extensions didn't allowed this call
-                                if (logger.isDebugEnabled()) {
-                                    final String errMsg = "Client not Allowed to make this outbound call";
-                                    logger.debug(errMsg);
-                                }
-                                String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
-                                        + " : Make sure the Client exist or is registered with Restcomm";
-                                sendNotification(errMsg, 11001, "warning", true);
-                                final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
-                                resp.send();
+
+                                ExtensionController.getInstance().executePostOutboundAction(er, extensions);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
                             }
-                            ec.executePostOutboundAction(er, extensions);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
                         }
+                    }, system.dispatcher());
+                } else {
+                    //Extensions didn't allowed this call
+                    if (logger.isDebugEnabled()) {
+                        final String errMsg = "Client not Allowed to make this outbound call";
+                        logger.debug(errMsg);
                     }
-                }, system.dispatcher());
+                    String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
+                            + " : Make sure the Client exist or is registered with Restcomm";
+                    sendNotification(errMsg, 11001, "warning", true);
+                    final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
+                    resp.send();
+                }
+                ec.executePostOutboundAction(er, extensions);
                 return;
             } else {
                 // toClient is null or we couldn't make the b2bua call to another client. check if this call is for a registered
@@ -1750,35 +1754,43 @@ public final class CallManager extends RestcommUntypedActor {
         ec.executePreOutboundAction(request, this.extensions);
         switch (request.type()) {
             case CLIENT: {
-                ClientsDao clients = storage.getClientsDao();
-                Client client = clients.getClient(request.to().replaceFirst("client:", ""));
-                if (client != null) {
-                    long delay = sendPushNotificationIfNeeded(client.getPushClientIdentity());
-                    system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
-                        @Override
-                        public void run() {
-                            createCallRequest = request;
-                            try {
-                                if (request.isAllowed()) {
-                                    outboundToClient(request, sender);
-                                } else {
-                                    //Extensions didn't allowed this call
-                                    final String errMsg = "Not Allowed to make this outbound call";
-                                    logger.warning(errMsg);
-                                    sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), createCallRequest), self());
+                if (request.isAllowed()) {
+                    ClientsDao clients = storage.getClientsDao();
+                    Client client = clients.getClient(request.to().replaceFirst("client:", ""));
+                    if (client != null) {
+                        long delay = sendPushNotificationIfNeeded(client.getPushClientIdentity());
+                        system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
+                            @Override
+                            public void run() {
+                                createCallRequest = request;
+                                try {
+                                    if (request.isAllowed()) {
+                                        outboundToClient(request, sender);
+                                    } else {
+                                        //Extensions didn't allowed this call
+                                        final String errMsg = "Not Allowed to make this outbound call";
+                                        logger.warning(errMsg);
+                                        sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), createCallRequest), self());
+                                    }
+                                    ExtensionController.getInstance().executePostOutboundAction(request, extensions);
+                                } catch (ServletParseException e) {
+                                    throw new RuntimeException(e);
                                 }
-                                ExtensionController.getInstance().executePostOutboundAction(request, extensions);
-                            } catch (ServletParseException e) {
-                                throw new RuntimeException(e);
                             }
-                        }
-                    }, system.dispatcher());
+                        }, system.dispatcher());
+                    } else {
+                        String errMsg = "The SIP Client " + request.to() + " is not registered or does not exist";
+                        logger.warning(errMsg);
+                        sendNotification(errMsg, 11008, "error", true);
+                        sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+                    }
                 } else {
-                    String errMsg = "The SIP Client " + request.to() + " is not registered or does not exist";
+                    //Extensions didn't allowed this call
+                    final String errMsg = "Not Allowed to make this outbound call";
                     logger.warning(errMsg);
-                    sendNotification(errMsg, 11008, "error", true);
-                    sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+                    sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), createCallRequest), self());
                 }
+                ec.executePostOutboundAction(request, this.extensions);
                 break;
             }
             case PSTN: {
