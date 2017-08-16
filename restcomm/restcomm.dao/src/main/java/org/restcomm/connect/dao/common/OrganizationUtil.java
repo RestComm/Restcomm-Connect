@@ -62,9 +62,10 @@ public class OrganizationUtil {
         final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
         try{
             Sid destinationOrganizationSid = getOrganizationSidBySipURIHost(storage, (SipURI)request.getRequestURI());
-
+            // try to get destinationOrganizationSid from toUril
+            destinationOrganizationSid = destinationOrganizationSid != null ? destinationOrganizationSid : getOrganizationSidBySipURIHost(storage, (SipURI)request.getTo());
             if(destinationOrganizationSid == null){
-                logger.error("destinationOrganizationSid is NULL: reuest Uri is: "+(SipURI)request.getRequestURI());
+                logger.error("destinationOrganizationSid is NULL: request Uri is: "+(SipURI)request.getRequestURI()+ " To Uri is: "+(SipURI)request.getTo());
             }else{
 
                 logger.info("getMostOptimalIncomingPhoneNumber: sourceOrganizationSid: "+sourceOrganizationSid+" : destinationOrganizationSid: "+destinationOrganizationSid);

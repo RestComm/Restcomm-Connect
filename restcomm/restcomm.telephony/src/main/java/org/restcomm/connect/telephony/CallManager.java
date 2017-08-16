@@ -88,6 +88,7 @@ import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.MostOptimalNumberResponse;
 import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.Registration;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.IExtensionCreateCallRequest;
@@ -526,7 +527,7 @@ public final class CallManager extends RestcommUntypedActor {
             logger.debug("toOrganizationSid: " + toOrganizationSid);
         }
         if(toOrganizationSid == null){
-            logger.error("Null Organization: toUri: "+(SipURI) request.getTo().getURI());
+            logger.error("Null to Organization: toUri: "+(SipURI) request.getTo().getURI());
         }
         Client toClient = clients.getClient(toUser, toOrganizationSid);
 
@@ -1934,7 +1935,12 @@ public final class CallManager extends RestcommUntypedActor {
                 // allow to use it directly
                 from = (SipURI) sipFactory.createURI(request.from());
             } else {
-                from = sipFactory.createSipURI(request.from(), outboundIntf.getHost() + ":" + outboundIntf.getPort());
+                if(request.accountId() != null){
+                    Organization fromOrganization = storage.getOrganizationsDao().getOrganization(storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid());
+                    from = sipFactory.createSipURI(request.from(), fromOrganization.getDomainName());
+                } else {
+                    from = sipFactory.createSipURI(request.from(), outboundIntf.getHost() + ":" + outboundIntf.getPort());
+                }
             }
         }
         if (from == null || to == null) {

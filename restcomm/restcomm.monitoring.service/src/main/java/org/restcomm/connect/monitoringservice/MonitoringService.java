@@ -164,6 +164,7 @@ public class MonitoringService extends RestcommUntypedActor {
         String location = getCall.getIdentifier();
         if (logger.isDebugEnabled()) {
             logger.debug("MonitoringService onGetCall, location: "+location);
+            logger.debug("MonitoringService onGetCall, callLocationMap: "+callLocationMap);
         }
         if (location != null) {
             ActorRef call = callLocationMap.get(location);
