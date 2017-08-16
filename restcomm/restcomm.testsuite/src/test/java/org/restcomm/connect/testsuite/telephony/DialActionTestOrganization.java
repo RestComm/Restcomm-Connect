@@ -285,7 +285,8 @@ public class DialActionTestOrganization {
 //		mockedSRVTLSRecords.add(new SRVRecord(new Name("_sips._" + ListeningPoint.TLS.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 1, 0, 5081, name));
         when(dnsLookupPerformer.performSRVLookup("_sips._" + ListeningPoint.TLS.toLowerCase() + "." + host)).thenReturn(mockedSRVTLSRecords);
     }
-    
+   
+    @Ignore
     @Test
     public void testDialSipNumberSameAndDifferentOrganization() throws ParseException, InterruptedException, DeploymentException, TextParseException{
     	stubFor(get(urlPathEqualTo("/1111"))
