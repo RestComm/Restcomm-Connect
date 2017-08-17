@@ -31,11 +31,15 @@ import akka.dispatch.Futures;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
+
 import com.google.gson.Gson;
+
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+
 import gov.nist.javax.sip.header.UserAgent;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.http.HttpResponse;
@@ -100,6 +104,7 @@ import org.restcomm.connect.telephony.api.SwitchProxy;
 import org.restcomm.connect.telephony.api.UpdateCallScript;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
+
 import scala.concurrent.Await;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
@@ -120,6 +125,7 @@ import javax.servlet.sip.SipURI;
 import javax.servlet.sip.TelURL;
 import javax.sip.header.RouteHeader;
 import javax.sip.message.Response;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
@@ -127,6 +133,7 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -140,7 +147,12 @@ import java.util.regex.Pattern;
 
 import static akka.pattern.Patterns.ask;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.*;
+import static javax.servlet.sip.SipServletResponse.SC_ACCEPTED;
+import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_SERVER_INTERNAL_ERROR;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -207,7 +219,7 @@ public final class CallManager extends RestcommUntypedActor {
 
     private boolean actAsProxyOut;
     private List<ProxyRule> proxyOutRules;
-    private boolean isActAsProxyOutUseFromHeader;
+    private boolean isActAsProxyOutUseContactHeader;
 
     // Push notification server
     private boolean pushNotificationServerEnabled;
@@ -345,7 +357,7 @@ public final class CallManager extends RestcommUntypedActor {
             final Configuration proxyOutRulesConf = proxyConfiguration.subset("proxy-rules");
             this.actAsProxyOut = proxyConfiguration.getBoolean("enabled", false);
             if (actAsProxyOut) {
-                isActAsProxyOutUseFromHeader = proxyConfiguration.getBoolean("use-from-header", true);
+                isActAsProxyOutUseContactHeader = proxyConfiguration.getBoolean("use-contact-header", true);
                 proxyOutRules = new ArrayList<ProxyRule>();
 
                 List<HierarchicalConfiguration> rulesList = ((HierarchicalConfiguration) proxyOutRulesConf).configurationsAt("rule");
@@ -354,7 +366,8 @@ public final class CallManager extends RestcommUntypedActor {
                     String toHost = rule.getString("to-uri");
                     final String username = rule.getString("proxy-to-username");
                     final String password = rule.getString("proxy-to-password");
-                    ProxyRule proxyRule = new ProxyRule(fromHost, toHost, username, password);
+                    final String patchSdpUri = rule.getString("patch-sdp");
+                    ProxyRule proxyRule = new ProxyRule(fromHost, toHost, username, password, patchSdpUri);
                     proxyOutRules.add(proxyRule);
                 }
 
@@ -402,7 +415,7 @@ public final class CallManager extends RestcommUntypedActor {
                 @Override
                 public UntypedActor create() throws Exception {
                     return new Call(sipFactory, msControllerFactory, configuration,
-                            null, null, null, null);
+                            null, null, null, actAsProxyOut, proxyOutRules, null);
                 }
             });
         } else {
@@ -412,7 +425,7 @@ public final class CallManager extends RestcommUntypedActor {
                 @Override
                 public UntypedActor create() throws Exception {
                     return new Call(sipFactory, msControllerFactory, configuration,
-                            request.statusCallback(), request.statusCallbackMethod(), request.statusCallbackEvent(), request.getOutboundProxyHeaders());
+                            request.statusCallback(), request.statusCallbackMethod(), request.statusCallbackEvent(), actAsProxyOut, proxyOutRules, request.getOutboundProxyHeaders());
                 }
             });
         }
@@ -833,7 +846,7 @@ public final class CallManager extends RestcommUntypedActor {
 
         SipURI fromUri = null;
         try {
-            if (isActAsProxyOutUseFromHeader) {
+            if (!isActAsProxyOutUseContactHeader) {
                 fromUri = ((SipURI) request.getFrom().getURI());
             } else {
                 fromUri = ((SipURI) request.getAddressHeader("Contact").getURI());
@@ -1992,9 +2005,28 @@ public final class CallManager extends RestcommUntypedActor {
         SipURI outboundIntf = null;
         SipURI from = null;
         SipURI to = (SipURI) sipFactory.createURI(request.to());
+        SipURI outboundProxyURI;
 
-        if (!uri.isEmpty()) {
-            to.setHost(uri);
+        try {
+            //NB: ifblock not really necessary, but we dont want
+            //exceptions all the time
+            if(!uri.isEmpty()){
+                outboundProxyURI = (SipURI) sipFactory.createSipURI(null, uri);
+                to.setHost(outboundProxyURI.getHost());
+                if(outboundProxyURI.getPort()!= -1){
+                    to.setPort(outboundProxyURI.getPort());
+                }
+
+                Iterator<String> params = outboundProxyURI.getParameterNames();
+                while(params.hasNext()){
+                    String param = params.next();
+                    to.setParameter(param, outboundProxyURI.getParameter(param));
+                }
+            }
+        } catch (Exception e) {
+            if(logger.isDebugEnabled()){
+                logger.debug("Exception: outboundProxy is "+uri+" "+e.getMessage());
+            }
         }
 
         String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
