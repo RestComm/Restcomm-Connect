@@ -63,7 +63,7 @@ public class OrganizationUtil {
         try{
             Sid destinationOrganizationSid = getOrganizationSidBySipURIHost(storage, (SipURI)request.getRequestURI());
             // try to get destinationOrganizationSid from toUril
-            destinationOrganizationSid = destinationOrganizationSid != null ? destinationOrganizationSid : getOrganizationSidBySipURIHost(storage, (SipURI)request.getTo());
+            destinationOrganizationSid = destinationOrganizationSid != null ? destinationOrganizationSid : getOrganizationSidBySipURIHost(storage, (SipURI)request.getTo().getURI());
             if(destinationOrganizationSid == null){
                 logger.error("destinationOrganizationSid is NULL: request Uri is: "+(SipURI)request.getRequestURI()+ " To Uri is: "+(SipURI)request.getTo());
             }else{
