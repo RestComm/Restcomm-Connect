@@ -527,6 +527,24 @@ public class GatherSpeechTest {
         };
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testDtmfFromMediaServer() throws Exception {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                final TestActorRef<VoiceInterpreter> interpreterRef = createVoiceInterpreter(observer);
+                VoiceInterpreter interpreter = interpreterRef.underlyingActor();
+                interpreter.fsm = spy(new FiniteStateMachine(interpreter.continuousGathering, interpreter.transitions));
+                doNothing().when(interpreter.fsm).transition(any(), eq(interpreter.finishGathering));
+                interpreter.collectedDigits = new StringBuffer();
+                interpreter.finishOnKey="#";
+                interpreterRef.tell(new MediaGroupResponse(new CollectedResult("5", false, false)), observer);
+                assertEquals("5", interpreter.collectedDigits.toString());
+            }
+        };
+    }
+
     private NameValuePair findParam(final List<NameValuePair> params, final String key) {
         return Iterables.find(params, new Predicate<NameValuePair>() {
             public boolean apply(NameValuePair p) {
