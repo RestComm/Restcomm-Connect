@@ -122,7 +122,7 @@ public class Jsr309CallController extends MediaServerController {
     private final State failed;
 
     // JSR-309 runtime stuff
-    private static final String[] CODEC_POLICY_AUDIO = new String[] { "audio" };
+    private static final String[] CODEC_POLICY_AUDIO = new String[] { "audio", "video" };
 
     private final MsControlFactory msControlFactory;
     private final MediaServerInfo mediaServerInfo;
