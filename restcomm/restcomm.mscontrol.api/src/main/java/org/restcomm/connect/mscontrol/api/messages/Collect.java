@@ -51,9 +51,10 @@ public final class Collect {
     private final String lang;
     private final String hints;
     private final String driver;
+    private final boolean partialResult;
 
     public Collect(String driver,final Type type, final List<URI> prompts, final String pattern, final int timeout, final String endInputKey,
-            final int numberOfDigits, final String lang, final String hints) {
+            final int numberOfDigits, final String lang, final String hints, final boolean partialResult) {
         super();
         this.driver = driver;
         this.type = type;
@@ -64,6 +65,7 @@ public final class Collect {
         this.numberOfDigits = numberOfDigits;
         this.lang = lang;
         this.hints = hints;
+        this.partialResult = partialResult;
     }
 
     public String getDriver() {
@@ -112,5 +114,9 @@ public final class Collect {
 
     public String getHints() {
         return hints;
+    }
+
+    public boolean needPartialResult() {
+        return partialResult;
     }
 }
