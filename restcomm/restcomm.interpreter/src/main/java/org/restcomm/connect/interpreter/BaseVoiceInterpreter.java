@@ -1588,7 +1588,8 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 }
             }
             // Start gathering.
-            final Collect collect = new Collect(restcommConfiguration.getMgAsr().getDefaultDriver(), inputType, gatherPrompts, null, timeout, finishOnKey, numberOfDigits, lang, hints);
+            final Collect collect = new Collect(restcommConfiguration.getMgAsr().getDefaultDriver(), inputType, gatherPrompts,
+                    null, timeout, finishOnKey, numberOfDigits, lang, hints, resultCallbackAttr != null && !StringUtils.isEmpty(resultCallbackAttr.value()));
             call.tell(collect, source);
             // Some clean up.
             gatherChildren = null;

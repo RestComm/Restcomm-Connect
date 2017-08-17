@@ -220,7 +220,7 @@ public class MgcpMediaGroup extends MediaGroup {
         } else {
             this.lastEvent = AsrSignal.REQUEST_ASR;
             signal = new AsrSignal(request.getDriver(), request.lang(), request.prompts(), request.endInputKey(), RestcommConfiguration.getInstance().getMgAsr().getAsrMRT(), request.timeout(),
-                    request.timeout(), request.getHints(), request.type().toString() ,request.numberOfDigits());
+                    request.timeout(), request.getHints(), request.type().toString() ,request.numberOfDigits(), request.needPartialResult());
         }
         this.originator = sender();
         ivr.tell(signal, self);
