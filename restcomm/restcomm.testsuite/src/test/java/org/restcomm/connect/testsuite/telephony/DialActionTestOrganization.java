@@ -354,31 +354,6 @@ public class DialActionTestOrganization {
 
     }
 
-	@Test
-	public void testMessageClientSentToOtherClientSameOrganization () throws ParseException {
-
-		SipURI uri = mariaSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-		assertTrue(mariaPhoneOrg2.register(uri, "maria", clientPassword, "sip:maria@127.0.0.1:5093", 3600, 3600));
-		Credential mariaCred = new Credential("org2.restcomm.com","maria","1234");
-		mariaPhoneOrg2.addUpdateCredential(mariaCred);
-
-		assertTrue(shoaibPhoneOrg2.register(uri,"shoaib", clientPassword,"sip:shoaib@127.0.0.1:5094", 3600, 3600));
-		Credential shoaibCread = new Credential("org2.restcomm.com","shoaib","1234");
-		shoaibPhoneOrg2.addUpdateCredential(shoaibCread);
-
-		SipCall shoaibCall = shoaibPhoneOrg2.createSipCall();
-		shoaibCall.listenForMessage();
-
-		SipCall mariaCall = mariaPhoneOrg2.createSipCall();
-		assertTrue(mariaCall.initiateOutgoingMessage("sip:shoaib@org2.restcomm.com", null, "Test Message from maria"));
-		assertTrue(mariaCall.waitForAuthorisation(5000));
-		assertTrue(mariaCall.waitOutgoingMessageResponse(5000));
-
-		assertTrue(shoaibCall.waitForMessage(5000));
-		Request msgReceived = shoaibCall.getLastReceivedMessageRequest();
-		assertTrue(new String(msgReceived.getRawContent()).equals("Test Message from maria"));
-	}
-
     @Test
     public void testOutboundPstn() throws ParseException, InterruptedException, UnknownHostException, MalformedURLException {
 
@@ -982,7 +957,7 @@ public class DialActionTestOrganization {
         assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCallOrg2.getLastReceivedResponse().getStatusCode());
 
-        String callSid = bobCallOrg2.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+        String callSid = bobCallOrg2.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
         bobCallOrg2.sendInviteOkAck();
         assertTrue(!(bobCallOrg2.getLastReceivedResponse().getStatusCode() >= 400));
