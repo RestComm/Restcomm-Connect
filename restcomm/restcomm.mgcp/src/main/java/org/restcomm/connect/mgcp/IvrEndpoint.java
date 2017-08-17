@@ -212,6 +212,7 @@ public final class IvrEndpoint extends GenericEndpoint {
             final Map<String, String> parameters = MgcpUtil.parseParameters(event.getParms());
             final int code = Integer.parseInt(parameters.get("rc"));
             switch (code) {
+                case 323: // provisioning error
                 case 326: // No digits
                 case 327: // No speech
                 case 328: // Spoke too long

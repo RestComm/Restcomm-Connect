@@ -49,6 +49,7 @@ public class AsrSignal {
     private final String input;
     private final int minNumber;
     private final int maxNumber;
+    private final boolean partialResult;
 
     /**
      *
@@ -62,10 +63,11 @@ public class AsrSignal {
      * @param hotWords hints for speech analyzer tool
      * @param input "dtmf", "speech", "dtmf speech"
      * @param numberOfDigits number of digits system expects from User
+     * @param partialResult whether RC needs partial results
      */
 
     public AsrSignal(String driver, String lang, List<URI> initialPrompts, String endInputKey, int maximumRecTimer, int waitingInputTimer,
-                     int timeAfterSpeech, String hotWords, String input, int numberOfDigits) {
+                     int timeAfterSpeech, String hotWords, String input, int numberOfDigits, boolean partialResult) {
         this.driver = driver;
         this.initialPrompts = initialPrompts;
         this.endInputKey = endInputKey;
@@ -78,6 +80,7 @@ public class AsrSignal {
         //RMS expects two parameters but Collect in RVD has only one
         this.minNumber = numberOfDigits;
         this.maxNumber = numberOfDigits;
+        this.partialResult = partialResult;
     }
 
     @Override
@@ -141,6 +144,11 @@ public class AsrSignal {
             if (buffer.length() > 0)
                 buffer.append(SPACE_CHARACTER);
             buffer.append("mx=").append(maxNumber);
+        }
+        if (partialResult) {
+            if (buffer.length() > 0)
+                buffer.append(SPACE_CHARACTER);
+            buffer.append("pr=").append(partialResult);
         }
         return buffer.toString();
     }
