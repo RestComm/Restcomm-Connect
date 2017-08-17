@@ -1,0 +1,257 @@
+= Restcomm API – Multiprovider Extension
+
+[[extensions-multiprovider]]
+== Multiprovider Extension
+
+=== High Level Operation
+
+The Multiprovider extension allows per account SMS and Voice routing.
+ 
+IMPORTANT: This REST API is only accessible by the super-admin.
+
+
+=== Multiprovider Extension Resource URI
+
+*/2012-04-24/ExtensionsConfiguration.json/{MultiProviderExtensionId}*
+
+=== Resource URI Properties
+
+[cols=",,",options="header",]
+|=========================================================================================================================
+|Property |Description|Valid Values
+|MultiProviderExtensionId |The unique MultiProvider Extension Id. This value will be different for each installation| Valid Extension Sid. eg.EX77f123cf07624366be8c0a9a2150f045
+|=========================================================================================================================
+
+=== Supported Operations
+
+*HTTP GET.* Returns the representation of the MultiProvider Extension resource.
+
+**HTTP POST/PUT**. Adds or modifies MultiProvider configuration for specific Account and returns the representation. Below you will find a list of supported parameters.
+
+=== Supported Operation Parameters
+
+[cols=",,",options="header",]
+|=========================================================================================================================
+|Parameter |Description|Valid Values
+|ExtensionName |The unique MultiProvider Extension name. Currently is fixed to "multi_provider"|"multi_provider"
+|Enabled |Enable or disable the extension.|"true"\|"false"
+|ConfigurationData |The MultiProvider configuration string.|Json string with correct schema
+|AccountSid |The Account this MultiProvider configuration is applied to.|Valid AccountSid
+|=========================================================================================================================
+
+==== ConfigurationData Parameter Json Example Structure
+[source,JSON]
+----
+{
+    "outbound-voice": [
+        {
+            "proxy": [
+                {
+                    "uri":"Uri",
+                    "username":"String",
+                    "password":"String",
+                    "match":"Regex String",
+                    "headers":[
+                        {
+                            "headerName":"String",
+                            "key":"String",
+                            "value":"String"
+                        },
+                        {...}
+                    ]
+                },
+                {...}
+            ]
+        }
+    ],
+    "outbound-sms": [
+        {"destination_network_id":"Integer"}
+    ]
+}
+----
+==== ConfigurationData Parameter Top Level Properties
+.Top Level
+[cols=",,,",options="header",]
+|====================================================================
+|Property |Type|Description | Optional
+|`outbound-sms` |Array| Array with single OutboundSms object.| Yes
+|`outbound-voice` |Array| Array with single OutboundVoice object.| Yes
+|====================================================================
+
+== SMS Enablement
+
+MultiProvider Extension enables Account specific SMS routing by sending `destination_network_id` (1550) TLV to the Telestax SMPP server that is configured.
+
+NOTE: Configuration wise it is possible to inject other TLVs for other purposes aside from SMS routing but this is currently not enabled. 
+In the future, injection of other arbitrary TLVs may be enabled.
+
+=== ConfigurationData Parameter OutboundSms Object Properties
+.`outbound-sms` Properties
+[cols=",,",options="header",]
+|====================================================================
+|Property |Description | Optional
+|`destination_network_id` |The destination_network_id TLV | No
+|====================================================================
+==== `outbound-sms` Json Example
+[source,JSON]
+--
+{
+    "outbound-sms": [
+        {"destination_network_id":"1000"}
+    ]
+}
+--
+=== Example SMS Enablement
+
+----
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acg:77f8c12cc7b8f8423e5c38b035249166@10.0.0.4:8080/restcomm/2012-04-24/ExtensionsConfiguration.json \ 
+-d "ExtensionName=multi_provider" -d "Enabled=true"  \
+-d "AccountSid=ACae6e420f425248d6a26948c17a9e2acf" \
+-d "ConfigurationData={\"outbound-sms\": [{\"destination_network_id\": \"1000\"}]}"
+----
+
+== Voice Enablement
+
+MultiProvider Extension voice enablement works three ways
+
+* Mapping a specific SIP outbound proxy to a specific Account. This applies to PSTN, SIP and Client calls.
+- MultiProvider Extension enables Account specific Voice routing to a specific outbound proxy by using the OutboundVoice `uri` property defined in the Account specific ConfigurationData.
+- Credentials of the outbound proxy are defined in `username` and `password` properties
+- URI properties have to be defined inline in the URI string itself. eg `"uri":"192.168.0.1;uriprop=uri_prop_value1"`
+* Appending SIP Message headers with custom header properties and adding custom headers.
+- SIP Message headers will be modified when the `headers` property is defined.
+- If the header defined in `headerName` is not present in the SIP Message, it is added to the SIP Message.
+
+* Rewriting SIP Request URI when the initial Request URI matches configured regex pattern. This applies to SIP calls.
+** Request URI pattern matching is done when `match` property is defined.
+** By default `match` property does not need to be defined. In a configuration where the `match` property is not defined it amounts to configuring the `match` as `"match":".*"`
+** Common regex may be used:
+*** `"match" : "uri.com"`. Will only match URI `uri.com`.
+*** `"match" : "uri[12]\.com"`. Will match URIs `uri1.com`, `uri2.com`. Will not match `uri3.com`
+*** `"match" : "^uri.*"`. Will match URIs `uri`, `uri.com`. Will not match `1uri.com`
+
+
+=== ConfigurationData Parameter OutboundVoice Object Properties
+.`outbound-voice` Properties
+[cols=",,,",options="header",]
+|====================================================================
+|Property |Type|Description | Optional
+|`proxy` |Array | Array of proxies|No
+|====================================================================
+
+.`proxy` Array Element Properties
+[cols=",,,",options="header",]
+|====================================================================
+|Property |Type|Description | Optional
+|`uri`|String| Uri of outbound proxy| No
+|`username`|String | Username for outbound proxy login|Yes
+|`password`|String | Password for outbound proxy login|Yes
+|`match` |String | Regex string for sip uri string matching|Yes
+|`headers` |Array| Array of headers to be replaced into Sip message|Yes
+|====================================================================
+
+.`headers` Array Element Properties
+[cols=",,,",options="header",]
+|====================================================================
+|Property |Type|Description | Optional
+|`headerName`|String| Header name in message to append| No
+|`key`|String | Key attribute to append to message|No
+|`value`|String | Value of attribute to append to message|No
+|====================================================================
+
+==== `outbound-voice` Json Example
+[source,JSON]
+----
+{
+    "outbound-voice": [
+        {
+            "proxy": [
+                {
+                    "uri":"192.168.0.1;uriprop1=uri_prop_value1;uriprop2=uri_prop_value2",
+                    "username":"someuser1",
+                    "password":"somepassword1",
+                    "match":"uri.com"
+                },
+                {
+                    "uri":"192.168.0.1",
+                    "username":"someuser1",
+                    "password":"somepassword1",
+                    "match":"uri[12]\.com",
+                    "headers":[
+                        {
+                            "headerName":"Request-URI",
+                            "key":"newkey1",
+                            "value":"newvalue1"
+                        },
+                        {
+                            "headerName":"Request-URI",
+                            "key":"newkey2",
+                            "value":"newvalue2"
+                        },
+                        {
+                            "headerName":"To",
+                            "key":"newkey3",
+                            "value":"newvalue3"
+                        },
+                        {
+                            "headerName":"X-CustomHeader",
+                            "key":"newkey4",
+                            "value":"newvalue4"
+                        }
+                    ]
+                },
+                {
+                    "uri":"192.168.0.2",
+                    "username":"someuser2",
+                    "password":"somepassword2",
+
+                    "headers":[
+                        {
+                            "headerName":"Request-URI",
+                            "key":"newkey5",
+                            "value":"newvalue5"
+                        },
+                        {
+                            "headerName":"Request-URI",
+                            "key":"newkey6",
+                            "value":"newvalue6"
+                        },
+                        {
+                            "headerName":"To",
+                            "key":"newkey7",
+                            "value":"newvalue7"
+                        },
+                        {
+                            "headerName":"X-CustomHeader",
+                            "key":"newkey8",
+                            "value":"newvalue8"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+----
+=== Example Voice Enablement
+
+----
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acg:77f8c12cc7b8f8423e5c38b035249166@10.0.0.4:8080/restcomm/2012-04-24/ExtensionsConfiguration.json \ 
+-d "ExtensionName=multi_provider" -d "Enabled=true"  \
+-d "AccountSid=ACae6e420f425248d6a26948c17a9e2acf" \
+-d "ConfigurationData={\"outbound-voice\": [  {\"proxy\": [ \ 
+{\"uri\":\"192.168.0.1;uriprop1=uri_prop_value1;uriprop2=uri_prop_value2"\", \"username\":\"someuser1.com\", \"password\":\"somepassword1.com\", \"match\":\"uri.com\"}, \ 
+{\"uri\":\"192.168.0.1\", \"username\":\"someuser1.com\", \"password\":\"somepassword1.com\", \"match\":\"uri[12]\\.com\", \"headers\": [
+   {\"headerName\":\"Request-URI\", \"key\":\"newkey1\", \"value\":\"newvalue1\"}, \
+   {\"headerName\":\"Request-URI\", \"key\":\"newkey2\", \"value\":\"newvalue2\"}, \
+   {\"headerName\":\"To\",          \"key\":\"newkey3\", \"value\":\"newvalue3\"}, \
+   {\"headerName\":\"X-CustomHeader\", \"key\":\"newkey4\", \"value\":\"newvalue4\"}  \
+]} \
+{\"uri\":\"192.168.0.2\", \"username\":\"someuser2.com\", \"password\":\"somepassword2.com\", \"headers\": [
+   {\"headerName\":\"Request-URI\", \"key\":\"newkey5\", \"value\":\"newvalue5\"}, \
+   {\"headerName\":\"Request-URI\", \"key\":\"newkey6\", \"value\":\"newvalue6\"}, \
+   {\"headerName\":\"To\", \"key\":\"newkey\", \"value7\":\"newvalue7\"}, \
+   {\"headerName\":\"X-CustomHeader\", \"key\":\"newkey8\", \"value\":\"newvalue8\"}  \
+]} \
+] } ] }"
+----
