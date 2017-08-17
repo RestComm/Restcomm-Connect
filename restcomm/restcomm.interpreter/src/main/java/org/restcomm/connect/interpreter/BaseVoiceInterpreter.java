@@ -1531,7 +1531,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         public void execute(final Object message) throws Exception {
 
             // check mandatory attribute partialResultCallback
-            Attribute resultCallbackAttr = verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK);
+            Attribute partialResultCallbackAttr = verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK);
             final NotificationsDao notifications = storage.getNotificationsDao();
             // parse attribute "input"
             Attribute typeAttr = verb.attribute(GatherAttributes.ATTRIBUTE_INPUT);
@@ -1589,7 +1589,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             }
             // Start gathering.
             final Collect collect = new Collect(restcommConfiguration.getMgAsr().getDefaultDriver(), inputType, gatherPrompts,
-                    null, timeout, finishOnKey, numberOfDigits, lang, hints, resultCallbackAttr != null && !StringUtils.isEmpty(resultCallbackAttr.value()));
+                    null, timeout, finishOnKey, numberOfDigits, lang, hints, partialResultCallbackAttr != null && !StringUtils.isEmpty(partialResultCallbackAttr.value()));
             call.tell(collect, source);
             // Some clean up.
             gatherChildren = null;
