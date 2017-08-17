@@ -340,6 +340,11 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             }
             context.setAttribute(MediaServerControllerFactory.class.getName(), mscontrollerFactory);
 
+            String compatibility = xml.subset("mscontrol").getString("compatibility", "rms");
+            if(compatibility.equals("xms")){
+                //TODO call ExternalResourceFetcher to download Dialogic libraries
+            }
+
             Boolean rvdMigrationEnabled = new Boolean(xml.subset("runtime-settings").getString("rvd-workspace-migration-enabled", "false"));
             if (rvdMigrationEnabled) {
                 //Replicate RVD Projects as database entities
