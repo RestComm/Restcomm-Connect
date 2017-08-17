@@ -27,6 +27,7 @@ import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
+import akka.dispatch.Futures;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
@@ -100,6 +101,7 @@ import org.restcomm.connect.telephony.api.UpdateCallScript;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 import scala.concurrent.Await;
+import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
@@ -128,6 +130,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -187,7 +190,6 @@ public final class CallManager extends RestcommUntypedActor {
     private String proxyIp;
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
-    private CreateCall createCallRequest;
     private SwitchProxy switchProxyRequest;
 
     //Control whether Restcomm will patch Request-URI and SDP for B2BUA calls
@@ -214,8 +216,10 @@ public final class CallManager extends RestcommUntypedActor {
 
     private HttpClient httpClient;
 
+    private ExecutionContext blockingDispatcher;
+
     // used for sending warning and error logs to notification engine and to the console
-    private void sendNotification(String errMessage, int errCode, String errType, boolean createNotification) {
+    private void sendNotification(Sid accountId, String errMessage, int errCode, String errType, boolean createNotification) {
         NotificationsDao notifications = storage.getNotificationsDao();
         Notification notification;
 
@@ -225,7 +229,7 @@ public final class CallManager extends RestcommUntypedActor {
                 logger.debug(errMessage); // send message to console
             }
             if (createNotification) {
-                notification = notification(ERROR_NOTIFICATION, errCode, errMessage);
+                notification = notification(accountId, ERROR_NOTIFICATION, errCode, errMessage);
                 notifications.addNotification(notification);
             }
         } else if (errType == "error") {
@@ -234,7 +238,7 @@ public final class CallManager extends RestcommUntypedActor {
                 logger.debug(errMessage); // send message to console
             }
             if (createNotification) {
-                notification = notification(ERROR_NOTIFICATION, errCode, errMessage);
+                notification = notification(accountId, ERROR_NOTIFICATION, errCode, errMessage);
                 notifications.addNotification(notification);
             }
         } else if (errType == "info") {
@@ -266,11 +270,11 @@ public final class CallManager extends RestcommUntypedActor {
             myHostIp = ((SipURI) outboundIntf).getHost().toString();
         } else {
             String errMsg = "SipURI outboundIntf is null";
-            sendNotification(errMsg, 14001, "error", false);
+            sendNotification(null, errMsg, 14001, "error", false);
 
             if (context == null)
                 errMsg = "SipServlet context is null";
-            sendNotification(errMsg, 14002, "error", false);
+            sendNotification(null, errMsg, 14002, "error", false);
         }
         Configuration mediaConf = configuration.subset("media-server-manager");
         mediaExternalIp = mediaConf.getString("mgcp-server.external-address");
@@ -370,6 +374,7 @@ public final class CallManager extends RestcommUntypedActor {
             this.pushNotificationServerDelay = runtime.getLong("push-notification-server-delay");
 
             this.httpClient = CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
+            this.blockingDispatcher = system.dispatchers().lookup("restcomm-blocking-dispatcher");
         }
 
         firstTimeCleanup();
@@ -537,9 +542,6 @@ public final class CallManager extends RestcommUntypedActor {
 
                 ExtensionController ec = ExtensionController.getInstance();
                 final IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, client.getAccountSid(), null, null, null, null);
-
-                this.createCallRequest = (CreateCall) er;
-
                 ec.executePreOutboundAction(er, extensions);
 
                 if (er.isAllowed()) {
@@ -548,8 +550,6 @@ public final class CallManager extends RestcommUntypedActor {
                         @Override
                         public void run() {
                             try {
-                                createCallRequest = (CreateCall) er;
-
                                 if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                                     if (logger.isInfoEnabled()) {
                                         logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp + " toHost: "
@@ -560,7 +560,7 @@ public final class CallManager extends RestcommUntypedActor {
                                 } else {
                                     String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
                                             + " : Make sure the Client exist or is registered with Restcomm";
-                                    sendNotification(errMsg, 11001, "warning", true);
+                                    sendNotification(client.getAccountSid(), errMsg, 11001, "warning", true);
                                     final SipServletResponse resp = request.createResponse(SC_NOT_FOUND, "Cannot complete P2P call");
                                     resp.send();
                                 }
@@ -579,7 +579,7 @@ public final class CallManager extends RestcommUntypedActor {
                     }
                     String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
                             + " : Make sure the Client exist or is registered with Restcomm";
-                    sendNotification(errMsg, 11001, "warning", true);
+                    sendNotification(client.getAccountSid(), errMsg, 11001, "warning", true);
                     final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
                     resp.send();
                 }
@@ -596,7 +596,7 @@ public final class CallManager extends RestcommUntypedActor {
                 // This call is not a registered DID (application). Try to proxy out this call.
                 // log to console and to notification engine
                 String errMsg = "A Restcomm Client is trying to call a Number/DID that is not registered with Restcomm";
-                sendNotification(errMsg, 11002, "info", true);
+                sendNotification(client.getAccountSid(), errMsg, 11002, "info", true);
 
                 ExtensionController ec = ExtensionController.getInstance();
                 IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.PSTN, client.getAccountSid(), null, null, null, null);
@@ -633,7 +633,7 @@ public final class CallManager extends RestcommUntypedActor {
                             proxyOut(request, client, toUser, toHost, toHostIpAddress, toPort, outboundIntf, proxyURI, proxyUsername, proxyPassword, from, to, callToSipUri);
                         } else {
                             errMsg = "Restcomm tried to proxy this call to an outbound party but it seems the outbound proxy is not configured.";
-                            sendNotification(errMsg, 11004, "warning", true);
+                            sendNotification(client.getAccountSid(), errMsg, 11004, "warning", true);
                         }
                     }
                 } else {
@@ -668,7 +668,7 @@ public final class CallManager extends RestcommUntypedActor {
         // We didn't find anyway to handle the call.
         String errMsg = "Restcomm cannot process this call because the destination number " + toUser
                 + "cannot be found or there is application attached to that";
-        sendNotification(errMsg, 11005, "error", true);
+        sendNotification(null, errMsg, 11005, "error", true);
 
     }
 
@@ -1315,7 +1315,7 @@ public final class CallManager extends RestcommUntypedActor {
             } else {
                 errMsg = "The number does not exist" + notANumber;
             }
-            sendNotification(errMsg, 11007, "error", false);
+            sendNotification(fromClientAccountSid, errMsg, 11007, "error", false);
             logger.warning(errMsg, notANumber);
             isFoundHostedApp = false;
         }
@@ -1416,7 +1416,6 @@ public final class CallManager extends RestcommUntypedActor {
                 }
             }
         } else if (CreateCall.class.equals(klass)) {
-            this.createCallRequest = (CreateCall) message;
             outbound(message, sender);
         } else if (ExecuteCallScript.class.equals(klass)) {
             execute(message);
@@ -1762,16 +1761,9 @@ public final class CallManager extends RestcommUntypedActor {
                         system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
                             @Override
                             public void run() {
-                                createCallRequest = request;
                                 try {
-                                    if (request.isAllowed()) {
-                                        outboundToClient(request, sender);
-                                    } else {
-                                        //Extensions didn't allowed this call
-                                        final String errMsg = "Not Allowed to make this outbound call";
-                                        logger.warning(errMsg);
-                                        sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), createCallRequest), self());
-                                    }
+                                    outboundToClient(request, sender);
+
                                     ExtensionController.getInstance().executePostOutboundAction(request, extensions);
                                 } catch (ServletParseException e) {
                                     throw new RuntimeException(e);
@@ -1781,14 +1773,14 @@ public final class CallManager extends RestcommUntypedActor {
                     } else {
                         String errMsg = "The SIP Client " + request.to() + " is not registered or does not exist";
                         logger.warning(errMsg);
-                        sendNotification(errMsg, 11008, "error", true);
-                        sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+                        sendNotification(request.accountId(), errMsg, 11008, "error", true);
+                        sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), request), self());
                     }
                 } else {
                     //Extensions didn't allowed this call
                     final String errMsg = "Not Allowed to make this outbound call";
                     logger.warning(errMsg);
-                    sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), createCallRequest), self());
+                    sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), request), self());
                 }
                 ec.executePostOutboundAction(request, this.extensions);
                 break;
@@ -1800,7 +1792,7 @@ public final class CallManager extends RestcommUntypedActor {
                     //Extensions didn't allowed this call
                     final String errMsg = "Not Allowed to make this outbound call";
                     logger.warning(errMsg);
-                    sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), this.createCallRequest), self());
+                    sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), request), self());
                 }
                 ec.executePostOutboundAction(request, this.extensions);
                 break;
@@ -1814,7 +1806,7 @@ public final class CallManager extends RestcommUntypedActor {
                     //Extensions didn't allowed this call
                     final String errMsg = "Not Allowed to make this outbound call";
                     logger.warning(errMsg);
-                    sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), this.createCallRequest), self());
+                    sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), request), self());
                 }
                 ec.executePostOutboundAction(request, this.extensions);
                 break;
@@ -1867,8 +1859,8 @@ public final class CallManager extends RestcommUntypedActor {
         } else {
             String errMsg = "The SIP Client " + request.to() + " is not registered or does not exist";
             logger.warning(errMsg);
-            sendNotification(errMsg, 11008, "error", true);
-            sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+            sendNotification(request.accountId(), errMsg, 11008, "error", true);
+            sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), request), self());
             return;
         }
 
@@ -1893,8 +1885,8 @@ public final class CallManager extends RestcommUntypedActor {
                 if (outboundIntf == null) {
                     String errMsg = "The outbound interface for transport: " + transport + " is NULL, something is wrong with container, cannot proceed to call client " + request.to();
                     logger.error(errMsg);
-                    sendNotification(errMsg, 11008, "error", true);
-                    sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+                    sendNotification(request.accountId(), errMsg, 11008, "error", true);
+                    sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), request), self());
                     return;
                 }
                 if (request.from() != null && request.from().contains("@")) {
@@ -1919,7 +1911,7 @@ public final class CallManager extends RestcommUntypedActor {
                     //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
                     final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: " + request.to();
                     logger.warning(errMsg);
-                    sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+                    sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), request), self());
                 } else {
                     calls.add(createOutbound(request, from, to, webRTC));
                 }
@@ -1930,8 +1922,8 @@ public final class CallManager extends RestcommUntypedActor {
         } else {
             String errMsg = "The SIP Client " + request.to() + " is not registered or does not exist";
             logger.warning(errMsg);
-            sendNotification(errMsg, 11008, "error", true);
-            sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+            sendNotification(request.accountId(), errMsg, 11008, "error", true);
+            sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), request), self());
         }
     }
 
@@ -1976,21 +1968,21 @@ public final class CallManager extends RestcommUntypedActor {
                     }
                 }
             } catch (Exception exception) {
-                sender.tell(new CallManagerResponse<ActorRef>(exception, this.createCallRequest), self());
+                sender.tell(new CallManagerResponse<ActorRef>(exception, request), self());
             }
             if (from == null || to == null) {
                 //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
                 final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: " + request.to();
                 logger.warning(errMsg);
-                sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+                sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), request), self());
             } else {
                 sender.tell(new CallManagerResponse<ActorRef>(createOutbound(request, from, to, false)), self());
             }
         } else {
             String errMsg = "Cannot create call to: " + request.to() + ". The Active Outbound Proxy is null. Please check configuration";
             logger.warning(errMsg);
-            sendNotification(errMsg, 11008, "error", true);
-            sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+            sendNotification(request.accountId(), errMsg, 11008, "error", true);
+            sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), request), self());
         }
     }
 
@@ -2022,7 +2014,7 @@ public final class CallManager extends RestcommUntypedActor {
             //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
             final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: " + request.to();
             logger.warning(errMsg);
-            sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+            sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), request), self());
         } else {
             sender.tell(new CallManagerResponse<ActorRef>(createOutbound(request, from, to, false)), self());
         }
@@ -2332,7 +2324,7 @@ public final class CallManager extends RestcommUntypedActor {
             activeProxyPassword = primaryProxyPassword;
             useFallbackProxy.set(false);
         }
-        final Notification notification = notification(WARNING_NOTIFICATION, 14110,
+        final Notification notification = notification(null, WARNING_NOTIFICATION, 14110,
                 "Max number of failed calls has been reached! Outbound proxy switched");
         final NotificationsDao notifications = storage.getNotificationsDao();
         notifications.addNotification(notification);
@@ -2351,16 +2343,14 @@ public final class CallManager extends RestcommUntypedActor {
         return proxies;
     }
 
-    private Notification notification(final int log, final int error, final String message) {
+    private Notification notification(Sid accountId, final int log, final int error, final String message) {
         String version = configuration.subset("runtime-settings").getString("api-version");
-        Sid accountId = null;
-        // Sid callSid = new Sid("CA00000000000000000000000000000000");
-        if (createCallRequest != null) {
-            accountId = createCallRequest.accountId();
-        } else if (switchProxyRequest != null) {
-            accountId = switchProxyRequest.getSid();
-        } else {
-            accountId = new Sid("ACae6e420f425248d6a26948c17a9e2acf");
+        if (accountId == null) {
+            if (switchProxyRequest != null) {
+                accountId = switchProxyRequest.getSid();
+            } else {
+                accountId = new Sid("ACae6e420f425248d6a26948c17a9e2acf");
+            }
         }
 
         final Notification.Builder builder = Notification.builder();
@@ -2470,7 +2460,7 @@ public final class CallManager extends RestcommUntypedActor {
             // We didn't find anyway to handle the call.
             String errMsg = "Call cannot be processed because the registration: " + regUri.toString()
                     + "cannot be found";
-            sendNotification(errMsg, 11005, "error", true);
+            sendNotification(null, errMsg, 11005, "error", true);
             return;
         } else {
             if (isFromIms) {
@@ -2531,7 +2521,7 @@ public final class CallManager extends RestcommUntypedActor {
             //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
             final String errMsg = "From and/or To are null, we cannot proceed to the outbound call to: " + request.to();
             logger.error(errMsg);
-            sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+            sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), request), self());
         } else {
             final ActorRef call = call(request);
             final ActorRef self = self();
@@ -2560,25 +2550,30 @@ public final class CallManager extends RestcommUntypedActor {
         }
     }
 
-    private long sendPushNotificationIfNeeded(String pushClientIdentity) {
-        long delay = 0;
+    private long sendPushNotificationIfNeeded(final String pushClientIdentity) {
         if (!pushNotificationServerEnabled || pushClientIdentity == null) {
-            return delay;
+            return 0;
         }
-        Map<String, String> params = new HashMap<>();
-        params.put("Identity", pushClientIdentity);
-        try {
-            HttpPost httpPost = new HttpPost(pushNotificationServerUrl);
-            httpPost.setEntity(new StringEntity(new Gson().toJson(params)));
-            HttpResponse httpResponse = httpClient.execute(httpPost);
-            if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                delay = pushNotificationServerDelay;
-            } else {
-                logger.warning("Error while sending push server notification to client with identity: " + pushClientIdentity + ", response: " + httpResponse.getEntity());
+        Futures.future(new Callable<Void>() {
+
+            @Override
+            public Void call() throws Exception {
+                Map<String, String> params = new HashMap<>();
+                params.put("Identity", pushClientIdentity);
+                try {
+                    HttpPost httpPost = new HttpPost(pushNotificationServerUrl);
+                    httpPost.setEntity(new StringEntity(new Gson().toJson(params)));
+                    HttpResponse httpResponse = httpClient.execute(httpPost);
+                    if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                        logger.warning("Error while sending push server notification to client with identity: " + pushClientIdentity + ", response: " + httpResponse.getEntity());
+                    }
+                } catch (Exception e) {
+                    logger.error("Exception while sending push server notification, " + e);
+                }
+                return null;
             }
-        } catch (Exception e) {
-            logger.error("Exception while sending push server notification, " + e);
-        }
-        return delay;
+        }, blockingDispatcher);
+
+        return pushNotificationServerDelay;
     }
 }
