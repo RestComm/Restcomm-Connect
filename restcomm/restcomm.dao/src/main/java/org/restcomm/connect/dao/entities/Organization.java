@@ -36,7 +36,7 @@ public final class Organization {
 
     /**
      * @param sid
-     * @param domainName
+     * @param domainName - such as customer.restcomm.com
      * @param dateCreated
      * @param dateUpdated
      * @throws IllegalArgumentException if sid or domainName are null/empty
