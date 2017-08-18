@@ -147,6 +147,12 @@
 		<!--  https://github.com/RestComm/Restcomm-Connect/issues/1649 -->
 		<enable-200-ok-delay>false</enable-200-ok-delay>
 
+		<push-notification-server-enabled>false</push-notification-server-enabled>
+		<!-- Path to Restcomm Push Notification Server (Notification API) -->
+		<push-notification-server-url></push-notification-server-url>
+		<!-- Delay in milliseconds to wait for all callee's mobile applications will wake up -->
+		<push-notification-server-delay></push-notification-server-delay>
+
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
 			<outbound-proxy-user></outbound-proxy-user>
