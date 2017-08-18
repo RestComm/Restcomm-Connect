@@ -44,6 +44,7 @@ import org.restcomm.connect.dao.entities.Client;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
 @NotThreadSafe
 public final class MybatisClientsDao implements ClientsDao {

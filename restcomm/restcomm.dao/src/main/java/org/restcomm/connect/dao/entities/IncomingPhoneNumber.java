@@ -28,6 +28,7 @@ import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
 @Immutable
 public final class IncomingPhoneNumber {

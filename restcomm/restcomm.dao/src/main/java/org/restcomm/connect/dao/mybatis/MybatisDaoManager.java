@@ -58,6 +58,7 @@ import scala.concurrent.ExecutionContext;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
 @ThreadSafe
 public final class MybatisDaoManager implements DaoManager {

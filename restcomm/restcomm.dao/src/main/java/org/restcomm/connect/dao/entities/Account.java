@@ -30,6 +30,7 @@ import org.restcomm.connect.commons.dao.Sid;
  * Represent a user Account
  *
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
 @Immutable
 public final class Account {

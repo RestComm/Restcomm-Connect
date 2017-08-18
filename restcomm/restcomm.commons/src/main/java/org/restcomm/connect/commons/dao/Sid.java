@@ -27,6 +27,7 @@ import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
 @Immutable
 public final class Sid {
