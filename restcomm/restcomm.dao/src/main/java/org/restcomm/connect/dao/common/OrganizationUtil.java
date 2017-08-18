@@ -53,8 +53,8 @@ public class OrganizationUtil {
      */
     public static MostOptimalNumberResponse getMostOptimalIncomingPhoneNumber(DaoManager storage, SipServletRequest request, String phone,
             Sid sourceOrganizationSid) {
-        //TODO remove it before merge
-        logger.info("*********************** getMostOptimalIncomingPhoneNumber started ***********************: "+phone);
+        if(logger.isDebugEnabled())
+            logger.debug("getMostOptimalIncomingPhoneNumber: "+phone);
 
         IncomingPhoneNumber number = null;
         boolean failCall = false;
@@ -67,8 +67,8 @@ public class OrganizationUtil {
             if(destinationOrganizationSid == null){
                 logger.error("destinationOrganizationSid is NULL: request Uri is: "+(SipURI)request.getRequestURI()+ " To Uri is: "+(SipURI)request.getTo());
             }else{
-
-                logger.info("getMostOptimalIncomingPhoneNumber: sourceOrganizationSid: "+sourceOrganizationSid+" : destinationOrganizationSid: "+destinationOrganizationSid);
+                if(logger.isDebugEnabled())
+                    logger.debug("getMostOptimalIncomingPhoneNumber: sourceOrganizationSid: "+sourceOrganizationSid+" : destinationOrganizationSid: "+destinationOrganizationSid +" request Uri is: "+(SipURI)request.getRequestURI()+ " To Uri is: "+(SipURI)request.getTo());
 
                 // Format the destination to an E.164 phone number.
                 final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
@@ -117,8 +117,8 @@ public class OrganizationUtil {
                 if(numbers != null && !numbers.isEmpty()){
                     // find number in same organization
                     for(IncomingPhoneNumber n : numbers){
-                        //TODO remove it before merge
-                        logger.info("getMostOptimalIncomingPhoneNumber: sourceOrganizationSid: "+sourceOrganizationSid+" destinationOrganizationSid: "+destinationOrganizationSid+" n.isPureSip(): "+n.isPureSip());
+                        if(logger.isDebugEnabled())
+                            logger.debug(String.format("getMostOptimalIncomingPhoneNumber: Got a similar number from DB: Analysis report: Number:Sid = %s:%s | Is Number pure sip? %s | Number's organizations: %s", n.getPhoneNumber(), n.getSid(), n.isPureSip(), n.getOrganizationSid()));
                         if(n.getOrganizationSid().equals(destinationOrganizationSid)){
                             /*
                              * check if request is coming from same org
@@ -126,9 +126,15 @@ public class OrganizationUtil {
                              */
                             if((sourceOrganizationSid != null && sourceOrganizationSid.equals(destinationOrganizationSid)) || (sourceOrganizationSid == null) || !n.isPureSip()){
                                 number = n;
-                                //TODO remove it before merge
-                                logger.info("found number: "+number+" | org: "+n.getOrganizationSid()+" | isPureSip: "+n.isPureSip());
+                                if(logger.isInfoEnabled())
+                                    logger.info(String.format("Found most optimal phone number: Number:Sid = %s:%s", n.getPhoneNumber(), n.getSid()));
+                            }else{
+                                if(logger.isDebugEnabled())
+                                    logger.debug("not allowed to call this number due to organizational restrictions");
                             }
+                        }else{
+                            if(logger.isDebugEnabled())
+                                logger.debug(String.format("getMostOptimalIncomingPhoneNumber: Number:Sid = %s:%s does not belong to requested/destination organization: %s", n.getPhoneNumber(), n.getSid(), destinationOrganizationSid));
                         }
                         if(number != null)
                             break;
@@ -139,8 +145,8 @@ public class OrganizationUtil {
         }catch(Exception e){
             logger.error("Error while trying to retrive getMostOptimalIncomingPhoneNumber: ", e);
         }
-        //TODO remove it before merge
-        logger.info("*********************** getMostOptimalIncomingPhoneNumber ended *********************** "+number);
+        if(logger.isDebugEnabled())
+            logger.debug(String.format("getMostOptimalIncomingPhoneNumber Resut: Found the number? %s | Is this number relevant? %s", number!=null, failCall));
         return new MostOptimalNumberResponse(number, failCall);
     }
 
@@ -152,6 +158,8 @@ public class OrganizationUtil {
      * @return Sid of Organization
      */
     public static Sid getOrganizationSidBySipURIHost(DaoManager storage, final SipURI sipURI){
+        if(logger.isDebugEnabled())
+            logger.debug(String.format("getOrganizationSidBySipURIHost sipURI = %s", sipURI));
         final String organizationDomainName = sipURI.getHost();
         Organization organization = storage.getOrganizationsDao().getOrganizationByDomainName(organizationDomainName);
         return organization == null ? null : organization.getSid();
