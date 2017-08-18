@@ -69,6 +69,7 @@ import static javax.ws.rs.core.Response.status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
 public class AccountsEndpoint extends SecuredEndpoint {
     protected Configuration runtimeConfiguration;

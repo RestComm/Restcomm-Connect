@@ -91,6 +91,7 @@ import akka.event.LoggingAdapter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
+ * @author maria-farooq@live.com (Maria Farooq)
  */
 public final class SmsService extends RestcommUntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);

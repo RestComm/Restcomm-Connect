@@ -48,6 +48,7 @@ import static org.restcomm.connect.dao.DaoUtils.writeUri;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
 @ThreadSafe
 public final class MybatisAccountsDao implements AccountsDao {

@@ -72,6 +72,7 @@ import akka.event.LoggingAdapter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
 public final class SmsSession extends RestcommUntypedActor {
     // Logger
