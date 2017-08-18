@@ -1190,7 +1190,7 @@ public final class CallManager extends RestcommUntypedActor {
         try {
             MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, phone, sourceOrganizationSid);
             number = mostOptimalNumber.number();
-            failCall = mostOptimalNumber.isFailCall();
+            failCall = mostOptimalNumber.isRelevant();
             if(failCall){
                 //number was found but organization was not proper.
                 final SipServletResponse response = request.createResponse(SC_NOT_FOUND);

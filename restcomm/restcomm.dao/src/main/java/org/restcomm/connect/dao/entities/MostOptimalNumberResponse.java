@@ -24,19 +24,26 @@ package org.restcomm.connect.dao.entities;
 public class MostOptimalNumberResponse {
 
     private final IncomingPhoneNumber number;
-    private final boolean failCall;
+    private final boolean relevant;
 
-    public MostOptimalNumberResponse(IncomingPhoneNumber number, boolean failCall) {
+    /**
+     * @param number - number from db
+     * @param relevant - if this number belongs to proper organization as per restrictions or not
+     */
+    public MostOptimalNumberResponse(IncomingPhoneNumber number, boolean relevant) {
         super();
         this.number = number;
-        this.failCall = failCall;
+        this.relevant = relevant;
     }
 
     public IncomingPhoneNumber number() {
         return number;
     }
 
-    public boolean isFailCall() {
-        return failCall;
+    /**
+     * @return true if number belongs to proper organization as per restrictions, or false otherwise
+     */
+    public boolean isRelevant() {
+        return relevant;
     }
 }
