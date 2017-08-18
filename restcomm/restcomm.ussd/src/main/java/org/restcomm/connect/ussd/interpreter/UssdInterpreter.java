@@ -903,7 +903,11 @@ public class UssdInterpreter extends RestcommUntypedActor {
 
             UssdInfoRequest ussdInfoRequest = new UssdInfoRequest(info);
             String ussdText = ussdInfoRequest.getMessage();
-            if (ussdCollectAction != null && !ussdCollectAction.isEmpty() && ussdText != null) {
+            UssdMessageType ussdMsgType = ussdInfoRequest.getUssdMessageType();
+            if ( !ussdMsgType.equals(UssdMessageType.unstructuredSSNotify_Response) &&
+                  ussdCollectAction != null &&
+                  !ussdCollectAction.isEmpty() &&
+                  ussdText != null) {
                 URI target = null;
                 try {
                     target = URI.create(ussdCollectAction);
@@ -946,7 +950,7 @@ public class UssdInterpreter extends RestcommUntypedActor {
                 ussdLanguageTag = null;
                 ussdMessageTags = new LinkedBlockingQueue<Tag>();
                 return;
-            } else if (ussdInfoRequest.getUssdMessageType().equals(UssdMessageType.unstructuredSSNotify_Response)) {
+            } else if (ussdMsgType.equals(UssdMessageType.unstructuredSSNotify_Response)) {
                 UssdRestcommResponse ussdRestcommResponse = new UssdRestcommResponse();
                 ussdRestcommResponse.setErrorCode("1");
                 ussdRestcommResponse.setIsFinalMessage(true);
