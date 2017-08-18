@@ -142,6 +142,7 @@ import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
 import akka.dispatch.Futures;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
