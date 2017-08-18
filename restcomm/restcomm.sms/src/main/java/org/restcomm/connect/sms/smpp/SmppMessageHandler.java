@@ -175,7 +175,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 } else if (appUri != null) {
                     builder.setUrl(UriUtils.resolve(appUri));
                 } else {
-                    logger.error("the matched number doesn't have SMS application attached, number: "+number.getPhoneNumber());
+                    logger.warning("the matched number doesn't have SMS application attached, number: "+number.getPhoneNumber());
                     return false;
                 }
                 builder.setMethod(number.getSmsMethod());
