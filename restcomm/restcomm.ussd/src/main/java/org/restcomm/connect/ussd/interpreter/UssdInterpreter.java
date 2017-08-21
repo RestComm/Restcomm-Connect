@@ -212,6 +212,9 @@ public class UssdInterpreter extends RestcommUntypedActor {
         transitions.add(new Transition(processingInfoRequest, preparingMessage));
         transitions.add(new Transition(processingInfoRequest, ready));
         transitions.add(new Transition(processingInfoRequest, finished));
+        transitions.add(new Transition(processingInfoRequest, disconnecting));
+        transitions.add(new Transition(processingInfoRequest, cancelling));
+        transitions.add(new Transition(processingInfoRequest, notFound));
         transitions.add(new Transition(disconnecting, finished));
 
         // Initialize the FSM.
