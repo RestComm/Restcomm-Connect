@@ -328,6 +328,10 @@ public class UssdCallManager extends RestcommUntypedActor {
             // otherwise the response is coming back to a Voice app hosted by Restcomm
             final ActorRef ussdCall = (ActorRef) application.getAttribute(UssdCall.class.getName());
             ussdCall.tell(response, self);
+        } else {
+            if(logger.isErrorEnabled()){
+                logger.debug("Application invalid "+ message.toString());
+            }
         }
     }
 }
