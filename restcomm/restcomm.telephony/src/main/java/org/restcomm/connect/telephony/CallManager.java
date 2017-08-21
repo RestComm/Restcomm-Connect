@@ -87,7 +87,6 @@ import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
