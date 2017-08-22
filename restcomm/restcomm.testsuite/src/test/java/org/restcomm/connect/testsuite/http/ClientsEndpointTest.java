@@ -187,6 +187,20 @@ public class ClientsEndpointTest {
         Assert.assertTrue("Response should contain 'invalid' term", response.getEntity(String.class).toLowerCase().contains("invalid"));
     }
 
+    @Test
+    public void createClientTestWithIsPushEnabled() throws IOException, ParseException, InterruptedException {
+        Client jersey = getClient(developerUsername, developeerAuthToken);
+        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.add("Login","bob"); // login contains @ sign
+        params.add("Password","RestComm1234!");
+        params.add("IsPushEnabled", "true");
+        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertTrue("Response should contain 'push_client_identity'", response.getEntity(String.class).contains("push_client_identity"));
+    }
+
+
     protected String getResourceUrl(String suffix) {
         String urlString = deploymentUrl.toString();
         if ( urlString.endsWith("/") )
