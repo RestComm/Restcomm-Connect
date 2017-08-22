@@ -22,9 +22,6 @@ import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
-import javax.sdp.SdpFactory;
-import javax.sdp.SdpParseException;
-import javax.sdp.SessionDescription;
 import javax.sip.message.Response;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -186,7 +183,7 @@ public class RestcommActingAsProxyTest {
 
 
     @Test
-    public void testDialNumberToProxyFromClient() throws ParseException, InterruptedException, MalformedURLException, SdpParseException {
+    public void testDialNumberToProxyFromClient() throws ParseException, InterruptedException, MalformedURLException {
         SipCall otherRestcommCall = otherRestcommPhone.createSipCall();
         otherRestcommCall.listenForIncomingCall();
 
@@ -201,13 +198,10 @@ public class RestcommActingAsProxyTest {
             assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
             response = bobCall.getLastReceivedResponse().getStatusCode();
         }
-        SessionDescription sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(bobCall.getLastReceivedResponse().getResponseEvent().getResponse().getRawContent()));
-        assertTrue(!sessionDescription.getConnection().getAddress().matches("192.168.11.99"));
+
         assertTrue(bobCall.sendInviteOkAck());
 
         assertTrue(otherRestcommCall.waitForIncomingCall(10000));
-        sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(otherRestcommCall.getLastReceivedRequest().getRequestEvent().getRequest().getRawContent()));
-        assertTrue(!sessionDescription.getConnection().getAddress().matches("192.168.11.99"));
         assertTrue(otherRestcommCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
         assertTrue(otherRestcommCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
         String receivedBody = new String(otherRestcommCall.getLastReceivedRequest().getRawContent());
@@ -251,7 +245,7 @@ public class RestcommActingAsProxyTest {
     }
 
     @Test
-    public void testDialNumberToProxyFromNonClient() throws ParseException, InterruptedException, MalformedURLException, SdpParseException {
+    public void testDialNumberToProxyFromNonClient() throws ParseException, InterruptedException, MalformedURLException {
         SipCall georgeCall = georgePhone.createSipCall();
         georgeCall.listenForIncomingCall();
 
@@ -266,13 +260,10 @@ public class RestcommActingAsProxyTest {
             assertTrue(henriqueCall.waitOutgoingCallResponse(5 * 1000));
             response = henriqueCall.getLastReceivedResponse().getStatusCode();
         }
-        SessionDescription sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(henriqueCall.getLastReceivedResponse().getResponseEvent().getResponse().getRawContent()));
-        assertTrue(sessionDescription.getConnection().getAddress().matches("192.168.11.99"));
+
         assertTrue(henriqueCall.sendInviteOkAck());
 
         assertTrue(georgeCall.waitForIncomingCall(10000));
-        sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(georgeCall.getLastReceivedRequest().getRequestEvent().getRequest().getRawContent()));
-        assertTrue(sessionDescription.getConnection().getAddress().matches("192.168.11.99"));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
         String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
