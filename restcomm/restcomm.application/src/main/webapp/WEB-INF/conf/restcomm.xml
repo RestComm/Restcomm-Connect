@@ -200,8 +200,8 @@
 		<!-- Using this feature, Restcomm will keep RMS in the path-->
 		<acting-as-proxy>
 			<enabled>false</enabled>
-			<!-- If set to true, From header will be used to extract the From URI, otherwise Contact header will be used. Default value is true-->
-			<use-contact-header>false</use-contact-header>
+			<!-- If set to true, From header will be used to extract the From URI, otherwise Contact header will be used-->
+			<use-from-header>true</use-from-header>
 			<proxy-rules>
 				<rule>
 					<from-uri></from-uri>
@@ -209,8 +209,6 @@
 					<!-- Optionally provide username -->
 					<proxy-to-username></proxy-to-username>
 					<proxy-to-password></proxy-to-password>
-					<!-- Control whether or not to patch the SDP for this rule. Default value is null and Restcomm will patch SDP -->
-					<patch-sdp></patch-sdp>
 				</rule>
 				<rule>
 					<from-uri></from-uri>
@@ -218,8 +216,6 @@
 					<!-- Optionally provide username -->
 					<proxy-to-username></proxy-to-username>
 					<proxy-to-password></proxy-to-password>
-					<!-- Control whether or not to patch the SDP for this rule. Default value is null and Restcomm will patch SDP -->
-					<patch-sdp></patch-sdp>
 				</rule>
 			</proxy-rules>
 		</acting-as-proxy>
@@ -264,6 +260,12 @@
 			 or send appropriate response according to the response from outbound dial-->
 		<!--  https://github.com/RestComm/Restcomm-Connect/issues/1649 -->
 		<enable-200-ok-delay>false</enable-200-ok-delay>
+
+		<push-notification-server-enabled>false</push-notification-server-enabled>
+		<!-- Path to Restcomm Push Notification Server (Notification API) -->
+		<push-notification-server-url></push-notification-server-url>
+		<!-- Delay in milliseconds to wait for all callee's mobile applications will wake up -->
+		<push-notification-server-delay></push-notification-server-delay>
 
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->

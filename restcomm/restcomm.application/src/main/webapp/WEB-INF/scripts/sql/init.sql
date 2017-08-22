@@ -168,7 +168,8 @@ CREATE TABLE "restcomm_clients" (
 "voice_fallback_url" MEDIUMTEXT,
 "voice_fallback_method" VARCHAR(4),
 "voice_application_sid" VARCHAR(34),
-"uri" MEDIUMTEXT NOT NULL
+"uri" MEDIUMTEXT NOT NULL,
+"push_client_identity" VARCHAR(34)
 );
 
 CREATE TABLE "restcomm_registrations" (
