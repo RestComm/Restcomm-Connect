@@ -1651,6 +1651,10 @@ public final class Call extends RestcommUntypedActor {
                         ack.setRequestURI(uri);
                     }
                 } else if (!ack.getHeaders("Route").hasNext()) {
+                    if (logger.isInfoEnabled()) {
+                        String msg = String.format("At UpdatingMediaSession method, ACK request for 200 OK doesn't contain Route headers. Will check original INVITE RURI");
+                        logger.info(msg);
+                    }
                     final SipServletRequest originalInvite = response.getRequest();
                     final SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
                     if ((SipURI) session.getAttribute("realInetUri") == null) {
@@ -1669,6 +1673,18 @@ public final class Call extends RestcommUntypedActor {
                     }
                         realInetUri.setUser(((SipURI) ack.getRequestURI()).getUser());
                         ack.setRequestURI(realInetUri);
+                    } else {
+                        if (realInetUri == null) {
+                            if (logger.isInfoEnabled()) {
+                                String msg = String.format("At UpdatingMediaSession method, ACK request for 200 OK will NOT patched because original INVITE RURI is null");
+                                logger.info(msg);
+                            }
+                        } else {
+                            if (logger.isInfoEnabled()) {
+                                String msg = String.format("At UpdatingMediaSession method, ACK request for 200 OK will NOT patched, ackRURI: %s, ackRURIPort: %s", ackRURI.getHostAddress(), ackRURIPort);
+                                logger.info(msg);
+                            }
+                        }
                     }
                 }
                 ack.send();
