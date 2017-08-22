@@ -68,7 +68,7 @@ public class OrganizationUtil {
                 logger.error("destinationOrganizationSid is NULL: request Uri is: "+(SipURI)request.getRequestURI()+ " To Uri is: "+(SipURI)request.getTo());
             }else{
                 if(logger.isDebugEnabled())
-                    logger.debug("getMostOptimalIncomingPhoneNumber: sourceOrganizationSid: "+sourceOrganizationSid+" : destinationOrganizationSid: "+destinationOrganizationSid +" request Uri is: "+(SipURI)request.getRequestURI()+ " To Uri is: "+(SipURI)request.getTo());
+                    logger.debug("getMostOptimalIncomingPhoneNumber: sourceOrganizationSid: "+sourceOrganizationSid+" : destinationOrganizationSid: "+destinationOrganizationSid +" request Uri is: "+(SipURI)request.getRequestURI()+ " To Uri is: "+(SipURI)request.getTo().getURI());
 
                 // Format the destination to an E.164 phone number.
                 final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
