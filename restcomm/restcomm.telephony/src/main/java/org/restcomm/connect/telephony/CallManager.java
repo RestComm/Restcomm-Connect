@@ -147,12 +147,7 @@ import java.util.regex.Pattern;
 
 import static akka.pattern.Patterns.ask;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_ACCEPTED;
-import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_SERVER_INTERNAL_ERROR;
+import static javax.servlet.sip.SipServletResponse.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -219,7 +214,7 @@ public final class CallManager extends RestcommUntypedActor {
 
     private boolean actAsProxyOut;
     private List<ProxyRule> proxyOutRules;
-    private boolean isActAsProxyOutUseContactHeader;
+    private boolean isActAsProxyOutUseFromHeader;
 
     // Push notification server
     private boolean pushNotificationServerEnabled;
@@ -357,7 +352,7 @@ public final class CallManager extends RestcommUntypedActor {
             final Configuration proxyOutRulesConf = proxyConfiguration.subset("proxy-rules");
             this.actAsProxyOut = proxyConfiguration.getBoolean("enabled", false);
             if (actAsProxyOut) {
-                isActAsProxyOutUseContactHeader = proxyConfiguration.getBoolean("use-contact-header", true);
+                isActAsProxyOutUseFromHeader = proxyConfiguration.getBoolean("use-from-header", true);
                 proxyOutRules = new ArrayList<ProxyRule>();
 
                 List<HierarchicalConfiguration> rulesList = ((HierarchicalConfiguration) proxyOutRulesConf).configurationsAt("rule");
@@ -366,8 +361,7 @@ public final class CallManager extends RestcommUntypedActor {
                     String toHost = rule.getString("to-uri");
                     final String username = rule.getString("proxy-to-username");
                     final String password = rule.getString("proxy-to-password");
-                    final boolean patchSdp = rule.getBoolean("patch-sdp", true);
-                    ProxyRule proxyRule = new ProxyRule(fromHost, toHost, username, password, patchSdp);
+                    ProxyRule proxyRule = new ProxyRule(fromHost, toHost, username, password);
                     proxyOutRules.add(proxyRule);
                 }
 
@@ -415,7 +409,7 @@ public final class CallManager extends RestcommUntypedActor {
                 @Override
                 public UntypedActor create() throws Exception {
                     return new Call(sipFactory, msControllerFactory, configuration,
-                            null, null, null, actAsProxyOut, proxyOutRules, null);
+                            null, null, null, null);
                 }
             });
         } else {
@@ -425,7 +419,7 @@ public final class CallManager extends RestcommUntypedActor {
                 @Override
                 public UntypedActor create() throws Exception {
                     return new Call(sipFactory, msControllerFactory, configuration,
-                            request.statusCallback(), request.statusCallbackMethod(), request.statusCallbackEvent(), actAsProxyOut, proxyOutRules, request.getOutboundProxyHeaders());
+                            request.statusCallback(), request.statusCallbackMethod(), request.statusCallbackEvent(), request.getOutboundProxyHeaders());
                 }
             });
         }
@@ -846,7 +840,7 @@ public final class CallManager extends RestcommUntypedActor {
 
         SipURI fromUri = null;
         try {
-            if (!isActAsProxyOutUseContactHeader) {
+            if (isActAsProxyOutUseFromHeader) {
                 fromUri = ((SipURI) request.getFrom().getURI());
             } else {
                 fromUri = ((SipURI) request.getAddressHeader("Contact").getURI());
