@@ -1514,8 +1514,38 @@ public final class Call extends RestcommUntypedActor {
     private CreateMediaSession generateRequest(SipServletMessage sipMessage) throws IOException, SdpException, ServletParseException {
         final byte[] sdp = sipMessage.getRawContent();
         String offer = SdpUtils.getSdp(sipMessage.getContentType(), sipMessage.getRawContent());
-        if (!disableSdpPatchingOnUpdatingMediaSession) {
-        String externalIp = null;
+
+
+        ProxyRule matchedProxyRule = null;
+        if (actingAsProxy && (proxyRules != null && proxyRules.size()>0) ) {
+            matchedProxyRule = getSipMessageMatchProxyOutRules(sipMessage);
+        }
+
+        boolean patchSdp = true;
+        boolean isProxyRuleSdpUri = false;
+
+        if (matchedProxyRule != null) {
+            isProxyRuleSdpUri = !matchedProxyRule.getPatchSdpUri().isEmpty() && !matchedProxyRule.getPatchSdpUri().equalsIgnoreCase("");
+        }
+
+        if (disableSdpPatchingOnUpdatingMediaSession)
+            // disableSdpPatchingOnUpdatingMediaSession = true so we will set patchSdp = false
+            patchSdp = false;
+        if (matchedProxyRule != null && isProxyRuleSdpUri )
+            patchSdp = false;
+
+        if (logger.isInfoEnabled()) {
+            String msg;
+            if (matchedProxyRule != null) {
+                msg = String.format("on generateRequest for updatingMediaSession method will patchSdp=%s for the outgoing INVITE, disableSdpPatchingOnUpdatingMediaSession is %s, and matchedProxyRule.isPatchSdp() is %s", patchSdp, disableSdpPatchingOnUpdatingMediaSession, isProxyRuleSdpUri);
+            } else {
+                msg = String.format("on generateRequest for updatingMediaSession method will patchSdp=%s for the outgoing INVITE, disableSdpPatchingOnUpdatingMediaSession is %s, and matchedProxyRule is NULL", patchSdp, disableSdpPatchingOnUpdatingMediaSession);
+            }
+            logger.info(msg);
+        }
+
+        if (patchSdp) {
+            String externalIp = null;
             final SipURI externalSipUri = (SipURI) sipMessage.getSession().getAttribute("realInetUri");
             if (externalSipUri != null) {
                 if (logger.isInfoEnabled()) {
@@ -1523,13 +1553,29 @@ public final class Call extends RestcommUntypedActor {
                 }
                 externalIp = externalSipUri.getHost().toString();
             } else {
-               externalIp = sipMessage.getInitialRemoteAddr();
+                externalIp = sipMessage.getInitialRemoteAddr();
                 if (logger.isInfoEnabled()) {
                     logger.info("ExternalSipUri stored in the session was null, will use the message InitialRemoteAddr: " + externalIp);
                 }
+            }
+            offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("on generateRequest for updatingMediaSession method, SDP patched with external address %s", externalIp);
+                logger.info(msg);
+            }
+        } else if (matchedProxyRule != null && isProxyRuleSdpUri) {
+//            offer = SdpUtils.patch(sipMessage.getContentType(), sdp, matchedProxyRule.getPatchSdpUri());
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("on generateRequest for updatingMediaSession method, matchedProxyRule.isPatchSdp() is %s WILL NOT patch SDP", isProxyRuleSdpUri);
+                logger.info(msg);
+            }
+        } else {
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("on generateRequest for updatingMediaSession method, WILL NOT patch SDP");
+                logger.info(msg);
+            }
         }
-        offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
-        }
+
         return new CreateMediaSession("sendrecv", offer, false, webrtc, inboundCallSid);
     }
 
