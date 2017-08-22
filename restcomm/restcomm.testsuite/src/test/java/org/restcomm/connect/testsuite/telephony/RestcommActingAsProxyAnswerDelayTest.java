@@ -217,7 +217,7 @@ public class RestcommActingAsProxyAnswerDelayTest {
 
         assertTrue(otherRestcommCall.waitForIncomingCall(10000));
         SessionDescription sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(otherRestcommCall.getLastReceivedRequest().getRequestEvent().getRequest().getRawContent()));
-        assertTrue(!sessionDescription.getConnection().getAddress().matches("192.168.11.99"));
+        assertTrue(sessionDescription.getConnection().getAddress().equalsIgnoreCase("127.0.0.1"));
         assertTrue(otherRestcommCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
         assertTrue(otherRestcommCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
         assertTrue(otherRestcommCall.sendIncomingCallResponse(Response.OK, "George-OK", 3600, body2, "application", "sdp",
@@ -230,7 +230,7 @@ public class RestcommActingAsProxyAnswerDelayTest {
             response = bobCall.getLastReceivedResponse().getStatusCode();
         }
         sessionDescription = SdpFactory.getInstance().createSessionDescription(new String(bobCall.getLastReceivedResponse().getResponseEvent().getResponse().getRawContent()));
-        assertTrue(!sessionDescription.getConnection().getAddress().matches("192.168.11.99"));
+        assertTrue(sessionDescription.getConnection().getAddress().equalsIgnoreCase("127.0.0.1"));
         assertTrue(bobCall.sendInviteOkAck());
 
         assertTrue(otherRestcommCall.waitForAck(50000));

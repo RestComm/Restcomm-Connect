@@ -366,8 +366,8 @@ public final class CallManager extends RestcommUntypedActor {
                     String toHost = rule.getString("to-uri");
                     final String username = rule.getString("proxy-to-username");
                     final String password = rule.getString("proxy-to-password");
-                    final boolean patchSdp = rule.getBoolean("patch-sdp", true);
-                    ProxyRule proxyRule = new ProxyRule(fromHost, toHost, username, password, patchSdp);
+                    final String patchSdpUri = rule.getString("patch-sdp");
+                    ProxyRule proxyRule = new ProxyRule(fromHost, toHost, username, password, patchSdpUri);
                     proxyOutRules.add(proxyRule);
                 }
 

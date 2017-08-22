@@ -89,8 +89,8 @@
 					<!-- Optionally provide username -->
 					<proxy-to-username></proxy-to-username>
 					<proxy-to-password></proxy-to-password>
-					<!-- Control whether or not to patch the SDP for this rule. Default value is true -->
-					<patch-sdp>false</patch-sdp>
+					<!-- Control whether or not to patch the SDP for this rule. Default value is null and Restcomm will patch SDP -->
+					<patch-sdp>127.0.0.1</patch-sdp>
 				</rule>
 				<!-- from RC instance A (5091) to ProxyA (5090) -->
 				<rule>
@@ -99,8 +99,8 @@
 					<!-- Optionally provide username -->
 					<proxy-to-username></proxy-to-username>
 					<proxy-to-password></proxy-to-password>
-					<!-- Control whether or not to patch the SDP for this rule. Default value is true -->
-					<patch-sdp>false</patch-sdp>
+					<!-- Control whether or not to patch the SDP for this rule. Default value is null and Restcomm will patch SDP -->
+					<patch-sdp>127.0.0.1</patch-sdp>
 				</rule>
 				<rule>
 					<from-uri>127.0.0.1:5092</from-uri>
@@ -108,8 +108,8 @@
 					<!-- Optionally provide username -->
 					<proxy-to-username></proxy-to-username>
 					<proxy-to-password></proxy-to-password>
-					<!-- Control whether or not to patch the SDP for this rule. Default value is true -->
-					<patch-sdp>true</patch-sdp>
+					<!-- Control whether or not to patch the SDP for this rule. Default value is null and Restcomm will patch SDP -->
+					<patch-sdp></patch-sdp>
 				</rule>
 				<rule>
 					<from-uri>127.0.0.1:5070</from-uri>
@@ -117,8 +117,8 @@
 					<!-- Optionally provide username -->
 					<proxy-to-username></proxy-to-username>
 					<proxy-to-password></proxy-to-password>
-					<!-- Control whether or not to patch the SDP for this rule. Default value is true -->
-					<patch-sdp>true</patch-sdp>
+					<!-- Control whether or not to patch the SDP for this rule. Default value is null and Restcomm will patch SDP -->
+					<patch-sdp></patch-sdp>
 				</rule>
 			</proxy-rules>
 		</acting-as-proxy>
