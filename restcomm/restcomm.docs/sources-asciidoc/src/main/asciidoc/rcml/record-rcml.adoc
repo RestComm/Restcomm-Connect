@@ -2,7 +2,9 @@
 
 [[record]]
 == Record
-The *<Record>* verb records the caller's voice and returns to you the URL of a file containing the audio recording.
+The *<Record>* verb records the caller's audio and video*, returning the URL of a file containing the audio and/or video* recording.
+
+IMPORTANT: * Video is supported only when Restcomm is configured to use Dialogic's PowerMedia XMS media server.
 
 === Record Attributes
 
@@ -17,6 +19,7 @@ The *<Record>* verb records the caller's voice and returns to you the URL of a f
 |transcribe |true, false |false
 |transcribeCallback |relative or absolute URL |none
 |playBeep |true, false |true
+|media |audio_only, video_only, audio_video |audio_only
 |===================================================================================
 
 * *action.* The 'action' attribute takes an absolute or relative URL as a value. When recording is finished RestComm will make a GET or POST request to this URL including the parameters below. If no 'action' is provided, <Record> will default to requesting the current document's URL. After making this request, RestComm will continue the current call using the RCML received in your response. Any RCML verbs occuring after a <Record> are unreachable. There is one exception: if RestComm receives an empty recording, it will not make a request to the 'action' URL. The current call flow will continue with the next verb in the current RCML document.
@@ -50,6 +53,10 @@ The *<Record>* verb records the caller's voice and returns to you the URL of a f
 |=============================================================================================
 
 * *playBeep.* The 'playBeep' attribute allows you to toggle between playing a sound before the start of a recording.
+* *media.* The 'media' attribute defines the which kind of information will be stored. Choose 'audio_only' so store a WAV file containing audio; 'video_only' to store a MP4 file containing vide; 'audio_video' to store a MP4 file containing audio and video*.
+
+IMPORTANT: * Video is supported only when Restcomm is configured to use Dialogic's PowerMedia XMS media server.
+
 * *Nesting.* The <Record> verb can not have any other verbs or nouns nested.
 
 === Examples
