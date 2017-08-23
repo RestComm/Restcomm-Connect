@@ -1846,25 +1846,8 @@ public class DialForkTest {
         assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique", 3600));
         assertTrue(henriqueCall.sendIncomingCallResponse(486, "Busy Here-Henrique", 3600));
         assertTrue(henriqueCall.waitForAck(50 * 1000));
-        //No one will answer the call and RCML will move to the next verb to call Fotini
-
-//        assertTrue(georgeCall.listenForCancel());
-//        assertTrue(aliceCall.listenForCancel());
-//        assertTrue(henriqueCall.listenForCancel());
-//
-//        Thread.sleep(1000);
-//
-//        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
-//        SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(50 * 1000);
-//        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
-//        assertNotNull(georgeCancelTransaction);
-//        assertNotNull(aliceCancelTransaction);
-//        assertNotNull(henriqueCancelTransaction);
-//        georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
-//        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
-//        henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
-
-        assertTrue(alicePhone.unregister(aliceContact, 3600));
+        //No one will answer the call and VoiceInterpreter will finish the call
+        
 
 //        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
 //        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
@@ -1885,7 +1868,7 @@ public class DialForkTest {
 
         int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        //Even though no call answered the dial forking the originated call from Bob should be still live
+        //No call should remain live
         logger.info("&&&& LiveCalls: "+liveCalls);
         logger.info("&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertEquals(2, liveCalls);
