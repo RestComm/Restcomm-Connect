@@ -207,7 +207,7 @@
   </update>
   <update id="updateInCompleteCallDetailRecordsToCompletedByInstanceId" parameterType="string">
     UPDATE "restcomm_call_detail_records"
-      SET "status"='COMPLETED'
+      SET "status"='completed'
       WHERE "instanceid"=#{instanceid} AND (UPPER("status") = ('IN_PROGRESS') OR 
         UPPER("status") = ('IN-PROGRESS') OR UPPER("status") = ('RINGING') OR UPPER("status") = ('QUEUED'));
   </update>
