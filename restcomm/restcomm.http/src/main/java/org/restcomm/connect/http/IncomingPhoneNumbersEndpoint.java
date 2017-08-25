@@ -242,9 +242,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
     }
 
     protected Response getIncomingPhoneNumber(final String accountSid, final String sid, final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
+        secure(operatedAccount, "RestComm:Read:IncomingPhoneNumbers");
         try{
-            Account operatedAccount = accountsDao.getAccount(accountSid);
-            secure(operatedAccount, "RestComm:Read:IncomingPhoneNumbers");
             final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
             if (incomingPhoneNumber == null) {
                 return status(NOT_FOUND).build();
@@ -287,11 +287,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
     }
 
     protected Response getIncomingPhoneNumbers(final String accountSid, final PhoneNumberType phoneNumberType, UriInfo info,
-            final MediaType responseType) {
+        final MediaType responseType) {
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
         try{
-
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
-
             String phoneNumberFilter = info.getQueryParameters().getFirst("PhoneNumber");
             String friendlyNameFilter = info.getQueryParameters().getFirst("FriendlyName");
             String page = info.getQueryParameters().getFirst("Page");
@@ -340,15 +338,15 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
     }
 
     protected Response putIncomingPhoneNumber(final String accountSid, final MultivaluedMap<String, String> data,
-            PhoneNumberType phoneNumberType, final MediaType responseType) {
+        PhoneNumberType phoneNumberType, final MediaType responseType) {
+        Account account = accountsDao.getAccount(accountSid);
+        secure(account, "RestComm:Create:IncomingPhoneNumbers");
+        try {
+            validate(data);
+        } catch (final NullPointerException exception) {
+            return status(BAD_REQUEST).entity(exception.getMessage()).build();
+        }
         try{
-            Account account = accountsDao.getAccount(accountSid);
-            secure(account, "RestComm:Create:IncomingPhoneNumbers");
-            try {
-                validate(data);
-            } catch (final NullPointerException exception) {
-                return status(BAD_REQUEST).entity(exception.getMessage()).build();
-            }
             String number = data.getFirst("PhoneNumber");
             String isSIP = data.getFirst("isSIP");
             // cater to SIP numbers
@@ -434,9 +432,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
 
     public Response updateIncomingPhoneNumber(final String accountSid, final String sid,
             final MultivaluedMap<String, String> data, final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
+        secure(operatedAccount, "RestComm:Modify:IncomingPhoneNumbers");
         try{
-            Account operatedAccount = accountsDao.getAccount(accountSid);
-            secure(operatedAccount, "RestComm:Modify:IncomingPhoneNumbers");
             final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
             if (incomingPhoneNumber == null) {
                 return status(NOT_FOUND).build();
@@ -600,9 +598,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
     }
 
     public Response deleteIncomingPhoneNumber(final String accountSid, final String sid) {
-        try{
             Account operatedAccount = accountsDao.getAccount(accountSid);
             secure(operatedAccount, "RestComm:Delete:IncomingPhoneNumbers");
+        try{
             final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
             if (incomingPhoneNumber == null) {
                 return status(NOT_FOUND).build();
