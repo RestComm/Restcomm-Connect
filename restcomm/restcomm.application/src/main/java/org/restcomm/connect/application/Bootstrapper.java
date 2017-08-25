@@ -1,17 +1,26 @@
 package org.restcomm.connect.application;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
+import java.net.UnknownHostException;
+import java.util.List;
+import java.util.Properties;
+
+import javax.media.mscontrol.MsControlException;
+import javax.media.mscontrol.MsControlFactory;
+import javax.media.mscontrol.spi.Driver;
+import javax.media.mscontrol.spi.DriverManager;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipServletContextEvent;
+import javax.servlet.sip.SipServletListener;
+import javax.servlet.sip.SipURI;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.SipConnector;
 import org.restcomm.connect.application.config.ConfigurationStringLookup;
 import org.restcomm.connect.commons.Version;
@@ -32,21 +41,16 @@ import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.MediaServerInfo;
 import org.restcomm.connect.mscontrol.jsr309.Jsr309ControllerFactory;
 import org.restcomm.connect.mscontrol.mms.MmsControllerFactory;
-import scala.concurrent.ExecutionContext;
 
-import javax.media.mscontrol.MsControlException;
-import javax.media.mscontrol.MsControlFactory;
-import javax.media.mscontrol.spi.Driver;
-import javax.media.mscontrol.spi.DriverManager;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.sip.SipServlet;
-import javax.servlet.sip.SipServletContextEvent;
-import javax.servlet.sip.SipServletListener;
-import javax.servlet.sip.SipURI;
-import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Properties;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import scala.concurrent.ExecutionContext;
 
 /**
  *
@@ -250,23 +254,23 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
      */
     private boolean generateDefaultDomainName (final Configuration configuration, final DaoManager storage) {
         try{
-            final String defaultOrganization = "ORafbe225ad37541eba518a74248f0ac4c";
-
+            final Sid defaultOrganization = new Sid("ORafbe225ad37541eba518a74248f0ac4c");
             final String hostname = configuration.getString("hostname");
-            Organization organization = storage.getOrganizationsDao().getOrganization(new Sid(defaultOrganization));
-            if(organization != null){
-                if(hostname != null && !hostname.trim().equals("")){
-                    if(logger.isInfoEnabled())
-                        logger.info("Generate Default Domain Name based on RC hostname: "+hostname);
-                    organization = organization.setDomainName(hostname);
-                    storage.getOrganizationsDao().updateOrganization(organization);
-                }else{
-                    logger.error("Unable to generateDefaultDomainName hostname property is null in restcomm.xml");
-                    return false;
-                }
+
+            if(hostname != null && !hostname.trim().equals("")){
+                if(logger.isInfoEnabled())
+                    logger.info("Generate Default Domain Name based on RC hostname: "+hostname);
             }else{
-                logger.error("Unable to generateDefaultDomainName default org not found");
+                logger.error("Unable to generateDefaultDomainName hostname property is null in restcomm.xml");
                 return false;
+            }
+
+            Organization organization = storage.getOrganizationsDao().getOrganization(defaultOrganization);
+            if(organization == null){
+                storage.getOrganizationsDao().addOrganization(new Organization(defaultOrganization, hostname, DateTime.now(), DateTime.now()));
+            }else{
+                organization = organization.setDomainName(hostname);
+                storage.getOrganizationsDao().updateOrganization(organization);
             }
         }catch(Exception e){
             logger.error("Unable to generateDefaultDomainName {}", e);
@@ -410,7 +414,11 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             monitoring.tell(instanceId, null);
             RestcommConfiguration.getInstance().getMain().setInstanceId(instanceId.getId().toString());
 
-            generateDefaultDomainName(xml.subset("http-client"), storage);
+            if(!generateDefaultDomainName(xml.subset("http-client"), storage)){
+                logger.error("Unable to generate DefaultDomainName, Restcomm Akka system will exit now...");
+                system.shutdown();
+                system.awaitTermination();
+            }
 
             // https://github.com/RestComm/Restcomm-Connect/issues/1285 Pass InstanceId to the Load Balancer for LCM stickiness
             SipConnector[] connectors = (SipConnector[]) context.getAttribute("org.mobicents.servlet.sip.SIP_CONNECTORS");
