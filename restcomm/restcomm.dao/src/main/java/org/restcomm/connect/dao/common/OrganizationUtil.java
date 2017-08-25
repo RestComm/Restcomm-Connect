@@ -117,27 +117,29 @@ public class OrganizationUtil {
                 if(numbers != null && !numbers.isEmpty()){
                     // find number in same organization
                     for(IncomingPhoneNumber n : numbers){
-                        if(logger.isDebugEnabled())
-                            logger.debug(String.format("getMostOptimalIncomingPhoneNumber: Got a similar number from DB: Analysis report: Number:Sid = %s:%s | Is Number pure sip? %s | Number's organizations: %s", n.getPhoneNumber(), n.getSid(), n.isPureSip(), n.getOrganizationSid()));
-                        if(n.getOrganizationSid().equals(destinationOrganizationSid)){
-                            /*
-                             * check if request is coming from same org
-                             * if not then only allow provider numbers
-                             */
-                            if((sourceOrganizationSid != null && sourceOrganizationSid.equals(destinationOrganizationSid)) || (sourceOrganizationSid == null) || !n.isPureSip()){
-                                number = n;
-                                if(logger.isInfoEnabled())
-                                    logger.info(String.format("Found most optimal phone number: Number:Sid = %s:%s", n.getPhoneNumber(), n.getSid()));
+                        if(n != null){
+                            if(logger.isDebugEnabled())
+                                logger.debug(String.format("getMostOptimalIncomingPhoneNumber: Got a similar number from DB: Analysis report: Number:Sid = %s : %s | Is Number pure sip? %s | Number's organizations: %s", n.getPhoneNumber(), n.getSid(), n.isPureSip(), n.getOrganizationSid()));
+                            if(n.getOrganizationSid().equals(destinationOrganizationSid)){
+                                /*
+                                 * check if request is coming from same org
+                                 * if not then only allow provider numbers
+                                 */
+                                if((sourceOrganizationSid != null && sourceOrganizationSid.equals(destinationOrganizationSid)) || (sourceOrganizationSid == null) || !n.isPureSip()){
+                                    number = n;
+                                    if(logger.isInfoEnabled())
+                                        logger.info(String.format("Found most optimal phone number: Number:Sid = %s : %s", n.getPhoneNumber(), n.getSid()));
+                                }else{
+                                    if(logger.isDebugEnabled())
+                                        logger.debug("not allowed to call this number due to organizational restrictions");
+                                }
                             }else{
                                 if(logger.isDebugEnabled())
-                                    logger.debug("not allowed to call this number due to organizational restrictions");
+                                    logger.debug(String.format("getMostOptimalIncomingPhoneNumber: Number:Sid = %s : %s does not belong to requested/destination organization: %s", n.getPhoneNumber(), n.getSid(), destinationOrganizationSid));
                             }
-                        }else{
-                            if(logger.isDebugEnabled())
-                                logger.debug(String.format("getMostOptimalIncomingPhoneNumber: Number:Sid = %s:%s does not belong to requested/destination organization: %s", n.getPhoneNumber(), n.getSid(), destinationOrganizationSid));
+                            if(number != null)
+                                break;
                         }
-                        if(number != null)
-                            break;
                     }
                     failCall = number == null;
                 }
