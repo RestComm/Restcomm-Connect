@@ -506,13 +506,11 @@ public final class CallManager extends RestcommUntypedActor {
         final SipURI fromUri = (SipURI) request.getFrom().getURI();
         Sid sourceOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromUri);
         if(logger.isDebugEnabled()) {
-            logger.debug("sourceOrganizationSid: " + sourceOrganizationSid);
+            logger.debug("sourceOrganizationSid: " + sourceOrganizationSid +" fromUri: "+fromUri);
         }
         if(sourceOrganizationSid == null){
-            logger.error("Null Organization: fromUri: "+fromUri);
-        }
-        if(logger.isDebugEnabled()) {
-            logger.debug("sourceOrganizationSid: " + sourceOrganizationSid);
+            if(logger.isInfoEnabled()) {
+                logger.info("Null Organization, call is probably coming from a provider: fromUri: "+fromUri);
         }
         final String fromUser = fromUri.getUser();
         final ClientsDao clients = storage.getClientsDao();
