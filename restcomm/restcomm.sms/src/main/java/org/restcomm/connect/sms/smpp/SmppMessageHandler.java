@@ -126,13 +126,10 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         final ActorRef self = self();
 
         String to = request.getSmppTo();
-        final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
-        List<IncomingPhoneNumber> numbers = numbersDao.getIncomingPhoneNumber(to);
-        IncomingPhoneNumber number = numbers.get(0);
 
         if( redirectToHostedSmsApp(self,request, storage.getAccountsDao(), storage.getApplicationsDao(),to  )){
             if(logger.isInfoEnabled()) {
-                logger.info("SMPP Message Accepted - A Restcomm Hosted App is Found for Number : " + number.getPhoneNumber() );
+                logger.info("SMPP Message Accepted - A Restcomm Hosted App is Found for Number : " + to );
             }
             return;
         } else {
