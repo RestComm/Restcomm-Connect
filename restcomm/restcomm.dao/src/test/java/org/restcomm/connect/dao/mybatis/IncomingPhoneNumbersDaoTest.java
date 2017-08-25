@@ -66,7 +66,7 @@ public class IncomingPhoneNumbersDaoTest {
     public void createReadUpdateDelete() {
         final Sid sid = Sid.generate(Sid.Type.PHONE_NUMBER);
         Sid account = Sid.generate(Sid.Type.ACCOUNT);
-        Sid application = Sid.generate(Sid.Type.APPLICATION);
+        Sid application = Sid.generate(Sid.Type.APPLICATION);     
         URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
         String method = "GET";
         final IncomingPhoneNumber.Builder builder = IncomingPhoneNumber.builder();
@@ -90,6 +90,7 @@ public class IncomingPhoneNumbersDaoTest {
         builder.setSmsFallbackMethod(method);
         builder.setSmsApplicationSid(application);
         builder.setUri(url);
+        builder.setOrganizationSid(Sid.generate(Sid.Type.ORGANIZATION));
         IncomingPhoneNumber number = builder.build();
         final IncomingPhoneNumbersDao numbers = manager.getIncomingPhoneNumbersDao();
         // Create a new incoming phone number in the data store.
@@ -203,6 +204,7 @@ public class IncomingPhoneNumbersDaoTest {
         builder.setSmsFallbackMethod(method);
         builder.setSmsApplicationSid(application);
         builder.setUri(url);
+        builder.setOrganizationSid(Sid.generate(Sid.Type.ORGANIZATION));
         IncomingPhoneNumber number = builder.build();
         final IncomingPhoneNumbersDao numbers = manager.getIncomingPhoneNumbersDao();
         // Create a new incoming phone number in the data store.
@@ -248,6 +250,7 @@ public class IncomingPhoneNumbersDaoTest {
         builder.setSmsFallbackMethod(method);
         builder.setSmsApplicationSid(application);
         builder.setUri(url);
+        builder.setOrganizationSid(Sid.generate(Sid.Type.ORGANIZATION));
         IncomingPhoneNumber number = builder.build();
         final IncomingPhoneNumbersDao numbers = manager.getIncomingPhoneNumbersDao();
         // Create a new incoming phone number in the data store.

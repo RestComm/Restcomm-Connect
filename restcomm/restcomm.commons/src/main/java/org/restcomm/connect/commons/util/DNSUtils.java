@@ -39,7 +39,7 @@ public class DNSUtils {
         synchronized (DNSUtils.class) {
             if (!initialized) {
                 String configClass = conf.getString("dns-util[@class]");
-                dnsUtilImplClassName = configClass == null ? DEFAULT_DNS_UTIL_CLASS_NAME : configClass;
+                dnsUtilImplClassName = (configClass == null || configClass.trim().equals("")) ? DEFAULT_DNS_UTIL_CLASS_NAME : configClass;
                 initialized = true;
             }
         }
