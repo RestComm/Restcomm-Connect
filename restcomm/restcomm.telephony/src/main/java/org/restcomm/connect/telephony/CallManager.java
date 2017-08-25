@@ -509,7 +509,7 @@ public final class CallManager extends RestcommUntypedActor {
             logger.debug("sourceOrganizationSid: " + sourceOrganizationSid +" fromUri: "+fromUri);
         }
         if(sourceOrganizationSid == null){
-            if(logger.isInfoEnabled()) {
+            if(logger.isInfoEnabled())
                 logger.info("Null Organization, call is probably coming from a provider: fromUri: "+fromUri);
         }
         final String fromUser = fromUri.getUser();
