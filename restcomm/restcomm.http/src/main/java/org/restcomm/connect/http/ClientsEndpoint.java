@@ -210,11 +210,6 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             return status(CONFLICT)
                     .entity("A client with the same name was already created by another account. Please, choose a different name and try again.")
                     .build();
-        } else {
-            // we can create a client with same name only once.
-            return status(CONFLICT)
-                    .entity("A client with the same name was already created. Please, choose a different name and try again.")
-                    .build();
         }
 
         if (APPLICATION_XML_TYPE == responseType) {
