@@ -385,6 +385,7 @@
 			<swedish>sv-se</swedish>
 		</languages>
 	</voicerss>
+	<dns-util class="org.restcomm.connect.commons.util.mock.InetAddressMock"/>
 
 
 	<!-- AT&T Speech Synthesizer plugin -->
