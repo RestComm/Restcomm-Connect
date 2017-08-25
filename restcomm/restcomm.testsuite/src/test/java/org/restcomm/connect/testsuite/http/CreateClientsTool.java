@@ -182,6 +182,7 @@ public class CreateClientsTool {
 
         res = res.replaceAll("\\{", "").replaceAll("\\}", "");
         String[] components = res.split(",");
+        System.out.println("createClient res: "+res+" components: "+components);
         clientSid = (components[0].split(":")[1]).replaceAll("\"", "");
 
         return clientSid;
