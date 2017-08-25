@@ -264,7 +264,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                 }
             }
         }catch(Exception e){
-            logger.error("", e);
+            logger.error("Exception while performing getIncomingPhoneNumber: ", e);
             return status(INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -332,7 +332,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                 return null;
             }
         }catch(Exception e){
-            logger.error("", e);
+            logger.error("Exception while performing getIncomingPhoneNumbers: ", e);
             return status(INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -425,7 +425,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             }
             return status(BAD_REQUEST).entity("21452").build();
         }catch(Exception e){
-            logger.error("", e);
+            logger.error("Exception while performing putIncomingPhoneNumber: ", e);
             return status(INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -461,7 +461,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             }
             return status(BAD_REQUEST).entity("21452").build();
         }catch(Exception e){
-            logger.error("", e);
+            logger.error("Exception while performing updateIncomingPhoneNumber: ", e);
             return status(INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -612,7 +612,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             dao.removeIncomingPhoneNumber(new Sid(sid));
             return noContent().build();
         }catch(Exception e){
-            logger.error("", e);
+            logger.error("Exception while performing deleteIncomingPhoneNumber: ", e);
             return status(INTERNAL_SERVER_ERROR).build();
         }
     }
