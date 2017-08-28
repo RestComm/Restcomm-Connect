@@ -86,33 +86,21 @@ public class OrganizationUtil {
                     formatedPhone = phone;
                 }else {
                     //get all number with same number, by both formatedPhone and unformatedPhone
-                    numbers = numbersDao.getIncomingPhoneNumber(formatedPhone);
+                    numbers = OrganizationUtil.searchAndAddNumberToTheList(numbers, formatedPhone, numbersDao);
                 }
-                if(numbers == null || numbers.isEmpty()){
-                    numbers = numbersDao.getIncomingPhoneNumber(phone);
-                }else{
-                    numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
-                }
+                numbers = OrganizationUtil.searchAndAddNumberToTheList(numbers, phone, numbersDao);
                 if (phone.startsWith("+")) {
                     //remove the (+) and check if exists
                     phone= phone.replaceFirst("\\+","");
-                    if(numbers == null || numbers.isEmpty()){
-                        numbers = numbersDao.getIncomingPhoneNumber(phone);
-                    }else{
-                        numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
-                    }
+                    numbers = OrganizationUtil.searchAndAddNumberToTheList(numbers, phone, numbersDao);
                 } else {
                     //Add "+" add check if number exists
                     phone = "+".concat(phone);
-                    if(numbers == null || numbers.isEmpty()){
-                        numbers = numbersDao.getIncomingPhoneNumber(phone);
-                    }else{
-                        numbers.addAll(numbersDao.getIncomingPhoneNumber(phone));
-                    }
+                    numbers = OrganizationUtil.searchAndAddNumberToTheList(numbers, phone, numbersDao);
                 }
                 if(numbers == null || numbers.isEmpty()){
                     // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
-                    numbers = numbersDao.getIncomingPhoneNumber("*");
+                    numbers = OrganizationUtil.searchAndAddNumberToTheList(numbers, "*", numbersDao);
                 }
                 if(numbers != null && !numbers.isEmpty()){
                     // find number in same organization
@@ -174,5 +162,23 @@ public class OrganizationUtil {
      */
     public static Sid getOrganizationSidByAccountSid(DaoManager storage, final Sid accountSid){
         return storage.getAccountsDao().getAccount(accountSid).getOrganizationSid();
+    }
+
+    /**
+     * @param numbers
+     * @param phone
+     * @param numbersDao
+     * @return
+     */
+    private static List<IncomingPhoneNumber> searchAndAddNumberToTheList(List<IncomingPhoneNumber> numbers, String phone, IncomingPhoneNumbersDao numbersDao){
+        List<IncomingPhoneNumber> listOfNumbers = numbersDao.getIncomingPhoneNumber(phone);
+        if(listOfNumbers !=null && !listOfNumbers.isEmpty()){
+            if(numbers == null || numbers.isEmpty()){
+                numbers = listOfNumbers;
+            }else{
+                numbers.addAll(listOfNumbers);
+            }
+        }
+        return numbers;
     }
 }
