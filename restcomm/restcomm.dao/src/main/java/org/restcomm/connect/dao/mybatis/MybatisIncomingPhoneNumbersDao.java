@@ -93,7 +93,9 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
             if (listPhones != null && listPhones.size() > 0) {
                 inboundPhoneNumber = ((String)parameter).replace("+1", "");
                 if (inboundPhoneNumber.matches("[\\d,*,#,+]+")) {
-                    incomingPhoneNumbers.add(checkIncomingPhoneNumberRegexMatch(selector, inboundPhoneNumber));
+                    IncomingPhoneNumber incomingPhoneNumber = checkIncomingPhoneNumberRegexMatch(selector, inboundPhoneNumber);
+                    if(incomingPhoneNumber != null)
+                        incomingPhoneNumbers.add(checkIncomingPhoneNumberRegexMatch(selector, inboundPhoneNumber));
                 }
             }
         }finally {
