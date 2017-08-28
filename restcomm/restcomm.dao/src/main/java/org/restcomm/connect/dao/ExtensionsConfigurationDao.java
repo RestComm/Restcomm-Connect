@@ -63,6 +63,12 @@ public interface ExtensionsConfigurationDao {
     List<ExtensionConfiguration> getAllConfiguration();
 
     /**
+     * Get all extension configuration of a specific type
+     * @return List<ExtensionConfiguration>
+     */
+    List<ExtensionConfiguration> getAllConfigurationByType(ExtensionConfiguration.configurationType type);
+
+    /**
      * Delete extension configuration by extension name
      * @param extensionName
      */
