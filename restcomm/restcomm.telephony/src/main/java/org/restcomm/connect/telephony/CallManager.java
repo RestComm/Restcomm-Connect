@@ -2579,6 +2579,7 @@ public final class CallManager extends RestcommUntypedActor {
                 params.put("Identity", pushClientIdentity);
                 try {
                     HttpPost httpPost = new HttpPost(pushNotificationServerUrl);
+                    httpPost.setHeader("Content-Type", "application/json");
                     httpPost.setEntity(new StringEntity(new Gson().toJson(params)));
                     HttpResponse httpResponse = httpClient.execute(httpPost);
                     if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {

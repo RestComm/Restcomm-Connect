@@ -147,6 +147,7 @@ public class PushNotificationServerTest {
                         .withBody(dialAliceRcml)));
 
         stubFor(post(urlPathEqualTo("/api/notifications"))
+                .withHeader("Content-Type", equalTo("application/json"))
                 .willReturn(aResponse()
                         .withStatus(200)));
 
@@ -204,6 +205,7 @@ public class PushNotificationServerTest {
     @Test
     public void testB2BUACall() throws ParseException, InterruptedException, IOException {
         stubFor(post(urlPathEqualTo("/api/notifications"))
+                .withHeader("Content-Type", equalTo("application/json"))
                 .willReturn(aResponse()
                         .withStatus(200)));
 
