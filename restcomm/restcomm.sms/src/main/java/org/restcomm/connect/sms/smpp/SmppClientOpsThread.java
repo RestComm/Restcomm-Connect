@@ -25,6 +25,7 @@ import akka.actor.ActorRef;
 import com.cloudhopper.commons.charset.CharsetUtil;
 import com.cloudhopper.commons.charset.Charset;
 import com.cloudhopper.smpp.PduAsyncResponse;
+import com.cloudhopper.smpp.SmppConstants;
 import com.cloudhopper.smpp.SmppSession;
 import com.cloudhopper.smpp.SmppSessionConfiguration;
 import com.cloudhopper.smpp.SmppSessionHandler;
@@ -38,6 +39,7 @@ import com.cloudhopper.smpp.pdu.PduResponse;
 import com.cloudhopper.smpp.type.Address;
 import com.cloudhopper.smpp.type.RecoverablePduException;
 import com.cloudhopper.smpp.type.UnrecoverablePduException;
+import com.cloudhopper.smpp.util.SmppUtil;
 import org.apache.log4j.Logger;
 
 import javax.servlet.ServletException;
@@ -348,28 +350,45 @@ public class SmppClientOpsThread implements Runnable {
             //with the request
             if (pduRequest.toString().toLowerCase().contains("enquire_link")) {
                 //logger.info("This is a response to the enquire_link, therefore, do NOTHING ");
-            } else {
-
+            } else if (pduRequest.getCommandId() == SmppConstants.CMD_ID_DELIVER_SM) {
+                logger.info("********** Received DeliverSm ***************** ");
                 DeliverSm deliverSm = (DeliverSm) pduRequest;
+                boolean isDeliveryReceipt = false;
+
+                String decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
+                String destSmppAddress = deliverSm.getDestAddress().getAddress();
+                String sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
+
+                Charset charset;
+                if (DataCoding.DATA_CODING_UCS2 == deliverSm.getDataCoding()) {
+                    charset = CharsetUtil.CHARSET_UCS_2;
+                } else {
+                    charset = CharsetUtil.CHARSET_GSM;
+
+                }
+
+                if (SmppUtil.isMessageTypeSmscDeliveryReceipt(deliverSm.getEsmClass())) {
+                    isDeliveryReceipt = true;
+                }
+
                 try {
-                    String decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
-                    String destSmppAddress = deliverSm.getDestAddress().getAddress();
-                    String sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
-                    Charset charset;
-                    if (DataCoding.DATA_CODING_UCS2 == deliverSm.getDataCoding()) {
-                        charset = CharsetUtil.CHARSET_UCS_2;
-                    } else {
-                        charset = CharsetUtil.CHARSET_GSM;
-                    }
-                    //send received SMPP PDU message to restcomm
+
+                    logger.info("send received SMPP PDU message to restcomm");
+                    // send received SMPP PDU message to restcomm
                     try {
-                        sendSmppMessageToRestcomm(decodedPduMessage, destSmppAddress, sourceSmppAddress, charset);
-                    } catch (IOException | ServletException e) {
+                        sendSmppMessageToRestcomm(decodedPduMessage, destSmppAddress, sourceSmppAddress, charset,
+                                isDeliveryReceipt);
+                    } catch (IOException e) {
                         logger.error("Exception while trying to dispatch incoming SMPP message to Restcomm: " + e);
                     }
+
                 } catch (Exception e) {
                     logger.error("Exception while trying to process incoming SMPP message to Restcomm: " + e);
                 }
+
+            } else {
+                //TODO verify other scenario
+                //System.out.println("otherss");
             }
             return response;
         }
@@ -421,12 +440,14 @@ public class SmppClientOpsThread implements Runnable {
         return getSmppSession;
     }
 
-    public void sendSmppMessageToRestcomm(String smppMessage, String smppTo, String smppFrom, Charset charset) throws IOException, ServletException {
+    public void sendSmppMessageToRestcomm(String smppMessage, String smppTo, String smppFrom, Charset charset,
+            boolean isDeliveryReceipt) throws IOException, ServletException {
         SmppSession smppSession = SmppClientOpsThread.getSmppSession();
         String to = smppTo;
         String from = smppFrom;
         String inboundMessage = smppMessage;
-        SmppInboundMessageEntity smppInboundMessage = new SmppInboundMessageEntity(to, from, inboundMessage, charset);
+        SmppInboundMessageEntity smppInboundMessage = new SmppInboundMessageEntity(to, from, inboundMessage, charset,
+                isDeliveryReceipt);
         smppMessageHandler.tell(smppInboundMessage, null);
     }
 }

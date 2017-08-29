@@ -8,7 +8,9 @@ import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import com.cloudhopper.commons.charset.CharsetUtil;
+import com.cloudhopper.smpp.SmppConstants;
 import com.cloudhopper.smpp.pdu.SubmitSm;
+import com.cloudhopper.smpp.pdu.SubmitSmResp;
 import com.cloudhopper.smpp.tlv.Tlv;
 import com.cloudhopper.smpp.type.Address;
 import com.cloudhopper.smpp.type.RecoverablePduException;
@@ -16,10 +18,23 @@ import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
 import com.cloudhopper.smpp.type.SmppTimeoutException;
 import com.cloudhopper.smpp.type.UnrecoverablePduException;
+import com.cloudhopper.smpp.util.DeliveryReceipt;
+import com.cloudhopper.smpp.util.DeliveryReceiptException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import org.apache.commons.configuration.Configuration;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
+import org.joda.time.DateTimeZone;
+
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
+
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
@@ -29,6 +44,7 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.IExtensionCreateSmsSessionRequest;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
@@ -49,6 +65,7 @@ import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipURI;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -65,6 +82,8 @@ public class SmppMessageHandler extends RestcommUntypedActor {
     private final ActorRef monitoringService;
     //List of extensions for SmsService
     List<RestcommExtensionGeneric> extensions;
+
+    private SmsMessage smsMessage;
 
     public SmppMessageHandler(final ServletContext servletContext) {
         this.servletContext = servletContext;
@@ -112,11 +131,42 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             final DestroySmsSession destroySmsSession = (DestroySmsSession) message;
             final ActorRef session = destroySmsSession.session();
             context.stop(session);
+        }else if (message instanceof SmsMessage) {
+            this.smsMessage = (SmsMessage) message;
         }
     }
 
     private void inbound(final SmppInboundMessageEntity request ) throws IOException {
         final ActorRef self = self();
+
+        if (request.getIsDeliveryReceipt()) {
+
+            try {
+                DeliveryReceipt dlr = DeliveryReceipt.parseShortMessage(request.getSmppContent(), DateTimeZone.UTC);
+                SmsMessage smsMsg = storage.getSmsMessagesDao().getSmsMessageWithSmppMsgId(dlr.getMessageId());
+                if (smsMsg != null) {
+                    final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+                    parameters.add(new BasicNameValuePair("SmsSid", smsMsg.getSid().toString()));
+                    parameters.add(new BasicNameValuePair("SmsStatus", dlr.toStateText(dlr.getState())));
+
+                    CloseableHttpClient client = HttpClients.createDefault();
+                    HttpPost httpPost = new HttpPost(smsMsg.getStatusCallback());
+
+                    httpPost.setEntity(new UrlEncodedFormEntity(parameters));
+
+                    CloseableHttpResponse response = client.execute(httpPost);
+                    // assertThat(response.getStatusLine().getStatusCode(), equalTo(200));
+                    client.close();
+
+                } else {
+                    logger.info("SmsMessage with SmppMsgId Not Found.");
+                }
+
+            } catch (DeliveryReceiptException e) {
+                e.printStackTrace();
+            }
+
+        } else {
 
         String to = request.getSmppTo();
         final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
@@ -130,6 +180,8 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         } else {
             logger.warning("SMPP Message Rejected : No Restcomm Hosted App Found for inbound number : " + to );
         }
+
+    }
     }
 
     private boolean redirectToHostedSmsApp(final ActorRef self, final SmppInboundMessageEntity request, final AccountsDao accounts,
@@ -234,11 +286,16 @@ public class SmppMessageHandler extends RestcommUntypedActor {
 
         byte[] textBytes;
         int smppTonNpiValue =  Integer.parseInt(SmppService.getSmppTonNpiValue()) ;
-        // add delivery receipt
-        //submit0.setRegisteredDelivery(SmppConstants.REGISTERED_DELIVERY_SMSC_RECEIPT_REQUESTED);
+
         SubmitSm submit0 = new SubmitSm();
         submit0.setSourceAddress(new Address((byte)smppTonNpiValue, (byte) smppTonNpiValue, request.getSmppFrom() ));
         submit0.setDestAddress(new Address((byte)smppTonNpiValue, (byte)smppTonNpiValue, request.getSmppTo()));
+
+     // add delivery receipt
+        if (smsMessage.getStatusCallback() != null) {
+            submit0.setRegisteredDelivery(SmppConstants.REGISTERED_DELIVERY_SMSC_RECEIPT_REQUESTED);
+        }
+
         if (CharsetUtil.CHARSET_UCS_2 == request.getSmppEncoding()) {
             submit0.setDataCoding(DataCoding.DATA_CODING_UCS2);
             textBytes = CharsetUtil.encode(request.getSmppContent(), CharsetUtil.CHARSET_UCS_2);
@@ -264,7 +321,11 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             if(logger.isInfoEnabled()) {
                 logger.info("Sending SubmitSM for " + request);
             }
-            SmppClientOpsThread.getSmppSession().submit(submit0, 10000); //send message through SMPP connector
+         // send message through SMPP connector
+            SubmitSmResp submitSmResp = SmppClientOpsThread.getSmppSession().submit(submit0, 10000);
+            smsMessage = smsMessage.setSmppMessageId(submitSmResp.getMessageId());
+            storage.getSmsMessagesDao().updateSmsMessage(smsMessage);
+
         } catch (RecoverablePduException | UnrecoverablePduException
                 | SmppTimeoutException | SmppChannelException
                 | InterruptedException e) {

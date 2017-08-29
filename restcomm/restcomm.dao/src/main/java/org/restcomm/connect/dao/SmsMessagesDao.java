@@ -34,6 +34,8 @@ public interface SmsMessagesDao {
 
     SmsMessage getSmsMessage(Sid sid);
 
+    SmsMessage getSmsMessageWithSmppMsgId(String smppmessageid);
+
     List<SmsMessage> getSmsMessages(final Sid accountSid);
 
     void removeSmsMessage(Sid sid);
