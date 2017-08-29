@@ -1,4 +1,4 @@
-[plantuml, data-model, png]
+[plantuml, datamodel, png]
 --
 
 !define table(x) class x << (T,#FFAAAA) >>
