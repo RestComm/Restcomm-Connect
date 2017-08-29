@@ -46,6 +46,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.common.http.CustomHttpClientBuilder;
@@ -2588,8 +2589,7 @@ public final class CallManager extends RestcommUntypedActor {
                 params.put("Identity", pushClientIdentity);
                 try {
                     HttpPost httpPost = new HttpPost(pushNotificationServerUrl);
-                    httpPost.setHeader("Content-Type", "application/json");
-                    httpPost.setEntity(new StringEntity(new Gson().toJson(params)));
+                    httpPost.setEntity(new StringEntity(new Gson().toJson(params), ContentType.APPLICATION_JSON));
                     HttpResponse httpResponse = httpClient.execute(httpPost);
                     if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                         logger.warning("Error while sending push server notification to client with identity: " + pushClientIdentity + ", response: " + httpResponse.getEntity());
