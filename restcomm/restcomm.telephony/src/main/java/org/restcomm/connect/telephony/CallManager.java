@@ -2581,7 +2581,9 @@ public final class CallManager extends RestcommUntypedActor {
         if (!pushNotificationServerEnabled || pushClientIdentity == null) {
             return 0;
         }
-        logger.debug("Push server notification to client with identity: '" + pushClientIdentity + "' added to queue.");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Push server notification to client with identity: '" + pushClientIdentity + "' added to queue.");
+        }
         Futures.future(new Callable<Void>() {
 
             @Override
@@ -2591,7 +2593,9 @@ public final class CallManager extends RestcommUntypedActor {
                 try {
                     HttpPost httpPost = new HttpPost(pushNotificationServerUrl);
                     httpPost.setEntity(new StringEntity(new Gson().toJson(params), ContentType.APPLICATION_JSON));
-                    logger.debug("Sending push server notification to client with identity: " + pushClientIdentity);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Sending push server notification to client with identity: " + pushClientIdentity);
+                    }
                     HttpResponse httpResponse = httpClient.execute(httpPost);
                     if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                         logger.warning("Error while sending push server notification to client with identity: " + pushClientIdentity + ", response: " + httpResponse.getEntity());
