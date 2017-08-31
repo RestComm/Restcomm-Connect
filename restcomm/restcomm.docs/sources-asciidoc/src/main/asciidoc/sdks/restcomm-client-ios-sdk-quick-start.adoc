@@ -25,12 +25,12 @@ Use the existing sample iOS App, 'HelloWorld'
 
 For now let's try the Hello World Sample App to get acquainted:
 
-* Grab the latest Restcomm iOS SDK release from link:https://github.com/RestComm/restcomm-ios-sdk/releases[GitHub]. At the time of this writing it is v1.0.0-beta-4 and the bundle you need to download is link:https://github.com/RestComm/restcomm-ios-sdk/archive/v1.0.0-beta.4.2.zip[restcomm-ios-sdk-1.0.0-beta.4.2.zip]
+* Grab the latest Restcomm iOS SDK release from link:https://github.com/RestComm/restcomm-ios-sdk/releases[GitHub]. At the time of this writing it is 1.0.0-beta.4.2.4 and the bundle you need to download is link:https://github.com/RestComm/restcomm-ios-sdk/releases/download/1.0.0-beta.4.2.4/restcomm-ios-sdk-1.0.0-beta.4.2.4.tar.bz2[restcomm-ios-sdk-1.0.0-beta.4.2.4.tar.bz2]
 * Extract it:
 +
 [source,theme:github,toolbar:2,lang:default,decode:true]
 ----
-$ unzip restcomm-ios-sdk-1.0.0-beta.4.2.zip
+$ tar -jxvf restcomm-ios-sdk-1.0.0-beta.4.2.4.tar.bz2
 ----
 
 To illustrate the SDK, first we'll be using one of the sample Apps provided in the bundle, called 'Hello World':
@@ -42,7 +42,7 @@ $ pod install
 Analyzing dependencies
 Fetching podspec for `restcomm-ios-sdk` from `../../`
 Downloading dependencies
-Installing restcomm-ios-sdk (0.9.1)
+Installing restcomm-ios-sdk (1.0.0-beta.4.2.4)
 Installing sofia-sip-library (1.12.11.2)
 Installing webrtc-framework (14493.2)
 Generating Pods project
@@ -129,7 +129,7 @@ $ pod init
 
 target 'your-target' do
   # Pods for your-project
-  pod 'restcomm-ios-sdk'
+  pod 'restcomm-ios-sdk', '>= 1.0.0-beta.4.2.4'
 
   ...
 end
