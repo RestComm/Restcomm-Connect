@@ -1551,8 +1551,8 @@ public final class CallManager extends RestcommUntypedActor {
             }
             ack.send();
             SipApplicationSession sipApplicationSession = request.getApplicationSession();
-            // Defaulting the sip application session to 1h
-            sipApplicationSession.setExpires(60);
+            // Defaulting the sip application session to 240 minutes
+            sipApplicationSession.setExpires(240);
         } else {
             if (logger.isInfoEnabled()) {
                 logger.info("Linked Response couldn't be found for ACK request");
