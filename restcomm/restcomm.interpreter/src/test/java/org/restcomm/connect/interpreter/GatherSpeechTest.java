@@ -103,6 +103,12 @@ public class GatherSpeechTest {
     private String gatherEmpty = "<Response><Gather " +
             GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK + "=\"" + partialCallbackUri + "\">" +
             "</Gather></Response>";
+    private String hintsExample = "Telestax’s RestcommONE platform is changing the way real-time communications are developed and delivered. " +
+            "It is fast becoming the platform of choice for rapidly building enterprise class real-time messaging, voice and video applications. " +
+            "Our platform is scalable, highly available and the only WebRTC platform that supports cloud, on premise and hybrid deployment configurations.";
+    private String hintsExpected = "Telestax’s RestcommONE platform is changing the way real-time communications are developed and deliv," +
+            " voice and video applications. Our platform is scalable, highly available and the only WebRTC platform that supports cloud," +
+            " on premise and hybrid deployment configurations.";
 
     public GatherSpeechTest() {
         super();
@@ -541,6 +547,20 @@ public class GatherSpeechTest {
                 interpreter.finishOnKey="#";
                 interpreterRef.tell(new MediaGroupResponse(new CollectedResult("5", false, false)), observer);
                 assertEquals("5", interpreter.collectedDigits.toString());
+            }
+        };
+    }
+
+    @Test
+    public void testHintsLimits() {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                final TestActorRef<VoiceInterpreter> interpreterRef = createVoiceInterpreter(observer);
+                VoiceInterpreter interpreter = interpreterRef.underlyingActor();
+                VoiceInterpreter.Gathering gathering = interpreter.new Gathering(observer);
+                String hints = gathering.limitHints(hintsExample);
+                assertEquals(hintsExpected, hints);
             }
         };
     }
