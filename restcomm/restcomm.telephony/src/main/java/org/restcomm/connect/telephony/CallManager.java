@@ -381,7 +381,6 @@ public final class CallManager extends RestcommUntypedActor {
             this.pushNotificationServerUrl = runtime.getString("push-notification-server-url");
             this.pushNotificationServerDelay = runtime.getLong("push-notification-server-delay");
 
-            this.httpClient = CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
             this.blockingDispatcher = system.dispatchers().lookup("restcomm-blocking-dispatcher");
         }
 
@@ -2583,6 +2582,9 @@ public final class CallManager extends RestcommUntypedActor {
         }
         if (logger.isDebugEnabled()) {
             logger.debug("Push server notification to client with identity: '" + pushClientIdentity + "' added to queue.");
+        }
+        if (httpClient == null) {
+            httpClient = CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
         }
         Futures.future(new Callable<Void>() {
 
