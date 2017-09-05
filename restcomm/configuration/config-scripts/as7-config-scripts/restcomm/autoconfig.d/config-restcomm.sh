@@ -76,7 +76,15 @@ configOutboundProxy(){
 	-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>|" $FILE > $FILE.bak;
 	mv $FILE.bak $FILE
 }
-
+## Description: Push notification server configuration.
+configPushNotificationServer() {
+    echo "Configure push-notification-server"
+    FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    sed -e "s|<push-notification-server-enabled>.*<\/push-notification-server-enabled>|<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>|" \
+	-e "s|<push-notification-server-url>.*<\/push-notification-server-url>|<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>|"  \
+	-e "s|<push-notification-server-delay>.*<\/push-notification-server-delay>|<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>|" $FILE > $FILE.bak;
+	mv $FILE.bak $FILE
+}
 ## Description: Configures Voip Innovations Credentials
 ## Parameters : 1.Login
 ## 				2.Password
@@ -661,6 +669,7 @@ configRestCommURIs
 updateRecordingsPath
 configHypertextPort
 configOutboundProxy
+configPushNotificationServer
 otherRestCommConf
 confRcmlserver
 confRVD
