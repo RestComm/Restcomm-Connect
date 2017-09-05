@@ -406,6 +406,10 @@
 	</media-server-manager>
 	<!-- Adjust http client behaviour for outgoing requests -->
 	<http-client>
+		<!--
+			Timeout setting in millis for most outgoing http requests including those for RCML. If the application server
+			is RVD make sure this value is greater than externalServiceTimeout defined in rvd.xml.
+		-->
 		<response-timeout>6000</response-timeout>
 		<!-- Control peer certificate verification for https connections. Two modes are supported:
 			'allowall' : Disables peer certificate verification. Use it when testing.
