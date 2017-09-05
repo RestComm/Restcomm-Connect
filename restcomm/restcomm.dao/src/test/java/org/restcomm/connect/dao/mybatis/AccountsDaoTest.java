@@ -2,11 +2,14 @@ package org.restcomm.connect.dao.mybatis;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import junit.framework.Assert;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +43,16 @@ public class AccountsDaoTest extends DaoTest {
     public void after() throws Exception {
         manager.shutdown();
         removeTempDir(sandboxRoot.getAbsolutePath());
+    }
+
+    @Test
+    public void addAccountTest() throws IllegalArgumentException, URISyntaxException {
+        AccountsDao dao = manager.getAccountsDao();
+        Sid sid = Sid.generate(Sid.Type.ACCOUNT);
+        dao.addAccount(new Account(sid, new DateTime(), new DateTime(), "test@telestax.com", "Top Level Account", new Sid("AC00000000000000000000000000000000"),Account.Type.FULL,Account.Status.ACTIVE,"77f8c12cc7b8f8423e5c38b035249166","Administrator",new URI("/2012-04-24/Accounts/AC00000000000000000000000000000000"), new Sid("ORafbe225ad37541eba518a74248f0ac4c")));
+        Account account = dao.getAccount(sid);
+        Assert.assertNotNull("Account not found",account);
+        Assert.assertNotNull(account.getOrganizationSid());
     }
 
     @Test

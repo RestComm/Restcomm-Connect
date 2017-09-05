@@ -19,16 +19,24 @@
  */
 package org.restcomm.connect.sms;
 
-import akka.actor.ActorRef;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import com.cloudhopper.commons.charset.Charset;
-import com.cloudhopper.commons.charset.CharsetUtil;
-import com.cloudhopper.commons.util.ByteArrayUtil;
-import com.cloudhopper.smpp.SmppConstants;
-import com.cloudhopper.smpp.tlv.Tlv;
-import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.servlet.ServletContext;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
+
 import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
@@ -50,24 +58,21 @@ import org.restcomm.connect.sms.smpp.SmppOutboundMessageEntity;
 import org.restcomm.connect.telephony.api.TextMessage;
 import org.restcomm.smpp.parameter.TlvSet;
 
-import javax.servlet.ServletContext;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.cloudhopper.commons.charset.Charset;
+import com.cloudhopper.commons.charset.CharsetUtil;
+import com.cloudhopper.commons.util.ByteArrayUtil;
+import com.cloudhopper.smpp.SmppConstants;
+import com.cloudhopper.smpp.tlv.Tlv;
+import com.google.common.collect.ImmutableMap;
+
+import akka.actor.ActorRef;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
 public final class SmsSession extends RestcommUntypedActor {
     // Logger
@@ -99,8 +104,10 @@ public final class SmsSession extends RestcommUntypedActor {
 
     private final ActorRef monitoringService;
 
+    private final Sid fromOrganizationSid;
+
     public SmsSession(final Configuration configuration, final SipFactory factory, final SipURI transport,
-                      final DaoManager storage, final ActorRef monitoringService, final ServletContext servletContext) {
+                      final DaoManager storage, final ActorRef monitoringService, final ServletContext servletContext, final Sid fromOrganizationSid) {
         super();
         this.configuration = configuration;
         this.smsConfiguration = configuration.subset("sms-aggregator");
@@ -119,6 +126,7 @@ public final class SmsSession extends RestcommUntypedActor {
         this.externalIP = this.configuration.subset("runtime-settings").getString("external-ip");
         if (externalIP == null || externalIP.isEmpty() || externalIP.equals(""))
             externalIP = defaultHost;
+        this.fromOrganizationSid = fromOrganizationSid;
 
         this.tlvSet = new TlvSet();
         if(!this.configuration.subset("outbound-sms").isEmpty()) {
@@ -276,11 +284,11 @@ public final class SmsSession extends RestcommUntypedActor {
         } else {
             to = last.to();
         }
-        final Client toClient = clients.getClient(to);
+        final Client toClient = clients.getClient(to, fromOrganizationSid);
         Registration toClientRegistration = null;
         if (toClient != null) {
             final RegistrationsDao registrations = storage.getRegistrationsDao();
-            toClientRegistration = registrations.getRegistration(toClient.getLogin());
+            toClientRegistration = registrations.getRegistration(toClient.getLogin(), fromOrganizationSid);
         }
 
 //        // Try to find an application defined for the phone number.

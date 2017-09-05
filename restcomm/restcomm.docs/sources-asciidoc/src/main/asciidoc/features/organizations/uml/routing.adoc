@@ -1,0 +1,25 @@
+[plantuml, routing, png]
+--
+
+:HTTPS / SIP\n    Traffic;
+split
+ :affinityclick.restcomm.com;
+split again
+ :fonedo.restcomm.com;
+split again
+ :voxist.restcomm.com;
+split again
+ :wonderland.restcomm.com;
+end split
+:Route 53;
+:Restcomm LoadBalancer;
+split
+ :Restcomm node 1;
+split again
+ :Restcomm node 2;
+split again
+ :Restcomm node 3;
+split again
+ :Restcomm node N;
+end split
+--

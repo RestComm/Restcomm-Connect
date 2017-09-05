@@ -1,0 +1,21 @@
+= Restcomm Organizations
+
+Purpose of this document is to share the design for implementing the functionality around Organizations in Restcomm 
+
+== What is an Organization
+A virtual Restcomm plateform provided to a customer on a unique custom domain. e.g. customer1.restcomm.com
+
+== Why Organizations
+So we can have true multitenacy for numbers and clients. Currently virtual numbers and SIP clients are globally unique. 
+
+== High Level Routing
+
+include::organizations/uml/routing.adoc[]
+
+== Call Routing
+
+include::organizations/uml/activitydiagram.adoc[]
+
+
+== Database
+include::organizations/uml/datamodel.adoc[]

@@ -227,22 +227,22 @@ public class MonitoringService extends RestcommUntypedActor {
     private void onUserRegistration(UserRegistration userRegistration, ActorRef self, ActorRef sender) {
         if (userRegistration.getRegistered()) {
             try {
-                registeredUsers.put(userRegistration.getUser(), userRegistration.getAddress());
+                registeredUsers.put(userRegistration.getUserPlusOrganizationsSid(), userRegistration.getAddress());
             } catch (Exception e) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("MonitoringService There was an issue during the process of UserRegistration message, "+e);
                 }
             }
         } else {
-            if (registeredUsers.containsKey(userRegistration.getUser())) {
-                registeredUsers.remove(userRegistration.getUser());
+            if (registeredUsers.containsKey(userRegistration.getUserPlusOrganizationsSid())) {
+                registeredUsers.remove(userRegistration.getUserPlusOrganizationsSid());
                 if (logger.isDebugEnabled()) {
-                    String msg = String.format("MonitoringService User %s removed from registered users", userRegistration.getUser());
+                    String msg = String.format("MonitoringService User %s removed from registered users", userRegistration.getUserPlusOrganizationsSid());
                     logger.debug(msg);
                 }
             } else {
                 if (logger.isDebugEnabled()) {
-                    String msg = String.format("MonitoringService User %s was not removed  because is not in the registered users", userRegistration.getUser());
+                    String msg = String.format("MonitoringService User %s was not removed  because is not in the registered users", userRegistration.getUserPlusOrganizationsSid());
                     logger.debug(msg);
                 }
             }
