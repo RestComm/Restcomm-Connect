@@ -312,7 +312,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
                 if (smsServiceResponse.succeeded()) {
                     // Create an SMS record for the text message.
                     final SmsMessage record = sms(new Sid(accountSid), getApiVersion(data), sender, recipient, body,
-                            SmsMessage.Status.SENDING, SmsMessage.Direction.OUTBOUND_API);
+                            SmsMessage.Status.SENDING, SmsMessage.Direction.OUTBOUND_API, data.getFirst("StatusCallback"));
                     dao.addSmsMessage(record);
                     // Send the sms.
                     final ActorRef session = smsServiceResponse.get();
@@ -342,7 +342,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     }
 
     private SmsMessage sms(final Sid accountSid, final String apiVersion, final String sender, final String recipient,
-            final String body, final SmsMessage.Status status, final SmsMessage.Direction direction) {
+            final String body, final SmsMessage.Status status, final SmsMessage.Direction direction, final String statusCallback) {
         final SmsMessage.Builder builder = SmsMessage.builder();
         final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
         builder.setSid(sid);
@@ -362,6 +362,9 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         buffer.append(sid.toString());
         final URI uri = URI.create(buffer.toString());
         builder.setUri(uri);
+        if (statusCallback != null) {
+            builder.setStatusCallback(URI.create(statusCallback));
+        }
         return builder.build();
     }
 
@@ -372,6 +375,11 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
             throw new NullPointerException("To can not be null.");
         } else if (!data.containsKey("Body")) {
             throw new NullPointerException("Body can not be null.");
+        } else if (data.containsKey("StatusCallback")) {
+            if (!isURL(data.getFirst("StatusCallback"))) {
+                // throw new ValidationException("StatusCallback URL is not valid.");
+                throw new NullPointerException("StatusCallback URL is not valid.");
+            }
         }
     }
 
@@ -386,6 +394,15 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         });
         return system.actorOf(props);
     }
+
+    public boolean isURL(String url) {
+
+        // Assigning the url format regular expression
+        // String urlPattern = "^http(s{0,1})://[a-zA-Z0-9_/\\-\\.]+\\.([A-Za-z/]{2,5})[a-zA-Z0-9_/\\&\\?\\=\\-\\.\\~\\%]*";
+        String urlPattern = "^http://[a-zA-Z0-9_/\\-\\.]+\\.([A-Za-z/]{2,5})[a-zA-Z0-9_/\\&\\?\\=\\-\\.\\~\\%]*";
+        return url.matches(urlPattern);
+    }
+
 
     private final class SmsSessionObserver extends RestcommUntypedActor {
         public SmsSessionObserver() {
