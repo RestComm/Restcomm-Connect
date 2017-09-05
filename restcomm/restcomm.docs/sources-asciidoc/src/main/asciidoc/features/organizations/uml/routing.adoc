@@ -3,15 +3,15 @@
 
 :HTTPS / SIP\n    Traffic;
 split
- :affinityclick.restcomm.com;
+ :organization1.restcomm.com;
 split again
- :fonedo.restcomm.com;
+ :organization2.restcomm.com;
 split again
- :voxist.restcomm.com;
+ :organization3.restcomm.com;
 split again
- :wonderland.restcomm.com;
+ :organization4.restcomm.com;
 end split
-:Route 53;
+:DNS;
 :Restcomm LoadBalancer;
 split
  :Restcomm node 1;
