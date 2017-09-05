@@ -27,6 +27,8 @@ import java.util.regex.Pattern;
 
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
+import com.google.common.base.CharMatcher;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
@@ -44,6 +46,17 @@ public final class StringUtils {
         } else {
             return text + suffix;
         }
+    }
+
+    /**
+     * Returns a substring of the input character sequence that omits all characters this matcher matches from the beginning of
+     * the string
+     * @param sequence
+     * @param value
+     * @return
+     */
+    public static String trimLeadingFrom(String sequence, String value) {
+        return CharMatcher.anyOf(sequence).trimLeadingFrom(value);
     }
 
     public static boolean isPositiveInteger(final String text) {

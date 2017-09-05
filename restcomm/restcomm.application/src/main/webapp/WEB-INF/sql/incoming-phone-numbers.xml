@@ -21,7 +21,10 @@
   </select>
 
   <select id="getIncomingPhoneNumberByValue" parameterType="string" resultType="hashmap">
-    SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "phone_number"=#{phone_number};
+    SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "phone_number"=#{phone_number}
+  	 or "phone_number" = '+'||#{phone_number}
+  	 or "phone_number" = '00'||#{phone_number}
+     or "phone_number" = '+'||'00'||#{phone_number};
   </select>
 
   <select id="getIncomingPhoneNumbers" parameterType="string" resultType="hashmap">
