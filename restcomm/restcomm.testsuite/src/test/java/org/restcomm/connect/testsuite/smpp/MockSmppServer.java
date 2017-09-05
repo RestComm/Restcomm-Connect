@@ -8,6 +8,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.cloudhopper.commons.charset.UCS2Charset;
 import com.cloudhopper.commons.util.windowing.WindowFuture;
 import com.cloudhopper.smpp.pdu.DeliverSm;
 import com.cloudhopper.smpp.pdu.DeliverSmResp;
@@ -206,6 +207,8 @@ public class MockSmppServer {
             String decodedPduMessage = null;
             String destSmppAddress = null;
             String sourceSmppAddress = null;
+            Charset pduMessageCharset = null;
+
 
             if (pduRequest.toString().toLowerCase().contains("enquire_link")) {
                 //logger.info("This is a response to the enquire_link, therefore, do NOTHING ");
@@ -216,7 +219,23 @@ public class MockSmppServer {
 
                 try {
                     SubmitSm deliverSm = (SubmitSm) pduRequest;
-                    decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
+                    // Why use UTF8 encoding when decoding? Only UCS-2 and GSM encodings are used by SMPP apparently. - otsakir
+                    //decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
+                    switch (deliverSm.getDataCoding()) {
+                        case DataCoding.DATA_CODING_UCS2:
+                            pduMessageCharset = CharsetUtil.CHARSET_UCS_2;
+                            break;
+                        case DataCoding.DATA_CODING_GSM8:
+                            pduMessageCharset = CharsetUtil.CHARSET_GSM8;
+                            break;
+                        case DataCoding.DATA_CODING_GSM7:
+                        default:
+                            // by default use GSM7
+                            pduMessageCharset = CharsetUtil.CHARSET_GSM7;
+                            break;
+                    }
+                    decodedPduMessage = CharsetUtil.decode(deliverSm.getShortMessage(), pduMessageCharset);
+
                     destSmppAddress = deliverSm.getDestAddress().getAddress();
                     sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
                     logger.info("getDataCoding: " + deliverSm.getDataCoding());
@@ -225,7 +244,7 @@ public class MockSmppServer {
                     logger.info("********DeliverSm Exception******* " + e);
                 }
 
-                smppInboundMessageEntity = new SmppInboundMessageEntity(destSmppAddress, sourceSmppAddress, decodedPduMessage, CharsetUtil.CHARSET_GSM);
+                smppInboundMessageEntity = new SmppInboundMessageEntity(destSmppAddress, sourceSmppAddress, decodedPduMessage, pduMessageCharset);
                 messageReceived = true;
             }
             return pduRequest.createResponse();
