@@ -36,6 +36,8 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.StorageClass;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 
 import javax.activation.MimetypesFileTypeMap;
 import java.io.File;
@@ -64,6 +66,7 @@ public class S3AccessTool {
     private boolean testing;
     private String testingUrl;
     private AmazonS3 s3client;
+    private int maxDelay;
 
     public S3AccessTool(final String accessKey, final String securityKey, final String bucketName, final String folder,
             final boolean reducedRedundancy, final int minutesToRetainPublicUrl, final boolean removeOriginalFile,
@@ -78,6 +81,7 @@ public class S3AccessTool {
         this.bucketRegion = bucketRegion;
         this.testing = testing;
         this.testingUrl = testingUrl;
+        this.maxDelay = RestcommConfiguration.getInstance().getMain().getRecordingMaxDelay();
     }
 
     public AmazonS3 getS3client() {
@@ -96,7 +100,7 @@ public class S3AccessTool {
         return s3client;
     }
 
-    public URI uploadFile(final String fileToUpload) {
+    public boolean uploadFile(final String fileToUpload) {
         if (s3client == null) {
             s3client = getS3client();
         }
@@ -119,19 +123,37 @@ public class S3AccessTool {
                 logger.info("File to upload to S3: " + fileUri.toString());
             }
 
-            while (!FileUtils.waitFor(file, 30)){}
-            if (testing) {
-                try {
-                    if (logger.isInfoEnabled()) {
-                        logger.info("Will thread sleep for 1 minute simulating the long operation of FileUtils.waitFor");
-                    }
-                    Thread.sleep(6000);
-                } catch (Exception e) {
-                    logger.error("Exception while sleepig simulating the long operation waiting for the file");
+            //For statistics and logs
+            DateTime start, end;
+            double waitDuration;
 
+//            if (!file.exists()) {
+//                 start = DateTime.now();
+//                while (!FileUtils.waitFor(file, 2)) {
+//                }
+//                 end = DateTime.now();
+//                 waitDuration = (end.getMillis() - start.getMillis()) / 1000;
+//                if (waitDuration > maxDelay || testing) {
+//                    if (logger.isInfoEnabled()) {
+//                        String msg = String.format("Finished waiting for recording file %s. Wait time %,.2f. Size of file in bytes %s", fileUri.toString(), waitDuration, file.length());
+//                        logger.info(msg);
+//                    }
+//                }
+//            }
+
+            if (fileExists(file)) {
+                start = DateTime.now();
+                if (testing) {
+                    try {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Will make thread sleep for 1 minute simulating the long operation of FileUtils.waitFor");
+                        }
+                        Thread.sleep(6000);
+                    } catch (Exception e) {
+                        logger.error("Exception while sleepig simulating the long operation waiting for the file");
+
+                    }
                 }
-            }
-            if (file.exists()) {
                 PutObjectRequest putRequest = new PutObjectRequest(bucket.toString(), file.getName(), file);
                 ObjectMetadata metadata = new ObjectMetadata();
                 metadata.setContentType(new MimetypesFileTypeMap().getContentType(file));
@@ -143,12 +165,19 @@ public class S3AccessTool {
                 if (removeOriginalFile) {
                     removeLocalFile(file);
                 }
-                URI recordingS3Uri = s3client.getUrl(bucket.toString(), file.getName()).toURI();
-                return recordingS3Uri;
-//                return downloadUrl.toURI();
+                end = DateTime.now();
+                waitDuration = (end.getMillis() - start.getMillis())/1000;
+                if (waitDuration > maxDelay || testing) {
+                    if (logger.isInfoEnabled()) {
+                        String msg = String.format("File %s uploaded to S3 successfully. Upload time %,.2f sec", fileUri.toString(), waitDuration);
+                        logger.info(msg);
+                    }
+                }
+                return true;
             } else {
-                logger.error("Timeout waiting for the recording file: "+file.getAbsolutePath());
-                return null;
+                String msg = String.format("Recording file \"%s\" doesn't exists ",file.getPath());
+                logger.error(msg);
+                return false;
             }
          } catch (AmazonServiceException ase) {
             logger.error("Caught an AmazonServiceException");
@@ -157,18 +186,45 @@ public class S3AccessTool {
             logger.error("AWS Error Code:   " + ase.getErrorCode());
             logger.error("Error Type:       " + ase.getErrorType());
             logger.error("Request ID:       " + ase.getRequestId());
-            return null;
+            return false;
         } catch (AmazonClientException ace) {
             logger.error("Caught an AmazonClientException ");
             logger.error("Error Message: " + ace.getMessage());
-            return null;
-        } catch (URISyntaxException e) {
-            logger.error("URISyntaxException: "+e.getMessage());
-            return null;
+            return false;
         } catch (IOException e) {
             logger.error("Problem while trying to touch recording file for testing", e);
-            return null;
+            return false;
         }
+    }
+
+    private boolean fileExists(final File file) {
+        if (file.exists()) {
+            return true;
+        } else {
+            return FileUtils.waitFor(file, 2);
+        }
+    }
+
+    public URI getS3Uri(final String fileToUpload) {
+        if (s3client == null) {
+            s3client = getS3client();
+        }
+        StringBuffer bucket = new StringBuffer();
+        bucket.append(bucketName);
+        if (folder != null && !folder.isEmpty())
+            bucket.append("/").append(folder);
+        URI fileUri = URI.create(fileToUpload);
+        File file = new File(fileUri);
+        URI recordingS3Uri = null;
+        try {
+            recordingS3Uri = s3client.getUrl(bucketName, file.getName()).toURI();
+        } catch (URISyntaxException e) {
+            logger.error("Problem during creation of S3 URI");
+        }
+        if (logger.isInfoEnabled()) {
+            logger.info("Created S3Uri for file: " + fileUri.toString());
+        }
+        return recordingS3Uri;
     }
 
     public URI getPublicUrl (String fileName) throws URISyntaxException {

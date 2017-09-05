@@ -334,6 +334,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(startDialing, finished));
         transitions.add(new Transition(processingDialChildren, processingDialChildren));
         transitions.add(new Transition(processingDialChildren, forking));
+        transitions.add(new Transition(processingDialChildren, startDialing));
+        transitions.add(new Transition(processingDialChildren, checkingCache));
+        transitions.add(new Transition(processingDialChildren, sendingEmail));
+        transitions.add(new Transition(processingDialChildren, faxing));
+        transitions.add(new Transition(processingDialChildren, sendingSms));
+        transitions.add(new Transition(processingDialChildren, playing));
+        transitions.add(new Transition(processingDialChildren, pausing));
+        transitions.add(new Transition(processingDialChildren, ready));
         transitions.add(new Transition(processingDialChildren, hangingUp));
         transitions.add(new Transition(processingDialChildren, finished));
         transitions.add(new Transition(forking, acquiringOutboundCallInfo));
@@ -804,19 +812,21 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     // DTMF using SIP INFO, check if all digits collected here
                     collectedDigits.append(dtmfResponse.get());
                     // Collected digits == requested num of digits the complete the collect digits
-                    if (numberOfDigits != Short.MAX_VALUE) {
-                        if (collectedDigits.length() == numberOfDigits) {
-                            dtmfReceived = true;
-                            fsm.transition(message, finishGathering);
-                        } else {
-                            dtmfReceived = false;
-                            return;
-                        }
+                    //Zendesk_34592: if collected digits smaller than numDigits in gather verb
+                    // when timeout on gather occur, garthering cannot move to finishGathering
+                    // If collected digits have finish on key at the end then complete the collect digits
+                    if (collectedDigits.toString().endsWith(finishOnKey)) {
+                        dtmfReceived = true;
+                        fsm.transition(message, finishGathering);
                     } else {
-                        // If collected digits have finish on key at the end then complete the collect digits
-                        if (collectedDigits.toString().endsWith(finishOnKey)) {
-                            dtmfReceived = true;
-                            fsm.transition(message, finishGathering);
+                        if (numberOfDigits != Short.MAX_VALUE) {
+                            if (collectedDigits.length() == numberOfDigits) {
+                                dtmfReceived = true;
+                                fsm.transition(message, finishGathering);
+                            } else {
+                                dtmfReceived = false;
+                                return;
+                            }
                         } else {
                             dtmfReceived = false;
                             return;
@@ -1270,7 +1280,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                         return;
                     } else {
-                        if (!is(finishDialing))
+                        if (!is(finishDialing) && !is(finished))
                             fsm.transition(message, finished);
                     }
                 break;
@@ -2160,7 +2170,25 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     source.tell(fork, source);
                     dialChildren = null;
                 } else {
-                    fsm.transition(message, hangingUp);
+//                    fsm.transition(message, hangingUp);
+                    Attribute attribute = null;
+                    if (verb != null) {
+                        attribute = verb.attribute("action");
+                    }
+                    if (attribute == null) {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("At ProcessingDialChildren with dialerBranches either null or 0 and attribute is null, will check for the next verb");
+                        }
+                        final GetNextVerb next = new GetNextVerb();
+                        if (parser != null) {
+                            parser.tell(next, source);
+                        }
+                    } else {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("At ProcessingDialChildren with dialerBranches either null or 0 will execute Dial Action");
+                        }
+                        executeDialAction(message, outboundCall);
+                    }
                 }
             }
         }
@@ -2314,7 +2342,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 logger.info("Proceeding to execute Dial Action attribute");
             }
             this.dialActionExecuted = true;
-            final List<NameValuePair> parameters = parameters();
 
             if (call != null) {
                 try {
@@ -2326,12 +2353,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>) Await.result(future,
                             Duration.create(10, TimeUnit.SECONDS));
                     callInfo = callResponse.get();
+                    callState = callInfo.state();
                 } catch (Exception e) {
                     if(logger.isDebugEnabled()) {
                         logger.debug("Timeout waiting for inbound call info: \n" + e.getMessage());
                     }
                 }
             }
+
+            final List<NameValuePair> parameters = parameters();
 
             if (outboundCall != null && !outboundCall.isTerminated()) {
                 try {

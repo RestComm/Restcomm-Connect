@@ -41,6 +41,9 @@
 		<recordings-path>file://${restcomm:home}/recordings</recordings-path>
 		<recordings-uri>/restcomm/recordings</recordings-uri>
 
+		<!-- if S3AccessTool takes more than the duration here, then Restcomm will report this -->
+		<recording-max-delay>2000</recording-max-delay>
+
 		<!-- The URL to the errors dictionary. -->
 		<error-dictionary-uri>/restcomm/errors</error-dictionary-uri>
 
@@ -139,6 +142,12 @@
 			 or send appropriate response according to the response from outbound dial-->
 		<!--  https://github.com/RestComm/Restcomm-Connect/issues/1649 -->
 		<enable-200-ok-delay>false</enable-200-ok-delay>
+
+		<push-notification-server-enabled>false</push-notification-server-enabled>
+		<!-- Path to Restcomm Push Notification Server (Notification API) -->
+		<push-notification-server-url></push-notification-server-url>
+		<!-- Delay in milliseconds to wait for all callee's mobile applications will wake up -->
+		<push-notification-server-delay></push-notification-server-delay>
 
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
@@ -395,6 +404,10 @@
 	</media-server-manager>
 	<!-- Adjust http client behaviour for outgoing requests -->
 	<http-client>
+		<!--
+			Timeout setting in millis for most outgoing http requests including those for RCML. If the application server
+			is RVD make sure this value is greater than externalServiceTimeout defined in rvd.xml.
+		-->
 		<response-timeout>6000</response-timeout>
 		<!-- Control peer certificate verification for https connections. Two modes are supported:
 			'allowall' : Disables peer certificate verification. Use it when testing.

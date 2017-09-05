@@ -79,6 +79,7 @@ public final class ClientsDaoTest {
         builder.setVoiceFallbackMethod(method);
         builder.setVoiceApplicationSid(application);
         builder.setUri(url);
+        builder.setPushClientIdentity(sid.toString());
         Client client = builder.build();
         final ClientsDao clients = manager.getClientsDao();
         // Create a new client in the data store.
@@ -99,10 +100,12 @@ public final class ClientsDaoTest {
         assertTrue(result.getVoiceFallbackMethod().equals(client.getVoiceFallbackMethod()));
         assertTrue(result.getVoiceApplicationSid().equals(client.getVoiceApplicationSid()));
         assertTrue(result.getUri().equals(client.getUri()));
+        assertTrue(result.getPushClientIdentity().equals(client.getPushClientIdentity()));
         // Update the client.
         application = Sid.generate(Sid.Type.APPLICATION);
         url = URI.create("http://127.0.0.1:8080/restcomm/demos/world-hello.xml");
         method = "POST";
+        String newClientIdentity = "newClientIdentity";
         client = client.setFriendlyName("Bob");
         client = client.setPassword("4321");
         client = client.setStatus(Client.DISABLED);
@@ -111,6 +114,7 @@ public final class ClientsDaoTest {
         client = client.setVoiceMethod(method);
         client = client.setVoiceFallbackUrl(url);
         client = client.setVoiceFallbackMethod(method);
+        client = client.setPushClientIdentity(newClientIdentity);
         clients.updateClient(client);
         // Read the updated client from the data store.
         result = clients.getClient(sid);
@@ -124,6 +128,7 @@ public final class ClientsDaoTest {
         assertTrue(result.getVoiceFallbackUrl().equals(client.getVoiceFallbackUrl()));
         assertTrue(result.getVoiceFallbackMethod().equals(client.getVoiceFallbackMethod()));
         assertTrue(result.getVoiceApplicationSid().equals(client.getVoiceApplicationSid()));
+        assertTrue(result.getPushClientIdentity().equals(newClientIdentity));
         // Delete the client.
         clients.removeClient(sid);
         // Validate that the client was removed.

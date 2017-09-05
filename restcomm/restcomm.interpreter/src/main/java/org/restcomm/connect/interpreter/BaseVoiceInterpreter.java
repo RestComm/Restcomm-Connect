@@ -115,8 +115,10 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -467,28 +469,36 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         return getContext().actorOf(props);
     }
 
+    LinkedList<String> states = new LinkedList<String>(Arrays.asList("queued", "ringing", "in-progress", "completed", "busy", "failed", "no-answer", "canceled"));
+
     //Callback using the Akka ask pattern (http://doc.akka.io/docs/akka/2.2.5/java/untyped-actors.html#Ask__Send-And-Receive-Future) will force VoiceInterpter to wait until
     //Downloader finish with this callback before shutdown everything. Issue https://github.com/Mobicents/RestComm/issues/437
     void callback(boolean ask) {
         if (viStatusCallback != null) {
-            if(logger.isInfoEnabled()){
-                logger.info("About to execute viStatusCallback: "+ viStatusCallback.toString());
-            }
-            if (viStatusCallbackMethod == null) {
-                viStatusCallbackMethod = "POST";
-            }
-            final List<NameValuePair> parameters = parameters();
-            requestCallback = new HttpRequestDescriptor(viStatusCallback, viStatusCallbackMethod, parameters);
-            if (!ask) {
-                downloader.tell(requestCallback, null);
-            } else if (ask) {
-                final Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
-                Future<Object> future = (Future<Object>) ask(downloader, requestCallback, timeout);
-                DownloaderResponse downloaderResponse = null;
-                try {
-                    downloaderResponse = (DownloaderResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
-                } catch (Exception e) {
-                    logger.error("Exception during callback with ask pattern");
+            if (states.remove(callState.toString().toLowerCase())) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("About to execute viStatusCallback: " + viStatusCallback.toString());
+                }
+                if (viStatusCallbackMethod == null) {
+                    viStatusCallbackMethod = "POST";
+                }
+                final List<NameValuePair> parameters = parameters();
+                requestCallback = new HttpRequestDescriptor(viStatusCallback, viStatusCallbackMethod, parameters);
+                if (!ask) {
+                    downloader.tell(requestCallback, null);
+                } else if (ask) {
+                    final Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
+                    Future<Object> future = (Future<Object>) ask(downloader, requestCallback, timeout);
+                    DownloaderResponse downloaderResponse = null;
+                    try {
+                        downloaderResponse = (DownloaderResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+                    } catch (Exception e) {
+                        logger.error("Exception during callback with ask pattern");
+                    }
+                }
+            } else {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Status Callback has been already executed for state: ",callState.toString());
                 }
             }
         } else if(logger.isInfoEnabled()){
@@ -1758,6 +1768,8 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
+            boolean amazonS3Enabled = configuration.subset("amazon-s3").getBoolean("enabled");
+
             final Class<?> klass = message.getClass();
             if (CallStateChanged.class.equals(klass)) {
                 final CallStateChanged event = (CallStateChanged) message;
@@ -1786,6 +1798,10 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 }
             } else if(logger.isDebugEnabled()) {
                 logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
+            }
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Recording duration: "+duration);
             }
 
             final Recording.Builder builder = Recording.builder();
@@ -1907,7 +1923,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                         }
                     }
                     final List<NameValuePair> parameters = parameters();
-                    boolean amazonS3Enabled = configuration.subset("amazon-s3").getBoolean("enabled");
                     if (amazonS3Enabled) {
                         //If Amazon S3 is enabled the Recordings DAO uploaded the wav file to S3 and changed the URI
                         parameters.add(new BasicNameValuePair("RecordingUrl", recording.getFileUri().toURL().toString()));
@@ -1932,10 +1947,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                             logger.info("About to execute Record action to: "+uri);
                         }
                         downloader.tell(request, self());
-                        // A little clean up.
-                        recordingSid = null;
-                        recordingUri = null;
-                        return;
                     } else if (CallStateChanged.class.equals(klass)) {
                         parameters.add(new BasicNameValuePair("Digits", "hangup"));
                         request = new HttpRequestDescriptor(uri, method, parameters);
@@ -1943,9 +1954,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                             logger.info("About to execute Record action to: "+uri);
                         }
                         downloader.tell(request, self());
-                        // A little clean up.
-                        recordingSid = null;
-                        recordingUri = null;
                     }
 //                    final StopInterpreter stop = new StopInterpreter();
 //                    source.tell(stop, source);
@@ -2043,7 +2051,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 // Start observing events from the sms session.
                 session.tell(new Observe(source), source);
                 // Store the status callback in the sms session.
-                attribute = verb.attribute("viStatusCallback");
+                attribute = verb.attribute("statusCallback");
                 if (attribute != null) {
                     String callback = attribute.value();
                     if (callback != null && !callback.isEmpty()) {

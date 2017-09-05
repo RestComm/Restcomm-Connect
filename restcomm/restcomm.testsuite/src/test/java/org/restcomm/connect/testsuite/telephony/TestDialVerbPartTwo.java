@@ -145,6 +145,8 @@ public class TestDialVerbPartTwo {
         }
         Thread.sleep(3000);
         wireMockRule.resetRequests();
+        wireMockRule.resetMappings();
+        wireMockRule.resetScenarios();
         Thread.sleep(2000);
     }
 
@@ -458,15 +460,16 @@ public class TestDialVerbPartTwo {
         assertTrue(bobCall.waitForAnswer(5000));
     }
 
-    private String dialConferenceNoDialActionRcml = "<Response><Dial><Conference>test</Conference></Dial>" +
+    private String dialConferenceNoDialActionSendSMSRcml = "<Response><Dial><Conference>test</Conference></Dial>" +
             "<Sms to=\"bob\" from=\"+12223334499\">Hello World!</Sms></Response>";
+    private String dialConferenceNoDialActionRcml = "<Response><Dial><Conference>test</Conference></Dial></Response>";
     @Test
-    public synchronized void testDialConferenceNoDialActionNoSms() throws InterruptedException, ParseException {
+    public synchronized void testDialConferenceNoDialAction_SendSms() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
-                        .withBody(dialConferenceNoDialActionRcml)));
+                        .withBody(dialConferenceNoDialActionSendSMSRcml)));
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -510,18 +513,13 @@ public class TestDialVerbPartTwo {
         assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
     }
 
-    private String dialConferenceNoDialActionSendSMSRcml = "<Response><Dial><Conference>test</Conference></Dial></Response>";
     @Test
-    public synchronized void testDialConferenceNoDialActionSendSms() throws InterruptedException, ParseException {
+    public synchronized void testDialConferenceNoDialAction_NoSms() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
-                        .withBody(dialConferenceWithDialActionRcml)));
-
-        stubFor(get(urlPathEqualTo("/action"))
-                .willReturn(aResponse()
-                        .withStatus(200)));
+                        .withBody(dialConferenceNoDialActionRcml)));
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -1630,7 +1628,7 @@ public class TestDialVerbPartTwo {
         for (LoggedRequest loggedRequest : requests) {
             logger.info("Status callback received: " + loggedRequest.getUrl());
         }
-        assertEquals(4, requests.size());
+        assertEquals(3, requests.size());
 }
 
     @Deployment(name = "TestDialVerbPartTwo", managed = true, testable = false)

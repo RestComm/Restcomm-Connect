@@ -199,7 +199,7 @@ public class DialRecordingTest {
 
 		bobCall.sendInviteOkAck();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
 		assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
 		assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
@@ -223,7 +223,7 @@ public class DialRecordingTest {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(3.0, duration, 0.0);
+		assertEquals(3.0, duration, 1.0);
 
 		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 		assertNotNull(metrics);
@@ -269,7 +269,7 @@ public class DialRecordingTest {
 
 		bobCall.sendInviteOkAck();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
 		assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
 		assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
@@ -358,7 +358,7 @@ public class DialRecordingTest {
 
 		bobCall.sendInviteOkAck();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
 		assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
 		assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
@@ -428,7 +428,7 @@ public class DialRecordingTest {
 
 		bobCall.sendInviteOkAck();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
 		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 		assertNotNull(metrics);
@@ -497,7 +497,7 @@ public class DialRecordingTest {
 		bobCall.sendInviteOkAck();
 		DateTime start = DateTime.now();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
 		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 		assertNotNull(metrics);
@@ -568,7 +568,7 @@ public class DialRecordingTest {
 		bobCall.sendInviteOkAck();
 		DateTime start = DateTime.now();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
 		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 		assertNotNull(metrics);

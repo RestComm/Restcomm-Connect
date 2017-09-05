@@ -24,6 +24,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
@@ -664,7 +665,7 @@ public class CallLifecycleTest {
         assertTrue(bobCall.respondToDisconnect());
         assertTrue(aliceCall.respondToDisconnect());
 
-        Thread.sleep(1000);
+        Thread.sleep(2000);
 
         logger.info("About to check the Requests");
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
@@ -680,7 +681,9 @@ public class CallLifecycleTest {
         }
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
-        assertEquals("completed", jsonObj.get("status").getAsString().toLowerCase());
+        String cdrStatus = jsonObj.get("status").getAsString().toLowerCase();
+        logger.info("CDR Status: "+ cdrStatus);
+        assertEquals("completed", cdrStatus);
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         assertNotNull(metrics);
@@ -751,6 +754,195 @@ public class CallLifecycleTest {
         logger.info("About to check the Requests");
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
         assertTrue(requests.size() == 1);
+        //        requests.get(0).g;
+        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
+        List<String> params = Arrays.asList(requestBody.split("&"));
+        String callSid = "";
+        for (String param : params) {
+            if (param.contains("CallSid")) {
+                callSid = param.split("=")[1];
+            }
+        }
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+        JsonObject jsonObj = cdr.getAsJsonObject();
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+    }
+
+    private String dialInvalidClientRcmlAndThenAlice = "<Response><Dial><Client>invalidClient</Client></Dial><Dial><Client>alice</Client></Dial></Response>";
+    @Test
+    public void testDialInvalidClientAndThenAlice() throws ParseException, InterruptedException, MalformedURLException {
+
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialInvalidClientRcmlAndThenAlice)));
+
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        logger.info("Last response: "+response);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+
+        assertTrue(aliceCall.waitForIncomingCall(5000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Alice-Trying", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Alice-Ringing", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "Alice-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(aliceCall.waitForAck(5000));
+
+        Thread.sleep(1000);
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertEquals(2, liveCalls);
+        assertEquals(1, liveIncomingCalls);
+        assertEquals(1, liveOutgoingCalls);
+        assertEquals(2,liveCallsArraySize);
+
+
+        Thread.sleep(3000);
+        bobCall.listenForDisconnect();
+
+        assertTrue(aliceCall.disconnect());
+        Thread.sleep(500);
+        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        Thread.sleep(1000);
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+        logger.info("LiveCalls: "+liveCalls);
+        liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+        assertEquals(0 ,liveCalls);
+        assertEquals(0,liveCallsArraySize);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
+        assertEquals(1, requests.size());
+        //        requests.get(0).g;
+        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
+        List<String> params = Arrays.asList(requestBody.split("&"));
+        String callSid = "";
+        for (String param : params) {
+            if (param.contains("CallSid")) {
+                callSid = param.split("=")[1];
+            }
+        }
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+        JsonObject jsonObj = cdr.getAsJsonObject();
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+    }
+
+    private String dialInvalidClientRcmlAndThenAliceWithDialAction = "<Response><Dial action=\"http://127.0.0.1:8090/DialAction\"><Client>invalidClient</Client></Dial><Dial><Client>alice</Client></Dial></Response>";
+
+    private String dialActionRcml = "<Response><Dial><Client>alice</Client></Dial></Response>";
+
+    @Test
+    public void testDialInvalidClientAndThenAliceWithDialAction() throws ParseException, InterruptedException, MalformedURLException {
+
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialInvalidClientRcmlAndThenAliceWithDialAction)));
+
+        stubFor(post(urlPathMatching("/DialAction.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialActionRcml)));
+
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        logger.info("Last response: "+response);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+
+        assertTrue(aliceCall.waitForIncomingCall(5000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Alice-Trying", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Alice-Ringing", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "Alice-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(aliceCall.waitForAck(5000));
+
+        Thread.sleep(1000);
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertEquals(2, liveCalls);
+        assertEquals(1, liveIncomingCalls);
+        assertEquals(1, liveOutgoingCalls);
+        assertEquals(2,liveCallsArraySize);
+
+
+        Thread.sleep(3000);
+        bobCall.listenForDisconnect();
+
+        assertTrue(aliceCall.disconnect());
+        Thread.sleep(500);
+        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        Thread.sleep(1000);
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+        logger.info("LiveCalls: "+liveCalls);
+        liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+        assertEquals(0 ,liveCalls);
+        assertEquals(0,liveCallsArraySize);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
+        assertEquals(1, requests.size());
         //        requests.get(0).g;
         String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
         List<String> params = Arrays.asList(requestBody.split("&"));
