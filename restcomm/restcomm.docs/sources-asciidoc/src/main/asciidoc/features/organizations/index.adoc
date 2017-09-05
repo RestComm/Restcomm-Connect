@@ -5,17 +5,34 @@ Purpose of this document is to share the design for implementing the functionali
 == What is an Organization
 A virtual Restcomm plateform provided to a customer on a unique custom domain. e.g. customer1.restcomm.com
 
-== Why Organizations
-So we can have true multitenacy for numbers and clients. Currently virtual numbers and SIP clients are globally unique. 
+*   True multitenacy for numbers and clients. SIP numbers/clients are unique to a particular organization and not the entire plateform.
+
+*   Routing of Numbers so they don’t conflict under a given domain/organization but can exist under other domain/organizations.
+
+*   Provide account holders with the ability to have a custom sub-domain mydomain.restcomm.com and/or mysubdomain.mydomain.restcomm.com
+
+*   Whitelabeling: Provide the ability to have a customizable user experience for a service provider’s end customers (a skinnable dashboard and RVD, etc.)
+
+*   Custom URL for API calls https://mydomain.restcomm.com/%E2%80%A6[https://mydomain.restcomm.com/…]
+
+*   Sharding of organizations/domain for scale, SLA, performance
+
+*   Consolidated billing for a given Organization
 
 == High Level Routing
 
 include::organizations/uml/routing.adoc[]
 
+image::uml/routing.png[]
+
 == Call Routing
 
 include::organizations/uml/activitydiagram.adoc[]
 
+image::uml/activitydiagram.png[]
+
 
 == Database
 include::organizations/uml/datamodel.adoc[]
+
+image::uml/datamodel.png[]
