@@ -147,7 +147,7 @@ public class PushNotificationServerTest {
                         .withBody(dialAliceRcml)));
 
         stubFor(post(urlPathEqualTo("/api/notifications"))
-                .withHeader("Content-Type", equalTo("application/json"))
+                .withHeader("Content-Type", matching("application/json;.*"))
                 .willReturn(aResponse()
                         .withStatus(200)));
 
@@ -156,7 +156,7 @@ public class PushNotificationServerTest {
         wireMockRule.addMockServiceRequestListener(new RequestListener() {
             @Override
             public void requestReceived(com.github.tomakehurst.wiremock.http.Request request, com.github.tomakehurst.wiremock.http.Response response) {
-                if (request.getAbsoluteUrl().contains("/api/notifications")) {
+                if (request.getAbsoluteUrl().contains("/api/notifications") && response.getStatus() == 200) {
                     assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
                 }
             }
@@ -205,7 +205,7 @@ public class PushNotificationServerTest {
     @Test
     public void testB2BUACall() throws ParseException, InterruptedException, IOException {
         stubFor(post(urlPathEqualTo("/api/notifications"))
-                .withHeader("Content-Type", equalTo("application/json"))
+                .withHeader("Content-Type", matching("application/json;.*"))
                 .willReturn(aResponse()
                         .withStatus(200)));
 
@@ -214,7 +214,7 @@ public class PushNotificationServerTest {
         wireMockRule.addMockServiceRequestListener(new RequestListener() {
             @Override
             public void requestReceived(com.github.tomakehurst.wiremock.http.Request request, com.github.tomakehurst.wiremock.http.Response response) {
-                if (request.getAbsoluteUrl().contains("/api/notifications")) {
+                if (request.getAbsoluteUrl().contains("/api/notifications") && response.getStatus() == 200) {
                     assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
                 }
             }

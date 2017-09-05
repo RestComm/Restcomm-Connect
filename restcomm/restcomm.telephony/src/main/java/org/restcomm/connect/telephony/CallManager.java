@@ -69,6 +69,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.common.http.CustomHttpClientBuilder;
@@ -384,7 +385,6 @@ public final class CallManager extends RestcommUntypedActor {
             this.pushNotificationServerUrl = runtime.getString("push-notification-server-url");
             this.pushNotificationServerDelay = runtime.getLong("push-notification-server-delay");
 
-            this.httpClient = CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
             this.blockingDispatcher = system.dispatchers().lookup("restcomm-blocking-dispatcher");
         }
 
@@ -2571,6 +2571,12 @@ public final class CallManager extends RestcommUntypedActor {
         if (!pushNotificationServerEnabled || pushClientIdentity == null) {
             return 0;
         }
+        if (logger.isDebugEnabled()) {
+            logger.debug("Push server notification to client with identity: '" + pushClientIdentity + "' added to queue.");
+        }
+        if (httpClient == null) {
+            httpClient = CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
+        }
         Futures.future(new Callable<Void>() {
 
             @Override
@@ -2579,8 +2585,10 @@ public final class CallManager extends RestcommUntypedActor {
                 params.put("Identity", pushClientIdentity);
                 try {
                     HttpPost httpPost = new HttpPost(pushNotificationServerUrl);
-                    httpPost.setHeader("Content-Type", "application/json");
-                    httpPost.setEntity(new StringEntity(new Gson().toJson(params)));
+                    httpPost.setEntity(new StringEntity(new Gson().toJson(params), ContentType.APPLICATION_JSON));
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Sending push server notification to client with identity: " + pushClientIdentity);
+                    }
                     HttpResponse httpResponse = httpClient.execute(httpPost);
                     if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                         logger.warning("Error while sending push server notification to client with identity: " + pushClientIdentity + ", response: " + httpResponse.getEntity());
