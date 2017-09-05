@@ -19,26 +19,49 @@
  */
 package org.restcomm.connect.telephony;
 
-import akka.actor.ActorContext;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.dispatch.Futures;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.util.Timeout;
+import static akka.pattern.Patterns.ask;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_ACCEPTED;
+import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_SERVER_INTERNAL_ERROR;
 
-import com.google.gson.Gson;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-
-import gov.nist.javax.sip.header.UserAgent;
+import javax.sdp.SdpParseException;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.AuthInfo;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipApplicationSessionEvent;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
+import javax.servlet.sip.TelURL;
+import javax.sip.header.RouteHeader;
+import javax.sip.message.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -57,6 +80,7 @@ import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.commons.telephony.ProxyRule;
+import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
@@ -64,15 +88,17 @@ import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.RegistrationsDao;
+import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.MostOptimalNumberResponse;
 import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.Registration;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.IExtensionCreateCallRequest;
@@ -106,55 +132,33 @@ import org.restcomm.connect.telephony.api.UpdateCallScript;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 
+import com.google.gson.Gson;
+import com.google.i18n.phonenumbers.NumberParseException;
+
+import akka.actor.ActorContext;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.dispatch.Futures;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.util.Timeout;
+import gov.nist.javax.sip.header.UserAgent;
 import scala.concurrent.Await;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-
-import javax.sdp.SdpParseException;
-import javax.servlet.ServletContext;
-import javax.servlet.sip.Address;
-import javax.servlet.sip.AuthInfo;
-import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipApplicationSessionEvent;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
-import javax.servlet.sip.TelURL;
-import javax.sip.header.RouteHeader;
-import javax.sip.message.Response;
-
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
-
-import static akka.pattern.Patterns.ask;
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author ivelin.ivanov@telestax.com
  * @author jean.deruelle@telestax.com
  * @author gvagenas@telestax.com
+ * @author maria.farooq@telestax.com
  */
 public final class CallManager extends RestcommUntypedActor {
 
@@ -500,13 +504,21 @@ public final class CallManager extends RestcommUntypedActor {
         final ApplicationsDao applications = storage.getApplicationsDao();
         // Try to find an application defined for the client.
         final SipURI fromUri = (SipURI) request.getFrom().getURI();
+        Sid sourceOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromUri);
+        if(logger.isDebugEnabled()) {
+            logger.debug("sourceOrganizationSid: " + sourceOrganizationSid +" fromUri: "+fromUri);
+        }
+        if(sourceOrganizationSid == null){
+            if(logger.isInfoEnabled())
+                logger.info("Null Organization, call is probably coming from a provider: fromUri: "+fromUri);
+        }
         final String fromUser = fromUri.getUser();
         final ClientsDao clients = storage.getClientsDao();
-        final Client client = clients.getClient(fromUser);
+        final Client client = clients.getClient(fromUser,sourceOrganizationSid);
         if (client != null) {
             // Make sure we force clients to authenticate.
             if (!authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
-                    || CallControlHelper.checkAuthentication(request, storage)) {
+                    || CallControlHelper.checkAuthentication(request, storage, sourceOrganizationSid)) {
                 // if the client has authenticated, try to redirect to the Client VoiceURL app
                 // otherwise continue trying to process the Client invite
                 if (redirectToClientVoiceApp(self, request, accounts, applications, client)) {
@@ -523,7 +535,7 @@ public final class CallManager extends RestcommUntypedActor {
         final String toUser = CallControlHelper.getUserSipId(request, useTo);
         final String ruri = ((SipURI) request.getRequestURI()).getHost();
         final String toHost = ((SipURI) request.getTo().getURI()).getHost();
-        final String toHostIpAddress = InetAddress.getByName(toHost).getHostAddress();
+        final String toHostIpAddress = DNSUtils.getByName(toHost).getHostAddress();
         final String toPort = String.valueOf(((SipURI) request.getTo().getURI()).getPort()).equalsIgnoreCase("-1") ? "5060"
                 : String.valueOf(((SipURI) request.getTo().getURI()).getHost());
         final String transport = ((SipURI) request.getTo().getURI()).getTransportParam() == null ? "udp" : ((SipURI) request
@@ -538,8 +550,14 @@ public final class CallManager extends RestcommUntypedActor {
             logger.info("mediaExternalIp: " + mediaExternalIp);
             logger.info("proxyIp: " + proxyIp);
         }
-
-        final Client toClient = clients.getClient(toUser);
+        Sid toOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getTo().getURI());
+        if(logger.isDebugEnabled()) {
+            logger.debug("toOrganizationSid: " + toOrganizationSid);
+        }
+        if(toOrganizationSid == null){
+            logger.error("Null to Organization: toUri: "+(SipURI) request.getTo().getURI());
+        }
+        final Client toClient = clients.getClient(toUser, toOrganizationSid);
 
         if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have little control over
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to the b2bua
@@ -595,7 +613,7 @@ public final class CallManager extends RestcommUntypedActor {
             } else {
                 // toClient is null or we couldn't make the b2bua call to another client. check if this call is for a registered
                 // DID (application)
-                if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, client.getAccountSid())) {
+                if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, client.getAccountSid(), sourceOrganizationSid)) {
                     // This is a call to a registered DID (application)
                     return;
                 }
@@ -661,7 +679,7 @@ public final class CallManager extends RestcommUntypedActor {
                 proxyDialClientThroughMediaServer(request, toClient, toClient.getLogin());
                 return;
             }
-            if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, null)) {
+            if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, null, sourceOrganizationSid)) {
                 // This is a call to a registered DID (application)
                 return;
             }
@@ -752,7 +770,7 @@ public final class CallManager extends RestcommUntypedActor {
                 "outboudproxy-user-at-from-header", true);
 
         final String fromHost = ((SipURI) request.getFrom().getURI()).getHost();
-        final String fromHostIpAddress = InetAddress.getByName(fromHost).getHostAddress();
+        final String fromHostIpAddress = DNSUtils.getByName(fromHost).getHostAddress();
 //                    final String fromPort = String.valueOf(((SipURI) request.getFrom().getURI()).getPort()).equalsIgnoreCase("-1") ? "5060"
 //                            : String.valueOf(((SipURI) request.getFrom().getURI()).getHost());
 
@@ -977,7 +995,7 @@ public final class CallManager extends RestcommUntypedActor {
             SipURI fromInetUri = (SipURI) request.getSession().getAttribute(B2BUAHelper.FROM_INET_URI);
             InetAddress infoRURI = null;
             try {
-                infoRURI = InetAddress.getByName(((SipURI) clonedInfo.getRequestURI()).getHost());
+                infoRURI = DNSUtils.getByName(((SipURI) clonedInfo.getRequestURI()).getHost());
             } catch (UnknownHostException e) {
             }
             if (patchForNatB2BUASessions) {
@@ -1078,23 +1096,9 @@ public final class CallManager extends RestcommUntypedActor {
             return;
         }
 
-        final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
         String phone = cdr.getTo();
-        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
-        if (number == null) {
-            if (phone.startsWith("+")) {
-                //remove the (+) and check if exists
-                phone = phone.replaceFirst("\\+", "");
-                number = numbers.getIncomingPhoneNumber(phone);
-            } else {
-                //Add "+" add check if number exists
-                phone = "+".concat(phone);
-                number = numbers.getIncomingPhoneNumber(phone);
-            }
-        }
-        if (number == null) {
-            number = numbers.getIncomingPhoneNumber("*");
-        }
+        MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, phone, storage.getAccountsDao().getAccount(cdr.getAccountSid()).getOrganizationSid());
+        IncomingPhoneNumber number = mostOptimalNumber.number();
 
         if (number == null || (number.getReferUrl() == null && number.getReferApplicationSid() == null)) {
             if (logger.isInfoEnabled()) {
@@ -1221,99 +1225,76 @@ public final class CallManager extends RestcommUntypedActor {
      * @param phone
      */
     private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-                                             final ApplicationsDao applications, String phone, Sid fromClientAccountSid) {
+                                             final ApplicationsDao applications, String phone, Sid fromClientAccountSid, Sid sourceOrganizationSid) {
         boolean isFoundHostedApp = false;
-        // Format the destination to an E.164 phone number.
-        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-        String formatedPhone = null;
-        if (!(phone.contains("*") || phone.contains("#"))) {
-            try {
-                formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
-            } catch (NumberParseException e) {
-                /*if (logger.isInfoEnabled()) {
-                    String msg = String.format("Problem while trying to format number %s, exception %s ",phone, e);
-                    logger.info(msg);
-                }*/
-            }
-        }
-        if (formatedPhone == null) {
-            //Don't format to E.164 if phone contains # or * as this is
-            //for a Regex or USSD short number
-            formatedPhone = phone;
-        }
+        boolean failCall = false;
         IncomingPhoneNumber number = null;
         try {
-            // Try to find an application defined for the phone number.
-            final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-            number = numbers.getIncomingPhoneNumber(formatedPhone);
-            if (number == null) {
-                number = numbers.getIncomingPhoneNumber(phone);
-            }
-            if (number == null) {
-                if (phone.startsWith("+")) {
-                    //remove the (+) and check if exists
-                    phone = phone.replaceFirst("\\+", "");
-                    number = numbers.getIncomingPhoneNumber(phone);
-                } else {
-                    //Add "+" add check if number exists
-                    phone = "+".concat(phone);
-                    number = numbers.getIncomingPhoneNumber(phone);
-                }
-            }
-            if (number == null) {
-                // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
-                number = numbers.getIncomingPhoneNumber("*");
-            }
-            if (number != null) {
-                final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
-                builder.setConfiguration(configuration);
-                builder.setStorage(storage);
-                builder.setCallManager(self);
-                builder.setConferenceCenter(conferences);
-                builder.setBridgeManager(bridges);
-                builder.setSmsService(sms);
-                //https://github.com/RestComm/Restcomm-Connect/issues/1939
-                Sid accSid = fromClientAccountSid == null ? number.getAccountSid() : fromClientAccountSid;
-                builder.setAccount(accSid);
-                builder.setPhone(number.getAccountSid());
-                builder.setVersion(number.getApiVersion());
-                // notifications should go to fromClientAccountSid email if not present then to number account
-                // https://github.com/RestComm/Restcomm-Connect/issues/2011
-                final Account account = accounts.getAccount(accSid);
-                builder.setEmailAddress(account.getEmailAddress());
-                final Sid sid = number.getVoiceApplicationSid();
-                if (sid != null) {
-                    final Application application = applications.getApplication(sid);
-                    RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
-                    RcmlserverResolver rcmlserverResolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
-                    builder.setUrl(UriUtils.resolve(rcmlserverResolver.resolveRelative(application.getRcmlUrl())));
-                } else {
-                    builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
-                }
-                final String voiceMethod = number.getVoiceMethod();
-                if (voiceMethod == null || voiceMethod.isEmpty()) {
-                    builder.setMethod("POST");
-                } else {
-                    builder.setMethod(voiceMethod);
-                }
-                URI uri = number.getVoiceFallbackUrl();
-                if (uri != null)
-                    builder.setFallbackUrl(UriUtils.resolve(uri));
-                else
-                    builder.setFallbackUrl(null);
-                builder.setFallbackMethod(number.getVoiceFallbackMethod());
-                builder.setStatusCallback(number.getStatusCallback());
-                builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
-                builder.setMonitoring(monitoring);
-                final Props props = VoiceInterpreter.props(builder.build());
-                final ActorRef interpreter = getContext().actorOf(props);
+            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, phone, sourceOrganizationSid);
+            number = mostOptimalNumber.number();
+            failCall = mostOptimalNumber.isRelevant();
+            if(failCall){
+                //number was found but organization was not proper.
+                final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
+                response.send();
+                String sourceDomainName = storage.getOrganizationsDao().getOrganization(sourceOrganizationSid).getDomainName();
+                // We found the number but organization was not proper
+                String errMsg = String.format("provided number %s does not belong to your domain %s.", phone, sourceDomainName);
+                logger.warning(errMsg+" Requiested URI was: "+ request.getRequestURI());
+                sendNotification(fromClientAccountSid, errMsg, 11005, "error", true);
+                return true;
+            }else{
+                if (number != null) {
+                    final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
+                    builder.setConfiguration(configuration);
+                    builder.setStorage(storage);
+                    builder.setCallManager(self);
+                    builder.setConferenceCenter(conferences);
+                    builder.setBridgeManager(bridges);
+                    builder.setSmsService(sms);
+                    //https://github.com/RestComm/Restcomm-Connect/issues/1939
+                    Sid accSid = fromClientAccountSid == null ? number.getAccountSid() : fromClientAccountSid;
+                    builder.setAccount(accSid);
+                    builder.setPhone(number.getAccountSid());
+                    builder.setVersion(number.getApiVersion());
+                    // notifications should go to fromClientAccountSid email if not present then to number account
+                    // https://github.com/RestComm/Restcomm-Connect/issues/2011
+                    final Account account = accounts.getAccount(accSid);
+                    builder.setEmailAddress(account.getEmailAddress());
+                    final Sid sid = number.getVoiceApplicationSid();
+                    if (sid != null) {
+                        final Application application = applications.getApplication(sid);
+                        RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+                        RcmlserverResolver rcmlserverResolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+                        builder.setUrl(UriUtils.resolve(rcmlserverResolver.resolveRelative(application.getRcmlUrl())));
+                    } else {
+                        builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
+                    }
+                    final String voiceMethod = number.getVoiceMethod();
+                    if (voiceMethod == null || voiceMethod.isEmpty()) {
+                        builder.setMethod("POST");
+                    } else {
+                        builder.setMethod(voiceMethod);
+                    }
+                    URI uri = number.getVoiceFallbackUrl();
+                    if (uri != null)
+                        builder.setFallbackUrl(UriUtils.resolve(uri));
+                    else
+                        builder.setFallbackUrl(null);
+                    builder.setFallbackMethod(number.getVoiceFallbackMethod());
+                    builder.setStatusCallback(number.getStatusCallback());
+                    builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
+                    builder.setMonitoring(monitoring);
+                    final Props props = VoiceInterpreter.props(builder.build());
+                    final ActorRef interpreter = getContext().actorOf(props);
 
-                final ActorRef call = call(null);
-                final SipApplicationSession application = request.getApplicationSession();
-                application.setAttribute(Call.class.getName(), call);
-                call.tell(request, self);
-                interpreter.tell(new StartInterpreter(call), self);
-                isFoundHostedApp = true;
+                    final ActorRef call = call(null);
+                    final SipApplicationSession application = request.getApplicationSession();
+                    application.setAttribute(Call.class.getName(), call);
+                    call.tell(request, self);
+                    interpreter.tell(new StartInterpreter(call), self);
+                    isFoundHostedApp = true;
+                }
             }
         } catch (Exception notANumber) {
             String errMsg;
@@ -1460,7 +1441,7 @@ public final class CallManager extends RestcommUntypedActor {
             if (patchForNatB2BUASessions) {
                 InetAddress ackRURI = null;
                 try {
-                    ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
+                    ackRURI = DNSUtils.getByName(((SipURI) ack.getRequestURI()).getHost());
                 } catch (UnknownHostException e) {
                 }
                 boolean isBehindLB = false;
@@ -1762,7 +1743,7 @@ public final class CallManager extends RestcommUntypedActor {
             case CLIENT: {
                 if (request.isAllowed()) {
                     ClientsDao clients = storage.getClientsDao();
-                    Client client = clients.getClient(request.to().replaceFirst("client:", ""));
+                    Client client = clients.getClient(request.to().replaceFirst("client:", ""), storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid());
                     if (client != null) {
                         long delay = sendPushNotificationIfNeeded(client.getPushClientIdentity());
                         system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
@@ -1835,8 +1816,9 @@ public final class CallManager extends RestcommUntypedActor {
         //2. Check if the client has more than one registrations
 
         List<Registration> registrationToDial = new CopyOnWriteArrayList<Registration>();
+        Sid organizationSid = storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid();
 
-        List<Registration> registrations = registrationsDao.getRegistrations(client);
+        List<Registration> registrations = registrationsDao.getRegistrations(client, organizationSid);
         if (registrations != null && registrations.size() > 0) {
             if (logger.isInfoEnabled()) {
                 logger.info("Preparing call for client: " + client + ". There are " + registrations.size() + " registrations at the database for this client");
@@ -2033,7 +2015,12 @@ public final class CallManager extends RestcommUntypedActor {
                 // allow to use it directly
                 from = (SipURI) sipFactory.createURI(request.from());
             } else {
-                from = sipFactory.createSipURI(request.from(), outboundIntf.getHost() + ":" + outboundIntf.getPort());
+                if(request.accountId() != null){
+                    Organization fromOrganization = storage.getOrganizationsDao().getOrganization(storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid());
+                    from = sipFactory.createSipURI(request.from(), fromOrganization.getDomainName());
+                } else {
+                    from = sipFactory.createSipURI(request.from(), outboundIntf.getHost() + ":" + outboundIntf.getPort());
+                }
             }
         }
         if (from == null || to == null) {
@@ -2133,7 +2120,7 @@ public final class CallManager extends RestcommUntypedActor {
                 SipURI fromInetUri = (SipURI) request.getSession().getAttribute(B2BUAHelper.FROM_INET_URI);
                 InetAddress byeRURI = null;
                 try {
-                    byeRURI = InetAddress.getByName(((SipURI) clonedBye.getRequestURI()).getHost());
+                    byeRURI = DNSUtils.getByName(((SipURI) clonedBye.getRequestURI()).getHost());
                 } catch (UnknownHostException e) {
                 }
                 boolean isBehindLB = false;
@@ -2447,7 +2434,11 @@ public final class CallManager extends RestcommUntypedActor {
             logger.info("looking for registrations for number: " + formattedNumber);
         }
         final RegistrationsDao registrationsDao = storage.getRegistrationsDao();
-        List<Registration> registrations = registrationsDao.getRegistrations(formattedNumber);
+        Sid orgSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI)regUri);
+        if(orgSid == null){
+            logger.error("Null Organization: regUri: "+regUri);
+        }
+        List<Registration> registrations = registrationsDao.getRegistrations(formattedNumber, orgSid);
 
         if (registrations == null || registrations.size() == 0) {
             return null;

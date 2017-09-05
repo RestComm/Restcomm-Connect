@@ -15,6 +15,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.loader.ObjectFactory;
+import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
@@ -41,6 +42,8 @@ public class MediaResourceBrokerTestUtil {
     protected ActorRef mediaResourceBrokerNode1;
     protected ActorRef mediaResourceBrokerNode2;
 
+    protected static final String RESTCOMM_CONFIG = "restcomm.xml";
+    
     protected static final String CONFIG_PATH_NODE_1 = "/restcomm.xml";
     protected static final String CONFIG_PATH_NODE_2 = "/restcomm-node2.xml";
     protected static final String CONFIG_PATH_DAO_MANAGER = "/dao-manager.xml";
@@ -55,6 +58,12 @@ public class MediaResourceBrokerTestUtil {
     public static void beforeClass() throws Exception {
         Config config = ConfigFactory.load("akka_fault_tolerance_application.conf");
         system = ActorSystem.create("test", config );
+        XMLConfiguration rectommXML = new XMLConfiguration();
+        rectommXML.setDelimiterParsingDisabled(true);
+        rectommXML.setAttributeSplittingDisabled(true);
+        rectommXML.load(RESTCOMM_CONFIG);
+        // initialize DnsUtilImpl ClassName
+        DNSUtils.initializeDnsUtilImplClassName(rectommXML);
     }
 
     @AfterClass

@@ -52,5 +52,6 @@
     <mapper url="file://${sql}/media-resource-broker-entity.xml"/>
     <mapper url="file://${sql}/extensions-configuration.xml"/>
     <mapper url="file://${sql}/geolocation.xml"/>
+    <mapper url="file://${sql}/organization.xml"/>
   </mappers>
 </configuration>
