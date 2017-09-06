@@ -394,6 +394,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     abstract List<NameValuePair> parameters();
 
+    protected URI resolve(URI uri){
+        return UriUtils.resolve(uri);
+    }
+
     public ActorRef getAsrService() {
         if (asrService == null || (asrService != null && asrService.isTerminated())) {
             asrService = asr(configuration.subset("speech-recognizer"));
@@ -528,7 +532,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         return cache;
     }
 
-    ActorRef cache(final String path, final String uri) {
+    protected ActorRef cache(final String path, final String uri) {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
             @Override
@@ -539,7 +543,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         return system.actorOf(props);
     }
 
-    ActorRef downloader() {
+    protected ActorRef downloader() {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
@@ -816,6 +820,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
         });
         return system.actorOf(props);
+    }
+
+    protected boolean is(State state) {
+        return this.fsm.state().equals(state);
     }
 
     abstract class AbstractAction implements Action {
