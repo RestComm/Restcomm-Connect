@@ -142,7 +142,7 @@ import static akka.pattern.Patterns.ask;
  * @author pavel.slegr@telestax.com
  * @author maria.farooq@telestax.com
  */
-public final class VoiceInterpreter extends BaseVoiceInterpreter {
+public class VoiceInterpreter extends BaseVoiceInterpreter {
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -225,7 +225,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     // Controls if VI will wait MS response to move to the next verb
     protected boolean msResponsePending;
 
-    private VoiceInterpreter(VoiceInterpreterParams params) {
+    public VoiceInterpreter(VoiceInterpreterParams params) {
         super();
         final ActorRef source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
@@ -467,10 +467,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 return new VoiceInterpreter(params);
             }
         });
-    }
-
-    private boolean is(State state) {
-        return this.fsm.state().equals(state);
     }
 
     private Notification notification(final int log, final int error, final String message) {
@@ -2263,7 +2259,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             path += "ringing.wav";
             URI uri = null;
             try {
-                uri = UriUtils.resolve(new URI(path));
+                uri = resolve(new URI(path));
             } catch (final Exception exception) {
                 final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                 final NotificationsDao notifications = storage.getNotificationsDao();
