@@ -1561,7 +1561,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             String hints = null;
             Attribute hintsAttr = verb.attribute(GatherAttributes.ATTRIBUTE_HINTS);
             if (hintsAttr != null && !StringUtils.isEmpty(hintsAttr.value())) {
-                hints = limitHints(hintsAttr.value());
+                hints = hintsAttr.value();
             } else if (inputType != Collect.Type.DTMF) {
                 logger.warning("'{}' attribute is null or empty", GatherAttributes.ATTRIBUTE_HINTS);
             }
@@ -1616,19 +1616,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                         defaultLang);
                 return defaultLang;
             }
-        }
-
-        String limitHints(String hints) {
-            List<String> hintList = Arrays.asList(hints.split(","));
-            if (hintList.size() > 50) {
-                hintList = hintList.subList(0, 50);
-            }
-            for (int i = 0; i < hintList.size() - 1; i++) {
-                if (hintList.get(i).length() > 100) {
-                    hintList.set(i, hintList.get(i).substring(0, 100));
-                }
-            }
-            return StringUtils.join(hintList, ",");
         }
     }
 
