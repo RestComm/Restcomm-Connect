@@ -292,7 +292,7 @@ public class DialRecordingTest {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertTrue(duration==3.0);
+		assertEquals(3.0 ,duration, 0.5);
 
 		RequestConfig requestConfig = RequestConfig.custom()
 				.setConnectTimeout(6000)
@@ -311,7 +311,7 @@ public class DialRecordingTest {
 		}
 		assertTrue(httpResponse != null);
 		int code = httpResponse.getStatusLine().getStatusCode();
-		assertEquals(404, code);
+		assertEquals(200, code);
 
 		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 		assertNotNull(metrics);
@@ -381,7 +381,7 @@ public class DialRecordingTest {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertTrue(duration==3.0);
+		assertEquals(3.0, duration, 0.5);;
 
 		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 		assertNotNull(metrics);
@@ -395,7 +395,7 @@ public class DialRecordingTest {
 
 	final String recordCall = "<Response><Record timeout=\"15\" maxLength=\"60\"/></Response>";
 	@Test
-	public synchronized void testRecordCall() throws InterruptedException, ParseException {
+	public synchronized void testRecordVerb() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
 						.withStatus(200)
@@ -443,14 +443,14 @@ public class DialRecordingTest {
 
 		bobCall.disconnect();
 
-		Thread.sleep(3000);
+		Thread.sleep(2000);
 
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(3.0, duration,1);
+		assertEquals(3.0, duration,0.5);
 
 		metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 		assertNotNull(metrics);

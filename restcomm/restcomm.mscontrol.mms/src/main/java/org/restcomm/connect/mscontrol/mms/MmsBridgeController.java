@@ -186,29 +186,35 @@ public class MmsBridgeController extends MediaServerController {
             duration = 0.0;
         }
 
-        if (duration.equals(0.0)) {
+        if (!duration.equals(0.0)) {
+//            if(logger.isInfoEnabled()) {
+//                logger.info("Call wraping up recording. File doesn't exist since duration is 0");
+//            }
+//            final DateTime end = DateTime.now();
+//            duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
+//        } else
+            if(logger.isInfoEnabled()) {
+            logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
+            }
+
+            final Recording.Builder builder = Recording.builder();
+            builder.setSid(recordingSid);
+            builder.setAccountSid(accountId);
+            builder.setCallSid(callId);
+            builder.setDuration(duration);
+            builder.setApiVersion(runtimeSettings.getString("api-version"));
+            StringBuilder buffer = new StringBuilder();
+            buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/").append(accountId.toString());
+            buffer.append("/Recordings/").append(recordingSid.toString());
+            builder.setUri(URI.create(buffer.toString()));
+            final Recording recording = builder.build();
+            RecordingsDao recordsDao = daoManager.getRecordingsDao();
+            recordsDao.addRecording(recording);
+        } else {
             if(logger.isInfoEnabled()) {
                 logger.info("Call wraping up recording. File doesn't exist since duration is 0");
             }
-            final DateTime end = DateTime.now();
-            duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
-        } else  if(logger.isInfoEnabled()) {
-            logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
         }
-
-        final Recording.Builder builder = Recording.builder();
-        builder.setSid(recordingSid);
-        builder.setAccountSid(accountId);
-        builder.setCallSid(callId);
-        builder.setDuration(duration);
-        builder.setApiVersion(runtimeSettings.getString("api-version"));
-        StringBuilder buffer = new StringBuilder();
-        buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/").append(accountId.toString());
-        buffer.append("/Recordings/").append(recordingSid.toString());
-        builder.setUri(URI.create(buffer.toString()));
-        final Recording recording = builder.build();
-        RecordingsDao recordsDao = daoManager.getRecordingsDao();
-        recordsDao.addRecording(recording);
     }
 
     /*
