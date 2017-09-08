@@ -28,6 +28,9 @@ import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.monitoringservice.LiveCallsDetails;
@@ -42,8 +45,13 @@ import java.util.List;
  */
 public class MonitoringServiceConverterCallDetails extends AbstractConverter implements JsonSerializer<LiveCallsDetails>{
 
+    private String dateTimeNow;
+
     public MonitoringServiceConverterCallDetails (Configuration configuration) {
         super(configuration);
+        DateTime now = DateTime.now();
+        DateTimeFormatter fmt = DateTimeFormat.forPattern("EEE, dd MMM yyyy kk:mm:ss");
+        dateTimeNow = fmt.print(now);
     }
 
     @Override
@@ -57,6 +65,7 @@ public class MonitoringServiceConverterCallDetails extends AbstractConverter imp
         JsonArray callsArray = new JsonArray();
 
         //First add InstanceId and Version details
+        result.addProperty("DateTime", dateTimeNow);
         result.addProperty("InstanceId", RestcommConfiguration.getInstance().getMain().getInstanceId());
         result.addProperty("Version", Version.getVersion());
         result.addProperty("Revision", Version.getRevision());
@@ -74,6 +83,10 @@ public class MonitoringServiceConverterCallDetails extends AbstractConverter imp
     @Override
     public void marshal(Object object, HierarchicalStreamWriter writer, MarshallingContext context) {
         final List<CallInfo> callDetails = (List<CallInfo>) object;
+
+        writer.startNode("DateTime");
+        writer.setValue(dateTimeNow);
+        writer.endNode();
 
         writer.startNode("InstanceId");
         writer.setValue(RestcommConfiguration.getInstance().getMain().getInstanceId());
