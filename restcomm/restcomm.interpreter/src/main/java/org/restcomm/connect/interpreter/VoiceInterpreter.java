@@ -803,6 +803,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             } else if (is(playing)) {
                 fsm.transition(message, ready);
             } else if (is(creatingRecording)) {
+                logger.info("Will move to finishRecording because of MediaGroupResponse");
                 fsm.transition(message, finishRecording);
             } // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
             // come later
@@ -1258,8 +1259,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     } else if (is(creatingRecording)) {
                         // Ask callMediaGroup to stop recording so we have the recording file available
                         // Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
+                        logger.info("Will move to finishRecording because of callStateChanged");
                         call.tell(new StopMediaGroup(), null);
-                        fsm.transition(message, finishRecording);
+//                        fsm.transition(message, finishRecording);
                     } else if ((is(bridged) || is(forking)) && call == sender()) {
                         if (!dialActionExecuted) {
                             fsm.transition(message, finishDialing);

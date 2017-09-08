@@ -319,6 +319,7 @@ public class MgcpMediaGroup extends MediaGroup {
                 }
             }
         } else if (StopMediaGroup.class.equals(klass)) {
+            logger.info("sender path :"+sender.path());
             if (acquiringLink.equals(state) || initializingLink.equals(state)) {
                 fsm.transition(message, inactive);
             } else if (active.equals(state) || openingLink.equals(state) || updatingLink.equals(state)) {
