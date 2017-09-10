@@ -55,9 +55,7 @@ import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -72,6 +70,10 @@ import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonObject;
+import java.util.HashMap;
+import java.util.Map;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
  * Test for Dial Action attribute. Reference: https://www.twilio.com/docs/api/twiml/dial#attributes-action The 'action'
@@ -98,10 +100,12 @@ public class CallLifecycleTest {
     @ArquillianResource
     URL deploymentUrl;
 
-    //Dial Action URL: http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/DialAction Method: POST
+    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
+    
+    private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
-
+    public WireMockRule wireMockRule = new WireMockRule(mockPort);
+    
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
@@ -111,34 +115,43 @@ public class CallLifecycleTest {
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
     private SipPhone bobPhone;
-    private String bobContact = "sip:bob@127.0.0.1:5090";
+    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile()); 
+    private String bobContact = "sip:bob@127.0.0.1:" + bobPort;
 
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
     // of the VoiceURL will be executed.
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
-    private String aliceContact = "sip:alice@127.0.0.1:5091";
+    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());    
+    private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
 
     // Henrique is a simple SIP Client. Will not register with Restcomm
     private SipStack henriqueSipStack;
     private SipPhone henriquePhone;
-    private String henriqueContact = "sip:henrique@127.0.0.1:5092";
+    private static String henriquePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private String henriqueContact = "sip:henrique@127.0.0.1:" + henriquePort;
 
     // George is a simple SIP Client. Will not register with Restcomm
     private SipStack georgeSipStack;
     private SipPhone georgePhone;
-    private String georgeContact = "sip:+131313@127.0.0.1:5070";
+    private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private String georgeContact = "sip:+131313@127.0.0.1:" + georgePort;
 
     // subaccountclient is a simple SIP Client. Will register with Restcomm
     private SipStack subAccountClientSipStack;
     private SipPhone subAccountClientPhone;
-    private String subAccountClientContact = "sip:subaccountclient@127.0.0.1:5093";
+    private static String subAccountPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private String subAccountClientContact = "sip:subaccountclient@127.0.0.1:" + subAccountPort;
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     private String subAccountSid = "ACae6e420f425248d6a26948c17a9e2acg";
     private String subAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    
+    private static int restcommPort = 5080;
+    private static int restcommHTTPPort = 8080;        
+    private static String restcommContact = "127.0.0.1:" + restcommPort;     
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -148,24 +161,34 @@ public class CallLifecycleTest {
         tool4 = new SipStackTool("DialActionTest4");
         tool5 = new SipStackTool("DialActionTest5");
     }
+    
+    public static void reconfigurePorts() { 
+        if (System.getProperty("arquillian_sip_port") != null) {
+            restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
+            restcommContact = "127.0.0.1:" + restcommPort; 
+        } 
+        if (System.getProperty("arquillian_http_port") != null) {
+            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
+        }        
+    }
 
 
     @Before
     public void before() throws Exception {
-        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
-        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
+        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", bobPort, restcommContact);
+        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, bobContact);
 
-        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
-        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
+        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", alicePort, restcommContact);
+        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, aliceContact);
 
-        henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
-        henriquePhone = henriqueSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, henriqueContact);
+        henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", henriquePort, restcommContact);
+        henriquePhone = henriqueSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, henriqueContact);
 
-        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
-        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
+        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", georgePort, restcommContact);
+        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, georgeContact);
 
-        subAccountClientSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5093", "127.0.0.1:5080");
-        subAccountClientPhone = subAccountClientSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, subAccountClientContact);
+        subAccountClientSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", subAccountPort, restcommContact);
+        subAccountClientPhone = subAccountClientSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, subAccountClientContact);
     }
 
     @After
@@ -227,7 +250,7 @@ public class CallLifecycleTest {
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -236,7 +259,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -279,7 +302,7 @@ public class CallLifecycleTest {
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -288,7 +311,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -346,7 +369,7 @@ public class CallLifecycleTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialAliceRcml)));
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -355,7 +378,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -442,7 +465,7 @@ public class CallLifecycleTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialAliceRcml)));
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -451,7 +474,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -474,7 +497,7 @@ public class CallLifecycleTest {
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         ArrayList<String> additionalHeaders = new ArrayList<String>();
         Header lbIpAddr = aliceSipStack.getHeaderFactory().createHeader("X-Sip-Balancer-InitialRemoteAddr","127.0.0.1");
-        Header lbPort = aliceSipStack.getHeaderFactory().createHeader("X-Sip-Balancer-InitialRemotePort","5091");
+        Header lbPort = aliceSipStack.getHeaderFactory().createHeader("X-Sip-Balancer-InitialRemotePort",alicePort);
         additionalHeaders.add(lbIpAddr.toString());
         additionalHeaders.add(lbPort.toString());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "Alice-OK", 3600, receivedBody, "application", "sdp",
@@ -543,7 +566,7 @@ public class CallLifecycleTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialAliceRcml)));
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -552,7 +575,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -617,7 +640,7 @@ public class CallLifecycleTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialAliceRcmlWithTimeLimit)));
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -626,7 +649,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -711,7 +734,7 @@ public class CallLifecycleTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialInvalidClientRcml)));
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -720,7 +743,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -778,7 +801,7 @@ public class CallLifecycleTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialInvalidClientRcmlAndThenAlice)));
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -787,7 +810,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -858,7 +881,7 @@ public class CallLifecycleTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
     }
 
-    private String dialInvalidClientRcmlAndThenAliceWithDialAction = "<Response><Dial action=\"http://127.0.0.1:8090/DialAction\"><Client>invalidClient</Client></Dial><Dial><Client>alice</Client></Dial></Response>";
+    private String dialInvalidClientRcmlAndThenAliceWithDialAction = "<Response><Dial action=\"http://127.0.0.1:" + mockPort + "/DialAction\"><Client>invalidClient</Client></Dial><Dial><Client>alice</Client></Dial></Response>";
 
     private String dialActionRcml = "<Response><Dial><Client>alice</Client></Dial></Response>";
 
@@ -877,7 +900,7 @@ public class CallLifecycleTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialActionRcml)));
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -886,7 +909,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -972,7 +995,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -1050,7 +1073,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, sdpToFailConnection, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, sdpToFailConnection, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -1102,7 +1125,7 @@ public class CallLifecycleTest {
         SipCall georgeCall = georgePhone.createSipCall();
         georgeCall.listenForIncomingCall();
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         Credential c = new Credential("127.0.0.1", "alice", "1234");
@@ -1110,7 +1133,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        aliceCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(aliceCall);
         assertTrue(aliceCall.waitForAuthorisation(5000));
         assertTrue(aliceCall.waitOutgoingCallResponse(5 * 1000));
@@ -1180,7 +1203,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -1264,7 +1287,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -1347,7 +1370,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -1430,7 +1453,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -1500,7 +1523,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -1564,7 +1587,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -1625,7 +1648,7 @@ public class CallLifecycleTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialAliceRcmlInvalidRCML)));
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -1634,7 +1657,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -1698,7 +1721,7 @@ public class CallLifecycleTest {
         SipCall georgeCall = georgePhone.createSipCall();
         georgeCall.listenForIncomingCall();
 
-        SipURI uri = subAccountClientSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = subAccountClientSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(subAccountClientPhone.register(uri, "subaccountclient", "1234", subAccountClientContact, 3600, 3600));
 
         Credential c = new Credential("127.0.0.1", "subaccountclient", "1234");
@@ -1706,7 +1729,7 @@ public class CallLifecycleTest {
 
         // Create outgoing call with subAccountClient phone to parent number
         final SipCall subAccountClientCall = subAccountClientPhone.createSipCall();
-        subAccountClientCall.initiateOutgoingCall(subAccountClientContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        subAccountClientCall.initiateOutgoingCall(subAccountClientContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(subAccountClientCall);
         assertTrue(subAccountClientCall.waitForAuthorisation(5000));
         assertTrue(subAccountClientCall.waitOutgoingCallResponse(5 * 1000));
@@ -1783,22 +1806,22 @@ public class CallLifecycleTest {
     @Deployment(name = "DialAction", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
-        WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
-                .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
-                .asSingle(WebArchive.class);
-        archive = archive.merge(restcommArchive);
-        archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/conf/restcomm.xml");
-        archive.delete("/WEB-INF/data/hsql/restcomm.script");
-        archive.delete("/WEB-INF/classes/application.conf");
-        archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm_calllifecycle.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script_callLifecycleTest", "data/hsql/restcomm.script");
-        archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
-        archive.addAsWebResource("dial-client-entry_wActionUrl.xml");
-        logger.info("Packaged Test App");
-        return archive;
-    }
+        reconfigurePorts();
+
+        Map<String,String> replacements = new HashMap();
+        //replace mediaport 2727 
+        replacements.put("2727", String.valueOf(mediaPort));        
+        replacements.put("8080", String.valueOf(restcommHTTPPort));
+        replacements.put("8090", String.valueOf(mockPort));
+        replacements.put("5080", String.valueOf(restcommPort));
+        replacements.put("5070", String.valueOf(georgePort));        
+        replacements.put("5090", String.valueOf(bobPort));
+        replacements.put("5091", String.valueOf(alicePort));
+        replacements.put("5092", String.valueOf(henriquePort));
+        replacements.put("5093", String.valueOf(subAccountPort));         
+        List<String> resources = new ArrayList(Arrays.asList("dial-client-entry_wActionUrl.xml"));
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm_calllifecycle.xml", 
+                "restcomm.script_callLifecycleTest",resources, replacements);
+    }      
 
 }

@@ -3,8 +3,10 @@
 
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
 	<appender name="rolling-file" class="org.apache.log4j.RollingFileAppender">
-		<param name="file" value="logs/sip-server.log" />
-		<param name="MaxFileSize" value="2000KB" />
+            <!--keep logs under maven target dir for git ginore and cleaning -->
+            <!--use arquillian system property to make file names unique across forks -->
+		<param name="file" value="target/logs/sip-server${arquillian_sip_port}.log" />
+		<param name="MaxFileSize" value="20000KB" />
 		<!-- Keep one backup file -->
 		<param name="MaxBackupIndex" value="20" />
 		<param name="append" value="false"/>
@@ -12,18 +14,13 @@
 			<param name="ConversionPattern" value="%p %t %l - %m%n" />
 		</layout>
 	</appender>
-	<appender name="console" class="org.apache.log4j.ConsoleAppender">
-		<param name="Target" value="System.out" />
-		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="%d{HH:mm:ss,SSS} %p %t %l - %m%n" />
-		</layout>
-	</appender>
+        <!-- do not print in console since we save on file anyway, and console
+        will make surefire/failsafe reports and jenkins console very big -->
 	<logger name="org.mobicents.servlet.sip.annotations">
 		<level value="INFO" />
 	</logger>
 	<root>
 		<priority value="DEBUG" />
-		<appender-ref ref="console" />
 		<appender-ref ref="rolling-file" />
 	</root>
 </log4j:configuration>
