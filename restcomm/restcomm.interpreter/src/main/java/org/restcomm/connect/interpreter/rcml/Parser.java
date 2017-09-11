@@ -128,7 +128,7 @@ public final class Parser extends RestcommUntypedActor {
                             continue;
                         }
                     }
-                    if (tag.name().equals("Gather") && tag.hasAttribute(GatherAttributes.ATTRIBUTE_HINTS) && !StringUtils.isEmpty(tag.attribute(GatherAttributes.ATTRIBUTE_HINTS).value())) {
+                    if (tag.name().equals(Verbs.gather) && tag.hasAttribute(GatherAttributes.ATTRIBUTE_HINTS) && !StringUtils.isEmpty(tag.attribute(GatherAttributes.ATTRIBUTE_HINTS).value())) {
                         String hotWords = tag.attribute(GatherAttributes.ATTRIBUTE_HINTS).value();
                         List<String> hintList = Arrays.asList(hotWords.split(","));
                         if (hintList.size() > 50) {
