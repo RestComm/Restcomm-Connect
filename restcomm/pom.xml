@@ -170,6 +170,8 @@
 		<module>restcomm.identity</module>
 		<module>restcomm.mrb</module>
                 <module>restcomm.mrb.api</module>
+                <module>restcomm.dns.api</module>
+                <module>restcomm.dns.route53</module>
                 <module>restcomm.monitoring.service</module>
                 <module>restcomm.tts.awspolly</module>
   </modules>
