@@ -6,7 +6,6 @@ Purpose of this document is to share the design for implementing the functionali
 A virtual Restcomm plateform provided to a customer on a unique custom domain. e.g. customer1.restcomm.com
 
 include::organizations/uml/component.adoc[]
-image::uml/component.png[]
 
 *   True multitenacy for numbers and clients. SIP numbers/clients are unique to a particular organization and not the entire plateform.
 
@@ -26,16 +25,13 @@ image::uml/component.png[]
 
 include::organizations/uml/routing.adoc[]
 
-image::uml/routing.png[]
 
 == SIP Routing
 
 include::organizations/uml/activitydiagram.adoc[]
 
-image::uml/activitydiagram.png[]
 
 
 == Database
 include::organizations/uml/datamodel.adoc[]
 
-image::uml/datamodel.png[]
