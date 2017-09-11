@@ -115,8 +115,10 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -471,28 +473,36 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         return getContext().actorOf(props);
     }
 
+    LinkedList<String> states = new LinkedList<String>(Arrays.asList("queued", "ringing", "in-progress", "completed", "busy", "failed", "no-answer", "canceled"));
+
     //Callback using the Akka ask pattern (http://doc.akka.io/docs/akka/2.2.5/java/untyped-actors.html#Ask__Send-And-Receive-Future) will force VoiceInterpter to wait until
     //Downloader finish with this callback before shutdown everything. Issue https://github.com/Mobicents/RestComm/issues/437
     void callback(boolean ask) {
         if (viStatusCallback != null) {
-            if(logger.isInfoEnabled()){
-                logger.info("About to execute viStatusCallback: "+ viStatusCallback.toString());
-            }
-            if (viStatusCallbackMethod == null) {
-                viStatusCallbackMethod = "POST";
-            }
-            final List<NameValuePair> parameters = parameters();
-            requestCallback = new HttpRequestDescriptor(viStatusCallback, viStatusCallbackMethod, parameters);
-            if (!ask) {
-                downloader.tell(requestCallback, null);
-            } else if (ask) {
-                final Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
-                Future<Object> future = (Future<Object>) ask(downloader, requestCallback, timeout);
-                DownloaderResponse downloaderResponse = null;
-                try {
-                    downloaderResponse = (DownloaderResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
-                } catch (Exception e) {
-                    logger.error("Exception during callback with ask pattern");
+            if (states.remove(callState.toString().toLowerCase())) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("About to execute viStatusCallback: " + viStatusCallback.toString());
+                }
+                if (viStatusCallbackMethod == null) {
+                    viStatusCallbackMethod = "POST";
+                }
+                final List<NameValuePair> parameters = parameters();
+                requestCallback = new HttpRequestDescriptor(viStatusCallback, viStatusCallbackMethod, parameters);
+                if (!ask) {
+                    downloader.tell(requestCallback, null);
+                } else if (ask) {
+                    final Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
+                    Future<Object> future = (Future<Object>) ask(downloader, requestCallback, timeout);
+                    DownloaderResponse downloaderResponse = null;
+                    try {
+                        downloaderResponse = (DownloaderResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+                    } catch (Exception e) {
+                        logger.error("Exception during callback with ask pattern");
+                    }
+                }
+            } else {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Status Callback has been already executed for state: ",callState.toString());
                 }
             }
         } else if(logger.isInfoEnabled()){

@@ -1,0 +1,30 @@
+[plantuml, activitydiagram, png]
+--
+
+title Request Routing
+
+start
+:Y@company.restcomm.com\nInitiate Call/Message\nX@company.restcomm.com;
+if (X is a client?) then (yes)
+  if (Y.organization = X.organization ?) then (yes)
+    :Connect Y with X;
+  else (no)
+    :Reject Call (404);
+    :Send notification;
+  endif
+else (no)
+    if (X is a SIP number ?) then (yes)
+        if (Y.organization = X.organization ?) then (yes)
+            :Connect Y with X;
+        else (no)
+            :Reject Call (404);
+            :Send notification;
+        endif
+    else (no)
+        :X is Provider Number!;
+        :Connect Y with X;
+    endif
+endif
+
+stop
+--

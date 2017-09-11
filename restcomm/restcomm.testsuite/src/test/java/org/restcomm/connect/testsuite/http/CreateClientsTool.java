@@ -1,8 +1,10 @@
 package org.restcomm.connect.testsuite.http;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -20,10 +22,9 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -153,12 +154,16 @@ public class CreateClientsTool {
     }
 
     public String createClient(String deploymentUrl, String username, String password, String voiceUrl) throws IOException {
+    	return createClient(deploymentUrl, "ACae6e420f425248d6a26948c17a9e2acf", "77f8c12cc7b8f8423e5c38b035249166", username, password, voiceUrl);
+    }
+
+    public String createClient(String deploymentUrl, String accountSid, String authToken, String username, String password, String voiceUrl) throws IOException {
         String clientSid = null;
 
         String endpoint = getEndpoint(deploymentUrl).replaceAll("http://", "");
 
-        String url = "http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@" + endpoint
-                + "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json";
+        String url = "http://"+accountSid+":"+authToken+"@" + endpoint
+                + "/2012-04-24/Accounts/"+accountSid+"/Clients.json";
 
         RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10 * 1000).build();
         CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
@@ -177,6 +182,7 @@ public class CreateClientsTool {
 
         res = res.replaceAll("\\{", "").replaceAll("\\}", "");
         String[] components = res.split(",");
+        System.out.println("createClient res: "+res+" components: "+components);
         clientSid = (components[0].split(":")[1]).replaceAll("\"", "");
 
         return clientSid;

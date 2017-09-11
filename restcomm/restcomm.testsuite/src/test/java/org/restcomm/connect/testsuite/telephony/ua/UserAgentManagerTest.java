@@ -47,6 +47,7 @@ import javax.sip.RequestEvent;
 import javax.sip.address.Address;
 import javax.sip.address.SipURI;
 import javax.sip.header.Header;
+import javax.sip.header.ToHeader;
 import javax.sip.message.Response;
 import java.net.URL;
 import java.text.ParseException;
@@ -101,6 +102,16 @@ public final class UserAgentManagerTest {
     private SipPhone phone5;
     private String mariaContact5 = "sip:maria.test%40telestax.com@127.0.0.1:5072";
 
+    private static SipStackTool tool6;
+    private SipStack sipStack6;
+    private SipPhone phone6;
+    private String aliceContact6 = "sip:alice@testdomain2.restcomm.com";
+
+    private static SipStackTool tool7;
+    private SipStack sipStack7;
+    private SipPhone phone7;
+    private String aliceContact7 = "sip:alice@127.0.0.1:5075";
+
     public UserAgentManagerTest() {
         super();
     }
@@ -112,6 +123,8 @@ public final class UserAgentManagerTest {
         tool3 = new SipStackTool("UserAgentTest3");
         tool4 = new SipStackTool("UserAgentTest4");
         tool5 = new SipStackTool("UserAgentTest5");
+        tool6 = new SipStackTool("UserAgentTest6");
+        tool7 = new SipStackTool("UserAgentTest7");
     }
 
     @Before
@@ -130,6 +143,12 @@ public final class UserAgentManagerTest {
 
         sipStack5 = tool5.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5073", "127.0.0.1:5080");
         phone5 = sipStack5.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5080, mariaContact5);
+
+        sipStack6 = tool6.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5074", "127.0.0.1:5080");
+        phone6 = sipStack6.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5080, aliceContact6);
+
+        sipStack7 = tool7.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5075", "127.0.0.1:5080");
+        phone7 = sipStack7.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5080, aliceContact7);
     }
 
     @After
@@ -485,6 +504,48 @@ public final class UserAgentManagerTest {
         phone5 = null;
         sipStack5 = null;
 
+        Thread.sleep(100000);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+    }
+
+    /**
+     * registerMultipleUsersWithSameLoginUnderDifferentOrganizations
+     * https://github.com/RestComm/Restcomm-Connect/issues/2106
+     * @throws ParseException
+     * @throws InterruptedException
+     * @throws InvalidArgumentException
+     */
+    @Test
+    public void registerMultipleUsersWithSameLoginUnderDifferentOrganizations() throws ParseException, InterruptedException, InvalidArgumentException {
+       
+        //register alice of organization (testdomain2.restcomm.com)
+        SipURI uri = sipStack6.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        Credential c = new Credential("testdomain2.restcomm.com","alice", "1234");
+        phone6.addUpdateCredential(c);
+        assertTrue(phone6.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5074", 3600, 3600));
+        Thread.sleep(500);
+        //alice should be registered successfully
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+
+        //register another alice of organization (127.0.0.1)
+        uri = sipStack7.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        c = new Credential("127.0.0.1","alice", "1234");
+        phone7.addUpdateCredential(c);
+        assertTrue(phone7.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5075", 3600, 3600));
+        Thread.sleep(500);
+
+        //both users should be registered successfully
+        int totalRegistrations = MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        logger.info("Totatl Registrations: "+totalRegistrations);
+        assertTrue(totalRegistrations==2);
+
+        //Dispose phones. Restcomm will fail to send the OPTIONS message and should remove the registration
+        sipStack6.dispose();
+        phone6 = null;
+        sipStack6 = null;
+        sipStack7.dispose();
+        phone7 = null;
+        sipStack7 = null;
         Thread.sleep(100000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }

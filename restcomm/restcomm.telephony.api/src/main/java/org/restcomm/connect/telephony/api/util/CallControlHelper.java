@@ -34,6 +34,7 @@ import javax.servlet.sip.SipURI;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.DigestAuthentication;
 
 /**
@@ -46,7 +47,7 @@ import org.restcomm.connect.commons.util.DigestAuthentication;
  */
 public class CallControlHelper {
 
-    static boolean permitted(final String authorization, final String method, DaoManager daoManager) {
+    static boolean permitted(final String authorization, final String method, DaoManager daoManager, final Sid organizationSid) {
         final Map<String, String> map = authHeaderToMap(authorization);
         final String user = map.get("username");
         final String algorithm = map.get("algorithm");
@@ -58,7 +59,7 @@ public class CallControlHelper {
         final String qop = map.get("qop");
         final String response = map.get("response");
         final ClientsDao clients = daoManager.getClientsDao();
-        final Client client = clients.getClient(user);
+        final Client client = clients.getClient(user, organizationSid);
         if (client != null && Client.ENABLED == client.getStatus()) {
             final String password = client.getPassword();
             final String result = DigestAuthentication.response(algorithm, user, realm, password, nonce, nc, cnonce, method,
@@ -76,11 +77,11 @@ public class CallControlHelper {
      * @return
      * @throws IOException
      */
-    public static boolean checkAuthentication(SipServletRequest request, DaoManager storage) throws IOException {
+    public static boolean checkAuthentication(SipServletRequest request, DaoManager storage, Sid organizationSid) throws IOException {
         // Make sure we force clients to authenticate.
         final String authorization = request.getHeader("Proxy-Authorization");
         final String method = request.getMethod();
-        if (authorization == null || !CallControlHelper.permitted(authorization, method, storage)) {
+        if (authorization == null || !CallControlHelper.permitted(authorization, method, storage, organizationSid)) {
             authenticate(request);
             return false;
         } else {

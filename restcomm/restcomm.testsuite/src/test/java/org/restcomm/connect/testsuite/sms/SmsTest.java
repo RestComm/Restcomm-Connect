@@ -80,6 +80,10 @@ public class SmsTest {
     private static SipStackTool tool2;
     private static SipStackTool tool3;
     private static SipStackTool tool4;
+    private static SipStackTool tool5;
+    private static SipStackTool tool6;
+    private static SipStackTool tool7;
+    private static SipStackTool tool8;
     
     private SipStack bobSipStack;
     private SipPhone bobPhone;
@@ -97,12 +101,29 @@ public class SmsTest {
     private SipPhone fotiniPhone;
     private String fotiniContact = "sip:fotini@127.0.0.1:5093";
     
+    private SipStack aliceSipStackOrg2;
+    private SipPhone alicePhoneOrg2;
+    private String aliceContactOrg2 = "sip:alice@org2.restcomm.com";
+    
+    private SipStack bobSipStackOrg2;
+    private SipPhone bobPhoneOrg2;
+    private String bobContactOrg2 = "sip:bob@org2.restcomm.com";
+
+    private SipStack georgeSipStackOrg2;
+    private SipPhone georgePhoneOrg2;
+    private String georgeContactOrg2 = "sip:george@org2.restcomm.com";
+    
+    private SipStack fotiniSipStackOrg2;
+    private SipPhone fotiniPhoneOrg2;
+    private String fotiniContactOrg2 = "sip:fotini@org2.restcomm.com";
+    
     private String dialSendSMS = "sip:+12223334444@127.0.0.1:5080";
     private String dialSendSMS2 = "sip:+12223334445@127.0.0.1:5080";
     private String dialSendSMS2_Greek = "sip:+12223334447@127.0.0.1:5080";
     private String dialSendSMS2_Greek_Huge = "sip:+12223334448@127.0.0.1:5080";
     private String dialSendSMS3 = "sip:+12223334446@127.0.0.1:5080";
     private String dialSendSMSwithCustomHeaders = "sip:+12223334449@127.0.0.1:5080";
+    private String dialSendSMS2Org2 = "sip:+12223334445@org2.restcomm.com";
 
     private String greekHugeMessage = "Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα "
             + "Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα Καλημερα "
@@ -116,6 +137,10 @@ public class SmsTest {
         tool2 = new SipStackTool("SmsTest2");
         tool3 = new SipStackTool("SmsTest3");
         tool4 = new SipStackTool("SmsTest4");
+        tool5 = new SipStackTool("SmsTest5");
+        tool6 = new SipStackTool("SmsTest6");
+        tool7 = new SipStackTool("SmsTest7");
+        tool8 = new SipStackTool("SmsTest8");
     }
     
     @Before
@@ -131,6 +156,18 @@ public class SmsTest {
         
         fotiniSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5093", "127.0.0.1:5080");
         fotiniPhone = fotiniSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, fotiniContact);
+        
+        aliceSipStackOrg2 = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
+        alicePhoneOrg2 = aliceSipStackOrg2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContactOrg2);
+        
+        bobSipStackOrg2 = tool6.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5095", "127.0.0.1:5080");
+        bobPhoneOrg2 = bobSipStackOrg2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContactOrg2);
+        
+        georgeSipStackOrg2 = tool7.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5096", "127.0.0.1:5080");
+        georgePhoneOrg2 = georgeSipStackOrg2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContactOrg2);
+        
+        fotiniSipStackOrg2 = tool8.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5097", "127.0.0.1:5080");
+        fotiniPhoneOrg2 = fotiniSipStackOrg2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, fotiniContactOrg2);
     }
     
     @After
@@ -161,6 +198,33 @@ public class SmsTest {
         }
         if (fotiniPhone != null) {
             fotiniPhone.dispose();
+        }
+        
+        if (georgeSipStackOrg2 != null) {
+            georgeSipStackOrg2.dispose();
+        }
+        if (georgePhoneOrg2 != null) {
+            georgePhoneOrg2.dispose();
+        }
+        
+        if (fotiniSipStackOrg2 != null) {
+            fotiniSipStack.dispose();
+        }
+        if (fotiniPhoneOrg2 != null) {
+            fotiniPhoneOrg2.dispose();
+        }
+        if (bobPhoneOrg2 != null) {
+            bobPhoneOrg2.dispose();
+        }
+        if (bobSipStackOrg2 != null) {
+            bobSipStackOrg2.dispose();
+        }
+
+        if (aliceSipStackOrg2 != null) {
+            aliceSipStackOrg2.dispose();
+        }
+        if (alicePhoneOrg2 != null) {
+            alicePhoneOrg2.dispose();
         }
     }
     
@@ -231,6 +295,32 @@ public class SmsTest {
         String msgReceived = new String(aliceCall.getLastReceivedMessageRequest().getRawContent());
         assertTrue("Hello World!".equals(msgReceived));
         aliceCall.sendMessageResponse(200, "OK-From-Alice", 3600);
+    }
+    
+    @Test
+    public void TestIncomingSmsSendToClientAliceOfOrganization2() throws ParseException, InterruptedException {
+        SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5094", 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCallOrg2 = alicePhoneOrg2.createSipCall();
+        aliceCallOrg2.listenForMessage();
+        
+        // Create outgoing call with first phone
+        final SipCall bobCallOrg2 = bobPhoneOrg2.createSipCall();
+        bobCallOrg2.initiateOutgoingMessage(dialSendSMS2Org2, null, "Hello from Bob!");
+        assertLastOperationSuccess(bobCallOrg2);
+        assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCallOrg2.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.ACCEPTED);
+
+        //Restcomm receives the SMS message from Bob, matches the DID with an RCML application, and executes it.
+        //The new RCML application sends an SMS to Alice with body "Hello World!"
+        
+        assertTrue(aliceCallOrg2.waitForMessage(5 * 1000));
+        String msgReceived = new String(aliceCallOrg2.getLastReceivedMessageRequest().getRawContent());
+        assertTrue("Hello World!".equals(msgReceived));
+        aliceCallOrg2.sendMessageResponse(200, "OK-From-Alice", 3600);
     }
     
     @Test
@@ -390,6 +480,41 @@ public class SmsTest {
         assertTrue(georgeCall.waitOutgoingMessageResponse(3000));
         assertTrue(georgeCall.getLastReceivedResponse().getStatusCode()==Response.OK);
         List<String> msgsFromGeorge = fotiniCall.getAllReceivedMessagesContent();
+
+        assertTrue(msgsFromGeorge.size()>0);
+        assertTrue(msgsFromGeorge.get(0).equals(greekHugeMessage));
+    }
+    
+    @Test
+    public void testP2PSendSMS_GeorgeClient_ToFotiniClientOrg2() throws ParseException {
+        SipURI uri = georgeSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        //Register George phone
+        assertTrue(georgePhoneOrg2.register(uri, "george", "1234", "sip:george@127.0.0.1:5096", 3600, 3600));
+        Credential georgeCredentialsOrg2 = new Credential("org2.restcomm.com", "george", "1234");
+        georgePhoneOrg2.addUpdateCredential(georgeCredentialsOrg2);
+
+        //Register Fotini phone
+        assertTrue(fotiniPhoneOrg2.register(uri, "fotini", "1234", "sip:fotini@127.0.0.1:5097", 3600, 3600));
+        Credential fotiniCredentials = new Credential("org2.restcomm.com", "fotini", "1234");
+        fotiniPhoneOrg2.addUpdateCredential(fotiniCredentials);
+        
+        //Prepare Fotini to receive message
+        SipCall fotiniCallOrg2 = fotiniPhoneOrg2.createSipCall();
+        fotiniCallOrg2.listenForMessage();
+
+        //Prepare George to send message
+        SipCall georgeCallOrg2 = georgePhoneOrg2.createSipCall();
+        georgeCallOrg2.initiateOutgoingMessage(georgeContactOrg2, fotiniContactOrg2, null, null, null, greekHugeMessage);
+        assertLastOperationSuccess(georgeCallOrg2);
+        georgeCallOrg2.waitForAuthorisation(30 * 1000);
+        assertTrue(georgeCallOrg2.waitOutgoingMessageResponse(3000));
+        assertTrue(georgeCallOrg2.getLastReceivedResponse().getStatusCode()==Response.TRYING);
+        
+        assertTrue(fotiniCallOrg2.waitForMessage(30 * 1000));
+        assertTrue(fotiniCallOrg2.sendMessageResponse(200, "OK-Fotini-Mesasge-Receieved", 1800));
+        assertTrue(georgeCallOrg2.waitOutgoingMessageResponse(3000));
+        assertTrue(georgeCallOrg2.getLastReceivedResponse().getStatusCode()==Response.OK);
+        List<String> msgsFromGeorge = fotiniCallOrg2.getAllReceivedMessagesContent();
 
         assertTrue(msgsFromGeorge.size()>0);
         assertTrue(msgsFromGeorge.get(0).equals(greekHugeMessage));

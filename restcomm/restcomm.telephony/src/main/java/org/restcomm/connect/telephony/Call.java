@@ -49,8 +49,8 @@ import org.restcomm.connect.commons.fsm.TransitionRollbackException;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.telephony.CreateCallType;
-import org.restcomm.connect.commons.telephony.ProxyRule;
 import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -138,6 +138,7 @@ import java.util.concurrent.TimeUnit;
  * @author amit.bhayani@telestax.com (Amit Bhayani)
  * @author gvagenas@telestax.com (George Vagenas)
  * @author henrique.rosa@telestax.com (Henrique Rosa)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  *
  */
 @Immutable
@@ -284,17 +285,14 @@ public final class Call extends RestcommUntypedActor {
         }
     };
 
-    private final boolean actingAsProxy;
-    private final List<ProxyRule> proxyRules;
-
     public Call(final SipFactory factory, final MediaServerControllerFactory mediaSessionControllerFactory, final Configuration configuration,
-                final URI statusCallback, final String statusCallbackMethod, final List<String> statusCallbackEvent, boolean actingAsProxy, List<ProxyRule> proxyRules) {
+    final URI statusCallback, final String statusCallbackMethod, final List<String> statusCallbackEvent) {
         this(factory, mediaSessionControllerFactory, configuration, statusCallback, statusCallbackMethod,
-                statusCallbackEvent, actingAsProxy, proxyRules, null);
+                statusCallbackEvent, null);
     }
 
     public Call(final SipFactory factory, final MediaServerControllerFactory mediaSessionControllerFactory, final Configuration configuration,
-                final URI statusCallback, final String statusCallbackMethod, final List<String> statusCallbackEvent, boolean actingAsProxy, List<ProxyRule> proxyRules, Map<String,  ArrayList<String>> headers)
+                final URI statusCallback, final String statusCallbackMethod, final List<String> statusCallbackEvent, Map<String, ArrayList<String>> headers)
     {
         super();
         final ActorRef source = self();
@@ -430,8 +428,6 @@ public final class Call extends RestcommUntypedActor {
             final Configuration imsAuthentication = runtime.subset("ims-authentication");
             this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
         }
-        this.actingAsProxy = actingAsProxy;
-        this.proxyRules = proxyRules;
     }
 
     ActorRef downloader() {
@@ -621,8 +617,8 @@ public final class Call extends RestcommUntypedActor {
             final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
             final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
 
-            InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
-            InetAddress inetAddress = InetAddress.getByName(realIP);
+            InetAddress contactInetAddress = DNSUtils.getByName(((SipURI) contactAddr.getURI()).getHost());
+            InetAddress inetAddress = DNSUtils.getByName(realIP);
 
             int remotePort = message.getRemotePort();
             int contactPort = ((SipURI) contactAddr.getURI()).getPort();
@@ -996,54 +992,13 @@ public final class Call extends RestcommUntypedActor {
                     ((SipSessionExt) session).setBypassProxy(true);
                 }
             }
-
-            ProxyRule matchedProxyRule = null;
-            if (actingAsProxy && (proxyRules != null && proxyRules.size()>0) ) {
-                matchedProxyRule = getSipMessageMatchProxyOutRules(invite);
-            }
-
-            boolean patchSdp = true;
-            boolean isProxyRuleSdpUri = false;
             String offer = null;
-
-            if (matchedProxyRule != null) {
-                isProxyRuleSdpUri = !matchedProxyRule.getPatchSdpUri().isEmpty() && !matchedProxyRule.getPatchSdpUri().equalsIgnoreCase("");
-            }
-
-            if (!mediaSessionInfo.usesNat())
-                patchSdp = false;
-            if (matchedProxyRule != null && isProxyRuleSdpUri )
-                patchSdp = false;
-
-            if (logger.isInfoEnabled()) {
-                String msg;
-                if (matchedProxyRule != null) {
-                    msg = String.format("on Dialing method will patchSdp=%s for the outgoing INVITE, mediaSessionInfo.usesNat() is %s, and matchedProxyRule.isPatchSdp() is %s", patchSdp, mediaSessionInfo.usesNat(), isProxyRuleSdpUri);
-                } else {
-                    msg = String.format("on Dialing method will patchSdp=%s for the outgoing INVITE, mediaSessionInfo.usesNat() is %s, and matchedProxyRule is NULL", patchSdp, mediaSessionInfo.usesNat());
-                }
-                logger.info(msg);
-            }
-
-            if (patchSdp) {
+            if (mediaSessionInfo.usesNat()) {
                 final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
                 final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
                 offer = SdpUtils.patch("application/sdp", sdp, externalIp);
-                if (logger.isInfoEnabled()) {
-                    String msg = String.format("on Dialing method, SDP patched with external address %s", externalIp);
-                    logger.info(msg);
-                }
-            } else if (matchedProxyRule != null && isProxyRuleSdpUri) {
-                final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
-                offer = SdpUtils.patch("application/sdp", sdp, matchedProxyRule.getPatchSdpUri());
-                if (logger.isInfoEnabled()) {
-                    String msg = String.format("on Dialing method, SDP patched with matched proxy rule address %s", matchedProxyRule.getPatchSdpUri());
-                    logger.info(msg);
-                }
             } else {
                 offer = mediaSessionInfo.getLocalSdp();
-                String msg = String.format("On Dialing method, SDP NOT patched");
-                logger.info(msg);
             }
             offer = SdpUtils.endWithNewLine(offer);
             invite.setContent(offer, "application/sdp");
@@ -1518,37 +1473,7 @@ public final class Call extends RestcommUntypedActor {
     private CreateMediaSession generateRequest(SipServletMessage sipMessage) throws IOException, SdpException, ServletParseException {
         final byte[] sdp = sipMessage.getRawContent();
         String offer = SdpUtils.getSdp(sipMessage.getContentType(), sipMessage.getRawContent());
-
-
-        ProxyRule matchedProxyRule = null;
-        if (actingAsProxy && (proxyRules != null && proxyRules.size()>0) ) {
-            matchedProxyRule = getSipMessageMatchProxyOutRules(sipMessage);
-        }
-
-        boolean patchSdp = true;
-        boolean isProxyRuleSdpUri = false;
-
-        if (matchedProxyRule != null) {
-            isProxyRuleSdpUri = !matchedProxyRule.getPatchSdpUri().isEmpty() && !matchedProxyRule.getPatchSdpUri().equalsIgnoreCase("");
-        }
-
-        if (disableSdpPatchingOnUpdatingMediaSession)
-            // disableSdpPatchingOnUpdatingMediaSession = true so we will set patchSdp = false
-            patchSdp = false;
-        if (matchedProxyRule != null && isProxyRuleSdpUri )
-            patchSdp = false;
-
-        if (logger.isInfoEnabled()) {
-            String msg;
-            if (matchedProxyRule != null) {
-                msg = String.format("on generateRequest for updatingMediaSession method will patchSdp=%s for the outgoing INVITE, disableSdpPatchingOnUpdatingMediaSession is %s, and matchedProxyRule.isPatchSdp() is %s", patchSdp, disableSdpPatchingOnUpdatingMediaSession, isProxyRuleSdpUri);
-            } else {
-                msg = String.format("on generateRequest for updatingMediaSession method will patchSdp=%s for the outgoing INVITE, disableSdpPatchingOnUpdatingMediaSession is %s, and matchedProxyRule is NULL", patchSdp, disableSdpPatchingOnUpdatingMediaSession);
-            }
-            logger.info(msg);
-        }
-
-        if (patchSdp) {
+        if (!disableSdpPatchingOnUpdatingMediaSession) {
             String externalIp = null;
             final SipURI externalSipUri = (SipURI) sipMessage.getSession().getAttribute("realInetUri");
             if (externalSipUri != null) {
@@ -1563,23 +1488,7 @@ public final class Call extends RestcommUntypedActor {
                 }
             }
             offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
-            if (logger.isInfoEnabled()) {
-                String msg = String.format("on generateRequest for updatingMediaSession method, SDP patched with external address %s", externalIp);
-                logger.info(msg);
-            }
-        } else if (matchedProxyRule != null && isProxyRuleSdpUri) {
-//            offer = SdpUtils.patch(sipMessage.getContentType(), sdp, matchedProxyRule.getPatchSdpUri());
-            if (logger.isInfoEnabled()) {
-                String msg = String.format("on generateRequest for updatingMediaSession method, matchedProxyRule.isPatchSdp() is %s WILL NOT patch SDP", isProxyRuleSdpUri);
-                logger.info(msg);
-            }
-        } else {
-            if (logger.isInfoEnabled()) {
-                String msg = String.format("on generateRequest for updatingMediaSession method, WILL NOT patch SDP");
-                logger.info(msg);
-            }
         }
-
         return new CreateMediaSession("sendrecv", offer, false, webrtc, inboundCallSid);
     }
 
@@ -1661,7 +1570,7 @@ public final class Call extends RestcommUntypedActor {
 //                  session.setAttribute("realInetUri", factory.createSipURI(null, realInetUri.getHost()+":"+realInetUri.getPort()));
                         session.setAttribute("realInetUri", realInetUri);
                     }
-                    final InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
+                    final InetAddress ackRURI = DNSUtils.getByName(((SipURI) ack.getRequestURI()).getHost());
                     final int ackRURIPort = ((SipURI) ack.getRequestURI()).getPort();
 
                     if (realInetUri != null
@@ -1697,22 +1606,18 @@ public final class Call extends RestcommUntypedActor {
                 }
             }
 
-            boolean patchSdp = true;
             String answer = null;
-
-            if (disableSdpPatchingOnUpdatingMediaSession)
-                patchSdp = false;
-
-            if (logger.isInfoEnabled()) {
-                String msg;
-                msg = String.format("on UpdatingMediaSession method will patchSdp=%s from 200 OK received with the external IP Address from Response, disableSdpPatchingOnUpdatingMediaSession is %s, and matchedProxyRule is NULL", patchSdp, disableSdpPatchingOnUpdatingMediaSession);
-            }
-
-            if (patchSdp) {
+            if (!disableSdpPatchingOnUpdatingMediaSession) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Will patch SDP answer from 200 OK received with the external IP Address from Response on updating media session");
+                }
                 final String externalIp = response.getInitialRemoteAddr();
                 final byte[] sdp = response.getRawContent();
                 answer = SdpUtils.patch(response.getContentType(), sdp, externalIp);
             } else {
+                if (logger.isInfoEnabled()) {
+                    logger.info("SDP Patching on updating media session is disabled");
+                }
                 answer = SdpUtils.getSdp(response.getContentType(), response.getRawContent());
             }
 
@@ -2289,7 +2194,7 @@ public final class Call extends RestcommUntypedActor {
                             if ((SipURI) session.getAttribute("realInetUri") == null) {
                                 session.setAttribute("realInetUri", realInetUri);
                             }
-                            final InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
+                            final InetAddress ackRURI = DNSUtils.getByName(((SipURI) ack.getRequestURI()).getHost());
                             final int ackRURIPort = ((SipURI) ack.getRequestURI()).getPort();
 
                             if (realInetUri != null
@@ -2314,63 +2219,6 @@ public final class Call extends RestcommUntypedActor {
                 }
             }
         }
-    }
-
-    private ProxyRule getSipMessageMatchProxyOutRules(SipServletMessage message) {
-        String messageUri = null;
-
-        ProxyRule matchedProxyRule = null;
-        SipURI uri = null;
-        if (message instanceof SipServletResponse) {
-            uri = ((SipURI) message.getFrom().getURI());
-            messageUri = uri.getHost() + ":" + uri.getPort();
-            if (logger.isInfoEnabled()) {
-                String msg = String.format("Restcomm acting as a proxy. About to check SipURI %s against the rules.",messageUri);
-                logger.info(msg);
-            }
-
-            for (ProxyRule proxyRule : proxyRules) {
-                if (messageUri != null) {
-                    if (proxyRule.getFromUri().contains(messageUri)) {
-                        matchedProxyRule = proxyRule;
-                        if (logger.isInfoEnabled()) {
-                            String msg = String.format("Restcomm acting as a proxy, found matched rule %s",matchedProxyRule.toString());
-                            logger.info(msg);
-                        }
-                        break;
-                    }
-                }
-            }
-        } else if (message instanceof SipServletRequest && message.getMethod().equalsIgnoreCase("INVITE")) {
-            uri = ((SipURI) message.getTo().getURI());
-            messageUri = uri.getHost() + ":" + uri.getPort();
-            if (logger.isInfoEnabled()) {
-                String msg = String.format("Restcomm acting as a proxy. About to check SipURI %s against the rules.",messageUri);
-                logger.info(msg);
-            }
-
-            for (ProxyRule proxyRule : proxyRules) {
-                if (messageUri != null) {
-                    if (proxyRule.getToUri().contains(messageUri)) {
-                        matchedProxyRule = proxyRule;
-                        if (logger.isInfoEnabled()) {
-                            String msg = String.format("Restcomm acting as a proxy, found matched rule %s",matchedProxyRule.toString());
-                            logger.info(msg);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (matchedProxyRule == null) {
-            if (logger.isInfoEnabled()) {
-                String msg = String.format("Restcomm acting as a proxy, couldn't match any of the proxy rules for the MessageUri %s", messageUri);
-                logger.info(msg);
-            }
-        }
-
-        return matchedProxyRule;
     }
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
@@ -2455,7 +2303,7 @@ public final class Call extends RestcommUntypedActor {
                 bye.addHeader("Reason",hangup.getMessage());
             }
             SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
-            InetAddress byeRURI = InetAddress.getByName(((SipURI) bye.getRequestURI()).getHost());
+            InetAddress byeRURI = DNSUtils.getByName(((SipURI) bye.getRequestURI()).getHost());
 
             // INVITE sip:+12055305520@107.21.247.251 SIP/2.0
             // Record-Route: <sip:10.154.28.245:5065;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
@@ -2824,57 +2672,13 @@ public final class Call extends RestcommUntypedActor {
         }
         if(!initialInviteOkSent){
             final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
-
-            ProxyRule matchedProxyRule = null;
-            if (actingAsProxy && (proxyRules != null && proxyRules.size()>0) ) {
-                matchedProxyRule = getSipMessageMatchProxyOutRules(okay);
-            }
-
-
-            boolean patchSdp = true;
-            boolean isProxyRuleSdpUri = false;
-            String answer = null;
-
-            if (matchedProxyRule != null) {
-                isProxyRuleSdpUri = !matchedProxyRule.getPatchSdpUri().isEmpty() && !matchedProxyRule.getPatchSdpUri().equalsIgnoreCase("");
-            }
-
-            if (!mediaSessionInfo.usesNat())
-                patchSdp = false;
-            if (matchedProxyRule != null && isProxyRuleSdpUri)
-                patchSdp = false;
-
-            if (logger.isInfoEnabled()) {
-                String msg;
-                if (matchedProxyRule != null) {
-                    msg = String.format("on sendInviteOk() method will patchSdp=%s of the 200 OK to sent received with the external IP Address from Response, mediaSessionInfo.usesNat() is %s, and matchedProxyRule.isPatchSdp() is %s", patchSdp, mediaSessionInfo.usesNat(), isProxyRuleSdpUri);
-                } else {
-                    msg = String.format("on sendInviteOk() method will patchSdp=%s of the 200 OK to sent received with the external IP Address from Response, mediaSessionInfo.usesNat() is %s, and matchedProxyRule is NULL", patchSdp, mediaSessionInfo.usesNat());
-                }
-                logger.info(msg);
-            }
-
             final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
-
-            if (patchSdp) {
+            String answer = null;
+            if (mediaSessionInfo.usesNat()) {
                 final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
                 answer = SdpUtils.patch("application/sdp", sdp, externalIp);
-                if (logger.isInfoEnabled()) {
-                    String msg = String.format("on sendInviteOk() method, SDP patched with external address %s", externalIp);
-                    logger.info(msg);
-                }
-            } else if (matchedProxyRule != null && isProxyRuleSdpUri) {
-                answer = SdpUtils.patch("application/sdp", sdp, matchedProxyRule.getPatchSdpUri());
-                if (logger.isInfoEnabled()) {
-                    String msg = String.format("on sendInviteOk() method, SDP patched with matched proxy rule ip address %s", matchedProxyRule.getPatchSdpUri());
-                    logger.info(msg);
-                }
             } else {
                 answer = mediaSessionInfo.getLocalSdp().toString();
-                if (logger.isInfoEnabled()) {
-                    String msg = String.format("on sendInviteOk() method, SDP WILL NOT patched");
-                    logger.info(msg);
-                }
             }
             // Issue #215:
             // https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
