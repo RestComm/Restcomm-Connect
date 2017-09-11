@@ -262,6 +262,18 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.dns.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.dns.route53</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
 			<groupId>javax.sip</groupId>
 			<artifactId>jain-sip-ri</artifactId>
 			<version>${sip-ri.version}</version>
