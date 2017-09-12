@@ -25,6 +25,6 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
  * @author maria.farooq@telestax.com
  */
 @Immutable
-public class DNSRecord {
+public class ResourceRecord {
 
 }
