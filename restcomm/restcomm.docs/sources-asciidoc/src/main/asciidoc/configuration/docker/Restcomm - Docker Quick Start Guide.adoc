@@ -30,7 +30,7 @@ Install and Run Restcomm Docker
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Get your "ETHERNET_IP" by running ifconfig
-* Fill out the STATIC_ADDRESS variable as shown below
+* Fill out the RCBCONF_STATIC_ADDRESS variable as shown below
 * Start Restcomm as shown below:
 * This will start Restcomm in secure mode (https)
 
@@ -50,10 +50,7 @@ Text-to-Speech with VoiceRSS
 Quick test
 ^^^^^^^^^^
 
-* Get the Docker IP address by running ifconfig command
-* docker0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500 inet 172.17.42.1
-
-1.  Go to *https://DOCKER_IP_ADDRESS:8443/olympus*
+1.  Go to *https://RCBCONF_STATIC_ADDRESS:8443/olympus*
 2.  Press "Sign in" (username alice or bob and password 1234)
 3.  Your browser will ask for permission to share microphone and camera, press allow
 4.  Go to "Contact", click on the "**+1234**" and press the "Audio Call" button (phone icon)
@@ -64,7 +61,7 @@ Quick test
 Accessing the Admin UI
 ^^^^^^^^^^^^^^^^^^^^^^
 
-1.  Go to https://DOCKER_IP_ADDRESS:8443
+1.  Go to https://RCBCONF_STATIC_ADDRESS:8443
 2.  Username = administrator@company.com
 3.  Password = RestComm
 4.  Change the default password
