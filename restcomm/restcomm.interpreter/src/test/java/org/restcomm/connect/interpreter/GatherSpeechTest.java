@@ -103,6 +103,15 @@ public class GatherSpeechTest {
     private String gatherEmpty = "<Response><Gather " +
             GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK + "=\"" + partialCallbackUri + "\">" +
             "</Gather></Response>";
+    private String gatherRcmlWithHints = "<Response><Gather " +
+            GatherAttributes.ATTRIBUTE_INPUT + "=\"speech\" " +
+            GatherAttributes.ATTRIBUTE_ACTION + "=\"" + actionCallbackUri + "\" " +
+            GatherAttributes.ATTRIBUTE_NUM_DIGITS + "=\"1\" " +
+            GatherAttributes.ATTRIBUTE_TIME_OUT + "=\"60\" " +
+            GatherAttributes.ATTRIBUTE_HINTS + "=\"" + "Telestax’s RestcommONE platform is changing the way real-time communications are developed and delivered. " +
+            "It is fast becoming the platform of choice for rapidly building enterprise class real-time messaging, voice and video applications. " +
+            "Our platform is scalable, highly available and the only WebRTC platform that supports cloud, on premise and hybrid deployment configurations.\">" +
+            "</Gather></Response>";
 
     public GatherSpeechTest() {
         super();
@@ -541,6 +550,44 @@ public class GatherSpeechTest {
                 interpreter.finishOnKey="#";
                 interpreterRef.tell(new MediaGroupResponse(new CollectedResult("5", false, false)), observer);
                 assertEquals("5", interpreter.collectedDigits.toString());
+            }
+        };
+    }
+
+    @Test
+    public void testHintsLimits() {
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                final ActorRef interpreter = createVoiceInterpreter(observer);
+                interpreter.tell(new StartInterpreter(observer), observer);
+
+                expectMsgClass(GetCallInfo.class);
+                interpreter.tell(new CallResponse(new CallInfo(
+                        new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
+                        CallStateChanged.State.IN_PROGRESS,
+                        CreateCallType.SIP,
+                        "inbound",
+                        new DateTime(),
+                        null,
+                        "test", "test",
+                        "testTo",
+                        null,
+                        null,
+                        false,
+                        false,
+                        false,
+                        new DateTime())), observer);
+
+                expectMsgClass(Observe.class);
+
+                //wait for rcml downloading
+                HttpRequestDescriptor callback = expectMsgClass(HttpRequestDescriptor.class);
+                assertEquals(callback.getUri(), requestUri);
+
+                interpreter.tell(new DownloaderResponse(getOkRcml(requestUri, gatherRcmlWithHints)), observer);
+
+                expectMsgClass(Hangup.class);
             }
         };
     }
