@@ -15,8 +15,8 @@
     SELECT * FROM restcomm_clients WHERE sid=#{sid};
   </select>
   
-  <select id="getClientByLogin" parameterType="string" resultType="hashmap">
-    SELECT * FROM restcomm_clients WHERE login=#{login};
+  <select id="getClientByLogin" parameterType="map" resultType="hashmap">
+    SELECT a.* FROM restcomm_clients a LEFT JOIN restcomm_accounts b ON a.account_sid=b.sid WHERE a.login=#{login} and b.organization_sid=#{organization_sid};
   </select>
   
   <select id="getClients" parameterType="string" resultType="hashmap">

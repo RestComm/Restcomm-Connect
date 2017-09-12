@@ -27,6 +27,7 @@ import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
 @Immutable
 public final class Sid {
@@ -35,7 +36,7 @@ public final class Sid {
     private final String id;
 
     public enum Type {
-        ACCOUNT, APPLICATION, ANNOUNCEMENT, CALL, CLIENT, CONFERENCE, GATEWAY, INVALID, NOTIFICATION, PHONE_NUMBER, RECORDING, REGISTRATION, SHORT_CODE, SMS_MESSAGE, TRANSCRIPTION, INSTANCE, EXTENSION_CONFIGURATION, GEOLOCATION
+        ACCOUNT, APPLICATION, ANNOUNCEMENT, CALL, CLIENT, CONFERENCE, GATEWAY, INVALID, NOTIFICATION, PHONE_NUMBER, RECORDING, REGISTRATION, SHORT_CODE, SMS_MESSAGE, TRANSCRIPTION, INSTANCE, EXTENSION_CONFIGURATION, GEOLOCATION, ORGANIZATION
     };
 
     private static final Sid INVALID_SID = new Sid("IN00000000000000000000000000000000");
@@ -138,6 +139,9 @@ public final class Sid {
             }
             case GEOLOCATION: {
                 return new Sid("GL" + uuid);
+            }
+            case ORGANIZATION: {
+                return new Sid("OR" + uuid);
             }
             default: {
                 return null;

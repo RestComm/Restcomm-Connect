@@ -189,7 +189,8 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
     }
 
     public Response putClient(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Create:Clients");
+        final Account account = accountsDao.getAccount(accountSid);
+        secure(account, "RestComm:Create:Clients");
         try {
             validate(data);
         } catch (final NullPointerException | IllegalArgumentException exception) {
@@ -197,7 +198,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         }
 
         // Issue 109: https://bitbucket.org/telestax/telscale-restcomm/issue/109
-        Client client = dao.getClient(data.getFirst("Login"));
+        Client client = dao.getClient(data.getFirst("Login"), account.getOrganizationSid());
         if (client == null) {
             try {
                 client = createFrom(new Sid(accountSid), data);

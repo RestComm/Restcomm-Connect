@@ -69,6 +69,7 @@ import static javax.ws.rs.core.Response.status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
 public class AccountsEndpoint extends SecuredEndpoint {
     protected Configuration runtimeConfiguration;
@@ -105,7 +106,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         // Make sure there is an authenticated account present when this endpoint is used
     }
 
-    private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) throws PasswordTooWeak {
+    private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data, Account parent) throws PasswordTooWeak {
         validate(data);
 
         final DateTime now = DateTime.now();
@@ -132,7 +133,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         final StringBuilder buffer = new StringBuilder();
         buffer.append("/").append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
-        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
+        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri, parent.getOrganizationSid());
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
@@ -331,9 +332,10 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
         // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
         final Sid sid = userIdentityContext.getEffectiveAccount().getSid();
+        final Account parent = accountsDao.getAccount(sid);
         Account account = null;
         try {
-            account = createFrom(sid, data);
+            account = createFrom(sid, data, parent);
         } catch (final NullPointerException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         } catch (PasswordTooWeak passwordTooWeak) {
@@ -347,7 +349,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
             - only Administrators can choose a role for newly created accounts. Normal users will create accounts with the same role as their own.
          */
         if (accountsDao.getAccount(account.getSid()) == null && !account.getEmailAddress().equalsIgnoreCase("administrator@company.com")) {
-            final Account parent = accountsDao.getAccount(sid);
             if (parent.getStatus().equals(Account.Status.ACTIVE) && isSecuredByPermission("RestComm:Create:Accounts")) {
                 if (!hasAccountRole(getAdministratorRole()) || !data.containsKey("Role")) {
                     account = account.setRole(parent.getRole());
@@ -361,7 +362,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 clientData.add("Password", data.getFirst("Password"));
                 clientData.add("FriendlyName", account.getFriendlyName());
                 clientData.add("AccountSid", account.getSid().toString());
-                Client client = clientDao.getClient(clientData.getFirst("Login"));
+                Client client = clientDao.getClient(clientData.getFirst("Login"), account.getOrganizationSid());
                 if (client == null) {
                     client = createClientFrom(account.getSid(), clientData);
                     clientDao.addClient(client);
@@ -519,7 +520,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 String email = modifiedAccount.getEmailAddress();
                 if (email != null && !email.equals("")) {
                     String username = email.split("@")[0];
-                    Client client = clientDao.getClient(username);
+                    Client client = clientDao.getClient(username, account.getOrganizationSid());
                     if (client != null) {
                         // TODO: need to encrypt this password because it's
                         // same with Account password.
