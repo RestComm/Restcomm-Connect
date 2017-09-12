@@ -53,7 +53,7 @@ Quick test
 * Get the Docker IP address by running ifconfig command
 * docker0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500 inet 172.17.42.1
 
-1.  Go to *https://DOCKER_IP_ADDRESS/olympus*
+1.  Go to *https://DOCKER_IP_ADDRESS:8443/olympus*
 2.  Press "Sign in" (username alice or bob and password 1234)
 3.  Your browser will ask for permission to share microphone and camera, press allow
 4.  Go to "Contact", click on the "**+1234**" and press the "Audio Call" button (phone icon)
@@ -64,7 +64,7 @@ Quick test
 Accessing the Admin UI
 ^^^^^^^^^^^^^^^^^^^^^^
 
-1.  Go to https://DOCKER_IP_ADDRESS
+1.  Go to https://DOCKER_IP_ADDRESS:8443
 2.  Username = administrator@company.com
 3.  Password = RestComm
 4.  Change the default password
@@ -133,4 +133,4 @@ docker run  -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/rest
 
 It is possible that you will not be able to log in to olympus the first time that you will try to connect using Firefox. To fix this problem please follow the solution provided by http://stackoverflow.com/users/379916/faisal-mq[Faisal Mq] (http://stackoverflow.com/questions/11542460/secure-websocket-wss-doesnt-work-on-firefox[stackoverflow]).
 
-* When you would try to open up wss say using wss://IP:5063, Firefox will keep on giving you error until you open up a separate Firefox tab and do try hitting URL [https]://IP:5063 and Confirm Security Exception (like you do on Firefox normally for any https based connection). This only happens in Firefox.
+* When you would try to open up wss say using wss://IP:5083, Firefox will keep on giving you error until you open up a separate Firefox tab and do try hitting URL [https]://IP:5083 and Confirm Security Exception (like you do on Firefox normally for any https based connection). This only happens in Firefox.
