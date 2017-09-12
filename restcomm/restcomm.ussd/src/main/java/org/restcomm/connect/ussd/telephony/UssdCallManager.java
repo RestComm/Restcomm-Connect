@@ -19,12 +19,23 @@
  */
 package org.restcomm.connect.ussd.telephony;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import javax.servlet.ServletContext;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipURI;
+
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
@@ -35,9 +46,11 @@ import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
+import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.MostOptimalNumberResponse;
 import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
@@ -48,19 +61,12 @@ import org.restcomm.connect.telephony.api.util.CallControlHelper;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreter;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreterParams;
 
-import javax.servlet.ServletContext;
-import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipURI;
-import java.io.IOException;
-import java.util.List;
-import java.util.regex.Pattern;
-
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.*;
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -179,7 +185,15 @@ public class UssdCallManager extends RestcommUntypedActor {
         final AccountsDao accounts = storage.getAccountsDao();
         final ApplicationsDao applications = storage.getApplicationsDao();
         final String toUser = CallControlHelper.getUserSipId(request, useTo);
-        if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
+        final SipURI fromUri = (SipURI) request.getFrom().getURI();
+        Sid sourceOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromUri);
+        if(logger.isDebugEnabled()) {
+            logger.debug("sourceOrganizationSid: " + sourceOrganizationSid);
+        }
+        if(sourceOrganizationSid == null){
+            logger.error("Null Organization: fromUri: "+fromUri);
+        }
+        if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, sourceOrganizationSid)) {
             return;
         }
 
@@ -200,7 +214,7 @@ public class UssdCallManager extends RestcommUntypedActor {
      * @throws Exception
      */
     private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-                                             final ApplicationsDao applications, String id) throws Exception {
+                                             final ApplicationsDao applications, String id, Sid sourceOrganizationSid) throws Exception {
         boolean isFoundHostedApp = false;
 
         final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
@@ -208,7 +222,8 @@ public class UssdCallManager extends RestcommUntypedActor {
 
         if (request.getContentType().equals("application/vnd.3gpp.ussd+xml")) {
             // This is a USSD Invite
-            number = numbersDao.getIncomingPhoneNumber(id);
+            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, id, sourceOrganizationSid);
+            number = mostOptimalNumber.number();
             if (number != null) {
                 final UssdInterpreterParams.Builder builder = new UssdInterpreterParams.Builder();
                 builder.setConfiguration(configuration);

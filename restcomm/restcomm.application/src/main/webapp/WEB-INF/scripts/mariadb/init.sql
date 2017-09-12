@@ -1,6 +1,13 @@
 CREATE DATABASE IF NOT EXISTS restcomm;
 USE restcomm;
 
+CREATE TABLE restcomm_organizations (
+sid VARCHAR(34) NOT NULL PRIMARY KEY,
+domain_name VARCHAR(255) NOT NULL UNIQUE,
+date_created DATETIME NOT NULL,
+date_updated DATETIME NOT NULL
+);
+
 CREATE TABLE restcomm_instance_id (
 instance_id VARCHAR(34) NOT NULL PRIMARY KEY,
 date_created DATETIME NOT NULL,
@@ -19,7 +26,8 @@ type VARCHAR(8) NOT NULL,
 status VARCHAR(16) NOT NULL,
 auth_token VARCHAR(32) NOT NULL,
 role VARCHAR(64) NOT NULL,
-uri MEDIUMTEXT NOT NULL
+uri MEDIUMTEXT NOT NULL,
+organization_sid VARCHAR(34) NOT NULL
 );
 
 CREATE TABLE restcomm_announcements (
@@ -105,7 +113,8 @@ ussd_fallback_method VARCHAR(4),
 ussd_application_sid VARCHAR(34),
 refer_url MEDIUMTEXT,
 refer_method VARCHAR(4),
-refer_application_sid VARCHAR(34)
+refer_application_sid VARCHAR(34),
+organization_sid VARCHAR(34) NOT NULL
 );
 
 CREATE TABLE restcomm_applications (
@@ -205,7 +214,8 @@ ttl INT NOT NULL,
 location MEDIUMTEXT NOT NULL,
 webrtc BOOLEAN NOT NULL DEFAULT FALSE,
 instanceid VARCHAR(255),
-isLBPresent BOOLEAN NOT NULL DEFAULT FALSE
+isLBPresent BOOLEAN NOT NULL DEFAULT FALSE,
+organization_sid VARCHAR(34) NOT NULL
 );
 
 CREATE TABLE restcomm_short_codes (
@@ -358,7 +368,7 @@ local_ip VARCHAR(34) NOT NULL,
 local_port INT NOT NULL,
 remote_ip VARCHAR(34) NOT NULL UNIQUE,
 remote_port INT NOT NULL,
-compatibility VARCHAR(34) DEFAULT 'rms',
+compatibility VARCHAR(34) DEFAULT "rms",
 response_timeout VARCHAR(34),
 external_address VARCHAR(34)
 );
@@ -389,6 +399,13 @@ configuration_data LONGTEXT NOT NULL,
 PRIMARY KEY (account_sid, extension_sid)
 );
 
+INSERT INTO restcomm_organizations VALUES(
+"ORafbe225ad37541eba518a74248f0ac4c", 
+"default.restcomm.com", 
+Date("2017-04-19"),
+Date("2017-04-19") 
+);
+
 INSERT INTO restcomm_accounts VALUES (
 "ACae6e420f425248d6a26948c17a9e2acf",
 Date("2012-04-24"),
@@ -400,7 +417,8 @@ null,
 "uninitialized",
 "77f8c12cc7b8f8423e5c38b035249166",
 "Administrator",
-"/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf");
+"/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf",
+"ORafbe225ad37541eba518a74248f0ac4c");
 
 /* Create demo Applications */
 INSERT INTO restcomm_applications VALUES('AP73926e7113fa4d95981aa96b76eca854','2015-09-23 06:56:04.108000','2015-09-23 06:56:04.108000','rvdCollectVerbDemo','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24',FALSE,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/AP73926e7113fa4d95981aa96b76eca854','/restcomm-rvd/services/apps/AP73926e7113fa4d95981aa96b76eca854/controller','voice');

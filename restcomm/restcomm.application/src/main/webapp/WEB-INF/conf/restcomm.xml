@@ -480,6 +480,8 @@
 			<timeout>5</timeout>
 		</media-server>
 	</mscontrol>
+	<!-- dns-util specifies a class that will be used for implementation of ip resolution. -->
+	<dns-util class="java.net.InetAddress"/>
 
 	<!-- The media server manager is responsible for managing the media servers
 		in use by RestComm. The default way to control media servers is using the
@@ -522,6 +524,10 @@
 	</media-server-manager>
 	<!-- Adjust http client behaviour for outgoing requests -->
 	<http-client>
+		<!--
+			Timeout setting in millis for most outgoing http requests including those for RCML. If the application server
+			is RVD make sure this value is greater than externalServiceTimeout defined in rvd.xml.
+		-->
 		<response-timeout>6000</response-timeout>
 		<!-- Control peer certificate verification for https connections. Two modes are supported:
 			'allowall' : Disables peer certificate verification. Use it when testing.

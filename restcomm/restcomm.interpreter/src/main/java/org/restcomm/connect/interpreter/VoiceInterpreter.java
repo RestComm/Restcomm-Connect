@@ -2162,9 +2162,10 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                             password = child.attribute("password").value();
                         }
                         if (username == null || username.isEmpty()) {
-                            if (storage.getClientsDao().getClient(callInfo.from()) != null) {
+                            final Sid organizationSid = storage.getAccountsDao().getAccount(accountId).getOrganizationSid();
+                            if (storage.getClientsDao().getClient(callInfo.from(), organizationSid) != null) {
                                 username = callInfo.from();
-                                password = storage.getClientsDao().getClient(callInfo.from()).getPassword();
+                                password = storage.getClientsDao().getClient(callInfo.from(), organizationSid).getPassword();
                             }
                         }
                     }
