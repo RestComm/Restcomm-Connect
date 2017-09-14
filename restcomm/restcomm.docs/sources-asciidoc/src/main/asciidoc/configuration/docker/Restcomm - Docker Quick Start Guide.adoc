@@ -39,6 +39,14 @@ Install and Run Restcomm Docker
 docker run  -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/restcomm/ -e RCBCONF_STATIC_ADDRESS="YOUR_ETHERNET_IP" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh" -p 8080:8080 -p 8443:8443 -p 9990:9990 -p 5080:5080 -p 5081:5081 -p 5082:5082 -p 5083:5083 -p 5080:5080/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
 ----
 
+* OS X seems to have known for mount denied issue on `/var/log/restcomm` directory, in such case: mount logs with any directory under `/Users`. Here is an example:
+
+[source,lang:default,decode:true]
+----
+docker run  -i -d --name=restcomm-myInstance -v /Users/username/var/log/restcomm:/var/log/restcomm/ -e RCBCONF_STATIC_ADDRESS="YOUR_ETHERNET_IP" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh" -p 8080:8080 -p 8443:8443 -p 9990:9990 -p 5080:5080 -p 5081:5081 -p 5082:5082 -p 5083:5083 -p 5080:5080/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+----
+
+
 [[text-to-speech-with-voicerss]]
 Text-to-Speech with VoiceRSS
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
