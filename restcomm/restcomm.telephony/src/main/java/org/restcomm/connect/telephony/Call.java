@@ -1379,21 +1379,27 @@ public final class Call extends RestcommUntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             if (isInbound()) {
-                SipServletResponse resp = null;
-                if (message instanceof CallFail) {
-                    resp = invite.createResponse(500, "Problem to setup the call");
-                    String reason = ((CallFail) message).getReason();
-                    if (reason != null)
-                        resp.addHeader("Reason", reason);
-                } else {
-                    // https://github.com/RestComm/Restcomm-Connect/issues/1663
-                    // We use 569 only if there is a problem to reach RMS as LB can be configured to take out
-                    // nodes that send back 569. This is meant to protect the cluster from nodes where the RMS
-                    // is in bad state and not responding anymore
-                    resp = invite.createResponse(MEDIA_SERVER_FAILURE_RESPONSE_CODE, "Problem to setup services");
+                try {
+                    if (invite.getSession().isValid()) {
+                        SipServletResponse resp = null;
+                        if (message instanceof CallFail) {
+                            resp = invite.createResponse(500, "Problem to setup the call");
+                            String reason = ((CallFail) message).getReason();
+                            if (reason != null)
+                                resp.addHeader("Reason", reason);
+                        } else {
+                            // https://github.com/RestComm/Restcomm-Connect/issues/1663
+                            // We use 569 only if there is a problem to reach RMS as LB can be configured to take out
+                            // nodes that send back 569. This is meant to protect the cluster from nodes where the RMS
+                            // is in bad state and not responding anymore
+                            resp = invite.createResponse(MEDIA_SERVER_FAILURE_RESPONSE_CODE, "Problem to setup services");
+                        }
+                        addCustomHeaders(resp);
+                        resp.send();
+                    }
+                } catch (Exception e) {
+                    logger.error("Exception while trying to prepare failed response, exception: "+e);
                 }
-                addCustomHeaders(resp);
-                resp.send();
             } else {
                 if (message instanceof CallFail)
                     sendBye(new Hangup(((CallFail) message).getReason()));
