@@ -716,6 +716,12 @@
 					</execution>
 				</executions>
 			</plugin>
+			<!-- Manage version of license-maven-plugin here  -->
+			<plugin>
+		                <groupId>org.codehaus.mojo</groupId>
+		                <artifactId>license-maven-plugin</artifactId>
+		                <version>1.13</version>
+		        </plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
