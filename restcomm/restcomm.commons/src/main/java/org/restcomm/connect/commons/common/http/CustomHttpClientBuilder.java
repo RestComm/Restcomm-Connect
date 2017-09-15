@@ -63,10 +63,33 @@ public class CustomHttpClientBuilder {
                 .setSocketTimeout(timeout)
                 .setCookieSpec(CookieSpecs.STANDARD).build();
         if ( mode == SslMode.strict ) {
-            return  HttpClients.custom().setDefaultRequestConfig(requestConfig).build();
+            SSLConnectionSocketFactory sslsf = null;
+            try {
+                sslsf = new SSLConnectionSocketFactory(
+                        SSLContextBuilder.create().build(),
+                        getSSLPrototocolsFromSystemProperties(),
+                        null,
+//                        new String[]{"TLS_RSA_WITH_3DES_EDE_CBC_SHA", "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA", "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256", "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA", "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384", "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA", "TLS_RSA_WITH_AES_128_CBC_SHA256", "TLS_RSA_WITH_AES_128_CBC_SHA", "TLS_RSA_WITH_AES_256_CBC_SHA256", "TLS_RSA_WITH_AES_256_CBC_SHA"},
+                        SSLConnectionSocketFactory.getDefaultHostnameVerifier());
+            } catch (KeyManagementException | NoSuchAlgorithmException e) {
+                throw new RuntimeException("Error creating HttpClient", e);
+            }
+            return  HttpClients.custom().setDefaultRequestConfig(requestConfig).setSSLSocketFactory(sslsf).build();
         } else {
             return buildAllowallClient(requestConfig);
         }
+    }
+
+    private static String[] getSSLPrototocolsFromSystemProperties() {
+        String protocols = System.getProperty("jdk.tls.client.protocols");
+        if (protocols == null)
+            protocols = System.getProperty("https.protocols");
+
+        if (protocols != null) {
+            String[] protocolsArray = protocols.split(",");
+            return protocolsArray;
+        }
+        return null;
     }
 
     private static HttpClient buildAllowallClient(RequestConfig requestConfig) {
@@ -82,7 +105,15 @@ public class CustomHttpClientBuilder {
                 try {
                     SSLContextBuilder builder = new SSLContextBuilder();
                     builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
-                    sslsf = new SSLConnectionSocketFactory(builder.build());
+//                    sslsf = new SSLConnectionSocketFactory(builder.build());
+
+                    sslsf = new SSLConnectionSocketFactory(
+                            builder.build(),
+                            getSSLPrototocolsFromSystemProperties(),
+                            null,
+                            SSLConnectionSocketFactory.getDefaultHostnameVerifier());
+
+
                     httpClient = HttpClients.custom().setDefaultRequestConfig(requestConfig).setSSLSocketFactory(sslsf).build();
                 } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
                     throw new RuntimeException("Error creating HttpClient", e);
