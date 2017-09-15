@@ -217,7 +217,7 @@ public class DialRecordingS3UploadTest_Secure {
 		bobCall.sendInviteOkAck();
 		DateTime start = DateTime.now();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
 		assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
 		assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
@@ -245,7 +245,7 @@ public class DialRecordingS3UploadTest_Secure {
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
 		assertEquals(recordedDuration, duration,1.0);
 
-		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
+		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("http://127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
 		//Since we are in secure mode the s3_uri shouldn't be here
 		assertNull(recording.get(0).getAsJsonObject().get("s3_uri"));
@@ -309,7 +309,7 @@ public class DialRecordingS3UploadTest_Secure {
 
 		bobCall.sendInviteOkAck();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
 		assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
 		assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
@@ -335,7 +335,7 @@ public class DialRecordingS3UploadTest_Secure {
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
 		assertTrue(duration==3.0);
-		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
+		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
 		//Since we are in secure mode the s3_uri shouldn't be here
 		assertNull(recording.get(0).getAsJsonObject().get("s3_uri"));
@@ -392,7 +392,7 @@ public class DialRecordingS3UploadTest_Secure {
 
 		bobCall.sendInviteOkAck();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
 		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 		assertNotNull(metrics);
@@ -415,7 +415,7 @@ public class DialRecordingS3UploadTest_Secure {
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
 		assertEquals(3.0, duration,1);
-		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
+		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
 		//Since we are in secure mode the s3_uri shouldn't be here
 		assertNull(recording.get(0).getAsJsonObject().get("s3_uri"));
@@ -469,7 +469,7 @@ public class DialRecordingS3UploadTest_Secure {
 
 		bobCall.sendInviteOkAck();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
 		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 		assertNotNull(metrics);
@@ -492,7 +492,7 @@ public class DialRecordingS3UploadTest_Secure {
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
 		assertEquals(3.0, duration,1);
-		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
+		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
 		//Since we are in secure mode the s3_uri shouldn't be here
 		assertNull(recording.get(0).getAsJsonObject().get("s3_uri"));
@@ -556,7 +556,7 @@ public class DialRecordingS3UploadTest_Secure {
 		bobCall.sendInviteOkAck();
 		DateTime start = DateTime.now();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
 		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 		assertNotNull(metrics);
@@ -582,7 +582,7 @@ public class DialRecordingS3UploadTest_Secure {
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
 		assertEquals(recordedDuration, duration,1.0);
 
-		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
+		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
 		//Since we are in secure mode the s3_uri shouldn't be here
 		assertNull(recording.get(0).getAsJsonObject().get("s3_uri"));

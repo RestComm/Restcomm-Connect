@@ -812,19 +812,21 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     // DTMF using SIP INFO, check if all digits collected here
                     collectedDigits.append(dtmfResponse.get());
                     // Collected digits == requested num of digits the complete the collect digits
-                    if (numberOfDigits != Short.MAX_VALUE) {
-                        if (collectedDigits.length() == numberOfDigits) {
-                            dtmfReceived = true;
-                            fsm.transition(message, finishGathering);
-                        } else {
-                            dtmfReceived = false;
-                            return;
-                        }
+                    //Zendesk_34592: if collected digits smaller than numDigits in gather verb
+                    // when timeout on gather occur, garthering cannot move to finishGathering
+                    // If collected digits have finish on key at the end then complete the collect digits
+                    if (collectedDigits.toString().endsWith(finishOnKey)) {
+                        dtmfReceived = true;
+                        fsm.transition(message, finishGathering);
                     } else {
-                        // If collected digits have finish on key at the end then complete the collect digits
-                        if (collectedDigits.toString().endsWith(finishOnKey)) {
-                            dtmfReceived = true;
-                            fsm.transition(message, finishGathering);
+                        if (numberOfDigits != Short.MAX_VALUE) {
+                            if (collectedDigits.length() == numberOfDigits) {
+                                dtmfReceived = true;
+                                fsm.transition(message, finishGathering);
+                            } else {
+                                dtmfReceived = false;
+                                return;
+                            }
                         } else {
                             dtmfReceived = false;
                             return;
@@ -2146,9 +2148,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             password = child.attribute("password").value();
                         }
                         if (username == null || username.isEmpty()) {
-                            if (storage.getClientsDao().getClient(callInfo.from()) != null) {
+                            final Sid organizationSid = storage.getAccountsDao().getAccount(accountId).getOrganizationSid();
+                            if (storage.getClientsDao().getClient(callInfo.from(), organizationSid) != null) {
                                 username = callInfo.from();
-                                password = storage.getClientsDao().getClient(callInfo.from()).getPassword();
+                                password = storage.getClientsDao().getClient(callInfo.from(), organizationSid).getPassword();
                             }
                         }
                     }

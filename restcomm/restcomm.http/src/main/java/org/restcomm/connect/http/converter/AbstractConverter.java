@@ -439,6 +439,23 @@ public abstract class AbstractConverter implements Converter {
         }
     }
 
+
+    protected void writePushClientIdentity(final String pushClientIdentity, final HierarchicalStreamWriter writer) {
+        if (pushClientIdentity != null) {
+            writer.startNode("PushClientIdentity");
+            writer.setValue(pushClientIdentity);
+            writer.endNode();
+        }
+    }
+
+    protected void writePushClientIdentity(final String pushClientIdentity, final JsonObject object) {
+        if (pushClientIdentity != null) {
+            object.addProperty("push_client_identity", pushClientIdentity);
+        } else {
+            object.add("voice_application_sid", JsonNull.INSTANCE);
+        }
+    }
+
     protected void writeVoiceCallerIdLookup(final boolean voiceCallerIdLookup, final HierarchicalStreamWriter writer) {
         writer.startNode("VoiceCallerIdLookup");
         writer.setValue(Boolean.toString(voiceCallerIdLookup));

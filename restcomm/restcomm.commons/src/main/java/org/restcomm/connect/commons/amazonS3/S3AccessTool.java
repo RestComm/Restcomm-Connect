@@ -123,17 +123,25 @@ public class S3AccessTool {
                 logger.info("File to upload to S3: " + fileUri.toString());
             }
 
-            DateTime start = DateTime.now();
-            while (!FileUtils.waitFor(file, 30)){}
-            DateTime end = DateTime.now();
-            double waitDuration = (end.getMillis() - start.getMillis())/1000;
-            if (waitDuration > maxDelay || testing) {
-                if (logger.isInfoEnabled()) {
-                    String msg = String.format("Finished waiting for recording file %s. Wait time %,.2f. Size of file in bytes %s", fileUri.toString(), waitDuration, file.length());
-                    logger.info(msg);
-                }
-            }
-            if (file.exists()) {
+            //For statistics and logs
+            DateTime start, end;
+            double waitDuration;
+
+//            if (!file.exists()) {
+//                 start = DateTime.now();
+//                while (!FileUtils.waitFor(file, 2)) {
+//                }
+//                 end = DateTime.now();
+//                 waitDuration = (end.getMillis() - start.getMillis()) / 1000;
+//                if (waitDuration > maxDelay || testing) {
+//                    if (logger.isInfoEnabled()) {
+//                        String msg = String.format("Finished waiting for recording file %s. Wait time %,.2f. Size of file in bytes %s", fileUri.toString(), waitDuration, file.length());
+//                        logger.info(msg);
+//                    }
+//                }
+//            }
+
+            if (fileExists(file)) {
                 start = DateTime.now();
                 if (testing) {
                     try {
@@ -167,7 +175,8 @@ public class S3AccessTool {
                 }
                 return true;
             } else {
-                logger.error("Timeout waiting for the recording file: "+file.getAbsolutePath());
+                String msg = String.format("Recording file \"%s\" doesn't exists ",file.getPath());
+                logger.error(msg);
                 return false;
             }
          } catch (AmazonServiceException ase) {
@@ -185,6 +194,14 @@ public class S3AccessTool {
         } catch (IOException e) {
             logger.error("Problem while trying to touch recording file for testing", e);
             return false;
+        }
+    }
+
+    private boolean fileExists(final File file) {
+        if (file.exists()) {
+            return true;
+        } else {
+            return FileUtils.waitFor(file, 2);
         }
     }
 

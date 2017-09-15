@@ -19,16 +19,24 @@
  */
 package org.restcomm.connect.sms;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Currency;
+import java.util.List;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipURI;
+
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
@@ -40,12 +48,13 @@ import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.SmsMessagesDao;
+import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.MostOptimalNumberResponse;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Direction;
@@ -70,26 +79,19 @@ import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 import org.restcomm.smpp.parameter.TlvSet;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServlet;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipURI;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Currency;
-import java.util.List;
-
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
+ * @author maria-farooq@live.com (Maria Farooq)
  */
 public final class SmsService extends RestcommUntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -154,7 +156,14 @@ public final class SmsService extends RestcommUntypedActor {
         final SipURI fromURI = (SipURI) request.getFrom().getURI();
         final String fromUser = fromURI.getUser();
         final ClientsDao clients = storage.getClientsDao();
-        final Client client = clients.getClient(fromUser);
+        final Sid sourceOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromURI);
+        if(logger.isDebugEnabled()) {
+            logger.debug("sourceOrganizationSid: " + sourceOrganizationSid);
+        }
+        if(sourceOrganizationSid == null){
+            logger.error("Null Organization: fromUri: "+fromURI);
+        }
+        final Client client = clients.getClient(fromUser, sourceOrganizationSid);
         final AccountsDao accounts = storage.getAccountsDao();
         final ApplicationsDao applications = storage.getApplicationsDao();
 
@@ -162,7 +171,7 @@ public final class SmsService extends RestcommUntypedActor {
         if (client != null) {
             // Make sure we force clients to authenticate.
             if (authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
-                    && !CallControlHelper.checkAuthentication(request, storage)) {
+                    && !CallControlHelper.checkAuthentication(request, storage, sourceOrganizationSid)) {
                 if(logger.isInfoEnabled()) {
                     logger.info("Client " + client.getLogin() + " failed to authenticate");
                 }
@@ -174,7 +183,7 @@ public final class SmsService extends RestcommUntypedActor {
         // registered
         final String toUser = CallControlHelper.getUserSipId(request, useTo);
         // Try to see if the request is destined for an application we are hosting.
-        if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
+        if (redirectToHostedSmsApp(self, request, accounts, applications, toUser, sourceOrganizationSid)) {
             // Tell the sender we received the message okay.
             if(logger.isInfoEnabled()) {
                 logger.info("Message to :" + toUser + " matched to one of the hosted applications");
@@ -193,7 +202,11 @@ public final class SmsService extends RestcommUntypedActor {
             // try to see if the request is destined to another registered client
             // if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we
             // have little control over
-            Client toClient = clients.getClient(toUser);
+            final Sid toOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getTo().getURI());
+            if(logger.isDebugEnabled()) {
+                logger.debug("toOrganizationSid" + toOrganizationSid);
+            }
+            Client toClient = clients.getClient(toUser, toOrganizationSid);
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect
                 // to the b2bua
                 if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
@@ -205,6 +218,12 @@ public final class SmsService extends RestcommUntypedActor {
                     }
                     monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_CLIENT), self);
                     return;
+                } else {
+                    String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
+                            + " : Make sure the Client exist or is registered with Restcomm";
+                    sendNotification(errMsg, 11001, "warning", true);
+                    final SipServletResponse resp = request.createResponse(SC_NOT_FOUND, "Cannot complete P2P messages");
+                    resp.send();
                 }
             } else {
                 // Since toUser is null, try to route the message outside using the SMS Aggregator
@@ -215,7 +234,8 @@ public final class SmsService extends RestcommUntypedActor {
                 final SipServletResponse trying = request.createResponse(SipServletResponse.SC_TRYING);
                 trying.send();
                 //TODO:do extensions check here too?
-                ActorRef session = session(this.configuration);
+                ActorRef session = session(this.configuration, sourceOrganizationSid);
+
                 // Create an SMS detail record.
                 final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
                 final SmsMessage.Builder builder = SmsMessage.builder();
@@ -270,24 +290,14 @@ public final class SmsService extends RestcommUntypedActor {
      * @throws IOException
      */
     private boolean redirectToHostedSmsApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-            final ApplicationsDao applications, String id) throws IOException {
+            final ApplicationsDao applications, String id, Sid sourceOrganizationSid) throws IOException {
         boolean isFoundHostedApp = false;
 
         // Handle the SMS message.
         final SipURI uri = (SipURI) request.getRequestURI();
         final String to = uri.getUser();
-        // Format the destination to an E.164 phone number.
-        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-        String phone = to;
-        try {
-            phone = phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164);
-        } catch (Exception e) {}
-        // Try to find an application defined for the phone number.
-        final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
-        if (number == null) {
-            number = numbers.getIncomingPhoneNumber(to);
-        }
+        MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, to, sourceOrganizationSid);
+        IncomingPhoneNumber number = mostOptimalNumber.number();
         try {
             if (number != null) {
                 URI appUri = number.getSmsUrl();
@@ -322,15 +332,19 @@ public final class SmsService extends RestcommUntypedActor {
                     final Props props = SmsInterpreter.props(builder.build());
                     interpreter = getContext().actorOf(props);
                 }
+                Sid organizationSid = storage.getOrganizationsDao().getOrganization(storage.getAccountsDao().getAccount(number.getAccountSid()).getOrganizationSid()).getSid();
+                if(logger.isDebugEnabled())
+                    logger.debug("redirectToHostedSmsApp organizationSid = "+organizationSid);
                 //TODO:do extensions check here too?
-                final ActorRef session = session(this.configuration);
+                final ActorRef session = session(this.configuration, organizationSid);
+
                 session.tell(request, self);
                 final StartInterpreter start = new StartInterpreter(session);
                 interpreter.tell(start, self);
                 isFoundHostedApp = true;
             }
         } catch (Exception e) {
-            String errMsg = "There is no valid Restcomm SMS Request URL configured for this number : " + phone;
+            String errMsg = "There is no valid Restcomm SMS Request URL configured for this number : " + to;
             sendNotification(errMsg, 12003, "warning", true);
         }
         return isFoundHostedApp;
@@ -348,7 +362,8 @@ public final class SmsService extends RestcommUntypedActor {
             ier.setConfiguration(this.configuration);
             ec.executePreOutboundAction(ier, this.extensions);
             if (ier.isAllowed()) {
-                final ActorRef session = session(ier.getConfiguration());
+                CreateSmsSession createSmsSession = (CreateSmsSession) message;
+                final ActorRef session = session(ier.getConfiguration(), OrganizationUtil.getOrganizationSidByAccountSid(storage, new Sid(createSmsSession.getAccountSid())));
                 final SmsServiceResponse<ActorRef> response = new SmsServiceResponse<ActorRef>(session);
                 sender.tell(response, self);
             } else {
@@ -416,13 +431,13 @@ public final class SmsService extends RestcommUntypedActor {
         return result;
     }
 
-    private ActorRef session(final Configuration p_configuration) {
+    private ActorRef session(final Configuration p_configuration, final Sid organizationSid) {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new SmsSession(p_configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
+                return new SmsSession(p_configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext, organizationSid);
             }
         });
         return getContext().actorOf(props);

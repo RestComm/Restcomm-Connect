@@ -1,35 +1,8 @@
 package org.restcomm.connect.application;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
-import org.apache.log4j.Logger;
-import org.mobicents.servlet.sip.SipConnector;
-import org.restcomm.connect.application.config.ConfigurationStringLookup;
-import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.commons.loader.ObjectFactory;
-import org.restcomm.connect.commons.loader.ObjectInstantiationException;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.entities.InstanceId;
-import org.restcomm.connect.dao.entities.shiro.ShiroResources;
-import org.restcomm.connect.extension.controller.ExtensionBootstrapper;
-import org.restcomm.connect.identity.IdentityContext;
-import org.restcomm.connect.monitoringservice.MonitoringService;
-import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
-import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
-import org.restcomm.connect.mscontrol.api.MediaServerInfo;
-import org.restcomm.connect.mscontrol.jsr309.Jsr309ControllerFactory;
-import org.restcomm.connect.mscontrol.mms.MmsControllerFactory;
-import scala.concurrent.ExecutionContext;
+import java.net.UnknownHostException;
+import java.util.List;
+import java.util.Properties;
 
 import javax.media.mscontrol.MsControlException;
 import javax.media.mscontrol.MsControlFactory;
@@ -41,14 +14,48 @@ import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletContextEvent;
 import javax.servlet.sip.SipServletListener;
 import javax.servlet.sip.SipURI;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Properties;
+
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.mobicents.servlet.sip.SipConnector;
+import org.restcomm.connect.application.config.ConfigurationStringLookup;
+import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.loader.ObjectFactory;
+import org.restcomm.connect.commons.loader.ObjectInstantiationException;
+import org.restcomm.connect.commons.util.DNSUtils;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.InstanceId;
+import org.restcomm.connect.dao.entities.Organization;
+import org.restcomm.connect.dao.entities.shiro.ShiroResources;
+import org.restcomm.connect.extension.controller.ExtensionBootstrapper;
+import org.restcomm.connect.identity.IdentityContext;
+import org.restcomm.connect.monitoringservice.MonitoringService;
+import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
+import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
+import org.restcomm.connect.mscontrol.api.MediaServerInfo;
+import org.restcomm.connect.mscontrol.jsr309.Jsr309ControllerFactory;
+import org.restcomm.connect.mscontrol.mms.MmsControllerFactory;
+
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import scala.concurrent.ExecutionContext;
 
 /**
  *
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
+ * @author maria-farooq@live.com (Maria Farooq)
  *
  */
 
@@ -117,7 +124,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         final String address = configuration.getString("media-server.address");
         final int port = configuration.getInt("media-server.port");
         final int timeout = configuration.getInt("media-server.timeout", 5);
-        return new MediaServerInfo(name, InetAddress.getByName(address), port, timeout);
+        return new MediaServerInfo(name, DNSUtils.getByName(address), port, timeout);
     }
 
     private Properties getDialogicXmsProperties(final Configuration configuration) {
@@ -239,6 +246,38 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return context.getContextPath();
     }
 
+    /**
+     * generateDefaultDomainName based on RC hostname
+     * https://github.com/RestComm/Restcomm-Connect/issues/2085
+     * @param configuration
+     * @param storage
+     */
+    private boolean generateDefaultDomainName (final Configuration configuration, final DaoManager storage) {
+        try{
+            final Sid defaultOrganization = new Sid("ORafbe225ad37541eba518a74248f0ac4c");
+            final String hostname = configuration.getString("hostname");
+
+            if(hostname != null && !hostname.trim().equals("")){
+                if(logger.isInfoEnabled())
+                    logger.info("Generate Default Domain Name based on RC hostname: "+hostname);
+            }else{
+                logger.error("Unable to generateDefaultDomainName hostname property is null in restcomm.xml");
+                return false;
+            }
+
+            Organization organization = storage.getOrganizationsDao().getOrganization(defaultOrganization);
+            if(organization == null){
+                storage.getOrganizationsDao().addOrganization(new Organization(defaultOrganization, hostname, DateTime.now(), DateTime.now()));
+            }else{
+                organization = organization.setDomainName(hostname);
+                storage.getOrganizationsDao().updateOrganization(organization);
+            }
+        }catch(Exception e){
+            logger.error("Unable to generateDefaultDomainName {}", e);
+            return false;
+        }
+        return true;
+    }
     @Override
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(Bootstrapper.class)) {
@@ -277,6 +316,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             }
             xml.setProperty("runtime-settings.home-directory", home(context));
             xml.setProperty("runtime-settings.root-uri", uri(context));
+            // initialize DnsUtilImpl ClassName
+            DNSUtils.initializeDnsUtilImplClassName(xml);
             // Create high-level restcomm configuration
             RestcommConfiguration.createOnce(xml);
             context.setAttribute(Configuration.class.getName(), xml);
@@ -368,9 +409,17 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             } catch (UnknownHostException e) {
                 logger.error("UnknownHostException during the generation of InstanceId: "+e);
             }
+
             context.setAttribute(InstanceId.class.getName(), instanceId);
             monitoring.tell(instanceId, null);
             RestcommConfiguration.getInstance().getMain().setInstanceId(instanceId.getId().toString());
+
+            if(!generateDefaultDomainName(xml.subset("http-client"), storage)){
+                logger.error("Unable to generate DefaultDomainName, Restcomm Akka system will exit now...");
+                system.shutdown();
+                system.awaitTermination();
+            }
+
             // https://github.com/RestComm/Restcomm-Connect/issues/1285 Pass InstanceId to the Load Balancer for LCM stickiness
             SipConnector[] connectors = (SipConnector[]) context.getAttribute("org.mobicents.servlet.sip.SIP_CONNECTORS");
             Properties loadBalancerCustomInfo = new Properties();

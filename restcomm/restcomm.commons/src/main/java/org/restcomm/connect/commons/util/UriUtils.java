@@ -146,7 +146,7 @@ public final class UriUtils {
             restcommAddress = RestcommConfiguration.getInstance().getMain().getHostname();
             if (restcommAddress == null || restcommAddress.isEmpty()) {
                 try {
-                    InetAddress addr = InetAddress.getByName(httpConnector.getAddress());
+                    InetAddress addr = DNSUtils.getByName(httpConnector.getAddress());
                     restcommAddress = addr.getCanonicalHostName();
                 } catch (UnknownHostException e) {
                     logger.error("Unable to resolve: " + httpConnector + " to hostname: " + e);
