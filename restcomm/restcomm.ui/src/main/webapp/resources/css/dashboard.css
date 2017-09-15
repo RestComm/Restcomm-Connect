@@ -205,6 +205,13 @@ form[role=login] input{
 
 }
 
+form[role=login] input:-webkit-autofill,
+form[role=login] input:-webkit-autofill:focus{
+    box-shadow: 0 0 0 1000px white inset;
+    transition-property: background-color;
+    -webkit-text-fill-color: #6d6e70;
+}
+
 #forgot-password {
     float: right;
     padding-right: 30px;
@@ -290,12 +297,19 @@ form[role=login] button:hover {
 
 .login-form .form-control {
     padding-left: 10px;
+    background: #ffffff;
 }
 .login-form .form-control + .glyphicon {
     position: absolute;
     left: 0;
     top: 22%;
     padding: 6px 0 0 27px;
+}
+
+.login-form .form-control:focus{
+    box-shadow: inset 0 0 6px #ffffff;
+    -webkit-box-shadow: 0 0 6px #ffffff;
+    -moz-box-shadow: 0 0 6px #ffffff;
 }
 
 /* unvisited link */

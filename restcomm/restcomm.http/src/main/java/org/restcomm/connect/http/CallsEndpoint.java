@@ -20,6 +20,7 @@
 package org.restcomm.connect.http;
 
 import akka.actor.ActorRef;
+import akka.pattern.AskTimeoutException;
 import akka.util.Timeout;
 
 import com.google.gson.Gson;
@@ -95,6 +96,7 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.GONE;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 
@@ -512,7 +514,13 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
             CallResponse<CallInfo> response = (CallResponse<CallInfo>) Await.result(future,
                     Duration.create(10, TimeUnit.SECONDS));
             callInfo = response.get();
+        } catch (AskTimeoutException ate) {
+            final String msg ="Call is already completed.";
+            if(logger.isDebugEnabled())
+                logger.debug("Modify Call LCM for call sid:"+callSid+ " AskTimeout while getting call: "+ callPath +" restcomm will send "+GONE +" with msg: "+msg);
+            return status(GONE).entity(msg).build();
         } catch (Exception exception) {
+            logger.error("Exception while trying to update call callPath: "+callPath+" callSid: "+callSid, exception);
             return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
         }
 

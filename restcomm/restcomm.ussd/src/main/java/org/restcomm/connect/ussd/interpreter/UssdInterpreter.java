@@ -28,6 +28,7 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -75,6 +76,8 @@ import org.restcomm.connect.ussd.commons.UssdRestcommResponse;
 
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -168,6 +171,9 @@ public class UssdInterpreter extends RestcommUntypedActor {
     private final State ready;
     private final State notFound;
 
+    private boolean receivedBye;
+    private boolean sentBye;
+
     public UssdInterpreter(final UssdInterpreterParams params) {
         super();
         final ActorRef source = self();
@@ -195,9 +201,9 @@ public class UssdInterpreter extends RestcommUntypedActor {
         transitions.add(new Transition(downloadingRcml, ready));
         transitions.add(new Transition(downloadingRcml, cancelling));
         transitions.add(new Transition(downloadingRcml, notFound));
-        transitions.add(new Transition(downloadingRcml, downloadingFallbackRcml));
+        transitions.add(new Transition(downloadingRcml, downloadingFallbackRcml));//??????
         transitions.add(new Transition(downloadingRcml, finished));
-        transitions.add(new Transition(downloadingRcml, ready));
+        transitions.add(new Transition(downloadingRcml, ready));//redundant
         transitions.add(new Transition(ready, preparingMessage));
         transitions.add(new Transition(preparingMessage, downloadingRcml));
         transitions.add(new Transition(preparingMessage, processingInfoRequest));
@@ -206,6 +212,9 @@ public class UssdInterpreter extends RestcommUntypedActor {
         transitions.add(new Transition(processingInfoRequest, preparingMessage));
         transitions.add(new Transition(processingInfoRequest, ready));
         transitions.add(new Transition(processingInfoRequest, finished));
+        transitions.add(new Transition(processingInfoRequest, disconnecting));
+        transitions.add(new Transition(processingInfoRequest, cancelling));
+        transitions.add(new Transition(processingInfoRequest, notFound));
         transitions.add(new Transition(disconnecting, finished));
 
         // Initialize the FSM.
@@ -231,6 +240,9 @@ public class UssdInterpreter extends RestcommUntypedActor {
         }
         path = path + accountId.toString();
         this.downloader = downloader();
+
+        receivedBye = false;
+        sentBye = false;
     }
 
     public static Props props(final UssdInterpreterParams params) {
@@ -469,6 +481,7 @@ public class UssdInterpreter extends RestcommUntypedActor {
             } else if ("ACK".equalsIgnoreCase(method)) {
                 fsm.transition(message, downloadingRcml);
             } else if ("BYE".equalsIgnoreCase(method)) {
+                receivedBye = true;
                 fsm.transition(message, disconnecting);
             } else if ("CANCEL".equalsIgnoreCase(method)) {
                 fsm.transition(message, cancelling);
@@ -532,22 +545,29 @@ public class UssdInterpreter extends RestcommUntypedActor {
             }
         } else if (DownloaderResponse.class.equals(klass)) {
             final DownloaderResponse response = (DownloaderResponse) message;
-            if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Rcml URI : " + response.get().getURI() + "response succeeded " + response.succeeded()
-                        + ", statusCode " + response.get().getStatusCode());
+
+            int sc = response.get().getStatusCode();
+            //processingInfoRequest
+            if (logger.isDebugEnabled()) {
+                logger.debug("Rcml URI : " + response.get().getURI() + "response success=" + response.succeeded()
+                    + ", statusCode=" + response.get().getStatusCode()+" state="+state);
+            }
+            //FIXME: what if these ifblocks arent in downloadingRcml?
+            if (response.succeeded()) {
+                if(HttpStatus.SC_OK == sc){
+                    fsm.transition(message, ready);
+                } else if (HttpStatus.SC_NOT_FOUND == sc){
+                    fsm.transition(message, notFound);
                 }
-                fsm.transition(message, ready);
-            } else if (response.succeeded() && HttpStatus.SC_NOT_FOUND == response.get().getStatusCode()) {
-                fsm.transition(message, notFound);
             } else {
-                if (downloadingRcml.equals(state)) {
-                    if (fallbackUrl != null) {
-                        fsm.transition(message, downloadingFallbackRcml);
-                    } else {
-                        fsm.transition(message, finished);
-                    }
+                if (downloadingRcml.equals(state) && fallbackUrl!=null) {
+                    fsm.transition(message, downloadingFallbackRcml);
                 } else {
+                    //unexpected response
+                    if(!sentBye && !receivedBye){
+                        sendBye("UssdInterpreter Stopping. Unexpected State when receiving DownloaderResponse");
+                        sentBye = true;
+                    }
                     fsm.transition(message, finished);
                 }
             }
@@ -588,6 +608,40 @@ public class UssdInterpreter extends RestcommUntypedActor {
             }
         } else if (End.class.equals(klass)) {
             fsm.transition(message, preparingMessage);
+        }
+    }
+
+    private void sendBye(String message) {
+        CallInfo info = null;
+        if (callInfo != null) {
+            info = callInfo;
+        } else if (outboundCallInfo != null){
+            info = outboundCallInfo;
+        }
+        if (info != null) {
+            final SipSession session = info.invite().getSession();
+            final String sessionState = session.getState().name();
+
+            if (sessionState == SipSession.State.TERMINATED.name()) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("SipSession already TERMINATED, will not send BYE");
+                }
+                return;
+            } else {
+                if (logger.isInfoEnabled()) {
+                    logger.info("About to send BYE, session state: " + sessionState);
+                }
+            }
+            final SipServletRequest bye = session.createRequest("BYE");
+            try {
+                bye.addHeader("Reason",message);
+                bye.send();
+            } catch (Exception e) {
+                if(logger.isErrorEnabled()){
+                    logger.error("Error sending BYE "+e.getMessage());
+                }
+            }
+
         }
     }
 
@@ -903,7 +957,11 @@ public class UssdInterpreter extends RestcommUntypedActor {
 
             UssdInfoRequest ussdInfoRequest = new UssdInfoRequest(info);
             String ussdText = ussdInfoRequest.getMessage();
-            if (ussdCollectAction != null && !ussdCollectAction.isEmpty() && ussdText != null) {
+            UssdMessageType ussdMsgType = ussdInfoRequest.getUssdMessageType();
+            if ( !ussdMsgType.equals(UssdMessageType.unstructuredSSNotify_Response) &&
+                  ussdCollectAction != null &&
+                  !ussdCollectAction.isEmpty() &&
+                  ussdText != null) {
                 URI target = null;
                 try {
                     target = URI.create(ussdCollectAction);
@@ -946,7 +1004,7 @@ public class UssdInterpreter extends RestcommUntypedActor {
                 ussdLanguageTag = null;
                 ussdMessageTags = new LinkedBlockingQueue<Tag>();
                 return;
-            } else if (ussdInfoRequest.getUssdMessageType().equals(UssdMessageType.unstructuredSSNotify_Response)) {
+            } else if (ussdMsgType.equals(UssdMessageType.unstructuredSSNotify_Response)) {
                 UssdRestcommResponse ussdRestcommResponse = new UssdRestcommResponse();
                 ussdRestcommResponse.setErrorCode("1");
                 ussdRestcommResponse.setIsFinalMessage(true);

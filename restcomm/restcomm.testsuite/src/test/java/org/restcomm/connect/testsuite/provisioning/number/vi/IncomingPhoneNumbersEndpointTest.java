@@ -57,6 +57,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
@@ -78,9 +79,108 @@ public class IncomingPhoneNumbersEndpointTest {
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     private String baseURL = "2012-04-24/Accounts/" + adminAccountSid + "/";
+    private String adminOrg2Username = "administrator@org2.restcomm.com";
+    private String adminOrg2AccountSid = "ACae6e420f425248d6a26948c17a9e2acg";
+    private String adminOrg2AuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    private String baseURLOrg2 = "2012-04-24/Accounts/" + adminOrg2AccountSid + "/";
     
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
+    
+
+    /*
+     * https://github.com/RestComm/Restcomm-Connect/issues/2389
+     * try deleting a number that does not exist
+     */
+    @Test
+    public void testDeletePhoneNumberNotFound() {
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("queryDID"))
+                .withRequestBody(containing("4196902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("assignDID"))
+                .withRequestBody(containing("4196902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("releaseDID"))
+                .withRequestBody(containing("4196902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        String phoneNumberSid = Sid.generate(Sid.Type.PHONE_NUMBER).toString();
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
+        webResource = jerseyClient.resource(provisioningURL);
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        logger.info("clientResponse: "+clientResponse.getStatus());
+        assertTrue(clientResponse.getStatus() == 404);
+    }
+    
+    /*
+     * https://github.com/RestComm/Restcomm-Connect/issues/2389
+     * try updating a number that does not exist
+     */
+    @Test
+    public void testUpdatePhoneNumberNotFound() {
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("queryDID"))
+                .withRequestBody(containing("4206902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("assignDID"))
+                .withRequestBody(containing("4206902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("releaseDID"))
+                .withRequestBody(containing("4206902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        String phoneNumberSid = Sid.generate(Sid.Type.PHONE_NUMBER).toString();
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
+        webResource = jerseyClient.resource(provisioningURL);
+        formData = new MultivaluedMapImpl();
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice2.xml");
+        formData.add("SmsUrl", "http://demo.telestax.com/docs/sms2.xml");
+        formData.add("VoiceMethod", "POST");
+        formData.add("SMSMethod", "GET");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        logger.info("clientResponse.getStatus(): "+clientResponse.getStatus());
+        assertTrue(clientResponse.getStatus() == 404);
+    }
     
     @Test
     public void getIncomingPhoneNumbersList() {
@@ -653,6 +753,7 @@ public class IncomingPhoneNumbersEndpointTest {
         formData.add("VoiceMethod", "POST");
         formData.add("SMSMethod", "GET");
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        logger.info(clientResponse);
         assertTrue(clientResponse.getStatus() == 200);
         response = clientResponse.getEntity(String.class);
         logger.info(response);
@@ -1002,6 +1103,231 @@ public class IncomingPhoneNumbersEndpointTest {
         webResource = jerseyClient.resource(provisioningURL);
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
         assertTrue(clientResponse.getStatus() == 204);
+    }
+
+    /**
+     * testCreatePureSipPhoneNumbersForOrganizations
+     * https://github.com/RestComm/Restcomm-Connect/issues/2106
+     */
+    @Test
+    public void testCreatePureSipPhoneNumbersForOrganizations() {
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("queryDID"))
+                .withRequestBody(containing("11223344"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("assignDID"))
+                .withRequestBody(containing("11223344"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Local.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "11223344");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "My Company Line");
+        formData.add("VoiceMethod", "GET");
+        formData.add("isSIP", "TRUE");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 200);
+        String response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        JsonParser parser = new JsonParser();
+        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+        
+        logger.info("testCreatePureSipPhoneNumber from default org jsonResponse: " + jsonResponse.toString());
+        
+        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultSIPPurchaseNumber));
+        
+        /*
+         * try to create same number again 
+         * under same organization/account, 
+         * it should not be allowed
+         * */
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("queryDID"))
+                .withRequestBody(containing("11223344"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("assignDID"))
+                .withRequestBody(containing("11223344"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        // Get Account using admin email address and user email address
+        jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Local.json";
+        webResource = jerseyClient.resource(provisioningURL);
+        formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "11223344");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "My Company Line");
+        formData.add("VoiceMethod", "GET");
+        formData.add("isSIP", "TRUE");
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        logger.info("testCreatePureSipPhoneNumber from default org TWICE clientResponse: " + clientResponse.toString());
+        assertTrue(clientResponse.getStatus() != 200);
+        
+        /*
+         * try to create same number again 
+         * under different organization/account, 
+         * it should be allowed
+         * */
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("queryDID"))
+                .withRequestBody(containing("11223344"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("assignDID"))
+                .withRequestBody(containing("11223344"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminOrg2Username, adminOrg2AuthToken));
+
+        provisioningURL = deploymentUrl + baseURLOrg2 + "IncomingPhoneNumbers/Local.json";
+        webResource = jerseyClient.resource(provisioningURL);
+
+        formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "11223344");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "My Company Line");
+        formData.add("VoiceMethod", "GET");
+        formData.add("isSIP", "TRUE");
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 200);
+        response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        parser = new JsonParser();
+        jsonResponse = parser.parse(response).getAsJsonObject();
+        
+        logger.info("testCreatePureSipPhoneNumber from Org2 jsonResponse: " + jsonResponse.toString());
+        
+        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultSIPPurchaseNumberOrg2));
+        
+    }
+
+    /**
+     * testCreateNonPureSipPhoneNumbersForOrganizations
+     * https://github.com/RestComm/Restcomm-Connect/issues/2106
+     */
+    @Test
+    public void testCreateNonPureSipPhoneNumbersForOrganizations() {
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("queryDID"))
+                .withRequestBody(containing("4166902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("assignDID"))
+                .withRequestBody(containing("4166902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Local.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "+14166902867");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "My Company Line");
+        formData.add("VoiceMethod", "GET");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 200);
+        String response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        JsonParser parser = new JsonParser();
+        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+        
+        System.out.println(jsonResponse.toString());
+        
+        assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultLocalPurchaseNumber));
+        /*
+         * try to create same number again 
+         * under same organization/account, 
+         * it should not be allowed
+         * */
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("queryDID"))
+                .withRequestBody(containing("4156902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+        
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("assignDID"))
+                .withRequestBody(containing("4156902867"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+        // Get Account using admin email address and user email address
+        jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Local.json";
+        webResource = jerseyClient.resource(provisioningURL);
+        formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "+4156902867");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "My Company Line");
+        formData.add("VoiceMethod", "GET");
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        logger.info("testCreatePureSipPhoneNumber from default org TWICE clientResponse: " + clientResponse.toString());
+        assertTrue(clientResponse.getStatus() == 403);
+        
+        /*
+         * try to create same number again 
+         * under different organization/account, 
+         * it should not be allowed
+         * */
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminOrg2Username, adminOrg2AuthToken));
+
+        provisioningURL = deploymentUrl + baseURLOrg2 + "IncomingPhoneNumbers/Local.json";
+        webResource = jerseyClient.resource(provisioningURL);
+
+        formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", "+4156902867");
+        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+        formData.add("FriendlyName", "My Company Line");
+        formData.add("VoiceMethod", "GET");
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        assertTrue(clientResponse.getStatus() == 403);
+        
     }
     
     @Deployment(name = "IncomingPhoneNumbersEndpointTest", managed = true, testable = false)

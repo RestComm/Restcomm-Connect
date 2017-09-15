@@ -203,7 +203,7 @@ public class TestDialVerbPartOneAnswerDelay {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
-        String outboundCallSid = aliceCall.getLastReceivedRequest().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+        String outboundCallSid = aliceCall.getLastReceivedRequest().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
@@ -211,7 +211,7 @@ public class TestDialVerbPartOneAnswerDelay {
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        String inboundCallSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+        String inboundCallSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
@@ -341,7 +341,7 @@ public class TestDialVerbPartOneAnswerDelay {
         }
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         //X-RestComm-CallSid: CAedaccc8f598b4093b1fc33431e1c9ac9
-        String outboundCallSid = aliceCall.getLastReceivedRequest().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+        String outboundCallSid = aliceCall.getLastReceivedRequest().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         //Ringing time 5 sec
         Thread.sleep(5000);
@@ -352,7 +352,7 @@ public class TestDialVerbPartOneAnswerDelay {
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
 //        X-RestComm-CallSid: CA5c2a775f2ca24003a04b7f7b90e6fabb
-        String inboundCallSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+        String inboundCallSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));

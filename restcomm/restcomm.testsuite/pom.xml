@@ -273,6 +273,19 @@
             <scope>test</scope>
         </dependency>
 
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>1.8.5</version>
+			<scope>test</scope>
+		</dependency>	
+		<!-- <dependency>
+  			<groupId>org.powermock</groupId>
+  			<artifactId>powermock-module-testng-agent</artifactId>
+  			<version>1.6.6</version>
+  			<scope>test</scope>
+		</dependency> -->
+
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
             <artifactId>wiremock</artifactId>

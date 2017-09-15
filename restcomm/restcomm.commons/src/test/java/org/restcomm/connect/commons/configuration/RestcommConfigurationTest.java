@@ -43,7 +43,7 @@ public class RestcommConfigurationTest {
     public void mainSetConfigurationOptionsAreValid() {
         MainConfigurationSet main = conf.getMain();
         assertTrue( main.getSslMode().equals(SslMode.strict));
-        assertTrue( main.getHostname().equals(""));
+        assertTrue( main.getHostname().equals("127.0.0.1"));
         assertTrue( main.isUseHostnameToResolveRelativeUrls() == true );
     }
     

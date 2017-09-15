@@ -21,21 +21,24 @@ package org.restcomm.connect.dao.mybatis;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import static org.junit.Assert.*;
 import org.junit.Test;
-
+import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria farooq
  */
 public final class ClientsDaoTest {
     private static MybatisDaoManager manager;
@@ -79,6 +82,7 @@ public final class ClientsDaoTest {
         builder.setVoiceFallbackMethod(method);
         builder.setVoiceApplicationSid(application);
         builder.setUri(url);
+        builder.setPushClientIdentity(sid.toString());
         Client client = builder.build();
         final ClientsDao clients = manager.getClientsDao();
         // Create a new client in the data store.
@@ -99,10 +103,12 @@ public final class ClientsDaoTest {
         assertTrue(result.getVoiceFallbackMethod().equals(client.getVoiceFallbackMethod()));
         assertTrue(result.getVoiceApplicationSid().equals(client.getVoiceApplicationSid()));
         assertTrue(result.getUri().equals(client.getUri()));
+        assertTrue(result.getPushClientIdentity().equals(client.getPushClientIdentity()));
         // Update the client.
         application = Sid.generate(Sid.Type.APPLICATION);
         url = URI.create("http://127.0.0.1:8080/restcomm/demos/world-hello.xml");
         method = "POST";
+        String newClientIdentity = "newClientIdentity";
         client = client.setFriendlyName("Bob");
         client = client.setPassword("4321");
         client = client.setStatus(Client.DISABLED);
@@ -111,6 +117,7 @@ public final class ClientsDaoTest {
         client = client.setVoiceMethod(method);
         client = client.setVoiceFallbackUrl(url);
         client = client.setVoiceFallbackMethod(method);
+        client = client.setPushClientIdentity(newClientIdentity);
         clients.updateClient(client);
         // Read the updated client from the data store.
         result = clients.getClient(sid);
@@ -124,6 +131,7 @@ public final class ClientsDaoTest {
         assertTrue(result.getVoiceFallbackUrl().equals(client.getVoiceFallbackUrl()));
         assertTrue(result.getVoiceFallbackMethod().equals(client.getVoiceFallbackMethod()));
         assertTrue(result.getVoiceApplicationSid().equals(client.getVoiceApplicationSid()));
+        assertTrue(result.getPushClientIdentity().equals(newClientIdentity));
         // Delete the client.
         clients.removeClient(sid);
         // Validate that the client was removed.
@@ -132,14 +140,24 @@ public final class ClientsDaoTest {
 
     @Test
     public void readByUser() {
-        final Sid account = Sid.generate(Sid.Type.ACCOUNT);
+    	AccountsDao dao = manager.getAccountsDao();
+        Sid accountSid = Sid.generate(Sid.Type.ACCOUNT);
+        final Sid org = Sid.generate(Sid.Type.ORGANIZATION);
+        try {
+			dao.addAccount(new Account(accountSid, new DateTime(), new DateTime(), "test@telestax.com", "Top Level Account", new Sid("AC00000000000000000000000000000000"),Account.Type.FULL,Account.Status.ACTIVE,"77f8c12cc7b8f8423e5c38b035249166","Administrator",new URI("/2012-04-24/Accounts/AC00000000000000000000000000000000"), org));
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+
         final Sid sid = Sid.generate(Sid.Type.CLIENT);
         Sid application = Sid.generate(Sid.Type.APPLICATION);
         URI url = URI.create("hello-world.xml");
         String method = "GET";
         final Client.Builder builder = Client.builder();
         builder.setSid(sid);
-        builder.setAccountSid(account);
+        builder.setAccountSid(accountSid);
         builder.setApiVersion("2012-04-24");
         builder.setFriendlyName("Tom");
         builder.setLogin("tom");
@@ -156,7 +174,7 @@ public final class ClientsDaoTest {
         // Create a new client in the data store.
         clients.addClient(client);
         // Read the client from the data store using the user name.
-        final Client result = clients.getClient("tom");
+        final Client result = clients.getClient("tom", org);
         // Validate the result.
         assertTrue(result.getSid().equals(client.getSid()));
         assertTrue(result.getAccountSid().equals(client.getAccountSid()));

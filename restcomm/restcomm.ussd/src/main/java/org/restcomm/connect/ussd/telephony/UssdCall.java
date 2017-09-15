@@ -34,6 +34,7 @@ import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
@@ -218,8 +219,8 @@ public class UssdCall extends RestcommUntypedActor {
         final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
         final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
 
-        InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
-        InetAddress inetAddress = InetAddress.getByName(realIP);
+        InetAddress contactInetAddress = DNSUtils.getByName(((SipURI) contactAddr.getURI()).getHost());
+        InetAddress inetAddress = DNSUtils.getByName(realIP);
 
         int remotePort = message.getRemotePort();
         int contactPort = ((SipURI)contactAddr.getURI()).getPort();

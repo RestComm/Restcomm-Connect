@@ -721,7 +721,7 @@ public class DialActionTest {
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
 
-        String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+        String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
@@ -829,7 +829,6 @@ public class DialActionTest {
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
         logger.info("requestBody = "+requestBody);
-        logger.debug("requestBody = "+requestBody);
         System.out.println("requestBody = "+requestBody);
         assertTrue(requestBody.contains("SipHeader_Diversion=%3Csip%3A11223344%40xyz.com%3E%3Bcounter%3D1%3Breason%3DUNKNOWN"));
         Iterator iter = Arrays.asList(params).iterator();
@@ -843,6 +842,7 @@ public class DialActionTest {
         }
         assertNotNull(dialCallSid);
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
+        logger.info("cdr = "+cdr);
         assertNotNull(cdr);
 
         String forwardedFrom = cdr.get("forwarded_from").getAsString();

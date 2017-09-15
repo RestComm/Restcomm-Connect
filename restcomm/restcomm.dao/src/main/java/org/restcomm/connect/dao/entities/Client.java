@@ -50,11 +50,12 @@ public final class Client {
     private final String voiceFallbackMethod;
     private final Sid voiceApplicationSid;
     private final URI uri;
+    private final String pushClientIdentity;
 
     public Client(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
             final String apiVersion, final String friendlyName, final String login, final String password,
             final Integer status, final URI voiceUrl, final String voiceMethod, final URI voiceFallbackUrl,
-            String voiceFallbackMethod, final Sid voiceApplicationSid, final URI uri) {
+            String voiceFallbackMethod, final Sid voiceApplicationSid, final URI uri, final String pushClientIdentity) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -71,6 +72,7 @@ public final class Client {
         this.voiceFallbackMethod = voiceFallbackMethod;
         this.voiceApplicationSid = voiceApplicationSid;
         this.uri = uri;
+        this.pushClientIdentity = pushClientIdentity;
     }
 
     public static Builder builder() {
@@ -137,44 +139,53 @@ public final class Client {
         return uri;
     }
 
+    public String getPushClientIdentity() {
+        return pushClientIdentity;
+    }
+
     public Client setFriendlyName(final String friendlyName) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, pushClientIdentity);
     }
 
     public Client setPassword(final String password) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, pushClientIdentity);
     }
 
     public Client setStatus(final int status) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, pushClientIdentity);
     }
 
     public Client setVoiceUrl(final URI voiceUrl) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, pushClientIdentity);
     }
 
     public Client setVoiceMethod(final String voiceMethod) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, pushClientIdentity);
     }
 
     public Client setVoiceFallbackUrl(final URI voiceFallbackUrl) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, pushClientIdentity);
     }
 
     public Client setVoiceFallbackMethod(final String voiceFallbackMethod) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, pushClientIdentity);
     }
 
     public Client setVoiceApplicationSid(final Sid voiceApplicationSid) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, pushClientIdentity);
+    }
+
+    public Client setPushClientIdentity(final String pushClientIdentity) {
+        return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, pushClientIdentity);
     }
 
     @NotThreadSafe
@@ -192,6 +203,7 @@ public final class Client {
         private String voiceFallbackMethod;
         private Sid voiceApplicationSid;
         private URI uri;
+        private String pushClientIdentity;
 
         private Builder() {
             super();
@@ -200,7 +212,7 @@ public final class Client {
         public Client build() {
             final DateTime now = DateTime.now();
             return new Client(sid, now, now, accountSid, apiVersion, friendlyName, login, password, status, voiceUrl,
-                    voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+                    voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, pushClientIdentity);
         }
 
         public void setSid(final Sid sid) {
@@ -253,6 +265,10 @@ public final class Client {
 
         public void setUri(final URI uri) {
             this.uri = uri;
+        }
+
+        public void setPushClientIdentity(String pushClientIdentity) {
+            this.pushClientIdentity = pushClientIdentity;
         }
     }
 }

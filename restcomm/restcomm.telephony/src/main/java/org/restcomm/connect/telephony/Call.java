@@ -49,6 +49,7 @@ import org.restcomm.connect.commons.fsm.TransitionRollbackException;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
@@ -137,6 +138,7 @@ import java.util.concurrent.TimeUnit;
  * @author amit.bhayani@telestax.com (Amit Bhayani)
  * @author gvagenas@telestax.com (George Vagenas)
  * @author henrique.rosa@telestax.com (Henrique Rosa)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  *
  */
 @Immutable
@@ -615,8 +617,8 @@ public final class Call extends RestcommUntypedActor {
             final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
             final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
 
-            InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
-            InetAddress inetAddress = InetAddress.getByName(realIP);
+            InetAddress contactInetAddress = DNSUtils.getByName(((SipURI) contactAddr.getURI()).getHost());
+            InetAddress inetAddress = DNSUtils.getByName(realIP);
 
             int remotePort = message.getRemotePort();
             int contactPort = ((SipURI) contactAddr.getURI()).getPort();
@@ -767,7 +769,10 @@ public final class Call extends RestcommUntypedActor {
             message.addHeader("X-RestComm-ApiVersion", apiVersion);
         if (accountId != null)
             message.addHeader("X-RestComm-AccountSid", accountId.toString());
-        message.addHeader("X-RestComm-CallSid", instanceId+"-"+id.toString());
+        // no need to append instance id, it will already be part of call sid by default
+        // https://github.com/RestComm/Restcomm-Connect/issues/1907
+        // message.addHeader("X-RestComm-CallSid", instanceId+"-"+id.toString());
+        message.addHeader("X-RestComm-CallSid", id.toString());
     }
 
     // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
@@ -1013,7 +1018,7 @@ public final class Call extends RestcommUntypedActor {
                 headers.put("RestComm-ApiVersion", apiVersion);
             if (accountId != null)
                 headers.put("RestComm-AccountSid", accountId.toString());
-            headers.put("RestComm-CallSid", instanceId+"-"+id.toString());
+            headers.put("RestComm-CallSid", id.toString());
         }
 
         //TODO: put this in a central place
@@ -1374,21 +1379,27 @@ public final class Call extends RestcommUntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             if (isInbound()) {
-                SipServletResponse resp = null;
-                if (message instanceof CallFail) {
-                    resp = invite.createResponse(500, "Problem to setup the call");
-                    String reason = ((CallFail) message).getReason();
-                    if (reason != null)
-                        resp.addHeader("Reason", reason);
-                } else {
-                    // https://github.com/RestComm/Restcomm-Connect/issues/1663
-                    // We use 569 only if there is a problem to reach RMS as LB can be configured to take out
-                    // nodes that send back 569. This is meant to protect the cluster from nodes where the RMS
-                    // is in bad state and not responding anymore
-                    resp = invite.createResponse(MEDIA_SERVER_FAILURE_RESPONSE_CODE, "Problem to setup services");
+                try {
+                    if (invite.getSession().isValid()) {
+                        SipServletResponse resp = null;
+                        if (message instanceof CallFail) {
+                            resp = invite.createResponse(500, "Problem to setup the call");
+                            String reason = ((CallFail) message).getReason();
+                            if (reason != null)
+                                resp.addHeader("Reason", reason);
+                        } else {
+                            // https://github.com/RestComm/Restcomm-Connect/issues/1663
+                            // We use 569 only if there is a problem to reach RMS as LB can be configured to take out
+                            // nodes that send back 569. This is meant to protect the cluster from nodes where the RMS
+                            // is in bad state and not responding anymore
+                            resp = invite.createResponse(MEDIA_SERVER_FAILURE_RESPONSE_CODE, "Problem to setup services");
+                        }
+                        addCustomHeaders(resp);
+                        resp.send();
+                    }
+                } catch (Exception e) {
+                    logger.error("Exception while trying to prepare failed response, exception: "+e);
                 }
-                addCustomHeaders(resp);
-                resp.send();
             } else {
                 if (message instanceof CallFail)
                     sendBye(new Hangup(((CallFail) message).getReason()));
@@ -1561,7 +1572,7 @@ public final class Call extends RestcommUntypedActor {
 //                  session.setAttribute("realInetUri", factory.createSipURI(null, realInetUri.getHost()+":"+realInetUri.getPort()));
                         session.setAttribute("realInetUri", realInetUri);
                     }
-                    final InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
+                    final InetAddress ackRURI = DNSUtils.getByName(((SipURI) ack.getRequestURI()).getHost());
                     final int ackRURIPort = ((SipURI) ack.getRequestURI()).getPort();
 
                     if (realInetUri != null
@@ -2185,7 +2196,7 @@ public final class Call extends RestcommUntypedActor {
                             if ((SipURI) session.getAttribute("realInetUri") == null) {
                                 session.setAttribute("realInetUri", realInetUri);
                             }
-                            final InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
+                            final InetAddress ackRURI = DNSUtils.getByName(((SipURI) ack.getRequestURI()).getHost());
                             final int ackRURIPort = ((SipURI) ack.getRequestURI()).getPort();
 
                             if (realInetUri != null
@@ -2294,7 +2305,7 @@ public final class Call extends RestcommUntypedActor {
                 bye.addHeader("Reason",hangup.getMessage());
             }
             SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
-            InetAddress byeRURI = InetAddress.getByName(((SipURI) bye.getRequestURI()).getHost());
+            InetAddress byeRURI = DNSUtils.getByName(((SipURI) bye.getRequestURI()).getHost());
 
             // INVITE sip:+12055305520@107.21.247.251 SIP/2.0
             // Record-Route: <sip:10.154.28.245:5065;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>

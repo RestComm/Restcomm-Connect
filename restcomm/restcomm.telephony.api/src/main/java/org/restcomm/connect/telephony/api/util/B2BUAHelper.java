@@ -26,7 +26,7 @@ import java.net.UnknownHostException;
 import java.util.Currency;
 import java.util.Vector;
 
- import javax.sdp.Connection;
+import javax.sdp.Connection;
 import javax.sdp.MediaDescription;
 import javax.sdp.SdpException;
 import javax.sdp.SdpFactory;
@@ -41,18 +41,20 @@ import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
- import org.apache.log4j.Logger;
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
- import org.restcomm.connect.telephony.api.CallStateChanged;
- import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RegistrationsDao;
+import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.telephony.api.CallStateChanged;
 
 /**
   * Helper methods for proxying SIP messages between Restcomm clients that are connecting in peer to peer mode
@@ -100,14 +102,21 @@ import org.restcomm.connect.commons.dao.Sid;
 
          final RegistrationsDao registrations = daoManager.getRegistrationsDao();
          try {
-             final Registration registration = registrations.getRegistration(user);
+             Sid toOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getTo().getURI());
+             final Registration registration = registrations.getRegistration(user, toOrganizationSid);
              if (registration != null) {
                  final String location = registration.getLocation();
                  final String aor = registration.getAddressOfRecord();
                  SipURI to;
                  SipURI from;
                  to = (SipURI) sipFactory.createURI(location);
-                 from = (SipURI) sipFactory.createURI((registrations.getRegistration(client.getLogin())).getLocation());
+                 Sid fromOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getFrom().getURI());
+                 // if both clients don't belong to same organization, call should not be allowed.
+                 if(!toOrganizationSid.equals(fromOrganizationSid)){
+                     logger.warn(String.format("B2B clients do not belong to same organization. from-client: %s belong to %s . where as to-client %s belong to %s", client.getLogin(), fromOrganizationSid, user, toOrganizationSid));
+                     return false;
+                 }
+                 from = (SipURI) sipFactory.createURI((registrations.getRegistration(client.getLogin(), fromOrganizationSid)).getLocation());
                  final SipSession incomingSession = request.getSession();
                  // create and send the outgoing invite and do the session linking
                  incomingSession.setAttribute(B2BUA_LAST_REQUEST, request);
@@ -386,7 +395,7 @@ import org.restcomm.connect.commons.dao.Sid;
          if (connection != null) {
              if (Connection.IN.equals(connection.getNetworkType())) {
                  if (Connection.IP4.equals(connection.getAddressType())) {
-                     final InetAddress address = InetAddress.getByName(connection.getAddress());
+                     final InetAddress address = DNSUtils.getByName(connection.getAddress());
                      if (address.isSiteLocalAddress() || address.isAnyLocalAddress() || address.isLoopbackAddress()) {
                          final String ip = address.getHostAddress();
                          connection.setAddress(externalIp);
@@ -509,13 +518,14 @@ import org.restcomm.connect.commons.dao.Sid;
          }
 
          CallDetailRecord callRecord = records.getCallDetailRecord((Sid) linkedRequest.getSession().getAttribute(CDR_SID));
+         Sid organizationSid = daoManager.getAccountsDao().getAccount(callRecord.getAccountSid()).getOrganizationSid();
 
          if (response.getRawContent() != null && response.getRawContent().length > 0 ) {
              final byte[] sdp = response.getRawContent();
              String offer = null;
              if (response.getContentType().equalsIgnoreCase("application/sdp") && patchForNat) {
                  // Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
-                 Registration registration = daoManager.getRegistrationsDao().getRegistration(callRecord.getTo());
+                 Registration registration = daoManager.getRegistrationsDao().getRegistration(callRecord.getTo(), organizationSid);
                  String externalIp;
                  if (registration != null) {
                      externalIp = registration.getLocation().split(":")[1].split("@")[1];
