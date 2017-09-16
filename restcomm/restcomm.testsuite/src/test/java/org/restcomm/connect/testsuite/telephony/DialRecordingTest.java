@@ -443,7 +443,7 @@ public class DialRecordingTest {
 
 		bobCall.disconnect();
 
-		Thread.sleep(2000);
+		Thread.sleep(5000);
 
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);

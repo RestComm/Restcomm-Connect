@@ -629,6 +629,12 @@ public class MgcpMediaGroup extends MediaGroup {
         @Override
         public void execute(final Object message) throws Exception {
             ivr.tell(new DestroyEndpoint(), super.source);
+//            if (lastEvent != null) {
+//                logger.info("MgcpMediaGroup at Deactivate state, about to stop IVR");
+//                stop(lastEvent);
+//            } else {
+//                ivr.tell(new DestroyEndpoint(), super.source);
+//            }
 //            if (link != null)
 //                link.tell(new CloseLink(), source);
 //            if (internalLink != null)

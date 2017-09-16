@@ -1260,8 +1260,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         // Ask callMediaGroup to stop recording so we have the recording file available
                         // Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
                         logger.info("Will move to finishRecording because of callStateChanged");
-                        call.tell(new StopMediaGroup(), null);
-//                        fsm.transition(message, finishRecording);
+//                        call.tell(new StopMediaGroup(), null);
+                        fsm.transition(message, finishRecording);
                     } else if ((is(bridged) || is(forking)) && call == sender()) {
                         if (!dialActionExecuted) {
                             fsm.transition(message, finishDialing);

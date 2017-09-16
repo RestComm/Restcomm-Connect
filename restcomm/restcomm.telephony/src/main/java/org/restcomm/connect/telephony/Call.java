@@ -1744,17 +1744,22 @@ public final class Call extends RestcommUntypedActor {
             }
 
             msController.tell(new CloseMediaSession(), source);
-            if (fail) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("At Call Stopping state, moving to Failed state");
-                }
-                fsm.transition(message, failed);
-            } else {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("At Call Stopping state, moving to Completed state");
-                }
-                fsm.transition(message, completed);
-            }
+
+            //Github issue 2261 - https://github.com/RestComm/Restcomm-Connect/issues/2261
+            //Set a ReceivedTimeout duration to make sure call doesn't block waiting for the response from MmsCallController
+            context().setReceiveTimeout(Duration.create(2000, TimeUnit.MILLISECONDS));
+
+//            if (fail) {
+//                if (logger.isDebugEnabled()) {
+//                    logger.debug("At Call Stopping state, moving to Failed state");
+//                }
+//                fsm.transition(message, failed);
+//            } else {
+//                if (logger.isDebugEnabled()) {
+//                    logger.debug("At Call Stopping state, moving to Completed state");
+//                }
+//                fsm.transition(message, completed);
+//            }
         }
     }
 
@@ -1976,6 +1981,24 @@ public final class Call extends RestcommUntypedActor {
                 observer.tell(infoResponse, self());
             }
 
+        } else if (is(stopping)) {
+            if (logger.isInfoEnabled()) {
+                //Github issue 2261 - https://github.com/RestComm/Restcomm-Connect/issues/2261
+                String msg = "Seems that MmsCallControler response from stopping never arrived, move the FSM accordingly";
+                logger.info(msg);
+            }
+            context().setReceiveTimeout(Duration.Undefined());
+            if (fail) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("At Call Stopping state, moving to Failed state");
+                }
+                fsm.transition(message, failed);
+            } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("At Call Stopping state, moving to Completed state");
+                }
+                fsm.transition(message, completed);
+            }
         } else if(logger.isInfoEnabled()) {
             logger.info("Timeout received for Call : "+self().path()+" isTerminated(): "+self().isTerminated()+". Sender: " + sender.path().toString() + " State: " + this.fsm.state()
                 + " Direction: " + direction + " From: " + from + " To: " + to);
@@ -2507,6 +2530,17 @@ public final class Call extends RestcommUntypedActor {
                     if (logger.isDebugEnabled()) {
                         String msg = String.format("On MediaServerContollerStateChanged, message: INACTIVE, Call state: %s, Fail: %s", fsm.state(), fail);
                         logger.debug(msg);
+                    }
+                    if (fail) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("At Call Stopping state, moving to Failed state");
+                        }
+                        fsm.transition(message, failed);
+                    } else {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("At Call Stopping state, moving to Completed state");
+                        }
+                        fsm.transition(message, completed);
                     }
 //                    if (fail) {
 //                        fsm.transition(message, failed);

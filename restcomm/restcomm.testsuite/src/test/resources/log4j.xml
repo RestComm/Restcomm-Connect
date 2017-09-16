@@ -22,7 +22,7 @@
 		<level value="INFO" />
 	</logger>
 	<root>
-		<priority value="DEBUG" />
+		<priority value="INFO" />
 		<appender-ref ref="console" />
 		<appender-ref ref="rolling-file" />
 	</root>
