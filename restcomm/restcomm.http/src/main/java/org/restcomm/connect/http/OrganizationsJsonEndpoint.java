@@ -24,7 +24,9 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
@@ -45,7 +47,7 @@ public final class OrganizationsJsonEndpoint extends OrganizationsEndpoint {
     }
 
     @GET
-    public Response getOrganizations() {
-        return getOrganizations(APPLICATION_JSON_TYPE);
+    public Response getOrganizations(@Context UriInfo info) {
+        return getOrganizations(info, APPLICATION_JSON_TYPE);
     }
 }

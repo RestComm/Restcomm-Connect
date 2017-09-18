@@ -35,6 +35,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.dao.Sid;
@@ -98,7 +99,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
                 return status(NOT_FOUND).build();
             }
         }else {
-        	return status(BAD_REQUEST).build();
+            return status(BAD_REQUEST).build();
         }
 
         if (organization == null) {
@@ -115,11 +116,22 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response getOrganizations(final MediaType responseType) {
+    protected Response getOrganizations(UriInfo info, final MediaType responseType) {
         checkAuthenticatedAccount();
         allowOnlySuperAdmin();
 
-        final List<Organization> organizations = organizationsDao.getAllOrganizations();
+        List<Organization> organizations = null;
+
+        String status = info.getQueryParameters().getFirst("Status");
+
+        if(status != null && Organization.Status.getValueOf(status.toLowerCase()) != null){
+            organizations = organizationsDao.getOrganizationsByStatus(Organization.Status.getValueOf(status.toLowerCase()));
+        }else{
+            organizations = organizationsDao.getAllOrganizations();
+        }
+        if (organizations == null || organizations.isEmpty()) {
+            return status(NOT_FOUND).build();
+        }
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new OrganizationList(organizations));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
