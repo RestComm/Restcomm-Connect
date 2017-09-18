@@ -19,6 +19,8 @@
  */
 package org.restcomm.connect.dao;
 
+import java.util.List;
+
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Organization;
 
@@ -45,6 +47,19 @@ public interface OrganizationsDao {
      * @return Organization entity
      */
     Organization getOrganizationByDomainName(final String domainName);
+
+    /**
+     * getOrganizationByStatus
+     * @param status
+     * @return
+     */
+    Organization getOrganizationByStatus(final Organization.Status status);
+
+    /**
+     * @return
+     */
+    List<Organization> getAllOrganizations();
+
     /**
      * updateOrganization
      * @param organization

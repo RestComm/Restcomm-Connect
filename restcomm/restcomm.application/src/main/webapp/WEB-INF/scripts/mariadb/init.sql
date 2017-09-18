@@ -5,7 +5,8 @@ CREATE TABLE restcomm_organizations (
 sid VARCHAR(34) NOT NULL PRIMARY KEY,
 domain_name VARCHAR(255) NOT NULL UNIQUE,
 date_created DATETIME NOT NULL,
-date_updated DATETIME NOT NULL
+date_updated DATETIME NOT NULL,
+status VARCHAR(16) NOT NULL
 );
 
 CREATE TABLE restcomm_instance_id (

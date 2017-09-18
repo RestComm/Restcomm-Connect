@@ -26,11 +26,12 @@ import java.util.Currency;
 import java.util.Date;
 
 import org.joda.time.DateTime;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.Geolocation;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.dao.entities.Organization;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -44,6 +45,14 @@ public final class DaoUtils {
     public static Account.Status readAccountStatus(final Object object) {
         if (object != null) {
             return Account.Status.getValueOf((String) object);
+        } else {
+            return null;
+        }
+    }
+
+    public static Organization.Status readOrganizationStatus(final Object object) {
+        if (object != null) {
+            return Organization.Status.getValueOf((String) object);
         } else {
             return null;
         }
@@ -162,6 +171,10 @@ public final class DaoUtils {
     }
 
     public static String writeAccountStatus(final Account.Status status) {
+        return status.toString();
+    }
+
+    public static String writeOrganizationStatus(final Organization.Status status) {
         return status.toString();
     }
 

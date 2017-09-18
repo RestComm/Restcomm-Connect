@@ -23,6 +23,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.Account.Status;
 
 /**
  * @author maria-farooq@live.com (Maria Farooq)
@@ -33,6 +34,7 @@ public final class Organization {
     private final String domainName;
     private final DateTime dateCreated;
     private final DateTime dateUpdated;
+    private final Status status;
 
     /**
      * @param sid
@@ -41,7 +43,7 @@ public final class Organization {
      * @param dateUpdated
      * @throws IllegalArgumentException if sid or domainName are null/empty
      */
-    public Organization(final Sid sid, final String domainName, final DateTime dateCreated, final DateTime dateUpdated) throws IllegalArgumentException {
+    public Organization(final Sid sid, final String domainName, final DateTime dateCreated, final DateTime dateUpdated, final Status status) throws IllegalArgumentException {
         super();
         if(domainName == null || domainName.trim().isEmpty())
             throw new IllegalArgumentException("Organization domainName can not be empty.");
@@ -51,7 +53,33 @@ public final class Organization {
         this.domainName = domainName;
         this.dateCreated = dateCreated;
         this.dateUpdated = dateUpdated;
+        this.status = status;
     }
+
+    public enum Status {
+        ACTIVE("active"), CLOSED("closed");
+
+        private final String text;
+
+        private Status(final String text) {
+            this.text = text;
+        }
+
+        public static Status getValueOf(final String text) {
+            Status[] values = values();
+            for (final Status value : values) {
+                if (value.toString().equals(text)) {
+                    return value;
+                }
+            }
+            throw new IllegalArgumentException(text + " is not a valid organization status.");
+        }
+
+        @Override
+        public String toString() {
+            return text;
+        }
+    };
 
     public static Builder builder() {
         return new Builder();
@@ -73,6 +101,10 @@ public final class Organization {
         return dateUpdated;
     }
 
+    public Status getStatus() {
+        return status;
+    }
+
     /**
      * @param domainName
      * @return
@@ -81,7 +113,7 @@ public final class Organization {
     public Organization setDomainName(final String domainName) throws IllegalArgumentException {
         if(domainName == null || domainName.trim().isEmpty())
             throw new IllegalArgumentException("Organization domainName can not be empty.");
-        return new Organization(sid, domainName, dateCreated, DateTime.now());
+        return new Organization(sid, domainName, dateCreated, DateTime.now(), status);
     }
 
     @NotThreadSafe
@@ -90,6 +122,7 @@ public final class Organization {
         private String domainName;
         private DateTime dateCreated;
         private DateTime dateUpdated;
+        private Status status;
 
         private Builder() {
             super();
@@ -97,10 +130,11 @@ public final class Organization {
             domainName = null;
             dateCreated = DateTime.now();
             dateUpdated = DateTime.now();
+            status = null;
         }
 
         public Organization build() {
-            return new Organization(sid, domainName, dateCreated, dateUpdated);
+            return new Organization(sid, domainName, dateCreated, dateUpdated, status);
         }
 
         public void setSid(final Sid sid) {
@@ -111,10 +145,21 @@ public final class Organization {
             this.domainName = domainName;
         }
 
+        public void setStatus(final Status status) {
+            this.status = status;
+        }
+
         @Override
         public String toString() {
-            return "Builder [sid=" + sid + ", domainName=" + domainName + ", dateCreated=" + dateCreated + "]";
+            return "Organization.Builder [sid=" + sid + ", domainName=" + domainName + ", dateCreated=" + dateCreated
+                    + ", dateUpdated=" + dateUpdated + ", status=" + status + "]";
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Organization [sid=" + sid + ", domainName=" + domainName + ", dateCreated=" + dateCreated
+                + ", dateUpdated=" + dateUpdated + ", status=" + status + "]";
     }
 
 }
