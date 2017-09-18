@@ -23,7 +23,6 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.entities.Account.Status;
 
 /**
  * @author maria-farooq@live.com (Maria Farooq)

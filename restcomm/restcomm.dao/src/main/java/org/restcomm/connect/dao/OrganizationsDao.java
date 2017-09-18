@@ -53,7 +53,7 @@ public interface OrganizationsDao {
      * @param status
      * @return
      */
-    Organization getOrganizationByStatus(final Organization.Status status);
+    List<Organization> getOrganizationsByStatus(final Organization.Status status);
 
     /**
      * @return

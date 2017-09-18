@@ -88,15 +88,17 @@ public final class MybatisOrganizationDao implements OrganizationsDao {
     }
 
     @Override
-    public Organization getOrganizationByStatus(Organization.Status status) {
+    public List<Organization> getOrganizationsByStatus(Organization.Status status) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + "getOrganizationByStatus", status.toString());
-            if (result != null) {
-                return toOrganization(result);
-            } else {
-                return null;
+            final List<Map<String, Object>> results = session.selectList(namespace + "getOrganizationByStatus", status.toString());
+            final List<Organization> organization = new ArrayList<Organization>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    organization.add(toOrganization(result));
+                }
             }
+            return organization;
         } finally {
             session.close();
         }
