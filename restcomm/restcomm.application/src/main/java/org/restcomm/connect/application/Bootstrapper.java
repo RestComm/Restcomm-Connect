@@ -267,7 +267,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
             Organization organization = storage.getOrganizationsDao().getOrganization(defaultOrganization);
             if(organization == null){
-                storage.getOrganizationsDao().addOrganization(new Organization(defaultOrganization, hostname, DateTime.now(), DateTime.now()));
+                storage.getOrganizationsDao().addOrganization(new Organization(defaultOrganization, hostname, DateTime.now(), DateTime.now(), Organization.Status.ACTIVE));
             }else{
                 organization = organization.setDomainName(hostname);
                 storage.getOrganizationsDao().updateOrganization(organization);
