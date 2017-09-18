@@ -87,6 +87,11 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         // Make sure there is an authenticated account present when this endpoint is used
     }
 
+    /**
+     * @param organizationSid
+     * @param responseType
+     * @return
+     */
     protected Response getOrganization(final String organizationSid, final MediaType responseType) {
         checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
@@ -116,6 +121,11 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         }
     }
 
+    /**
+     * @param info
+     * @param responseType
+     * @return
+     */
     protected Response getOrganizations(UriInfo info, final MediaType responseType) {
         checkAuthenticatedAccount();
         allowOnlySuperAdmin();
