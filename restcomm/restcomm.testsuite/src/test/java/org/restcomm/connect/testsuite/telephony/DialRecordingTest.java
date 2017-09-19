@@ -208,7 +208,7 @@ public class DialRecordingTest {
 				null));
 		assertTrue(aliceCall.waitForAck(50 * 1000));
 
-		Thread.sleep(3000);
+		Thread.sleep(1000);
 
 		// hangup.
 		aliceCall.listenForDisconnect();
@@ -236,7 +236,7 @@ public class DialRecordingTest {
 	}
 
 	@Test
-	public synchronized void testDialClientAliceGerRecordindNoFile() throws InterruptedException, ParseException {
+	public synchronized void testDialClientAliceGetRecordindNoFile() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
 						.withStatus(200)
@@ -495,7 +495,6 @@ public class DialRecordingTest {
 		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
 
 		bobCall.sendInviteOkAck();
-		DateTime start = DateTime.now();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
@@ -511,17 +510,18 @@ public class DialRecordingTest {
 		Thread.sleep(3000);
 
 		bobCall.disconnect();
-		DateTime end = DateTime.now();
 
-		Thread.sleep(500);
+		Thread.sleep(3000);
 
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
-		double recordedDuration = (end.getMillis() - start.getMillis())/1000;
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(recordedDuration, duration,0);
+		assertEquals(3.0, duration,0.5);
+
+
+		Thread.sleep(2000);
 
 		logger.info("\n\n &&&&&& About to check liveCalls &&&&&& \n");
 

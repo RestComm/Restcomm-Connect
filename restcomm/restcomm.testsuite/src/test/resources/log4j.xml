@@ -18,11 +18,12 @@
 			<param name="ConversionPattern" value="%d{HH:mm:ss,SSS} %p %t %l - %m%n" />
 		</layout>
 	</appender>
-	<logger name="org.mobicents.servlet.sip.annotations">
+	<logger name="org.mobicents.servlet">
+	<!--<logger name="org.mobicents.servlet.sip.annotations">-->
 		<level value="INFO" />
 	</logger>
 	<root>
-		<priority value="INFO" />
+		<priority value="DEBUG" />
 		<appender-ref ref="console" />
 		<appender-ref ref="rolling-file" />
 	</root>
