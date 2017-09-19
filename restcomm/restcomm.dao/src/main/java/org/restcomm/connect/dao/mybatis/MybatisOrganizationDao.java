@@ -91,7 +91,7 @@ public final class MybatisOrganizationDao implements OrganizationsDao {
     public List<Organization> getOrganizationsByStatus(Organization.Status status) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getOrganizationByStatus", status.toString());
+            final List<Map<String, Object>> results = session.selectList(namespace + "getOrganizationsByStatus", status.toString());
             final List<Organization> organization = new ArrayList<Organization>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
