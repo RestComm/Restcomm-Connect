@@ -2044,8 +2044,9 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                     }
                     parameters.add(new BasicNameValuePair("RecordingDuration", Double.toString(duration)));
                     if (MediaGroupResponse.class.equals(klass)) {
-                        final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
-                        parameters.add(new BasicNameValuePair("Digits", response.get()));
+                        final MediaGroupResponse response = (MediaGroupResponse) message;
+                        Object data = response.get();
+                        parameters.add(new BasicNameValuePair("Digits", data instanceof CollectedResult ? ((CollectedResult)data).getResult() : (String)data));
                         request = new HttpRequestDescriptor(uri, method, parameters);
                         if (logger.isInfoEnabled()){
                             logger.info("About to execute Record action to: "+uri);
