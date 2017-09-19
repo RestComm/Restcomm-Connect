@@ -5,6 +5,8 @@ import java.util.logging.Logger;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
@@ -65,7 +67,7 @@ public class RestcommOrganizationsTool {
 		return jsonResponse;
 	}
 
-	public JsonObject getOrganizationList (String deploymentUrl, String adminUsername, String adminAuthToken, String status)
+	public JsonArray getOrganizationList (String deploymentUrl, String adminUsername, String adminAuthToken, String status)
 			throws UniformInterfaceException {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -82,9 +84,20 @@ public class RestcommOrganizationsTool {
             response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
         }
 		JsonParser parser = new JsonParser();
-		JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+		JsonArray jsonArray = null;
+		try {
+            JsonElement jsonElement = parser.parse(response);
+            if (jsonElement.isJsonArray()) {
+                jsonArray = jsonElement.getAsJsonArray();
+            } else {
+                logger.info("JsonElement: " + jsonElement.toString());
+            }
+        } catch (Exception e) {
+            logger.info("Exception during JSON response parsing, exception: "+e);
+            logger.info("JSON response: "+response);
+        }
 
-		return jsonResponse;
+		return jsonArray;
 	}
 
 	public ClientResponse getOrganizationResponse (String deploymentUrl, String username, String authtoken, String organizationSid) {

@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 /**
@@ -35,17 +36,18 @@ public class OrganizationsEndpointTest extends EndpointTest {
     @ArquillianResource
     URL deploymentUrl;
 
-    private String adminUsername = "administrator@company.com";
+    private String superAdminUsername = "administrator@company.com";
     private String adminFriendlyName = "Default Administrator Account";
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
-    private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    private String superAdminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     private String adminPassword = "RestComm";
 
     private String commonAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     static SipStackTool tool1;
 
-    private final String defaultOrganization = "ORafbe225ad37541eba518a74248f0ac4c";
+    private final String org1 = "ORafbe225ad37541eba518a74248f0ac4c";
+    private final String org2 = "ORafbe225ad37541eba518a74248f0ac4c";
     
     @BeforeClass
     public static void beforeClass() {
@@ -54,8 +56,8 @@ public class OrganizationsEndpointTest extends EndpointTest {
     @Test
     public void testGetAccount() {
         // Get Account using admin email address and user email address
-        JsonObject adminAccount = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
-                adminAuthToken, adminUsername);
+        JsonObject adminAccount = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), superAdminUsername,
+                superAdminAuthToken, superAdminUsername);
         assertTrue(adminAccount.get("sid").getAsString().equals(adminAccountSid));
     }
 
@@ -65,10 +67,23 @@ public class OrganizationsEndpointTest extends EndpointTest {
      */
     @Test
     public void getOrganizationFromSuperAdminAccount(){
-    	JsonObject organization = RestcommOrganizationsTool.getInstance().getOrganization(deploymentUrl.toString(), adminUsername, adminAuthToken, defaultOrganization);
-    	assertTrue(organization!=null);
-    	logger.info("organization: "+organization);
+    	JsonObject organizationJsonObject = RestcommOrganizationsTool.getInstance().getOrganization(deploymentUrl.toString(), superAdminUsername, superAdminAuthToken, org1);
+    	assertTrue(organizationJsonObject!=null);
+    	logger.info("organization: "+organizationJsonObject);
+    	
+    	// only superadmin can read an org that does not affiliate with its account
+    	organizationJsonObject = null;
+    	organizationJsonObject = RestcommOrganizationsTool.getInstance().getOrganization(deploymentUrl.toString(), superAdminUsername, superAdminAuthToken, org1);
+    	assertTrue(organizationJsonObject!=null);
+    	
+    	//only superadmin can read the whole list of organizations
+    	JsonArray jsonArray = null;
+    	jsonArray = RestcommOrganizationsTool.getInstance().getOrganizationList(deploymentUrl.toExternalForm(), superAdminUsername, superAdminAuthToken, null);
+    	logger.info("organization list: "+jsonArray);
+    	assertTrue(jsonArray!=null);
+    	assertTrue(jsonArray.size() == 2);
     }
+
     /**
      * Admis can read only affliated organization
      * this test will try to Read single organization and read list
