@@ -98,7 +98,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Read:Organizations");
         Organization organization = null;
-        
+
         if (!Sid.pattern.matcher(organizationSid).matches()) {
             return status(BAD_REQUEST).build();
         }else{
@@ -106,12 +106,12 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
                 //if account is not super admin then allow to read only affiliated organization
                 if(!isSuperAdmin()){
                     if(userIdentityContext.getEffectiveAccount().getOrganizationSid().equals(new Sid(organizationSid))){
-                        organization = organizationsDao.getOrganization(new Sid(organizationSid));  
+                        organization = organizationsDao.getOrganization(new Sid(organizationSid));
                     }else{
                         return status(UNAUTHORIZED).build();
                     }
                 }else{
-                    organization = organizationsDao.getOrganization(new Sid(organizationSid));                    
+                    organization = organizationsDao.getOrganization(new Sid(organizationSid));
                 }
             } catch (Exception e) {
                 return status(NOT_FOUND).build();
