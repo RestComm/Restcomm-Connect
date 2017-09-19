@@ -12,7 +12,7 @@
   </select>
   
   <select id="getOrganizationByDomainName" parameterType="string" resultType="hashmap">
-    SELECT * FROM "restcomm_organizations" WHERE "domain_name"=#{domain_name};
+    SELECT * FROM "restcomm_organizations" WHERE UPPER("domain_name")=UPPER(#{domain_name});
   </select>
   
   <select id="getAllOrganizations" resultType="hashmap">

@@ -130,6 +130,7 @@ public class OrganizationsEndpointTest extends EndpointTest {
     	assertTrue(clientResponse.getStatus() == 403);
     
     }
+
     /**
      * getOrganizationListByStatus
      */
@@ -145,6 +146,20 @@ public class OrganizationsEndpointTest extends EndpointTest {
     	logger.info("organization list: "+jsonArray);
     	assertTrue(jsonArray!=null);
     	assertTrue(jsonArray.size() == 1);
+    }
+
+    /**
+     * createOrganizationPermissionTest
+     * only super admin can create a new organization
+     */
+    @Test
+    public void createOrganizationPermissionTest(){
+    	//super admin tries to create org
+    	//TODO:
+    	//admin tries to create org
+    	//TODO:
+    	//developer tries to create org
+    	//TODO:
     }
     
     @Deployment(name = "OrganizationsEndpointTest", managed = true, testable = false)
