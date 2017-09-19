@@ -926,7 +926,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (Verbs.pause.equals(verb.name())) {
             fsm.transition(message, pausing);
         } else if (Verbs.hangup.equals(verb.name())) {
-            if (is(finishDialing)) {
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("Next verb is Hangup, current state is %s , callInfo state %s", fsm.state(), callInfo.state());
+                logger.info(msg);
+            }
+            if (is(finishDialing) || callInfo.state().equals(CallStateChanged.State.COMPLETED)) {
                 fsm.transition(message, finished);
             } else {
                 fsm.transition(message, hangingUp);
@@ -1240,6 +1244,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     String msg = String.format("OnCallStateChanged, VI state %s, received %s, is it from inbound call: %s",fsm.state().toString(), callState.toString(), sender.equals(call));
                     logger.info(msg);
                 }
+                if (sender.equals(call)) {
+                    if (callInfo != null) {
+                        callInfo.setState(CallStateChanged.State.COMPLETED);
+                    }
+                }
                 if (is(bridging)) {
                     fsm.transition(message, finishDialing);
                 } else if (is(bridged) && (sender.equals(outboundCall) || outboundCall != null)) {
@@ -1260,7 +1269,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         // Ask callMediaGroup to stop recording so we have the recording file available
                         // Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
                         logger.info("Will move to finishRecording because of callStateChanged");
-//                        call.tell(new StopMediaGroup(), null);
+                        call.tell(new StopMediaGroup(), null);
                         fsm.transition(message, finishRecording);
                     } else if ((is(bridged) || is(forking)) && call == sender()) {
                         if (!dialActionExecuted) {

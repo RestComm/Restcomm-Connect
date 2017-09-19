@@ -45,7 +45,6 @@ import jain.protocol.ip.mgcp.message.parms.EventName;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
-import org.joda.time.DateTime;
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
@@ -104,7 +103,6 @@ public class MockMediaGateway extends RestcommUntypedActor {
     private static Map<MediaSession, ActorRef> endpoints;
     private static Map<MediaSession, ActorRef> links;
     private static Map<MediaSession, ActorRef> connections;
-    private static Map<File, DateTime> recordingFiles;
 
     private ActorSystem system;
 
@@ -113,7 +111,6 @@ public class MockMediaGateway extends RestcommUntypedActor {
         endpoints = new ConcurrentHashMap<MediaSession, ActorRef>();
         links = new ConcurrentHashMap<MediaSession, ActorRef>();
         connections = new ConcurrentHashMap<MediaSession, ActorRef>();
-        recordingFiles = new ConcurrentHashMap<File, DateTime>();
         system = context().system();
     }
 
@@ -318,24 +315,6 @@ public class MockMediaGateway extends RestcommUntypedActor {
             context.stop(request.connection());
         } else if (DestroyLink.class.equals(klass)) {
             logger.info("&&&&& Got DestroyLink");
-            if (!recordingFiles.isEmpty()) {
-                File recordingFile = recordingFiles.keySet().iterator().next();
-                DateTime started = recordingFiles.entrySet().iterator().next().getValue();
-                recordingFiles.clear();
-                DateTime ended = DateTime.now();
-                int duration = (int) ((ended.getMillis() - started.getMillis()) / 1000);
-                String msg = String.format("Will write to recording file %s for duration of %d", recordingFile, duration);
-                logger.info(msg);
-
-                URI waveFileUri = ClassLoader.getSystemResource("FiveMinutes.wav").toURI();
-                File waveFile = new File(waveFileUri);
-                writeRecording(waveFile, recordingFile, duration);
-            }
-            final DestroyLink request = (DestroyLink) message;
-            links.values().remove(request.link());
-            context.stop(request.link());
-        } else if (DestroyEndpoint.class.equals(klass)) {
-            logger.info("&&&&& Got DestroyEndpoint");
 //            if (!recordingFiles.isEmpty()) {
 //                File recordingFile = recordingFiles.keySet().iterator().next();
 //                DateTime started = recordingFiles.entrySet().iterator().next().getValue();
@@ -349,6 +328,11 @@ public class MockMediaGateway extends RestcommUntypedActor {
 //                File waveFile = new File(waveFileUri);
 //                writeRecording(waveFile, recordingFile, duration);
 //            }
+            final DestroyLink request = (DestroyLink) message;
+            links.values().remove(request.link());
+            context.stop(request.link());
+        } else if (DestroyEndpoint.class.equals(klass)) {
+            logger.info("&&&&& Got DestroyEndpoint");
             final DestroyEndpoint request = (DestroyEndpoint) message;
             endpoints.values().remove(request.endpoint());
             context.stop(request.endpoint());
@@ -506,6 +490,9 @@ public class MockMediaGateway extends RestcommUntypedActor {
         int sleepTime = 0;
         String filename = null;
         boolean failResponse = false;
+
+        File recordingFile = null;
+
         if (events != null && events.length > 0 && events[0].getEventIdentifier() != null) {
             if (events[0].getEventIdentifier().getName().equalsIgnoreCase("pr")) {
                 //Check for the Recording Length Timer parameter if the RQNT is about PlayRecord request
@@ -525,19 +512,24 @@ public class MockMediaGateway extends RestcommUntypedActor {
                 if (filename != null) {
                     try {
                         Path path = Paths.get(filename.replaceFirst("file://",""));
-                        File recordingFile = new File(filename.replaceFirst("file://",""));
+                        recordingFile = new File(filename.replaceFirst("file://",""));
                         recordingFile.getParentFile().mkdir();
                         recordingFile.createNewFile();
-                        recordingFiles.put(recordingFile, DateTime.now());
-                        if (recordingFile.exists()) {
-                            logger.info("Created Recording file " + recordingFile);
-                        } else {
-                            logger.info("Recording file still doesn't exist "+recordingFile);
-                        }
-                    } catch (IOException e) {
+
+                        String msg = String.format("Will write to recording file %s for duration of %d", recordingFile, 3);
+                        logger.info(msg);
+                        URI waveFileUri = ClassLoader.getSystemResource("FiveMinutes.wav").toURI();
+                        File waveFile = new File(waveFileUri);
+                        writeRecording(waveFile, recordingFile, 3);
+//                        Files.copy(waveFile.toPath(), recordingFile.toPath());
+//                        msg = String.format("Recording file exists %s, size %s",recordingFile.exists(), recordingFile.length());
+//                        logger.info(msg);
+
+                    } catch (Exception e) {
                         String msg = String.format("Exception while trying to create Recording file %s, exception %s", filename, e);
                         logger.error(msg);
                     }
+
                 }
             } else if (events[0].getEventIdentifier().getName().equalsIgnoreCase("pa")) {
                 //If this is a Play Audio request, check that the parameter string ends with WAV
