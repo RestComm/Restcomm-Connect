@@ -28,13 +28,17 @@ import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
+import static javax.ws.rs.core.Response.Status.CONFLICT;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
@@ -44,9 +48,13 @@ import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.OrganizationList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.dns.DnsProvisioningManager;
+import org.restcomm.connect.dns.DnsProvisioningManagerProvider;
 import org.restcomm.connect.http.converter.AccountConverter;
 import org.restcomm.connect.http.converter.AccountListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
+import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -56,6 +64,9 @@ import com.thoughtworks.xstream.XStream;
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
 public class OrganizationsEndpoint extends SecuredEndpoint {
+    @Context
+    protected ServletContext context;
+    protected DnsProvisioningManager dnsProvisioningManager;
     protected Configuration runtimeConfiguration;
     protected Configuration rootConfiguration; // top-level configuration element
     protected Gson gson;
@@ -86,6 +97,8 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(new AccountListConverter(runtimeConfiguration));
         xstream.registerConverter(new RestCommResponseConverter(runtimeConfiguration));
         // Make sure there is an authenticated account present when this endpoint is used
+        // get manager from context or create it if it does not exist
+        dnsProvisioningManager = new DnsProvisioningManagerProvider(configuration, context).get();
     }
 
     /**
@@ -162,4 +175,38 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
             return null;
         }
     }
+
+	/**
+	 * putOrganization
+	 * @param domainName
+	 * @param data
+	 * @param applicationJsonType
+	 * @return
+	 */
+    protected Response putOrganization(String domainName, MultivaluedMap<String, String> data,
+			MediaType responseType) {
+    	if(domainName == null){
+            return status(BAD_REQUEST).entity("domain name can not be empty. Please, choose a valid name and try again.").build();
+        }else{
+        	checkAuthenticatedAccount();
+            allowOnlySuperAdmin();
+
+            //Character verification
+            final Pattern pattern = Pattern.compile("[A-Za-z0-9\\-]{1,255}");
+            if(!pattern.matcher(domainName).matches()){
+                return status(BAD_REQUEST).entity("Total Length of domain_name can be upto 255 Characters. It can contain only letters, number and hyphen - sign.. Please, choose a valid name and try again.").build();
+            }
+
+            //Check if domain_name does not already taken inside restcomm by an organization.
+            Organization organization = organizationsDao.getOrganizationByDomainName(domainName);
+            if(organization != null){
+            	return status(CONFLICT)
+                        .entity("This domain name is not available. Please, choose a different name and try again.")
+                        .build();
+            }
+            //restcomm.com
+            data.get("HostedZone");
+            DNs
+        }
+	}
 }

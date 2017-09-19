@@ -22,9 +22,11 @@ package org.restcomm.connect.http;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
@@ -49,5 +51,10 @@ public final class OrganizationsXmlEndpoint extends OrganizationsEndpoint {
     @GET
     public Response getOrganizations(@Context UriInfo info) {
         return getOrganizations(info, APPLICATION_XML_TYPE);
+    }
+
+    @POST
+    public Response putOrganization(@PathParam("domainName") final String domainName, final MultivaluedMap<String, String> data) {
+        return putOrganization(domainName, data, APPLICATION_XML_TYPE);
     }
 }
