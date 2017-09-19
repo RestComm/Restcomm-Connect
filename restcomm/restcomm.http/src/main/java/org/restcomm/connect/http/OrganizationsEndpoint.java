@@ -27,6 +27,7 @@ import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.util.List;
 
@@ -97,14 +98,24 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Read:Organizations");
         Organization organization = null;
-        if (Sid.pattern.matcher(organizationSid).matches()) {
+        
+        if (!Sid.pattern.matcher(organizationSid).matches()) {
+            return status(BAD_REQUEST).build();
+        }else{
             try {
-                organization = organizationsDao.getOrganization(new Sid(organizationSid));
+                //if account is not super admin then allow to read only affiliated organization
+                if(!isSuperAdmin()){
+                    if(userIdentityContext.getEffectiveAccount().getOrganizationSid().equals(new Sid(organizationSid))){
+                        organization = organizationsDao.getOrganization(new Sid(organizationSid));  
+                    }else{
+                        return status(UNAUTHORIZED).build();
+                    }
+                }else{
+                    organization = organizationsDao.getOrganization(new Sid(organizationSid));                    
+                }
             } catch (Exception e) {
                 return status(NOT_FOUND).build();
             }
-        }else {
-            return status(BAD_REQUEST).build();
         }
 
         if (organization == null) {
