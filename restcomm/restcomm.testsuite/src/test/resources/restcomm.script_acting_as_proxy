@@ -28,7 +28,7 @@ CREATE USER SA PASSWORD ""
 GRANT DBA TO SA
 SET WRITE_DELAY 10
 SET SCHEMA PUBLIC
-INSERT INTO "restcomm_organizations" VALUES('ORafbe225ad37541eba518a74248f0ac4c', 'default.restcomm.com', '2017-04-19 00:00:00.000000000','2017-04-19 00:00:00.000000000')
+INSERT INTO "restcomm_organizations" VALUES('ORafbe225ad37541eba518a74248f0ac4c', 'default.restcomm.com', '2017-04-19 00:00:00.000000000','2017-04-19 00:00:00.000000000', 'active')
 INSERT INTO "restcomm_accounts" VALUES('ACae6e420f425248d6a26948c17a9e2acf','2012-04-24 22:51:29.372000000','2012-04-24 22:51:29.372000000','administrator@company.com','Default Administrator Account',NULL,'Full','active','77f8c12cc7b8f8423e5c38b035249166','Administrator','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf', 'ORafbe225ad37541eba518a74248f0ac4c')
 INSERT INTO "restcomm_applications" VALUES('AP73926e7113fa4d95981aa96b76eca854','2015-09-23 06:56:04.108000','2015-09-23 06:56:04.108000','rvdCollectVerbDemo','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24',FALSE,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/AP73926e7113fa4d95981aa96b76eca854','/restcomm-rvd/services/apps/AP73926e7113fa4d95981aa96b76eca854/controller','voice')
 INSERT INTO "restcomm_applications" VALUES('AP81cf45088cba4abcac1261385916d582','2015-09-23 06:56:17.977000','2015-09-23 06:56:17.977000','rvdESDemo','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24',FALSE,'/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/AP81cf45088cba4abcac1261385916d582','/restcomm-rvd/services/apps/AP81cf45088cba4abcac1261385916d582/controller','voice')

@@ -45,6 +45,8 @@ public class OrganizationsEndpointTest extends EndpointTest {
 
     static SipStackTool tool1;
 
+    private final String defaultOrganization = "ORafbe225ad37541eba518a74248f0ac4c";
+    
     @BeforeClass
     public static void beforeClass() {
     }
@@ -62,7 +64,11 @@ public class OrganizationsEndpointTest extends EndpointTest {
      * this test will try to Read single organization and read list
      */
     @Test
-    public void getOrganizationFromSuperAdminAccount(){}
+    public void getOrganizationFromSuperAdminAccount(){
+    	JsonObject organization = RestcommOrganizationsTool.getInstance().getOrganization(deploymentUrl.toString(), adminUsername, adminAuthToken, defaultOrganization);
+    	assertTrue(organization!=null);
+    	logger.info("organization: "+organization);
+    }
     /**
      * Admis can read only affliated organization
      * this test will try to Read single organization and read list
