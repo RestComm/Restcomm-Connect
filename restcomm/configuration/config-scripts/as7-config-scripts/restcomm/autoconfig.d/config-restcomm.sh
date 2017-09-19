@@ -10,7 +10,7 @@ RESTCOMM_BIN=$RESTCOMM_HOME/bin
 RESTCOMM_DARS=$RESTCOMM_HOME/standalone/configuration/dars
 RESTCOMM_CONF=$RESTCOMM_HOME/standalone/configuration
 RESTCOMM_DEPLOY=$RESTCOMM_HOME/standalone/deployments/restcomm.war
-RVD_DEPLOY=$RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war
+RVD_DEPLOY_PATH=$RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war
 
 ## FUNCTIONS
 
@@ -549,9 +549,9 @@ otherRestCommConf(){
 }
 
 disableRVD() {
-    if [[ -f "$RVD_DEPLOY.deployed" || -f "$RVD_DEPLOY.dodeploy" ]]; then
-		rm -f "$RVD_DEPLOY.deployed"
-		rm -f "$RVD_DEPLOY.dodeploy"
+    if [[ -f "$RVD_DEPLOY_PATH.deployed" || -f "$RVD_DEPLOY_PATH.dodeploy" ]]; then
+		rm -f "$RVD_DEPLOY_PATH.deployed"
+		rm -f "$RVD_DEPLOY_PATH.dodeploy"
     	echo "RVD undeployed (or not deployed at all)"
 	else
 		echo "RVD not deployed"
@@ -559,22 +559,24 @@ disableRVD() {
 }
 
 enableRVD() {
-	if [ -f "$RVD_DEPLOY.deployed" ]; then
+	if [ -f "$RVD_DEPLOY_PATH.deployed" ]; then
 		echo "RVD already deployed"
 	else
-		touch "$RVD_DEPLOY".dodeploy
+		touch "$RVD_DEPLOY_PATH".dodeploy
 		echo "RVD deployed"
 	fi
 }
 
 confRVD(){
-    if [ -z "$RVD_URL" ]; then
+    if [[ "$RVD_UNDEPLOY" = true || "$RVD_UNDEPLOY" = True || "$RVD_UNDEPLOY" = TRUE ]]; then
+        disableRVD
+    else
         enableRVD
-        echo "Configure bundled RVD"
+        echo "Configuring bundled RVD"
         if [ -n "$RVD_LOCATION" ]; then
             echo "RVD_LOCATION $RVD_LOCATION"
             mkdir -p `echo $RVD_LOCATION`
-            sed -i "s|<workspaceLocation>.*</workspaceLocation>|<workspaceLocation>${RVD_LOCATION}</workspaceLocation>|" $RVD_DEPLOY/WEB-INF/rvd.xml
+            sed -i "s|<workspaceLocation>.*</workspaceLocation>|<workspaceLocation>${RVD_LOCATION}</workspaceLocation>|" $RVD_DEPLOY_PATH/WEB-INF/rvd.xml
 
             COPYFLAG=$RVD_LOCATION/.demos_initialized
             if [ -f "$COPYFLAG" ]; then
@@ -582,13 +584,11 @@ confRVD(){
                 echo "RVD demo application are already copied"
             else
                 echo "Will copy RVD demo applications to the new workspace $RVD_LOCATION"
-                cp -ar $RVD_DEPLOY/workspace/* $RVD_LOCATION
+                cp -ar $RVD_DEPLOY_PATH/workspace/* $RVD_LOCATION
                 touch $COPYFLAG
             fi
 
         fi
-    else
-        disableRVD
     fi
 }
 
@@ -615,12 +615,10 @@ confRVD(){
 # Updates <rcmlserver>/<base-url> according to $RVD_URL
 # This version of confRcmlserver() used sed for backwards compatibility with existing sed commands in this
 confRcmlserver() {
-    echo "Configuring <rcmlserver/>..."
     local RESTCOMM_XML=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
     sed  "/<rcmlserver>/,/<\/rcmlserver>/ s|<base-url>.*</base-url>|<base-url>${RVD_URL}</base-url>|" "$RESTCOMM_XML" > "${RESTCOMM_XML}.bak"
     mv ${RESTCOMM_XML}.bak "$RESTCOMM_XML"
-    echo "base-url set to '$RVD_URL'"
-    echo "<rcmlserver/> configured"
+    echo "Configured <rcmlserver/>. base-url set to '$RVD_URL'"
 }
 
 
