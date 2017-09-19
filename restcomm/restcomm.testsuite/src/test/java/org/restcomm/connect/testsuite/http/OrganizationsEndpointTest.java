@@ -75,7 +75,7 @@ public class OrganizationsEndpointTest extends EndpointTest {
     	jsonArray = RestcommOrganizationsTool.getInstance().getOrganizationList(deploymentUrl.toExternalForm(), superAdminAccountSid, superAdminAuthToken, null);
     	logger.info("organization list: "+jsonArray);
     	assertTrue(jsonArray!=null);
-    	assertTrue(jsonArray.size() == 2);
+    	assertTrue(jsonArray.size() == 3);
     }
 
     /**
@@ -94,7 +94,7 @@ public class OrganizationsEndpointTest extends EndpointTest {
     	clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), adminAccountSid, adminAuthToken, org2);
     	assertTrue(clientResponse!=null);
     	logger.info("organization: "+clientResponse);
-    	assertTrue(clientResponse.getStatus() == 401);
+    	assertTrue(clientResponse.getStatus() == 403);
     	
     	//only superadmin can read the whole list of organizations
     	clientResponse = null;
@@ -113,14 +113,14 @@ public class OrganizationsEndpointTest extends EndpointTest {
     	ClientResponse clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), devAccountSid, devAuthToken, org1);
     	assertTrue(clientResponse!=null);
     	logger.info("organization: "+clientResponse);
-    	assertTrue(clientResponse.getStatus() == 401);
+    	assertTrue(clientResponse.getStatus() == 403);
     	
     	// only superadmin can read an org that does not affiliate with its account
     	clientResponse = null;
     	clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), devAccountSid, devAuthToken, org2);
     	assertTrue(clientResponse!=null);
     	logger.info("organization: "+clientResponse);
-    	assertTrue(clientResponse.getStatus() == 401);
+    	assertTrue(clientResponse.getStatus() == 403);
     	
     	//only superadmin can read the whole list of organizations
     	clientResponse = null;
@@ -134,7 +134,18 @@ public class OrganizationsEndpointTest extends EndpointTest {
      * getOrganizationListByStatus
      */
     @Test
-    public void getOrganizationListByStatus(){}
+    public void getOrganizationListByStatus(){
+    	JsonArray jsonArray = null;
+    	jsonArray = RestcommOrganizationsTool.getInstance().getOrganizationList(deploymentUrl.toExternalForm(), superAdminAccountSid, superAdminAuthToken, "active");
+    	logger.info("organization list: "+jsonArray);
+    	assertTrue(jsonArray!=null);
+    	assertTrue(jsonArray.size() == 2);
+    	jsonArray = null;
+    	jsonArray = RestcommOrganizationsTool.getInstance().getOrganizationList(deploymentUrl.toExternalForm(), superAdminAccountSid, superAdminAuthToken, "closed");
+    	logger.info("organization list: "+jsonArray);
+    	assertTrue(jsonArray!=null);
+    	assertTrue(jsonArray.size() == 1);
+    }
     
     @Deployment(name = "OrganizationsEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {

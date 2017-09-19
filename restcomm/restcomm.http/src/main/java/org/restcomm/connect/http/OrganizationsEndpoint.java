@@ -27,7 +27,7 @@ import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 
 import java.util.List;
 
@@ -108,7 +108,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
                     if(userIdentityContext.getEffectiveAccount().getOrganizationSid().equals(new Sid(organizationSid))){
                         organization = organizationsDao.getOrganization(new Sid(organizationSid));
                     }else{
-                        return status(UNAUTHORIZED).build();
+                        return status(FORBIDDEN).build();
                     }
                 }else{
                     organization = organizationsDao.getOrganization(new Sid(organizationSid));
