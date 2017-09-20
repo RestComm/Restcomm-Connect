@@ -206,7 +206,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
             }
             //restcomm.com
             data.get("HostedZone");
-            DNs
+            //TODO: dns get, check if its not already taken
         }
 	}
 }
