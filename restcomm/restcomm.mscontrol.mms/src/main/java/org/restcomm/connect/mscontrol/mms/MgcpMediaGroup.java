@@ -29,7 +29,6 @@ import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.commons.dao.CollectedResult;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -56,6 +55,7 @@ import org.restcomm.connect.mgcp.StopEndpoint;
 import org.restcomm.connect.mgcp.UpdateLink;
 import org.restcomm.connect.mscontrol.api.MediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.Collect;
+import org.restcomm.connect.mscontrol.api.messages.CollectedResult;
 import org.restcomm.connect.mscontrol.api.messages.Join;
 import org.restcomm.connect.mscontrol.api.messages.MediaGroupResponse;
 import org.restcomm.connect.mscontrol.api.messages.MediaGroupStateChanged;
@@ -243,16 +243,19 @@ public class MgcpMediaGroup extends MediaGroup {
     @SuppressWarnings("unchecked")
     protected void notification(final Object message) {
         final IvrEndpointResponse response = (IvrEndpointResponse) message;
+        Object ivrResponse = response.get();
         final ActorRef self = self();
         MediaGroupResponse<CollectedResult> event;
+        org.restcomm.connect.mgcp.CollectedResult mgcpCollectedResult = null;
         if (response.succeeded()) {
-            event = new MediaGroupResponse<>(response.get());
+            mgcpCollectedResult = (org.restcomm.connect.mgcp.CollectedResult)ivrResponse;
+            event = new MediaGroupResponse<>(new CollectedResult(mgcpCollectedResult.getResult(), mgcpCollectedResult.isAsr(), mgcpCollectedResult.isPartial()));
         } else {
             event = new MediaGroupResponse<>(response.cause(), response.error());
         }
         if (originator != null)
             this.originator.tell(event, self);
-        if (response.get() == null || !response.get().isPartial()) {
+        if (ivrResponse == null || (mgcpCollectedResult != null && !(mgcpCollectedResult.isPartial()))) {
             ivrInUse = false;
         }
     }

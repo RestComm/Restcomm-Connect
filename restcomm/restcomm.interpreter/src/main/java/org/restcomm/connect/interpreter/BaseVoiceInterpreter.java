@@ -46,7 +46,6 @@ import org.restcomm.connect.commons.cache.DiskCacheRequest;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
 import org.restcomm.connect.commons.cache.HashGenerator;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.commons.dao.CollectedResult;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
@@ -87,6 +86,7 @@ import org.restcomm.connect.interpreter.rcml.Tag;
 import org.restcomm.connect.interpreter.rcml.Verbs;
 import org.restcomm.connect.interpreter.rcml.domain.GatherAttributes;
 import org.restcomm.connect.mscontrol.api.messages.Collect;
+import org.restcomm.connect.mscontrol.api.messages.CollectedResult;
 import org.restcomm.connect.mscontrol.api.messages.MediaGroupResponse;
 import org.restcomm.connect.mscontrol.api.messages.Play;
 import org.restcomm.connect.mscontrol.api.messages.Record;
@@ -2046,7 +2046,13 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                     if (MediaGroupResponse.class.equals(klass)) {
                         final MediaGroupResponse response = (MediaGroupResponse) message;
                         Object data = response.get();
-                        parameters.add(new BasicNameValuePair("Digits", data instanceof CollectedResult ? ((CollectedResult)data).getResult() : (String)data));
+                        if (data instanceof CollectedResult) {
+                            parameters.add(new BasicNameValuePair("Digits", ((CollectedResult)data).getResult()));
+                        } else if(data instanceof String) {
+                            parameters.add(new BasicNameValuePair("Digits", (String)data));
+                        } else {
+                            logger.error("unidentified response recived in MediaGroupResponse: "+response);
+                        }
                         request = new HttpRequestDescriptor(uri, method, parameters);
                         if (logger.isInfoEnabled()){
                             logger.info("About to execute Record action to: "+uri);
