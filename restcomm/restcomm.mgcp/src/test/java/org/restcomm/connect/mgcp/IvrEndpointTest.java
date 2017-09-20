@@ -19,6 +19,22 @@
  */
 package org.restcomm.connect.mgcp;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
+import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
+
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -30,21 +46,6 @@ import jain.protocol.ip.mgcp.message.Notify;
 import jain.protocol.ip.mgcp.message.parms.EventName;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
-import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -132,7 +133,7 @@ public class IvrEndpointTest {
                 endpoint.tell(playCollect, observer);
                 final IvrEndpointResponse ivrResponse = expectMsgClass(IvrEndpointResponse.class);
                 assertTrue(ivrResponse.succeeded());
-                assertTrue("1".equals((ivrResponse.get()).getResult()));
+                assertTrue("1".equals(((CollectedResult)ivrResponse.get()).getResult()));
                 // Stop observing events from the IVR end point.
                 endpoint.tell(new StopObserving(observer), observer);
             }
