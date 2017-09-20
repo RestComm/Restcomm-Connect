@@ -20,6 +20,22 @@
 
 package org.restcomm.connect.mgcp;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URI;
+import java.util.Collections;
+
+import org.apache.commons.codec.binary.Hex;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
+import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
+
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -31,21 +47,6 @@ import jain.protocol.ip.mgcp.message.Notify;
 import jain.protocol.ip.mgcp.message.parms.EventName;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
-import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
-import org.apache.commons.codec.binary.Hex;
-
-import java.net.URI;
-import java.util.Collections;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Dmitriy Nadolenko
@@ -102,19 +103,22 @@ public class IvrAsrEndpointTest {
                 endpoint.tell(asr, observer);
                 final IvrEndpointResponse ivrResponse = expectMsgClass(IvrEndpointResponse.class);
                 assertTrue(ivrResponse.succeeded());
-                assertTrue(ASR_RESULT_TEXT.equals(ivrResponse.get().getResult()));
-                assertTrue(ivrResponse.get().isAsr());
+                CollectedResult collectedResult = (CollectedResult)ivrResponse.get();
+                assertTrue(ASR_RESULT_TEXT.equals(collectedResult.getResult()));
+                assertTrue(collectedResult.isAsr());
 
                 final IvrEndpointResponse ivrResponse2 = expectMsgClass(IvrEndpointResponse.class);
                 assertTrue(ivrResponse2.succeeded());
-                assertTrue(ASR_RESULT_TEXT.equals(ivrResponse2.get().getResult()));
-                assertTrue(ivrResponse2.get().isAsr());
+                collectedResult = (CollectedResult)ivrResponse2.get();
+                assertTrue(ASR_RESULT_TEXT.equals(collectedResult.getResult()));
+                assertTrue(collectedResult.isAsr());
 
 
                 final IvrEndpointResponse ivrResponse3 = expectMsgClass(IvrEndpointResponse.class);
+                collectedResult = (CollectedResult)ivrResponse3.get();
                 assertTrue(ivrResponse3.succeeded());
-                assertTrue(ivrResponse3.get().getResult().isEmpty());
-                assertTrue(ivrResponse2.get().isAsr());
+                assertTrue(collectedResult.getResult().isEmpty());
+                assertTrue(collectedResult.isAsr());
 
                 // Stop observing events from the IVR end point.
                 endpoint.tell(new StopObserving(observer), observer);
@@ -185,8 +189,9 @@ public class IvrAsrEndpointTest {
                 endpoint.tell(asr, observer);
                 final IvrEndpointResponse ivrResponse = expectMsgClass(IvrEndpointResponse.class);
                 assertTrue(ivrResponse.succeeded());
-                assertTrue(ASR_RESULT_TEXT.equals(ivrResponse.get().getResult()));
-                assertTrue(ivrResponse.get().isAsr());
+                CollectedResult collectedResult = (CollectedResult)ivrResponse.get();
+                assertTrue(ASR_RESULT_TEXT.equals(collectedResult.getResult()));
+                assertTrue(collectedResult.isAsr());
 
                 // EndSignal to IVR
                 endpoint.tell(new StopEndpoint(AsrSignal.REQUEST_ASR), observer);
