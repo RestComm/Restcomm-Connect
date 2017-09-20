@@ -204,6 +204,31 @@
 			<gmlc-password></gmlc-password>
 		</gmlc>
 
+		<!--
+		dns-provisioning: configuration is used to proform CRUD operations for organizations
+			
+		class: represents the DNS provisioning manager class 
+		e.g org.restcomm.connect.telscale.dns.route53.Route53DnsProvisioningManager
+		A developer can provide customer Class for any DNS server as long as it implements 
+		org.restcomm.connect.dns.DnsProvisioningManager
+		
+		enabled: by default dns provisioning is disabled
+		which means during organization api CRUD operations, restcomm will not send any requests to DNS server.
+		-->
+		<dns-provisioning class="" enabled="false">
+			<!--restcomm-address is address to which DNS Server will route traffic
+				In a cluster, it can be public ip of loadbalancer	  
+			-->
+			<restcomm-address></restcomm-address>
+			<!-- DNS Resource Record (RR) Types -->
+			<rr-type>A</rr-type>
+			<aws-route53>
+				<!-- ttl: time to live in seconds -->
+				<!-- hosted-zone-id: The ID of the hosted zone that contains the resource record sets that you want to change. -->
+				<ttl>3600</ttl>
+				<hosted-zone-id></hosted-zone-id>
+			</aws-route53>
+		</dns-provisioning>
 		<!-- Each permission is represented as three columns Domain:Action:Target
 			Possible actions are Create, Read, Modify, Delete. -->
 		<security-roles>
