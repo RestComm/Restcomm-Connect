@@ -20,6 +20,7 @@
 package org.restcomm.connect.dns;
 
 import org.apache.commons.configuration.Configuration;
+import org.restcomm.connect.commons.patterns.StandardResponse;
 
 public interface DnsProvisioningManager {
 
@@ -30,4 +31,8 @@ public interface DnsProvisioningManager {
      */
     void init(Configuration dnsConfiguration);
 
+    StandardResponse<?> createResourceRecord(final String name);
+    StandardResponse<?> readResourceRecord();
+    StandardResponse<?> updateResourceRecord();
+    StandardResponse<?> deleteResourceRecord();
 }
