@@ -18,7 +18,7 @@
  *
  */
 
-package org.restcomm.connect.commons.dao;
+package org.restcomm.connect.mscontrol.api.messages;
 
 /**
  * Created by gdubina on 6/6/17.

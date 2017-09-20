@@ -17,23 +17,42 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
+
 package org.restcomm.connect.mgcp;
 
-import org.restcomm.connect.commons.patterns.StandardResponse;
-
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * Created by gdubina on 6/6/17.
  */
-public class IvrEndpointResponse<T> extends StandardResponse<T> {
-    public IvrEndpointResponse(final T object) {
-        super(object);
+public class CollectedResult {
+
+    private final String result;
+    private final boolean isAsr;
+    private final boolean isPartial;
+
+    public CollectedResult(String result, boolean isAsr, boolean isPartial) {
+        this.result = result;
+        this.isAsr = isAsr;
+        this.isPartial = isPartial;
     }
 
-    public IvrEndpointResponse(final Throwable cause) {
-        super(cause);
+    public String getResult() {
+        return result;
     }
 
-    public IvrEndpointResponse(final Throwable cause, final String message) {
-        super(cause, message);
+    public boolean isAsr() {
+        return isAsr;
+    }
+
+    public boolean isPartial() {
+        return isPartial;
+    }
+
+    @Override
+    public String toString() {
+        return "CollectedResult{" +
+                "result='" + result + '\'' +
+                ", isAsr=" + isAsr +
+                ", isPartial=" + isPartial +
+                '}';
     }
 }
