@@ -113,8 +113,8 @@ public class IvrAsrEndpointTest {
 
                 final IvrEndpointResponse ivrResponse3 = expectMsgClass(IvrEndpointResponse.class);
                 assertTrue(ivrResponse3.succeeded());
-                assertTrue(ivrResponse3.get().getResult().isEmpty());
-                assertTrue(ivrResponse2.get().isAsr());
+                assertTrue(ASR_RESULT_TEXT.equals(ivrResponse3.get().getResult()));
+                assertTrue(ivrResponse3.get().isAsr());
 
                 // Stop observing events from the IVR end point.
                 endpoint.tell(new StopObserving(observer), observer);
@@ -225,7 +225,7 @@ public class IvrAsrEndpointTest {
                 notify = createNotify(request, (int) transactionIdPool.get(), AUMgcpEvent.auoc.withParm("rc=101 asrr=" + ASR_RESULT_TEXT_HEX));
                 sender.tell(notify, self);
 
-                notify = createNotify(request, (int) transactionIdPool.get(), AUMgcpEvent.auoc.withParm("rc=100"));
+                notify = createNotify(request, (int) transactionIdPool.get(), AUMgcpEvent.auoc.withParm("rc=100 asrr=" + ASR_RESULT_TEXT_HEX));
                 sender.tell(notify, self);
             }
         }
