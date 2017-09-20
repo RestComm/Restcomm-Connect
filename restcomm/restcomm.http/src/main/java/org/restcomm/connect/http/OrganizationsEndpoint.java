@@ -26,9 +26,9 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
+import static javax.ws.rs.core.Response.Status.FORBIDDEN;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -53,8 +53,6 @@ import org.restcomm.connect.dns.DnsProvisioningManagerProvider;
 import org.restcomm.connect.http.converter.AccountConverter;
 import org.restcomm.connect.http.converter.AccountListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
-import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -71,6 +69,9 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
     protected Configuration rootConfiguration; // top-level configuration element
     protected Gson gson;
     protected XStream xstream;
+	private final String MSG_EMPTY_DOMAIN_NAME = "domain name can not be empty. Please, choose a valid name and try again.";
+	private final String MSG_INVALID_DOMAIN_NAME_PATTERN= "Total Length of domain_name can be upto 255 Characters. It can contain only letters, number and hyphen - sign.. Please, choose a valid name and try again.";
+	private final String MSG_DOMAIN_NAME_NOT_AVAILABLE = "This domain name is not available. Please, choose a different name and try again.";
 
     public OrganizationsEndpoint() {
         super();
@@ -186,7 +187,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
     protected Response putOrganization(String domainName, MultivaluedMap<String, String> data,
 			MediaType responseType) {
     	if(domainName == null){
-            return status(BAD_REQUEST).entity("domain name can not be empty. Please, choose a valid name and try again.").build();
+            return status(BAD_REQUEST).entity(MSG_EMPTY_DOMAIN_NAME ).build();
         }else{
         	checkAuthenticatedAccount();
             allowOnlySuperAdmin();
@@ -194,14 +195,14 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
             //Character verification
             final Pattern pattern = Pattern.compile("[A-Za-z0-9\\-]{1,255}");
             if(!pattern.matcher(domainName).matches()){
-                return status(BAD_REQUEST).entity("Total Length of domain_name can be upto 255 Characters. It can contain only letters, number and hyphen - sign.. Please, choose a valid name and try again.").build();
+                return status(BAD_REQUEST).entity(MSG_INVALID_DOMAIN_NAME_PATTERN).build();
             }
 
             //Check if domain_name does not already taken inside restcomm by an organization.
             Organization organization = organizationsDao.getOrganizationByDomainName(domainName);
             if(organization != null){
             	return status(CONFLICT)
-                        .entity("This domain name is not available. Please, choose a different name and try again.")
+                        .entity(MSG_DOMAIN_NAME_NOT_AVAILABLE)
                         .build();
             }
             //restcomm.com
