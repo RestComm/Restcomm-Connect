@@ -930,7 +930,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 String msg = String.format("Next verb is Hangup, current state is %s , callInfo state %s", fsm.state(), callInfo.state());
                 logger.info(msg);
             }
-            if (is(finishDialing) || callInfo.state().equals(CallStateChanged.State.COMPLETED)) {
+            if (is(finishDialing)) {
                 fsm.transition(message, finished);
             } else {
                 fsm.transition(message, hangingUp);
@@ -1244,11 +1244,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     String msg = String.format("OnCallStateChanged, VI state %s, received %s, is it from inbound call: %s",fsm.state().toString(), callState.toString(), sender.equals(call));
                     logger.info(msg);
                 }
-                if (sender.equals(call)) {
-                    if (callInfo != null) {
-                        callInfo.setState(CallStateChanged.State.COMPLETED);
-                    }
-                }
+//                if (sender.equals(call)) {
+//                    if (callInfo != null) {
+//                        callInfo.setState(CallStateChanged.State.COMPLETED);
+//                    }
+//                }
                 if (is(bridging)) {
                     fsm.transition(message, finishDialing);
                 } else if (is(bridged) && (sender.equals(outboundCall) || outboundCall != null)) {

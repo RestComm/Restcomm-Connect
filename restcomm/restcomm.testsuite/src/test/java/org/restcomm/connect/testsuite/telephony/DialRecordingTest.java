@@ -566,7 +566,6 @@ public class DialRecordingTest {
 		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
 
 		bobCall.sendInviteOkAck();
-		DateTime start = DateTime.now();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
@@ -582,7 +581,6 @@ public class DialRecordingTest {
 		bobCall.listenForDisconnect();
 		assertTrue(bobCall.waitForDisconnect(70000));
 		assertTrue(bobCall.respondToDisconnect());
-		DateTime end = DateTime.now();
 
 		Thread.sleep(500);
 
@@ -590,9 +588,8 @@ public class DialRecordingTest {
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
-		double recordedDuration = (end.getMillis() - start.getMillis())/1000;
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(recordedDuration, duration,0);
+		assertEquals(3.0, duration,0);
 
 		logger.info("\n\n &&&&&& About to check liveCalls &&&&&& \n");
 
@@ -644,7 +641,6 @@ public class DialRecordingTest {
 //		assertTrue(bobCall.waitOutgoingCallResponse(10000));
 //		assertEquals(500, bobCall.getLastReceivedResponse());
 
-		DateTime start = DateTime.now();
 		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 		assertNotNull(metrics);
 		int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
@@ -659,7 +655,6 @@ public class DialRecordingTest {
 //		bobCall.listenForDisconnect();
 //		assertTrue(bobCall.waitForDisconnect(70000));
 //		assertTrue(bobCall.respondToDisconnect());
-		DateTime end = DateTime.now();
 
 		Thread.sleep(500);
 
@@ -667,9 +662,8 @@ public class DialRecordingTest {
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
-		double recordedDuration = (end.getMillis() - start.getMillis())/1000;
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(0.0, duration,0);
+		assertEquals(3.0, duration,0);
 
 		logger.info("\n\n &&&&&& About to check liveCalls &&&&&& \n");
 
