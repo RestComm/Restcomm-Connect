@@ -9,7 +9,8 @@
       <transactionManager type="JDBC"/>
       <dataSource type="POOLED">
         <property name="driver" value="org.hsqldb.jdbcDriver"/>
-        <property name="url" value="jdbc:hsqldb:file:./src/test/resources/data/restcomm;create=true;hsqldb.write_delay=false;shutdown=true"/>
+        <!--keep data in maven target so git ignores changes-->
+        <property name="url" value="jdbc:hsqldb:file:./target/test-classes/data/restcomm;create=true;hsqldb.write_delay=false;shutdown=true"/>
         <property name="username" value="sa"/>
         <property name="password" value=""/>
       </dataSource>

@@ -50,6 +50,8 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.restcomm.connect.commons.common.http.CustomHttpClientBuilder;
 import scala.concurrent.ExecutionContext;
 
 /**
@@ -72,6 +74,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
     @Override
     public void destroy() {
+        CustomHttpClientBuilder.stopDefaultClient();
         system.shutdown();
         system.awaitTermination();
     }
@@ -356,6 +359,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             } else {
                 logger.error("Monitoring Service is null");
             }
+
+            CloseableHttpClient buildDefaultClient = CustomHttpClientBuilder.buildDefaultClient(RestcommConfiguration.getInstance().getMain());
+            context.setAttribute(CustomHttpClientBuilder.class.getName(), buildDefaultClient);
 
             //Initialize Extensions
             Configuration extensionConfiguration = null;

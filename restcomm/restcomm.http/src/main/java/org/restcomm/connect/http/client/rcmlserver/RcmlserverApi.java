@@ -41,6 +41,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
 
 /**
  * Utility class that handles notification submission to rcmlserver (typically RVD)
@@ -87,10 +91,15 @@ public class RcmlserverApi {
         String json = gson.toJson(notifications);
         request.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
         Integer totalTimeout = rcmlserverConfig.getTimeout() + notifications.size() * rcmlserverConfig.getTimeoutPerNotification();
-        HttpClient httpClient = CustomHttpClientBuilder.build(mainConfig, totalTimeout);
+        HttpClient httpClient = CustomHttpClientBuilder.buildDefaultClient(mainConfig);
         try {
             logger.info("Will transmit a set of " + notifications.size() + " notifications and wait at most for " + totalTimeout);
-            HttpResponse response = httpClient.execute(request);
+            HttpContext httpContext = new BasicHttpContext();
+            httpContext.setAttribute(HttpClientContext.REQUEST_CONFIG, RequestConfig.custom().
+            setConnectTimeout(totalTimeout).
+            setSocketTimeout(totalTimeout).
+            setConnectionRequestTimeout(totalTimeout).build());
+            HttpResponse response = httpClient.execute(request, httpContext);
             if (response.getStatusLine().getStatusCode() != 200) {
                 throw new RcmlserverNotifyError();
             }

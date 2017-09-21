@@ -20,6 +20,7 @@
 
 package org.restcomm.connect.http;
 
+import javax.ws.rs.core.MediaType;
 import org.apache.commons.configuration.ConfigurationException;
 import org.junit.Test;
 import org.restcomm.connect.http.exceptions.NotAuthenticated;
@@ -45,6 +46,8 @@ public class AccountsEndpointMockedTest extends EndpointMockedTest {
         when(request.getHeader("Authorization")).thenReturn(null); // override Authorization header to null
         AccountsEndpoint endpoint = new AccountsEndpoint(servletContext,request);
         endpoint.init();
+        //use endpoint to cause the exception
+        endpoint.getAccounts(MediaType.TEXT_XML_TYPE);
     }
 
 }
