@@ -71,6 +71,9 @@
     <select id="getAccountExtensionConfiguration" parameterType="map" resultType="hashmap">
         SELECT "configuration_data", "account_sid" AS "sid", "extension_sid" AS "extension" FROM "restcomm_accounts_extensions"
         WHERE "account_sid"=#{account_sid} AND "extension_sid"=#{extension_sid};
+
+        SELECT configuration_data, account_sid AS "sid", extension_sid AS "extension" FROM restcomm_accounts_extensions
+        WHERE account_sid=#{account_sid} AND extension_sid=#{extension_sid};
     </select>
 
     <insert id="addAccountExtensionConfiguration" parameterType="map">
