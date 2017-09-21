@@ -34,7 +34,6 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.restcomm.connect.commons.common.http.CustomHttpClientBuilder;
@@ -53,6 +52,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -61,12 +64,16 @@ public final class Downloader extends RestcommUntypedActor {
 
     public static final int LOGGED_RESPONSE_MAX_SIZE = 100;
 
+    private CloseableHttpClient client = null;
+
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     public Downloader () {
         super();
+        client = (CloseableHttpClient) CustomHttpClientBuilder.buildDefaultClient(RestcommConfiguration.getInstance().getMain());
     }
+
 
     public HttpResponseDescriptor fetch (final HttpRequestDescriptor descriptor) throws IllegalArgumentException, IOException,
             URISyntaxException, XMLStreamException {
@@ -74,18 +81,22 @@ public final class Downloader extends RestcommUntypedActor {
         HttpRequest request = null;
         CloseableHttpResponse response = null;
         HttpRequestDescriptor temp = descriptor;
-        CloseableHttpClient client = null;
         HttpResponseDescriptor responseDescriptor = null;
         HttpResponseDescriptor rawResponseDescriptor = null;
         try {
             do {
-                client = (CloseableHttpClient) CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
-                //            client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
-//            client.getParams().setParameter("http.protocol.content-charset", "UTF-8");
                 request = request(temp);
                 request.setHeader("http.protocol.content-charset", "UTF-8");
-
-                response = client.execute((HttpUriRequest) request);
+                if (descriptor.getTimeout() > 0){
+                    HttpContext httpContext = new BasicHttpContext();
+                    httpContext.setAttribute(HttpClientContext.REQUEST_CONFIG, RequestConfig.custom().
+                    setConnectTimeout(descriptor.getTimeout()).
+                    setSocketTimeout(descriptor.getTimeout()).
+                    setConnectionRequestTimeout(descriptor.getTimeout()).build());
+                    response = client.execute((HttpUriRequest) request, httpContext);
+                } else {
+                    response = client.execute((HttpUriRequest) request);
+                }
                 code = response.getStatusLine().getStatusCode();
                 if (isRedirect(code)) {
                     final Header header = response.getFirstHeader(HttpHeaders.LOCATION);
@@ -128,9 +139,9 @@ public final class Downloader extends RestcommUntypedActor {
             logger.warning(String.format("Problem while trying to download RCML. URL: %s, Status: %s, Response: %s ", request.getRequestLine(), statusInfo, responseInfo));
             throw e; // re-throw
         } finally {
-            response.close();
-            HttpClientUtils.closeQuietly(client);
-            client = null;
+            if (response != null) {
+                response.close();
+            }
         }
         return responseDescriptor;
     }
