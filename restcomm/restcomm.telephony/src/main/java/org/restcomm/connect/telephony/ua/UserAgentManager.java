@@ -474,8 +474,14 @@ public final class UserAgentManager extends RestcommUntypedActor {
         String location = "%"+toUri.getHost()+":"+toUri.getPort();
         List<Registration> registrationList = registrations.getRegistrationsByLocation(toUri.getUser(), location);
         //Registration here shouldn't be null. Update it
-        Registration registration = registrationList.get(0).updated();
-        registrations.updateRegistration(registration);
+        if(registrationList != null && !registrationList.isEmpty()){
+            Registration registration = registrationList.get(0).updated();
+            registrations.updateRegistration(registration);
+        }else{
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("UAM pong: Could not find any registration for %s Location %s", toUri.getUser(), location));
+            }
+        }
     }
 
     private SipURI outboundInterface(String toTransport) {

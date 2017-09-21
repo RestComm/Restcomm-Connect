@@ -2,7 +2,7 @@
 
 [[gather]]
 == Gather
-The *<Gather>* verb "gathers" digits that a caller enters into his or her telephone keypad. When the caller is done entering digits, RestComm submits that digits to the provided 'action' URL in an HTTP GET or POST request. If no input is received before timeout, *<Gather>* falls through to the next verb in the RestComm document. You may optionally nest **<Say>, <Play>**, and *<Pause>* verbs within a *<Gather>* verb while waiting for input. This allows you to read menu options to the caller while letting her enter a menu selection at any time. After the first digit is received the audio will stop playing.
+The *<Gather>* verb supports two modes: *DTMF* and *SPEECH*. In DTMF mode it "gathers" digits that a caller enters into his or her telephone keypad. When the caller is done entering digits, RestComm submits that digits to the provided 'action' URL in an HTTP GET or POST request. In SPEECH mode it "gathers" recognized speech that a caller said. If no input is received before timeout, *<Gather>* falls through to the next verb in the RestComm document. You may optionally nest *<Say>*, *<Play>*, and *<Pause>* verbs within a *<Gather>* verb while waiting for input. This allows you to read menu options to the caller while letting her enter a menu selection at any time. After the first digit is received the audio will stop playing.
 
 === Gather Attributes
 
@@ -14,6 +14,11 @@ The *<Gather>* verb "gathers" digits that a caller enters into his or her teleph
 |timeout |positive integer |5 seconds
 |finishOnKey |any digit, #, * |#
 |numDigits |integer >= 1 |unlimited
+|input |dtmf, speech |dtmf
+|partialResultCallback |relative or absolute url |none
+|partialResultCallbackMethod |GET, POST |POST
+|language |en-US, en-GB, es-ES, it-IT, fr-FR, pl-PL, pt-PT |en-US
+|hints |"words, phrases that have many words" |none
 |======================================================
 
 * *action.* The 'action' attribute takes an absolute or relative URL as a value. When the caller has finished entering digits RestComm will make a GET or POST request to this URL including the parameters below. If no 'action' is provided, RestComm will by default make a POST request to the current document's URL.
@@ -24,6 +29,7 @@ The *<Gather>* verb "gathers" digits that a caller enters into his or her teleph
 |=======================================================================
 |Parameter |Description
 |Digits |The digits the caller pressed, excluding the finishOnKey digit.
+|SpeechResult |The transcribed result of the speech.
 |=======================================================================
 
 
@@ -31,6 +37,20 @@ The *<Gather>* verb "gathers" digits that a caller enters into his or her teleph
 * *timeout.* The 'timeout' attribute sets the limit in seconds that RestComm will wait for the caller to press another digit before moving on and making a request to the 'action' URL. For example, if 'timeout' is '10', RestComm will wait ten seconds for the caller to press another key before submitting the previously entered digits to the 'action' URL. RestComm waits until completing the execution of all nested verbs before beginning the timeout period.
 * *finishOnKey.* The 'finishOnKey' attribute lets you choose one value that submits the received data when entered. For example, if you set 'finishOnKey' to '\#' and the user enters '1234#', RestComm will immediately stop waiting for more input when the '\#' is received and will submit "Digits=1234" to the 'action' URL. Note that the 'finishOnKey' value is not sent. The allowed values are the digits 0-9, '#', '*' and the empty string (set 'finishOnKey' to ''). If the empty string is used, <Gather> captures all input and no key will end the <Gather> when pressed. In this case RestComm will submit the entered digits to the 'action' URL only after the timeout has been reached. The value can only be a single character.
 * *numDigits.* The 'numDigits' attribute lets you set the number of digits you are expecting, and submits the data to the 'action' URL once the caller enters that number of digits.
+* *input* A list of inputs that RestComm should accept for <Gather>. Can be "dtmf" or "speech". Defaults to "dtmf".
+* *partialResultCallback* A relative or fully qualified URL. Is a mandatory attribute for “speech” mode. RestComm will make requests to your partialResultCallback in real-time as speech is recognized.
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|=======================================================================
+|Parameter |Description
+|UnstableSpeechResult |Partially recognized speech the caller said.
+|=======================================================================
+
+
+* *language* The language RestComm should recognize. Defaults to en-US
+* *hints* A list of words or phrases that RestComm should expect during recognition. These are very useful for improving recognition of single words or phrases. Entries into hints should be separated by a comma.
 
 === Nesting
 You can nest the following verbs within <Gather>: <Say>, <Play>, <Pause>
