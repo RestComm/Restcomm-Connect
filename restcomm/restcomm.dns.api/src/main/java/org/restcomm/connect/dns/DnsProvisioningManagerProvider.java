@@ -23,6 +23,7 @@ package org.restcomm.connect.dns;
 import javax.servlet.ServletContext;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.loader.ObjectFactory;
 import org.restcomm.connect.commons.loader.ObjectInstantiationException;
 
@@ -32,6 +33,8 @@ import org.restcomm.connect.commons.loader.ObjectInstantiationException;
  * @author maria farooq
  */
 public class DnsProvisioningManagerProvider {
+    protected Logger logger = Logger.getLogger(DnsProvisioningManagerProvider.class);
+
     Configuration configuration;
     ServletContext context;
 
@@ -40,9 +43,15 @@ public class DnsProvisioningManagerProvider {
         this.context = context;
     }
 
-    public DnsProvisioningManager create() {
+    /**
+     * @return initialized instance of DnsProvisioningManager
+     */
+    private DnsProvisioningManager create() {
         final String dnsProvisioningManagerClass = configuration.getString("dns-provisioning[@class]");
         Configuration dnsProvisioningConfiguration = configuration.subset("dns-provisioning");
+    	if(dnsProvisioningManagerClass == null || dnsProvisioningManagerClass.trim().equals("")){
+    		return null;
+    	}
         DnsProvisioningManager dnsProvisioningManager;
         try {
             dnsProvisioningManager = (DnsProvisioningManager) new ObjectFactory(getClass().getClassLoader())
