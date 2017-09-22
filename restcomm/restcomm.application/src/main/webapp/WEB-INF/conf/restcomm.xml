@@ -322,8 +322,7 @@
 			<gmlc-password></gmlc-password>
 		</gmlc>
 
-		<!--
-		dns-provisioning: configuration is used to proform CRUD operations for organizations
+		<!-- dns-provisioning: configuration is used to proform CRUD operations for organizations, i.e creating new domains under restcomm
 			
 		class: represents the DNS provisioning manager class 
 		e.g org.restcomm.connect.telscale.dns.route53.Route53DnsProvisioningManager
@@ -340,9 +339,13 @@
 			<restcomm-address></restcomm-address>
 			<!-- DNS Resource Record (RR) Types -->
 			<rr-type>A</rr-type>
+			
+			<!-- aws-route53 specific config for dns provisioning
+			ttl: time to live in seconds
+			hosted-zone-id: The ID of the hosted zone that contains the resource record sets that you want to change.
+			for example hosted zone id of domain restcomm.com, this can be get from aws management console 
+			-->
 			<aws-route53>
-				<!-- ttl: time to live in seconds -->
-				<!-- hosted-zone-id: The ID of the hosted zone that contains the resource record sets that you want to change. -->
 				<ttl>3600</ttl>
 				<hosted-zone-id></hosted-zone-id>
 			</aws-route53>

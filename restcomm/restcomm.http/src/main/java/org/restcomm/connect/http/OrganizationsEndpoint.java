@@ -43,15 +43,15 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.OrganizationList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.dns.DnsProvisioningManager;
 import org.restcomm.connect.dns.DnsProvisioningManagerProvider;
-import org.restcomm.connect.http.converter.AccountConverter;
-import org.restcomm.connect.http.converter.AccountListConverter;
+import org.restcomm.connect.http.converter.OrganizationConverter;
+import org.restcomm.connect.http.converter.OrganizationListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 
 import com.google.gson.Gson;
@@ -65,13 +65,14 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected DnsProvisioningManager dnsProvisioningManager;
-    protected Configuration runtimeConfiguration;
-    protected Configuration rootConfiguration; // top-level configuration element
     protected Gson gson;
     protected XStream xstream;
 	private final String MSG_EMPTY_DOMAIN_NAME = "domain name can not be empty. Please, choose a valid name and try again.";
 	private final String MSG_INVALID_DOMAIN_NAME_PATTERN= "Total Length of domain_name can be upto 255 Characters. It can contain only letters, number and hyphen - sign.. Please, choose a valid name and try again.";
 	private final String MSG_DOMAIN_NAME_NOT_AVAILABLE = "This domain name is not available. Please, choose a different name and try again.";
+	private String DOMAIN_NAME_VALIDATION_PATTERN="[A-Za-z0-9\\-\\.]{1,255}";
+	private String SUB_DOMAIN_NAME_VALIDATION_PATTERN="[A-Za-z0-9\\-]{1,255}";
+	private OrganizationListConverter listConverter;
 
     public OrganizationsEndpoint() {
         super();
@@ -79,29 +80,41 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
 
     // used for testing
     public OrganizationsEndpoint(ServletContext context, HttpServletRequest request) {
-        super(context,request);
+        super(context, request);
     }
 
     @PostConstruct
     void init() {
-        rootConfiguration = (Configuration) context.getAttribute(Configuration.class.getName());
-        runtimeConfiguration = rootConfiguration.subset("runtime-settings");
-        super.init(runtimeConfiguration);
-        final AccountConverter converter = new AccountConverter(runtimeConfiguration);
+        configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+        super.init(configuration.subset("runtime-settings"));
+
+        registerConverters();
+
+        // Make sure there is an authenticated account present when this endpoint is used
+        // get manager from context or create it if it does not exist
+        try {
+        	dnsProvisioningManager = new DnsProvisioningManagerProvider(configuration, context).get();
+        } catch(Exception e) {
+        	logger.error("Unable to get dnsProvisioningManager", e);
+        }
+    }
+
+    private void registerConverters(){
+		final OrganizationConverter converter = new OrganizationConverter(configuration);
+        listConverter = new OrganizationListConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(Account.class, converter);
+        builder.serializeNulls();
+        builder.registerTypeAdapter(Organization.class, converter);
+        builder.registerTypeAdapter(OrganizationList.class, listConverter);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(converter);
-        xstream.registerConverter(new AccountListConverter(runtimeConfiguration));
-        xstream.registerConverter(new RestCommResponseConverter(runtimeConfiguration));
-        // Make sure there is an authenticated account present when this endpoint is used
-        // get manager from context or create it if it does not exist
-        dnsProvisioningManager = new DnsProvisioningManagerProvider(configuration, context).get();
+        xstream.registerConverter(listConverter);
+        xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
-
+    
     /**
      * @param organizationSid
      * @param responseType
@@ -115,16 +128,16 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
 
         if (!Sid.pattern.matcher(organizationSid).matches()) {
             return status(BAD_REQUEST).build();
-        }else{
+        } else {
             try {
                 //if account is not super admin then allow to read only affiliated organization
-                if(!isSuperAdmin()){
-                    if(userIdentityContext.getEffectiveAccount().getOrganizationSid().equals(new Sid(organizationSid))){
+                if (!isSuperAdmin()) {
+                    if (userIdentityContext.getEffectiveAccount().getOrganizationSid().equals(new Sid(organizationSid))) {
                         organization = organizationsDao.getOrganization(new Sid(organizationSid));
-                    }else{
+                    } else {
                         return status(FORBIDDEN).build();
                     }
-                }else{
+                } else {
                     organization = organizationsDao.getOrganization(new Sid(organizationSid));
                 }
             } catch (Exception e) {
@@ -178,7 +191,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
     }
 
 	/**
-	 * putOrganization
+	 * putOrganization create new organization
 	 * @param domainName
 	 * @param data
 	 * @param applicationJsonType
@@ -193,7 +206,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
             allowOnlySuperAdmin();
 
             //Character verification
-            final Pattern pattern = Pattern.compile("[A-Za-z0-9\\-]{1,255}");
+            final Pattern pattern = Pattern.compile(SUB_DOMAIN_NAME_VALIDATION_PATTERN);
             if(!pattern.matcher(domainName).matches()){
                 return status(BAD_REQUEST).entity(MSG_INVALID_DOMAIN_NAME_PATTERN).build();
             }
@@ -205,9 +218,15 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
                         .entity(MSG_DOMAIN_NAME_NOT_AVAILABLE)
                         .build();
             }
-            //restcomm.com
-            data.get("HostedZone");
-            //TODO: dns get, check if its not already taken
+            if(dnsProvisioningManager == null) {
+            	logger.warn("No DNS provisioning Manager is configured, restcomm will not make any queries to DNS server.");
+            	organization = new Organization(Sid.generate(Sid.Type.ORGANIZATION), domainName, DateTime.now(), DateTime.now(), Organization.Status.ACTIVE);
+            }else {
+                //for example hosted zon id of domain restcomm.com or others. if not provided then default will be used as per configuration
+                String hostedZoneId = data.getFirst("HostedZoneId");
+                //TODO: dns get, check if its not already taken
+                dnsProvisioningManager.createResourceRecord(domainName, hostedZoneId);
+            }
         }
 	}
 }

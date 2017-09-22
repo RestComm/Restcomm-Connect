@@ -20,7 +20,6 @@
 package org.restcomm.connect.dns;
 
 import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.commons.patterns.StandardResponse;
 
 public interface DnsProvisioningManager {
 
@@ -31,8 +30,43 @@ public interface DnsProvisioningManager {
      */
     void init(Configuration dnsConfiguration);
 
-    StandardResponse<?> createResourceRecord(final String name);
-    StandardResponse<?> readResourceRecord();
-    StandardResponse<?> updateResourceRecord();
-    StandardResponse<?> deleteResourceRecord();
+    /**
+     * @param name The name of the domain you want to perform the action on. 
+     * Enter a sub domain name only. For example to add 'company1.restcomm.com',
+     *  provide only 'company1' and provide hosted zone for 'restcomm.com'
+     * @param hostedZoneId  hostedZoneId The ID of the hosted zone that contains the resource record sets that you want to change.
+     * If none provided, then default will be used as per configuration
+     * @return true if operation successful, false otherwise.
+     */
+    boolean createResourceRecord(final String name, final String hostedZoneId);
+
+    /**
+     * @param name The name of the domain you want to perform the action on. 
+     * Enter a sub domain name only. For example to add 'company1.restcomm.com',
+     *  provide only 'company1' and provide hosted zone for 'restcomm.com'
+     * @param hostedZoneId  hostedZoneId The ID of the hosted zone that contains the resource record sets that you want to change.
+     * If none provided, then default will be used as per configuration
+     * @return true if operation successful, false otherwise.
+     */
+    boolean readResourceRecord(final String name, final String hostedZoneId);
+
+    /**
+     * @param name The name of the domain you want to perform the action on. 
+     * Enter a sub domain name only. For example to add 'company1.restcomm.com',
+     *  provide only 'company1' and provide hosted zone for 'restcomm.com'
+     * @param hostedZoneId  hostedZoneId The ID of the hosted zone that contains the resource record sets that you want to change.
+     * If none provided, then default will be used as per configuration
+     * @return true if operation successful, false otherwise.
+     */
+    boolean updateResourceRecord(final String name, final String hostedZoneId);
+
+    /**
+     * @param name The name of the domain you want to perform the action on. 
+     * Enter a sub domain name only. For example to add 'company1.restcomm.com',
+     *  provide only 'company1' and provide hosted zone for 'restcomm.com'
+     * @param hostedZoneId  hostedZoneId The ID of the hosted zone that contains the resource record sets that you want to change.
+     * If none provided, then default will be used as per configuration
+     * @return true if operation successful, false otherwise.
+     */
+    boolean deleteResourceRecord(final String name, final String hostedZoneId);
 }
