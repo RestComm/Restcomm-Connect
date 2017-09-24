@@ -50,11 +50,14 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
+import org.restcomm.connect.dao.PermissionsDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.AccountList;
+import org.restcomm.connect.dao.entities.AccountPermission;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Organization;
+import org.restcomm.connect.dao.entities.Permission;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
@@ -62,8 +65,8 @@ import org.restcomm.connect.http.converter.AccountConverter;
 import org.restcomm.connect.http.converter.AccountListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
-import org.restcomm.connect.http.exceptions.AuthorizationException;
-import org.restcomm.connect.http.exceptions.InsufficientPermission;
+import org.restcomm.connect.commons.exceptions.AuthorizationException;
+import org.restcomm.connect.commons.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
 import org.restcomm.connect.http.exceptions.RcmlserverNotifyError;
 import org.restcomm.connect.identity.passwords.PasswordValidator;
@@ -86,6 +89,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
     protected Gson gson;
     protected XStream xstream;
     protected ClientsDao clientDao;
+    protected PermissionsDao permissionsDao;
 
     public AccountsEndpoint() {
         super();
@@ -102,6 +106,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         runtimeConfiguration = rootConfiguration.subset("runtime-settings");
         super.init(runtimeConfiguration);
         clientDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getClientsDao();
+        permissionsDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getPermissionsDao();
         final AccountConverter converter = new AccountConverter(runtimeConfiguration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
@@ -429,6 +434,41 @@ public class AccountsEndpoint extends SecuredEndpoint {
         }
     }
 
+    /*
+     * add or update Account Permissions
+     * */
+    private void processPermissionsData(Account account, MultivaluedMap<String, String> data) {
+        String permissionSidString = data.getFirst("PermissionSid");
+
+        if(!permissionSidString.isEmpty()){
+            //check if accounts permissions exists first
+            //if ap exists, just update value
+            //if not create new ap from perm,check if permission exists first
+            List<Permission> p1 = accountsDao.getAccountPermissions(account.getSid());
+            AccountPermission ap = (AccountPermission)accountsDao.getAccountPermission(account.getSid(), new Sid(permissionSidString));
+            Permission perm = permissionsDao.getPermission(new Sid(permissionSidString));
+            if(ap != null){
+                String permissionValue = data.getFirst("PermissionValue");
+                //FIXME:
+                ap.setValue(permissionValue.isEmpty() ? true: Boolean.valueOf(permissionValue));
+                accountsDao.updateAccountPermissions(account.getSid(), ap);
+                p1 = accountsDao.getAccountPermissions(account.getSid());
+            }else if(perm!=null){
+                String permissionValue = data.getFirst("PermissionValue");
+                //AccountPermission ap = new AccountPermission(Permission);
+                ap = new AccountPermission(perm.getSid(), perm.getName());
+                ap.setValue(permissionValue.isEmpty() ? true: Boolean.valueOf(permissionValue));
+                accountsDao.addAccountPermission(account.getSid(), ap);
+                p1 = accountsDao.getAccountPermissions(account.getSid());
+            }else{
+                //permission doesnt exist
+                if(logger.isDebugEnabled()){
+                    logger.debug("AccountPermission doesnt exist");
+                }
+            }
+        }
+    }
+
     private Client createClientFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
         final Client.Builder builder = Client.builder();
         final Sid sid = Sid.generate(Sid.Type.CLIENT);
@@ -584,6 +624,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                     }
                 }
                 accountsDao.updateAccount(modifiedAccount);
+                processPermissionsData(account, data);
             }
 
             if (APPLICATION_JSON_TYPE == responseType) {
@@ -655,6 +696,26 @@ public class AccountsEndpoint extends SecuredEndpoint {
         }
         // close parent account too
         closeSingleAccount(parentAccount,rcmlserverApi);
+    }
+
+    protected Response getAccountPermissions(String accountSid, String permissionSid, MediaType applicationJsonType) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    protected Response addAccountPermission(String accountSid, String permissionSid, MediaType applicationJsonType) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    protected Response updateAccountPermission(String accountSid, String permissionSid, MediaType applicationJsonType) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    protected Response deleteAccountPermission(String accountSid, String permissionSid, MediaType applicationJsonType) {
+        accountsDao.deleteAccountPermission(new Sid(accountSid), new Sid(permissionSid));
+        return null;
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
