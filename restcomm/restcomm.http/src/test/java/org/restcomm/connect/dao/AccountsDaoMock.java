@@ -27,6 +27,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Permission;
 
 /**
  * Elementary mocking for AccountsDao to be used for endpoint unit testing mostly.
@@ -101,8 +102,56 @@ public class AccountsDaoMock implements AccountsDao {
         throw new NotImplementedException();
     }
 
-	@Override
-	public List<Account> getAccountsByOrganization(Sid sid) {
+    @Override
+    public List<Account> getAccountsByOrganization(Sid sid) {
         throw new NotImplementedException();
+    }
+
+    @Override
+    public void addAccountPermissions(Sid account_sid, List<Permission> permissions) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void addAccountPermission(Sid account_sid1, Permission permission) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void updateAccountPermissions(Sid account_sid1, Permission permission) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void deleteAccountPermission(Sid account_sid1, Sid permission_sid1) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void clearAccountPermissions(Sid account_sid1, ArrayList<Permission> permissions) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void deleteAccountPermissionByName(Sid account_sid1, String permission_name) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public List<Permission> getAccountPermissions(Sid account_sid) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Permission getAccountPermission(Sid accountSid, Sid permissionSid) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

@@ -74,4 +74,6 @@ public interface DaoManager extends Configurable, LifeCycle {
 
     OrganizationsDao getOrganizationsDao();
 
+    PermissionsDao getPermissionsDao();
+
 }
