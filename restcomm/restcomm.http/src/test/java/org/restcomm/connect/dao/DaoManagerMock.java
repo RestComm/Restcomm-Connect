@@ -167,7 +167,14 @@ public class DaoManagerMock implements DaoManager {
     }
 
     @Override
-    public OrganizationsDao getOrganizationsDao() {
+    public PermissionsDao getPermissionsDao() {
+        // TODO Auto-generated method stub
         return null;
     }
+
+	@Override
+	public OrganizationsDao getOrganizationsDao() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

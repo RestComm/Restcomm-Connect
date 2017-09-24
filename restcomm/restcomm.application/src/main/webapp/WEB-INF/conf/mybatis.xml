@@ -53,5 +53,6 @@
     <mapper url="file://${sql}/extensions-configuration.xml"/>
     <mapper url="file://${sql}/geolocation.xml"/>
     <mapper url="file://${sql}/organization.xml"/>
+	<mapper url="file://${sql}/permissions.xml"/>
   </mappers>
 </configuration>
