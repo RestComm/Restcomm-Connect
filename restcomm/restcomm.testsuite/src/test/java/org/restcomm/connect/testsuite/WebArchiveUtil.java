@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
@@ -42,6 +43,14 @@ public class WebArchiveUtil {
         return createWebArchiveNoGw(restcommConf, dbScript, new ArrayList(), replacements);
     }
     public static WebArchive createWebArchiveNoGw(String restcommConf, String dbScript, List<String> resources, Map<String,String> replacements) {
+        Map<String,String> webInfResources = new HashMap();
+        webInfResources.put(restcommConf, "conf/restcomm.xml");
+        webInfResources.put(dbScript, "data/hsql/restcomm.script");
+        webInfResources.put("akka_application.conf", "classes/application.conf");
+        return createWebArchiveNoGw(webInfResources, resources, replacements);
+    }
+    public static WebArchive createWebArchiveNoGw(Map<String,String> webInfResources, List<String> resources, Map<String,String> replacements) {
+    
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
         final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + Version.getVersion()).withoutTransitivity()
@@ -52,10 +61,10 @@ public class WebArchiveUtil {
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.delete("/WEB-INF/classes/application.conf");
         archive.addAsWebInfResource("sip.xml");
-        File f = WebArchiveUtil.tweakFilePorts(restcommConf,replacements );
-        archive.addAsWebInfResource(f, "conf/restcomm.xml");
-        File script = WebArchiveUtil.tweakFilePorts(dbScript,replacements );
-        archive.addAsWebInfResource(script, "data/hsql/restcomm.script");
+        for (String webdInfFile : webInfResources.keySet()) {
+            File f = WebArchiveUtil.tweakFilePorts(webdInfFile,replacements );
+            archive.addAsWebInfResource(f, webInfResources.get(webdInfFile));
+        }
         archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
         for (String rAux: resources) {
             File rFile = WebArchiveUtil.tweakFilePorts(rAux,replacements );
