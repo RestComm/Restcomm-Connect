@@ -20,6 +20,8 @@
 
 package org.restcomm.connect.http.exceptions;
 
+import org.restcomm.connect.commons.exceptions.AuthorizationException;
+
 /**
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  */
