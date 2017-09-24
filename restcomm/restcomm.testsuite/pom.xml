@@ -434,7 +434,7 @@
                         <include>**/TestDialVerbPartThree.java</include>                      
                         <include>**/ClientsDialAnswerDelayTest.java</include>
                         <include>**/UserAgentManagerTest.java</include>
-                        
+                        <include>**/SmsTest.java</include>
                     </includes>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     <rerunFailingTestsCount>2</rerunFailingTestsCount>
