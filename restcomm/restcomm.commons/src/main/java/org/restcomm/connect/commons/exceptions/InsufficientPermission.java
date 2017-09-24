@@ -17,16 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.http.exceptions;
+package org.restcomm.connect.commons.exceptions;
 
-import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
+public class InsufficientPermission extends AuthorizationException{
 
-/**
- * General type of authorization exceptions. All security-related exceptions
- * in REST endpoints should extend this.
- *
- * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
- */
-
-public class AuthorizationException extends RestcommRuntimeException {
 }
