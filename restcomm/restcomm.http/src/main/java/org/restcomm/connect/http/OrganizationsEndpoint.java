@@ -106,7 +106,6 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         final GsonBuilder builder = new GsonBuilder();
         builder.serializeNulls();
         builder.registerTypeAdapter(Organization.class, converter);
-        builder.registerTypeAdapter(OrganizationList.class, listConverter);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
