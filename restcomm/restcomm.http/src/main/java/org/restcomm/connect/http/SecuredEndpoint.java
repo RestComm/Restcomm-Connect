@@ -113,7 +113,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
                 logger.info("RestAPI extensions: "+(extensions != null ? extensions.size() : "0"));
             }
         }
-        permissionUtil = PermissionsUtil.getInstance(this.context);
+        permissionUtil = PermissionsUtil.getInstance();
         permissionUtil.setUserIdentityContext(userIdentityContext);
     }
 

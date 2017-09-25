@@ -28,10 +28,12 @@ import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
+
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.NameValuePair;
@@ -80,6 +82,8 @@ import org.restcomm.connect.http.client.Downloader;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
 import org.restcomm.connect.http.client.HttpResponseDescriptor;
+import org.restcomm.connect.identity.AuthOutcome;
+import org.restcomm.connect.identity.permissions.PermissionsUtil;
 import org.restcomm.connect.interpreter.rcml.Attribute;
 import org.restcomm.connect.interpreter.rcml.GetNextVerb;
 import org.restcomm.connect.interpreter.rcml.Parser;
@@ -109,11 +113,14 @@ import org.restcomm.connect.tts.api.GetSpeechSynthesizerInfo;
 import org.restcomm.connect.tts.api.SpeechSynthesizerInfo;
 import org.restcomm.connect.tts.api.SpeechSynthesizerRequest;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
+
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
+//import javax.servlet.ServletContext;
 import javax.servlet.sip.SipServletResponse;
+
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -130,6 +137,9 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
+
+
 import static akka.pattern.Patterns.ask;
 
 /**
@@ -141,7 +151,8 @@ import static akka.pattern.Patterns.ask;
 public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
-
+    private final String PERMISSION_SERVICE_ASR = "RestComm:*:ASR";
+    private final String PERMISSION_SERVICE_ASR_ERR_NO_PERMISSION = "No Permission for Asr Service";
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
@@ -266,6 +277,9 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
     int recordingDuration = -1;
 
     protected RestcommConfiguration restcommConfiguration;
+
+    private boolean hasAsrPermission;
+    private PermissionsUtil permissionsUtil;
 
     public BaseVoiceInterpreter() {
         super();
@@ -404,6 +418,8 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         transitions.add(new Transition(sendingSms, creatingRecording));
         transitions.add(new Transition(sendingSms, creatingSmsSession));
         transitions.add(new Transition(sendingSms, hangingUp));
+
+        permissionsUtil = PermissionsUtil.getInstance();
     }
 
     @Override
@@ -425,7 +441,16 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
     private boolean checkAsrService() {
         boolean AsrActive=false;
         Configuration Asrconfiguration=configuration.subset("speech-recognizer");
-        if (Asrconfiguration.getString("api-key") != null && !Asrconfiguration.getString("api-key").isEmpty()){
+
+        //FIXME: check one time only?
+        if(permissionsUtil.checkPermission(PERMISSION_SERVICE_ASR, this.accountId)==AuthOutcome.OK){
+            hasAsrPermission = true;
+        }else{
+            if(logger.isDebugEnabled()){
+                logger.debug(PERMISSION_SERVICE_ASR_ERR_NO_PERMISSION);
+            }
+        }
+        if (hasAsrPermission && Asrconfiguration.getString("api-key") != null && !Asrconfiguration.getString("api-key").isEmpty()){
             AsrActive=true;
         }
         return AsrActive;
@@ -1971,6 +1996,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                             }
                         }
                     }
+
                     boolean transcribe = false;
                     if (transcribeCallback != null) {
                         transcribe = true;
@@ -2005,6 +2031,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                             final Map<String, Object> attributes = new HashMap<String, Object>();
                             attributes.put("callback", transcribeCallback);
                             attributes.put("transcription", transcription);
+                            attributes.put("accountId", accountId.toString());
                             getAsrService().tell(new AsrRequest(new File(recordingUri), "en", attributes), source);
                             outstandingAsrRequests++;
                         } catch (final Exception exception) {
