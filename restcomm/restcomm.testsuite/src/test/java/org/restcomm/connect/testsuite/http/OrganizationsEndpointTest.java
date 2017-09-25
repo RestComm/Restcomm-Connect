@@ -155,17 +155,23 @@ public class OrganizationsEndpointTest extends EndpointTest {
     @Test
     public void createOrganizationTest(){
     	//super admin tries to create org
-    	//TODO:
     	ClientResponse clientResponse = RestcommOrganizationsTool.getInstance().createOrganizationResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, "newdomain");
     	logger.info("clientResponse: "+clientResponse);
     	assertTrue(clientResponse.getStatus() == 200);
 
     	// create an org that domain name already exists
-    	//TODO:
+    	//super admin tries to create org that already exists
+    	clientResponse = RestcommOrganizationsTool.getInstance().createOrganizationResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, "newdomain");
+    	logger.info("clientResponse: "+clientResponse);
+    	assertTrue(clientResponse.getStatus() == 409);
     	//admin tries to create org
-    	//TODO:
+    	clientResponse = RestcommOrganizationsTool.getInstance().createOrganizationResponse(deploymentUrl.toString(), adminAccountSid, adminAuthToken, "newdomain");
+    	logger.info("clientResponse: "+clientResponse);
+    	assertTrue(clientResponse.getStatus() == 403);
     	//developer tries to create org
-    	//TODO:
+    	clientResponse = RestcommOrganizationsTool.getInstance().createOrganizationResponse(deploymentUrl.toString(), devAccountSid, devAuthToken, "newdomain");
+    	logger.info("clientResponse: "+clientResponse);
+    	assertTrue(clientResponse.getStatus() == 403);
     }
     
     @Deployment(name = "OrganizationsEndpointTest", managed = true, testable = false)

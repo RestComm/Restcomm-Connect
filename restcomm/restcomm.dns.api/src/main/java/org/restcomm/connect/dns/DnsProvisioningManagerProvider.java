@@ -47,6 +47,9 @@ public class DnsProvisioningManagerProvider {
      * @return initialized instance of DnsProvisioningManager
      */
     private DnsProvisioningManager create() {
+        Configuration dnsProvisioningConfiguration = configuration.subset("dns-provisioning");
+        if (dnsProvisioningConfiguration.isEmpty())
+            return null;
         final boolean enabled = configuration.getBoolean("dns-provisioning[@enabled]");
         if(!enabled){
             if(logger.isDebugEnabled())
@@ -54,7 +57,6 @@ public class DnsProvisioningManagerProvider {
             return null;
         }
         final String dnsProvisioningManagerClass = configuration.getString("dns-provisioning[@class]");
-        Configuration dnsProvisioningConfiguration = configuration.subset("dns-provisioning");
         if(dnsProvisioningManagerClass == null || dnsProvisioningManagerClass.trim().equals("")){
             logger.warn("dns-provisioning is enabled but manager class is null or empty");
             return null;

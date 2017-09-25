@@ -136,8 +136,8 @@ public class RestcommOrganizationsTool {
 		String url = getOrganizationsUrl(deploymentUrl) + "/" + domainName;
 
 		WebResource webResource = jerseyClient.resource(url);
-
-		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, null);
+		MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
 		return response;
 	}
 }
