@@ -115,4 +115,29 @@ public class RestcommOrganizationsTool {
 		ClientResponse response = webResource.get(ClientResponse.class);
 		return response;
 	}
+
+	public JsonObject createOrganization (String deploymentUrl, String username, String adminAuthToken, String domainName) {
+
+		JsonParser parser = new JsonParser();
+		JsonObject jsonResponse = null;
+		try {
+			ClientResponse clientResponse = createOrganizationResponse(deploymentUrl, username, adminAuthToken, domainName);
+			jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
+		} catch (Exception e) {
+			logger.info("Exception: " + e);
+		}
+		return jsonResponse;
+	}
+
+	public ClientResponse createOrganizationResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String domainName) {
+		Client jerseyClient = Client.create();
+		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorAuthtoken));
+
+		String url = getOrganizationsUrl(deploymentUrl) + "/" + domainName;
+
+		WebResource webResource = jerseyClient.resource(url);
+
+		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, null);
+		return response;
+	}
 }
