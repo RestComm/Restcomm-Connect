@@ -23,6 +23,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
@@ -53,8 +54,15 @@ public final class OrganizationsJsonEndpoint extends OrganizationsEndpoint {
         return getOrganizations(info, APPLICATION_JSON_TYPE);
     }
 
+    @Path("/{domainName}")
     @POST
-    public Response putOrganization(@PathParam("domainName") final String domainName, final MultivaluedMap<String, String> data) {
+    public Response putOrganizationPost(@PathParam("domainName") final String domainName, final MultivaluedMap<String, String> data) {
+        return putOrganization(domainName, data, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{domainName}")
+    @PUT
+    public Response putOrganizationPut(@PathParam("domainName") final String domainName, final MultivaluedMap<String, String> data) {
         return putOrganization(domainName, data, APPLICATION_JSON_TYPE);
     }
 }

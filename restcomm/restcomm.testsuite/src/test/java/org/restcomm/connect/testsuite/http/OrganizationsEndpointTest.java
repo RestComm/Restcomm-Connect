@@ -72,14 +72,14 @@ public class OrganizationsEndpointTest extends EndpointTest {
     	
     	//only superadmin can read the whole list of organizations
     	JsonArray jsonArray = null;
-    	jsonArray = RestcommOrganizationsTool.getInstance().getOrganizationList(deploymentUrl.toExternalForm(), superAdminAccountSid, superAdminAuthToken, null);
+    	jsonArray = RestcommOrganizationsTool.getInstance().getOrganizationList(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, null);
     	logger.info("organization list: "+jsonArray);
     	assertTrue(jsonArray!=null);
     	assertTrue(jsonArray.size() == 3);
     }
 
     /**
-     * Admis can read only affliated organization
+     * Administrators can read only affiliated organization
      * this test will try to Read single organization and read list
      */
     @Test
@@ -98,7 +98,7 @@ public class OrganizationsEndpointTest extends EndpointTest {
     	
     	//only superadmin can read the whole list of organizations
     	clientResponse = null;
-    	clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationsResponse(deploymentUrl.toExternalForm(), adminAccountSid, adminAuthToken);
+    	clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationsResponse(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
     	logger.info("organization list: "+clientResponse);
     	assertTrue(clientResponse!=null);
     	assertTrue(clientResponse.getStatus() == 403);
@@ -124,7 +124,7 @@ public class OrganizationsEndpointTest extends EndpointTest {
     	
     	//only superadmin can read the whole list of organizations
     	clientResponse = null;
-    	clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationsResponse(deploymentUrl.toExternalForm(), devAccountSid, devAuthToken);
+    	clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationsResponse(deploymentUrl.toString(), devAccountSid, devAuthToken);
     	logger.info("organization list: "+clientResponse);
     	assertTrue(clientResponse!=null);
     	assertTrue(clientResponse.getStatus() == 403);
@@ -137,24 +137,29 @@ public class OrganizationsEndpointTest extends EndpointTest {
     @Test
     public void getOrganizationListByStatus(){
     	JsonArray jsonArray = null;
-    	jsonArray = RestcommOrganizationsTool.getInstance().getOrganizationList(deploymentUrl.toExternalForm(), superAdminAccountSid, superAdminAuthToken, "active");
+    	jsonArray = RestcommOrganizationsTool.getInstance().getOrganizationList(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, "active");
     	logger.info("organization list: "+jsonArray);
     	assertTrue(jsonArray!=null);
     	assertTrue(jsonArray.size() == 2);
     	jsonArray = null;
-    	jsonArray = RestcommOrganizationsTool.getInstance().getOrganizationList(deploymentUrl.toExternalForm(), superAdminAccountSid, superAdminAuthToken, "closed");
+    	jsonArray = RestcommOrganizationsTool.getInstance().getOrganizationList(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, "closed");
     	logger.info("organization list: "+jsonArray);
     	assertTrue(jsonArray!=null);
     	assertTrue(jsonArray.size() == 1);
     }
 
     /**
-     * createOrganizationPermissionTest
+     * createOrganizationTest
      * only super admin can create a new organization
      */
     @Test
-    public void createOrganizationPermissionTest(){
+    public void createOrganizationTest(){
     	//super admin tries to create org
+    	//TODO:
+    	ClientResponse clientResponse = RestcommOrganizationsTool.getInstance().createOrganizationResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, "newdomain");
+    	assertTrue(clientResponse.getStatus() == 200);
+
+    	// create an org that domain name already exists
     	//TODO:
     	//admin tries to create org
     	//TODO:
