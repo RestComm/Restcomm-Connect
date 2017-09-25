@@ -400,6 +400,18 @@ configuration_data LONGTEXT NOT NULL,
 PRIMARY KEY (account_sid, extension_sid)
 );
 
+CREATE TABLE restcomm_permissions(
+sid VARCHAR(34) NOT NULL PRIMARY KEY,
+name LONGTEXT NOT NULL
+);
+
+CREATE TABLE restcomm_accounts_permissions(
+account_sid VARCHAR(34) NOT NULL,
+permission_sid VARCHAR(34) NOT NULL,
+PRIMARY KEY(account_sid, permission_sid),
+value BOOLEAN NOT NULL
+);
+
 INSERT INTO restcomm_organizations VALUES(
 "ORafbe225ad37541eba518a74248f0ac4c", 
 "default.restcomm.com", 
