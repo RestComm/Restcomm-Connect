@@ -35,6 +35,7 @@ import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.shiro.ShiroResources;
 import org.restcomm.connect.extension.controller.ExtensionBootstrapper;
 import org.restcomm.connect.identity.IdentityContext;
+import org.restcomm.connect.identity.permissions.PermissionsUtil;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
@@ -353,6 +354,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             IdentityContext identityContext = new IdentityContext(xml);
             context.setAttribute(IdentityContext.class.getName(), identityContext);
 
+            PermissionsUtil.getInstance(context, storage, xml);
             // Create the media gateway.
 
             //Initialize Monitoring Service

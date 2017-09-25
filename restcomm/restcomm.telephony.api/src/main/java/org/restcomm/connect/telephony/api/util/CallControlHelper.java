@@ -99,7 +99,7 @@ public class CallControlHelper {
         response.send();
     }
 
-    private static Map<String, String> authHeaderToMap(final String header) {
+    public static Map<String, String> authHeaderToMap(final String header) {
         final Map<String, String> map = new HashMap<String, String>();
         final int endOfScheme = header.indexOf(" ");
         map.put("scheme", header.substring(0, endOfScheme).trim());
