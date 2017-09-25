@@ -157,6 +157,7 @@ public class OrganizationsEndpointTest extends EndpointTest {
     	//super admin tries to create org
     	//TODO:
     	ClientResponse clientResponse = RestcommOrganizationsTool.getInstance().createOrganizationResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, "newdomain");
+    	logger.info("clientResponse: "+clientResponse);
     	assertTrue(clientResponse.getStatus() == 200);
 
     	// create an org that domain name already exists
