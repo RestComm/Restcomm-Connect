@@ -22,6 +22,11 @@ package org.restcomm.connect.testsuite.sms;
 import static org.junit.Assert.assertTrue;
 
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.sip.address.SipURI;
 
@@ -33,15 +38,15 @@ import org.cafesip.sipunit.SipStack;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -56,27 +61,42 @@ public class SmsOutTest {
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     
+    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();    
+    
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
-    private String aliceContact = "sip:alice@127.0.0.1:5091";
+    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());    
+    private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
     
     private SipStack outboundDestSipStack;
     private SipPhone outboundDestPhone;
-    private String outboundDestContact = "sip:9898989@127.0.0.1:5094";
+    private static String outboundPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());    
+    private String outboundDestContact = "sip:9898989@127.0.0.1:" + outboundPort;
 
+    private static int restcommPort = 5080;
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;  
+    
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("SmsTest1");
         tool2 = new SipStackTool("SmsTest2");
+        if (System.getProperty("arquillian_sip_port") != null) {
+            restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
+            restcommContact = "127.0.0.1:" + restcommPort;
+        }
+        if (System.getProperty("arquillian_http_port") != null) {
+            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
+        }          
     }
     
     @Before
     public void before() throws Exception {
-        aliceSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
-        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
+        aliceSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", alicePort, restcommContact);
+        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, aliceContact);
 
-        outboundDestSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
-        outboundDestPhone = outboundDestSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, outboundDestContact);
+        outboundDestSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", outboundPort, restcommContact);
+        outboundDestPhone = outboundDestSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, outboundDestContact);
     }
     
     @After
@@ -101,14 +121,14 @@ public class SmsOutTest {
         SipCall outboundDestCall = outboundDestPhone.createSipCall();
         outboundDestCall.listenForMessage();
         
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
         
         Credential credential = new Credential("127.0.0.1", "alice", "1234");
         alicePhone.addUpdateCredential(credential);
         
         SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.initiateOutgoingMessage(aliceContact, "sip:9898989@127.0.0.1:5080", null, null, null, "Test message");
+        aliceCall.initiateOutgoingMessage(aliceContact, "sip:9898989@" + restcommContact, null, null, null, "Test message");
         assertTrue(aliceCall.waitForAuthorisation(5000));
         assertTrue(aliceCall.waitOutgoingMessageResponse(5000));
         assertTrue(aliceCall.getLastReceivedResponse().getStatusCode() == 100);
@@ -127,14 +147,14 @@ public class SmsOutTest {
         SipCall outboundDestCall = outboundDestPhone.createSipCall();
         outboundDestCall.listenForMessage();
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         Credential credential = new Credential("127.0.0.1", "alice", "1234");
         alicePhone.addUpdateCredential(credential);
 
         SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.initiateOutgoingMessage(aliceContact, "sip:9898989@127.0.0.1:5080", null, null, null, "Test message");
+        aliceCall.initiateOutgoingMessage(aliceContact, "sip:9898989@" + restcommContact, null, null, null, "Test message");
         assertTrue(aliceCall.waitForAuthorisation(5000));
         assertTrue(aliceCall.waitOutgoingMessageResponse(5000));
         assertTrue(aliceCall.getLastReceivedResponse().getStatusCode() == 100);
@@ -149,23 +169,28 @@ public class SmsOutTest {
     }
 
     @Deployment(name = "SmsTest", managed = true, testable = false)
-    public static WebArchive createWebArchiveNoGw() {
-        logger.info("Packaging Test App");
-        WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
-                .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
-                .asSingle(WebArchive.class);
-        restcommArchive.addClass(SmsRcmlServlet.class);
-        archive = archive.merge(restcommArchive);
-        archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/web.xml");
-        archive.delete("/WEB-INF/conf/restcomm.xml");
-        archive.delete("/WEB-INF/data/hsql/restcomm.script");
-        archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("web_for_SmsTest.xml", "web.xml");
-        archive.addAsWebInfResource("restcomm_SmsTest2.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script_SmsTest", "data/hsql/restcomm.script");
-        logger.info("Packaged Test App");
-        return archive;
-    }
+    public static WebArchive createWebArchive() {
+
+        Map<String, String> webInfResources = new HashMap();
+        webInfResources.put("restcomm_SmsTest2.xml", "conf/restcomm.xml");
+        webInfResources.put("restcomm.script_SmsTest", "data/hsql/restcomm.script");
+        webInfResources.put("sip.xml", "sip.xml");
+        webInfResources.put("web_for_SmsTest.xml", "web.xml");
+        webInfResources.put("akka_application.conf", "classes/application.conf");        
+
+        Map<String, String> replacements = new HashMap();
+        //replace mediaport 2727 
+        replacements.put("2727", String.valueOf(mediaPort));
+        replacements.put("8080", String.valueOf(restcommHTTPPort));        
+        replacements.put("5080", String.valueOf(restcommPort));
+        replacements.put("5091", String.valueOf(alicePort));
+        replacements.put("5094", String.valueOf(outboundPort));
+
+
+        List<String> resources = new ArrayList(Arrays.asList(
+        ));
+        return WebArchiveUtil.createWebArchiveNoGw(webInfResources,
+                resources,
+                replacements);
+    }    
 }
