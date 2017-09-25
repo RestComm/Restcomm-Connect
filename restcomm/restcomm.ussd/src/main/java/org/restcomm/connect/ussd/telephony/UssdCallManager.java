@@ -26,6 +26,7 @@ import static javax.servlet.sip.SipServletResponse.SC_OK;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import javax.servlet.ServletContext;
@@ -40,6 +41,7 @@ import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.dao.Sid.Type;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
@@ -49,6 +51,7 @@ import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
+import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.MostOptimalNumberResponse;
 import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
@@ -114,7 +117,8 @@ public class UssdCallManager extends RestcommUntypedActor {
         this.ussdGatewayUri = ussdGatewayConfig.getString("ussd-gateway-uri");
         this.ussdGatewayUsername = ussdGatewayConfig.getString("ussd-gateway-user");
         this.ussdGatewayPassword = ussdGatewayConfig.getString("ussd-gateway-password");
-        permissionsUtil = PermissionsUtil.getInstance(this.context);
+        //permissionsUtil = PermissionsUtil.getInstance(this.context);
+        permissionsUtil = PermissionsUtil.getInstance();
     }
 
     private ActorRef ussdCall() {
@@ -148,12 +152,13 @@ public class UssdCallManager extends RestcommUntypedActor {
         final ActorRef sender = sender();
 
         //FIXME: really kludgy and ugly
-        //TODO: how to get AccountSid from SipServletRequest??
         Account effectiveAccount = null;
         AccountsDao accountsDao = storage.getAccountsDao();
         if (CreateCall.class.equals(klass)) {
             this.createCallRequest = (CreateCall) message;
             effectiveAccount = accountsDao.getAccount(this.createCallRequest.accountId());
+        }else if (SipServletRequest.class.equals(klass)){
+            effectiveAccount = accountsDao.getAccount(getAccountIdFromSipRequest((SipServletRequest) message));
         }
 
         UserIdentityContext uic = new UserIdentityContext(effectiveAccount, accountsDao);
@@ -192,6 +197,25 @@ public class UssdCallManager extends RestcommUntypedActor {
             execute(message);
         }
 
+    }
+
+    private Sid getAccountIdFromSipRequest(SipServletRequest request) {
+        //FIXME: a null check is faster?
+        Sid accountSid = Sid.generate(Type.INVALID);
+        final String authorization = request.getHeader("Proxy-Authorization");
+        if(authorization!=null){
+            final Map<String, String> map = CallControlHelper.authHeaderToMap(authorization);
+            final String user = map.get("username");
+
+            //FIXME: how to derive org here?
+            //Sid toOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getTo().getURI());
+            Sid organizationSid = null;
+            Client client = storage.getClientsDao().getClient(user, organizationSid);
+            if (client != null) {
+                accountSid = client.getAccountSid();
+            }
+        }
+        return accountSid;
     }
 
     private void invite(final Object message) throws Exception {
