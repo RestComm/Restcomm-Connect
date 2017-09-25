@@ -50,7 +50,7 @@ public class DnsProvisioningManagerProvider {
         Configuration dnsProvisioningConfiguration = configuration.subset("dns-provisioning");
         if (dnsProvisioningConfiguration.isEmpty())
             return null;
-        final boolean enabled = configuration.getBoolean("dns-provisioning[@enabled]");
+        final boolean enabled = configuration.getBoolean("dns-provisioning[@enabled]", false);
         if(!enabled){
             if(logger.isDebugEnabled())
                 logger.debug("dns-provisioning is disabled in configuration");
