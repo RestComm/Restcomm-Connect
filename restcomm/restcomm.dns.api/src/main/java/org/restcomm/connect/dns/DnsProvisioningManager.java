@@ -31,7 +31,7 @@ public interface DnsProvisioningManager {
     void init(Configuration dnsConfiguration);
 
     /**
-     * @param name The name of the domain you want to perform the action on. 
+     * @param name The name of the domain you want to perform the action on.
      * Enter a sub domain name only. For example to add 'company1.restcomm.com',
      *  provide only 'company1' and provide hosted zone for 'restcomm.com'
      * @param hostedZoneId  hostedZoneId The ID of the hosted zone that contains the resource record sets that you want to change.
@@ -46,12 +46,12 @@ public interface DnsProvisioningManager {
      *  provide only 'company1' and provide hosted zone for 'restcomm.com'
      * @param hostedZoneId  hostedZoneId The ID of the hosted zone that contains the resource record sets that you want to change.
      * If none provided, then default will be used as per configuration
-     * @return true if operation successful, false otherwise.
+     * @return true if resource record exists, false otherwise.
      */
     boolean doesResourceRecordAlreadyExists(final String name, final String hostedZoneId);
 
     /**
-     * @param name The name of the domain you want to perform the action on. 
+     * @param name The name of the domain you want to perform the action on.
      * Enter a sub domain name only. For example to add 'company1.restcomm.com',
      *  provide only 'company1' and provide hosted zone for 'restcomm.com'
      * @param hostedZoneId  hostedZoneId The ID of the hosted zone that contains the resource record sets that you want to change.
@@ -61,7 +61,7 @@ public interface DnsProvisioningManager {
     boolean updateResourceRecord(final String name, final String hostedZoneId);
 
     /**
-     * @param name The name of the domain you want to perform the action on. 
+     * @param name The name of the domain you want to perform the action on.
      * Enter a sub domain name only. For example to add 'company1.restcomm.com',
      *  provide only 'company1' and provide hosted zone for 'restcomm.com'
      * @param hostedZoneId  hostedZoneId The ID of the hosted zone that contains the resource record sets that you want to change.

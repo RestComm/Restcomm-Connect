@@ -35,8 +35,8 @@ import org.restcomm.connect.commons.loader.ObjectInstantiationException;
 public class DnsProvisioningManagerProvider {
     protected Logger logger = Logger.getLogger(DnsProvisioningManagerProvider.class);
 
-    Configuration configuration;
-    ServletContext context;
+    protected Configuration configuration;
+    protected ServletContext context;
 
     public DnsProvisioningManagerProvider(Configuration configuration, ServletContext context) {
         this.configuration = configuration;
@@ -49,9 +49,9 @@ public class DnsProvisioningManagerProvider {
     private DnsProvisioningManager create() {
         final String dnsProvisioningManagerClass = configuration.getString("dns-provisioning[@class]");
         Configuration dnsProvisioningConfiguration = configuration.subset("dns-provisioning");
-    	if(dnsProvisioningManagerClass == null || dnsProvisioningManagerClass.trim().equals("")){
-    		return null;
-    	}
+        if(dnsProvisioningManagerClass == null || dnsProvisioningManagerClass.trim().equals("")){
+            return null;
+        }
         DnsProvisioningManager dnsProvisioningManager;
         try {
             dnsProvisioningManager = (DnsProvisioningManager) new ObjectFactory(getClass().getClassLoader())

@@ -115,7 +115,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(listConverter);
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
-    
+
     /**
      * @param organizationSid
      * @param responseType
