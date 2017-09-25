@@ -341,11 +341,15 @@
 			<rr-type>A</rr-type>
 			
 			<!-- aws-route53 specific config for dns provisioning
+			region: the region to be used by the client. This will be used to determine both the service endpoint (eg: https://sns.us-west-1.amazonaws.com) and signing region (eg: us-west-1) for requests.
 			ttl: time to live in seconds
 			hosted-zone-id: The ID of the hosted zone that contains the resource record sets that you want to change.
 			for example hosted zone id of domain restcomm.com, this can be get from aws management console 
 			-->
 			<aws-route53>
+				<access-key></access-key>
+				<secret-key></secret-key>
+				<region></region>
 				<ttl>3600</ttl>
 				<hosted-zone-id></hosted-zone-id>
 			</aws-route53>
