@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.map.HashedMap;
+import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.restcomm.connect.commons.dao.Sid;
@@ -97,9 +98,14 @@ public class MybatisPermissionsDao implements PermissionsDao {
         final SqlSession session = sessions.openSession();
         HashedMap map = (HashedMap)toMap(permission);
         map.put("sid", sid.toString());
+        int results = 0;
         try {
-            session.insert(namespace + "updatePermission", map);
-            session.commit();
+            if(session.update(namespace + "updatePermission", map)>0){
+                session.commit();
+            }else{
+                //TODO: should we throw an exception if results are zero?
+                throw new PersistenceException();
+            }
         } finally {
             session.close();
         }
