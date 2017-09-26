@@ -23,7 +23,7 @@ package org.restcomm.connect.dao.entities;
 import org.apache.shiro.authz.permission.WildcardPermission;
 import org.restcomm.connect.commons.dao.Sid;
 
-public class Permission extends WildcardPermission{
+public class Permission extends WildcardPermission implements Comparable<Permission>{
     private final Sid sid;
     private String name;
     public Permission(Sid sid, String name){
@@ -58,6 +58,11 @@ public class Permission extends WildcardPermission{
     public int hashCode() {
         // TODO Auto-generated method stub
         return super.hashCode();
+    }
+
+    @Override
+    public int compareTo(Permission arg0) {
+        return this.toString().compareTo(arg0.toString());
     }
 
 //    @Override
