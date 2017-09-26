@@ -52,9 +52,7 @@ import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -133,14 +131,14 @@ public class DialActionTest {
     private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
     private String georgeContact = "sip:+131313@127.0.0.1:" + georgePort;
 
-    private String dialClientWithActionUrl = "sip:+12223334455@" + restcommContact; // Application: dial-client-entry_wActionUrl.xml
-
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     private static int restcommPort = 5080;
     private static int restcommHTTPPort = 8080;        
     private static String restcommContact = "127.0.0.1:" + restcommPort;  
+    private static String dialClientWithActionUrl = "sip:+12223334455@" + restcommContact; // Application: dial-client-entry_wActionUrl.xml
+
     
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -150,7 +148,8 @@ public class DialActionTest {
         tool4 = new SipStackTool("DialActionTest4");
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
-            restcommContact = "127.0.0.1:" + restcommPort; 
+            restcommContact = "127.0.0.1:" + restcommPort;
+            dialClientWithActionUrl = "sip:+12223334455@" + restcommContact;
         } 
         if (System.getProperty("arquillian_http_port") != null) {
             restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
