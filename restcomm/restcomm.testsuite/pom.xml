@@ -435,6 +435,7 @@
                         <include>**/ClientsDialAnswerDelayTest.java</include>
                         <include>**/UserAgentManagerTest.java</include>
                         <include>**/DialForkTest.java</include>
+                        <include>**/CallLifecycleTest.java</include>
                         <include>**/sms/*Test.java</include>
                     </includes>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
