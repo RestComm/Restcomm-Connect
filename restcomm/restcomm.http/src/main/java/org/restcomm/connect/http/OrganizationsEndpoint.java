@@ -94,7 +94,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         // Make sure there is an authenticated account present when this endpoint is used
         // get manager from context or create it if it does not exist
         try {
-            dnsProvisioningManager = new DnsProvisioningManagerProvider(configuration, context).get();
+            dnsProvisioningManager = new DnsProvisioningManagerProvider(configuration.subset("runtime-settings"), context).get();
         } catch(Exception e) {
             logger.error("Unable to get dnsProvisioningManager", e);
         }
