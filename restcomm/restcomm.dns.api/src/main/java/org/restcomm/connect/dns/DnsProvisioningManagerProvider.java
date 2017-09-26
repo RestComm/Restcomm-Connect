@@ -48,12 +48,13 @@ public class DnsProvisioningManagerProvider {
      */
     private DnsProvisioningManager create() {
         Configuration dnsProvisioningConfiguration = configuration.subset("dns-provisioning");
-        if (dnsProvisioningConfiguration.isEmpty())
+        if (dnsProvisioningConfiguration == null || dnsProvisioningConfiguration.isEmpty()){
+            logger.warn("dns-provisioning configuration is null or empty");
             return null;
+        }
         final boolean enabled = configuration.getBoolean("dns-provisioning[@enabled]", false);
         if(!enabled){
-            if(logger.isDebugEnabled())
-                logger.debug("dns-provisioning is disabled in configuration");
+            logger.warn("dns-provisioning is disabled in configuration");
             return null;
         }
         final String dnsProvisioningManagerClass = configuration.getString("dns-provisioning[@class]");
