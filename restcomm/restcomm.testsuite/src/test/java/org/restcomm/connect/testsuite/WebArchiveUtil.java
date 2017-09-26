@@ -58,12 +58,9 @@ public class WebArchiveUtil {
                 .resolve("org.restcomm:restcomm-connect.application:war:" + Version.getVersion()).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
-        archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/conf/restcomm.xml");
-        archive.delete("/WEB-INF/data/hsql/restcomm.script");
-        archive.delete("/WEB-INF/classes/application.conf");
         for (String webdInfFile : webInfResources.keySet()) {
             File f = WebArchiveUtil.tweakFilePorts(webdInfFile,replacements );
+            archive.delete("/WEB-INF/" + webInfResources.get(webdInfFile));
             archive.addAsWebInfResource(f, webInfResources.get(webdInfFile));
         }
         for (String rAux: resources) {

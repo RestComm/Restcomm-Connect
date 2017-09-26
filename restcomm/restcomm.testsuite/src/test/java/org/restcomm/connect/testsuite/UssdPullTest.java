@@ -435,6 +435,12 @@ public class UssdPullTest {
     @Deployment(name = "UssdPullTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
+        
+        Map<String,String> webInfResources = new HashMap();
+        webInfResources.put("restcomm.xml", "conf/restcomm.xml");
+        webInfResources.put("org/restcomm/connect/ussd/restcomm.script_ussdPullTest", "data/hsql/restcomm.script");
+        webInfResources.put("akka_application.conf", "classes/application.conf");
+        webInfResources.put("sip.xml", "/sip.xml");        
 
         Map<String, String> replacements = new HashMap();
         //replace mediaport 2727 
@@ -449,8 +455,9 @@ public class UssdPullTest {
                 "org/restcomm/connect/ussd/ussd-rcml-character-limit-exceed.xml"
         ));
 
-        return WebArchiveUtil.createWebArchiveNoGw("restcomm.xml",
-                "org/restcomm/connect/ussd/restcomm.script_ussdPullTest", resources, replacements);
+        return WebArchiveUtil.createWebArchiveNoGw(webInfResources, 
+                resources, 
+                replacements);
     }
 
 }

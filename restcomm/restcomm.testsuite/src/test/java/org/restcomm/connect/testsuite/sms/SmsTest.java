@@ -492,11 +492,11 @@ public class SmsTest {
 
         //Prepare George to send message
         SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.initiateOutgoingMessage(georgeContact, fotiniContact, null, null, null, greekHugeMessage);
+        georgeCall.initiateOutgoingMessage(georgeContact, "sip:fotini@" + restcommContact, null, null, null, greekHugeMessage);
         assertLastOperationSuccess(georgeCall);
         georgeCall.waitForAuthorisation(30 * 1000);
         assertTrue(georgeCall.waitOutgoingMessageResponse(3000));
-        assertTrue(georgeCall.getLastReceivedResponse().getStatusCode() == Response.TRYING);
+        assertEquals(Response.TRYING, georgeCall.getLastReceivedResponse().getStatusCode());
 
         assertTrue(fotiniCall.waitForMessage(30 * 1000));
         assertTrue(fotiniCall.sendMessageResponse(200, "OK-Fotini-Mesasge-Receieved", 1800));
@@ -552,7 +552,7 @@ public class SmsTest {
         georgePhone.addUpdateCredential(georgeCredentials);
 
         //Register Fotini phone
-        assertTrue(fotiniPhone.register(uri, "fotini", "1234", fotiniContact, 3600, 3600));
+        assertTrue(fotiniPhone.register(uri, "fotini", "1234", "sip:fotini@" + restcommContact, 3600, 3600));
         Credential fotiniCredentials = new Credential("127.0.0.1", "fotini", "1234");
         fotiniPhone.addUpdateCredential(fotiniCredentials);
 
