@@ -632,6 +632,20 @@ configRMSNetworking() {
     fi
 }
 
+configAsrDriver() {
+    if [ ! -z "$MG_ASR_DRIVERS" ] && [ ! -z "$MG_ASR_DRIVER_DEFAULT" ]; then
+        FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+        xmlstarlet ed --inplace -d "/restcomm/runtime-settings/mg-asr-drivers" \
+            -s "/restcomm/runtime-settings" -t elem  -n mg-asr-drivers \
+            -i "/restcomm/runtime-settings/mg-asr-drivers" -t attr -n default -v "$MG_ASR_DRIVER_DEFAULT" \
+            $FILE
+        for driverName in ${MG_ASR_DRIVERS//,/ }; do
+            xmlstarlet ed --inplace -s "/restcomm/runtime-settings/mg-asr-drivers" -t elem -n "driver" -v "$driverName" \
+                $FILE
+        done
+    fi
+}
+
 # MAIN
 echo 'Configuring RestComm...'
 configRCJavaOpts
@@ -672,4 +686,5 @@ otherRestCommConf
 confRcmlserver
 confRVD
 configRMSNetworking
+configAsrDriver
 echo 'Configured RestComm!'
