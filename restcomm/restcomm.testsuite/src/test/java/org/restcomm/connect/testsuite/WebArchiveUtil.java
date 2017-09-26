@@ -27,10 +27,11 @@ public class WebArchiveUtil {
             for (String key : portReplaments.keySet()) {
                 confStr = confStr.replace(key, portReplaments.get(key));
             }
-            String targetFilePath = "target/" + filePath;
+            String targetFilePath = "target" + File.separator;
             if (System.getProperty("arquillian_sip_port") != null) {
                 targetFilePath = targetFilePath + System.getProperty("arquillian_sip_port");
             }
+            targetFilePath = targetFilePath + File.separator +  filePath;
             File f = new File(targetFilePath);
             FileUtils.writeStringToFile(f, confStr);
             return f;
@@ -67,7 +68,9 @@ public class WebArchiveUtil {
         }
         for (String rAux: resources) {
             File rFile = WebArchiveUtil.tweakFilePorts(rAux,replacements );
-            archive.addAsWebResource(rFile, rAux);
+            //assume wherever the file comes from (dir depth), 
+            //we will get it form context root
+            archive.addAsWebResource(rFile, rFile.getName());
         }
         return archive;
     }    
