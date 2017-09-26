@@ -47,6 +47,7 @@ public class WebArchiveUtil {
         webInfResources.put(restcommConf, "conf/restcomm.xml");
         webInfResources.put(dbScript, "data/hsql/restcomm.script");
         webInfResources.put("akka_application.conf", "classes/application.conf");
+        webInfResources.put("sip.xml", "/sip.xml");
         return createWebArchiveNoGw(webInfResources, resources, replacements);
     }
     public static WebArchive createWebArchiveNoGw(Map<String,String> webInfResources, List<String> resources, Map<String,String> replacements) {
@@ -60,12 +61,10 @@ public class WebArchiveUtil {
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.delete("/WEB-INF/classes/application.conf");
-        archive.addAsWebInfResource("sip.xml");
         for (String webdInfFile : webInfResources.keySet()) {
             File f = WebArchiveUtil.tweakFilePorts(webdInfFile,replacements );
             archive.addAsWebInfResource(f, webInfResources.get(webdInfFile));
         }
-        archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
         for (String rAux: resources) {
             File rFile = WebArchiveUtil.tweakFilePorts(rAux,replacements );
             archive.addAsWebResource(rFile, rAux);
