@@ -436,6 +436,13 @@
                         <include>**/UserAgentManagerTest.java</include>
                         <include>**/DialForkTest.java</include>
                         <include>**/CallLifecycleTest.java</include>
+                        <include>**/CallLifecycleAnswerDelayTest.java</include>
+                        <include>**/CallRegexTest.java</include>
+                        <include>**/DialForkAnswerDealyTest.java</include>
+                        <include>**/DialActionTest.java</include>
+                        <include>**/DialStatusCallbackTest.java</include>
+                        <include>**/DialActionAnswerDelayTest.java</include>                        
+                        <include>**/CallRegexSingleTest.java</include>                                            
                         <include>**/sms/*Test.java</include>
                     </includes>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
