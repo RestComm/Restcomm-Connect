@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.PermissionsDao">
+  <insert id="addPermission" parameterType="map">
+    INSERT INTO "restcomm_permissions" ("sid", "name") VALUES(#{sid}, #{name});
+  </insert>
+
+  <select id="getPermission" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_permissions" WHERE "sid"=#{sid};
+  </select>
+  
+  <select id="getPermissionByName" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_permissions" WHERE "name"=#{name};
+  </select>
+
+  <delete id="deletePermission" parameterType="string">
+    DELETE FROM "restcomm_permissions" WHERE "sid"=#{sid};
+  </delete>
+  
+  <update id="updatePermission" parameterType="map">
+    UPDATE "restcomm_permissions" SET "name"=#{name} WHERE "sid"=#{sid};
+  </update>
+
+</mapper>
