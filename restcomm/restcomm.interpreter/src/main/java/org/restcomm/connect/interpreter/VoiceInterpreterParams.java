@@ -59,7 +59,7 @@ public final class VoiceInterpreterParams {
     private String transferor;
     private String transferee;
 
-    public VoiceInterpreterParams(Configuration configuration, DaoManager storage, ActorRef callManager, ActorRef conferences, ActorRef bridgeManager, ActorRef smsService, Sid account, Sid phone, String version, URI url, String method, URI fallbackUrl, String fallbackMethod, URI statusCallback, String statusCallbackMethod, String referTarget, String emailAddress, ActorRef monitoring, String rcml, boolean asImsUa, String imsUaLogin, String imsUaPassword, String transferor, String transferee) {
+    private VoiceInterpreterParams(Configuration configuration, DaoManager storage, ActorRef callManager, ActorRef conferences, ActorRef bridgeManager, ActorRef smsService, Sid account, Sid phone, String version, URI url, String method, URI fallbackUrl, String fallbackMethod, URI statusCallback, String statusCallbackMethod, String referTarget, String emailAddress, ActorRef monitoring, String rcml, boolean asImsUa, String imsUaLogin, String imsUaPassword, String transferor, String transferee) {
         this.configuration = configuration;
         this.storage = storage;
         this.callManager = callManager;
