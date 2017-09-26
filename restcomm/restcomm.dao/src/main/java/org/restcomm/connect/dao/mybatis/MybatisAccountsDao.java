@@ -361,9 +361,9 @@ public final class MybatisAccountsDao implements AccountsDao {
             session.close();
         }
     }
+
     @Override
     public void addAccountPermissions(Sid account_sid1, List<Permission> permissions) {
-        // TODO Auto-generated method stub
         for(Permission p : permissions){
             addAccountPermission(account_sid1, p);
         }
@@ -371,7 +371,6 @@ public final class MybatisAccountsDao implements AccountsDao {
 
     @Override
     public void addAccountPermission(Sid account_sid1, Permission permission) {
-        // TODO Auto-generated method stub
         final SqlSession session = sessions.openSession();
         try {
             session.insert(namespace + "addAccountPermission", toMap(account_sid1, permission));
@@ -394,14 +393,21 @@ public final class MybatisAccountsDao implements AccountsDao {
     }
 
     @Override
-    public void clearAccountPermissions(Sid account_sid1, ArrayList<Permission> permissions) {
-        // TODO Auto-generated method stub
+    public void clearAccountPermissions(Sid account_sid1) {
+        final SqlSession session = sessions.openSession();
+        final Map<String, String> map = new HashMap<String, String>();
+        map.put("account_sid", account_sid1.toString());
 
+        try {
+            session.insert(namespace + "clearAccountPermissions", map);
+            session.commit();
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public void deleteAccountPermission(Sid account_sid1, Sid permission_sid1) {
-        // TODO Auto-generated method stub
         final SqlSession session = sessions.openSession();
         final Map<String, String> map = new HashMap<String, String>();
         map.put("account_sid", account_sid1.toString());
@@ -416,8 +422,16 @@ public final class MybatisAccountsDao implements AccountsDao {
 
     @Override
     public void deleteAccountPermissionByName(Sid account_sid1, String permission_name) {
-        // TODO Auto-generated method stub
-
+        final SqlSession session = sessions.openSession();
+        final Map<String, String> map = new HashMap<String, String>();
+        map.put("account_sid", account_sid1.toString());
+        map.put("permission_name", permission_name.toString());
+        try {
+            session.insert(namespace + "deleteAccountPermissionByName", map);
+            session.commit();
+        } finally {
+            session.close();
+        }
     }
 
 }

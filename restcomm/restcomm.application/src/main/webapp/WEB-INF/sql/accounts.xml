@@ -75,6 +75,13 @@
     DELETE FROM "restcomm_accounts_permissions"
     WHERE "account_sid"=#{account_sid} AND "permission_sid"=#{permission_sid};
   </delete>
+
+  <delete id="deleteAccountPermissionByName" parameterType="map">
+    DELETE FROM "restcomm_accounts_permissions"
+    WHERE "account_sid"=#{account_sid} AND
+    "permission_sid"=(SELECT "sid" FROM "restcomm_permissions" WHERE "name"=#{permission_name});
+  </delete>
+
   <delete id="clearAccountPermissions" parameterType="string">
     DELETE FROM "restcomm_accounts_permissions"
     WHERE "account_sid"=#{account_sid};
