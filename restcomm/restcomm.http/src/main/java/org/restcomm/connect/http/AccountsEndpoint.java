@@ -19,10 +19,27 @@
  */
 package org.restcomm.connect.http;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-import com.thoughtworks.xstream.XStream;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.CONFLICT;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
@@ -52,20 +69,10 @@ import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-
-import static javax.ws.rs.core.MediaType.*;
-import static javax.ws.rs.core.Response.Status.*;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -114,6 +121,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
         // Issue 108: https://bitbucket.org/telestax/telscale-restcomm/issue/108/account-sid-could-be-a-hash-of-the
         final Sid sid = Sid.generate(Sid.Type.ACCOUNT, emailAddress);
+        Sid organizationSid=null;
 
         String friendlyName = emailAddress;
         if (data.containsKey("FriendlyName")) {
@@ -124,6 +132,19 @@ public class AccountsEndpoint extends SecuredEndpoint {
         if (data.containsKey("Status")) {
             status = Account.Status.getValueOf(data.getFirst("Status").toLowerCase());
         }
+        if (data.containsKey("OrganizationSid")) {
+            Sid orgSid = new Sid(data.getFirst("OrganizationSid"));
+            // user can add account in same organization
+            if(!orgSid.equals(parent.getOrganizationSid())){
+                //only super admin can add account in organizations other than it belongs to
+                allowOnlySuperAdmin();
+                if(organizationsDao.getOrganization(orgSid) == null){
+                    throw new IllegalArgumentException("provided OrganizationSid does not exist");
+                }
+                organizationSid = orgSid;
+            }
+        }
+        organizationSid = organizationSid != null ? organizationSid : parent.getOrganizationSid();
         final String password = data.getFirst("Password");
         PasswordValidator validator = PasswordValidatorFactory.createDefault();
         if (!validator.isStrongEnough(password))
@@ -133,7 +154,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         final StringBuilder buffer = new StringBuilder();
         buffer.append("/").append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
-        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri, parent.getOrganizationSid());
+        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri, organizationSid);
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
@@ -336,7 +357,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
         Account account = null;
         try {
             account = createFrom(sid, data, parent);
-        } catch (final NullPointerException exception) {
+        } catch (IllegalArgumentException  illegalArgumentException) {
+            return status(BAD_REQUEST).entity(illegalArgumentException.getMessage()).build();
+        }catch (final NullPointerException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         } catch (PasswordTooWeak passwordTooWeak) {
             return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();

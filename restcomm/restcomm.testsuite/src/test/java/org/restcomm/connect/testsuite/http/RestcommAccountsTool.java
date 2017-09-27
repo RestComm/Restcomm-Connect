@@ -113,7 +113,7 @@ public class RestcommAccountsTool {
 		JsonParser parser = new JsonParser();
 		JsonObject jsonResponse = null;
 		try {
-			ClientResponse clientResponse = createAccountResponse(deploymentUrl, adminUsername, adminAuthToken, emailAddress, password, friendlyName);
+			ClientResponse clientResponse = createAccountResponse(deploymentUrl, adminUsername, adminAuthToken, emailAddress, password, friendlyName, null);
 			jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
 		} catch (Exception e) {
 			logger.info("Exception: " + e);
@@ -123,11 +123,11 @@ public class RestcommAccountsTool {
 
 	public ClientResponse createAccountResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String emailAddress,
 												 String password) {
-		return createAccountResponse(deploymentUrl, operatorUsername, operatorAuthtoken, emailAddress, password, null);
+		return createAccountResponse(deploymentUrl, operatorUsername, operatorAuthtoken, emailAddress, password, null, null);
 	}
 
 	public ClientResponse createAccountResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String emailAddress,
-												 String password, String friendlyName) {
+												 String password, String friendlyName, String organizationSid) {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorAuthtoken));
 
@@ -141,6 +141,8 @@ public class RestcommAccountsTool {
 		params.add("Role", "Administartor");
 		if (friendlyName != null)
 			params.add("FriendlyName", friendlyName);
+		if (organizationSid != null)
+			params.add("OrganizationSid", organizationSid);
 
 		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
 		return response;

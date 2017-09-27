@@ -1,12 +1,16 @@
 package org.restcomm.connect.testsuite.http;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URL;
+
+import javax.sip.address.SipURI;
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.apache.log4j.Logger;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.cafesip.sipunit.SipPhone;
@@ -27,15 +31,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
-import javax.sip.address.SipURI;
-import javax.ws.rs.core.MultivaluedMap;
-import java.net.URL;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -65,6 +67,7 @@ public class AccountsEndpointTest extends EndpointTest {
     private String childAuthToken ="77f8c12cc7b8f8423e5c38b035249166";
 
     private String createdUsernanme = "created@company.com";
+    private String createdUsernanme2 = "created2@company.com";
     private String createdAccountSid = "AC5ee3b351401804c2d064a33f762146fb";
     private String createdPassword = "RestComm12";
     private String createdAuthToken = "28f96b0fea1f9e33646f42026abdf305";
@@ -93,6 +96,9 @@ public class AccountsEndpointTest extends EndpointTest {
     private String nonSubAccountSid = "AC44444444444444444444444444444444";
 
     private String commonAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    
+    private String organizationSid2 = "ORafbe225ad37541eba518a74248f0ac4d";
+    private String organizationSid1 = "ORafbe225ad37541eba518a74248f0ac4c";
 
     static SipStackTool tool1;
 
@@ -566,6 +572,35 @@ public class AccountsEndpointTest extends EndpointTest {
         // updating an account with strong password should succeed
         response = RestcommAccountsTool.getInstance().updateAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, "updated-weak@company.com", null, "RestComm12", null, null, null );
         assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    public void testCreateAccountInSpecificOrganization() {
+    	// child should not be able to create account in specified org that it does not belong to
+    	ClientResponse clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+                childUsername, childAuthToken, createdUsernanme, createdPassword, null, organizationSid2);
+    	assertEquals(403, clientResponse.getStatus());
+
+    	// child should not be able to create account in specified org that it does not belong to
+    	clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+                childUsername, childAuthToken, createdUsernanme, createdPassword, null, organizationSid1);
+    	assertEquals(200, clientResponse.getStatus());
+    	
+    	//super admin tries to create account with invalid organization Sid
+    	clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, createdUsernanme2, createdPassword, null, "blabla");
+    	assertEquals(400, clientResponse.getStatus());
+
+    	//super admin tries to create account with organization Sid that does not exists
+    	clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, createdUsernanme2, createdPassword, null, "ORafbe225ad37541eba518a74248f0ac4e");
+    	assertEquals(400, clientResponse.getStatus());
+
+    	//super admin should be able to create account in specified org
+    	clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, createdUsernanme2, createdPassword, null, organizationSid2);
+    	assertEquals(200, clientResponse.getStatus());
+    
     }
 
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
