@@ -88,7 +88,9 @@ public class UssdPullTest {
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("UssdPullTest");
-
+    }
+    
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
             restcommContact = "127.0.0.1:" + restcommPort;
@@ -140,7 +142,7 @@ public class UssdPullTest {
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
         assertTrue(bobCall.sendInviteOkAck());
 
-        assertTrue(bobCall.getDialog().getState().getValue() == DialogState._CONFIRMED);
+        assertEquals(DialogState._CONFIRMED, bobCall.getDialog().getState().getValue());
 
         assertTrue(bobCall.listenForDisconnect());
 
@@ -435,6 +437,7 @@ public class UssdPullTest {
     @Deployment(name = "UssdPullTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
+        reconfigurePorts();
         
         Map<String,String> webInfResources = new HashMap();
         webInfResources.put("restcomm.xml", "conf/restcomm.xml");

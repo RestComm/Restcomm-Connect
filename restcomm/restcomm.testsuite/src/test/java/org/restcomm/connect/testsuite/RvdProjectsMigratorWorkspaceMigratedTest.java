@@ -80,7 +80,6 @@ public class RvdProjectsMigratorWorkspaceMigratedTest {
     private static int restcommHTTPPort = 8080;
     private static String restcommContact = "127.0.0.1:" + restcommPort;    
     
-    @BeforeClass
     public static void reconfigurePorts() throws Exception {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
@@ -170,6 +169,7 @@ public class RvdProjectsMigratorWorkspaceMigratedTest {
     @Deployment(name = "RvdProjectsMigratorWorkspaceMigratedTest", managed = true, testable = false)
     public static WebArchive createWebArchiveRestcomm() throws Exception {
         logger.info("Packaging Test App");
+        reconfigurePorts();
 
         Map<String, String> replacements = new HashMap();
         replacements.put("3025", String.valueOf(smtpPort));

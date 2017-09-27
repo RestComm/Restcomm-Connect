@@ -118,6 +118,9 @@ public class TestDialVerbPartThree {
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("DialTest3Tool1");
         tool2 = new SipStackTool("DialTest3Tool2");
+    }
+    
+    public static void reconfigurePorts() { 
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
             restcommContact = "127.0.0.1:" + restcommPort; 
@@ -811,6 +814,7 @@ public class TestDialVerbPartThree {
     @Deployment(name = "TestDialVerbPartThree", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
+        reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
         //replace mediaport 2727 

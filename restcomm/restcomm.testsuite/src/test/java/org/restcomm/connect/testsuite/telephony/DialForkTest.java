@@ -133,6 +133,9 @@ public class DialForkTest {
         tool3 = new SipStackTool("DialFork3");
         tool4 = new SipStackTool("DialFork4");
         tool5 = new SipStackTool("DialFork5");
+    }
+    
+    public static void reconfigurePorts() { 
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
             restcommContact = "127.0.0.1:" + restcommPort; 
@@ -2355,6 +2358,7 @@ public class DialForkTest {
     @Deployment(name = "DialForkTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
+        reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
         //replace mediaport 2727 

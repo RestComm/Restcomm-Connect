@@ -138,7 +138,9 @@ public final class UserAgentManagerTest {
         tool5 = new SipStackTool("UserAgentTest5");
         tool6 = new SipStackTool("UserAgentTest6");
         tool7 = new SipStackTool("UserAgentTest7");
-        
+    }
+     
+    public static void reconfigurePorts() { 
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
             restcommContact = "127.0.0.1:" + restcommPort;          
@@ -574,6 +576,7 @@ public final class UserAgentManagerTest {
     @Deployment(name = "UserAgentTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
+        reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
         //replace mediaport 2727 

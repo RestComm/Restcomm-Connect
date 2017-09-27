@@ -121,6 +121,9 @@ public class DialForkAnswerDelayTest {
         tool3 = new SipStackTool("DialForkAnswerDelay3");
         tool4 = new SipStackTool("DialForkAnswerDelay4");
         tool5 = new SipStackTool("DialForkAnswerDelay5");
+    }
+    
+    public static void reconfigurePorts() { 
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
             restcommContact = "127.0.0.1:" + restcommPort; 
@@ -1465,6 +1468,7 @@ public class DialForkAnswerDelayTest {
     @Deployment(name = "DialForkAnswerDelayTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
+        reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
         //replace mediaport 2727 

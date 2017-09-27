@@ -53,6 +53,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.restcomm.connect.commons.Version;
+import static org.restcomm.connect.testsuite.RvdProjectsMigratorWorkspaceMigratedTest.reconfigurePorts;
 
 /**
  * @author guilherme.jansen@telestax.com
@@ -81,7 +82,6 @@ public class RvdProjectsMigratorWorkspaceOriginalTest {
     private static int restcommHTTPPort = 8080;
     private static String restcommContact = "127.0.0.1:" + restcommPort;    
     
-    @BeforeClass
     public static void reconfigurePorts() throws Exception {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
@@ -194,7 +194,8 @@ public class RvdProjectsMigratorWorkspaceOriginalTest {
     @Deployment(name = "RvdProjectsMigratorWorkspaceOriginalTest", managed = true, testable = false)
     public static WebArchive createWebArchiveRestcomm() throws Exception {
         logger.info("Packaging Test App");
-
+        reconfigurePorts();
+        
         Map<String, String> replacements = new HashMap();
         replacements.put("3025", String.valueOf(smtpPort));
         //replace mediaport 2727 

@@ -261,7 +261,9 @@ public class ClientsDialAnswerDelayTest {
         tool7 = new SipStackTool("ClientsDialAnswerDelayTest7");
         tool8 = new SipStackTool("ClientsDialAnswerDelayTest8");
         tool9 = new SipStackTool("ClientsDialAnswerDelayTest9");
-        
+    }
+    
+    public static void reconfigurePorts() {     
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
             restcommContact = "127.0.0.1:" + restcommPort;          
@@ -1015,6 +1017,7 @@ public class ClientsDialAnswerDelayTest {
 
     @Deployment(name = "ClientsDialAnswerDelayTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
+        reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
         //replace mediaport 2727 

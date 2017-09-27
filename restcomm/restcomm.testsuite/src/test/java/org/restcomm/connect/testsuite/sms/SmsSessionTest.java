@@ -91,6 +91,8 @@ public final class SmsSessionTest {
     public static void beforeClass() throws Exception {
         tool = new SipStackTool("SmsSessionTest");
         tool2 = new SipStackTool("SmsSessionTest2");
+    }
+    public static void reconfigurePorts() { 
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
             restcommContact = "127.0.0.1:" + restcommPort;
@@ -352,7 +354,8 @@ public final class SmsSessionTest {
 
     @Deployment(name = "SmsSessionTest", managed = true, testable = false)
     public static WebArchive createWebArchive() {
-
+        reconfigurePorts();
+        
         Map<String, String> webInfResources = new HashMap();
         webInfResources.put("restcomm_SmsTest.xml", "conf/restcomm.xml");
         webInfResources.put("restcomm.script_SmsTest", "data/hsql/restcomm.script");
