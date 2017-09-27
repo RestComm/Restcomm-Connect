@@ -251,18 +251,24 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
      * https://github.com/RestComm/Restcomm-Connect/issues/2085
      * @param configuration
      * @param storage
+     * @param sipUriHostAsFallbackDomain - if hostname is not provided in restcomm.xml then provided sipuri host will be used as domain.
      */
-    private boolean generateDefaultDomainName (final Configuration configuration, final DaoManager storage) {
+    private boolean generateDefaultDomainName (final Configuration configuration, final DaoManager storage, final SipURI sipUriHostAsFallbackDomain) {
         try{
             final Sid defaultOrganization = new Sid("ORafbe225ad37541eba518a74248f0ac4c");
-            final String hostname = configuration.getString("hostname");
+            String hostname = configuration.getString("hostname");
 
             if(hostname != null && !hostname.trim().equals("")){
                 if(logger.isInfoEnabled())
                     logger.info("Generate Default Domain Name based on RC hostname: "+hostname);
             }else{
-                logger.error("Unable to generateDefaultDomainName hostname property is null in restcomm.xml");
-                return false;
+                if(sipUriHostAsFallbackDomain != null){
+                    logger.warn("Hostname property is null in restcomm.xml, will assign this host as domain: "+sipUriHostAsFallbackDomain.getHost());
+                    hostname = sipUriHostAsFallbackDomain.getHost();
+                }else {
+                    logger.error("Hostname property is null in restcomm.xml, As well restcomm outbound sipuri is NULL.");
+                    return false;
+                }
             }
 
             Organization organization = storage.getOrganizationsDao().getOrganization(defaultOrganization);
@@ -396,8 +402,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             Version.printVersion();
             GenerateInstanceId generateInstanceId = null;
             InstanceId instanceId = null;
+            SipURI sipURI = null;
             try {
-                SipURI sipURI = outboundInterface(context,"udp");
+                sipURI = outboundInterface(context,"udp");
                 if (sipURI != null) {
                     generateInstanceId = new GenerateInstanceId(context, sipURI);
                 } else {
@@ -414,7 +421,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             monitoring.tell(instanceId, null);
             RestcommConfiguration.getInstance().getMain().setInstanceId(instanceId.getId().toString());
 
-            if(!generateDefaultDomainName(xml.subset("http-client"), storage)){
+            if(!generateDefaultDomainName(xml.subset("http-client"), storage, sipURI)){
                 logger.error("Unable to generate DefaultDomainName, Restcomm Akka system will exit now...");
                 system.shutdown();
                 system.awaitTermination();
