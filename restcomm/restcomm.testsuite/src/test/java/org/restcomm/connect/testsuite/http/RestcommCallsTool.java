@@ -69,6 +69,15 @@ public class RestcommCallsTool {
         return url;
     }
 
+    private String getGateWayUrl(String deploymentUrl, String username) {
+        if (deploymentUrl.endsWith("/")) {
+            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
+        }
+        
+        String url = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Management/Gateways";
+        return url;
+    }
+
     public JsonArray getRecordings(String deploymentUrl, String username, String authToken) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -366,5 +375,43 @@ public class RestcommCallsTool {
         JsonArray jsonArray = parser.parse(response).getAsJsonArray();
 
         return jsonArray;
+    }
+    
+    public String setGateWay(String deploymentUrl, String username, String authToken, String friend, String uName, String password, String proxy,
+        boolean register, String ttl) {
+
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+
+        String url = getGateWayUrl(deploymentUrl, username);
+
+        WebResource webResource = jerseyClient.resource(url);
+
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.add("Register", String.valueOf(register));
+        if (friend != null) {
+            params.add("FriendlyName", friend);
+        }
+        if (uName != null) {
+            params.add("UserName", uName);
+        }
+        if (password != null) {
+            params.add("Password", password);
+        }
+        if (proxy != null) {
+            params.add("Proxy", proxy);
+        }
+        if (ttl != null) {
+            params.add("TTL", ttl);
+        }
+
+        String response = null;
+        try {
+            response = webResource.accept(MediaType.APPLICATION_XML).post(String.class, params);
+        } catch (Exception e) {
+            logger.error("Exception : ", e);
+            UniformInterfaceException exception = (UniformInterfaceException)e;
+        }
+        return response;
     }
 }
