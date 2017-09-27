@@ -55,12 +55,6 @@ public final class OrganizationsJsonEndpoint extends OrganizationsEndpoint {
     }
 
     @Path("/{domainName}")
-    @POST
-    public Response putOrganizationPost(@PathParam("domainName") final String domainName, final MultivaluedMap<String, String> data) {
-        return putOrganization(domainName, data, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/{domainName}")
     @PUT
     public Response putOrganizationPut(@PathParam("domainName") final String domainName, final MultivaluedMap<String, String> data) {
         return putOrganization(domainName, data, APPLICATION_JSON_TYPE);

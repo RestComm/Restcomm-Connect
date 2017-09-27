@@ -137,7 +137,7 @@ public class RestcommOrganizationsTool {
 
 		WebResource webResource = jerseyClient.resource(url);
 		MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, params);
 		return response;
 	}
 }
