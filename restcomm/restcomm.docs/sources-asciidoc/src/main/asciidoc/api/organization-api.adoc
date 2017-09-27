@@ -29,12 +29,12 @@ Rational to create a new organization pretty simple and described already, we wa
 
 [source,]
 ----
-/{Version}/Organizations
+/{Version}/Organizations/{domainName}
 ----
 
 HTTP PUT to above Uri will create a new organization and returns the representation of the organization resource, including the properties above.
 
-===== Request Parameters
+===== Uri Parameters
 
 |====
 | Property | Description
