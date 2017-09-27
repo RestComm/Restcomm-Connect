@@ -40,6 +40,7 @@ public final class Organization {
      * @param domainName - such as customer.restcomm.com
      * @param dateCreated
      * @param dateUpdated
+     * @param Status
      * @throws IllegalArgumentException if sid or domainName are null/empty
      */
     public Organization(final Sid sid, final String domainName, final DateTime dateCreated, final DateTime dateUpdated, final Status status) throws IllegalArgumentException {
@@ -56,6 +57,7 @@ public final class Organization {
     }
 
     public enum Status {
+        // max length of a new status should be under 16 characters otherwise schema update is required.
         ACTIVE("active"), CLOSED("closed");
 
         private final String text;
