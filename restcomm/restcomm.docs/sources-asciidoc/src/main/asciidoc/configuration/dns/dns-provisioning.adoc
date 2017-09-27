@@ -40,15 +40,15 @@ DNS_PROVISIONING_AWS_ROUTE53_ALIAS_HOSTED_ZONE_ID=""
 
 **DNS_PROVISIONING_AWS_ROUTE53_ACCESS_KEY**: aws access key to call their APIs.
 **DNS_PROVISIONING_AWS_ROUTE53_SECRET_KEY**: aws secret key to call their APIs.
-**DNS_PROVISIONING_AWS_ROUTE53_REGION**: the region to be used by the client. This will be used to determine both the ervice endpoint (eg: https://sns.us-west-1.amazonaws.com) and signing region (eg: us-west-1) for requests.
-**DNS_PROVISIONING_AWS_ROUTE53_TTL**: Time to live in seconds
+**DNS_PROVISIONING_AWS_ROUTE53_REGION**: The region to be used by the client. This will be used to determine both the ervice endpoint (eg: https://sns.us-west-1.amazonaws.com) and signing region (eg: us-west-1) for requests.
+**DNS_PROVISIONING_AWS_ROUTE53_TTL**: Time to live in seconds, default is 3600 seconds
 **DNS_PROVISIONING_AWS_ROUTE53_HOSTED_ZONE_ID**: The ID of the hosted zone that contains the resource record sets that you want to change. For example hosted zone id of domain `restcomm.com`, this can be get from aws management console.
 **DNS_PROVISIONING_AWS_ROUTE53_IS_ALIAS**: Set this configuration to true if above restcomm-address is an alias and not a IP-address/domain-name. Default value is false. Read more about aliases http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-choosing-alias-non-alias.html[here].
 
 [NOTE]
 ====
-If DNS_PROVISIONING_RESTCOMM_ADDRESS is and alias and DNS_PROVISIONING_AWS_ROUTE53_IS_ALIAS is set to true: we need to provide further configuration for
+If DNS_PROVISIONING_RESTCOMM_ADDRESS is an alias and DNS_PROVISIONING_AWS_ROUTE53_IS_ALIAS is set to true: we need to provide further configuration for
 ====
 
 **DNS_PROVISIONING_AWS_ROUTE53_ALIAS_EVALUATE_TARGET_HEALTH**: Boolean to either evaluate target health or not, default is false.
-**DNS_PROVISIONING_AWS_ROUTE53_ALIAS_HOSTED_ZONE_ID**: hosted-zone-id of the alias.
+**DNS_PROVISIONING_AWS_ROUTE53_ALIAS_HOSTED_ZONE_ID**: The ID of the hosted zone of the alias.
