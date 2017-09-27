@@ -55,12 +55,6 @@ public final class OrganizationsXmlEndpoint extends OrganizationsEndpoint {
     }
 
     @Path("/{domainName}")
-    @POST
-    public Response putOrganizationPost(@PathParam("domainName") final String domainName, final MultivaluedMap<String, String> data) {
-        return putOrganization(domainName, data, APPLICATION_XML_TYPE);
-    }
-
-    @Path("/{domainName}")
     @PUT
     public Response putOrganizationPut(@PathParam("domainName") final String domainName, final MultivaluedMap<String, String> data) {
         return putOrganization(domainName, data, APPLICATION_XML_TYPE);
