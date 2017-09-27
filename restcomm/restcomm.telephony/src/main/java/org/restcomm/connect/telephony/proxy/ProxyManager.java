@@ -103,13 +103,18 @@ public final class ProxyManager extends RestcommUntypedActor {
         if (outboundInterface == null)
             outboundInterface = (SipURI) factory.createSipURI(null, address);
         final String user = gateway.getUserName();
+        String contactUser = new String (user);
+        if (contactUser.contains("@")) {
+            int index = contactUser.indexOf("@");
+            contactUser = contactUser.substring(0, index);
+        }
         final String host = outboundInterface.getHost();
         int port = outboundInterface.getPort();
         if (port == -1) {
             port = outboundInterface().getPort();
         }
         final StringBuilder buffer = new StringBuilder();
-        buffer.append("sip:").append(user).append("@").append(host).append(":").append(port);
+        buffer.append("sip:").append(contactUser).append("@").append(host).append(":").append(port);
         final Address contact = factory.createAddress(buffer.toString());
         contact.setExpires(expires);
         return contact;
@@ -202,7 +207,11 @@ public final class ProxyManager extends RestcommUntypedActor {
             final String user = gateway.getUserName();
             final String proxy = gateway.getProxy();
             final StringBuilder buffer = new StringBuilder();
-            buffer.append("sip:").append(user).append("@").append(proxy);
+            if (user.contains("@")) {
+                buffer.append("sip:").append(user);
+            } else {
+                buffer.append("sip:").append(user).append("@").append(proxy);
+            }
             final String aor = buffer.toString();
             final int expires = (gateway.getTimeToLive() > 0 && gateway.getTimeToLive() < 3600) ? gateway.getTimeToLive() : ttl;
             final Address contact = contact(gateway, expires);
@@ -212,7 +221,7 @@ public final class ProxyManager extends RestcommUntypedActor {
                 final String method = response.getRequest().getMethod();
                 register = response.getSession().createRequest(method);
             } else {
-                register = factory.createRequest(application, "REGISTER", contact.toString(), aor);
+                register = factory.createRequest(application, "REGISTER", aor, aor);
             }
             if (authentication != null && response != null) {
                 register.addAuthHeader(response, authentication);
