@@ -28,8 +28,8 @@ import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -68,12 +68,13 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
     protected DnsProvisioningManager dnsProvisioningManager;
     protected Gson gson;
     protected XStream xstream;
-    private final String MSG_EMPTY_DOMAIN_NAME = "domain name can not be empty. Please, choose a valid name and try again.";
-    private final String MSG_INVALID_DOMAIN_NAME_PATTERN= "Total Length of domain_name can be upto 255 Characters. It can contain only letters, number and hyphen - sign.. Please, choose a valid name and try again.";
-    private final String MSG_DOMAIN_NAME_NOT_AVAILABLE = "This domain name is not available. Please, choose a different name and try again.";
-    private String DOMAIN_NAME_VALIDATION_PATTERN="[A-Za-z0-9\\-\\.]{1,255}";
-    private String SUB_DOMAIN_NAME_VALIDATION_PATTERN="[A-Za-z0-9\\-]{1,255}";
-    private OrganizationListConverter listConverter;
+    protected final String MSG_EMPTY_DOMAIN_NAME = "domain name can not be empty. Please, choose a valid name and try again.";
+    protected final String MSG_INVALID_DOMAIN_NAME_PATTERN= "Total Length of domain_name can be upto 255 Characters. It can contain only letters, number and hyphen - sign.. Please, choose a valid name and try again.";
+    protected final String MSG_DOMAIN_NAME_NOT_AVAILABLE = "This domain name is not available. Please, choose a different name and try again.";
+    protected String SUB_DOMAIN_NAME_VALIDATION_PATTERN="[A-Za-z0-9\\-]{1,255}";
+    protected Pattern pattern;
+
+    protected OrganizationListConverter listConverter;
 
     public OrganizationsEndpoint() {
         super();
@@ -98,6 +99,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         } catch(Exception e) {
             logger.error("Unable to get dnsProvisioningManager", e);
         }
+        pattern = Pattern.compile(SUB_DOMAIN_NAME_VALIDATION_PATTERN);
     }
 
     private void registerConverters(){
@@ -206,25 +208,33 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
             allowOnlySuperAdmin();
 
             //Character verification
-            final Pattern pattern = Pattern.compile(SUB_DOMAIN_NAME_VALIDATION_PATTERN);
             if(!pattern.matcher(domainName).matches()){
                 return status(BAD_REQUEST).entity(MSG_INVALID_DOMAIN_NAME_PATTERN).build();
             }
-
-            //Check if domain_name does not already taken inside restcomm by an organization.
-            Organization organization = organizationsDao.getOrganizationByDomainName(domainName);
-            if(organization != null){
-                return status(CONFLICT)
-                        .entity(MSG_DOMAIN_NAME_NOT_AVAILABLE)
-                        .build();
-            }
+            Organization organization;
             if(dnsProvisioningManager == null) {
+                //Check if domain_name does not already taken inside restcomm by an organization.
+                organization = organizationsDao.getOrganizationByDomainName(domainName);
+                if(organization != null){
+                    return status(CONFLICT)
+                            .entity(MSG_DOMAIN_NAME_NOT_AVAILABLE)
+                            .build();
+                }
                 logger.warn("No DNS provisioning Manager is configured, restcomm will not make any queries to DNS server.");
                 organization = new Organization(Sid.generate(Sid.Type.ORGANIZATION), domainName, DateTime.now(), DateTime.now(), Organization.Status.ACTIVE);
                 organizationsDao.addOrganization(organization);
             }else {
                 //for example hosted zone id of domain restcomm.com or others. if not provided then default will be used as per configuration
                 String hostedZoneId = data.getFirst("HostedZoneId");
+                //Check if domain_name does not already taken inside restcomm by an organization.
+                String completeDomainName = dnsProvisioningManager.getCompleteDomainName(domainName, hostedZoneId);
+                organization = organizationsDao.getOrganizationByDomainName(completeDomainName);
+                if(organization != null){
+                    return status(CONFLICT)
+                            .entity(MSG_DOMAIN_NAME_NOT_AVAILABLE)
+                            .build();
+                }
+                //check if domain name already exists on dns side or not
                 if(dnsProvisioningManager.doesResourceRecordAlreadyExists(domainName, hostedZoneId)){
                     return status(CONFLICT)
                             .entity(MSG_DOMAIN_NAME_NOT_AVAILABLE)
@@ -234,8 +244,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
                     logger.error("could not create resource record on dns server");
                     return status(INTERNAL_SERVER_ERROR).build();
                 }else{
-                    domainName = dnsProvisioningManager.getCompleteDomainName(domainName, hostedZoneId);
-                    organization = new Organization(Sid.generate(Sid.Type.ORGANIZATION), domainName, DateTime.now(), DateTime.now(), Organization.Status.ACTIVE);
+                    organization = new Organization(Sid.generate(Sid.Type.ORGANIZATION), completeDomainName, DateTime.now(), DateTime.now(), Organization.Status.ACTIVE);
                     organizationsDao.addOrganization(organization);
                 }
             }
