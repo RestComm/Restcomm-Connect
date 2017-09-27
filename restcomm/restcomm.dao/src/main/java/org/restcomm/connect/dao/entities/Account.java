@@ -22,7 +22,6 @@ package org.restcomm.connect.dao.entities;
 import java.net.URI;
 
 import org.joda.time.DateTime;
-
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.dao.Sid;
 
@@ -143,6 +142,11 @@ public final class Account {
     }
 
     public Account setRole(final String role) {
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
+                role, uri, organizationSid);
+    }
+
+    public Account setOrganization(final Sid organizationSid) {
         return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
                 role, uri, organizationSid);
     }
