@@ -58,8 +58,8 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
     }
 
     @GET
-    public Response getAccounts() {
-        return getAccounts(APPLICATION_XML_TYPE);
+    public Response getAccounts(final MultivaluedMap<String, String> data) {
+        return getAccounts(data, APPLICATION_XML_TYPE);
     }
 
     @Consumes(APPLICATION_FORM_URLENCODED)
