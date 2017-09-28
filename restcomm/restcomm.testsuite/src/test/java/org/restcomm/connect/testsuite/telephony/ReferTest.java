@@ -725,7 +725,7 @@ public class ReferTest {
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
         assertTrue(bobCall.sendInviteOkAck());
 
-        assertTrue(georgeCall.waitForIncomingCall(5000));
+        assertTrue(georgeCall.waitForIncomingCall(6000));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
 

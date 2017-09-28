@@ -63,7 +63,6 @@ import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -187,14 +186,8 @@ public class MmsBridgeController extends MediaServerController {
         }
 
         if (!duration.equals(0.0)) {
-//            if(logger.isInfoEnabled()) {
-//                logger.info("Call wraping up recording. File doesn't exist since duration is 0");
-//            }
-//            final DateTime end = DateTime.now();
-//            duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
-//        } else
             if(logger.isInfoEnabled()) {
-            logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
+            logger.info("Call wraping up recording. File already exists, duration: " + duration);
             }
 
             final Recording.Builder builder = Recording.builder();

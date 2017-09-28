@@ -41,7 +41,6 @@ import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 
 import javax.activation.MimetypesFileTypeMap;
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Calendar;
@@ -110,11 +109,11 @@ public class S3AccessTool {
         try {
             URI fileUri = URI.create(fileToUpload);
             File file = new File(fileUri);
-            if (!file.exists() && testing && (!testingUrl.isEmpty() || !testingUrl.equals(""))) {
-//                s3client.setEndpoint(testingUrl);
-//                s3client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
-                FileUtils.touch(new File(URI.create(fileToUpload)));
-            }
+//            if (!file.exists() && testing && (!testingUrl.isEmpty() || !testingUrl.equals(""))) {
+////                s3client.setEndpoint(testingUrl);
+////                s3client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
+//                FileUtils.touch(new File(URI.create(fileToUpload)));
+//            }
             StringBuffer bucket = new StringBuffer();
             bucket.append(bucketName);
             if (folder != null && !folder.isEmpty())
@@ -143,17 +142,17 @@ public class S3AccessTool {
 
             if (fileExists(file)) {
                 start = DateTime.now();
-                if (testing) {
-                    try {
-                        if (logger.isInfoEnabled()) {
-                            logger.info("Will make thread sleep for 1 minute simulating the long operation of FileUtils.waitFor");
-                        }
-                        Thread.sleep(6000);
-                    } catch (Exception e) {
-                        logger.error("Exception while sleepig simulating the long operation waiting for the file");
-
-                    }
-                }
+//                if (testing) {
+//                    try {
+//                        if (logger.isInfoEnabled()) {
+//                            logger.info("Will make thread sleep for 1 minute simulating the long operation of FileUtils.waitFor");
+//                        }
+//                        Thread.sleep(6000);
+//                    } catch (Exception e) {
+//                        logger.error("Exception while sleepig simulating the long operation waiting for the file");
+//
+//                    }
+//                }
                 PutObjectRequest putRequest = new PutObjectRequest(bucket.toString(), file.getName(), file);
                 ObjectMetadata metadata = new ObjectMetadata();
                 metadata.setContentType(new MimetypesFileTypeMap().getContentType(file));
@@ -191,10 +190,11 @@ public class S3AccessTool {
             logger.error("Caught an AmazonClientException ");
             logger.error("Error Message: " + ace.getMessage());
             return false;
-        } catch (IOException e) {
-            logger.error("Problem while trying to touch recording file for testing", e);
-            return false;
         }
+//        catch (IOException e) {
+//            logger.error("Problem while trying to touch recording file for testing", e);
+//            return false;
+//        }
     }
 
     private boolean fileExists(final File file) {
