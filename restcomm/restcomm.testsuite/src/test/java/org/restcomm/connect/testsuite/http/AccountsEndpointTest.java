@@ -593,7 +593,7 @@ public class AccountsEndpointTest extends EndpointTest {
 
     	//super admin tries to create account with organization Sid that does not exists
     	clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, createdUsernanme2, createdPassword, null, "ORafbe225ad37541eba518a74248f0ac4e");
+                adminUsername, adminAuthToken, createdUsernanme2, createdPassword, null, "ORafbe225ad37541eba518a74248f01234");
     	assertEquals(400, clientResponse.getStatus());
 
     	//super admin should be able to create account in specified org
@@ -601,6 +601,12 @@ public class AccountsEndpointTest extends EndpointTest {
                 adminUsername, adminAuthToken, createdUsernanme2, createdPassword, null, organizationSid2);
     	assertEquals(200, clientResponse.getStatus());
     
+    }
+
+    @Test
+    public void testGetAccountsOfASpecificOrganization() {
+        ClientResponse response = RestcommAccountsTool.getInstance().getAccountsResponse(deploymentUrl.toString(), adminUsername, adminAuthToken);
+        assertEquals(200, response.getStatus());
     }
 
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
