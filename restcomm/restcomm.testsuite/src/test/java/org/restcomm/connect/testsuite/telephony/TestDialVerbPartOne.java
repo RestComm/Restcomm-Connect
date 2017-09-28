@@ -123,7 +123,7 @@ public class TestDialVerbPartOne {
     private SipStack fotiniSipStack;
     private SipPhone fotiniPhone;
     private static String fotiniPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String fotiniContact = "sip:fotini@127.0.0.1:" + georgePort;     
+    private String fotiniContact = "sip:fotini@127.0.0.1:" + fotiniPort;     
 
     private static int restcommPort = 5080;
     private static int restcommHTTPPort = 8080;    

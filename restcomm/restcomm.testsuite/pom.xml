@@ -429,20 +429,23 @@
                 <version>2.18.1</version>
                 <configuration>
                     <includes>
+                        <include>**/CallLifecycleAnswerDelayTest.java</include>
+                        <include>**/CallLifecycleTest.java</include>
+                        <include>**/CallRegexSingleTest.java</include>
+                        <include>**/CallRegexTest.java</include>
+                        <include>**/ClientsDialAnswerDelayTest.java</include>
+                        <include>**/ClientsDialTest.java</include>
+                        <include>**/DialActionAnswerDelayTest.java</include>
+                        <include>**/DialActionTest.java</include>
+                        <include>**/DialForkAnswerDealyTest.java</include>
+                        <include>**/DialForkTest.java</include>
+                        <include>**/DialStatusCallbackTest.java</include>
+                        <include>**/TestDialVerbPartOneAnswerDelay.java</include>
                         <include>**/TestDialVerbPartOne.java</include>
                         <include>**/TestDialVerbPartTwo.java</include>
-                        <include>**/TestDialVerbPartThree.java</include>                      
-                        <include>**/ClientsDialAnswerDelayTest.java</include>
-                        <include>**/UserAgentManagerTest.java</include>
-                        <include>**/DialForkTest.java</include>
-                        <include>**/CallLifecycleTest.java</include>
-                        <include>**/CallLifecycleAnswerDelayTest.java</include>
-                        <include>**/CallRegexTest.java</include>
-                        <include>**/DialForkAnswerDealyTest.java</include>
-                        <include>**/DialActionTest.java</include>
-                        <include>**/DialStatusCallbackTest.java</include>
-                        <include>**/DialActionAnswerDelayTest.java</include>                        
-                        <include>**/CallRegexSingleTest.java</include>                                            
+                        <include>**/TestDialVerbPartThree.java</include>                                               
+                                                             
+                        <include>**/UserAgentManagerTest.java</include>       
                         <include>**/sms/*Test.java</include>
                         <include>**/connect/testsuite/*Test.java</include>
                     </includes>
@@ -457,7 +460,7 @@ since that will make ports over the maximum allowed by OS.
                     <parallel>classes</parallel>
                     <threadCountClasses>5</threadCountClasses>
                     <!-- start with low memory to increase forks -->
-                    <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=512m</argLine>
+                    <argLine>-Xms256m -Xmx2048m f</argLine>
                     <systemPropertyVariables>
                         <!--use different arquillian configuration to tweak maps
                         depending on forked JVM-->
