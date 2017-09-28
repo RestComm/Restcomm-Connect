@@ -130,7 +130,7 @@ public class UssdPushTest {
 
         String from = "+15126002188";
         String to = "bob";
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/ussd-rcml.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/ussd-rcml.xml";
 
         JsonObject callResult = RestcommUssdPushTool.getInstance().createUssdPush(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -178,7 +178,7 @@ public class UssdPushTest {
 
         String from = "Restcomm";
         String to = "bob";
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/ussd-rcml.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/ussd-rcml.xml";
 
         JsonObject callResult = RestcommUssdPushTool.getInstance().createUssdPush(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -226,7 +226,7 @@ public class UssdPushTest {
 
         String from = "+15126002188";
         String to = "bob";
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/ussd-rcml-collect.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/ussd-rcml-collect.xml";
 
         JsonObject callResult = RestcommUssdPushTool.getInstance().createUssdPush(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);

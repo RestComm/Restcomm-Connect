@@ -127,7 +127,7 @@ public class OutboudProxyCallsTest {
 
         String from = "+15126002188";
         String to = primaryProxyContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm.application-"+version+"/dial-number-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + ".application-"+version+"/dial-number-entry.xml";
 
         for (int i = 0; i < 20; i++) {
 
