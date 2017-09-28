@@ -53,6 +53,7 @@ import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.http.client.Downloader;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
 import org.restcomm.connect.mscontrol.api.messages.CloseMediaSession;
@@ -235,6 +236,7 @@ public final class Call extends UntypedActor {
     private URI recordingUri;
     private Sid recordingSid;
     private Sid parentCallSid;
+    private MediaAttributes mediaAttributes;
 
     // Runtime Setting
     private Configuration runtimeSettings;
@@ -410,6 +412,10 @@ public final class Call extends UntypedActor {
             final Configuration imsAuthentication = runtime.subset("ims-authentication");
             this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
         }
+        /* The initialization of mediaAttributes variable assumes the call as AUDIO_ONLY by default.
+        The real value is later replaced when the call is queued, as any of {@link MediaAttribute.MediaType}
+         */
+        this.mediaAttributes = new MediaAttributes();
     }
 
     ActorRef downloader() {
@@ -836,6 +842,7 @@ public final class Call extends UntypedActor {
             timeout = request.timeout();
             direction = request.isFromApi() ? OUTBOUND_API : OUTBOUND_DIAL;
             webrtc = request.isWebrtc();
+            mediaAttributes = request.getMediaAttributes();
 
             // Notify the observers.
             external = CallStateChanged.State.QUEUED;
@@ -1322,7 +1329,7 @@ public final class Call extends UntypedActor {
             // Initialize the MS Controller
             CreateMediaSession command = null;
             if (isOutbound()) {
-                command = new CreateMediaSession("sendrecv", "", true, webrtc, id);
+                command = new CreateMediaSession("sendrecv", "", true, webrtc, id, mediaAttributes);
             } else {
                 if (!liveCallModification) {
                     command = generateRequest(invite);

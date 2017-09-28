@@ -2278,7 +2278,7 @@ public final class CallManager extends UntypedActor {
             }
             InitializeOutbound init = new InitializeOutbound(request.from(), from, to, proxyUsername, proxyPassword, request.timeout(),
                     request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage, isToWebRTC,
-                    true, imsProxyAddress, imsProxyPort);
+                    true, imsProxyAddress, imsProxyPort, request.mediaAttributes());
             if (request.parentCallSid() != null) {
                 init.setParentCallSid(request.parentCallSid());
             }
