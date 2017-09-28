@@ -464,7 +464,7 @@ since that will make ports over the maximum allowed by OS.
                     <parallel>classes</parallel>
                     <threadCountClasses>5</threadCountClasses>
                     <!-- start with low memory to increase forks -->
-                    <argLine>-Xms256m -Xmx2048m f</argLine>
+                    <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=512m</argLine>
                     <systemPropertyVariables>
                         <!--use different arquillian configuration to tweak maps
                         depending on forked JVM-->
