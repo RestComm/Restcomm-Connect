@@ -25,6 +25,10 @@
     SELECT * FROM "restcomm_accounts" WHERE "parent_sid"=#{parent_sid};
   </select>
   
+  <select id="getAccountsByOrganization" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_accounts" WHERE "organization_sid"=#{organization_sid};
+  </select>
+  
   <delete id="removeAccount" parameterType="string">
     DELETE FROM "restcomm_accounts" WHERE "sid"=#{sid};
   </delete>

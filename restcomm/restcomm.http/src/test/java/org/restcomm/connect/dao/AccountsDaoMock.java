@@ -100,4 +100,9 @@ public class AccountsDaoMock implements AccountsDao {
     public List<String> getAccountLineage(Account account) throws AccountHierarchyDepthCrossed {
         throw new NotImplementedException();
     }
+
+	@Override
+	public List<Account> getAccountsByOrganization(Sid sid) {
+        throw new NotImplementedException();
+    }
 }

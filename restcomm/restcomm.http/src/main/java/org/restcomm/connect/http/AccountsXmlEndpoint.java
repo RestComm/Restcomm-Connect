@@ -27,8 +27,10 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
@@ -58,8 +60,8 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
     }
 
     @GET
-    public Response getAccounts(final MultivaluedMap<String, String> data) {
-        return getAccounts(data, APPLICATION_XML_TYPE);
+    public Response getAccounts(@Context UriInfo info) {
+        return getAccounts(info, APPLICATION_XML_TYPE);
     }
 
     @Consumes(APPLICATION_FORM_URLENCODED)
