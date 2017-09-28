@@ -127,19 +127,18 @@ public class MybatisPermissionsDao implements PermissionsDao {
     @Override
     public List<Permission> getPermissions() {
         final SqlSession session = sessions.openSession();
-        List<Permission> permissions = new ArrayList<>();
-        Sid sid1 = new Sid("PE00000000000000000000000000000001");
-        Sid sid2 = new Sid("PE00000000000000000000000000000002");
-        String name1 = "RestComm:*:USSD";
-        String name2 = "RestComm:*:ASR";
-        permissions.add(new Permission(sid1, name1));
-        permissions.add(new Permission(sid2, name2));
-//        try {
-//            session.selectList(namespace + "getPermissions");
-//
-//        } finally {
-//            session.close();
-//        }
+        List<Permission> permissions = null;
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getPermissions");
+            permissions = new ArrayList<>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    permissions.add(toPermission(result));
+                }
+            }
+        } finally {
+            session.close();
+        }
         return permissions;
     }
 }
