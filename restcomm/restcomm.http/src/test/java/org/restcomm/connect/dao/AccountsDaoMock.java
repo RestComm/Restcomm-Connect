@@ -132,7 +132,7 @@ public class AccountsDaoMock implements AccountsDao {
     }
 
     @Override
-    public void clearAccountPermissions(Sid account_sid1, ArrayList<Permission> permissions) {
+    public void clearAccountPermissions(Sid account_sid1) {
         // TODO Auto-generated method stub
         
     }

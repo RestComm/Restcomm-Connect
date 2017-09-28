@@ -253,4 +253,75 @@ public class RestcommAccountsTool {
 		
 		return params;
 	}
+
+    public JsonObject addAccountPermission(String deploymentUrl, String adminUsername, String adminAuthToken, String permissionSid, String permissionValue) {
+
+        JsonParser parser = new JsonParser();
+        JsonObject jsonResponse = null;
+        try {
+            Client jerseyClient = Client.create();
+            jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+            String url = getAccountsUrl(deploymentUrl);
+
+            WebResource webResource = jerseyClient.resource(url);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("PermissionSid", permissionSid);
+            params.add("PermissionValue", permissionValue);
+
+            ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+
+            jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
+        } catch (Exception e) {
+            logger.info("Exception: " + e);
+        }
+        return jsonResponse;
+    }
+    public JsonObject updateAccountPermission(String deploymentUrl, String adminUsername, String adminAuthToken, String permissionSid, String permissionValue) {
+
+        JsonParser parser = new JsonParser();
+        JsonObject jsonResponse = null;
+        try {
+            Client jerseyClient = Client.create();
+            jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+            String url = getAccountsUrl(deploymentUrl);
+
+            WebResource webResource = jerseyClient.resource(url).path(adminUsername);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("PermissionSid", permissionSid);
+            params.add("PermissionValue", permissionValue);
+
+            ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+
+            jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
+        } catch (Exception e) {
+            logger.info("Exception: " + e);
+        }
+        return jsonResponse;
+    }
+
+    public JsonObject deleteAccountPermission(String deploymentUrl, String adminUsername, String adminAuthToken, String permissionSid) {
+
+        JsonParser parser = new JsonParser();
+        JsonObject jsonResponse = null;
+        try {
+            Client jerseyClient = Client.create();
+            jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+            String url = getAccountsUrl(deploymentUrl);
+
+            WebResource webResource = jerseyClient.resource(url).path(adminUsername+"/Permissions/"+permissionSid);
+            WebResource webResource1 = jerseyClient.resource(url).path(adminUsername).path("/Permissions"+permissionSid);
+            WebResource webResource2 = jerseyClient.resource(url).path(adminUsername).path("/Permissions").path(permissionSid);
+
+            ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON).delete(ClientResponse.class);
+            jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
+        } catch (Exception e) {
+            logger.info("Exception: " + e);
+        }
+        return jsonResponse;
+    }
 }
