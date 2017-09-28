@@ -26,7 +26,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
@@ -55,7 +54,7 @@ public final class OrganizationsJsonEndpoint extends OrganizationsEndpoint {
 
     @Path("/{domainName}")
     @PUT
-    public Response putOrganizationPut(@PathParam("domainName") final String domainName, final MultivaluedMap<String, String> data) {
-        return putOrganization(domainName, data, APPLICATION_JSON_TYPE);
+    public Response putOrganizationPut(@PathParam("domainName") final String domainName, @Context UriInfo info) {
+        return putOrganization(domainName, info, APPLICATION_JSON_TYPE);
     }
 }

@@ -39,7 +39,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
@@ -199,7 +198,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
      * @param applicationJsonType
      * @return
      */
-    protected Response putOrganization(String domainName, MultivaluedMap<String, String> data,
+    protected Response putOrganization(String domainName, final UriInfo info,
             MediaType responseType) {
         if(domainName == null){
             return status(BAD_REQUEST).entity(MSG_EMPTY_DOMAIN_NAME ).build();
@@ -225,7 +224,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
                 organizationsDao.addOrganization(organization);
             }else {
                 //for example hosted zone id of domain restcomm.com or others. if not provided then default will be used as per configuration
-                String hostedZoneId = data.getFirst("HostedZoneId");
+                String hostedZoneId = info.getQueryParameters().getFirst("HostedZoneId");
                 //Check if domain_name does not already taken inside restcomm by an organization.
                 String completeDomainName = dnsProvisioningManager.getCompleteDomainName(domainName, hostedZoneId);
                 organization = organizationsDao.getOrganizationByDomainName(completeDomainName);
