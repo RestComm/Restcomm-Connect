@@ -56,7 +56,7 @@
 			<act-as-ims-ua>true</act-as-ims-ua>
 			<domain>127.0.0.1</domain>
 			<proxy-address>127.0.0.1</proxy-address>
-			<proxy-port>0</proxy-port>
+			<proxy-port>9999</proxy-port>
 			<call-id-prefix>WebRTCGW__1@</call-id-prefix>
 			<user-agent>WebRTCGW/1.0</user-agent>
 			<account>ims</account>
