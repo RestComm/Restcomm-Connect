@@ -1,12 +1,18 @@
 package org.restcomm.connect.testsuite.telephony.proxy;
 
+import gov.nist.javax.sip.header.Authorization;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import javax.sip.InvalidArgumentException;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import javax.sip.RequestEvent;
+import javax.sip.address.SipURI;
+import javax.sip.header.ContactHeader;
+import javax.sip.header.WWWAuthenticateHeader;
 import javax.sip.message.MessageFactory;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
@@ -23,6 +29,8 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -34,7 +42,6 @@ import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 //import org.restcomm.connect.telephony.Version;
 
 @RunWith(Arquillian.class)
-@Ignore
 public final class ProxyManagerTest {
     private static final String version = Version.getVersion();
 
@@ -42,23 +49,38 @@ public final class ProxyManagerTest {
     private Deployer deployer;
 
     final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
-    private static SipStackTool tool;
-    private SipStack receiver;
-    private SipPhone phone;
+    private static SipStackTool tool1;
+    private static SipStackTool tool2;
+    
+    private SipStack augustSipStack;
+    private SipPhone augustPhone;
+    private String augustContact = "sip:august@127.0.0.1:5092";
+    
+    private SipStack imsSipStack;
+    private SipPhone imsAugustPhone;
+    private String imsContact = "sip:127.0.0.1";
 
+    private boolean isAuthorizationHasRightUserName = false;
+    private boolean isRegisterRequestReceived = false;
     public ProxyManagerTest() {
         super();
     }
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        tool = new SipStackTool("ProxyManagerTest");
+        tool1 = new SipStackTool("ImsClientsDialTest1");
+        tool2 = new SipStackTool("ImsClientsDialTest2");
     }
 
     @Before
     public void before() throws Exception {
-        receiver = tool.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
-        phone = receiver.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:alice@127.0.0.1:5070");
+        
+        imsSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5060", "127.0.0.1:5080");
+
+        augustSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
+        augustPhone = augustSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, augustContact);
+        imsAugustPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, augustContact);
+        imsAugustPhone.setLoopback(true);
     }
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
@@ -66,50 +88,81 @@ public final class ProxyManagerTest {
 
     @After
     public void after() throws Exception {
-        if (phone != null) {
-            phone.dispose();
+        if (augustPhone != null) {
+            augustPhone.dispose();
         }
-        if (receiver != null) {
-            receiver.dispose();
+        if (augustSipStack != null) {
+            augustSipStack.dispose();
         }
+
+        if (imsSipStack != null) {
+            imsSipStack.dispose();
+        }
+        if (imsAugustPhone != null) {
+            imsAugustPhone.dispose();
+        }
+        
         deployer.undeploy("ProxyManagerTest");
     }
 
     @Test
-    public void testRestCommRegistration() throws Exception {
+    public void testRegisterWithGateWay() throws ParseException, InterruptedException, SQLException {
         deployer.deploy("ProxyManagerTest");
-        // This is necessary for SipUnit to accept unsolicited requests.
-        // Set Gateway Info
-        // This test is need to do manually.
-        RestcommCallsTool.getInstance().setGateWay(deploymentUrl, adminAccountSid, adminAuthToken, "friendlyName", 
-            "abcdef@xyz.com", "abcdef", "127.0.0.1:5070", true, "3600");
-        
+        SipURI uri = augustSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        final String userName = "august@127.0.0.1:5092";
+        isAuthorizationHasRightUserName = false;
+        isRegisterRequestReceived = false;
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(new Runnable() {
             @Override
             public void run() {
-//                phone.setLoopback(true);
-                phone.listenRequestMessage();
-                final RequestEvent register = phone.waitRequest(75 * 1000);
-                assertNotNull(null);
-                final String method = register.getRequest().getMethod();
-                assertTrue("REGISTER".equalsIgnoreCase(method));
-                // Send the OK response.
-                final MessageFactory factory = receiver.getMessageFactory();
-                final Request request = register.getRequest();
-                 
-                try {
-                   Response ok = factory.createResponse(200, request);
-                   SipTransaction transaction = phone.sendReply(register, ok);
-                   assertNotNull(transaction);
-                } catch (ParseException ex) {
-                    fail(ex.getMessage());
+            	imsAugustPhone.listenRequestMessage();
+                RequestEvent requestEvent = imsAugustPhone.waitRequest(10000);
+                assertNotNull(requestEvent);
+                if (requestEvent.getRequest() != null) {
+                    isRegisterRequestReceived = true;
                 }
-                
+                try {
+                    Response response = imsSipStack.getMessageFactory().createResponse(401, requestEvent.getRequest());
+                    WWWAuthenticateHeader wwwAuthenticateHeader = imsSipStack.getHeaderFactory().createWWWAuthenticateHeader("Digest realm=\"ims.tp.pl\",\n" +
+                            "   nonce=\"b7c9036dbf357f7683f054aea940e9703dc8f84c1108\",\n" +
+                            "   opaque=\"ALU:QbkRBthOEgEQAkgVEwwHRAIBHgkdHwQCQ1lFRkZWDhMyIXBqLCs0Zj06ZTwhdHpgZmI_\",\n" +
+                            "   algorithm=MD5,\n" +
+                            "   qop=\"auth\"");
+                    response.setHeader(wwwAuthenticateHeader);
+                    ContactHeader contactHeader = augustSipStack.getHeaderFactory().createContactHeader();
+                    contactHeader.setAddress(augustSipStack.getAddressFactory().createAddress(imsContact));
+                    response.addHeader(contactHeader);
+                    imsAugustPhone.sendReply(requestEvent, response);
+                    requestEvent = imsAugustPhone.waitRequest(10000);
+                    response = imsSipStack.getMessageFactory().createResponse(200, requestEvent.getRequest());
+                    Authorization auth = (Authorization)requestEvent.getRequest().getHeader(Authorization.NAME);
+                    assertNotNull(auth);
+                    if (auth.getUsername().equals(userName)) {
+                        isAuthorizationHasRightUserName = true;
+                    }
+                    contactHeader = augustSipStack.getHeaderFactory().createContactHeader();
+                    contactHeader.setExpires(600);
+                    contactHeader.setAddress(augustSipStack.getAddressFactory().createAddress(imsContact));
+                    response.addHeader(contactHeader);
+                    imsAugustPhone.sendReply(requestEvent, response);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    fail(e.getMessage());
+                }catch (InvalidArgumentException e) {
+                    e.printStackTrace();
+                    fail(e.getMessage());
+                }
+
             }
         });
-        
+
+        RestcommCallsTool.getInstance().setGateWay(deploymentUrl, adminAccountSid, adminAuthToken, "friendlyName", 
+            userName, "abcdef", "127.0.0.1", true, "3600");
+
         Thread.sleep(10000);
+        assertTrue(isAuthorizationHasRightUserName);
+        assertTrue(isRegisterRequestReceived);
     }
 
     @Deployment(name = "ProxyManagerTest", managed = false, testable = false)

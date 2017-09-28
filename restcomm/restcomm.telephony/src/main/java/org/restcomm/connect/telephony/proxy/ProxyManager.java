@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
 import static javax.servlet.sip.SipServletResponse.*;
+import javax.sip.header.ContactHeader;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -213,7 +214,8 @@ public final class ProxyManager extends RestcommUntypedActor {
                 buffer.append("sip:").append(user).append("@").append(proxy);
             }
             final String aor = buffer.toString();
-            final int expires = (gateway.getTimeToLive() > 0 && gateway.getTimeToLive() < 3600) ? gateway.getTimeToLive() : ttl;
+            // Set maximum expire time to 3600s
+            final int expires = (gateway.getTimeToLive() > 0 && gateway.getTimeToLive() <= 3600) ? gateway.getTimeToLive() : ttl;
             final Address contact = contact(gateway, expires);
             // Issue http://code.google.com/p/restcomm/issues/detail?id=65
             SipServletRequest register = null;
@@ -226,7 +228,10 @@ public final class ProxyManager extends RestcommUntypedActor {
             if (authentication != null && response != null) {
                 register.addAuthHeader(response, authentication);
             }
-            register.addAddressHeader("Contact", contact, false);
+            // If contact header is already in, dont add it any more.
+            if (register.getHeader(ContactHeader.NAME) == null) {
+                register.addAddressHeader("Contact", contact, false);
+            }
             final SipURI uri = factory.createSipURI(null, proxy);
             register.pushRoute(uri);
             register.setRequestURI(uri);
