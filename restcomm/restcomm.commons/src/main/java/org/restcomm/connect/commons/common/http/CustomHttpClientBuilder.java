@@ -17,26 +17,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-
 package org.restcomm.connect.commons.common.http;
 
-import org.apache.http.client.HttpClient;
+import java.net.InetSocketAddress;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
-import org.restcomm.connect.commons.HttpConnector;
-import org.restcomm.connect.commons.HttpConnectorList;
 import org.restcomm.connect.commons.configuration.sets.MainConfigurationSet;
-import org.restcomm.connect.commons.util.UriUtils;
 
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Iterator;
-import java.util.List;
+import java.util.concurrent.TimeUnit;
+import org.apache.http.HttpHost;
+import org.apache.http.client.utils.HttpClientUtils;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+import org.apache.http.conn.util.PublicSuffixMatcher;
+import org.apache.http.conn.util.PublicSuffixMatcherLoader;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.ssl.SSLContexts;
 
 /**
  *
@@ -46,44 +55,90 @@ import java.util.List;
 public class CustomHttpClientBuilder {
 
     private CustomHttpClientBuilder() {
-        // TODO Auto-generated constructor stub
     }
 
+    private static CloseableHttpClient defaultClient = null;
 
-    public static HttpClient build(MainConfigurationSet config) {
+    public static synchronized void stopDefaultClient() {
+        if (defaultClient != null) {
+            HttpClientUtils.closeQuietly(defaultClient);
+            defaultClient = null;
+        }
+    }
+
+    public static synchronized CloseableHttpClient buildDefaultClient(MainConfigurationSet config) {
+        if (defaultClient == null) {
+            defaultClient = build(config);
+        }
+        return defaultClient;
+    }
+
+    public static CloseableHttpClient build(MainConfigurationSet config) {
         int timeoutConnection = config.getResponseTimeout();
         return build(config, timeoutConnection);
     }
 
-    public static HttpClient build(MainConfigurationSet config, int timeout) {
-        SslMode mode = config.getSslMode();
+    public static CloseableHttpClient build(MainConfigurationSet config, int timeout) {
+        HttpClientBuilder builder = HttpClients.custom();
+
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(timeout)
-                .setConnectionRequestTimeout(timeout)
+                .setConnectionRequestTimeout(config.getDefaultHttpConnectionRequestTimeout())
                 .setSocketTimeout(timeout)
                 .setCookieSpec(CookieSpecs.STANDARD).build();
-        if ( mode == SslMode.strict ) {
-            SSLConnectionSocketFactory sslsf = null;
-            try {
-                sslsf = new SSLConnectionSocketFactory(
-                        SSLContextBuilder.create().build(),
-                        getSSLPrototocolsFromSystemProperties(),
-                        null,
-//                        new String[]{"TLS_RSA_WITH_3DES_EDE_CBC_SHA", "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA", "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256", "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA", "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384", "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA", "TLS_RSA_WITH_AES_128_CBC_SHA256", "TLS_RSA_WITH_AES_128_CBC_SHA", "TLS_RSA_WITH_AES_256_CBC_SHA256", "TLS_RSA_WITH_AES_256_CBC_SHA"},
-                        SSLConnectionSocketFactory.getDefaultHostnameVerifier());
-            } catch (KeyManagementException | NoSuchAlgorithmException e) {
-                throw new RuntimeException("Error creating HttpClient", e);
-            }
-            return  HttpClients.custom().setDefaultRequestConfig(requestConfig).setSSLSocketFactory(sslsf).build();
+        builder.setDefaultRequestConfig(requestConfig);
+
+        SslMode mode = config.getSslMode();
+        SSLConnectionSocketFactory sslsf = null;
+        if (mode == SslMode.strict) {
+            sslsf = buildStrictFactory();
         } else {
-            return buildAllowallClient(requestConfig);
+            sslsf = buildAllowallFactory();
         }
+        builder.setSSLSocketFactory(sslsf);
+
+        builder.setMaxConnPerRoute(config.getDefaultHttpMaxConnsPerRoute());
+        builder.setMaxConnTotal(config.getDefaultHttpMaxConns());
+        builder.setConnectionTimeToLive(config.getDefaultHttpTTL(), TimeUnit.MILLISECONDS);
+        if (config.getDefaultHttpRoutes() != null
+                && config.getDefaultHttpRoutes().size() > 0) {
+            if (sslsf == null) {
+                //strict mode with no system https properties
+                //taken from apache buider code
+                PublicSuffixMatcher publicSuffixMatcherCopy = PublicSuffixMatcherLoader.getDefault();
+                DefaultHostnameVerifier hostnameVerifierCopy = new DefaultHostnameVerifier(publicSuffixMatcherCopy);
+                sslsf = new SSLConnectionSocketFactory(
+                        SSLContexts.createDefault(),
+                        hostnameVerifierCopy);
+            }
+            Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
+                    .register("http", PlainConnectionSocketFactory.getSocketFactory())
+                    .register("https", sslsf)
+                    .build();
+            final PoolingHttpClientConnectionManager poolingmgr = new PoolingHttpClientConnectionManager(
+                    reg,
+                    null,
+                    null,
+                    null,
+                    config.getDefaultHttpTTL(),
+                    TimeUnit.MILLISECONDS);
+            //ensure conn configuration is set again for new conn manager
+            poolingmgr.setMaxTotal(config.getDefaultHttpMaxConns());
+            poolingmgr.setDefaultMaxPerRoute(config.getDefaultHttpMaxConnsPerRoute());
+            for (InetSocketAddress addr : config.getDefaultHttpRoutes().keySet()) {
+                HttpRoute r = new HttpRoute(new HttpHost(addr.getHostName(), addr.getPort()));
+                poolingmgr.setMaxPerRoute(r, config.getDefaultHttpRoutes().get(addr));
+            }
+            builder.setConnectionManager(poolingmgr);
+        }
+        return builder.build();
     }
 
     private static String[] getSSLPrototocolsFromSystemProperties() {
         String protocols = System.getProperty("jdk.tls.client.protocols");
-        if (protocols == null)
+        if (protocols == null) {
             protocols = System.getProperty("https.protocols");
+        }
 
         if (protocols != null) {
             String[] protocolsArray = protocols.split(",");
@@ -92,39 +147,34 @@ public class CustomHttpClientBuilder {
         return null;
     }
 
-    private static HttpClient buildAllowallClient(RequestConfig requestConfig) {
-        HttpConnectorList httpConnectorList = UriUtils.getHttpConnectorList();
-        HttpClient httpClient = null;
-        //Enable SSL only if we have HTTPS connector
-        List<HttpConnector> connectors = httpConnectorList.getConnectors();
-        Iterator<HttpConnector> iterator = connectors.iterator();
-        while (iterator.hasNext()) {
-            HttpConnector connector = iterator.next();
-            if (connector.isSecure()) {
-                SSLConnectionSocketFactory sslsf;
-                try {
-                    SSLContextBuilder builder = new SSLContextBuilder();
-                    builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
-//                    sslsf = new SSLConnectionSocketFactory(builder.build());
-
-                    sslsf = new SSLConnectionSocketFactory(
-                            builder.build(),
-                            getSSLPrototocolsFromSystemProperties(),
-                            null,
-                            SSLConnectionSocketFactory.getDefaultHostnameVerifier());
-
-
-                    httpClient = HttpClients.custom().setDefaultRequestConfig(requestConfig).setSSLSocketFactory(sslsf).build();
-                } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
-                    throw new RuntimeException("Error creating HttpClient", e);
-                }
-                break;
-            }
+    private static SSLConnectionSocketFactory buildStrictFactory() {
+        try {
+            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(
+                    SSLContextBuilder.create().build(),
+                    getSSLPrototocolsFromSystemProperties(),
+                    null,
+                    //                        new String[]{"TLS_RSA_WITH_3DES_EDE_CBC_SHA", "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA", "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256", "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA", "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384", "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA", "TLS_RSA_WITH_AES_128_CBC_SHA256", "TLS_RSA_WITH_AES_128_CBC_SHA", "TLS_RSA_WITH_AES_256_CBC_SHA256", "TLS_RSA_WITH_AES_256_CBC_SHA"},
+                    SSLConnectionSocketFactory.getDefaultHostnameVerifier());
+            return sslsf;
+        } catch (KeyManagementException | NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error creating HttpClient", e);
         }
-        if (httpClient == null) {
-            httpClient = HttpClients.custom().setDefaultRequestConfig(requestConfig).build();
-        }
+    }
 
-        return httpClient;
+    private static SSLConnectionSocketFactory buildAllowallFactory() {
+        try {
+            SSLContextBuilder builder = new SSLContextBuilder();
+            builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
+
+            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(
+                    builder.build(),
+                    getSSLPrototocolsFromSystemProperties(),
+                    null,
+                    SSLConnectionSocketFactory.getDefaultHostnameVerifier());
+
+            return sslsf;
+        } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
+            throw new RuntimeException("Error creating HttpClient", e);
+        }
     }
 }
