@@ -31,6 +31,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
@@ -612,12 +614,18 @@ public class AccountsEndpointTest extends EndpointTest {
         assertEquals(200, response.getStatus());
 
         //getAccounts with null Filter
-        response = RestcommAccountsTool.getInstance().getAccountsWithFilterResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, null, null, null);
+        String responseStr = RestcommAccountsTool.getInstance().getAccountsWithFilterStringResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, null, null);
         if(logger.isDebugEnabled())
-        	logger.debug("getAccounts With null Filter Response: "+response);
-        assertEquals(200, response.getStatus());
-
-        
+        	logger.debug("getAccounts With null Filter Response: "+responseStr);
+        //should be 6 accounts
+       JsonElement jsonElement = new JsonParser().parse(responseStr);
+        if(jsonElement.isJsonArray()) {
+        	JsonArray accountsArray = jsonElement.getAsJsonArray();
+            assertEquals(6, accountsArray.size());
+        } else {
+            logger.info("JsonElement: " + jsonElement.toString());
+            Assert.fail();
+        }
     }
 
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
