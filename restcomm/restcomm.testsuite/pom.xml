@@ -442,7 +442,9 @@
                         <include>**/DialStatusCallbackTest.java</include>
                         <include>**/TestDialVerbPartOneAnswerDelay.java</include>
                         <include>**/TestDialVerbPartOne.java</include>
+                        <include>**/TestDialVerbPartTwoAnswerDelay.java</include>
                         <include>**/TestDialVerbPartTwo.java</include>
+                        <include>**/TestDialVerbPartThreeAnswerDelay.java</include>
                         <include>**/TestDialVerbPartThree.java</include>                                               
                                                              
                         <include>**/UserAgentManagerTest.java</include>       
