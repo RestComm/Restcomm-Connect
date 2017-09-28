@@ -43,6 +43,13 @@ HTTP PUT to above Uri will create a new organization and returns the representat
 Total Length of domain_name can be upto 255 Characters. It can contain only letters, number and “-” aka hyphen sign.
 |====
 
+===== Optional Request Parameters
+
+|====
+| Property | Description
+| HostedZoneId | ID of hosted zone on your DNS server, under which you want to create above domainName, if not provided system will use default configured one.
+|====
+
 
 ==== Read organization
 
