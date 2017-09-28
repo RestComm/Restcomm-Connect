@@ -442,6 +442,8 @@
                         <include>**/DialRecordingAnswerDelayTest.java</include>
                         <include>**/DialRecordingTest.java</include>
                         <include>**/DialStatusCallbackTest.java</include>
+                        <include>**/ImsClientsDialAnswerDelayTest.java</include>
+                        <include>**/ImsClientsDialTest.java</include>
                         <include>**/TestDialVerbPartOneAnswerDelay.java</include>
                         <include>**/TestDialVerbPartOne.java</include>
                         <include>**/TestDialVerbPartTwoAnswerDelay.java</include>
@@ -510,6 +512,8 @@ since that will make ports over the maximum allowed by OS.
                         <exclude>**/DialRecordingAnswerDelayTest.java</exclude>
                         <exclude>**/DialRecordingTest.java</exclude>
                         <exclude>**/DialStatusCallbackTest.java</exclude>
+                        <exclude>**/ImsClientsDialAnswerDelayTest.java</exclude>
+                        <exclude>**/ImsClientsDialTest.java</exclude>                        
                         <exclude>**/TestDialVerbPartOneAnswerDelay.java</exclude>
                         <exclude>**/TestDialVerbPartOne.java</exclude>
                         <exclude>**/TestDialVerbPartTwoAnswerDelay.java</exclude>
