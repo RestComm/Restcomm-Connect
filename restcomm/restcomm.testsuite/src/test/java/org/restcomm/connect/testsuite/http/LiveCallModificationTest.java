@@ -142,7 +142,7 @@ public class LiveCallModificationTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-number-entry.xml";
 
         JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -194,7 +194,7 @@ public class LiveCallModificationTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-number-entry.xml";
 
         JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -253,7 +253,7 @@ public class LiveCallModificationTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry-lcm.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-number-entry-lcm.xml";
 
         JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -300,7 +300,7 @@ public class LiveCallModificationTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-number-entry.xml";
 
         JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -327,7 +327,7 @@ public class LiveCallModificationTest {
 
         Thread.sleep(10000);
         System.out.println("\n ******************** \nAbout to redirect the call\n ********************\n");
-        rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
+        rcmlUrl = deploymentUrl.toString() + "/dial-client-entry.xml";
 
         callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
                 callSid, null, rcmlUrl);
@@ -435,7 +435,7 @@ public class LiveCallModificationTest {
 
         Thread.sleep(10000);
         System.out.println("\n ******************** \nAbout to redirect the call\n ********************\n");
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-client-entry.xml";
 
         JsonObject callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
                 callSid, null, rcmlUrl);
@@ -604,7 +604,7 @@ public class LiveCallModificationTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-number-entry.xml";
 
         JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -631,7 +631,7 @@ public class LiveCallModificationTest {
 
         Thread.sleep(10000);
         System.out.println("\n ******************** \nAbout to redirect the call\n ********************\n");
-        rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
+        rcmlUrl = deploymentUrl.toString() + "/dial-client-entry.xml";
 
         //String invalidCallSid = Sid.generate(Sid.Type.CALL).toString();
         // restcomm-connect/1907

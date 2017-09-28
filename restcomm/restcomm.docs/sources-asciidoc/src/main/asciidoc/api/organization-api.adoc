@@ -1,0 +1,80 @@
+= Restcomm API – Organizations
+
+[[Organizations]]
+== Organizations
+Organization are useful for segmenting accounts and providing restcomm functionalities on custom domain name.
+
+=== Organization Api
+
+Organization api will provide functionality to perform CRUD (create, read, update and delete) operations for organizations. Api is mainly responsible for communicating with configureable DNS hosting service provider (for example Route-53 or others) for making changes in record sets.
+
+==== Organization Entity
+
+|====
+| Property | Description
+| sid | A string that uniquely identifies this organization.
+| domain_name | A custom DNS hostname that you create on Restcomm Cloud. It can accept traffic for an account. If anyone makes a SIP/HTTP request using that domain, say the SIP URI sip:alice@mycompany.restcomm.com, it will route to Restcomm.
+
+Total Length of domain_name can be upto 255 Characters. It can contain only letters, number and “-” aka hyphen sign.
+| date_created | The date that this organization was created.
+| date_updated | The date that this organization was last updated.
+| Status | Active or Closed.
+|====
+
+==== Create new organization
+
+===== Rationale 
+
+Rational to create a new organization pretty simple and described already, we want to onboard a new customer and provide them with their own domain and account on the platform.
+
+[source,]
+----
+/{Version}/Organizations/{domainName}
+----
+
+HTTP PUT to above Uri will create a new organization and returns the representation of the organization resource, including the properties above.
+
+===== Uri Parameters
+
+|====
+| Property | Description
+| domainName | A custom DNS hostname that you create on Restcomm Cloud. It can accept traffic for an account. If anyone makes a SIP/HTTP request using that domain, say the SIP URI sip:alice@mycompany.restcomm.com, it will route to Restcomm.
+
+Total Length of domain_name can be upto 255 Characters. It can contain only letters, number and “-” aka hyphen sign.
+|====
+
+
+==== Read organization
+
+An account can read organization details if it belongs to that particular organization. Super admins can read all organizations.
+
+Read organization resource will return organization entity provided above.
+
+===== Single Resource URI
+
+Will return single organization resource
+
+[source,]
+----
+/{Version}/Organizations/{OrganizationSid}(.json)
+----
+
+===== List Resource URI
+
+Will return list of organizations
+
+[source,]
+----
+/{Version}/Organizations(.json)
+----
+
+===== List Filter
+
+You can filter an organization list resource by providing following parameters.
+
+===== Request Parameters
+
+|====
+| Property | Description
+| Status | Active or Closed.
+|====
