@@ -605,17 +605,19 @@ public class AccountsEndpointTest extends EndpointTest {
 
     @Test
     public void testGetAccountsOfASpecificOrganization() {
-    	//without any parameters
+    	//getAccounts without any parameters
         ClientResponse response = RestcommAccountsTool.getInstance().getAccountsResponse(deploymentUrl.toString(), adminUsername, adminAuthToken);
         if(logger.isDebugEnabled())
         	logger.debug("getAccounts without filter Response: "+response);
         assertEquals(200, response.getStatus());
 
-        //without any parameters
+        //getAccounts with null Filter
         response = RestcommAccountsTool.getInstance().getAccountsWithFilterResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, null, null, null);
         if(logger.isDebugEnabled())
         	logger.debug("getAccounts With null Filter Response: "+response);
         assertEquals(200, response.getStatus());
+
+        
     }
 
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
