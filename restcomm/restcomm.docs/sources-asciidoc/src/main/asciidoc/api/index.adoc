@@ -16,6 +16,7 @@ Restcomm Accounts have the following subresources. Click on a link to read the A
 
 === Developer Sub-Resources
 
+* <<organization-api.adoc#organization,Restcomm API – Organization>>
 * <<account-api.adoc#account,Restcomm API – Account>>
 * <<Restcomm - Multi-tenancy and Managing Sub-Accounts.adoc#restcomm-rest-api,Multi-tenancy and Managing Sub-Accounts>>
 * <<applications-api.adoc#applications,Restcomm API – Applications>>
