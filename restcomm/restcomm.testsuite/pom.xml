@@ -27,23 +27,23 @@
         </dependency>
 
         <!-- <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.application</artifactId>
-            <version>${project.version}</version> <type>war</type> <scope>test</scope>
-            </dependency> <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.commons</artifactId>
-            <version>${project.version}</version> <scope>provided</scope> </dependency>
-            <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.dao</artifactId>
-            <version>${project.version}</version> <scope>provided</scope> </dependency>
-            <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.mgcp</artifactId>
-            <version>${project.version}</version> <scope>provided</scope> </dependency>
-            <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.sms</artifactId>
-            <version>${project.version}</version> <scope>provided</scope> </dependency>
-            <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.http</artifactId>
-            <version>${project.version}</version> <scope>provided</scope> </dependency>
-            <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.telephony</artifactId>
-            <version>${project.version}</version> <scope>provided</scope> </dependency>
-            <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.telephony.api</artifactId>
-            <version>${project.version}</version> <scope>provided</scope> </dependency>
-            <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.interpreter</artifactId>
-            <version>${project.version}</version> <scope>test</scope> </dependency> -->
+        <version>${project.version}</version> <type>war</type> <scope>test</scope>
+        </dependency> <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.commons</artifactId>
+        <version>${project.version}</version> <scope>provided</scope> </dependency>
+        <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.dao</artifactId>
+        <version>${project.version}</version> <scope>provided</scope> </dependency>
+        <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.mgcp</artifactId>
+        <version>${project.version}</version> <scope>provided</scope> </dependency>
+        <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.sms</artifactId>
+        <version>${project.version}</version> <scope>provided</scope> </dependency>
+        <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.http</artifactId>
+        <version>${project.version}</version> <scope>provided</scope> </dependency>
+        <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.telephony</artifactId>
+        <version>${project.version}</version> <scope>provided</scope> </dependency>
+        <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.telephony.api</artifactId>
+        <version>${project.version}</version> <scope>provided</scope> </dependency>
+        <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.interpreter</artifactId>
+        <version>${project.version}</version> <scope>test</scope> </dependency> -->
 
         <dependency>
             <groupId>org.scala-lang</groupId>
@@ -160,12 +160,12 @@
 
         <!--Dependencies for Tomcat-6 -->
         <!-- <dependency> <groupId>org.mobicents.servlet.sip.containers</groupId>
-            <artifactId>sip-servlets-catalina-6</artifactId> <version>${sipservletapi.version}</version>
-            <scope>test</scope> </dependency> <dependency> <groupId>org.mobicents.servlet.sip.containers</groupId>
-            <artifactId>sip-servlets-tomcat-jboss4</artifactId> <version>${sipservletapi.version}</version>
-            <scope>test</scope> </dependency> <dependency> <groupId>org.mobicents.arquillian.container</groupId>
-            <artifactId>mss-tomcat-embedded-6</artifactId> <version>${mss.arquillian.version}</version>
-            <scope>test</scope> </dependency> -->
+        <artifactId>sip-servlets-catalina-6</artifactId> <version>${sipservletapi.version}</version>
+        <scope>test</scope> </dependency> <dependency> <groupId>org.mobicents.servlet.sip.containers</groupId>
+        <artifactId>sip-servlets-tomcat-jboss4</artifactId> <version>${sipservletapi.version}</version>
+        <scope>test</scope> </dependency> <dependency> <groupId>org.mobicents.arquillian.container</groupId>
+        <artifactId>mss-tomcat-embedded-6</artifactId> <version>${mss.arquillian.version}</version>
+        <scope>test</scope> </dependency> -->
 
         <!--Dependencies for Tomcat-6 -->
 
@@ -273,18 +273,18 @@
             <scope>test</scope>
         </dependency>
 
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<version>1.8.5</version>
-			<scope>test</scope>
-		</dependency>	
-		<!-- <dependency>
-  			<groupId>org.powermock</groupId>
-  			<artifactId>powermock-module-testng-agent</artifactId>
-  			<version>1.6.6</version>
-  			<scope>test</scope>
-		</dependency> -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.8.5</version>
+            <scope>test</scope>
+        </dependency>	
+        <!-- <dependency>
+                <groupId>org.powermock</groupId>
+                <artifactId>powermock-module-testng-agent</artifactId>
+                <version>1.6.6</version>
+                <scope>test</scope>
+        </dependency> -->
 
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
@@ -423,23 +423,88 @@
                     <resultFileMinClasspathCount>2</resultFileMinClasspathCount>
                 </configuration>
             </plugin>
-
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.18.1</version>
+                <configuration>
+                    <includes>
+                        <include>**/CallLifecycleAnswerDelayTest.java</include>
+                        <include>**/CallLifecycleTest.java</include>
+                        <include>**/CallRegexSingleTest.java</include>
+                        <include>**/CallRegexTest.java</include>
+                        <include>**/ClientsDialAnswerDelayTest.java</include>
+                        <include>**/ClientsDialTest.java</include>
+                        <include>**/DialActionAnswerDelayTest.java</include>
+                        <include>**/DialActionTest.java</include>
+                        <include>**/DialForkAnswerDealyTest.java</include>
+                        <include>**/DialForkTest.java</include>
+                        <include>**/DialStatusCallbackTest.java</include>
+                        <include>**/TestDialVerbPartOneAnswerDelay.java</include>
+                        <include>**/TestDialVerbPartOne.java</include>
+                        <include>**/TestDialVerbPartTwoAnswerDelay.java</include>
+                        <include>**/TestDialVerbPartTwo.java</include>
+                        <include>**/TestDialVerbPartThreeAnswerDelay.java</include>
+                        <include>**/TestDialVerbPartThree.java</include>                                               
+                                                             
+                        <include>**/UserAgentManagerTest.java</include>       
+                        <include>**/sms/*Test.java</include>
+                        <include>**/connect/testsuite/*Test.java</include>
+                    </includes>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    <rerunFailingTestsCount>2</rerunFailingTestsCount>
+                    <!-- let ci script set forkcount.Dont increase over 65 
+since that will make ports over the maximum allowed by OS.
+                    on local env set depending on available mem
+                    <forkCount>2</forkCount>
+                    -->
+                    <reuseForks>false</reuseForks>
+                    <parallel>classes</parallel>
+                    <threadCountClasses>5</threadCountClasses>
+                    <!-- start with low memory to increase forks -->
+                    <argLine>-Xms256m -Xmx2048m f</argLine>
+                    <systemPropertyVariables>
+                        <!--use different arquillian configuration to tweak maps
+                        depending on forked JVM-->
+                        <arquillian.launch>mss-tomcat-embedded-7-forked</arquillian.launch>
+                        <!-- this will ensure sip and http ports are diff for
+                        every forked JVM/test class-->
+                        <arquillian_http_port>${surefire.forkNumber}509</arquillian_http_port>
+                        <arquillian_sip_port>${surefire.forkNumber}508</arquillian_sip_port>
+                    </systemPropertyVariables>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>failsafe-integration-tests</id>
+                        <phase>integration-test</phase>                            
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.19.1</version>
+                <configuration>
+                    <argLine>-Xms1024m -Xmx2048m -XX:MaxPermSize=1024m</argLine>
+                    <!-- <excludes> <exclude>**/SmsSessionTest.java</exclude> </excludes> -->
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
+                    <skipTests>${skipUTs}</skipTests>
+                    <excludes>
+                        <exclude>**/TestDialVerbPartOne.java</exclude>
+                        <exclude>**/TestDialVerbPartTwo.java</exclude>
+                        <exclude>**/TestDialVerbPartThree.java</exclude>                      
+                        <exclude>**/ClientsDialAnswerDelayTest.java</exclude>
+                        <exclude>**/UserAgentManagerTest.java</exclude>
+                        <exclude>**/sms/*Test.java</exclude>
+                    </excludes>                    
+                </configuration>
+            </plugin>               
         </plugins>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.19.1</version>
-                    <configuration>
-                        <argLine>-Xms1024m -Xmx2048m -XX:MaxPermSize=1024m</argLine>
-                        <!-- <excludes> <exclude>**/SmsSessionTest.java</exclude> </excludes> -->
-                        <forkCount>1</forkCount>
-                        <reuseForks>false</reuseForks>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
     </build>
 
     <repositories>
