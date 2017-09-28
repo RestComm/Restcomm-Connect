@@ -43,12 +43,38 @@ HTTP PUT to above Uri will create a new organization and returns the representat
 Total Length of domain_name can be upto 255 Characters. It can contain only letters, number and “-” aka hyphen sign.
 |====
 
+.Add new organization with domain name "test" - Example
+====
+curl -X PUT "https://<accountSid>:<authtoke>@mycompany.restcomm.com/restcomm/2012-04-24/Organizations/test"
+
+  <Organization>
+    <Sid>OR905d1b4e9d3045acb268f8d0fdf259ac</Sid>
+    <DomainName>test.restcomm.com.</DomainName>
+    <Status>active</Status>
+    <DateCreated>Thu, 28 Sep 2017 16:11:39 +0000</DateCreated>
+    <DateUpdated>Thu, 28 Sep 2017 16:11:39 +0000</DateUpdated>
+  </Organization>
+====
+
 ===== Optional Request Parameters
 
 |====
 | Property | Description
 | HostedZoneId | ID of hosted zone on your DNS server, under which you want to create above domainName, if not provided system will use default configured one.
 |====
+
+.Add new organization with domain name "test" under a specific hosted zone - Example
+====
+curl -X PUT "https://<accountSid>:<authToken>@mycompany.restcomm.com/restcomm/2012-04-24/Organizations/test" -d "HostedZoneId=<myHostedZoneId>"
+
+  <Organization>
+    <Sid>OR905d1b4e9d3045acb268f8d0fdf259ac</Sid>
+    <DomainName>test.restcomm.com.</DomainName>
+    <Status>active</Status>
+    <DateCreated>Thu, 28 Sep 2017 16:11:39 +0000</DateCreated>
+    <DateUpdated>Thu, 28 Sep 2017 16:11:39 +0000</DateUpdated>
+  </Organization>
+====
 
 
 ==== Read organization
@@ -63,8 +89,27 @@ Will return single organization resource
 
 [source,]
 ----
-/{Version}/Organizations/{OrganizationSid}(.json)
+/{Version}/Organizations(.json)/{OrganizationSid}
 ----
+
+.Read Organization Example
+====
+curl -X GET "https://{accountSid}:{authToken}@mycompany.restcomm.com/restcomm/2012-04-24/Organizations/{OrganizationSid}"
+
+
+  <Organization>
+    <Sid>OR905d1b4e9d3045acb268f8d0fdf259ac</Sid>
+    <DomainName>test.restcomm.com.</DomainName>
+    <Status>active</Status>
+    <DateCreated>Thu, 28 Sep 2017 16:11:39 +0000</DateCreated>
+    <DateUpdated>Thu, 28 Sep 2017 16:11:39 +0000</DateUpdated>
+  </Organization>
+====
+
+.Read Organization Json Example
+====
+curl -X GET "https://{accountSid}:{authToken}@mycompany.restcomm.com/restcomm/2012-04-24/Organizations.json/{OrganizationSid}"
+====
 
 ===== List Resource URI
 
@@ -85,3 +130,8 @@ You can filter an organization list resource by providing following parameters.
 | Property | Description
 | Status | Active or Closed.
 |====
+
+.Read Organization List with filter Example
+====
+curl -X GET "https://{accountSid}:{authToken}@mycompany.restcomm.com/restcomm/2012-04-24/Organizations/{OrganizationSid}.json" -d "Status=active"
+====
