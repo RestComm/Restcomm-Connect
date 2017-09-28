@@ -39,6 +39,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.crypto.hash.Md5Hash;
@@ -53,6 +54,7 @@ import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.AccountList;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
@@ -318,7 +320,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
 
 
-    protected Response getAccounts(final MultivaluedMap<String, String> data, final MediaType responseType) {
+    protected Response getAccounts(final UriInfo info, final MediaType responseType) {
         checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Read:Accounts");
@@ -327,8 +329,28 @@ public class AccountsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             final List<Account> accounts = new ArrayList<Account>();
-//            accounts.add(account);
-            accounts.addAll(accountsDao.getChildAccounts(account.getSid()));
+
+            if (info == null) {
+                accounts.addAll(accountsDao.getChildAccounts(account.getSid()));
+            } else {
+                String organizationSid = info.getQueryParameters().getFirst("OrganizationSid");
+                String domainName = info.getQueryParameters().getFirst("DomainName");
+
+                if(organizationSid != null && !(organizationSid.trim().isEmpty())){
+                    allowOnlySuperAdmin();
+                    accounts.addAll(accountsDao.getAccountsByOrganization(new Sid(organizationSid)));
+                } else if(domainName != null && !(domainName.trim().isEmpty())){
+                    allowOnlySuperAdmin();
+                    Organization organization = organizationsDao.getOrganizationByDomainName(domainName);
+                    if(organization == null){
+                        return status(NOT_FOUND).build();
+                    }
+                    accounts.addAll(accountsDao.getAccountsByOrganization(organization.getSid()));
+                } else {
+                    accounts.addAll(accountsDao.getChildAccounts(account.getSid()));
+                }
+            }
+
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(new AccountList(accounts));
                 return ok(xstream.toXML(response), APPLICATION_XML).build();

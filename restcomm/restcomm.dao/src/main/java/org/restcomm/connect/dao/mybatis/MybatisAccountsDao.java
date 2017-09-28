@@ -19,21 +19,6 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.joda.time.DateTime;
-import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import org.restcomm.connect.dao.AccountsDao;
-import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.commons.dao.Sid;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static org.restcomm.connect.dao.DaoUtils.readAccountStatus;
 import static org.restcomm.connect.dao.DaoUtils.readAccountType;
 import static org.restcomm.connect.dao.DaoUtils.readDateTime;
@@ -45,6 +30,21 @@ import static org.restcomm.connect.dao.DaoUtils.writeAccountType;
 import static org.restcomm.connect.dao.DaoUtils.writeDateTime;
 import static org.restcomm.connect.dao.DaoUtils.writeSid;
 import static org.restcomm.connect.dao.DaoUtils.writeUri;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.AccountsDao;
+import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -232,6 +232,23 @@ public final class MybatisAccountsDao implements AccountsDao {
         try {
             session.update(selector, toMap(account));
             session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public List<Account> getAccountsByOrganization(final Sid organizationSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getAccountsByOrganization", organizationSid.toString());
+            final List<Account> accounts = new ArrayList<Account>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    accounts.add(toAccount(result));
+                }
+            }
+            return accounts;
         } finally {
             session.close();
         }

@@ -19,7 +19,8 @@
  */
 package org.restcomm.connect.http;
 
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -28,11 +29,12 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -58,8 +60,8 @@ public final class AccountsJsonEndpoint extends AccountsEndpoint {
     }
 
     @GET
-    public Response getAccounts(final MultivaluedMap<String, String> data) {
-        return getAccounts(data, APPLICATION_JSON_TYPE);
+    public Response getAccounts(@Context UriInfo info) {
+        return getAccounts(info, APPLICATION_JSON_TYPE);
     }
 
     /* disabled as #1270
