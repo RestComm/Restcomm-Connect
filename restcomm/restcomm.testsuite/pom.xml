@@ -497,12 +497,29 @@ since that will make ports over the maximum allowed by OS.
                     <reuseForks>false</reuseForks>
                     <skipTests>${skipUTs}</skipTests>
                     <excludes>
-                        <exclude>**/TestDialVerbPartOne.java</exclude>
-                        <exclude>**/TestDialVerbPartTwo.java</exclude>
-                        <exclude>**/TestDialVerbPartThree.java</exclude>                      
+                        <exclude>**/CallLifecycleAnswerDelayTest.java</exclude>
+                        <exclude>**/CallLifecycleTest.java</exclude>
+                        <exclude>**/CallRegexSingleTest.java</exclude>
+                        <exclude>**/CallRegexTest.java</exclude>
                         <exclude>**/ClientsDialAnswerDelayTest.java</exclude>
-                        <exclude>**/UserAgentManagerTest.java</exclude>
+                        <exclude>**/ClientsDialTest.java</exclude>
+                        <exclude>**/DialActionAnswerDelayTest.java</exclude>
+                        <exclude>**/DialActionTest.java</exclude>
+                        <exclude>**/DialForkAnswerDealyTest.java</exclude>
+                        <exclude>**/DialForkTest.java</exclude>
+                        <exclude>**/DialRecordingAnswerDelayTest.java</exclude>
+                        <exclude>**/DialRecordingTest.java</exclude>
+                        <exclude>**/DialStatusCallbackTest.java</exclude>
+                        <exclude>**/TestDialVerbPartOneAnswerDelay.java</exclude>
+                        <exclude>**/TestDialVerbPartOne.java</exclude>
+                        <exclude>**/TestDialVerbPartTwoAnswerDelay.java</exclude>
+                        <exclude>**/TestDialVerbPartTwo.java</exclude>
+                        <exclude>**/TestDialVerbPartThreeAnswerDelay.java</exclude>
+                        <exclude>**/TestDialVerbPartThree.java</exclude>                                               
+                                                             
+                        <exclude>**/UserAgentManagerTest.java</exclude>       
                         <exclude>**/sms/*Test.java</exclude>
+                        <exclude>**/connect/testsuite/*Test.java</exclude>
                     </excludes>                    
                 </configuration>
             </plugin>               
