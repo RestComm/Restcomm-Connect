@@ -1896,12 +1896,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             // Create a record of the recording.
             Double duration = WavUtils.getAudioDuration(recordingUri);
             if (duration.equals(0.0)) {
-//                final DateTime end = DateTime.now();
-//                duration = new Double((end.getMillis() - callRecord.getStartTime().getMillis()) / 1000);
-//                if (logger.isDebugEnabled()) {
-//                    String msg = String.format("Recording duration %s, startTime %s endTime %s", duration, callRecord.getStartTime().getMillis(), end.getMillis());
-//                    logger.debug(msg);
-//                }
                 if (logger.isInfoEnabled()) {
                     String msg = String.format("Recording file %s, duration is 0 and will return",recordingUri);
                     logger.info(msg);

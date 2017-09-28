@@ -776,7 +776,7 @@ public class Jsr309CallController extends MediaServerController {
                         logger.error("Could not measure recording duration: " + e.getMessage(), e);
                         duration = 0.0;
                     }
-                    if (duration.equals(0.0)) {
+                    if (!duration.equals(0.0)) {
                         if(logger.isInfoEnabled()) {
                             logger.info("Call wraping up recording. File doesn't exist since duration is 0");
                         }

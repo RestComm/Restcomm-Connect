@@ -1258,11 +1258,6 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     String msg = String.format("OnCallStateChanged, VI state %s, received %s, is it from inbound call: %s",fsm.state().toString(), callState.toString(), sender.equals(call));
                     logger.info(msg);
                 }
-//                if (sender.equals(call)) {
-//                    if (callInfo != null) {
-//                        callInfo.setState(CallStateChanged.State.COMPLETED);
-//                    }
-//                }
                 if (is(bridging)) {
                     fsm.transition(message, finishDialing);
                 } else if (is(bridged) && (sender.equals(outboundCall) || outboundCall != null)) {
@@ -1280,11 +1275,15 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                             fsm.transition(message, finishDialing);
                         }
                     } else if (is(creatingRecording)) {
+                    //Do nothing, VoiceInterpreter will receive MediaGroupResponse from IVR
+                    // endpoint with recording will be done
+
                         // Ask callMediaGroup to stop recording so we have the recording file available
                         // Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
-                        logger.info("Will move to finishRecording because of callStateChanged");
-                        call.tell(new StopMediaGroup(), null);
-                        fsm.transition(message, finishRecording);
+//                        logger.info("Will move to finishDialing because of callStateChanged");
+//                        fsm.transition(message, finishDialing);
+//                        call.tell(new StopMediaGroup(), null);
+//                        fsm.transition(message, finishRecording);
                     } else if ((is(bridged) || is(forking)) && call == sender()) {
                         if (!dialActionExecuted) {
                             fsm.transition(message, finishDialing);

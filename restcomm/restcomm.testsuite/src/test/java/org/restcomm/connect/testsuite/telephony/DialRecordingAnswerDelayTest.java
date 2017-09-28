@@ -209,7 +209,7 @@ public class DialRecordingAnswerDelayTest {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertTrue(duration==3.0);
+		assertEquals(3.0, duration, 0.5);
 	}
 
 
@@ -270,7 +270,7 @@ public class DialRecordingAnswerDelayTest {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertTrue(duration==3.0);
+		assertEquals(3.0, duration, 0.5);
 	}
 
 
