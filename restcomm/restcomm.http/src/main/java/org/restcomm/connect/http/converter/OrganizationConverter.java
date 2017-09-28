@@ -53,6 +53,7 @@ public final class OrganizationConverter extends AbstractConverter implements Js
         final Organization organization = (Organization) object;
         writer.startNode("Organization");
         writeSid(organization.getSid(), writer);
+        writeDomainName(organization.getDomainName(), writer);
         writeStatus(organization.getStatus().toString(), writer);
         writeDateCreated(organization.getDateCreated(), writer);
         writeDateUpdated(organization.getDateUpdated(), writer);
@@ -63,6 +64,7 @@ public final class OrganizationConverter extends AbstractConverter implements Js
     public JsonElement serialize(final Organization organization, final Type type, final JsonSerializationContext context) {
         final JsonObject object = new JsonObject();
         writeSid(organization.getSid(), object);
+        writeDomainName(organization.getDomainName(), object);
         writeStatus(organization.getStatus().toString(), object);
         writeDateCreated(organization.getDateCreated(), object);
         writeDateUpdated(organization.getDateUpdated(), object);
