@@ -61,6 +61,7 @@ import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -846,6 +847,9 @@ public class Jsr309CallController extends MediaServerController {
         @Override
         public void execute(Object message) throws Exception {
             try {
+                CreateMediaSession msg = (CreateMediaSession) message;
+                MediaAttributes mediaAttributes = msg.mediaAttributes();
+
                 // Create media session
                 mediaSession = msControlFactory.createMediaSession();
 
@@ -859,6 +863,25 @@ public class Jsr309CallController extends MediaServerController {
 
                 // Create network connection
                 networkConnection = mediaSession.createNetworkConnection(NetworkConnection.BASIC);
+
+                if (MediaAttributes.MediaType.VIDEO_ONLY.equals(mediaAttributes.getMediaType())) {
+                    // video only
+                    configureVideoMediaSession(mediaAttributes);
+                    Parameters mixerParams = createMixerParams();
+                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
+                } else if (MediaAttributes.MediaType.AUDIO_VIDEO.equals(mediaAttributes.getMediaType())) {
+                    // audio and video
+                    configureVideoMediaSession(mediaAttributes);
+                    Parameters mixerParams = createMixerParams();
+                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
+                } else {
+                    // audio only
+                    Parameters mixerParams = createMixerParams();
+                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO, mixerParams);
+                }
+
+                //TODO mediaMixer.addListener(mixerAllocationListener);
+                mediaMixer.confirm();
 
                 // Distinguish between WebRTC and SIP calls
                 Parameters sdpParameters = mediaSession.createParameters();
@@ -886,6 +909,17 @@ public class Jsr309CallController extends MediaServerController {
             } catch (MsControlException e) {
                 fsm.transition(e, failed);
             }
+        }
+
+        private void configureVideoMediaSession(final MediaAttributes mediaAttributes) {
+            // resolution configuration
+            mediaSession.setAttribute("CONFERENCE_VIDEO_SIZE", mediaAttributes.getVideoResolution().toString());
+        }
+
+        private Parameters createMixerParams() {
+            Parameters mixerParams = mediaSession.createParameters();
+            mixerParams.put(MediaMixer.MAX_PORTS, 900);
+            return mixerParams;
         }
 
     }

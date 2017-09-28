@@ -161,4 +161,5 @@ public final class InitializeOutbound {
         return imsProxyPort;
     }
 
+    public MediaAttributes getMediaAttributes() { return mediaAttributes; }
 }
