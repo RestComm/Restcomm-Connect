@@ -99,8 +99,14 @@ public class AccountsEndpointTest extends EndpointTest {
 
     private String commonAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     
-    private String organizationSid2 = "ORafbe225ad37541eba518a74248f0ac4d";
     private String organizationSid1 = "ORafbe225ad37541eba518a74248f0ac4c";
+    private String organizationSid2 = "ORafbe225ad37541eba518a74248f0ac4d";
+    private String organizationSid3 = "ORafbe225ad37541eba518a74248f0ac4e";
+    
+    private String organization1DomainName = "127.0.0.1";
+    private String organization2DomainName = "org1.restcomm.com";
+    private String organization3DomainName = "org2.restcomm.com";
+    
 
     static SipStackTool tool1;
 
@@ -614,18 +620,39 @@ public class AccountsEndpointTest extends EndpointTest {
         assertEquals(200, response.getStatus());
 
         //getAccounts with null Filter
-        String responseStr = RestcommAccountsTool.getInstance().getAccountsWithFilterStringResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, null, null);
+        JsonArray accountsArray = RestcommAccountsTool.getInstance().getAccountsWithFilterResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, null, null);
         if(logger.isDebugEnabled())
-        	logger.debug("getAccounts With null Filter Response: "+responseStr);
-        //should be 6 accounts
-       JsonElement jsonElement = new JsonParser().parse(responseStr);
-        if(jsonElement.isJsonArray()) {
-        	JsonArray accountsArray = jsonElement.getAsJsonArray();
-            assertEquals(6, accountsArray.size());
-        } else {
-            logger.info("JsonElement: " + jsonElement.toString());
-            Assert.fail();
-        }
+        	logger.debug("getAccounts With null Filter Response: "+accountsArray);
+        //should be 6 accounts as these are child accounts only
+        assertEquals(7, accountsArray.size());
+       
+        //getAccounts with organizationSid Filter
+        accountsArray = RestcommAccountsTool.getInstance().getAccountsWithFilterResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, organizationSid1, null);
+        if(logger.isDebugEnabled())
+        	logger.debug("getAccounts With organizationSid Filter Response: "+accountsArray);
+        //should be 15 accounts as these are child accounts only
+        assertEquals(15, accountsArray.size());
+
+        //getAccounts with organizationSid Filter
+        accountsArray = RestcommAccountsTool.getInstance().getAccountsWithFilterResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, organizationSid2, null);
+        if(logger.isDebugEnabled())
+        	logger.debug("getAccounts With organizationSid Filter Response: "+accountsArray);
+        //should be 1 account
+        assertEquals(1, accountsArray.size());
+
+        //getAccounts with organizationSid Filter
+        accountsArray = RestcommAccountsTool.getInstance().getAccountsWithFilterResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, organizationSid3, null);
+        if(logger.isDebugEnabled())
+        	logger.debug("getAccounts With organizationSid Filter Response: "+accountsArray);
+        //should be 0
+        assertEquals(0, accountsArray.size());
+
+        //getAccounts with domainName Filter
+        accountsArray = RestcommAccountsTool.getInstance().getAccountsWithFilterResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, null, organization2DomainName);
+        if(logger.isDebugEnabled())
+        	logger.debug("getAccounts With domainName Filter Response: "+accountsArray);
+        //should be 1 account
+        assertEquals(1, accountsArray.size());
     }
 
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)

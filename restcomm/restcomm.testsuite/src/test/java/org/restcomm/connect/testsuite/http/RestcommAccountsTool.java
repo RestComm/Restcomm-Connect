@@ -5,6 +5,8 @@ import java.util.logging.Logger;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
@@ -212,15 +214,16 @@ public class RestcommAccountsTool {
 	 * @param authtoken
 	 * @param organizationSid
 	 * @param domainName
-	 * @return
+	 * @return JsonArray
 	 */
-	public String getAccountsWithFilterStringResponse (String deploymentUrl, String username, String authtoken, String organizationSid, String domainName) {
+	public JsonArray getAccountsWithFilterResponse (String deploymentUrl, String username, String authtoken, String organizationSid, String domainName) {
 		WebResource webResource = prepareAccountListWebResource(deploymentUrl, username, authtoken);
 		
 		String  response = webResource.queryParams(prepareAccountListFilter(organizationSid, domainName))
 				.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                 .get(String.class);
-		return response;
+		JsonElement jsonElement = new JsonParser().parse(response);
+        return jsonElement.getAsJsonArray();
 	}
 
 	/**
