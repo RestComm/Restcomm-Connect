@@ -4,7 +4,7 @@ This is a quick user guide for Restcomm - Docker. You will learn how to install 
 Prerequisites
 ^^^^^^^^^^^^^^
 
-*  *System requirements:* There are not any particular minimum requirements to properly run RestComm. Mostly depends on the use-case scenario and needs in resources. For a local development environment (not production) a medium station (i3,4Gb) should be enough (link:#memissue[known issue]).
+* *System requirements:* Please, check RAM dedicated to your Docker container. Restcomm requires minimum *3GB* to start 2 java processes: Jboss with Restcomm services and standalone mediaserver
 * Install docker on your sever : https://docs.docker.com/engine/installation/
 * Get a free API KEY VoiceRss account as explained  http://www.voicerss.org/[HERE]
 * Ensure firewall is correctly configured (*SELinux can be a problem on some systems*)
@@ -15,7 +15,6 @@ Supported Tags
 ^^^^^^^^^^^^^^
 
 * Tag "latest". Points to the latest binary from the Continuous Delivery server. Uses the https://github.com/RestComm/Restcomm-Connect[master] development branch : restcomm/restcomm:latest. *We don't advice to use "latest" tag for production as it is constantly changing, and as well new features and fixes may not be documented.
-* Tag "stable". Points to the latest/current GA release (current: https://github.com/RestComm/Restcomm-Connect/releases/tag/7.6.0.879/[7.6.0.GA]) use tag :  restcomm/restcomm:stable
 * Tag "7.7.0" pointing to current specific GA release (v770ga).
 
 To pull the "**latest**" image from the RestComm docker hub repository please use:
@@ -29,15 +28,23 @@ docker pull restcomm/restcomm:latest
 Install and Run Restcomm Docker
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Get your "ETHERNET_IP" by running ifconfig
-* Fill out the STATIC_ADDRESS variable as shown below
+* Get your "ETHERNET_IP" by running ifconfig. Use 127.0.0.1 as "ETHERNET_IP" if you are running container on Docker for Mac.
+* Fill out the RCBCONF_STATIC_ADDRESS variable as shown below.
 * Start Restcomm as shown below:
 * This will start Restcomm in secure mode (https)
 
 [source,lang:default,decode:true]
 ----
-docker run  -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/restcomm/ -e RCBCONF_STATIC_ADDRESS="YOUR_ETHERNET_IP" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh" -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+docker run  -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/restcomm/ -e RCBCONF_STATIC_ADDRESS="YOUR_ETHERNET_IP" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh" -p 8080:8080 -p 8443:8443 -p 9990:9990 -p 5080:5080 -p 5081:5081 -p 5082:5082 -p 5083:5083 -p 5080:5080/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
 ----
+
+* OS X seems to have known for mount denied issue on `/var/log/restcomm` directory, in such case: mount logs with any directory under `/Users`. Here is an example:
+
+[source,lang:default,decode:true]
+----
+docker run  -i -d --name=restcomm-myInstance -v /Users/username/var/log/restcomm:/var/log/restcomm/ -e RCBCONF_STATIC_ADDRESS="YOUR_ETHERNET_IP" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh" -p 8080:8080 -p 8443:8443 -p 9990:9990 -p 5080:5080 -p 5081:5081 -p 5082:5082 -p 5083:5083 -p 5080:5080/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+----
+
 
 [[text-to-speech-with-voicerss]]
 Text-to-Speech with VoiceRSS
@@ -50,21 +57,19 @@ Text-to-Speech with VoiceRSS
 Quick test
 ^^^^^^^^^^
 
-* Get the Docker IP address by running ifconfig command
-* docker0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500 inet 172.17.42.1
 
-1.  Go to *https://DOCKER_IP_ADDRESS/olympus*
+1.  Go to *https://RCBCONF_STATIC_ADDRESS:8443/olympus*
 2.  Press "Sign in" (username alice or bob and password 1234)
 3.  Your browser will ask for permission to share microphone and camera, press allow
 4.  Go to "Contact", click on the "**+1234**" and press the "Audio Call" button (phone icon)
 5.  You should hear the "Welcome to RestComm, a Telestax Sponsored project" announcement
-6.  You can also make a calll to the "**+1235**" to test your Text-to-Speech configuration
+6.  You can also make a call to the "**+1235**" to test your Text-to-Speech configuration
 
 [[accessing-the-admin-ui]]
 Accessing the Admin UI
 ^^^^^^^^^^^^^^^^^^^^^^
 
-1.  Go to https://DOCKER_IP_ADDRESS
+1.  Go to https://RCBCONF_STATIC_ADDRESS:8443
 2.  Username = administrator@company.com
 3.  Password = RestComm
 4.  Change the default password
@@ -98,7 +103,7 @@ You can start the container and get a bash console to manually setup Restcomm an
 
 [source,lang:default,decode:true]
 ----
-docker run --name=restcomm-myInstance --entrypoint=/bin/bash -it -p 80:80 -p 5060:5060 -p 5082:5082 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+docker run --name=restcomm-myInstance --entrypoint=/bin/bash -it -p 8080:8080 -p 8443:8443 -p 9990:9990 -p 5080:5080 -p 5081:5081 -p 5082:5082 -p 5083:5083 -p 5080:5080/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
 ----
 
 Get a bash console for a running RestComm container:
@@ -126,11 +131,11 @@ When using a SIP client that is not running on the same local machine as the Res
 
 [source,lang:default,decode:true]
 ----
-docker run  -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/restcomm/ -e RCBCONF_STATIC_ADDRESS="YOUR_ETHERNET_IP" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/scripts/restcomm_env_locally.sh" -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+docker run  -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/restcomm/ -e RCBCONF_STATIC_ADDRESS="YOUR_ETHERNET_IP" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/scripts/restcomm_env_locally.sh" -p 8080:8080 -p 8443:8443 -p 9990:9990 -p 5080:5080 -p 5081:5081 -p 5082:5082 -p 5083:5083 -p 5080:5080/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
 ----
 
 *Known Issue on Firefox when running RestComm Olympus*
 
 It is possible that you will not be able to log in to olympus the first time that you will try to connect using Firefox. To fix this problem please follow the solution provided by http://stackoverflow.com/users/379916/faisal-mq[Faisal Mq] (http://stackoverflow.com/questions/11542460/secure-websocket-wss-doesnt-work-on-firefox[stackoverflow]).
 
-* When you would try to open up wss say using wss://IP:5063, Firefox will keep on giving you error until you open up a separate Firefox tab and do try hitting URL [https]://IP:5063 and Confirm Security Exception (like you do on Firefox normally for any https based connection). This only happens in Firefox.
+* When you would try to open up wss say using wss://RCBCONF_STATIC_ADDRESS:5083, Firefox will keep on giving you error until you open up a separate Firefox tab and do try hitting URL [https]://RCBCONF_STATIC_ADDRESS:5083 and Confirm Security Exception (like you do on Firefox normally for any https based connection). This only happens in Firefox.

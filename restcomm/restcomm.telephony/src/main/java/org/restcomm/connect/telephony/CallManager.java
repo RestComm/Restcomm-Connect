@@ -552,10 +552,7 @@ public final class CallManager extends RestcommUntypedActor {
         }
         Sid toOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getTo().getURI());
         if(logger.isDebugEnabled()) {
-            logger.debug("toOrganizationSid: " + toOrganizationSid);
-        }
-        if(toOrganizationSid == null){
-            logger.error("Null to Organization: toUri: "+(SipURI) request.getTo().getURI());
+            logger.debug("toOrganizationSid: " + toOrganizationSid +" toUri: "+(SipURI) request.getTo().getURI());
         }
         final Client toClient = clients.getClient(toUser, toOrganizationSid);
 
