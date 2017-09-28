@@ -38,9 +38,13 @@ public final class HttpRequestDescriptor {
     private final URI uri;
     private final String method;
     private final List<NameValuePair> parameters;
+    private final Integer timeout;
 
-    public HttpRequestDescriptor(final URI uri, final String method, final List<NameValuePair> parameters) {
+    public HttpRequestDescriptor(final URI uri, final String method,
+            final List<NameValuePair> parameters,
+            final Integer timeout) {
         super();
+        this.timeout = timeout;
         this.uri = base(uri);
         this.method = method;
         if (parameters != null) {
@@ -53,6 +57,11 @@ public final class HttpRequestDescriptor {
             final List<NameValuePair> other = URLEncodedUtils.parse(uri, "UTF-8");
             parameters.addAll(other);
         }
+
+    }
+
+    public HttpRequestDescriptor(final URI uri, final String method, final List<NameValuePair> parameters) {
+        this(uri,method,parameters, -1);
     }
 
     public HttpRequestDescriptor(final URI uri, final String method) throws UnsupportedEncodingException, URISyntaxException {
@@ -92,4 +101,9 @@ public final class HttpRequestDescriptor {
     public URI getUri() {
         return uri;
     }
+
+    public Integer getTimeout() {
+        return timeout;
+    }
+
 }
