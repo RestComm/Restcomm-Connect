@@ -4,7 +4,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.HttpClientUtils;
 import org.restcomm.connect.commons.common.http.CustomHttpClientBuilder;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 
@@ -30,7 +29,7 @@ public URI download(URI requestUri, File pathToSave) throws IOException, URISynt
         try {
             if (requestUri.getScheme().equalsIgnoreCase("https")) {
                 //Handle the HTTPS URIs
-                client = CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
+                client = CustomHttpClientBuilder.buildDefaultClient(RestcommConfiguration.getInstance().getMain());
                 /*URI result = new URIBuilder()
                         .setScheme(requestUri.getScheme())
                         .setHost(requestUri.getHost())
@@ -75,10 +74,6 @@ public URI download(URI requestUri, File pathToSave) throws IOException, URISynt
             if (httpResponse != null) {
                 ((CloseableHttpResponse) httpResponse).close();
                 httpResponse = null;
-            }
-            if (client != null) {
-                HttpClientUtils.closeQuietly(client);
-                client = null;
             }
         }
 
