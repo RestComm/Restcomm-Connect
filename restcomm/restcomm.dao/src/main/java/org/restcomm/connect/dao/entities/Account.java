@@ -146,11 +146,6 @@ public final class Account {
                 role, uri, organizationSid);
     }
 
-    public Account setOrganization(final Sid organizationSid) {
-        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
-                role, uri, organizationSid);
-    }
-
     public enum Status {
         ACTIVE("active"), CLOSED("closed"), SUSPENDED("suspended"), INACTIVE("inactive"), UNINITIALIZED("uninitialized");
 
