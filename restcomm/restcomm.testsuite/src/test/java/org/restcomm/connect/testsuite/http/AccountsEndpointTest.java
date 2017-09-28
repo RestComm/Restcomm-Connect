@@ -605,7 +605,9 @@ public class AccountsEndpointTest extends EndpointTest {
 
     @Test
     public void testGetAccountsOfASpecificOrganization() {
-        ClientResponse response = RestcommAccountsTool.getInstance().getAccountsResponse(deploymentUrl.toString(), adminUsername, adminAuthToken);
+    	//without any parameters
+        ClientResponse response = RestcommAccountsTool.getInstance().getAccountsWithFilterResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, null, null, null);
+        logger.info("getAccountsWithFilterResponse: "+response);
         assertEquals(200, response.getStatus());
     }
 

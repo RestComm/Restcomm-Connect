@@ -181,6 +181,24 @@ public class RestcommAccountsTool {
 		return response;
 	}
 
+	public ClientResponse getAccountsWithFilterResponse (String deploymentUrl, String username, String authtoken, String organizationSid, String domainName, String baseAccount) {
+		Client jerseyClient = Client.create();
+		jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authtoken));
+		WebResource webResource = jerseyClient.resource(getAccountsUrl(deploymentUrl));
+		
+		MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+		if(organizationSid != null && !(organizationSid.trim().isEmpty()))
+			params.add("OrganizationSid", organizationSid);
+		if(domainName != null && !(domainName.trim().isEmpty()))
+			params.add("DomainName", domainName);
+		if(baseAccount != null && !(baseAccount.trim().isEmpty()))
+			params.add("BaseAccount", baseAccount);
+
+		ClientResponse  response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+                .get(ClientResponse.class);
+		return response;
+	}
+
 	public ClientResponse removeAccountResponse (String deploymentUrl, String operatingUsername, String operatingAuthToken, String removedAccountSid) {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatingUsername, operatingAuthToken));

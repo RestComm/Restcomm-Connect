@@ -318,7 +318,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
 
 
-    protected Response getAccounts(final MediaType responseType) {
+    protected Response getAccounts(final MultivaluedMap<String, String> data, final MediaType responseType) {
         checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Read:Accounts");

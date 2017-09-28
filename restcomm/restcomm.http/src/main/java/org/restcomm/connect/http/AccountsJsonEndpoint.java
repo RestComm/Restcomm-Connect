@@ -58,8 +58,8 @@ public final class AccountsJsonEndpoint extends AccountsEndpoint {
     }
 
     @GET
-    public Response getAccounts() {
-        return getAccounts(APPLICATION_JSON_TYPE);
+    public Response getAccounts(final MultivaluedMap<String, String> data) {
+        return getAccounts(data, APPLICATION_JSON_TYPE);
     }
 
     /* disabled as #1270
