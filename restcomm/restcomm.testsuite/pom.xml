@@ -439,6 +439,8 @@
                         <include>**/DialActionTest.java</include>
                         <include>**/DialForkAnswerDealyTest.java</include>
                         <include>**/DialForkTest.java</include>
+                        <include>**/DialRecordingAnswerDelayTest.java</include>
+                        <include>**/DialRecordingTest.java</include>
                         <include>**/DialStatusCallbackTest.java</include>
                         <include>**/TestDialVerbPartOneAnswerDelay.java</include>
                         <include>**/TestDialVerbPartOne.java</include>
