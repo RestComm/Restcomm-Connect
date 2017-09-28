@@ -8,10 +8,14 @@
     INSERT INTO "restcomm_permissions" ("sid", "name") VALUES(#{sid}, #{name});
   </insert>
 
+  <select id="getPermissions" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_permissions";
+  </select>
+
   <select id="getPermission" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_permissions" WHERE "sid"=#{sid};
   </select>
-  
+
   <select id="getPermissionByName" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_permissions" WHERE "name"=#{name};
   </select>

@@ -24,6 +24,8 @@ import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -80,6 +82,26 @@ public class PermissionsDaoTest extends DaoTest{
         removeTempDir(sandboxRoot.getAbsolutePath());
     }
 
+    @Test
+    public void testGetPermissions() {
+        assertNull(permission1);
+        assertNull(permission2);
+        assertNull(permission3);
+        assertNull(permission4);
+
+        //TODO: all the validations can be abstracted
+        List<Permission> permissions1 = permissionsDao.getPermissions();
+        List<Permission> permissions2 =  new ArrayList<Permission>();
+        permissions2.add(new Permission(sid1, name1));
+        permissions2.add(new Permission(sid2, name2));
+        permissions2.add(new Permission(sid3, name3));
+
+        assertTrue(permissions1.size()==3);
+//        for(Permission p:permissions1){
+//            System.out.println(p.getSid().toString()+" "+p.getName());
+//        }
+        assertTrue(permissions1.equals(permissions2));
+    }
     @Test
     public void testGetPermission() {
         assertNull(permission1);
