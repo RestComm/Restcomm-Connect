@@ -477,7 +477,7 @@ public class TestDialVerbPartOneAnswerDelay {
         replacements.put("5090", String.valueOf(bobPort));
         replacements.put("5091", String.valueOf(alicePort));
       
-        return WebArchiveUtil.createWebArchiveNoGw("restcomm-delay.xm", 
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm-delay.xml", 
                 "restcomm.script_dialTest_new", replacements);
     }    
 
