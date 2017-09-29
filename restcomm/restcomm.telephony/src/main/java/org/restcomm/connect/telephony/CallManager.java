@@ -2572,7 +2572,7 @@ public final class CallManager extends RestcommUntypedActor {
             logger.debug("Push server notification to client with identity: '" + pushClientIdentity + "' added to queue.");
         }
         if (httpClient == null) {
-            httpClient = CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
+            httpClient = CustomHttpClientBuilder.buildDefaultClient(RestcommConfiguration.getInstance().getMain());
         }
         Futures.future(new Callable<Void>() {
 

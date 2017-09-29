@@ -97,13 +97,13 @@ public class ClientsEndpointTest {
         SipURI reqUri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
         String clientSID = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "RestComm1234",
-                "http://127.0.0.1:8080/restcomm/demos/welcome.xml");
+                deploymentUrl.toString() + "/demos/welcome.xml");
         assertNotNull(clientSID);
 
         Thread.sleep(3000);
 
         String clientSID2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "RestComm1234",
-                "http://127.0.0.1:8080/restcomm/demos/welcome.xml");
+                deploymentUrl.toString() + "/demos/welcome.xml");
         assertNotNull(clientSID2);
 
         Thread.sleep(3000);
