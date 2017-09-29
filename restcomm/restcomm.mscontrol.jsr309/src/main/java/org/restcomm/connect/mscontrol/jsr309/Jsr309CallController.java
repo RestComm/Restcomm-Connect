@@ -123,8 +123,6 @@ public class Jsr309CallController extends MediaServerController {
     private final State failed;
 
     // JSR-309 runtime stuff
-    private static final String[] CODEC_POLICY_AUDIO = new String[] { "audio", "video" };
-
     private final MsControlFactory msControlFactory;
     private final MediaServerInfo mediaServerInfo;
     private MediaSession mediaSession;
@@ -864,25 +862,6 @@ public class Jsr309CallController extends MediaServerController {
                 // Create network connection
                 networkConnection = mediaSession.createNetworkConnection(NetworkConnection.BASIC);
 
-                if (MediaAttributes.MediaType.VIDEO_ONLY.equals(mediaAttributes.getMediaType())) {
-                    // video only
-                    configureVideoMediaSession(mediaAttributes);
-                    Parameters mixerParams = createMixerParams();
-                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
-                } else if (MediaAttributes.MediaType.AUDIO_VIDEO.equals(mediaAttributes.getMediaType())) {
-                    // audio and video
-                    configureVideoMediaSession(mediaAttributes);
-                    Parameters mixerParams = createMixerParams();
-                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
-                } else {
-                    // audio only
-                    Parameters mixerParams = createMixerParams();
-                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO, mixerParams);
-                }
-
-                //TODO mediaMixer.addListener(mixerAllocationListener);
-                mediaMixer.confirm();
-
                 // Distinguish between WebRTC and SIP calls
                 Parameters sdpParameters = mediaSession.createParameters();
                 Map<String, String> configurationData = new HashMap<String, String>();
@@ -897,7 +876,7 @@ public class Jsr309CallController extends MediaServerController {
                 networkConnection.setParameters(sdpParameters);
 
                 CodecPolicy codecPolicy = new CodecPolicy();
-                codecPolicy.setMediaTypeCapabilities(CODEC_POLICY_AUDIO);
+                codecPolicy.setMediaTypeCapabilities(mediaAttributes.getMediaType().getCodecPolicy());
 
                 networkConnection.getSdpPortManager().setCodecPolicy(codecPolicy);
                 networkConnection.getSdpPortManager().addListener(sdpListener);
@@ -910,18 +889,6 @@ public class Jsr309CallController extends MediaServerController {
                 fsm.transition(e, failed);
             }
         }
-
-        private void configureVideoMediaSession(final MediaAttributes mediaAttributes) {
-            // resolution configuration
-            mediaSession.setAttribute("CONFERENCE_VIDEO_SIZE", mediaAttributes.getVideoResolution().toString());
-        }
-
-        private Parameters createMixerParams() {
-            Parameters mixerParams = mediaSession.createParameters();
-            mixerParams.put(MediaMixer.MAX_PORTS, 900);
-            return mixerParams;
-        }
-
     }
 
     private final class UpdatingMediaSession extends AbstractAction {
