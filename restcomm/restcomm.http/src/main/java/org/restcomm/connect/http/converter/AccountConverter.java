@@ -19,7 +19,6 @@
  */
 package org.restcomm.connect.http.converter;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
@@ -29,11 +28,9 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Permission;
 
 import javax.ws.rs.core.MediaType;
 import java.lang.reflect.Type;
-import java.util.List;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
@@ -71,7 +68,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         writeAuthToken(account, writer);
         writeUri(account.getUri(), writer);
         writeSubResourceUris(account, writer);
-        writePermissions(account.getPermissions(), writer);
+        writePermissions(account, writer);
         writer.endNode();
     }
 
@@ -89,7 +86,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         writeAuthToken(account, object);
         writeUri(account, object);
         writeSubResourceUris(account, object);
-        writePermissions(account.getPermissions(), object, context);
+        writePermissions(account, object, context);
         return object;
     }
 
@@ -251,22 +248,14 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         object.addProperty("transcriptions", prefix(account) + "/Transcriptions.json");
     }
 
-    private void writePermissions(List<Permission> list, final HierarchicalStreamWriter writer) {
-        // TODO Auto-generated method stub
-        writer.startNode("PermissionsX");
-        writer.setValue("/TranscriptionsSTUFF");
+    private void writePermissions(final Account account, final HierarchicalStreamWriter writer) {
+        writer.startNode("Permissions");
+        writer.setValue(prefix(account) + "/Permissions");
         writer.endNode();
     }
 
-    private void writePermissions(List<Permission> list, JsonObject object, final JsonSerializationContext context) {
-        JsonArray permArray = new JsonArray();
-        object.add("permissions", permArray);
-
-        if (list != null && list.size() > 0)
-            for (Permission permission: list) {
-                permArray.add(context.serialize(permission));
-            }
-        object.add("Permissions", permArray);
+    private void writePermissions(final Account account, JsonObject object, final JsonSerializationContext context) {
+        object.addProperty("permissions", prefix(account) + "/Permissions.json");
     }
 
     private void writeEmailAddress(final Account account, final HierarchicalStreamWriter writer) {

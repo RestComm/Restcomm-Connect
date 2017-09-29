@@ -23,6 +23,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
@@ -96,5 +97,16 @@ public final class AccountsJsonEndpoint extends AccountsEndpoint {
         return updateAccount(accountSid, data, APPLICATION_JSON_TYPE);
     }
 
+    @Path("/{accountSid}/Permissions.json")
+    @GET
+    public Response getAccountPermissions(@PathParam("accountSid") final String accountSid) {
+        return getAccountPermissions(accountSid, APPLICATION_JSON_TYPE);
+    }
 
+    @Path("/{accountSid}/Permissions/{permissionSid}")
+    @DELETE
+    public Response deleteAccountPermission(@PathParam("accountSid") final String accountSid,
+                                                @PathParam("permissionSid") final String permissionSid) {
+        return deleteAccountPermission(accountSid, permissionSid, APPLICATION_JSON_TYPE);
+    }
 }
