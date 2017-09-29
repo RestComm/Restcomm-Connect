@@ -50,7 +50,7 @@ public class MediaAttributes {
     }
 
     /**
-     * Constructor for audio-video or video-only media sessions
+     * Constructor for audio-video or video-only media sessions (conference calls)
      *
      * @param mediaType
      * @param videoMode
@@ -68,6 +68,16 @@ public class MediaAttributes {
         this.videoResolution = videoResolution;
         this.videoLayout = videoLayout;
         this.videoOverlay = videoOverlay;
+    }
+
+    /**
+     * Constructor for audio-video or video-only media sessions (outbound calls / fork)
+     *
+     * @param mediaType
+     * @param videoResolution
+     */
+    public MediaAttributes(final MediaType mediaType, final VideoResolution videoResolution){
+        this(mediaType, null, videoResolution, null, null);
     }
 
     public MediaType getMediaType() {
@@ -91,12 +101,16 @@ public class MediaAttributes {
     }
 
     public enum MediaType {
-        AUDIO_ONLY("audio_only"), VIDEO_ONLY("video_only"), AUDIO_VIDEO("audio_video");
+        AUDIO_ONLY("audio_only", new String[] {"audio"}),
+        VIDEO_ONLY("video_only", new String[] {"video"}),
+        AUDIO_VIDEO("audio_video", new String[] {"audio", "video"});
 
         private final String text;
+        private final String[] codecPolicy;
 
-        MediaType(final String text) {
+        MediaType(final String text, final String[] codecPolicy) {
             this.text = text;
+            this.codecPolicy = codecPolicy;
         }
 
         public static MediaType getValueOf(final String text) {
@@ -114,6 +128,9 @@ public class MediaAttributes {
             return text;
         }
 
+        public String[] getCodecPolicy() {
+            return codecPolicy;
+        }
     }
 
     public enum VideoMode {
