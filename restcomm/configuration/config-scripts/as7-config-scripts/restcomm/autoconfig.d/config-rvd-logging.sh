@@ -20,11 +20,13 @@
 
 # Default values
 STANDALONE_SIP=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
-LOG_FILE="rvd/rvd.log"; # this is relative to "jboss.server.log.dir"
+LOG_FILE="rvd/rvd.log"; # this is relative to "jboss.server.log.dir". It gets overriden by RVD_LOG_FILE variable from advanced.conf
 RVD_LOG_LEVEL=INFO # logging level that will be used if handlers/loggers are missing
+HANDLER_RELATIVE_TO="jboss.server.log.dir"  # this applies only for relative LOG_FILE setting
 LOGGING_HANDLER=RVD # the handler to be used for RVD logging. Set this to 'FILE' to redirect all messages to the main restcomm log (server.log)
 
-# Variables 
+
+# Variables
 XML_UPDATED=false # flag to format xml file only if updated
 OVERRIDE=false
 
@@ -33,22 +35,38 @@ error(){
     exit 1
 }
 
+# Remove an element by its xpath
+# 1. xpath of element to remove
+# 2. path of the file to process
+# 3. namespace of element to remove
+# 4. alias of namespace used in xpath
+#
+removeElement() {
+	local nsAlias="$4"
+	if [ ! -z $3 ]; then
+		local nsparam="-N $nsAlias=$3"
+	fi
+	xmlstarlet ed -P $nsparam -d "$1" "$2" > ${2}_tmp
+    mv ${2}_tmp ${2}
+}
+
 createHandler(){
 
-    # create the RVD handler if it is missing
-    xmlstarlet sel -Q -N logns=urn:jboss:domain:logging:1.2 -t -m "//logns:periodic-rotating-file-handler[@name='RVD']" -o "found" $STANDALONE_SIP 
-    result=$?
-    if [ "$result" -eq 1 ]; then
-	echo "adding RVD handler"
-	xmlstarlet ed -P -N logns=urn:jboss:domain:logging:1.2 -d "//logns:periodic-rotating-file-handler[@name='RVD']" -s "//logns:subsystem" -t elem -n periodic-rotating-file-handler_TMP -v "" \
+    # always remove handler
+    removeElement "//logns:periodic-rotating-file-handler[@name='RVD']" "$STANDALONE_SIP" "urn:jboss:domain:logging:1.2" "logns" > ${STANDALONE_SIP}_tmp
+    # re-create the RVD handler
+    if [ -n "$HANDLER_RELATIVE_TO" ]; then
+        RELATIVE_TO_SUBCOMMAND="-i //file_TMP -t attr -n relative-to -v $HANDLER_RELATIVE_TO"
+    fi
+    xmlstarlet ed -P -N logns=urn:jboss:domain:logging:1.2 -d "//logns:periodic-rotating-file-handler[@name='RVD']" -s "//logns:subsystem" -t elem -n periodic-rotating-file-handler_TMP -v "" \
     -i //periodic-rotating-file-handler_TMP -t attr -n name -v RVD \
     -i //periodic-rotating-file-handler_TMP -t attr -n autoflush -v true \
     -s //periodic-rotating-file-handler_TMP -t elem -n formatter_TMP -v "" \
     -s //formatter_TMP -t elem -n pattern-formatter_TMP -v "" \
     -i //pattern-formatter_TMP -t attr -n pattern -v "%d{MMdd HH:mm:ss,SSS X} %p (%t) %m %n" \
     -s //periodic-rotating-file-handler_TMP -t elem -n file_TMP -v "" \
-    -i //file_TMP -t attr -n relative-to -v "jboss.server.log.dir" \
-    -i //file_TMP -t attr -n path -v "rvd/rvd.log" \
+    $RELATIVE_TO_SUBCOMMAND \
+    -i //file_TMP -t attr -n path -v "$LOG_FILE" \
     -s //periodic-rotating-file-handler_TMP -t elem -n suffix_TMP -v "" \
     -s //suffix_TMP -t attr -n value -v ".yyyy-MM-dd" \
     -s //periodic-rotating-file-handler_TMP -t elem -n append_TMP -v "" \
@@ -59,22 +77,17 @@ createHandler(){
     -r //file_TMP -v file \
     -r //suffix_TMP -v suffix \
     -r //append_TMP -v append \
-	$STANDALONE_SIP > ${STANDALONE_SIP}_tmp
-	mv ${STANDALONE_SIP}_tmp $STANDALONE_SIP
+    $STANDALONE_SIP > ${STANDALONE_SIP}_tmp
+    mv ${STANDALONE_SIP}_tmp $STANDALONE_SIP
         XML_UPDATED=true
-    else 
-        if [ "$result" -eq 3 ];
-        then
-            error
-        fi
-    fi
+    echo "updated RVD handler"
 
 }
 
 createLoggers(){
 
     # create RVD local logger if it is missing
-    xmlstarlet sel -Q -N logns=urn:jboss:domain:logging:1.2 -t -m "//logns:logger[@category='org.restcomm.connect.rvd.LOCAL']" -o "found" $STANDALONE_SIP 
+    xmlstarlet sel -Q -N logns=urn:jboss:domain:logging:1.2 -t -m "//logns:logger[@category='org.restcomm.connect.rvd.LOCAL']" -o "found" $STANDALONE_SIP
     result=$?
     if [ "$result" -eq 1 -o \( "$result" = 0 -a "$OVERRIDE" = true \) ]; then
 	echo "adding RVD local logger - $RVD_LOG_LEVEL/$LOGGING_HANDLER handler"
@@ -101,7 +114,7 @@ createLoggers(){
     fi
 
     # create RVD global logger if it is missing
-    xmlstarlet sel -Q -N logns=urn:jboss:domain:logging:1.2 -t -m "//logns:logger[@category='org.restcomm.connect.rvd.GLOBAL']" -o "found" $STANDALONE_SIP 
+    xmlstarlet sel -Q -N logns=urn:jboss:domain:logging:1.2 -t -m "//logns:logger[@category='org.restcomm.connect.rvd.GLOBAL']" -o "found" $STANDALONE_SIP
     result=$?
     if [ "$result" -eq 1 -o \( "$result" = 0 -a "$OVERRIDE" = true \) ]; then
 	echo "adding RVD global logger - $RVD_LOG_LEVEL/$LOGGING_HANDLER handler"
@@ -131,7 +144,7 @@ createLoggers(){
 formatXml(){
     tmpfile=$(mktemp -t rvdconfigXXX)
     xmlstarlet fo "$STANDALONE_SIP" > "$tmpfile"
-    mv "$tmpfile" "$STANDALONE_SIP" 
+    mv "$tmpfile" "$STANDALONE_SIP"
 }
 
 # MAIN
@@ -143,6 +156,17 @@ then
 fi
 
 echo "Configuring RVD logging"
+
+# Override LOG_FILE if advanced.conf:RVD_LOG_FILE does contain something
+if [ -n "$RVD_LOG_FILE" ]
+then
+    LOG_FILE="$RVD_LOG_FILE"
+fi
+# If there is an absolute path, remove the 'relative-to' attribute of handler
+if [[ "$LOG_FILE" == /* ]]
+then
+    HANDLER_RELATIVE_TO=""
+fi
 
 # if no (level) argument is given, create default loggers only if they are missing
 if [ -z $1 ]
@@ -167,13 +191,13 @@ else
                         exit 1
                     ;;
                 esac
-            fi    
+            fi
             RVD_LOG_LEVEL=$1
             OVERRIDE=true
             createHandler
             createLoggers
         ;;
-        *) 
+        *)
             echo "invalid arguments: level should be one of FATAL|ERROR|WARN|INFO|DEBUG|TRACE|ALL|OFF"
             exit 1
         ;;
@@ -187,4 +211,6 @@ then
     formatXml
     echo "$STANDALONE_SIP updated"
 fi
+
+echo "Using $LOG_FILE file for RVD logging (relative paths will be related to jboss.server.log.dir)"
 
