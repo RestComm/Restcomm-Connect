@@ -40,6 +40,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import com.thoughtworks.xstream.XStream;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.crypto.hash.Md5Hash;
@@ -58,11 +62,14 @@ import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.Permission;
+import org.restcomm.connect.dao.entities.PermissionList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
 import org.restcomm.connect.http.converter.AccountConverter;
 import org.restcomm.connect.http.converter.AccountListConverter;
+import org.restcomm.connect.http.converter.AccountPermissionsConverter;
+import org.restcomm.connect.http.converter.PermissionsConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
 import org.restcomm.connect.commons.exceptions.AuthorizationException;
@@ -78,6 +85,21 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.thoughtworks.xstream.XStream;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
+import static javax.ws.rs.core.MediaType.*;
+import static javax.ws.rs.core.Response.Status.*;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -108,8 +130,12 @@ public class AccountsEndpoint extends SecuredEndpoint {
         clientDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getClientsDao();
         permissionsDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getPermissionsDao();
         final AccountConverter converter = new AccountConverter(runtimeConfiguration);
+        final PermissionsConverter permConv = new PermissionsConverter(runtimeConfiguration);
+        final AccountPermissionsConverter accPermConv = new AccountPermissionsConverter(runtimeConfiguration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
+        builder.registerTypeAdapter(Permission.class, permConv);
+        builder.registerTypeAdapter(AccountPermission.class, accPermConv);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
@@ -444,22 +470,18 @@ public class AccountsEndpoint extends SecuredEndpoint {
             //check if accounts permissions exists first
             //if ap exists, just update value
             //if not create new ap from perm,check if permission exists first
-            List<Permission> p1 = accountsDao.getAccountPermissions(account.getSid());
             AccountPermission ap = (AccountPermission)accountsDao.getAccountPermission(account.getSid(), new Sid(permissionSidString));
             Permission perm = permissionsDao.getPermission(new Sid(permissionSidString));
             if(ap != null){
                 String permissionValue = data.getFirst("PermissionValue");
-                //FIXME:
+
                 ap.setValue(permissionValue.isEmpty() ? true: Boolean.valueOf(permissionValue));
                 accountsDao.updateAccountPermissions(account.getSid(), ap);
-                p1 = accountsDao.getAccountPermissions(account.getSid());
-            }else if(perm!=null){
+            }else if(ap==null && perm!=null){
                 String permissionValue = data.getFirst("PermissionValue");
-                //AccountPermission ap = new AccountPermission(Permission);
                 ap = new AccountPermission(perm.getSid(), perm.getName());
                 ap.setValue(permissionValue.isEmpty() ? true: Boolean.valueOf(permissionValue));
                 accountsDao.addAccountPermission(account.getSid(), ap);
-                p1 = accountsDao.getAccountPermissions(account.getSid());
             }else{
                 //permission doesnt exist
                 if(logger.isDebugEnabled()){
@@ -698,24 +720,35 @@ public class AccountsEndpoint extends SecuredEndpoint {
         closeSingleAccount(parentAccount,rcmlserverApi);
     }
 
-    protected Response getAccountPermissions(String accountSid, String permissionSid, MediaType applicationJsonType) {
-        // TODO Auto-generated method stub
-        return null;
+    protected Response getAccountPermissions(String accountSid, MediaType responseType) {
+        final List<Permission> permissions = new ArrayList<Permission>();
+        permissions.addAll(accountsDao.getAccountPermissions(new Sid(accountSid)));
+        if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(new PermissionList(permissions));
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(permissions), APPLICATION_JSON).build();
+        } else {
+            return null;
+        }
     }
 
-    protected Response addAccountPermission(String accountSid, String permissionSid, MediaType applicationJsonType) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    protected Response updateAccountPermission(String accountSid, String permissionSid, MediaType applicationJsonType) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    protected Response deleteAccountPermission(String accountSid, String permissionSid, MediaType applicationJsonType) {
-        accountsDao.deleteAccountPermission(new Sid(accountSid), new Sid(permissionSid));
-        return null;
+    protected Response deleteAccountPermission(String accountSid, String permissionSid, MediaType responseType) {
+        Permission permission = accountsDao.getAccountPermission(new Sid(accountSid), new Sid(permissionSid));
+        if (permission != null) {
+            //FIXME: if delete failed?
+            accountsDao.deleteAccountPermission(new Sid(accountSid), new Sid(permissionSid));
+            if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(permission);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(permission), APPLICATION_JSON).build();
+            } else {
+                return null;
+            }
+        } else {
+            return status(Response.Status.NOT_FOUND).build();
+        }
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
