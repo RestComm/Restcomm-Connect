@@ -69,6 +69,7 @@ public class AccountsEndpointTest extends EndpointTest {
 
     private String createdUsernanme = "created@company.com";
     private String createdUsernanme2 = "created2@company.com";
+    private String createdUsernanme3 = "created3@company.com";
     private String createdAccountSid = "AC5ee3b351401804c2d064a33f762146fb";
     private String createdPassword = "RestComm12";
     private String createdAuthToken = "28f96b0fea1f9e33646f42026abdf305";
@@ -174,6 +175,7 @@ public class AccountsEndpointTest extends EndpointTest {
                 adminAuthToken, createdUsernanme);
         assertTrue(getAccountResponse.get("sid").getAsString().equals(createdAccountSid));
         assertEquals(createdAuthToken, getAccountResponse.get("auth_token").getAsString());
+        logger.info("createAccountResponse: "+createAccountResponse);
         assertTrue(createAccountResponse.get("sid").getAsString().equals(createdAccountSid));
         assertEquals(createdAuthToken, createAccountResponse.get("auth_token").getAsString());
     }
@@ -588,24 +590,24 @@ public class AccountsEndpointTest extends EndpointTest {
                 childUsername, childAuthToken, createdUsernanme, createdPassword, null, organizationSid2);
     	assertEquals(403, clientResponse.getStatus());
 
-    	// child should not be able to create account in specified org that it does not belong to
+    	// child should be able to create account in specified org that it does not belong to
     	clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
-                childUsername, childAuthToken, createdUsernanme, createdPassword, null, organizationSid1);
+                childUsername, childAuthToken, createdUsernanme2, createdPassword, null, organizationSid1);
     	assertEquals(200, clientResponse.getStatus());
     	
     	//super admin tries to create account with invalid organization Sid
     	clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, createdUsernanme2, createdPassword, null, "blabla");
+                adminUsername, adminAuthToken, createdUsernanme3, createdPassword, null, "blabla");
     	assertEquals(400, clientResponse.getStatus());
 
     	//super admin tries to create account with organization Sid that does not exists
     	clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, createdUsernanme2, createdPassword, null, "ORafbe225ad37541eba518a74248f01234");
+                adminUsername, adminAuthToken, createdUsernanme3, createdPassword, null, "ORafbe225ad37541eba518a74248f01234");
     	assertEquals(400, clientResponse.getStatus());
 
     	//super admin should be able to create account in specified org
     	clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, createdUsernanme2, createdPassword, null, organizationSid2);
+                adminUsername, adminAuthToken, createdUsernanme3, createdPassword, null, organizationSid2);
     	assertEquals(200, clientResponse.getStatus());
     
     }
