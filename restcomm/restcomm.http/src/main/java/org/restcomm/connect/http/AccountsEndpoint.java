@@ -466,7 +466,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
     private void processPermissionsData(Account account, MultivaluedMap<String, String> data) {
         String permissionSidString = data.getFirst("PermissionSid");
 
-        if(!permissionSidString.isEmpty()){
+        if(data.containsKey("PermissionSid") && !permissionSidString.isEmpty()){
             //check if accounts permissions exists first
             //if ap exists, just update value
             //if not create new ap from perm,check if permission exists first
@@ -475,12 +475,12 @@ public class AccountsEndpoint extends SecuredEndpoint {
             if(ap != null){
                 String permissionValue = data.getFirst("PermissionValue");
 
-                ap.setValue(permissionValue.isEmpty() ? true: Boolean.valueOf(permissionValue));
+                ap.setValue((permissionValue==null || permissionValue.isEmpty()) ? true: Boolean.valueOf(permissionValue));
                 accountsDao.updateAccountPermissions(account.getSid(), ap);
             }else if(ap==null && perm!=null){
                 String permissionValue = data.getFirst("PermissionValue");
                 ap = new AccountPermission(perm.getSid(), perm.getName());
-                ap.setValue(permissionValue.isEmpty() ? true: Boolean.valueOf(permissionValue));
+                ap.setValue((permissionValue==null || permissionValue.isEmpty()) ? true: Boolean.valueOf(permissionValue));
                 accountsDao.addAccountPermission(account.getSid(), ap);
             }else{
                 //permission doesnt exist

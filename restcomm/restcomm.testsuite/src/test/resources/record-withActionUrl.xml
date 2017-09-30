@@ -1,4 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
-	<Record action="http://127.0.0.1:8090/test" method="POST" finishOnKey="#" maxLength="10" playBeep="true"/>
+	<!--Record 
+	action="http://127.0.0.1:8090/test" 
+	method="POST" 
+	finishOnKey="#" 
+	maxLength="10" 
+	playBeep="true"/-->
+	
+	<Record
+        action="https://127.0.0.1:8090/test"
+        method="POST"
+        maxLength="60"
+        timeout="5"
+        finishOnKey="#"
+        transcribe="true"
+        transcribeCallback="transcribe.jsp"
+        playBeep="false"
+    />
+    <Gather timeout="30" finishOnKey="#">
+        <Say voice="man" language="en" loop="1">Hello World!</Say>
+        <Play loop="1">https://127.0.0.1:8080/restcomm/audio/hello-world.wav</Play>
+        <Pause length="1"/>
+    </Gather>
 </Response>
