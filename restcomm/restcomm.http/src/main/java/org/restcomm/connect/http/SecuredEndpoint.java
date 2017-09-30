@@ -52,7 +52,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 
 import java.util.List;
-import java.util.Set;
+//import java.util.Set;
 
 
 /**
@@ -114,7 +114,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
             }
         }
         permissionUtil = PermissionsUtil.getInstance();
-        permissionUtil.setUserIdentityContext(userIdentityContext);
+        //permissionUtil.setUserIdentityContext(userIdentityContext);
     }
 
     /**
@@ -157,13 +157,16 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      */
     protected void checkPermission(final String permission) {
         //checkAuthenticatedAccount(); // ok there is a valid authenticated account
-        permissionUtil.checkPermission(permission);
+        AuthOutcome res = permissionUtil.checkPermission(permission, userIdentityContext.getEffectiveAccount().getSid());
+        if(res != AuthOutcome.OK){
+            throw new InsufficientPermission();
+        }
     }
 
     // boolean overloaded form of checkAuthenticatedAccount(permission)
     protected boolean isSecuredByPermission(final String permission) {
         try {
-           permissionUtil.checkPermission(permission);
+           checkPermission(permission);
             return true;
         } catch (AuthorizationException e) {
             return false;
@@ -184,7 +187,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     protected void secure(final Account operatedAccount, final String permission, SecuredType type) throws AuthorizationException {
         checkAuthenticatedAccount();
-        permissionUtil.checkPermission(permission); // check an authenticated account allowed to do "permission" is available
+        checkPermission(permission); // check an authenticated account allowed to do "permission" is available
         checkOrganization(operatedAccount); // check if valid organization is attached with this account.
         if (operatedAccount == null) {
             // if operatedAccount is NULL, we'll probably return a 404. But let's handle that in a central place.
@@ -278,9 +281,9 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @param roleNames
      * @return
      */
-    private AuthOutcome checkPermission(String neededPermissionString, Set<String> roleNames) {
-        return permissionUtil.checkPermission(neededPermissionString, roleNames);
-    }
+//    private AuthOutcome checkPermission(String neededPermissionString, Set<String> roleNames) {
+//        return permissionUtil.checkPermission(neededPermissionString, roleNames);
+//    }
 
     /**
      * Applies the following access control rule:

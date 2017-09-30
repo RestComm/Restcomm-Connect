@@ -63,7 +63,7 @@ import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreter;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreterParams;
-import org.restcomm.connect.identity.UserIdentityContext;
+//import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.identity.permissions.PermissionsUtil;
 
 import akka.actor.ActorRef;
@@ -161,10 +161,10 @@ public class UssdCallManager extends RestcommUntypedActor {
             effectiveAccount = accountsDao.getAccount(getAccountIdFromSipRequest((SipServletRequest) message));
         }
 
-        UserIdentityContext uic = new UserIdentityContext(effectiveAccount, accountsDao);
-        permissionsUtil.setUserIdentityContext(uic);
+//        UserIdentityContext uic = new UserIdentityContext(effectiveAccount, accountsDao);
+//        permissionsUtil.setUserIdentityContext(uic);
         try {
-            permissionsUtil.checkPermission("Restcomm:*:Ussd");
+            permissionsUtil.checkPermission("Restcomm:*:Ussd", effectiveAccount.getSid());
         } catch (Exception e) {
             logger.debug("No permission for USSD feature "+e);
             return;
