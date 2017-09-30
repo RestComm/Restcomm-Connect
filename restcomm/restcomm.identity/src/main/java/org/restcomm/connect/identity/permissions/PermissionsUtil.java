@@ -78,6 +78,7 @@ public class PermissionsUtil {
         //should get union of permissions
         //FIXME: should an account have more than one role??
         Set<String> roleNames = new HashSet<String>();
+        roleNames.add(accountsDao.getAccount(accountSid).getRole());
         Set<Permission> allRolePermissions = new HashSet<Permission>();
         for (String roleName: roleNames) {
             SimpleRole simpleRole = restcommRoles.getRole(roleName);

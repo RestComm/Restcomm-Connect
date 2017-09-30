@@ -217,9 +217,6 @@ public class PermissionsTest {
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_permissions_test", "data/hsql/restcomm.script");
         // archive.addAsWebInfResource("restcomm.properties", "data/hsql/restcomm.properties");
-
-        archive.delete("/WEB-INF/conf/mybatis.xml");
-        archive.addAsWebInfResource("mybatis_win.xml", "conf/mybatis.xml");
         return archive;
     }
 }

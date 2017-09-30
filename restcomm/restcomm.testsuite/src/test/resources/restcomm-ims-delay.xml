@@ -127,7 +127,7 @@
 		<!-- Each permission is represented as three columns Domain:Action:Target
 			Possible actions are Create, Read, Modify, Delete. -->
 		<security-roles>
-			<role name="Developer">
+			<role name="Administrator"><permission>*:*:*</permission></role><role name="Developer">
 				<permission>RestComm:*:Accounts</permission>
 				<permission>RestComm:*:Applications</permission>
 				<permission>RestComm:*:Announcements</permission>
