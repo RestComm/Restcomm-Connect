@@ -1744,17 +1744,8 @@ public final class Call extends RestcommUntypedActor {
             }
 
             msController.tell(new CloseMediaSession(), source);
-            if (fail) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("At Call Stopping state, moving to Failed state");
-                }
-                fsm.transition(message, failed);
-            } else {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("At Call Stopping state, moving to Completed state");
-                }
-                fsm.transition(message, completed);
-            }
+            //Don't wait for ever for the CallController response
+            context().setReceiveTimeout(Duration.create(2000, TimeUnit.SECONDS));
         }
     }
 
@@ -1976,10 +1967,22 @@ public final class Call extends RestcommUntypedActor {
                 observer.tell(infoResponse, self());
             }
 
+        } else if (is(stopping)) {
+            if (fail) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("At Call Stopping state, moving to Failed state");
+                }
+                fsm.transition(message, failed);
+            } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("At Call Stopping state, moving to Completed state");
+                }
+                fsm.transition(message, completed);
+            }
         } else if(logger.isInfoEnabled()) {
-            logger.info("Timeout received for Call : "+self().path()+" isTerminated(): "+self().isTerminated()+". Sender: " + sender.path().toString() + " State: " + this.fsm.state()
-                + " Direction: " + direction + " From: " + from + " To: " + to);
-        }
+                logger.info("Timeout received for Call : "+self().path()+" isTerminated(): "+self().isTerminated()+". Sender: " + sender.path().toString() + " State: " + this.fsm.state()
+                        + " Direction: " + direction + " From: " + from + " To: " + to);
+            }
     }
 
     private void onSipServletRequest(SipServletRequest message, ActorRef self, ActorRef sender) throws Exception {
@@ -2508,6 +2511,19 @@ public final class Call extends RestcommUntypedActor {
                         String msg = String.format("On MediaServerContollerStateChanged, message: INACTIVE, Call state: %s, Fail: %s", fsm.state(), fail);
                         logger.debug(msg);
                     }
+
+                    if (fail) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("At Call Stopping state, moving to Failed state");
+                        }
+                        fsm.transition(message, failed);
+                    } else {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("At Call Stopping state, moving to Completed state");
+                        }
+                        fsm.transition(message, completed);
+                    }
+
 //                    if (fail) {
 //                        fsm.transition(message, failed);
 //                    } else {
@@ -2600,7 +2616,8 @@ public final class Call extends RestcommUntypedActor {
 
             if (!liveCallModification) {
                 // After leaving let the Interpreter know the Call is ready.
-                fsm.transition(message, completed);
+//                fsm.transition(message, completed);
+                fsm.transition(message, stopping);
             } else {
                 if (muted) {
                     // Forward to media server controller
