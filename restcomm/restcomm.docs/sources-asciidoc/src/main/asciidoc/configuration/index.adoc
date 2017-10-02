@@ -85,6 +85,10 @@ There is two different ways to install Restcomm Connect. Either through Docker o
 
 * <<asr/asr.adoc#intro,Automatic Speech Recognition Integration>>
 
+== DNS Provisioning Provider to create new domains under restcomm
+
+* <<dns/dns-provisioning.adoc#intro,DNS Integration Configuration>>
+
 == Contributor Resources
 
 * <<How to build Restcomm-Connect from source.adoc#build-from-source,How to build Restcomm-Connect from source>>

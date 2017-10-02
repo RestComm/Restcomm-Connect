@@ -354,7 +354,7 @@ public class AccountsEndpointTest extends EndpointTest {
             assertNotNull(clientOfAccount);
 
             CreateClientsTool.getInstance().updateClientVoiceUrl(deploymentUrl.toString(), subAccountResponse,
-                    clientOfAccount.get("sid").getAsString(), "http://127.0.0.1:8080/restcomm/demos/welcome.xml",
+                    clientOfAccount.get("sid").getAsString(), deploymentUrl.toString() + "/demos/welcome.xml",
                     adminUsername, adminPassword);
 
             JsonObject clientOfAccountUpdated = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),

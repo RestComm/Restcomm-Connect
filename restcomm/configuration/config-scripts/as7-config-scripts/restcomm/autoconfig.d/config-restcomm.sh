@@ -3,6 +3,7 @@
 ## Description: Configures RestComm
 ## Author: Henrique Rosa (henrique.rosa@telestax.com)
 ## Author: Pavel Slegr (pavel.slegr@telestax.com)
+## Author: Maria Farooq (maria.farooq@telestax.com)
 ##
 
 # VARIABLES
@@ -648,6 +649,46 @@ configAsrDriver() {
     fi
 }
 
+## Description: DNS Provisioning Manager Configuration.
+configDnsProvisioningManager() {
+    echo "Configure DnsProvisioningManager"
+    FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+
+	xmlstarlet ed --inplace -d "/restcomm/runtime-settings/dns-provisioning" \
+            -s "/restcomm/runtime-settings" -t elem  -n dns-provisioning \
+            -i "/restcomm/runtime-settings/dns-provisioning" -t attr -n class -v "$DNS_PROVISIONING_CLASS" \
+            $FILE
+            
+	xmlstarlet ed --inplace -d "/restcomm/runtime-settings/dns-provisioning" \
+            -s "/restcomm/runtime-settings" -t elem  -n dns-provisioning \
+            -i "/restcomm/runtime-settings/dns-provisioning" -t attr -n enabled -v "$DNS_PROVISIONING_ENABLED" \
+            $FILE
+
+	xmlstarlet ed --inplace -d "/restcomm/runtime-settings/dns-provisioning" \
+            -s "/restcomm/runtime-settings" -t elem  -n dns-provisioning \
+            -i "/restcomm/runtime-settings/dns-provisioning" -t attr -n class -v "$DNS_PROVISIONING_CLASS" \
+            $FILE
+	xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning" -t attr -n "enabled" -v "$DNS_PROVISIONING_ENABLED" $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning" -t elem -n "restcomm-address" -v "$DNS_PROVISIONING_RESTCOMM_ADDRESS" $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning" -t elem -n "rr-type" -v "$DNS_PROVISIONING_RR_TYPE" $FILE
+
+	xmlstarlet ed --inplace -d "/restcomm/runtime-settings/dns-provisioning/aws-route53" \
+            -s "/restcomm/runtime-settings/dns-provisioning" -t elem  -n aws-route53 $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem -n "access-key" -v "$DNS_PROVISIONING_AWS_ROUTE53_ACCESS_KEY" $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem -n "secret-key" -v "$DNS_PROVISIONING_AWS_ROUTE53_SECRET_KEY" $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem -n "region" -v "$DNS_PROVISIONING_AWS_ROUTE53_REGION" $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem -n "ttl" -v "$DNS_PROVISIONING_AWS_ROUTE53_TTL" $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem -n "hosted-zone-id" -v "$DNS_PROVISIONING_AWS_ROUTE53_HOSTED_ZONE_ID" $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem -n "is-alias" -v "$DNS_PROVISIONING_AWS_ROUTE53_IS_ALIAS" $FILE
+
+
+	xmlstarlet ed --inplace -d "/restcomm/runtime-settings/dns-provisioning/aws-route53/alias-target" \
+            -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem  -n alias-target $FILE
+	xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53/alias-target" -t elem -n "evaluate-target-health" -v "$DNS_PROVISIONING_AWS_ROUTE53_ALIAS_EVALUATE_TARGET_HEALTH" $FILE
+	xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53/alias-target" -t elem -n "hosted-zone-id" -v "$DNS_PROVISIONING_AWS_ROUTE53_ALIAS_HOSTED_ZONE_ID" $FILE
+
+}
+
 # MAIN
 echo 'Configuring RestComm...'
 configRCJavaOpts
@@ -689,4 +730,5 @@ confRcmlserver
 confRVD
 configRMSNetworking
 configAsrDriver
+configDnsProvisioningManager
 echo 'Configured RestComm!'

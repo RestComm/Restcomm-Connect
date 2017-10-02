@@ -5,7 +5,8 @@ CREATE TABLE restcomm_organizations (
 sid VARCHAR(34) NOT NULL PRIMARY KEY,
 domain_name VARCHAR(255) NOT NULL UNIQUE,
 date_created DATETIME NOT NULL,
-date_updated DATETIME NOT NULL
+date_updated DATETIME NOT NULL,
+status VARCHAR(16) NOT NULL
 );
 
 CREATE TABLE restcomm_instance_id (
@@ -403,7 +404,8 @@ INSERT INTO restcomm_organizations VALUES(
 "ORafbe225ad37541eba518a74248f0ac4c", 
 "default.restcomm.com", 
 Date("2017-04-19"),
-Date("2017-04-19") 
+Date("2017-04-19"),
+status VARCHAR(16)
 );
 
 INSERT INTO restcomm_accounts VALUES (

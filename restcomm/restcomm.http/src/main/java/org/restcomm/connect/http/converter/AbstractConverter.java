@@ -199,6 +199,16 @@ public abstract class AbstractConverter implements Converter {
         object.addProperty("sid", sid.toString());
     }
 
+    protected void writeDomainName(final String domainName, final HierarchicalStreamWriter writer) {
+        writer.startNode("DomainName");
+        writer.setValue(domainName);
+        writer.endNode();
+    }
+
+    protected void writeDomainName(final String domainName, final JsonObject object) {
+        object.addProperty("domain_name", domainName);
+    }
+
     protected void writeSmsFallbackUrl(final URI smsFallbackUrl, final HierarchicalStreamWriter writer) {
         if (smsFallbackUrl != null) {
             writer.startNode("SmsFallbackUrl");

@@ -19,7 +19,9 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
@@ -86,6 +88,40 @@ public final class MybatisOrganizationDao implements OrganizationsDao {
     }
 
     @Override
+    public List<Organization> getOrganizationsByStatus(Organization.Status status) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getOrganizationsByStatus", status.toString());
+            final List<Organization> organization = new ArrayList<Organization>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    organization.add(toOrganization(result));
+                }
+            }
+            return organization;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public List<Organization> getAllOrganizations() {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getAllOrganizations");
+            final List<Organization> organization = new ArrayList<Organization>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    organization.add(toOrganization(result));
+                }
+            }
+            return organization;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public void updateOrganization(Organization organization) {
         final SqlSession session = sessions.openSession();
         try {
@@ -101,15 +137,17 @@ public final class MybatisOrganizationDao implements OrganizationsDao {
         final String domainName = DaoUtils.readString(map.get("domain_name"));
         final DateTime dateCreated = DaoUtils.readDateTime(map.get("date_created"));
         final DateTime dateUpdated = DaoUtils.readDateTime(map.get("date_updated"));
-        return new Organization(sid, domainName, dateCreated, dateUpdated);
+        final Organization.Status status = DaoUtils.readOrganizationStatus(map.get("status"));
+        return new Organization(sid, domainName, dateCreated, dateUpdated, status);
     }
 
-    private Map<String, Object> toMap(final Organization cdr) {
+    private Map<String, Object> toMap(final Organization org) {
         final Map<String, Object> map = new HashMap<String, Object>();
-        map.put("sid", DaoUtils.writeSid(cdr.getSid()));
-        map.put("domain_name", cdr.getDomainName());
-        map.put("date_created", DaoUtils.writeDateTime(cdr.getDateCreated()));
-        map.put("date_updated", DaoUtils.writeDateTime(cdr.getDateUpdated()));
+        map.put("sid", DaoUtils.writeSid(org.getSid()));
+        map.put("domain_name", org.getDomainName());
+        map.put("date_created", DaoUtils.writeDateTime(org.getDateCreated()));
+        map.put("date_updated", DaoUtils.writeDateTime(org.getDateUpdated()));
+        map.put("status", DaoUtils.writeOrganizationStatus(org.getStatus()));
         return map;
     }
 }
