@@ -129,7 +129,7 @@ public class AccountsEndpointTest extends EndpointTest {
         if (thinhPhone != null) {
             thinhPhone.dispose();
         }
-        if (thinhSipStack != null) {
+        if (thinhSipStack != null && thinhSipStack.getSipProvider().getListeningPoints().length>0) {
             thinhSipStack.dispose();
         }
         Thread.sleep(1000);
