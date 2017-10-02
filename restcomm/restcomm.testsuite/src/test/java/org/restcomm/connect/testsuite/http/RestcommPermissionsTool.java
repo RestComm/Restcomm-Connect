@@ -96,7 +96,7 @@ public class RestcommPermissionsTool {
         ClientResponse clientResponse = webResource.path(permissionSid).get(ClientResponse.class);
         int status = clientResponse.getStatus();
         response = clientResponse.getEntity(String.class);
-        System.out.println("YUIO status="+status+" response="+response+" "+clientResponse.toString()+" "+clientResponse.getClientResponseStatus());
+        //System.out.println("status="+status+" response="+response+" "+clientResponse.toString()+" "+clientResponse.getClientResponseStatus());
         //TODO: handle other Statuses?
         if(clientResponse.getClientResponseStatus().equals(Status.NOT_FOUND) ){
             throw new NotFoundException();
