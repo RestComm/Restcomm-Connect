@@ -26,7 +26,7 @@ import static javax.servlet.sip.SipServletResponse.SC_OK;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
+
 import java.util.regex.Pattern;
 
 import javax.servlet.ServletContext;
@@ -41,11 +41,12 @@ import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.dao.Sid.Type;
+
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
+import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
@@ -157,9 +158,10 @@ public class UssdCallManager extends RestcommUntypedActor {
         if (CreateCall.class.equals(klass)) {
             this.createCallRequest = (CreateCall) message;
             effectiveAccount = accountsDao.getAccount(this.createCallRequest.accountId());
-        }else if (SipServletRequest.class.equals(klass)){
+        }else if (message instanceof SipServletRequest){
             effectiveAccount = accountsDao.getAccount(getAccountIdFromSipRequest((SipServletRequest) message));
         }
+
 
 //        UserIdentityContext uic = new UserIdentityContext(effectiveAccount, accountsDao);
 //        permissionsUtil.setUserIdentityContext(uic);
@@ -200,21 +202,38 @@ public class UssdCallManager extends RestcommUntypedActor {
     }
 
     private Sid getAccountIdFromSipRequest(SipServletRequest request) {
+        final ClientsDao clients = storage.getClientsDao();
         //FIXME: a null check is faster?
-        Sid accountSid = Sid.generate(Type.INVALID);
-        final String authorization = request.getHeader("Proxy-Authorization");
-        if(authorization!=null){
-            final Map<String, String> map = CallControlHelper.authHeaderToMap(authorization);
-            final String user = map.get("username");
+        Sid accountSid = null ; //Sid.generate(Type.INVALID);
 
-            //FIXME: how to derive org here?
-            //Sid toOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getTo().getURI());
-            Sid organizationSid = null;
-            Client client = storage.getClientsDao().getClient(user, organizationSid);
-            if (client != null) {
-                accountSid = client.getAccountSid();
+        //TODO: implement get from Proxy-Authorization
+
+        final SipURI fromUri = (SipURI) request.getFrom().getURI();
+        Sid sourceOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromUri);
+        if(logger.isDebugEnabled()) {
+            logger.debug("sourceOrganizationSid: " + sourceOrganizationSid);
+        }
+        if(sourceOrganizationSid == null){
+            logger.error("Null Organization: fromUri: "+fromUri);
+        }
+
+        //get from From
+        final String fromUser = fromUri.getUser();
+        final Client client = clients.getClient(fromUser,sourceOrganizationSid);
+        if (client != null) {
+            accountSid = client.getAccountSid();
+        }
+
+        //TODO: if not available from From, should we actually get the accountSid from the To??
+        if(accountSid == null){
+            final String toUser = CallControlHelper.getUserSipId(request, useTo);
+            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, toUser, sourceOrganizationSid);
+            IncomingPhoneNumber number = mostOptimalNumber.number();
+            if(number!=null){
+                accountSid = number.getAccountSid();
             }
         }
+
         return accountSid;
     }
 
@@ -224,6 +243,7 @@ public class UssdCallManager extends RestcommUntypedActor {
         // Make sure we handle re-invites properly.
         if (!request.isInitial()) {
             final SipServletResponse okay = request.createResponse(SC_OK);
+            //FIXME: should check request session first?
             okay.send();
             return;
         }
