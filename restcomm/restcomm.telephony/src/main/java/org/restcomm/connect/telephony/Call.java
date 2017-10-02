@@ -1380,7 +1380,19 @@ public final class Call extends UntypedActor {
             }
             offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
         }
-        return new CreateMediaSession("sendrecv", offer, false, webrtc, inboundCallSid);
+
+        //Prepare media attributes to be used by call controller
+        final boolean isAudioSdp = SdpUtils.isAudioSDP(sipMessage.getContentType(), sipMessage.getRawContent());
+        final boolean isVideoSdp = SdpUtils.isVideoSDP(sipMessage.getContentType(), sipMessage.getRawContent());
+        if(isAudioSdp && isVideoSdp){
+            //Call with audio and video
+            mediaAttributes = new MediaAttributes(MediaAttributes.MediaType.AUDIO_VIDEO, MediaAttributes.VideoResolution.SEVEN_TWENTY_P);
+        } else if (isVideoSdp) {
+            //Call with video and no audio
+            mediaAttributes = new MediaAttributes(MediaAttributes.MediaType.VIDEO_ONLY, MediaAttributes.VideoResolution.SEVEN_TWENTY_P);
+        } //mediaAttributes remains with default value (AUDIO_ONLY) if both isAudioSdp and isVideoSdp are false
+
+        return new CreateMediaSession("sendrecv", offer, false, webrtc, inboundCallSid, mediaAttributes);
     }
 
     private final class UpdatingMediaSession extends AbstractAction {
