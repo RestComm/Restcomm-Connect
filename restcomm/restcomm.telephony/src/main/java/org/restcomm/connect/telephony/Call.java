@@ -1966,7 +1966,6 @@ public final class Call extends RestcommUntypedActor {
             for (final ActorRef observer : observers) {
                 observer.tell(infoResponse, self());
             }
-
         } else if (is(stopping)) {
             if (fail) {
                 if (logger.isDebugEnabled()) {
@@ -2616,7 +2615,6 @@ public final class Call extends RestcommUntypedActor {
 
             if (!liveCallModification) {
                 // After leaving let the Interpreter know the Call is ready.
-//                fsm.transition(message, completed);
                 fsm.transition(message, stopping);
             } else {
                 if (muted) {
