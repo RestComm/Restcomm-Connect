@@ -19,6 +19,7 @@
  */
 package org.restcomm.connect.mgcp;
 
+import akka.actor.ActorRef;
 import jain.protocol.ip.mgcp.JainMgcpProvider;
 import jain.protocol.ip.mgcp.JainMgcpStack;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
@@ -43,10 +44,11 @@ public final class PowerOnMediaGateway {
     private final long timeout;
     private final JainMgcpStack stack;
     private final JainMgcpProvider provider;
+    private final ActorRef monitoringService;
 
     public PowerOnMediaGateway(final String name, final InetAddress localIp, final int localPort, final InetAddress remoteIp,
             final int remotePort, final boolean useNat, final InetAddress externalIp, final long timeout, final JainMgcpStack stack,
-                               final JainMgcpProvider provider) {
+                               final JainMgcpProvider provider, final ActorRef monitoringService) {
         super();
         this.name = name;
         this.localIp = localIp;
@@ -58,6 +60,7 @@ public final class PowerOnMediaGateway {
         this.timeout = timeout;
         this.stack = stack;
         this.provider = provider;
+        this.monitoringService = monitoringService;
     }
 
     public static Builder builder() {
@@ -104,6 +107,10 @@ public final class PowerOnMediaGateway {
         return provider;
     }
 
+    public ActorRef getMonitoringService () {
+        return monitoringService;
+    }
+
     public static final class Builder {
         private String name;
         private InetAddress localIp;
@@ -115,13 +122,14 @@ public final class PowerOnMediaGateway {
         private long timeout;
         private JainMgcpStack stack;
         private JainMgcpProvider provider;
+        private ActorRef monitoringService;
 
         private Builder() {
             super();
         }
 
         public PowerOnMediaGateway build() {
-            return new PowerOnMediaGateway(name, localIp, localPort, remoteIp, remotePort, useNat, externalIp, timeout, stack, provider);
+            return new PowerOnMediaGateway(name, localIp, localPort, remoteIp, remotePort, useNat, externalIp, timeout, stack, provider, monitoringService);
         }
 
         public void setName(final String name) {
@@ -162,6 +170,10 @@ public final class PowerOnMediaGateway {
 
         public void setProvider(JainMgcpProvider provider) {
             this.provider = provider;
+        }
+
+        public void setMonitoringService (ActorRef monitoringService) {
+            this.monitoringService = monitoringService;
         }
     }
 }

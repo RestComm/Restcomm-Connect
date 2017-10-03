@@ -79,7 +79,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         system.awaitTermination();
     }
 
-    private MediaServerControllerFactory mediaServerControllerFactory(final Configuration configuration, ClassLoader loader, DaoManager storage)
+    private MediaServerControllerFactory mediaServerControllerFactory(final Configuration configuration, ClassLoader loader, DaoManager storage, ActorRef monitoring)
             throws ServletException {
         Configuration settings ;
         String compatibility = configuration.subset("mscontrol").getString("compatibility", "rms");
@@ -89,7 +89,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             case "rms":
                 try {
                     settings = configuration.subset("media-server-manager");
-                    ActorRef mrb = mediaResourceBroker(settings, storage, loader);
+                    ActorRef mrb = mediaResourceBroker(settings, storage, loader, monitoring);
                     factory = new MmsControllerFactory(mrb);
                 } catch (UnknownHostException e) {
                     throw new ServletException(e);
@@ -200,7 +200,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return result;
     }
 
-    private ActorRef mediaResourceBroker(final Configuration configuration, final DaoManager storage, final ClassLoader loader) throws UnknownHostException{
+    private ActorRef mediaResourceBroker(final Configuration configuration, final DaoManager storage, final ClassLoader loader, final ActorRef monitoring) throws UnknownHostException{
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
@@ -211,7 +211,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             }
         });
         ActorRef mrb = system.actorOf(props);
-        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader), null);
+        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader, monitoring), null);
         return mrb;
     }
 
@@ -387,7 +387,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Create the media server controller factory
             MediaServerControllerFactory mscontrollerFactory = null;
             try {
-                mscontrollerFactory = mediaServerControllerFactory(xml, loader, storage);
+                mscontrollerFactory = mediaServerControllerFactory(xml, loader, storage, monitoring);
             } catch (ServletException exception) {
                 logger.error("ServletException during initialization: ", exception);
             }

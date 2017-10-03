@@ -52,10 +52,10 @@ public class MonitoringServiceTool {
     }
 
     public JsonObject getMetrics(String deploymentUrl, String username, String authToken) {
-        return getMetrics(deploymentUrl, username, authToken, true);
+        return getMetrics(deploymentUrl, username, authToken, true, true);
     }
 
-    public JsonObject getMetrics(String deploymentUrl, String username, String authToken, boolean callDetails) {
+    public JsonObject getMetrics(String deploymentUrl, String username, String authToken, boolean callDetails, boolean mgcpStats) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
         String url = getAccountsUrl(deploymentUrl, username);
@@ -63,6 +63,9 @@ public class MonitoringServiceTool {
 
         if (callDetails) {
             webResource = webResource.queryParam("LiveCallDetails","true");
+        }
+        if (mgcpStats) {
+            webResource = webResource.queryParam("MgcpStats", "true");
         }
 
         String response = null;
