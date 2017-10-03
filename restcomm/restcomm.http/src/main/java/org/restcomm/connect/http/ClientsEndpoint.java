@@ -296,8 +296,12 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
                 result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
             }
         }
-        if (data.containsKey("IsPushEnabled") && getBoolean("IsPushEnabled", data)) {
-            result.setPushClientIdentity(client.getSid().toString());
+        if (data.containsKey("IsPushEnabled")) {
+            if (getBoolean("IsPushEnabled", data)) {
+                result = result.setPushClientIdentity(client.getSid().toString());
+            } else {
+                result = result.setPushClientIdentity(null);
+            }
         }
         return result;
     }
