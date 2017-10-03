@@ -2,6 +2,7 @@ package org.restcomm.connect.testsuite.telephony;
 
 import akka.actor.ActorRef;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
@@ -21,8 +22,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.mgcp.MediaSession;
-import org.restcomm.connect.mgcp.MockMediaGateway;
+import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.sip.message.Response;
 import java.net.URL;
@@ -153,6 +153,7 @@ public class TestMgcpOperations {
         bobPhone.addUpdateCredential(c);
 
         final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.listenForDisconnect();
         bobCall.initiateOutgoingCall(bobContact, "sip:1234@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitForAuthorisation(5000));
@@ -171,16 +172,56 @@ public class TestMgcpOperations {
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        bobCall.listenForDisconnect();
+        Thread.sleep(500);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        int mgcpEndpoints = metrics.getAsJsonObject("Metrics").get("MgcpEndpoints").getAsInt();
+        int mgcpConnections = metrics.getAsJsonObject("Metrics").get("MgcpConnections").getAsInt();
+        int mgcpLinks = metrics.getAsJsonObject("Metrics").get("MgcpLinks").getAsInt();
+        int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+
+        logger.info("MgcpEndpoints: "+mgcpEndpoints);
+        logger.info("MgcpConnections: "+mgcpConnections);
+        logger.info("MgcpLinks: "+mgcpLinks);
+        logger.info("LiveCalls: "+liveCalls);
+//        int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+//        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+//        assertTrue(liveCalls==0);
+//        assertTrue(liveCallsArraySize==0);
+//        int maxConcurrentCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentCalls").getAsInt();
+//        int maxConcurrentIncomingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
+//        int maxConcurrentOutgoingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
+//        assertTrue(maxConcurrentCalls==0);
+//        assertTrue(maxConcurrentIncomingCalls==0);
+//        assertTrue(maxConcurrentOutgoingCalls==0);
+
+
+
         assertTrue(bobCall.waitForDisconnect(10000));
 
-        Map<MediaSession, ActorRef> endpoints = MockMediaGateway.getEndpointsMap();
-        assertNotNull(endpoints);
-        assertTrue(endpoints.size() == 0);
+        Thread.sleep(1000);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        mgcpEndpoints = metrics.getAsJsonObject("Metrics").get("MgcpEndpoints").getAsInt();
+        mgcpConnections = metrics.getAsJsonObject("Metrics").get("MgcpConnections").getAsInt();
+        mgcpLinks = metrics.getAsJsonObject("Metrics").get("MgcpLinks").getAsInt();
+        liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+
+        logger.info("MgcpEndpoints at the end: "+mgcpEndpoints);
+        logger.info("MgcpConnections at the end: "+mgcpConnections);
+        logger.info("MgcpLinks at the end: "+mgcpLinks);
+        logger.info("Live calls at the end: "+liveCalls);
+
+        assertEquals(0, liveCalls);
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpLinks);
+        assertEquals(0, mgcpConnections);
     }
 
 
-    @Deployment(name = "TestDialVerbPartOne", managed = true, testable = false)
+    @Deployment(name = "TestMgcpOperations", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
@@ -190,10 +231,10 @@ public class TestMgcpOperations {
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
-//        archive.delete("/WEB-INF/data/hsql/restcomm.script");
+        archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-//        archive.addAsWebInfResource("restcomm.script_dialTest_new", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("restcomm.script_mgcpoperations", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");
         return archive;
     }
