@@ -226,13 +226,14 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
         secure(operatedAccount, "RestComm:Modify:Clients");
-        final Client client = dao.getClient(new Sid(sid));
+        Client client = dao.getClient(new Sid(sid));
         if (client == null) {
             return status(NOT_FOUND).build();
         } else {
             secure(operatedAccount, client.getAccountSid(), SecuredType.SECURED_STANDARD );
             try {
-                dao.updateClient(update(client, data));
+                client = update(client, data);
+                dao.updateClient(client);
             } catch (PasswordTooWeak passwordTooWeak) {
                 return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
             }
