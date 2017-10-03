@@ -484,7 +484,15 @@
                             <threadCountClasses>5</threadCountClasses>
                             <!-- start with low memory to increase forks -->
                             <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=512m</argLine>
-
+                            <systemPropertyVariables>
+                                <!--use different arquillian configuration to tweak maps
+                                depending on forked JVM-->
+                                <arquillian.launch>mss-tomcat-embedded-7-forked</arquillian.launch>
+                                <!-- this will ensure sip and http ports are diff for
+                                every forked JVM/test class-->
+                                <arquillian_http_port>${surefire.forkNumber}509</arquillian_http_port>
+                                <arquillian_sip_port>${surefire.forkNumber}508</arquillian_sip_port>
+                            </systemPropertyVariables>
                         </configuration>
                         <executions>
                             <execution>
