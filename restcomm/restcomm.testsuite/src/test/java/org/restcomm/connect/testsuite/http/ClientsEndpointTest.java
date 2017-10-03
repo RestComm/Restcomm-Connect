@@ -247,6 +247,25 @@ public class ClientsEndpointTest {
         Assert.assertTrue("Response should contain 'push_client_identity'", response.getEntity(String.class).contains("push_client_identity"));
     }
 
+    @Test
+    public void updateClientTestWithIsPushEnabled() throws IOException, ParseException, InterruptedException {
+        String sid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), developerAccountSid, developeerAuthToken, "agafox", "RestComm1234", null);
+        // add push_client_identity
+        Client jersey = getClient(developerUsername, developeerAuthToken);
+        WebResource resource = jersey.resource(getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients/" + sid + ".json" ));
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.putSingle("IsPushEnabled", "true");
+        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, params);
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertTrue("Response should contain 'push_client_identity'", response.getEntity(String.class).contains("push_client_identity"));
+        // remove push_client_identity
+        resource = jersey.resource(getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients/" + sid + ".json"));
+        params.putSingle("IsPushEnabled", "false");
+        response = resource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, params);
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertFalse("Response shouldn't contain 'push_client_identity'", response.getEntity(String.class).contains("push_client_identity"));
+    }
+
     protected String getResourceUrl(String suffix) {
         String urlString = deploymentUrl.toString();
         if ( urlString.endsWith("/") )
