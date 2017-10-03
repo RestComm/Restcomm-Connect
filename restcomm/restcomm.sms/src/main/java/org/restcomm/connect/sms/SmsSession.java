@@ -300,7 +300,7 @@ public final class SmsSession extends RestcommUntypedActor {
         // 2, SMPP is activated
         if (toClient == null && smppActivated) {
             if(logger.isInfoEnabled()) {
-                logger.info("Destination is not a local registered client, therefore, sending through SMPP to:  " + last.to() );
+                logger.info("Destination is not a local registered client, therefore, sending through SMPP to: {} " + last.to() );
             }
             if (sendUsingSmpp(last.from(), last.to(), last.body(), tlvSet, charset))
                 return;

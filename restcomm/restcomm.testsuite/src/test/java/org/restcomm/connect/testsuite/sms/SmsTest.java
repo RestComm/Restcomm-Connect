@@ -158,8 +158,8 @@ public class SmsTest {
         tool7 = new SipStackTool("SmsTest7");
         tool8 = new SipStackTool("SmsTest8");
     }
-    
-    public static void reconfigurePorts() { 
+
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
             restcommContact = "127.0.0.1:" + restcommPort;
@@ -478,11 +478,11 @@ public class SmsTest {
 
     @Test
     public void testP2PSendSMS_GeorgeClient_ToFotiniClient() throws ParseException {
-        SipURI uri = georgeSipStack.getAddressFactory().createSipURI(null, restcommContact);
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         //Register George phone
-        assertTrue(georgePhone.register(uri, "george", "1234", georgeContact, 3600, 3600));
-        Credential georgeCredentials = new Credential("127.0.0.1", "george", "1234");
-        georgePhone.addUpdateCredential(georgeCredentials);
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        Credential aliceCredentials = new Credential("127.0.0.1", "alice", "1234");
+        alicePhone.addUpdateCredential(aliceCredentials);
 
         //Register Fotini phone
         assertTrue(fotiniPhone.register(uri, "fotini", "1234", fotiniContact, 3600, 3600));
@@ -494,17 +494,17 @@ public class SmsTest {
         fotiniCall.listenForMessage();
 
         //Prepare George to send message
-        SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.initiateOutgoingMessage(georgeContact, "sip:fotini@" + restcommContact, null, null, null, greekHugeMessage);
-        assertLastOperationSuccess(georgeCall);
-        georgeCall.waitForAuthorisation(30 * 1000);
-        assertTrue(georgeCall.waitOutgoingMessageResponse(3000));
-        assertEquals(Response.TRYING, georgeCall.getLastReceivedResponse().getStatusCode());
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.initiateOutgoingMessage(aliceContact, "sip:fotini@" + restcommContact, null, null, null, greekHugeMessage);
+        assertLastOperationSuccess(aliceCall);
+        aliceCall.waitForAuthorisation(30 * 1000);
+        assertTrue(aliceCall.waitOutgoingMessageResponse(3000));
+        assertEquals(Response.TRYING, aliceCall.getLastReceivedResponse().getStatusCode());
 
         assertTrue(fotiniCall.waitForMessage(30 * 1000));
         assertTrue(fotiniCall.sendMessageResponse(200, "OK-Fotini-Mesasge-Receieved", 1800));
-        assertTrue(georgeCall.waitOutgoingMessageResponse(3000));
-        assertTrue(georgeCall.getLastReceivedResponse().getStatusCode() == Response.OK);
+        assertTrue(aliceCall.waitOutgoingMessageResponse(3000));
+        assertTrue(aliceCall.getLastReceivedResponse().getStatusCode() == Response.OK);
         List<String> msgsFromGeorge = fotiniCall.getAllReceivedMessagesContent();
 
         assertTrue(msgsFromGeorge.size() > 0);
@@ -575,7 +575,7 @@ public class SmsTest {
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         reconfigurePorts();
-        
+
         Map<String, String> webInfResources = new HashMap();
         webInfResources.put("restcomm_SmsTest.xml", "conf/restcomm.xml");
         webInfResources.put("restcomm.script_SmsTest", "data/hsql/restcomm.script");
@@ -584,7 +584,7 @@ public class SmsTest {
         webInfResources.put("akka_application.conf", "classes/application.conf");
 
         Map<String, String> replacements = new HashMap();
-        //replace mediaport 2727 
+        //replace mediaport 2727
         replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("5080", String.valueOf(restcommPort));
@@ -596,14 +596,14 @@ public class SmsTest {
         replacements.put("5094", String.valueOf(alicePort2));
         replacements.put("5095", String.valueOf(bobPort2));
         replacements.put("5096", String.valueOf(georgePort2));
-        replacements.put("5097", String.valueOf(fotiniPort2)); 
-                
+        replacements.put("5097", String.valueOf(fotiniPort2));
+
 
         List<String> resources = new ArrayList(Arrays.asList(
                 "send-sms-test.xml",
-                "send-sms-test-greek.xml", 
-                "send-sms-test-greek_huge.xml", 
-                "send-sms-test2.xml", 
+                "send-sms-test-greek.xml",
+                "send-sms-test-greek_huge.xml",
+                "send-sms-test2.xml",
                 "dial-client-entry.xml"
         ));
         return WebArchiveUtil.createWebArchiveNoGw(webInfResources,
