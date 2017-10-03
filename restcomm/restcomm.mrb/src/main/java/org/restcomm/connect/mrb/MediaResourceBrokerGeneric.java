@@ -69,6 +69,7 @@ public class MediaResourceBrokerGeneric extends RestcommUntypedActor {
     protected Configuration configuration;
     protected DaoManager storage;
     protected ClassLoader loader;
+    protected ActorRef monitoringService;
     protected ActorRef localMediaGateway;
     protected String localMsId;
     protected Map<String, ActorRef> mediaGatewayMap;
@@ -113,6 +114,7 @@ public class MediaResourceBrokerGeneric extends RestcommUntypedActor {
         this.configuration = message.configuration();
         this.storage = message.storage();
         this.loader = message.loader();
+        this.monitoringService = message.getMonitoringService();
 
         localMediaServerEntity = uploadLocalMediaServersInDataBase();
         bindMGCPStack(localMediaServerEntity.getLocalIpAddress(), localMediaServerEntity.getLocalPort());
@@ -184,6 +186,7 @@ public class MediaResourceBrokerGeneric extends RestcommUntypedActor {
         builder.setTimeout(Long.parseLong(mediaServerEntity.getResponseTimeout()));
         builder.setStack(mgcpStack);
         builder.setProvider(mgcpProvider);
+        builder.setMonitoringService(monitoringService);
 
         final PowerOnMediaGateway powerOn = builder.build();
         gateway.tell(powerOn, null);

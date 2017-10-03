@@ -29,6 +29,12 @@ import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.InstanceId;
+import org.restcomm.connect.mgcp.stats.MgcpConnectionAdded;
+import org.restcomm.connect.mgcp.stats.MgcpConnectionDeleted;
+import org.restcomm.connect.mgcp.stats.MgcpEndpointAdded;
+import org.restcomm.connect.mgcp.stats.MgcpEndpointDeleted;
+import org.restcomm.connect.mgcp.stats.MgcpLinkAdded;
+import org.restcomm.connect.mgcp.stats.MgcpLinkDeleted;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
@@ -84,6 +90,16 @@ public class MonitoringService extends RestcommUntypedActor {
     private final AtomicInteger maxConcurrentCalls;
     private final AtomicInteger maxConcurrentIncomingCalls;
     private final AtomicInteger maxConcurrentOutgoingCalls;
+
+    private final AtomicInteger mgcpEndpoints;
+    private final AtomicInteger mgcpLinks;
+    private final AtomicInteger mgcpConnections;
+//    private final Map<ActorRef, MediaSession> mgcpEndpointMap;
+//    private final Map<ActorRef, MediaSession> mgcpLinkMap;
+//    private final Map<ActorRef, MediaSession> mgcpConnectionMap;
+
+
+
     private InstanceId instanceId;
 
 
@@ -113,6 +129,15 @@ public class MonitoringService extends RestcommUntypedActor {
         maxConcurrentCalls = new AtomicInteger(0);
         maxConcurrentIncomingCalls = new AtomicInteger(0);
         maxConcurrentOutgoingCalls = new AtomicInteger(0);
+
+        mgcpEndpoints = new AtomicInteger(0);
+        mgcpLinks = new AtomicInteger(0);
+        mgcpConnections = new AtomicInteger(0);
+
+//        mgcpEndpointMap = new ConcurrentHashMap<ActorRef, MediaSession>();
+//        mgcpLinkMap = new ConcurrentHashMap<ActorRef, MediaSession>();
+//        mgcpConnectionMap = new ConcurrentHashMap<ActorRef, MediaSession>();
+
         if(logger.isInfoEnabled()){
             logger.info("Monitoring Service started");
         }
@@ -156,8 +181,50 @@ public class MonitoringService extends RestcommUntypedActor {
                     logger.debug("MonitoringService onGetCall, message is null, sender: "+sender.path());
                 }
             }
+        } else if (MgcpConnectionAdded.class.equals(klass)) {
+            mgcpConnections.incrementAndGet();
+        } else if (MgcpConnectionDeleted.class.equals(klass)) {
+            mgcpConnections.decrementAndGet();
+        } else if (MgcpEndpointAdded.class.equals(klass)) {
+            mgcpEndpoints.incrementAndGet();
+        } else if (MgcpEndpointDeleted.class.equals(klass)) {
+            mgcpEndpoints.decrementAndGet();
+        } else if (MgcpLinkAdded.class.equals(klass)) {
+            mgcpLinks.incrementAndGet();
+        } else if (MgcpLinkDeleted.class.equals(klass)) {
+            mgcpLinks.decrementAndGet();
         }
     }
+
+//    private void processMgcpConnectionAdded(final MgcpConnectionAdded mgcpConnectionAdded) {
+//        mgcpConnections.incrementAndGet();
+//        mgcpConnectionMap.put(mgcpConnectionAdded.getConnection(), mgcpConnectionAdded.getSession());
+//    }
+//
+//    private void processMgcpConnectionDeleted(final MgcpConnectionDeleted mgcpConnectionDeleted) {
+//        mgcpConnections.decrementAndGet();
+//        mgcpConnectionMap.remove(mgcpConnectionDeleted.getConnection());
+//    }
+//
+//    private void processMgcpEndpointAdded(final MgcpEndpointAdded mgcpEndpointAdded) {
+//        mgcpEndpoints.incrementAndGet();
+//        mgcpEndpointMap.put(mgcpEndpointAdded.getConnection(), mgcpEndpointAdded.getSession());
+//    }
+//
+//    private void processMgcpEndpointDeleted(final MgcpEndpointDeleted mgcpEndpointDeleted) {
+//        mgcpEndpoints.decrementAndGet();
+//        mgcpEndpointMap.remove(mgcpEndpointDeleted.getConnection());
+//    }
+//
+//    private void processMgcpLinkAdded(final MgcpLinkAdded mgcpLinkAdded) {
+//        mgcpLinks.incrementAndGet();
+//        mgcpLinkMap.put(mgcpLinkAdded.getConnection(), mgcpLinkAdded.getSession());
+//    }
+//
+//    private void processMgcpLinkDeleted(final MgcpLinkDeleted mgcpLinkDeleted) {
+//        mgcpLinks.decrementAndGet();
+//        mgcpLinkMap.remove(mgcpLinkDeleted.getConnection());
+//    }
 
     private void onGetCall(Object message, ActorRef self, ActorRef sender) throws ServletParseException {
         GetCall getCall = (GetCall)message;
@@ -427,6 +494,12 @@ public class MonitoringService extends RestcommUntypedActor {
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_TEXT_MESSAGE_INBOUND_TO_PROXY_OUT, textInboundToProxyOut.get());
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_TEXT_MESSAGE_NOT_FOUND, textNotFound.get());
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_TEXT_MESSAGE_OUTBOUND, textOutbound.get());
+
+        if (message.isWithMgcpStats()) {
+            countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS, mgcpEndpoints.get());
+            countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_CONNECTIONS, mgcpConnections.get());
+            countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_LINKS, mgcpLinks.get());
+        }
 
         MonitoringServiceResponse callInfoList = null;
         if (message.isWithLiveCallDetails()) {
