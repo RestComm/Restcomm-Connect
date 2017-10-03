@@ -134,14 +134,19 @@ public class SupervisorEndpoint extends SecuredEndpoint{
         checkAuthenticatedAccount();
         allowOnlySuperAdmin();
         boolean withLiveCallDetails = false;
+        boolean withMgcpStats = false;
         if (info != null && info.getQueryParameters().containsKey("LiveCallDetails") ) {
             withLiveCallDetails = Boolean.parseBoolean(info.getQueryParameters().getFirst("LiveCallDetails"));
+        }
+
+        if (info != null && info.getQueryParameters().containsKey("MgcpStats") ) {
+            withMgcpStats = Boolean.parseBoolean(info.getQueryParameters().getFirst("MgcpStats"));
         }
         //Get the list of live calls from Monitoring Service
         MonitoringServiceResponse monitoringServiceResponse;
         try {
             final Timeout expires = new Timeout(Duration.create(5, TimeUnit.SECONDS));
-            GetStatistics getStatistics = new GetStatistics(withLiveCallDetails, accountSid);
+            GetStatistics getStatistics = new GetStatistics(withLiveCallDetails, withMgcpStats, accountSid);
             Future<Object> future = (Future<Object>) ask(monitoringService, getStatistics, expires);
             monitoringServiceResponse = (MonitoringServiceResponse) Await.result(future, Duration.create(5, TimeUnit.SECONDS));
         } catch (Exception exception) {
@@ -202,14 +207,19 @@ public class SupervisorEndpoint extends SecuredEndpoint{
         checkAuthenticatedAccount();
         allowOnlySuperAdmin();
         boolean withLiveCallDetails = false;
+        boolean withMgcpStats = false;
         if (info != null && info.getQueryParameters().containsKey("LiveCallDetails") ) {
             withLiveCallDetails = Boolean.parseBoolean(info.getQueryParameters().getFirst("LiveCallDetails"));
+        }
+
+        if (info != null && info.getQueryParameters().containsKey("MgcpStats") ) {
+            withMgcpStats = Boolean.parseBoolean(info.getQueryParameters().getFirst("MgcpStats"));
         }
         //Get the list of live calls from Monitoring Service
         MonitoringServiceResponse monitoringServiceResponse;
         try {
             final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
-            GetStatistics getStatistics = new GetStatistics(withLiveCallDetails, accountSid);
+            GetStatistics getStatistics = new GetStatistics(withLiveCallDetails, withMgcpStats, accountSid);
             Future<Object> future = (Future<Object>) ask(monitoringService, getStatistics, expires);
             monitoringServiceResponse = (MonitoringServiceResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
         } catch (Exception exception) {
@@ -238,14 +248,19 @@ public class SupervisorEndpoint extends SecuredEndpoint{
         final String url = data.getFirst("Url");
         final String refresh = data.getFirst("Refresh");
         boolean withLiveCallDetails = false;
+        boolean withMgcpStats = false;
         if (data != null && data.containsKey("LiveCallDetails")) {
             withLiveCallDetails = Boolean.parseBoolean(data.getFirst("LiveCallDetails"));
+        }
+
+        if (data != null && data.containsKey("MgcpStats") ) {
+            withMgcpStats = Boolean.parseBoolean(data.getFirst("MgcpStats"));
         }
         //Get the list of live calls from Monitoring Service
         MonitoringServiceResponse monitoringServiceResponse;
         try {
             final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
-            GetStatistics getStatistics = new GetStatistics(withLiveCallDetails, accountSid);
+            GetStatistics getStatistics = new GetStatistics(withLiveCallDetails, withMgcpStats, accountSid);
             Future<Object> future = (Future<Object>) ask(monitoringService, getStatistics, expires);
             monitoringServiceResponse = (MonitoringServiceResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
         } catch (Exception exception) {
