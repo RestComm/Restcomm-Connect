@@ -130,6 +130,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 
 import static akka.pattern.Patterns.ask;
+import org.restcomm.connect.interpreter.rcml.End;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -1280,6 +1281,13 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             } else if (Tag.class.equals(klass) && Verbs.hangup.equals(verb.name())) {
                 Integer sipResponse = outboundCallResponse != null ? outboundCallResponse : SipServletResponse.SC_REQUEST_TERMINATED;
                 call.tell(new Hangup(sipResponse), source);
+            } else if (End.class.equals(klass)) {
+                // github issue#2013 fix
+                if (outboundCallResponse != null) {
+                    call.tell(new Hangup(outboundCallResponse), source);
+                } else {
+                    call.tell(new Hangup("Empty_RCML", SipServletResponse.SC_DECLINE), source);
+                }
             } else {
                 call.tell(new Hangup(outboundCallResponse), source);
             }

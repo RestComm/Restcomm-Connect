@@ -353,6 +353,8 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(forking, hangingUp));
         transitions.add(new Transition(forking, finished));
         transitions.add(new Transition(forking, ready));
+        // https://github.com/RestComm/Restcomm-Connect/issues/2145
+        transitions.add(new Transition(forking, checkingCache));
         // transitions.add(new Transition(acquiringOutboundCallInfo, joiningCalls));
         transitions.add(new Transition(acquiringOutboundCallInfo, hangingUp));
         transitions.add(new Transition(acquiringOutboundCallInfo, finished));
@@ -3074,6 +3076,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
             if (callRecord != null) {
                 final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                 callRecord = records.getCallDetailRecord(callRecord.getSid());
+                if (CallStateChanged.State.FAILED.equals(callState)) {
+                    callState = CallStateChanged.State.COMPLETED;
+                }
                 callRecord = callRecord.setStatus(callState.toString());
                 final DateTime end = DateTime.now();
                 callRecord = callRecord.setEndTime(end);
