@@ -584,19 +584,33 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
-    public void testCreateAccountInSpecificOrganization() {
+    public void createAccountInSpecificOrganizationPermissionTest() {
     	// child should not be able to create account in specified org that it does not belong to
     	ClientResponse clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
                 childUsername, childAuthToken, createdUsernanme, createdPassword, null, organizationSid2);
     	assertEquals(403, clientResponse.getStatus());
+    
+    }
 
-    	// child should be able to create account in specified org that it does not belong to
-    	clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+    @Test
+    public void createAccountInSpecificOrganizationRoleTest() {
+    	// child should be able to create account in specified org that it belong to
+    	ClientResponse clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
                 childUsername, childAuthToken, createdUsernanme2, createdPassword, null, organizationSid1);
     	assertEquals(200, clientResponse.getStatus());
-    	
-    	//super admin tries to create account with invalid organization Sid
+
+    	//super admin should be able to create account in specified org
     	clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, createdUsernanme3, createdPassword, null, organizationSid2);
+    	assertEquals(200, clientResponse.getStatus());
+    
+    }
+
+    @Test
+    public void createAccountInSpecificOrganizationInvalidRequestTest() {
+
+    	//super admin tries to create account with invalid organization Sid
+    	ClientResponse clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, createdUsernanme3, createdPassword, null, "blabla");
     	assertEquals(400, clientResponse.getStatus());
 
@@ -604,12 +618,6 @@ public class AccountsEndpointTest extends EndpointTest {
     	clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, createdUsernanme3, createdPassword, null, "ORafbe225ad37541eba518a74248f01234");
     	assertEquals(400, clientResponse.getStatus());
-
-    	//super admin should be able to create account in specified org
-    	clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, createdUsernanme3, createdPassword, null, organizationSid2);
-    	assertEquals(200, clientResponse.getStatus());
-    
     }
 
     @Test
@@ -626,26 +634,26 @@ public class AccountsEndpointTest extends EndpointTest {
         	logger.debug("getAccounts With null Filter Response: "+accountsArray);
         //should be 6 accounts as these are child accounts only
         assertEquals(7, accountsArray.size());
-       
+
         //getAccounts with organizationSid Filter
         accountsArray = RestcommAccountsTool.getInstance().getAccountsWithFilterResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, organizationSid1, null);
         if(logger.isDebugEnabled())
         	logger.debug("getAccounts With organizationSid Filter Response: "+accountsArray);
-        //should be 15 accounts as these are child accounts only
+        //should be 15 accounts that belongs to this org
         assertEquals(15, accountsArray.size());
 
         //getAccounts with organizationSid Filter
         accountsArray = RestcommAccountsTool.getInstance().getAccountsWithFilterResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, organizationSid2, null);
         if(logger.isDebugEnabled())
         	logger.debug("getAccounts With organizationSid Filter Response: "+accountsArray);
-        //should be 1 account
+        //should be 1 account that belongs to this org
         assertEquals(1, accountsArray.size());
 
         //getAccounts with organizationSid Filter
         accountsArray = RestcommAccountsTool.getInstance().getAccountsWithFilterResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, organizationSid3, null);
         if(logger.isDebugEnabled())
         	logger.debug("getAccounts With organizationSid Filter Response: "+accountsArray);
-        //should be 0
+        //should be 0, as no account belongs to this org
         assertEquals(0, accountsArray.size());
 
         //getAccounts with domainName Filter
