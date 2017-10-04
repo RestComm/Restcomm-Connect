@@ -21,9 +21,9 @@ package org.restcomm.connect.dao;
 
 import java.util.List;
 
-import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -106,4 +106,10 @@ public interface AccountsDao {
      * @throws AccountHierarchyDepthCrossed
      */
     List<String> getAccountLineage(Account account) throws AccountHierarchyDepthCrossed;
+
+    /**
+     * @param sid of organization
+     * @return
+     */
+    List<Account> getAccountsByOrganization(Sid organizationSid);
 }
