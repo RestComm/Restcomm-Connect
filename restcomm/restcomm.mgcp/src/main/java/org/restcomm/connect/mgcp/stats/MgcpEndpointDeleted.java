@@ -3,13 +3,13 @@ package org.restcomm.connect.mgcp.stats;
 import akka.actor.ActorRef;
 
 public class MgcpEndpointDeleted {
-    private final ActorRef connection;
+    private final ActorRef endpoint;
 
-    public MgcpEndpointDeleted (ActorRef connection) {
-        this.connection = connection;
+    public MgcpEndpointDeleted (ActorRef endpoint) {
+        this.endpoint = endpoint;
     }
 
-    public ActorRef getConnection () {
-        return connection;
+    public ActorRef getEndpoint () {
+        return endpoint;
     }
 }

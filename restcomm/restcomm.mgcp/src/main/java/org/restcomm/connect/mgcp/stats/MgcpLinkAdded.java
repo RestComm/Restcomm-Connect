@@ -5,18 +5,18 @@ import org.restcomm.connect.mgcp.MediaSession;
 
 public class MgcpLinkAdded {
     private final MediaSession session;
-    private final ActorRef connection;
+    private final ActorRef link;
 
-    public MgcpLinkAdded (MediaSession session, ActorRef connection) {
+    public MgcpLinkAdded (MediaSession session, ActorRef link) {
         this.session = session;
-        this.connection = connection;
+        this.link = link;
     }
 
     public MediaSession getSession () {
         return session;
     }
 
-    public ActorRef getConnection () {
-        return connection;
+    public ActorRef getLink () {
+        return link;
     }
 }

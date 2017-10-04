@@ -5,18 +5,18 @@ import org.restcomm.connect.mgcp.MediaSession;
 
 public class MgcpEndpointAdded {
     private final MediaSession session;
-    private final ActorRef connection;
+    private final ActorRef endpoint;
 
-    public MgcpEndpointAdded (MediaSession session, ActorRef connection) {
+    public MgcpEndpointAdded (MediaSession session, ActorRef endpoint) {
         this.session = session;
-        this.connection = connection;
+        this.endpoint = endpoint;
     }
 
     public MediaSession getSession () {
         return session;
     }
 
-    public ActorRef getConnection () {
-        return connection;
+    public ActorRef getEndpoint () {
+        return endpoint;
     }
 }
