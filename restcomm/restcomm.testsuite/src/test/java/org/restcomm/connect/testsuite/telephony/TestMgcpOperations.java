@@ -22,6 +22,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.monitoringservice.MonitoringMetrics;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.sip.message.Response;
@@ -214,6 +215,21 @@ public class TestMgcpOperations {
         logger.info("MgcpLinks at the end: "+mgcpLinks);
         logger.info("Live calls at the end: "+liveCalls);
 
+
+        int ivrEndpoints;
+        int confEndpoints;
+        int bridgeEndpoints;
+        int packetRelayEndpoints;
+        if (mgcpEndpoints > 0) {
+            bridgeEndpoints = metrics.getAsJsonObject("Metrics").get(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_BRIDGE).getAsInt();
+            ivrEndpoints = metrics.getAsJsonObject("Metrics").get(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_IVR).getAsInt();
+            confEndpoints = metrics.getAsJsonObject("Metrics").get(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_CONFERENCE).getAsInt();
+            packetRelayEndpoints = metrics.getAsJsonObject("Metrics").get(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_PACKETRELAY).getAsInt();
+            logger.info("IVR Endpoints: "+ivrEndpoints);
+            logger.info("Bridge Endpoints: "+bridgeEndpoints);
+            logger.info("Conference Endpoints: "+confEndpoints);
+            logger.info("PacketRelay Endpoints: "+packetRelayEndpoints);
+        }
         assertEquals(0, liveCalls);
         assertEquals(0, mgcpEndpoints);
         assertEquals(0, mgcpLinks);
