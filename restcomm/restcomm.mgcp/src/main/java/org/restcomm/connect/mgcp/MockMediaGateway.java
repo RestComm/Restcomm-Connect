@@ -114,6 +114,10 @@ public class MockMediaGateway extends RestcommUntypedActor {
             }
         });
         ActorRef connection = system.actorOf(props);
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("MockMediaGateway, Added new Connection, path: %s",connection.path());
+            logger.info(msg);
+        }
         monitoringService.tell(new MgcpConnectionAdded(session, connection), self());
         return connection;
     }
@@ -131,6 +135,10 @@ public class MockMediaGateway extends RestcommUntypedActor {
             }
         });
         ActorRef bridgeEndpoint = system.actorOf(props);
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("MockMediaGateway, Added Bridge endpoint, path: %s",bridgeEndpoint.path());
+            logger.info(msg);
+        }
         monitoringService.tell(new MgcpEndpointAdded(session, bridgeEndpoint), self());
         return bridgeEndpoint;
     }
@@ -152,6 +160,10 @@ public class MockMediaGateway extends RestcommUntypedActor {
             }
         });
         ActorRef conferenceEndpoint = system.actorOf(props);
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("MockMediaGateway, Added Conference endpoint, path: %s", conferenceEndpoint.path());
+            logger.info(msg);
+        }
         monitoringService.tell(new MgcpEndpointAdded(session, conferenceEndpoint), self());
         return conferenceEndpoint;
     }
@@ -175,6 +187,10 @@ public class MockMediaGateway extends RestcommUntypedActor {
             }
         });
         ActorRef ivrEndpoint = system.actorOf(props);
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("MockMediaGateway, Added Ivr endpoint, path: %s",ivrEndpoint.path());
+            logger.info(msg);
+        }
         monitoringService.tell(new MgcpEndpointAdded(session, ivrEndpoint), self());
         return ivrEndpoint;
     }
@@ -192,6 +208,10 @@ public class MockMediaGateway extends RestcommUntypedActor {
             }
         });
         ActorRef link = system.actorOf(props);
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("MockMediaGateway, Added new Link, path: %s",link.path());
+            logger.info(msg);
+        }
         monitoringService.tell(new MgcpLinkAdded(session, link), self());
         return link;
     }
@@ -209,6 +229,10 @@ public class MockMediaGateway extends RestcommUntypedActor {
             }
         });
         ActorRef packetRelayEndpoint = system.actorOf(props);
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("MockMediaGateway, Added PacketRelay endpoint, path: %s",packetRelayEndpoint.path());
+            logger.info(msg);
+        }
         monitoringService.tell(new MgcpEndpointAdded(session, packetRelayEndpoint), self());
         return packetRelayEndpoint;
     }
@@ -286,14 +310,26 @@ public class MockMediaGateway extends RestcommUntypedActor {
             sender.tell(new MediaGatewayResponse<ActorRef>(endpoint), self);
         } else if (DestroyConnection.class.equals(klass)) {
             final DestroyConnection request = (DestroyConnection) message;
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("MockMediaGateway, Connection destroyed, path %s",request.connection().path());
+                logger.info(msg);
+            }
             monitoringService.tell(new MgcpConnectionDeleted(request.connection()), self());
             context.stop(request.connection());
         } else if (DestroyLink.class.equals(klass)) {
             final DestroyLink request = (DestroyLink) message;
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("MockMediaGateway, Link destroyed, path %s",request.link().path());
+                logger.info(msg);
+            }
             monitoringService.tell(new MgcpLinkDeleted(request.link()), self());
             context.stop(request.link());
         } else if (DestroyEndpoint.class.equals(klass)) {
             final DestroyEndpoint request = (DestroyEndpoint) message;
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("MockMediaGateway, Endpoint destroyed, path %s",request.endpoint().path());
+                logger.info(msg);
+            }
             monitoringService.tell(new MgcpEndpointDeleted(request.endpoint()), self());
             context.stop(request.endpoint());
         } else if (message instanceof JainMgcpCommandEvent) {

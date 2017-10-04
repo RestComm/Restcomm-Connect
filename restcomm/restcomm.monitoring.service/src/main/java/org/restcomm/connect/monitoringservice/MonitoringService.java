@@ -193,19 +193,19 @@ public class MonitoringService extends RestcommUntypedActor {
         } else if (MgcpEndpointAdded.class.equals(klass)) {
             MgcpEndpointAdded mgcpEndpointAdded = (MgcpEndpointAdded)message;
             mgcpEndpoints.incrementAndGet();
-            mgcpEndpointMap.put(mgcpEndpointAdded.getConnection(), mgcpEndpointAdded.getSession());
+            mgcpEndpointMap.put(mgcpEndpointAdded.getEndpoint(), mgcpEndpointAdded.getSession());
         } else if (MgcpEndpointDeleted.class.equals(klass)) {
             MgcpEndpointDeleted mgcpEndpointDeleted = (MgcpEndpointDeleted)message;
             mgcpEndpoints.decrementAndGet();
-            mgcpEndpointMap.remove(mgcpEndpointDeleted.getConnection());
+            mgcpEndpointMap.remove(mgcpEndpointDeleted.getEndpoint());
         } else if (MgcpLinkAdded.class.equals(klass)) {
             MgcpLinkAdded mgcpLinkAdded = (MgcpLinkAdded)message;
             mgcpLinks.incrementAndGet();
-            mgcpLinkMap.put(mgcpLinkAdded.getConnection(), mgcpLinkAdded.getSession());
+            mgcpLinkMap.put(mgcpLinkAdded.getLink(), mgcpLinkAdded.getSession());
         } else if (MgcpLinkDeleted.class.equals(klass)) {
             MgcpLinkDeleted mgcpLinkDeleted = (MgcpLinkDeleted)message;
             mgcpLinks.decrementAndGet();
-            mgcpLinkMap.remove(mgcpLinkDeleted.getConnection());
+            mgcpLinkMap.remove(mgcpLinkDeleted.getLink());
         }
     }
 
