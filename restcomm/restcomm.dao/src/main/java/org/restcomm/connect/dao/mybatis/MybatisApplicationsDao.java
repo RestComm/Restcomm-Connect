@@ -100,11 +100,22 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
         try {
             final List<Map<String, Object>> results = session.selectList(namespace + "getApplicationsAndNumbers", accountSid.toString());
             final List<Application> applications = new ArrayList<Application>();
-            // TODO produce an application list that contains a number list as a property of the application
-            // ...
             if (results != null && !results.isEmpty()) {
+                Application previousApp = null;
+                Application app = null;
                 for (final Map<String, Object> result : results) {
-                    applications.add(toApplication(result));
+                    app = toApplication(result);
+                    if (previousApp != null && previousApp.getSid().equals(app.getSid()) )
+                        app = previousApp;
+                    // if there is a number bound to this application populate the latter with the number details
+                    if (result.get("num_sid") != null) {
+                        populateApplicationWithNumber(app, result, "num_");
+                    }
+                    if (previousApp == null || !previousApp.getSid().equals(app.getSid())) {
+                        // is this is a new application in the result map add it to the list. Remember, the same app can be returned many times if it's related to many numbers
+                        applications.add(app);
+                    }
+                    previousApp = app;
                 }
             }
             return applications;
@@ -186,7 +197,7 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
      * @param field_prefix
      * @return
      */
-    private Application populateApplicationWithNumber(Application application, final Map<String, Object> map, String field_prefix) {
+    private void populateApplicationWithNumber(Application application, final Map<String, Object> map, String field_prefix) {
         // first create the number
         IncomingPhoneNumber.Builder numberBuilder = new IncomingPhoneNumber.Builder();
         numberBuilder.setSid(readSid(map.get(field_prefix + "sid")));
@@ -198,11 +209,11 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
         numberBuilder.setReferApplicationSid(readSid(map.get(field_prefix + "refer_application_sid")));
         IncomingPhoneNumber number = numberBuilder.build();
         List<IncomingPhoneNumber> numbers = application.getNumbers();
-        if (number == null)
+        if (numbers == null) {
             numbers = new ArrayList<IncomingPhoneNumber>();
+            application.setNumbers(numbers);
+        }
         numbers.add(number);
-
-        return application.setNumbers(numbers);
     }
 
     private Map<String, Object> toMap(final Application application) {

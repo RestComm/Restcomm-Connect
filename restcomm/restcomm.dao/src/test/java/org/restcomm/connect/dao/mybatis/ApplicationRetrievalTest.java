@@ -68,17 +68,41 @@ public class ApplicationRetrievalTest extends DaoTest {
     public void retrieveApplications() {
         ApplicationsDao dao = manager.getApplicationsDao();
         List<Application> apps = dao.getApplications(new Sid("ACae6e420f425248d6a26948c17a9e2acf"));
-        Assert.assertEquals(3, apps.size());
+        Assert.assertEquals(5, apps.size());
     }
 
     /**
-     * PN00000000000000000000000000000000 is bound to AP73926e7113fa4d95981aa96b76eca854 (sms)
-     * PN00000000000000000000000000000001 is bound to AP73926e7113fa4d95981aa96b76eca854 (both sms+ussd)
+     * PN00000000000000000000000000000001 is bound to AP73926e7113fa4d95981aa96b76eca854 (sms)
+     * PN00000000000000000000000000000002 is bound to AP73926e7113fa4d95981aa96b76eca854 (both sms+ussd)
+     * PN00000000000000000000000000000003 is bound to AP00000000000000000000000000000005. The number belong sto other account
+     * AP00000000000000000000000000000006 belongs to other account
      */
     @Test
     public void retrieveApplicationsAndTheirNumbers() {
         ApplicationsDao dao = manager.getApplicationsDao();
         List<Application> apps = dao.getApplications(new Sid("ACae6e420f425248d6a26948c17a9e2acf"), true);
+
         Assert.assertEquals(5, apps.size());
+        Assert.assertNotNull(searchApplicationBySid(new Sid("AP73926e7113fa4d95981aa96b76eca854"),apps).getNumbers());
+        // applications bound with many numbers are property returned
+        Assert.assertEquals("Three (3) numbers should be bound to this application", searchApplicationBySid(new Sid("AP73926e7113fa4d95981aa96b76eca854"),apps).getNumbers().size(), 3);
+        // applications bound with no numbers are properly returned
+        Assert.assertNull(searchApplicationBySid(new Sid("AP00000000000000000000000000000004"),apps).getNumbers());
+        // applications bound to numbers that belong to different account should not be returned (for now at least)
+        Assert.assertNull(searchApplicationBySid(new Sid("AP00000000000000000000000000000005"),apps).getNumbers());
+
+    }
+
+    private Application searchApplicationBySid(Sid sid, List<Application> apps) {
+        if (apps != null) {
+            int i = 0;
+            while (i < apps.size()) {
+                if (apps.get(i).getSid().equals(sid))
+                    return apps.get(i);
+                i++;
+            }
+        }
+        return null; // nothing found
+
     }
 }

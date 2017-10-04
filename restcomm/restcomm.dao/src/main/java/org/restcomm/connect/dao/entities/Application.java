@@ -137,10 +137,8 @@ public final class Application {
                 uri, rcmlUrl, kind);
     }
 
-    public Application setNumbers(List<IncomingPhoneNumber> numbers) {
-        Application newapplication = new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup, uri, rcmlUrl, kind);
-        newapplication.numbers = numbers;
-        return newapplication;
+    public void setNumbers(List<IncomingPhoneNumber> numbers) {
+        this.numbers = numbers;
     }
 
     public enum Kind {
