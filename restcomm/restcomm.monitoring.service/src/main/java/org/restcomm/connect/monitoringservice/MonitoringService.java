@@ -29,6 +29,7 @@ import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.InstanceId;
+import org.restcomm.connect.mgcp.MediaSession;
 import org.restcomm.connect.mgcp.stats.MgcpConnectionAdded;
 import org.restcomm.connect.mgcp.stats.MgcpConnectionDeleted;
 import org.restcomm.connect.mgcp.stats.MgcpEndpointAdded;
@@ -94,9 +95,9 @@ public class MonitoringService extends RestcommUntypedActor {
     private final AtomicInteger mgcpEndpoints;
     private final AtomicInteger mgcpLinks;
     private final AtomicInteger mgcpConnections;
-//    private final Map<ActorRef, MediaSession> mgcpEndpointMap;
-//    private final Map<ActorRef, MediaSession> mgcpLinkMap;
-//    private final Map<ActorRef, MediaSession> mgcpConnectionMap;
+    private final Map<ActorRef, MediaSession> mgcpEndpointMap;
+    private final Map<ActorRef, MediaSession> mgcpLinkMap;
+    private final Map<ActorRef, MediaSession> mgcpConnectionMap;
 
 
 
@@ -134,9 +135,9 @@ public class MonitoringService extends RestcommUntypedActor {
         mgcpLinks = new AtomicInteger(0);
         mgcpConnections = new AtomicInteger(0);
 
-//        mgcpEndpointMap = new ConcurrentHashMap<ActorRef, MediaSession>();
-//        mgcpLinkMap = new ConcurrentHashMap<ActorRef, MediaSession>();
-//        mgcpConnectionMap = new ConcurrentHashMap<ActorRef, MediaSession>();
+        mgcpEndpointMap = new ConcurrentHashMap<ActorRef, MediaSession>();
+        mgcpLinkMap = new ConcurrentHashMap<ActorRef, MediaSession>();
+        mgcpConnectionMap = new ConcurrentHashMap<ActorRef, MediaSession>();
 
         if(logger.isInfoEnabled()){
             logger.info("Monitoring Service started");
@@ -182,17 +183,29 @@ public class MonitoringService extends RestcommUntypedActor {
                 }
             }
         } else if (MgcpConnectionAdded.class.equals(klass)) {
+            MgcpConnectionAdded mgcpConnectionAdded = (MgcpConnectionAdded)message;
             mgcpConnections.incrementAndGet();
+            mgcpConnectionMap.put(mgcpConnectionAdded.getConnection(), mgcpConnectionAdded.getSession());
         } else if (MgcpConnectionDeleted.class.equals(klass)) {
+            MgcpConnectionDeleted mgcpConnectionDeleted = (MgcpConnectionDeleted)message;
             mgcpConnections.decrementAndGet();
+            mgcpConnectionMap.remove(mgcpConnectionDeleted.getConnection());
         } else if (MgcpEndpointAdded.class.equals(klass)) {
+            MgcpEndpointAdded mgcpEndpointAdded = (MgcpEndpointAdded)message;
             mgcpEndpoints.incrementAndGet();
+            mgcpEndpointMap.put(mgcpEndpointAdded.getConnection(), mgcpEndpointAdded.getSession());
         } else if (MgcpEndpointDeleted.class.equals(klass)) {
+            MgcpEndpointDeleted mgcpEndpointDeleted = (MgcpEndpointDeleted)message;
             mgcpEndpoints.decrementAndGet();
+            mgcpEndpointMap.remove(mgcpEndpointDeleted.getConnection());
         } else if (MgcpLinkAdded.class.equals(klass)) {
+            MgcpLinkAdded mgcpLinkAdded = (MgcpLinkAdded)message;
             mgcpLinks.incrementAndGet();
+            mgcpLinkMap.put(mgcpLinkAdded.getConnection(), mgcpLinkAdded.getSession());
         } else if (MgcpLinkDeleted.class.equals(klass)) {
+            MgcpLinkDeleted mgcpLinkDeleted = (MgcpLinkDeleted)message;
             mgcpLinks.decrementAndGet();
+            mgcpLinkMap.remove(mgcpLinkDeleted.getConnection());
         }
     }
 
@@ -208,7 +221,7 @@ public class MonitoringService extends RestcommUntypedActor {
 //
 //    private void processMgcpEndpointAdded(final MgcpEndpointAdded mgcpEndpointAdded) {
 //        mgcpEndpoints.incrementAndGet();
-//        mgcpEndpointMap.put(mgcpEndpointAdded.getConnection(), mgcpEndpointAdded.getSession());
+//        mgcpConnectionMap.remove(mgcpConnectionDeleted.getConnection());
 //    }
 //
 //    private void processMgcpEndpointDeleted(final MgcpEndpointDeleted mgcpEndpointDeleted) {
