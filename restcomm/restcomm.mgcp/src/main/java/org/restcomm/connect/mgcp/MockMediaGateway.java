@@ -139,7 +139,7 @@ public class MockMediaGateway extends RestcommUntypedActor {
             String msg = String.format("MockMediaGateway, Added Bridge endpoint, path: %s",bridgeEndpoint.path());
             logger.info(msg);
         }
-        monitoringService.tell(new MgcpEndpointAdded(session, bridgeEndpoint), self());
+        monitoringService.tell(new MgcpEndpointAdded(session, bridgeEndpoint, MgcpEndpointAdded.Type.BRIDGE), self());
         return bridgeEndpoint;
     }
 
@@ -164,7 +164,7 @@ public class MockMediaGateway extends RestcommUntypedActor {
             String msg = String.format("MockMediaGateway, Added Conference endpoint, path: %s", conferenceEndpoint.path());
             logger.info(msg);
         }
-        monitoringService.tell(new MgcpEndpointAdded(session, conferenceEndpoint), self());
+        monitoringService.tell(new MgcpEndpointAdded(session, conferenceEndpoint, MgcpEndpointAdded.Type.CONFERENCE), self());
         return conferenceEndpoint;
     }
 
@@ -191,7 +191,7 @@ public class MockMediaGateway extends RestcommUntypedActor {
             String msg = String.format("MockMediaGateway, Added Ivr endpoint, path: %s",ivrEndpoint.path());
             logger.info(msg);
         }
-        monitoringService.tell(new MgcpEndpointAdded(session, ivrEndpoint), self());
+        monitoringService.tell(new MgcpEndpointAdded(session, ivrEndpoint, MgcpEndpointAdded.Type.IVR), self());
         return ivrEndpoint;
     }
 
@@ -233,7 +233,7 @@ public class MockMediaGateway extends RestcommUntypedActor {
             String msg = String.format("MockMediaGateway, Added PacketRelay endpoint, path: %s",packetRelayEndpoint.path());
             logger.info(msg);
         }
-        monitoringService.tell(new MgcpEndpointAdded(session, packetRelayEndpoint), self());
+        monitoringService.tell(new MgcpEndpointAdded(session, packetRelayEndpoint, MgcpEndpointAdded.Type.PACKETRELAY), self());
         return packetRelayEndpoint;
     }
 
