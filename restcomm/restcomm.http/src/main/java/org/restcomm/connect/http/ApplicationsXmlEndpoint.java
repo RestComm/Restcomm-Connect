@@ -62,7 +62,7 @@ public class ApplicationsXmlEndpoint extends ApplicationsEndpoint {
 
     @GET
     public Response getApplications(@PathParam("accountSid") final String accountSid) {
-        return getApplications(accountSid, APPLICATION_XML_TYPE);
+        return getApplications(accountSid, APPLICATION_XML_TYPE, );
     }
 
     @Path("/{sid}")

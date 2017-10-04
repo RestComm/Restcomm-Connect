@@ -26,6 +26,7 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -94,6 +95,25 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
     }
 
     @Override
+    public List<Application> getApplications(Sid accountSid, boolean includeNumbers) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getApplicationsAndNumbers", accountSid.toString());
+            final List<Application> applications = new ArrayList<Application>();
+            // TODO produce an application list that contains a number list as a property of the application
+            // ...
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    applications.add(toApplication(result));
+                }
+            }
+            return applications;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public List<Application> getApplications(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
@@ -154,6 +174,35 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
         final Application.Kind kind = readApplicationKind(map.get("kind"));
         return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
                 uri, rcmlUrl, kind);
+    }
+
+    /**
+     * Populates application.numbers field with information of one or more numbers. The 'numbers' list is created if
+     * already null and an IncomingPhoneNumber is added into it based on information from the map. Invoking the same method
+     * several times to add more numbers to the same list is possible.
+     *
+     * @param application
+     * @param map
+     * @param field_prefix
+     * @return
+     */
+    private Application populateApplicationWithNumber(Application application, final Map<String, Object> map, String field_prefix) {
+        // first create the number
+        IncomingPhoneNumber.Builder numberBuilder = new IncomingPhoneNumber.Builder();
+        numberBuilder.setSid(readSid(map.get(field_prefix + "sid")));
+        numberBuilder.setFriendlyName(readString(map.get(field_prefix + "friendly_name")));
+        numberBuilder.setPhoneNumber(readString(map.get(field_prefix + "phone_number")));
+        numberBuilder.setVoiceApplicationSid(readSid(map.get(field_prefix + "voice_application_sid")));
+        numberBuilder.setSmsApplicationSid(readSid(map.get(field_prefix + "sms_application_sid")));
+        numberBuilder.setUssdApplicationSid(readSid(map.get(field_prefix + "ussd_application_sid")));
+        numberBuilder.setReferApplicationSid(readSid(map.get(field_prefix + "refer_application_sid")));
+        IncomingPhoneNumber number = numberBuilder.build();
+        List<IncomingPhoneNumber> numbers = application.getNumbers();
+        if (number == null)
+            numbers = new ArrayList<IncomingPhoneNumber>();
+        numbers.add(number);
+
+        return application.setNumbers(numbers);
     }
 
     private Map<String, Object> toMap(final Application application) {

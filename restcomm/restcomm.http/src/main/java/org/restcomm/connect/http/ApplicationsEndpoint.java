@@ -44,6 +44,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.List;
 
@@ -144,10 +145,16 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response getApplications(final String accountSid, final MediaType responseType) {
+    protected Response getApplications(final String accountSid, final MediaType responseType, UriInfo uriInfo) {
         Account account;
         account = accountsDao.getAccount(accountSid);
         secure(account, "RestComm:Read:Applications", SecuredType.SECURED_APP);
+        // shall we also return number information with the application ?
+        boolean includeNumbers = false;
+        String tmp = uriInfo.getQueryParameters().getFirst("includeNumbers");
+        if (tmp != null && tmp.equalsIgnoreCase("true"))
+            includeNumbers = true;
+
         final List<Application> applications = dao.getApplications(account.getSid());
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new ApplicationList(applications));
