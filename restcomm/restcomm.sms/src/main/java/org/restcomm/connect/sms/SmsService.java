@@ -27,6 +27,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Currency;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -43,6 +44,7 @@ import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
+import org.restcomm.connect.commons.push.PushNotificationServerHelper;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
@@ -87,6 +89,7 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -107,6 +110,9 @@ public final class SmsService extends RestcommUntypedActor {
     static final int WARNING_NOTIFICATION = 1;
 
     private final ActorRef monitoringService;
+
+    // Push notification server
+    private final PushNotificationServerHelper pushNotificationServerHelper;
 
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
@@ -130,6 +136,7 @@ public final class SmsService extends RestcommUntypedActor {
         this.storage = storage;
         this.servletContext = servletContext;
         monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
+        this.pushNotificationServerHelper = new PushNotificationServerHelper(system, configuration);
         // final Configuration runtime = configuration.subset("runtime-settings");
         // TODO this.useTo = runtime.getBoolean("use-to");
         patchForNatB2BUASessions = runtime.getBoolean("patch-for-nat-b2bua-sessions", true);
@@ -206,25 +213,35 @@ public final class SmsService extends RestcommUntypedActor {
             if(logger.isDebugEnabled()) {
                 logger.debug("toOrganizationSid" + toOrganizationSid);
             }
-            Client toClient = clients.getClient(toUser, toOrganizationSid);
+            final Client toClient = clients.getClient(toUser, toOrganizationSid);
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect
-                // to the b2bua
-                if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
-                    // if all goes well with proxying the SIP MESSAGE on to the target client
-                    // then we can end further processing of this request and send response to sender
-                    if(logger.isInfoEnabled()) {
-                        logger.info("P2P, Message from: " + client.getLogin() + " redirected to registered client: "
-                            + toClient.getLogin());
+                long delay = pushNotificationServerHelper.sendPushNotificationIfNeeded(toClient.getPushClientIdentity());
+                system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            // to the b2bua
+                            if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
+                                // if all goes well with proxying the SIP MESSAGE on to the target client
+                                // then we can end further processing of this request and send response to sender
+                                if(logger.isInfoEnabled()) {
+                                    logger.info("P2P, Message from: " + client.getLogin() + " redirected to registered client: "
+                                            + toClient.getLogin());
+                                }
+                                monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_CLIENT), self);
+                                return;
+                            } else {
+                                String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
+                                        + " : Make sure the Client exist or is registered with Restcomm";
+                                sendNotification(errMsg, 11001, "warning", true);
+                                final SipServletResponse resp = request.createResponse(SC_NOT_FOUND, "Cannot complete P2P messages");
+                                resp.send();
+                            }
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
-                    monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_CLIENT), self);
-                    return;
-                } else {
-                    String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
-                            + " : Make sure the Client exist or is registered with Restcomm";
-                    sendNotification(errMsg, 11001, "warning", true);
-                    final SipServletResponse resp = request.createResponse(SC_NOT_FOUND, "Cannot complete P2P messages");
-                    resp.send();
-                }
+                }, system.dispatcher());
             } else {
                 // Since toUser is null, try to route the message outside using the SMS Aggregator
                 if(logger.isInfoEnabled()) {
