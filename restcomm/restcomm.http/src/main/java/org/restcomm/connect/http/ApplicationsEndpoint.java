@@ -33,9 +33,11 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.ApplicationList;
+import org.restcomm.connect.dao.entities.ApplicationNumberSummary;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.ApplicationConverter;
 import org.restcomm.connect.http.converter.ApplicationListConverter;
+import org.restcomm.connect.http.converter.ApplicationNumberSummaryConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 
 import javax.annotation.PostConstruct;
@@ -92,6 +94,8 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new ApplicationListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
+        xstream.registerConverter(new ApplicationNumberSummaryConverter());
+        xstream.alias("Number",ApplicationNumberSummary.class);
     }
 
     private Application createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
@@ -155,7 +159,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         if (tmp != null && tmp.equalsIgnoreCase("true"))
             includeNumbers = true;
 
-        final List<Application> applications = dao.getApplications(account.getSid());
+        final List<Application> applications = dao.getApplications(account.getSid(), includeNumbers);
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new ApplicationList(applications));
             return ok(xstream.toXML(response), APPLICATION_XML).build();

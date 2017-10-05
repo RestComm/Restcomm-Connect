@@ -44,7 +44,7 @@ public final class Application {
     private final URI uri;
     private final URI rcmlUrl;
     private final Kind kind;
-    private List<IncomingPhoneNumber> numbers;
+    private List<ApplicationNumberSummary> numbers;
 
     public Application(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
             final Sid accountSid, final String apiVersion, final Boolean hasVoiceCallerIdLookup, final URI uri,
@@ -54,7 +54,7 @@ public final class Application {
 
     public Application(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
                        final Sid accountSid, final String apiVersion, final Boolean hasVoiceCallerIdLookup, final URI uri,
-                       final URI rcmlUrl, Kind kind, List<IncomingPhoneNumber> numbers) {
+                       final URI rcmlUrl, Kind kind, List<ApplicationNumberSummary> numbers) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -113,7 +113,7 @@ public final class Application {
         return kind;
     }
 
-    public List<IncomingPhoneNumber> getNumbers() {
+    public List<ApplicationNumberSummary> getNumbers() {
         return numbers;
     }
 
@@ -137,7 +137,7 @@ public final class Application {
                 uri, rcmlUrl, kind);
     }
 
-    public void setNumbers(List<IncomingPhoneNumber> numbers) {
+    public void setNumbers(List<ApplicationNumberSummary> numbers) {
         this.numbers = numbers;
     }
 
