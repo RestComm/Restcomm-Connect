@@ -214,7 +214,7 @@ public class SmsPushNotificationServerTest {
                 adminAuthToken, from, to, body, null);
         assertNotNull(callResult);
 
-        assertTrue(aliceCall.waitForMessage(5000));
+        assertTrue(aliceCall.waitForMessage(10000));
         Request messageRequest = aliceCall.getLastReceivedMessageRequest();
         assertTrue(aliceCall.sendMessageResponse(202, "Accepted", 3600));
         String messageReceived = new String(messageRequest.getRawContent());
