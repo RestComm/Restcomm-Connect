@@ -219,7 +219,8 @@ public final class SmsService extends RestcommUntypedActor {
                 // workaround for only clients with push_client_identity after long discussion about current SIP Message flow processing
                 // https://telestax.atlassian.net/browse/RESTCOMM-1159
                 if (delay > 0) {
-                    request.createResponse(100).send();
+                    final SipServletResponse trying = request.createResponse(SipServletResponse.SC_TRYING);
+                    trying.send();
                 }
                 system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
                     @Override
