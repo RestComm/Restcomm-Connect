@@ -1,15 +1,13 @@
 package org.restcomm.connect.mgcp.stats;
 
-import akka.actor.ActorRef;
-
 public class MgcpEndpointDeleted {
-    private final ActorRef endpoint;
+    private final String endpoint;
 
-    public MgcpEndpointDeleted (ActorRef endpoint) {
+    public MgcpEndpointDeleted (String endpoint) {
         this.endpoint = endpoint;
     }
 
-    public ActorRef getEndpoint () {
+    public String getEndpoint () {
         return endpoint;
     }
 }

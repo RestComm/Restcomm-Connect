@@ -321,12 +321,10 @@ public class DialConferenceTest {
         assertNotNull(metrics);
         int mgcpEndpoints = metrics.getAsJsonObject("Metrics").get("MgcpEndpoints").getAsInt();
         int mgcpConnections = metrics.getAsJsonObject("Metrics").get("MgcpConnections").getAsInt();
-        int mgcpLinks = metrics.getAsJsonObject("Metrics").get("MgcpLinks").getAsInt();
         liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
 
         logger.info("MgcpEndpoints at the end: "+mgcpEndpoints);
         logger.info("MgcpConnections at the end: "+mgcpConnections);
-        logger.info("MgcpLinks at the end: "+mgcpLinks);
         logger.info("Live calls at the end: "+liveCalls);
 
 
@@ -350,7 +348,95 @@ public class DialConferenceTest {
         }
         assertEquals(0, liveCalls);
         assertEquals(0, mgcpEndpoints);
-        assertEquals(0, mgcpLinks);
+        assertEquals(0, mgcpConnections);
+
+    }
+
+    @Test
+    public synchronized void testDialConferenceSingleClient() throws InterruptedException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialConfernceRcml)));
+
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        Thread.sleep(2000);
+
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls == 1);
+        assertTrue(liveCallsArraySize == 1);
+        assertTrue(getConferencesSize()>=1);
+        int numOfParticipants = getParticipantsSize(confRoom2);
+        logger.info("Number of participants: "+numOfParticipants);
+        assertTrue(numOfParticipants==1);
+
+        Thread.sleep(3000);
+
+        bobCall.disconnect();
+
+        Thread.sleep(5000);
+        liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls == 0);
+        assertTrue(liveCallsArraySize == 0);
+        assertTrue(getConferencesSize()>=1);
+        int confRoom2Participants = getParticipantsSize(confRoom2);
+        logger.info("&&&&& ConfRoom2Participants: "+confRoom2Participants);
+        assertTrue(confRoom2Participants==0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        int mgcpEndpoints = metrics.getAsJsonObject("Metrics").get("MgcpEndpoints").getAsInt();
+        int mgcpConnections = metrics.getAsJsonObject("Metrics").get("MgcpConnections").getAsInt();
+        liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+
+        logger.info("MgcpEndpoints at the end: "+mgcpEndpoints);
+        logger.info("MgcpConnections at the end: "+mgcpConnections);
+        logger.info("Live calls at the end: "+liveCalls);
+
+
+        int ivrEndpoints;
+        int confEndpoints;
+        int bridgeEndpoints;
+        int packetRelayEndpoints;
+        if (mgcpEndpoints > 0) {
+            bridgeEndpoints = metrics.getAsJsonObject("Metrics").get(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_BRIDGE).getAsInt();
+            ivrEndpoints = metrics.getAsJsonObject("Metrics").get(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_IVR).getAsInt();
+            confEndpoints = metrics.getAsJsonObject("Metrics").get(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_CONFERENCE).getAsInt();
+            packetRelayEndpoints = metrics.getAsJsonObject("Metrics").get(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_PACKETRELAY).getAsInt();
+            logger.info("IVR Endpoints: "+ivrEndpoints);
+            logger.info("Bridge Endpoints: "+bridgeEndpoints);
+            logger.info("Conference Endpoints: "+confEndpoints);
+            logger.info("PacketRelay Endpoints: "+packetRelayEndpoints);
+            assertEquals(0, ivrEndpoints);
+            assertEquals(0, confEndpoints);
+            assertEquals(0, bridgeEndpoints);
+            assertEquals(0, bridgeEndpoints);
+        }
+        assertEquals(0, liveCalls);
+        assertEquals(0, mgcpEndpoints);
         assertEquals(0, mgcpConnections);
 
     }

@@ -29,13 +29,10 @@ import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.InstanceId;
-import org.restcomm.connect.mgcp.MediaSession;
 import org.restcomm.connect.mgcp.stats.MgcpConnectionAdded;
 import org.restcomm.connect.mgcp.stats.MgcpConnectionDeleted;
 import org.restcomm.connect.mgcp.stats.MgcpEndpointAdded;
 import org.restcomm.connect.mgcp.stats.MgcpEndpointDeleted;
-import org.restcomm.connect.mgcp.stats.MgcpLinkAdded;
-import org.restcomm.connect.mgcp.stats.MgcpLinkDeleted;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
@@ -53,6 +50,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,15 +90,11 @@ public class MonitoringService extends RestcommUntypedActor {
     private final AtomicInteger maxConcurrentIncomingCalls;
     private final AtomicInteger maxConcurrentOutgoingCalls;
 
-    private final AtomicInteger mgcpEndpoints;
     private final AtomicInteger mgcpEndpointsBridge;
     private final AtomicInteger mgcpEndpointsIvr;
     private final AtomicInteger mgcpEndpointsConference;
     private final AtomicInteger mgcpEndpointsPacketRelay;
-    private final AtomicInteger mgcpLinks;
-    private final AtomicInteger mgcpConnections;
-    private final Map<ActorRef, MgcpEndpointAdded.Type> mgcpEndpointMap;
-    private final Map<ActorRef, MediaSession> mgcpLinkMap;
+    private final Map<String, String> mgcpEndpointMap;
     private final Map<String, String> mgcpConnectionMap;
 
 
@@ -135,16 +129,12 @@ public class MonitoringService extends RestcommUntypedActor {
         maxConcurrentIncomingCalls = new AtomicInteger(0);
         maxConcurrentOutgoingCalls = new AtomicInteger(0);
 
-        mgcpEndpoints = new AtomicInteger(0);
         mgcpEndpointsBridge = new AtomicInteger(0);
         mgcpEndpointsIvr = new AtomicInteger(0);
         mgcpEndpointsConference = new AtomicInteger(0);
         mgcpEndpointsPacketRelay = new AtomicInteger(0);
-        mgcpLinks = new AtomicInteger(0);
-        mgcpConnections = new AtomicInteger(0);
 
-        mgcpEndpointMap = new ConcurrentHashMap<ActorRef, MgcpEndpointAdded.Type>();
-        mgcpLinkMap = new ConcurrentHashMap<ActorRef, MediaSession>();
+        mgcpEndpointMap = new ConcurrentHashMap<String, String>();
         mgcpConnectionMap = new ConcurrentHashMap<String, String>();
 
         if(logger.isInfoEnabled()){
@@ -192,62 +182,41 @@ public class MonitoringService extends RestcommUntypedActor {
             }
         } else if (MgcpConnectionAdded.class.equals(klass)) {
             MgcpConnectionAdded mgcpConnectionAdded = (MgcpConnectionAdded)message;
-            mgcpConnections.incrementAndGet();
-
             mgcpConnectionMap.put(mgcpConnectionAdded.getConnId(), mgcpConnectionAdded.getEndpointId());
         } else if (MgcpConnectionDeleted.class.equals(klass)) {
             MgcpConnectionDeleted mgcpConnectionDeleted = (MgcpConnectionDeleted)message;
-            mgcpConnections.decrementAndGet();
-            mgcpConnectionMap.remove(mgcpConnectionDeleted.getConnId());
+            if (mgcpConnectionDeleted.getConnId() != null) {
+                mgcpConnectionMap.remove(mgcpConnectionDeleted.getConnId());
+            } else {
+                mgcpConnectionMap.values().removeAll(Collections.singleton(mgcpConnectionDeleted.getEndpoint()));
+            }
         } else if (MgcpEndpointAdded.class.equals(klass)) {
             MgcpEndpointAdded mgcpEndpointAdded = (MgcpEndpointAdded)message;
-            mgcpEndpoints.incrementAndGet();
-            switch (mgcpEndpointAdded.getType()) {
-                case IVR:
-                    mgcpEndpointsIvr.incrementAndGet();
-                    break;
-                case BRIDGE:
-                    mgcpEndpointsBridge.incrementAndGet();
-                    break;
-                case CONFERENCE:
-                    mgcpEndpointsConference.incrementAndGet();
-                    break;
-                case PACKETRELAY:
-                    mgcpEndpointsPacketRelay.incrementAndGet();
-                    break;
-                default:
-                    break;
+            mgcpEndpointMap.put(mgcpEndpointAdded.getConnId(), mgcpEndpointAdded.getEndpoint());
+            logger.info("MonitoringService: Added endpoint: "+mgcpEndpointAdded.getEndpoint());
+            String endpoint = mgcpEndpointAdded.getEndpoint();
+            if (endpoint.contains("ivr")) {
+                mgcpEndpointsIvr.incrementAndGet();
+            } else if (endpoint.contains("conf")) {
+                mgcpEndpointsConference.incrementAndGet();
+            } else if (endpoint.contains("bridge")) {
+                mgcpEndpointsBridge.incrementAndGet();
+            } else if (endpoint.contains("relay")) {
+                mgcpEndpointsPacketRelay.incrementAndGet();
             }
-            mgcpEndpointMap.put(mgcpEndpointAdded.getEndpoint(), mgcpEndpointAdded.getType());
         } else if (MgcpEndpointDeleted.class.equals(klass)) {
             MgcpEndpointDeleted mgcpEndpointDeleted = (MgcpEndpointDeleted)message;
-            mgcpEndpoints.decrementAndGet();
-            MgcpEndpointAdded.Type type = mgcpEndpointMap.remove(mgcpEndpointDeleted.getEndpoint());
-            switch (type) {
-                case IVR:
-                    mgcpEndpointsIvr.decrementAndGet();
-                    break;
-                case BRIDGE:
-                    mgcpEndpointsBridge.decrementAndGet();
-                    break;
-                case CONFERENCE:
-                    mgcpEndpointsConference.decrementAndGet();
-                    break;
-                case PACKETRELAY:
-                    mgcpEndpointsPacketRelay.decrementAndGet();
-                    break;
-                default:
-                    break;
+            mgcpEndpointMap.values().removeAll(Collections.singleton(mgcpEndpointDeleted.getEndpoint()));
+            String endpoint = mgcpEndpointDeleted.getEndpoint();
+            if (endpoint.contains("ivr")) {
+                mgcpEndpointsIvr.decrementAndGet();
+            } else if (endpoint.contains("conf")) {
+                mgcpEndpointsConference.decrementAndGet();
+            } else if (endpoint.contains("bridge")) {
+                mgcpEndpointsBridge.decrementAndGet();
+            } else if (endpoint.contains("relay")) {
+                mgcpEndpointsPacketRelay.decrementAndGet();
             }
-
-        } else if (MgcpLinkAdded.class.equals(klass)) {
-            MgcpLinkAdded mgcpLinkAdded = (MgcpLinkAdded)message;
-            mgcpLinks.incrementAndGet();
-            mgcpLinkMap.put(mgcpLinkAdded.getLink(), mgcpLinkAdded.getSession());
-        } else if (MgcpLinkDeleted.class.equals(klass)) {
-            MgcpLinkDeleted mgcpLinkDeleted = (MgcpLinkDeleted)message;
-            mgcpLinks.decrementAndGet();
-            mgcpLinkMap.remove(mgcpLinkDeleted.getLink());
         }
     }
 
@@ -521,10 +490,9 @@ public class MonitoringService extends RestcommUntypedActor {
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_TEXT_MESSAGE_OUTBOUND, textOutbound.get());
 
         if (message.isWithMgcpStats()) {
-            countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_CONNECTIONS, mgcpConnections.get());
-            countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_LINKS, mgcpLinks.get());
-            countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS, mgcpEndpoints.get());
-            if (mgcpEndpoints.get()>0) {
+            countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_CONNECTIONS, mgcpConnectionMap.size());
+            countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS, mgcpEndpointMap.size());
+            if (mgcpEndpointMap.size()>0) {
                 countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_BRIDGE, mgcpEndpointsBridge.get());
                 countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_IVR, mgcpEndpointsIvr.get());
                 countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_CONFERENCE, mgcpEndpointsConference.get());

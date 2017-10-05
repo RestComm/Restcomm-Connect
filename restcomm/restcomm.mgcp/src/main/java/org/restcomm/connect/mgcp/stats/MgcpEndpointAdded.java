@@ -1,31 +1,19 @@
 package org.restcomm.connect.mgcp.stats;
 
-import akka.actor.ActorRef;
-import org.restcomm.connect.mgcp.MediaSession;
-
 public class MgcpEndpointAdded {
-    public enum Type {
-        BRIDGE, IVR, PACKETRELAY, CONFERENCE
-    };
-    private final MediaSession session;
-    private final ActorRef endpoint;
-    private final Type type;
+    private final String connId;
+    private final String endpoint;
 
-    public MgcpEndpointAdded (MediaSession session, ActorRef endpoint, Type type) {
-        this.session = session;
+    public MgcpEndpointAdded (String connId, String endpoint) {
+        this.connId = connId;
         this.endpoint = endpoint;
-        this.type = type;
     }
 
-    public MediaSession getSession () {
-        return session;
+    public String getConnId () {
+        return connId;
     }
 
-    public ActorRef getEndpoint () {
+    public String getEndpoint () {
         return endpoint;
-    }
-
-    public Type getType () {
-        return type;
     }
 }
