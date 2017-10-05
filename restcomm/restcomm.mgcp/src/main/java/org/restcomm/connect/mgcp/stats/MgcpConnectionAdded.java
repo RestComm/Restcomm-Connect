@@ -1,22 +1,19 @@
 package org.restcomm.connect.mgcp.stats;
 
-import akka.actor.ActorRef;
-import org.restcomm.connect.mgcp.MediaSession;
-
 public class MgcpConnectionAdded {
-    private final MediaSession session;
-    private final ActorRef connection;
+    private final String connId;
+    private final String endpointId;
 
-    public MgcpConnectionAdded (MediaSession session, ActorRef connection) {
-        this.session = session;
-        this.connection = connection;
+    public MgcpConnectionAdded (String connId, String endpointId) {
+        this.connId = connId;
+        this.endpointId = endpointId;
     }
 
-    public MediaSession getSession () {
-        return session;
+    public String getConnId () {
+        return connId;
     }
 
-    public ActorRef getConnection () {
-        return connection;
+    public String getEndpointId () {
+        return endpointId;
     }
 }

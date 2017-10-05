@@ -101,7 +101,7 @@ public class MonitoringService extends RestcommUntypedActor {
     private final AtomicInteger mgcpConnections;
     private final Map<ActorRef, MgcpEndpointAdded.Type> mgcpEndpointMap;
     private final Map<ActorRef, MediaSession> mgcpLinkMap;
-    private final Map<ActorRef, MediaSession> mgcpConnectionMap;
+    private final Map<String, String> mgcpConnectionMap;
 
 
 
@@ -145,7 +145,7 @@ public class MonitoringService extends RestcommUntypedActor {
 
         mgcpEndpointMap = new ConcurrentHashMap<ActorRef, MgcpEndpointAdded.Type>();
         mgcpLinkMap = new ConcurrentHashMap<ActorRef, MediaSession>();
-        mgcpConnectionMap = new ConcurrentHashMap<ActorRef, MediaSession>();
+        mgcpConnectionMap = new ConcurrentHashMap<String, String>();
 
         if(logger.isInfoEnabled()){
             logger.info("Monitoring Service started");
@@ -194,11 +194,11 @@ public class MonitoringService extends RestcommUntypedActor {
             MgcpConnectionAdded mgcpConnectionAdded = (MgcpConnectionAdded)message;
             mgcpConnections.incrementAndGet();
 
-            mgcpConnectionMap.put(mgcpConnectionAdded.getConnection(), mgcpConnectionAdded.getSession());
+            mgcpConnectionMap.put(mgcpConnectionAdded.getConnId(), mgcpConnectionAdded.getEndpointId());
         } else if (MgcpConnectionDeleted.class.equals(klass)) {
             MgcpConnectionDeleted mgcpConnectionDeleted = (MgcpConnectionDeleted)message;
             mgcpConnections.decrementAndGet();
-            mgcpConnectionMap.remove(mgcpConnectionDeleted.getConnection());
+            mgcpConnectionMap.remove(mgcpConnectionDeleted.getConnId());
         } else if (MgcpEndpointAdded.class.equals(klass)) {
             MgcpEndpointAdded mgcpEndpointAdded = (MgcpEndpointAdded)message;
             mgcpEndpoints.incrementAndGet();

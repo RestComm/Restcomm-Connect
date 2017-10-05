@@ -22,6 +22,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.monitoringservice.MonitoringMetrics;
 import org.restcomm.connect.testsuite.http.RestcommConferenceParticipantsTool;
 import org.restcomm.connect.testsuite.http.RestcommConferenceTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
@@ -35,6 +36,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -314,6 +316,43 @@ public class DialConferenceTest {
         int confRoom2Participants = getParticipantsSize(confRoom2);
         logger.info("&&&&& ConfRoom2Participants: "+confRoom2Participants);
         assertTrue(confRoom2Participants==0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        int mgcpEndpoints = metrics.getAsJsonObject("Metrics").get("MgcpEndpoints").getAsInt();
+        int mgcpConnections = metrics.getAsJsonObject("Metrics").get("MgcpConnections").getAsInt();
+        int mgcpLinks = metrics.getAsJsonObject("Metrics").get("MgcpLinks").getAsInt();
+        liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+
+        logger.info("MgcpEndpoints at the end: "+mgcpEndpoints);
+        logger.info("MgcpConnections at the end: "+mgcpConnections);
+        logger.info("MgcpLinks at the end: "+mgcpLinks);
+        logger.info("Live calls at the end: "+liveCalls);
+
+
+        int ivrEndpoints;
+        int confEndpoints;
+        int bridgeEndpoints;
+        int packetRelayEndpoints;
+        if (mgcpEndpoints > 0) {
+            bridgeEndpoints = metrics.getAsJsonObject("Metrics").get(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_BRIDGE).getAsInt();
+            ivrEndpoints = metrics.getAsJsonObject("Metrics").get(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_IVR).getAsInt();
+            confEndpoints = metrics.getAsJsonObject("Metrics").get(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_CONFERENCE).getAsInt();
+            packetRelayEndpoints = metrics.getAsJsonObject("Metrics").get(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_PACKETRELAY).getAsInt();
+            logger.info("IVR Endpoints: "+ivrEndpoints);
+            logger.info("Bridge Endpoints: "+bridgeEndpoints);
+            logger.info("Conference Endpoints: "+confEndpoints);
+            logger.info("PacketRelay Endpoints: "+packetRelayEndpoints);
+            assertEquals(0, ivrEndpoints);
+            assertEquals(0, confEndpoints);
+            assertEquals(0, bridgeEndpoints);
+            assertEquals(0, bridgeEndpoints);
+        }
+        assertEquals(0, liveCalls);
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpLinks);
+        assertEquals(0, mgcpConnections);
+
     }
 
     private final String confRoom3 = "confRoom3";
@@ -506,4 +545,3 @@ public class DialConferenceTest {
     }
 
 }
-
