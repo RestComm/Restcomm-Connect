@@ -338,15 +338,11 @@ public final class SmsSession extends RestcommUntypedActor {
     }
 
     private void sendUsingSip(Client toClient, SmsSessionRequest request) {
-        //Turns out that SMS was not send using SMPP so we procedd as usual with SIP MESSAGE
-        final String prefix = smsConfiguration.getString("outbound-prefix");
-        final String service = smsConfiguration.getString("outbound-endpoint");
-        if (service == null) {
-            return;
+        Registration toClientRegistration = null;
+        if (toClient != null) {
+            final RegistrationsDao registrations = storage.getRegistrationsDao();
+            toClientRegistration = registrations.getRegistration(toClient.getLogin(), fromOrganizationSid);
         }
-
-        final RegistrationsDao registrations = storage.getRegistrationsDao();
-        final Registration toClientRegistration = registrations.getRegistration(toClient.getLogin(), fromOrganizationSid);
 
         final SipApplicationSession application = factory.createApplicationSession();
         StringBuilder buffer = new StringBuilder();
@@ -357,7 +353,12 @@ public final class SmsSession extends RestcommUntypedActor {
         if (toClient != null && toClientRegistration != null) {
             buffer.append(toClientRegistration.getLocation());
         } else {
+            final String service = smsConfiguration.getString("outbound-endpoint");
+            if (service == null) {
+                return;
+            }
             buffer.append("sip:");
+            final String prefix = smsConfiguration.getString("outbound-prefix");
             if (prefix != null) {
                 buffer.append(prefix);
             }
