@@ -60,6 +60,8 @@ import javax.sdp.SdpFactory;
 import javax.sdp.SdpParseException;
 import javax.sdp.SessionDescription;
 import java.net.InetAddress;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -93,6 +95,9 @@ public class MockMediaGateway extends RestcommUntypedActor {
     private RevolvingCounter connectionIdPool;
     private RevolvingCounter endpointIdPool;
 
+    private Map<ActorRef, ActorRef> connectionToEndpointMap;
+    private Map<String, String> connEndpointMap;
+
     private ActorRef monitoringService;
 
     private ActorSystem system;
@@ -100,6 +105,8 @@ public class MockMediaGateway extends RestcommUntypedActor {
     public MockMediaGateway() {
         super();
         system = context().system();
+        connectionToEndpointMap = new ConcurrentHashMap<ActorRef, ActorRef>();
+        connEndpointMap = new ConcurrentHashMap<String, String>();
     }
 
     private ActorRef getConnection(final Object message) {
@@ -118,7 +125,6 @@ public class MockMediaGateway extends RestcommUntypedActor {
             String msg = String.format("MockMediaGateway, Added new Connection, path: %s",connection.path());
             logger.info(msg);
         }
-        monitoringService.tell(new MgcpConnectionAdded(session, connection), self());
         return connection;
     }
 
@@ -314,7 +320,6 @@ public class MockMediaGateway extends RestcommUntypedActor {
                 String msg = String.format("MockMediaGateway, Connection destroyed, path %s",request.connection().path());
                 logger.info(msg);
             }
-            monitoringService.tell(new MgcpConnectionDeleted(request.connection()), self());
             context.stop(request.connection());
         } else if (DestroyLink.class.equals(klass)) {
             final DestroyLink request = (DestroyLink) message;
@@ -360,6 +365,12 @@ public class MockMediaGateway extends RestcommUntypedActor {
             buffer.append(endpointIdPool.get());
             endpointId = new EndpointIdentifier(buffer.toString(), domain);
         }
+        connEndpointMap.put(connId.toString(), endpointId.getLocalEndpointName());
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("About to add connId %s for endpoint %s", connId.toString(), endpointId.getLocalEndpointName());
+            logger.info(msg);
+        }
+        monitoringService.tell(new MgcpConnectionAdded(connId.toString(), endpointId.getLocalEndpointName()));
         response.setSpecificEndpointIdentifier(endpointId);
         // Create a new secondary end point id if necessary.
         EndpointIdentifier secondaryEndpointId = crcx.getSecondEndpointIdentifier();
@@ -377,6 +388,12 @@ public class MockMediaGateway extends RestcommUntypedActor {
                 buffer.append(endpointIdPool.get());
                 secondaryEndpointId = new EndpointIdentifier(buffer.toString(), domain);
             }
+            connEndpointMap.put(connId.toString(), secondaryEndpointId.getLocalEndpointName());
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("About to add connId %s for endpoint %s", connId.toString(), secondaryEndpointId.getLocalEndpointName());
+                logger.info(msg);
+            }
+            monitoringService.tell(new MgcpConnectionAdded(connId.toString(), secondaryEndpointId.getLocalEndpointName()));
             response.setSecondEndpointIdentifier(secondaryEndpointId);
         }
         final ConnectionDescriptor descriptor = new ConnectionDescriptor(sdp);
@@ -390,7 +407,7 @@ public class MockMediaGateway extends RestcommUntypedActor {
     private void modifyConnection(final Object message, final ActorRef sender) {
         final ActorRef self = self();
         final ModifyConnection mdcx = (ModifyConnection) message;
-        System.out.println(mdcx.toString());
+        System.out.println("MDCX: \n" +mdcx.toString());
         ReturnCode code;
         SessionDescription sessionDescription = null;
         boolean isNonValidSdp = false;
@@ -424,6 +441,8 @@ public class MockMediaGateway extends RestcommUntypedActor {
     private void deleteConnection(final Object message, final ActorRef sender) {
         final ActorRef self = self();
         final DeleteConnection dlcx = (DeleteConnection) message;
+        connEndpointMap.remove(dlcx.getConnectionIdentifier().toString());
+        monitoringService.tell(new MgcpConnectionDeleted(dlcx.getConnectionIdentifier().toString()));
         System.out.println(dlcx.toString());
         final ReturnCode code = ReturnCode.Transaction_Executed_Normally;
         final DeleteConnectionResponse response = new DeleteConnectionResponse(self, code);

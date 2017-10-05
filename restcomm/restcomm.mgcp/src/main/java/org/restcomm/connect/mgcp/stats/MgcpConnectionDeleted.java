@@ -1,15 +1,13 @@
 package org.restcomm.connect.mgcp.stats;
 
-import akka.actor.ActorRef;
-
 public class MgcpConnectionDeleted {
-    private final ActorRef connection;
+    private final String connId;
 
-    public MgcpConnectionDeleted (ActorRef connection) {
-        this.connection = connection;
+    public MgcpConnectionDeleted (String connId) {
+        this.connId = connId;
     }
 
-    public ActorRef getConnection () {
-        return connection;
+    public String getConnId () {
+        return connId;
     }
 }
