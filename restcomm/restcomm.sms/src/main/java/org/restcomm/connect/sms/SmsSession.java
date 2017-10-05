@@ -350,7 +350,7 @@ public final class SmsSession extends RestcommUntypedActor {
         buffer.append("sip:").append(request.from()).append("@").append(externalIP + ":" + transport.getPort());
         final String sender = buffer.toString();
         buffer = new StringBuilder();
-        if (toClient != null && toClientRegistration != null) {
+        if (toClientRegistration != null) {
             buffer.append(toClientRegistration.getLocation());
         } else {
             final String service = smsConfiguration.getString("outbound-endpoint");
