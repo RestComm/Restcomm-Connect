@@ -409,6 +409,10 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
 
     abstract List<NameValuePair> parameters();
 
+    protected URI resolve(URI uri){
+        return UriUtils.resolve(uri);
+    }
+
     public ActorRef getAsrService() {
         if (asrService == null || (asrService != null && asrService.isTerminated())) {
             asrService = asr(configuration.subset("speech-recognizer"));
@@ -838,6 +842,10 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             }
         });
         return getContext().actorOf(props);
+    }
+
+    protected boolean is(State state) {
+        return this.fsm.state().equals(state);
     }
 
     abstract class AbstractAction implements Action {

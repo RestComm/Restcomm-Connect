@@ -43,24 +43,27 @@ updateMaxMediaFileSize() {
 
 # MAIN
 
-if [ -z "$RESTCOMM_HOME" ]
-then
-    echo "RESTCOMM_HOME env variable not set. Aborting."
-    exit 1
-fi
-if [ ! -f "$RVD_XML_FILE" ]
-then
-    echo "rvd.xml not found. Aborting."
-    return
-fi
-
-echo "Configuring RVD"
-
-if [[ "$RVD_VIDEO_SUPPORT" = true || "$RVD_VIDEO_SUPPORT" = TRUE || "$RVD_VIDEO_SUPPORT" = True ]] ; then
-    updateVideoSupport true
+if [[ "$RVD_UNDEPLOY" = true || "$RVD_UNDEPLOY" = TRUE || "$RVD_UNDEPLOY" != True ]]; then
+    echo "Skipping RVD configuration since it's not deployed"
 else
-    updateVideoSupport false
-fi
-updateMaxMediaFileSize "$RVD_MAX_MEDIA_FILE_SIZE"
-echo "Updated rvd.xml"
+    if [ -z "$RESTCOMM_HOME" ]
+    then
+        echo "RESTCOMM_HOME env variable not set. Aborting."
+        exit 1
+    fi
+    if [ ! -f "$RVD_XML_FILE" ]
+    then
+        echo "rvd.xml not found. Aborting."
+        return
+    fi
 
+    echo "Configuring RVD"
+
+    if [[ "$RVD_VIDEO_SUPPORT" = true || "$RVD_VIDEO_SUPPORT" = TRUE || "$RVD_VIDEO_SUPPORT" = True ]] ; then
+        updateVideoSupport true
+    else
+        updateVideoSupport false
+    fi
+    updateMaxMediaFileSize "$RVD_MAX_MEDIA_FILE_SIZE"
+    echo "Updated rvd.xml"
+fi
