@@ -216,6 +216,11 @@ public final class SmsService extends RestcommUntypedActor {
             final Client toClient = clients.getClient(toUser, toOrganizationSid);
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect
                 long delay = pushNotificationServerHelper.sendPushNotificationIfNeeded(toClient.getPushClientIdentity());
+                // workaround for only clients with push_client_identity after long discussion about current SIP Message flow processing
+                // https://telestax.atlassian.net/browse/RESTCOMM-1159
+                if (delay > 0) {
+                    request.createResponse(100).send();
+                }
                 system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
                     @Override
                     public void run() {
