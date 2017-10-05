@@ -22,6 +22,7 @@ package org.restcomm.connect.testsuite.sms.push;
 
 import com.github.tomakehurst.wiremock.http.RequestListener;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
@@ -43,14 +44,17 @@ import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.http.CreateClientsTool;
+import org.restcomm.connect.testsuite.sms.SmsEndpointTool;
 
 import javax.sip.address.SipURI;
+import javax.sip.message.Request;
 import javax.sip.message.Response;
 import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -85,6 +89,9 @@ public class SmsPushNotificationServerTest {
     private static int restcommPort = 5080;
     private static int restcommHTTPPort = 8080;
     private static String restcommContact = "127.0.0.1:" + restcommPort;
+
+    private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
+    private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -177,6 +184,45 @@ public class SmsPushNotificationServerTest {
         verify(postRequestedFor(urlEqualTo("/api/notifications")));
     }
 
+    @Test
+    public void testSmsEndpointMessage() throws ParseException {
+
+        stubFor(post(urlPathEqualTo("/api/notifications"))
+                .withHeader("Content-Type", matching("application/json;.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        final SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
+
+        wireMockRule.addMockServiceRequestListener(new RequestListener() {
+            @Override
+            public void requestReceived(com.github.tomakehurst.wiremock.http.Request request, com.github.tomakehurst.wiremock.http.Response response) {
+                if (request.getAbsoluteUrl().contains("/api/notifications") && response.getStatus() == 200) {
+                    assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+                }
+            }
+        });
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForMessage();
+
+        String from = "+15126002188";
+        String to = "alice";
+        String body = "Hello, Alice!";
+
+        JsonObject callResult = SmsEndpointTool.getInstance().createSms(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, body, null);
+        assertNotNull(callResult);
+
+        assertTrue(aliceCall.waitForMessage(5000));
+        Request messageRequest = aliceCall.getLastReceivedMessageRequest();
+        assertTrue(aliceCall.sendMessageResponse(202, "Accepted", 3600));
+        String messageReceived = new String(messageRequest.getRawContent());
+        assertTrue(messageReceived.equals(body));
+
+        verify(postRequestedFor(urlEqualTo("/api/notifications")));
+    }
+
     @SuppressWarnings("Duplicates")
     @Deployment(name = "SmsPushNotificationServerTest", testable = false)
     public static WebArchive createWebArchiveNoGw() {
@@ -191,7 +237,7 @@ public class SmsPushNotificationServerTest {
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.delete("/WEB-INF/classes/application.conf");
         archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm_pushNotificationServer.xml", "conf/restcomm.xml");
+        archive.addAsWebInfResource("restcomm_for_SMSEndpointTest.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_pushNotificationServer", "data/hsql/restcomm.script");
         archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
         archive.addAsWebResource("dial-client-entry_wActionUrl.xml");
