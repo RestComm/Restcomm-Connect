@@ -70,8 +70,8 @@ public final class CreateMediaSession {
         this("", "", false, false, callSid, null, new MediaAttributes());
     }
 
-    public CreateMediaSession() {
-        this("", "", false, false, null, null, new MediaAttributes());
+    public CreateMediaSession(final MediaAttributes mediaAttributes) {
+        this("", "", false, false, null, null, mediaAttributes);
     }
 
     public String getConnectionMode() {

@@ -3256,7 +3256,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(Object message) throws Exception {
-            final CreateBridge create = new CreateBridge();
+            final CreateBridge create = new CreateBridge(outboundCallInfo.mediaAttributes());
             bridgeManager.tell(create, super.source);
         }
 

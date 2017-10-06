@@ -451,7 +451,7 @@ public final class Call extends UntypedActor {
             } else {
                 to = ((TelURL) this.to).getPhoneNumber();
             }
-            final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime);
+            final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime, mediaAttributes);
             return new CallResponse<CallInfo>(info);
         } catch (Exception e) {
             if (logger.isInfoEnabled()) {
