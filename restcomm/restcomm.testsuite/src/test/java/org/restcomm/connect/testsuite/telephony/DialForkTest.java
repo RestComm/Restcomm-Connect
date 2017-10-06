@@ -63,7 +63,7 @@ public class DialForkTest {
 
 
     private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
-    
+
     private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(mockPort);
@@ -76,8 +76,8 @@ public class DialForkTest {
     private String dialForkWithTimeout15 = "<Response><Dial timeout=\"15\"><Client>alice</Client><Sip>sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number>+131313</Number></Dial></Response>";
     private String dialSequential = "<Response><Dial timeout=\"5\"><Sip>sip:nonexistent@127.0.0.1:5566</Sip></Dial><Dial timeout=\"5\"><Sip>sip:nonexistent2@127.0.0.1:6655</Sip></Dial><Dial><Sip>sip:henrique@127.0.0.1:" + henriquePort + "</Sip></Dial></Response>";
     private String dialForkTwoSipUrisRcml = "<Response><Dial><Sip>sip:fotini@127.0.0.1:" + fotiniPort + "</Sip><Sip>sip:henrique@127.0.0.1:" + henriquePort + "</Sip></Dial></Response>";
-    
-    
+
+
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
@@ -117,14 +117,14 @@ public class DialForkTest {
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    
+
     private static int restcommPort = 5080;
-    private static int restcommHTTPPort = 8080;        
-    private static String restcommContact = "127.0.0.1:" + restcommPort;     
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
     private static String dialAliceRcmlWithPlay;
     private static String dialAliceRcmlWithInvalidPlay;
     private String dialForkWithTimeout = "<Response><Dial timeout=\"2\"><Client>alice</Client><Sip>sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number>+131313</Number></Dial></Response>";
-    
+
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -134,11 +134,11 @@ public class DialForkTest {
         tool4 = new SipStackTool("DialFork4");
         tool5 = new SipStackTool("DialFork5");
     }
-    
-    public static void reconfigurePorts() { 
+
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
-            restcommContact = "127.0.0.1:" + restcommPort; 
+            restcommContact = "127.0.0.1:" + restcommPort;
         }
         if (System.getProperty("arquillian_http_port") != null) {
             restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
@@ -148,10 +148,10 @@ public class DialForkTest {
 
     @Before
     public void before() throws Exception {
-        
+
         dialAliceRcmlWithPlay = "<Response><Play>" + deploymentUrl.toString() + "/audio/demo-prompt.wav</Play><Dial><Client>alice</Client></Dial></Response>";
         dialAliceRcmlWithInvalidPlay = "<Response><Play>" + deploymentUrl.toString() + "/audio/demo-prompt13.wav</Play><Dial><Client>alice</Client></Dial></Response>";
-        
+
         bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", bobPort, restcommContact);
         bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, bobContact);
 
@@ -325,6 +325,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
@@ -444,6 +452,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     // Non regression test for https://github.com/RestComm/Restcomm-Connect/issues/1972
@@ -534,6 +550,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     //Non regression test for https://github.com/RestComm/Restcomm-Connect/issues/1972
@@ -625,6 +649,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Test
@@ -740,6 +772,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Test
@@ -851,6 +891,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Test
@@ -961,6 +1009,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
 
@@ -1079,6 +1135,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     String nonValidSDP = "v=0\n" +
@@ -1218,6 +1282,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("failed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     private String dialClientAlice = "<Response><Dial timeout=\"2\"><Client>alice</Client></Dial></Response>";
@@ -1322,6 +1394,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("failed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Test
@@ -1439,6 +1519,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Test
@@ -1557,6 +1645,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
 
@@ -1667,6 +1763,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
 
@@ -1805,6 +1909,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Test
@@ -1954,6 +2066,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     private String dialAliceRcml = "<Response><Dial><Client>alice</Client></Dial></Response>";
@@ -2030,6 +2150,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
 
@@ -2105,6 +2233,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
 
@@ -2169,6 +2305,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
 
@@ -2259,6 +2403,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Test
@@ -2353,6 +2505,14 @@ public class DialForkTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Deployment(name = "DialForkTest", managed = true, testable = false)
@@ -2361,19 +2521,19 @@ public class DialForkTest {
         reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
-        //replace mediaport 2727 
-        replacements.put("2727", String.valueOf(mediaPort));        
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("8090", String.valueOf(mockPort));
         replacements.put("5080", String.valueOf(restcommPort));
-        replacements.put("5070", String.valueOf(georgePort));        
+        replacements.put("5070", String.valueOf(georgePort));
         replacements.put("5090", String.valueOf(bobPort));
         replacements.put("5091", String.valueOf(alicePort));
         replacements.put("5092", String.valueOf(henriquePort));
         replacements.put("5093", String.valueOf(fotiniPort));
-        
+
         List<String> resources = new ArrayList(Arrays.asList("hello-play.xml"));
-        return WebArchiveUtil.createWebArchiveNoGw("restcomm.xml", 
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm.xml",
                 "restcomm.script_dialForkTest",resources, replacements);
-    }      
+    }
 }
