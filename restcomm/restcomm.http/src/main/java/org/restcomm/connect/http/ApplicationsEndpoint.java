@@ -21,6 +21,7 @@
 
 package org.restcomm.connect.http;
 
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
@@ -87,6 +88,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         final ApplicationConverter converter = new ApplicationConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Application.class, converter);
+        builder.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES); // if custom converter is not provided, rename camelCase to camel_case. Needed for serializing ApplicationNumberSummary and hopefully other entities too at some point.
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();

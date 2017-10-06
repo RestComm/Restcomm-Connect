@@ -52,7 +52,6 @@ public class ApplicationConverterTest {
         builder.setPrettyPrinting();
         Gson gson = builder.create();
         ApplicationNumberSummaryConverter numberConverter = new ApplicationNumberSummaryConverter();
-        gson = builder.create();
         XStream xstream = new XStream();
         //xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(applicationConverter);
