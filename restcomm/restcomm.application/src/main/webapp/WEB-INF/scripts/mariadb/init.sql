@@ -405,7 +405,7 @@ INSERT INTO restcomm_organizations VALUES(
 "default.restcomm.com", 
 Date("2017-04-19"),
 Date("2017-04-19"),
-status VARCHAR(16)
+"active"
 );
 
 INSERT INTO restcomm_accounts VALUES (
