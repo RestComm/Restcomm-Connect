@@ -1109,6 +1109,15 @@ public class MmsCallController extends MediaServerController {
         public void execute(Object message) throws Exception {
             // Notify observers the controller has stopped
             broadcast(new MediaServerControllerStateChanged(state));
+            if (mediaGroup != null) {
+                // Stop the media group
+                mediaGroup.tell(new StopMediaGroup(), super.source);
+            }
+
+            if (bridgeEndpoint != null) {
+                // Stop bridge endpoint
+                bridgeEndpoint.tell(new DestroyEndpoint(), super.source);
+            }
         }
     }
 
@@ -1161,7 +1170,7 @@ public class MmsCallController extends MediaServerController {
 
     private final class Failed extends FinalState {
 
-        public Failed(final ActorRef source) {
+        public Failed(final ActorRef source){
             super(source, MediaServerControllerState.FAILED);
         }
 
