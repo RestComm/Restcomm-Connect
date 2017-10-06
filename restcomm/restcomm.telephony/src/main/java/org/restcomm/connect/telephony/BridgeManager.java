@@ -29,6 +29,7 @@ import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.telephony.api.BridgeManagerResponse;
 import org.restcomm.connect.telephony.api.BridgeStateChanged;
@@ -51,13 +52,13 @@ public class BridgeManager extends UntypedActor {
         this.system = context().system();
     }
 
-    private ActorRef createBridge() {
+    private ActorRef createBridge(final MediaAttributes mediaAttributes) {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Bridge(factory.provideBridgeController());
+                return new Bridge(factory.provideBridgeController(), mediaAttributes);
             }
         });
         return system.actorOf(props);
@@ -82,7 +83,7 @@ public class BridgeManager extends UntypedActor {
 
     private void onCreateBridge(CreateBridge message, ActorRef self, ActorRef sender) {
         // Create a new bridge
-        ActorRef bridge = createBridge();
+        ActorRef bridge = createBridge(message.mediaAttributes());
 
         // Observe state changes in the bridge for termination purposes
         bridge.tell(new Observe(self), self);

@@ -483,7 +483,7 @@ public class Jsr309BridgeController extends MediaServerController {
 
         private void configureVideoMediaSession(final MediaAttributes mediaAttributes) {
             // resolution configuration
-            mediaSession.setAttribute("CONFERENCE_VIDEO_SIZE", mediaAttributes.getVideoResolution().toString());
+            mediaSession.setAttribute("NC_VIDEO_SIZE", mediaAttributes.getVideoResolution().toString());
         }
 
         private Parameters createMixerParams() {
