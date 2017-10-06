@@ -61,7 +61,8 @@
     OR "num"."sms_application_sid" = "app"."sid"
     OR "num"."ussd_application_sid" = "app"."sid"
     OR "num"."refer_application_sid" = "app"."sid"
-    WHERE ("app"."account_sid"=#{account_sid} or "app"."account_sid" is null);
+    WHERE ("app"."account_sid"=#{account_sid} or "app"."account_sid" is null)
+    ORDER BY "app"."date_created";
   </select>
 
 
