@@ -64,6 +64,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.monitoringservice.MonitoringMetrics;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
@@ -101,11 +102,11 @@ public class CallLifecycleTest {
     URL deploymentUrl;
 
     private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
-    
+
     private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(mockPort);
-    
+
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
@@ -115,32 +116,32 @@ public class CallLifecycleTest {
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
     private SipPhone bobPhone;
-    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile()); 
+    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String bobContact = "sip:bob@127.0.0.1:" + bobPort;
 
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
     // of the VoiceURL will be executed.
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
-    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());    
+    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
 
     // Henrique is a simple SIP Client. Will not register with Restcomm
     private SipStack henriqueSipStack;
     private SipPhone henriquePhone;
-    private static String henriquePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private static String henriquePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String henriqueContact = "sip:henrique@127.0.0.1:" + henriquePort;
 
     // George is a simple SIP Client. Will not register with Restcomm
     private SipStack georgeSipStack;
     private SipPhone georgePhone;
-    private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String georgeContact = "sip:+131313@127.0.0.1:" + georgePort;
 
     // subaccountclient is a simple SIP Client. Will register with Restcomm
     private SipStack subAccountClientSipStack;
     private SipPhone subAccountClientPhone;
-    private static String subAccountPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private static String subAccountPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String subAccountClientContact = "sip:subaccountclient@127.0.0.1:" + subAccountPort;
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
@@ -148,10 +149,10 @@ public class CallLifecycleTest {
 
     private String subAccountSid = "ACae6e420f425248d6a26948c17a9e2acg";
     private String subAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    
+
     private static int restcommPort = 5080;
-    private static int restcommHTTPPort = 8080;        
-    private static String restcommContact = "127.0.0.1:" + restcommPort;     
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -161,15 +162,15 @@ public class CallLifecycleTest {
         tool4 = new SipStackTool("DialActionTest4");
         tool5 = new SipStackTool("DialActionTest5");
     }
-    
-    public static void reconfigurePorts() { 
+
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
-            restcommContact = "127.0.0.1:" + restcommPort; 
-        } 
+            restcommContact = "127.0.0.1:" + restcommPort;
+        }
         if (System.getProperty("arquillian_http_port") != null) {
             restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
-        }        
+        }
     }
 
 
@@ -288,6 +289,13 @@ public class CallLifecycleTest {
         assertTrue(maxConcurrentCalls==0);
         assertTrue(maxConcurrentIncomingCalls==0);
         assertTrue(maxConcurrentOutgoingCalls==0);
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Test
@@ -357,6 +365,14 @@ public class CallLifecycleTest {
         assertTrue(status.equalsIgnoreCase("canceled"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     private String dialAliceRcml = "<Response><Dial><Client>alice</Client></Dial></Response>";
@@ -454,6 +470,13 @@ public class CallLifecycleTest {
         assertTrue(maxConcurrentCalls==2);
         assertTrue(maxConcurrentIncomingCalls==1);
         assertTrue(maxConcurrentOutgoingCalls==1);
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Test
@@ -555,6 +578,13 @@ public class CallLifecycleTest {
         assertTrue(maxConcurrentCalls==2);
         assertTrue(maxConcurrentIncomingCalls==1);
         assertTrue(maxConcurrentOutgoingCalls==1);
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Test
@@ -688,7 +718,7 @@ public class CallLifecycleTest {
         assertTrue(bobCall.respondToDisconnect());
         assertTrue(aliceCall.respondToDisconnect());
 
-        Thread.sleep(2000);
+        Thread.sleep(3000);
 
         logger.info("About to check the Requests");
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
@@ -722,6 +752,13 @@ public class CallLifecycleTest {
         assertTrue(maxConcurrentCalls==2);
         assertTrue(maxConcurrentIncomingCalls==1);
         assertTrue(maxConcurrentOutgoingCalls==1);
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     private String dialInvalidClientRcml = "<Response><Dial><Client>invalidClient</Client></Dial></Response>";
@@ -789,6 +826,13 @@ public class CallLifecycleTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     private String dialInvalidClientRcmlAndThenAlice = "<Response><Dial><Client>invalidClient</Client></Dial><Dial><Client>alice</Client></Dial></Response>";
@@ -879,6 +923,13 @@ public class CallLifecycleTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     private String dialInvalidClientRcmlAndThenAliceWithDialAction = "<Response><Dial action=\"http://127.0.0.1:" + mockPort + "/DialAction\"><Client>invalidClient</Client></Dial><Dial><Client>alice</Client></Dial></Response>";
@@ -978,6 +1029,13 @@ public class CallLifecycleTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     private String dialNumberRcml = "<Response><Dial><Number>+131313</Number></Dial></Response>";
@@ -1050,6 +1108,14 @@ public class CallLifecycleTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     String sdpToFailConnection = "v=0\n" +
@@ -1111,6 +1177,14 @@ public class CallLifecycleTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("failed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Test
@@ -1187,6 +1261,14 @@ public class CallLifecycleTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Test
@@ -1271,6 +1353,13 @@ public class CallLifecycleTest {
         assertTrue(maxConcurrentCalls==2);
         assertTrue(maxConcurrentIncomingCalls==1);
         assertTrue(maxConcurrentOutgoingCalls==1);
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Test
@@ -1353,6 +1442,14 @@ public class CallLifecycleTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
 
@@ -1435,6 +1532,14 @@ public class CallLifecycleTest {
         georgePhone = null;
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     private String dialNumberRcmlWithTimeout = "<Response><Dial timeout=\"10\"><Number>+131313</Number></Dial></Response>";
@@ -1507,6 +1612,14 @@ public class CallLifecycleTest {
         assertTrue(status.equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Test
@@ -1571,6 +1684,14 @@ public class CallLifecycleTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Test
@@ -1635,6 +1756,14 @@ public class CallLifecycleTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     private String dialAliceRcmlInvalidRCML = "%%<Response><Dial><Client>alice</Client></Dial></Response>";
@@ -1698,6 +1827,14 @@ public class CallLifecycleTest {
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     /**
@@ -1801,6 +1938,13 @@ public class CallLifecycleTest {
         cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), subAccountSid, subAuthToken, callSid);
         jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Test
@@ -1848,6 +1992,14 @@ public class CallLifecycleTest {
         assertTrue(liveIncomingCalls==0);
         assertTrue(liveCallsArraySize==0);
 
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+
 //        Thread.sleep(10000);
 //
 //        logger.info("About to check the Requests");
@@ -1888,19 +2040,19 @@ public class CallLifecycleTest {
         reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
-        //replace mediaport 2727 
-        replacements.put("2727", String.valueOf(mediaPort));        
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("8090", String.valueOf(mockPort));
         replacements.put("5080", String.valueOf(restcommPort));
-        replacements.put("5070", String.valueOf(georgePort));        
+        replacements.put("5070", String.valueOf(georgePort));
         replacements.put("5090", String.valueOf(bobPort));
         replacements.put("5091", String.valueOf(alicePort));
         replacements.put("5092", String.valueOf(henriquePort));
-        replacements.put("5093", String.valueOf(subAccountPort));         
+        replacements.put("5093", String.valueOf(subAccountPort));
         List<String> resources = new ArrayList(Arrays.asList("dial-client-entry_wActionUrl.xml"));
-        return WebArchiveUtil.createWebArchiveNoGw("restcomm_calllifecycle.xml", 
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm_calllifecycle.xml",
                 "restcomm.script_callLifecycleTest",resources, replacements);
-    }      
+    }
 
 }
