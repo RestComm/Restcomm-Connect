@@ -10,6 +10,8 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.core.MediaType;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by gvagenas on 11/25/15.
@@ -49,6 +51,19 @@ public class MonitoringServiceTool {
         response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
         JsonParser parser = new JsonParser();
         return parser.parse(response).getAsJsonObject();
+    }
+
+    public Map<String, Integer> getMgcpResources(JsonObject metrics) {
+        Integer mgcpEndpoints = metrics.getAsJsonObject("Metrics").get("MgcpEndpoints").getAsInt();
+        Integer mgcpConnections = metrics.getAsJsonObject("Metrics").get("MgcpConnections").getAsInt();
+
+        Map<String, Integer> mgcpResources = new ConcurrentHashMap<String, Integer>();
+
+        mgcpResources.put("MgcpEndpoints", mgcpEndpoints);
+        mgcpResources.put("MgcpConnections", mgcpConnections);
+
+
+        return mgcpResources;
     }
 
     public JsonObject getMetrics(String deploymentUrl, String username, String authToken) {
