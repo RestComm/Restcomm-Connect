@@ -53,9 +53,12 @@ import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.PermissionsDao;
+import org.restcomm.connect.dao.entities.Permission;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
 import org.restcomm.connect.http.client.HttpResponseDescriptor;
+import org.restcomm.connect.identity.permissions.PermissionsUtil;
 import org.restcomm.connect.interpreter.rcml.MockedActor;
 import org.restcomm.connect.interpreter.rcml.domain.GatherAttributes;
 import org.restcomm.connect.mscontrol.api.messages.Collect;
@@ -143,6 +146,7 @@ public class GatherSpeechTest {
         try {
             configuration = getConfiguration(restcommXmlPath);
             RestcommConfiguration.createOnce(configuration);
+
         } catch (ConfigurationException e) {
             throw new RuntimeException();
         }
@@ -176,6 +180,10 @@ public class GatherSpeechTest {
         final DaoManager storage = mock(DaoManager.class);
         when(storage.getCallDetailRecordsDao()).thenReturn(recordsDao);
 
+        final PermissionsDao permissionsDao = mock(PermissionsDao.class);
+        when(permissionsDao.getPermission(any(Sid.class))).thenReturn(new Permission(Sid.generate(Sid.Type.PERMISSION), "Restcomm:*:ASR"));
+
+        PermissionsUtil.getInstance(null, storage, configuration);
         //actors
         final ActorRef downloader = new MockedActor("downloader")
                 .add(DiskCacheRequest.class, new DiskCacheRequestProperty(playUri), new DiskCacheResponse(playUri))
