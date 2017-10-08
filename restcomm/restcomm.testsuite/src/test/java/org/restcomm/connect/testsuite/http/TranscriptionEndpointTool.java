@@ -19,13 +19,16 @@
  */
 package org.restcomm.connect.testsuite.http;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+
 import java.util.Map;
+
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -55,7 +58,15 @@ public class TranscriptionEndpointTool {
 
         return accountsUrl;
     }
+    public JsonArray getTranscriptionListTranscriptions (String deploymentUrl, String username, String authToken) {
+        JsonObject jo = getTranscriptionList (deploymentUrl, username, authToken);
+        JsonArray ja = null;
+        if( jo!=null && jo.get("transcriptions").isJsonArray() && (jo.get("transcriptions").getAsJsonArray().size()>0)){
+            ja = jo.get("transcriptions").getAsJsonArray();
+        }
 
+        return ja;
+    }
     public JsonObject getTranscriptionList (String deploymentUrl, String username, String authToken) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));

@@ -19,24 +19,6 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.joda.time.DateTime;
-import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import org.restcomm.connect.dao.AccountsDao;
-import org.restcomm.connect.dao.DaoUtils;
-import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.AccountPermission;
-import org.restcomm.connect.dao.entities.Permission;
-import org.restcomm.connect.commons.dao.Sid;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static org.restcomm.connect.dao.DaoUtils.readAccountStatus;
 import static org.restcomm.connect.dao.DaoUtils.readAccountType;
 import static org.restcomm.connect.dao.DaoUtils.readDateTime;
@@ -61,7 +43,10 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.AccountsDao;
+import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.AccountPermission;
+import org.restcomm.connect.dao.entities.Permission;
 import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 
 /**

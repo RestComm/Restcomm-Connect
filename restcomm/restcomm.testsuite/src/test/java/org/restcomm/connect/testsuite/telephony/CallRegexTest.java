@@ -1596,9 +1596,10 @@ public class CallRegexTest {
                         .withBody(ussdRcml)));
 
 
-        final SipCall bobCall = bobPhone.createSipCall();
+        final SipCall bobCall = alicePhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, "sip:*777#@" + restcommContact, null, ussdClientRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
         assertLastOperationSuccess(bobCall);
+        bobCall.waitForAuthorisation(30 * 1000);
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
