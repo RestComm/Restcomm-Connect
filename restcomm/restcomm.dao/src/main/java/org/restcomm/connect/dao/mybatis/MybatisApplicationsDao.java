@@ -95,10 +95,7 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
     }
 
     @Override
-    public List<Application> getApplications(Sid accountSid, boolean includeNumbers) {
-        if (!includeNumbers)
-            return getApplications(accountSid);
-
+    public List<Application> getApplicationsWithNumbers(Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
             final List<Map<String, Object>> results = session.selectList(namespace + "getApplicationsAndNumbers", accountSid.toString());

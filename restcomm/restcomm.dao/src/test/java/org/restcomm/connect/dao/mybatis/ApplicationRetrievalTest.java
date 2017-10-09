@@ -80,12 +80,12 @@ public class ApplicationRetrievalTest extends DaoTest {
     @Test
     public void retrieveApplicationsAndTheirNumbers() {
         ApplicationsDao dao = manager.getApplicationsDao();
-        List<Application> apps = dao.getApplications(new Sid("ACae6e420f425248d6a26948c17a9e2acf"), true);
+        List<Application> apps = dao.getApplicationsWithNumbers(new Sid("ACae6e420f425248d6a26948c17a9e2acf"));
 
         Assert.assertEquals(5, apps.size());
         Assert.assertNotNull(searchApplicationBySid(new Sid("AP73926e7113fa4d95981aa96b76eca854"),apps).getNumbers());
         // applications bound with many numbers are property returned
-        Assert.assertEquals("Three (3) numbers should be bound to this application", searchApplicationBySid(new Sid("AP73926e7113fa4d95981aa96b76eca854"),apps).getNumbers().size(), 3);
+        Assert.assertEquals("Three (3) numbers should be bound to this application", 3, searchApplicationBySid(new Sid("AP73926e7113fa4d95981aa96b76eca854"),apps).getNumbers().size());
         // applications bound with no numbers are properly returned
         Assert.assertNull(searchApplicationBySid(new Sid("AP00000000000000000000000000000004"),apps).getNumbers());
         // applications bound to numbers that belong to different account should not be returned (for now at least)

@@ -161,7 +161,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         if (tmp != null && tmp.equalsIgnoreCase("true"))
             includeNumbers = true;
 
-        final List<Application> applications = dao.getApplications(account.getSid(), includeNumbers);
+        final List<Application> applications = dao.getApplicationsWithNumbers(account.getSid());
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new ApplicationList(applications));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
