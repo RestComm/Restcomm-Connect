@@ -1307,6 +1307,10 @@ public final class Call extends RestcommUntypedActor {
                 outgoingCallRecord = outgoingCallRecord.setRingDuration(seconds);
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
+
+            if(isOutbound()){
+                executeStatusCallback(CallbackState.COMPLETED);
+            }
         }
     }
 
