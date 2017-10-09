@@ -43,6 +43,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.http.CreateClientsTool;
 import org.restcomm.connect.testsuite.sms.SmsEndpointTool;
 
@@ -52,6 +53,8 @@ import javax.sip.message.Response;
 import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.assertNotNull;
@@ -67,8 +70,10 @@ public class SmsPushNotificationServerTest {
 
     private static final String CLIENT_PASSWORD = "qwerty1234RT";
 
+    private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
+
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090);
+    public WireMockRule wireMockRule = new WireMockRule(mockPort);
 
     @ArquillianResource
     URL deploymentUrl;
@@ -227,21 +232,15 @@ public class SmsPushNotificationServerTest {
     @Deployment(name = "SmsPushNotificationServerTest", testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
-        WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
-                .resolve("org.restcomm:restcomm-connect.application:war:" + Version.getVersion()).withoutTransitivity()
-                .asSingle(WebArchive.class);
-        archive = archive.merge(restcommArchive);
-        archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/conf/restcomm.xml");
-        archive.delete("/WEB-INF/data/hsql/restcomm.script");
-        archive.delete("/WEB-INF/classes/application.conf");
-        archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm_for_SMSEndpointTest.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script_pushNotificationServer", "data/hsql/restcomm.script");
-        archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
-        archive.addAsWebResource("dial-client-entry_wActionUrl.xml");
-        logger.info("Packaged Test App");
-        return archive;
+        reconfigurePorts();
+
+        Map<String,String> replacements = new HashMap();
+        replacements.put("8080", String.valueOf(restcommHTTPPort));
+        replacements.put("8090", String.valueOf(mockPort));
+        replacements.put("5080", String.valueOf(restcommPort));
+        replacements.put("5090", String.valueOf(bobPort));
+        replacements.put("5091", String.valueOf(alicePort));
+
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm_for_SMSEndpointTest.xml", "restcomm.script_pushNotificationServer", replacements);
     }
 }
