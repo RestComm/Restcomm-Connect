@@ -70,6 +70,8 @@ public class SmsPushNotificationServerTest {
 
     private static final String CLIENT_PASSWORD = "qwerty1234RT";
 
+    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
+
     private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
 
     @Rule
@@ -235,6 +237,8 @@ public class SmsPushNotificationServerTest {
         reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("8090", String.valueOf(mockPort));
         replacements.put("5080", String.valueOf(restcommPort));
