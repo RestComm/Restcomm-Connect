@@ -34,12 +34,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -65,19 +63,13 @@ import javax.sip.message.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
 import org.joda.time.DateTime;
-import org.restcomm.connect.commons.common.http.CustomHttpClientBuilder;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.push.PushNotificationServerHelper;
 import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.commons.telephony.ProxyRule;
 import org.restcomm.connect.commons.util.DNSUtils;
@@ -132,7 +124,6 @@ import org.restcomm.connect.telephony.api.UpdateCallScript;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 
-import com.google.gson.Gson;
 import com.google.i18n.phonenumbers.NumberParseException;
 
 import akka.actor.ActorContext;
@@ -143,13 +134,11 @@ import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
-import akka.dispatch.Futures;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
 import gov.nist.javax.sip.header.UserAgent;
 import scala.concurrent.Await;
-import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
@@ -222,13 +211,7 @@ public final class CallManager extends RestcommUntypedActor {
     private boolean isActAsProxyOutUseFromHeader;
 
     // Push notification server
-    private boolean pushNotificationServerEnabled;
-    private String pushNotificationServerUrl;
-    private long pushNotificationServerDelay;
-
-    private HttpClient httpClient;
-
-    private ExecutionContext blockingDispatcher;
+    private final PushNotificationServerHelper pushNotificationServerHelper;
 
     // used for sending warning and error logs to notification engine and to the console
     private void sendNotification(Sid accountId, String errMessage, int errCode, String errType, boolean createNotification) {
@@ -380,13 +363,7 @@ public final class CallManager extends RestcommUntypedActor {
         }
 
         // Push notification server
-        this.pushNotificationServerEnabled = runtime.getBoolean("push-notification-server-enabled", false);
-        if (this.pushNotificationServerEnabled) {
-            this.pushNotificationServerUrl = runtime.getString("push-notification-server-url");
-            this.pushNotificationServerDelay = runtime.getLong("push-notification-server-delay");
-
-            this.blockingDispatcher = system.dispatchers().lookup("restcomm-blocking-dispatcher");
-        }
+        this.pushNotificationServerHelper = new PushNotificationServerHelper(system, configuration);
 
         firstTimeCleanup();
     }
@@ -567,7 +544,7 @@ public final class CallManager extends RestcommUntypedActor {
                 ec.executePreOutboundAction(er, extensions);
 
                 if (er.isAllowed()) {
-                    long delay = sendPushNotificationIfNeeded(toClient.getPushClientIdentity());
+                    long delay = pushNotificationServerHelper.sendPushNotificationIfNeeded(toClient.getPushClientIdentity());
                     system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
                         @Override
                         public void run() {
@@ -1742,7 +1719,7 @@ public final class CallManager extends RestcommUntypedActor {
                     ClientsDao clients = storage.getClientsDao();
                     Client client = clients.getClient(request.to().replaceFirst("client:", ""), storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid());
                     if (client != null) {
-                        long delay = sendPushNotificationIfNeeded(client.getPushClientIdentity());
+                        long delay = pushNotificationServerHelper.sendPushNotificationIfNeeded(client.getPushClientIdentity());
                         system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
                             @Override
                             public void run() {
@@ -2562,41 +2539,5 @@ public final class CallManager extends RestcommUntypedActor {
             call.tell(init, self);
             sender.tell(new CallManagerResponse<ActorRef>(call), self());
         }
-    }
-
-    private long sendPushNotificationIfNeeded(final String pushClientIdentity) {
-        if (!pushNotificationServerEnabled || pushClientIdentity == null) {
-            return 0;
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("Push server notification to client with identity: '" + pushClientIdentity + "' added to queue.");
-        }
-        if (httpClient == null) {
-            httpClient = CustomHttpClientBuilder.buildDefaultClient(RestcommConfiguration.getInstance().getMain());
-        }
-        Futures.future(new Callable<Void>() {
-
-            @Override
-            public Void call() throws Exception {
-                Map<String, String> params = new HashMap<>();
-                params.put("Identity", pushClientIdentity);
-                try {
-                    HttpPost httpPost = new HttpPost(pushNotificationServerUrl);
-                    httpPost.setEntity(new StringEntity(new Gson().toJson(params), ContentType.APPLICATION_JSON));
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Sending push server notification to client with identity: " + pushClientIdentity);
-                    }
-                    HttpResponse httpResponse = httpClient.execute(httpPost);
-                    if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                        logger.warning("Error while sending push server notification to client with identity: " + pushClientIdentity + ", response: " + httpResponse.getEntity());
-                    }
-                } catch (Exception e) {
-                    logger.error("Exception while sending push server notification, " + e);
-                }
-                return null;
-            }
-        }, blockingDispatcher);
-
-        return pushNotificationServerDelay;
     }
 }
