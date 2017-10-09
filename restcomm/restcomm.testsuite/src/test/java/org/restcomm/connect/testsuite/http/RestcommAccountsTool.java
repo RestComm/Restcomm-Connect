@@ -1,8 +1,12 @@
 package org.restcomm.connect.testsuite.http;
 
+import java.util.logging.Logger;
+
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
@@ -11,8 +15,6 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
-
-import java.util.logging.Logger;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -113,7 +115,7 @@ public class RestcommAccountsTool {
 		JsonParser parser = new JsonParser();
 		JsonObject jsonResponse = null;
 		try {
-			ClientResponse clientResponse = createAccountResponse(deploymentUrl, adminUsername, adminAuthToken, emailAddress, password, friendlyName);
+			ClientResponse clientResponse = createAccountResponse(deploymentUrl, adminUsername, adminAuthToken, emailAddress, password, friendlyName, null);
 			jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
 		} catch (Exception e) {
 			logger.info("Exception: " + e);
@@ -123,11 +125,11 @@ public class RestcommAccountsTool {
 
 	public ClientResponse createAccountResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String emailAddress,
 												 String password) {
-		return createAccountResponse(deploymentUrl, operatorUsername, operatorAuthtoken, emailAddress, password, null);
+		return createAccountResponse(deploymentUrl, operatorUsername, operatorAuthtoken, emailAddress, password, null, null);
 	}
 
 	public ClientResponse createAccountResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String emailAddress,
-												 String password, String friendlyName) {
+												 String password, String friendlyName, String organizationSid) {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorAuthtoken));
 
@@ -141,6 +143,8 @@ public class RestcommAccountsTool {
 		params.add("Role", "Administartor");
 		if (friendlyName != null)
 			params.add("FriendlyName", friendlyName);
+		if (organizationSid != null)
+			params.add("OrganizationSid", organizationSid);
 
 		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
 		return response;
@@ -185,5 +189,68 @@ public class RestcommAccountsTool {
 		WebResource webResource = jerseyClient.resource(getAccountsUrl(deploymentUrl));
 		ClientResponse response = webResource.path(removedAccountSid).delete(ClientResponse.class);
 		return response;
+	}
+
+	/**
+	 * @param deploymentUrl
+	 * @param username
+	 * @param authtoken
+	 * @param organizationSid
+	 * @param domainName
+	 * @return
+	 */
+	public ClientResponse getAccountsWithFilterClientResponse (String deploymentUrl, String username, String authtoken, String organizationSid, String domainName) {
+		WebResource webResource = prepareAccountListWebResource(deploymentUrl, username, authtoken);
+		
+		ClientResponse  response = webResource.queryParams(prepareAccountListFilter(organizationSid, domainName))
+				.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+                .get(ClientResponse.class);
+		return response;
+	}
+
+	/**
+	 * @param deploymentUrl
+	 * @param username
+	 * @param authtoken
+	 * @param organizationSid
+	 * @param domainName
+	 * @return JsonArray
+	 */
+	public JsonArray getAccountsWithFilterResponse (String deploymentUrl, String username, String authtoken, String organizationSid, String domainName) {
+		WebResource webResource = prepareAccountListWebResource(deploymentUrl, username, authtoken);
+		
+		String  response = webResource.queryParams(prepareAccountListFilter(organizationSid, domainName))
+				.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+                .get(String.class);
+		JsonElement jsonElement = new JsonParser().parse(response);
+        return jsonElement.getAsJsonArray();
+	}
+
+	/**
+	 * @param deploymentUrl
+	 * @param username
+	 * @param authtoken
+	 * @return
+	 */
+	private WebResource prepareAccountListWebResource(String deploymentUrl, String username, String authtoken){
+		Client jerseyClient = Client.create();
+		jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authtoken));
+		WebResource webResource = jerseyClient.resource(getAccountsUrl(deploymentUrl));
+		return webResource;
+	}
+
+	/**
+	 * @param organizationSid
+	 * @param domainName
+	 * @return
+	 */
+	private MultivaluedMap<String, String> prepareAccountListFilter(String organizationSid, String domainName){
+		MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+		if(organizationSid != null && !(organizationSid.trim().isEmpty()))
+			params.add("OrganizationSid", organizationSid);
+		if(domainName != null && !(domainName.trim().isEmpty()))
+			params.add("DomainName", domainName);
+		
+		return params;
 	}
 }

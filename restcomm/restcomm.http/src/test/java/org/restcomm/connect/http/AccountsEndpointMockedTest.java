@@ -47,7 +47,7 @@ public class AccountsEndpointMockedTest extends EndpointMockedTest {
         AccountsEndpoint endpoint = new AccountsEndpoint(servletContext,request);
         endpoint.init();
         //use endpoint to cause the exception
-        endpoint.getAccounts(MediaType.TEXT_XML_TYPE);
+        endpoint.getAccounts(null, MediaType.TEXT_XML_TYPE);
     }
 
 }
