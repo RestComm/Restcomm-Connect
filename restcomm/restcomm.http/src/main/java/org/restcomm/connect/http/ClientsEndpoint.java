@@ -260,10 +260,9 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         }
     }
 
-    private Client update(final Client client, final MultivaluedMap<String, String> data) throws PasswordTooWeak {
-        Client result = client;
+    private Client update(Client client, final MultivaluedMap<String, String> data) throws PasswordTooWeak {
         if (data.containsKey("FriendlyName")) {
-            result = result.setFriendlyName(data.getFirst("FriendlyName"));
+            client = client.setFriendlyName(data.getFirst("FriendlyName"));
         }
         if (data.containsKey("Password")) {
             String password = data.getFirst("Password");
@@ -271,39 +270,39 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             if (!validator.isStrongEnough(password)) {
                 throw new PasswordTooWeak();
             }
-            result = result.setPassword(password);
+            client = client.setPassword(password);
         }
         if (data.containsKey("Status")) {
-            result = result.setStatus(getStatus(data));
+            client = client.setStatus(getStatus(data));
         }
         if (data.containsKey("VoiceUrl")) {
             URI uri = getUrl("VoiceUrl", data);
-            result = result.setVoiceUrl(isEmpty(uri.toString()) ? null : uri);
+            client = client.setVoiceUrl(isEmpty(uri.toString()) ? null : uri);
         }
         if (data.containsKey("VoiceMethod")) {
-            result = result.setVoiceMethod(getMethod("VoiceMethod", data));
+            client = client.setVoiceMethod(getMethod("VoiceMethod", data));
         }
         if (data.containsKey("VoiceFallbackUrl")) {
             URI uri = getUrl("VoiceFallbackUrl", data);
-            result = result.setVoiceFallbackUrl(isEmpty(uri.toString()) ? null :uri);
+            client = client.setVoiceFallbackUrl(isEmpty(uri.toString()) ? null :uri);
         }
         if (data.containsKey("VoiceFallbackMethod")) {
-            result = result.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
+            client = client.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
         }
         if (data.containsKey("VoiceApplicationSid")) {
             if (org.apache.commons.lang.StringUtils.isEmpty(data.getFirst("VoiceApplicationSid"))) {
-                result = result.setVoiceApplicationSid(null);
+                client = client.setVoiceApplicationSid(null);
             } else {
-                result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+                client = client.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
             }
         }
         if (data.containsKey("IsPushEnabled")) {
             if (getBoolean("IsPushEnabled", data)) {
-                result = result.setPushClientIdentity(client.getSid().toString());
+                client = client.setPushClientIdentity(client.getSid().toString());
             } else {
-                result = result.setPushClientIdentity(null);
+                client = client.setPushClientIdentity(null);
             }
         }
-        return result;
+        return client;
     }
 }
