@@ -545,27 +545,34 @@ public class UssdInterpreter extends RestcommUntypedActor {
             }
         } else if (DownloaderResponse.class.equals(klass)) {
             final DownloaderResponse response = (DownloaderResponse) message;
-
-            int sc = response.get().getStatusCode();
-            //processingInfoRequest
             if (logger.isDebugEnabled()) {
-                logger.debug("Rcml URI : " + response.get().getURI() + "response success=" + response.succeeded()
-                    + ", statusCode=" + response.get().getStatusCode()+" state="+state);
+                logger.debug("Rcml DownloaderResponse success=" + response.succeeded());
             }
             //FIXME: what if these ifblocks arent in downloadingRcml?
             if (response.succeeded()) {
+                int sc = response.get().getStatusCode();
+                //processingInfoRequest
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Rcml DownloaderResponse URI : " + response.get().getURI()
+                        + ", statusCode=" + response.get().getStatusCode()+" state="+state);
+                }
                 if(HttpStatus.SC_OK == sc){
                     fsm.transition(message, ready);
                 } else if (HttpStatus.SC_NOT_FOUND == sc){
                     fsm.transition(message, notFound);
                 }
             } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Rcml DownloaderResponse error : " + response.error()
+                        + ", cause=" +
+                        ((response.cause() != null) ? response.cause().getMessage() : ""));
+                }
                 if (downloadingRcml.equals(state) && fallbackUrl!=null) {
                     fsm.transition(message, downloadingFallbackRcml);
                 } else {
                     //unexpected response
                     if(!sentBye && !receivedBye){
-                        sendBye("UssdInterpreter Stopping. Unexpected State when receiving DownloaderResponse");
+                        sendBye("UssdInterpreter Stopping. Unexpected State when receiving DownloaderResponse " + response.error());
                         sentBye = true;
                     }
                     fsm.transition(message, finished);
