@@ -26,13 +26,13 @@ import static javax.servlet.sip.SipServletResponse.SC_OK;
 
 import java.io.IOException;
 import java.util.List;
-
 import java.util.regex.Pattern;
 
 import javax.servlet.ServletContext;
 import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipURI;
@@ -41,7 +41,6 @@ import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
-
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
@@ -151,7 +150,7 @@ public class UssdCallManager extends RestcommUntypedActor {
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
-
+        boolean needAuthorization = true;
         //FIXME: really kludgy and ugly
         Account effectiveAccount = null;
         AccountsDao accountsDao = storage.getAccountsDao();
@@ -160,16 +159,25 @@ public class UssdCallManager extends RestcommUntypedActor {
             effectiveAccount = accountsDao.getAccount(this.createCallRequest.accountId());
         }else if (message instanceof SipServletRequest){
             effectiveAccount = accountsDao.getAccount(getAccountIdFromSipRequest((SipServletRequest) message));
+        } else if (message instanceof ExecuteCallScript) {
+            effectiveAccount = accountsDao.getAccount(((ExecuteCallScript )message).account());
+        } else if (ExecuteCallScript.class.equals(klass)) {
+            effectiveAccount = accountsDao.getAccount(((ExecuteCallScript )message).account());
+        } else if (message instanceof SipServletResponse){
+            //getAccountIdFromSipRequest((SipServletResponse) message);
+            needAuthorization = false;
         }
 
 
 //        UserIdentityContext uic = new UserIdentityContext(effectiveAccount, accountsDao);
 //        permissionsUtil.setUserIdentityContext(uic);
-        try {
-            permissionsUtil.checkPermission("Restcomm:*:Ussd", effectiveAccount.getSid());
-        } catch (Exception e) {
-            logger.debug("No permission for USSD feature "+e);
-            return;
+        if(needAuthorization){
+            try {
+                permissionsUtil.checkPermission("Restcomm:*:Ussd", effectiveAccount.getSid());
+            } catch (Exception e) {
+                logger.debug("No permission for USSD feature "+e);
+                return;
+            }
         }
         if (message instanceof SipServletRequest) {
             final SipServletRequest request = (SipServletRequest) message;
@@ -201,13 +209,12 @@ public class UssdCallManager extends RestcommUntypedActor {
 
     }
 
-    private Sid getAccountIdFromSipRequest(SipServletRequest request) {
+    private Sid getAccountIdFromSipRequest(SipServletMessage request) {
         final ClientsDao clients = storage.getClientsDao();
         //FIXME: a null check is faster?
         Sid accountSid = null ; //Sid.generate(Type.INVALID);
 
         //TODO: implement get from Proxy-Authorization
-
         final SipURI fromUri = (SipURI) request.getFrom().getURI();
         Sid sourceOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromUri);
         if(logger.isDebugEnabled()) {
@@ -225,9 +232,9 @@ public class UssdCallManager extends RestcommUntypedActor {
         }
 
         //TODO: if not available from From, should we actually get the accountSid from the To??
-        if(accountSid == null){
-            final String toUser = CallControlHelper.getUserSipId(request, useTo);
-            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, toUser, sourceOrganizationSid);
+        if(accountSid == null && (request instanceof SipServletRequest)){
+            final String toUser = CallControlHelper.getUserSipId((SipServletRequest)request, useTo);
+            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, (SipServletRequest)request, toUser, sourceOrganizationSid);
             IncomingPhoneNumber number = mostOptimalNumber.number();
             if(number!=null){
                 accountSid = number.getAccountSid();
