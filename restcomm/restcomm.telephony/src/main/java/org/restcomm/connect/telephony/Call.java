@@ -60,6 +60,7 @@ import org.restcomm.connect.mscontrol.api.messages.CloseMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.Collect;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.JoinBridge;
+import org.restcomm.connect.mscontrol.api.messages.JoinBridgeNoMixer;
 import org.restcomm.connect.mscontrol.api.messages.JoinComplete;
 import org.restcomm.connect.mscontrol.api.messages.JoinConference;
 import org.restcomm.connect.mscontrol.api.messages.Leave;
@@ -70,6 +71,7 @@ import org.restcomm.connect.mscontrol.api.messages.MediaSessionInfo;
 import org.restcomm.connect.mscontrol.api.messages.Mute;
 import org.restcomm.connect.mscontrol.api.messages.Play;
 import org.restcomm.connect.mscontrol.api.messages.Record;
+import org.restcomm.connect.mscontrol.api.messages.ShareBridgeNetworkConnection;
 import org.restcomm.connect.mscontrol.api.messages.StartRecording;
 import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
@@ -175,6 +177,7 @@ public final class Call extends UntypedActor {
     private final State updatingMediaSession;
     private final State inProgress;
     private final State joining;
+    private final State joiningNoMixer;
     private final State leaving;
     private final State stopping;
     private final State completed;
@@ -311,6 +314,7 @@ public final class Call extends UntypedActor {
         this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source), null);
         this.inProgress = new State("in progress", new InProgress(source), null);
         this.joining = new State("joining", new Joining(source), null);
+        this.joiningNoMixer = new State("joiningNoMixer", new JoiningNoMixer(source), null);
         this.leaving = new State("leaving", new Leaving(source), null);
         this.stopping = new State("stopping", new Stopping(source), null);
         this.completed = new State("completed", new Completed(source), null);
@@ -345,6 +349,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.initializing, this.stopping));
         transitions.add(new Transition(this.waitingForAnswer, this.inProgress));
         transitions.add(new Transition(this.waitingForAnswer, this.joining));
+        transitions.add(new Transition(this.waitingForAnswer, this.joiningNoMixer));
         transitions.add(new Transition(this.waitingForAnswer, this.canceling));
         transitions.add(new Transition(this.waitingForAnswer, this.completed));
         transitions.add(new Transition(this.waitingForAnswer, this.stopping));
@@ -358,12 +363,16 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.dialing, this.updatingMediaSession));
         transitions.add(new Transition(this.inProgress, this.stopping));
         transitions.add(new Transition(this.inProgress, this.joining));
+        transitions.add(new Transition(this.inProgress, this.joiningNoMixer));
         transitions.add(new Transition(this.inProgress, this.leaving));
         transitions.add(new Transition(this.inProgress, this.failed));
         transitions.add(new Transition(this.inProgress, this.inDialogRequest));
         transitions.add(new Transition(this.joining, this.inProgress));
         transitions.add(new Transition(this.joining, this.stopping));
         transitions.add(new Transition(this.joining, this.failed));
+        transitions.add(new Transition(this.joiningNoMixer, this.inProgress));
+        transitions.add(new Transition(this.joiningNoMixer, this.stopping));
+        transitions.add(new Transition(this.joiningNoMixer, this.failed));
         transitions.add(new Transition(this.leaving, this.inProgress));
         transitions.add(new Transition(this.leaving, this.stopping));
         transitions.add(new Transition(this.leaving, this.failed));
@@ -693,6 +702,8 @@ public final class Call extends UntypedActor {
             onJoinConference((JoinConference) message, self, sender);
         } else if (JoinBridge.class.equals(klass)) {
             onJoinBridge((JoinBridge) message, self, sender);
+        } else if (JoinBridgeNoMixer.class.equals(klass)) {
+            onJoinBridgeNoMixer((JoinBridgeNoMixer) message, self, sender);
         } else if (Leave.class.equals(klass)) {
             onLeave((Leave) message, self, sender);
         } else if (Left.class.equals(klass)) {
@@ -1597,9 +1608,26 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-            msController.tell(message, super.source);
+            final JoinBridge join = (JoinBridge) message;
+            if(join.isUsingMixer()){
+                msController.tell(message, super.source);
+            } else {
+                final ShareBridgeNetworkConnection sbnc = new ShareBridgeNetworkConnection(join.getEndpoint(), join.getConnectionMode(), join.getCall());
+                msController.tell(sbnc, super.source);
+            }
+        }
+    }
+
+    private final class JoiningNoMixer extends AbstractAction {
+
+        public JoiningNoMixer(ActorRef source) {
+            super(source);
         }
 
+        @Override
+        public void execute(Object message) throws Exception {
+            msController.tell(message, super.source);
+        }
     }
 
     private final class Leaving extends AbstractAction {
@@ -2403,6 +2431,13 @@ public final class Call extends UntypedActor {
         }
     }
 
+    private void onJoinBridgeNoMixer(JoinBridgeNoMixer message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(inProgress) || is(waitingForAnswer)) {
+            this.bridge = sender;
+            this.fsm.transition(message, joiningNoMixer);
+        }
+    }
+
     private void onJoinConference(JoinConference message, ActorRef self, ActorRef sender) throws Exception {
         if (logger.isInfoEnabled()) {
             logger.info("********************* onJoinConference *********************");
@@ -2417,7 +2452,7 @@ public final class Call extends UntypedActor {
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) throws Exception {
         //The CallController will send to the Call the JoinComplete message when the join completes
-        if (is(joining)) {
+        if (is(joining) || is(joiningNoMixer)) {
             // Forward message to the bridge
             if (conferencing) {
                 if (outgoingCallRecord != null && isOutbound()) {

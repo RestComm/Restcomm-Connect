@@ -307,7 +307,7 @@ public class Bridge extends UntypedActor {
         @Override
         public void execute(Object message) throws Exception {
             // Ask mscontroller to join inbound call
-            final JoinCall join = new JoinCall(inboundCall, ConnectionMode.SendRecv);
+            final JoinCall join = new JoinCall(inboundCall, ConnectionMode.SendRecv, outboundCall, mediaAttributes);
             mscontroller.tell(join, super.source);
         }
 

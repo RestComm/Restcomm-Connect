@@ -285,7 +285,7 @@ public class MmsBridgeController extends MediaServerController {
     private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
         // Tell call to join bridge by passing reference to the media mixer
         final JoinBridge join = new JoinBridge(this.endpoint, message.getConnectionMode());
-        message.getCall().tell(join, sender);
+        message.getInboundCall().tell(join, sender);
     }
 
     private void onStop(Stop message, ActorRef self, ActorRef sender) throws Exception {
