@@ -19,11 +19,12 @@
  */
 package org.restcomm.connect.telephony.api;
 
-import org.restcomm.connect.commons.annotations.concurrency.Immutable;
-import org.restcomm.connect.commons.dao.Sid;
-
 import java.net.URI;
 import java.util.List;
+
+import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -49,10 +50,19 @@ public final class CreateCall {
     private final URI statusCallbackUrl;
     private final String statusCallbackMethod;
     private final List<String> statusCallbackEvent;
+    private final MediaAttributes mediaAttributes;
 
     public CreateCall(final String from, final String to, final String username, final String password,
             final boolean isFromApi, final int timeout, final Type type, final Sid accountId, final Sid parentCallSid,
             final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent) {
+        this(from, to, username, password, isFromApi, timeout, type, accountId, parentCallSid, statusCallbackUrl,
+                statusCallbackMethod, statusCallbackEvent, new MediaAttributes());
+    }
+
+    public CreateCall(final String from, final String to, final String username, final String password,
+            final boolean isFromApi, final int timeout, final Type type, final Sid accountId, final Sid parentCallSid,
+            final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent,
+            final MediaAttributes mediaAttributes) {
         super();
         this.from = from;
         this.to = to;
@@ -66,6 +76,7 @@ public final class CreateCall {
         this.statusCallbackUrl = statusCallbackUrl;
         this.statusCallbackMethod = statusCallbackMethod;
         this.statusCallbackEvent = statusCallbackEvent;
+        this.mediaAttributes = mediaAttributes;
     }
 
     public String from() {
@@ -117,4 +128,8 @@ public final class CreateCall {
     public String statusCallbackMethod() { return statusCallbackMethod; }
 
     public List<String> statusCallbackEvent() { return statusCallbackEvent; }
+
+    public MediaAttributes mediaAttributes() {
+        return mediaAttributes;
+    }
 }

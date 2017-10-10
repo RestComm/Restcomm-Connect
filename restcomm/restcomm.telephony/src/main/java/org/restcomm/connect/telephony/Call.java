@@ -53,6 +53,7 @@ import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.http.client.Downloader;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
 import org.restcomm.connect.mscontrol.api.messages.CloseMediaSession;
@@ -235,6 +236,7 @@ public final class Call extends UntypedActor {
     private URI recordingUri;
     private Sid recordingSid;
     private Sid parentCallSid;
+    private MediaAttributes mediaAttributes;
 
     // Runtime Setting
     private Configuration runtimeSettings;
@@ -410,6 +412,10 @@ public final class Call extends UntypedActor {
             final Configuration imsAuthentication = runtime.subset("ims-authentication");
             this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
         }
+        /* The initialization of mediaAttributes variable assumes the call as AUDIO_ONLY by default.
+        The real value is later replaced when the call is queued, as any of {@link MediaAttribute.MediaType}
+         */
+        this.mediaAttributes = new MediaAttributes();
     }
 
     ActorRef downloader() {
@@ -445,7 +451,7 @@ public final class Call extends UntypedActor {
             } else {
                 to = ((TelURL) this.to).getPhoneNumber();
             }
-            final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime);
+            final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime, mediaAttributes);
             return new CallResponse<CallInfo>(info);
         } catch (Exception e) {
             if (logger.isInfoEnabled()) {
@@ -541,7 +547,7 @@ public final class Call extends UntypedActor {
         if (statusCallback != null) {
             if (statusCallbackEvent.contains(state.toString())) {
                 if (logger.isDebugEnabled()) {
-                    String msg = String.format("About to execute Call StatusCallback to %s for state %s",statusCallback.toString(), state.text);
+                    String msg = String.format("About to execute Call StatusCallback for state %s to StatusCallback %s. Call from %s to %s direction %s", state.text, statusCallback.toString(), from.toString(), to.toString(), direction);
                     logger.debug(msg);
                 }
                 if (statusCallbackMethod == null) {
@@ -836,6 +842,7 @@ public final class Call extends UntypedActor {
             timeout = request.timeout();
             direction = request.isFromApi() ? OUTBOUND_API : OUTBOUND_DIAL;
             webrtc = request.isWebrtc();
+            mediaAttributes = request.getMediaAttributes();
 
             // Notify the observers.
             external = CallStateChanged.State.QUEUED;
@@ -1322,7 +1329,7 @@ public final class Call extends UntypedActor {
             // Initialize the MS Controller
             CreateMediaSession command = null;
             if (isOutbound()) {
-                command = new CreateMediaSession("sendrecv", "", true, webrtc, id);
+                command = new CreateMediaSession("sendrecv", "", true, webrtc, id, mediaAttributes);
             } else {
                 if (!liveCallModification) {
                     command = generateRequest(invite);
@@ -1373,7 +1380,19 @@ public final class Call extends UntypedActor {
             }
             offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
         }
-        return new CreateMediaSession("sendrecv", offer, false, webrtc, inboundCallSid);
+
+        //Prepare media attributes to be used by call controller
+        final boolean isAudioSdp = SdpUtils.isAudioSDP(sipMessage.getContentType(), sipMessage.getRawContent());
+        final boolean isVideoSdp = SdpUtils.isVideoSDP(sipMessage.getContentType(), sipMessage.getRawContent());
+        if(isAudioSdp && isVideoSdp){
+            //Call with audio and video
+            mediaAttributes = new MediaAttributes(MediaAttributes.MediaType.AUDIO_VIDEO, MediaAttributes.VideoResolution.SEVEN_TWENTY_P);
+        } else if (isVideoSdp) {
+            //Call with video and no audio
+            mediaAttributes = new MediaAttributes(MediaAttributes.MediaType.VIDEO_ONLY, MediaAttributes.VideoResolution.SEVEN_TWENTY_P);
+        } //mediaAttributes remains with default value (AUDIO_ONLY) if both isAudioSdp and isVideoSdp are false
+
+        return new CreateMediaSession("sendrecv", offer, false, webrtc, inboundCallSid, mediaAttributes);
     }
 
     private final class UpdatingMediaSession extends AbstractAction {
@@ -2108,6 +2127,8 @@ public final class Call extends UntypedActor {
                 // Move to next state to clean media resources and close session
                 fsm.transition(message, stopping);
             }
+        } else if (is(failingNoAnswer)) {
+            fsm.transition(message, canceling);
         }
     }
 

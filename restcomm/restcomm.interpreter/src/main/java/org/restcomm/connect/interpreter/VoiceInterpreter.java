@@ -1159,6 +1159,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                         return;
                     }
+                } if (is(initializingCall)) {
+                    fsm.transition(message, finished);
                 } else {
                     fsm.transition(message, finishDialing);
                     return;
@@ -1183,6 +1185,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         logger.info("No-Answer event received, and dialBrances is either null or 0 size, sender: "+sender.path()+", vi state: "+fsm.state());
                         checkDialBranch(message, sender, action);
                     }
+                }
+                if (is(initializingCall)) {
+                    sender.tell(new Hangup(), self());
                 }
                 break;
             case FAILED:
@@ -1329,8 +1334,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (sender != null && !sender.equals(call)) {
                     callManager.tell(new DestroyCall(sender), self());
                 }
-                final GetNextVerb next = new GetNextVerb();
-                parser.tell(next, self());
+                if (parser != null) {
+                    final GetNextVerb next = new GetNextVerb();
+                    parser.tell(next, self());
+                }
             } else {
                 if (logger.isInfoEnabled()) {
                     logger.info("Executing Dial Action for inbound call");
@@ -2021,6 +2028,21 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             return videoOverlay;
         }
+
+        public void fetchMediaAttributes(final Tag container){
+            Tag video = video(container);
+            if(video != null){
+                MediaAttributes.MediaType mediaType = videoEnabled(video);
+                if (!MediaAttributes.MediaType.AUDIO_ONLY.equals(mediaType)) {
+                    final MediaAttributes.VideoMode videoMode = videoMode(video);
+                    final MediaAttributes.VideoResolution videoResolution = videoResolution(video);
+                    final MediaAttributes.VideoLayout videoLayout = videoLayout(video);
+                    final String videoOverlay = videoOverlay(video);
+                    mediaAttributes = new MediaAttributes(mediaType, videoMode, videoResolution, videoLayout,
+                            videoOverlay);
+                }
+            }
+        }
     }
 
     private final class StartDialing extends AbstractDialAction {
@@ -2085,15 +2107,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             logger.error(errorMsg);
                             throw new Exception(errorMsg);
                         }
-                        final MediaAttributes.MediaType mediaType = videoEnabled(grandchild);
-                        if (!MediaAttributes.MediaType.AUDIO_ONLY.equals(mediaType)) {
-                            final MediaAttributes.VideoMode videoMode = videoMode(grandchild);
-                            final MediaAttributes.VideoResolution videoResolution = videoResolution(grandchild);
-                            final MediaAttributes.VideoLayout videoLayout = videoLayout(grandchild);
-                            final String videoOverlay = videoOverlay(grandchild);
-                            mediaAttributes = new MediaAttributes(mediaType, videoMode, videoResolution, videoLayout,
-                                    videoOverlay);
-                        }
+                        fetchMediaAttributes(child);
                     }
                     final StringBuilder buffer = new StringBuilder();
                     //conference account should be phone account. i.e account of whoever owns that phone number.
@@ -2186,13 +2200,20 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         statusCallbackEvent.add("completed");
                     }
                 }
+                fetchMediaAttributes(child);
+                String callee;
+                if(video(child) != null){
+                    callee = child.attribute("name").value();
+                } else {
+                    callee = child.text();
+                }
                 if (Nouns.client.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCall.Type.CLIENT, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
+                                CreateCall.Type.CLIENT, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     } else {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                                CreateCall.Type.CLIENT, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, false, timeout(verb),
+                                CreateCall.Type.CLIENT, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     }
                 } else if (Nouns.number.equals(child.name())) {
                     if (call != null && callInfo != null) {
@@ -2204,11 +2225,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (Nouns.uri.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCall.Type.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
+                                CreateCall.Type.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     } else {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                                CreateCall.Type.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, false, timeout(verb),
+                                CreateCall.Type.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     }
                 } else if (Nouns.SIP.equals(child.name())) {
                     // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
@@ -2232,11 +2253,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                     }
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
-                                CreateCall.Type.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), username, password, false, timeout(verb),
+                                CreateCall.Type.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     } else {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
-                                CreateCall.Type.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), username, password, false, timeout(verb),
+                                CreateCall.Type.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     }
                 }
                 callManager.tell(create, source);
@@ -2634,7 +2655,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         } else if (outboundCall != null) {
                             outboundCall.tell(new Cancel(), source);
                         }
-                        if (dialBranches == null) {
+                        //Issue https://github.com/RestComm/Restcomm-Connect/issues/2157. If outbound call != null,
+                        //then checking the DialBranch here will cause race condition that will prevent outbound call to move
+                        //to completed state because checkDialBranch() method will ask for the next verb which could be the End.tag
+                        if (dialBranches == null && outboundCall == null) {
                             checkDialBranch(message,sender,action);
                         }
                         dialChildren = null;
@@ -3253,7 +3277,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(Object message) throws Exception {
-            final CreateBridge create = new CreateBridge();
+            final CreateBridge create = new CreateBridge(outboundCallInfo.mediaAttributes());
             bridgeManager.tell(create, super.source);
         }
 

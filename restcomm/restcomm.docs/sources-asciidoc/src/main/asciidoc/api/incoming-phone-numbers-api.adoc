@@ -402,6 +402,20 @@ Result of the above command
 
 ....
 
+== Incoming Phone Number Regex Support
+[cols=",",]
+|==================================================================================================================================================================================================================================================
+|*Regex Sample* |*Description*
+|7777\|8888 | Matches the numbers 7777 or 8888
+|^*77...33#$| Matches any number that starts with *77 and and the three dots matches any character and it must end with a # sign
+|^[12]2233#$| Matches any number that starts with 1 or 2 and ends with 2233#
+|^7688[456]#$ | matches any number that starts with 76884# or 76885# or 76886#
+|[45]234[23] | matches 42342, 42343, 52342 and 52343
+|^*222*...*...*500#$| the Regext (^*222*...*...*500#$) matches *222*888*999*500# or *222*444*321*500#  the dots maches any character
+|999...| Matches 999222, 999123, 999555 the dots matches any character
+
+|=====================================================================================================================================================================================================================================================
+
 
 == Delete a phone number
 
@@ -418,3 +432,4 @@ Gets all numbers created using *IncomingPhoneNumbers.json*
 ....
 curl -X GET  https://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json
 ....
+

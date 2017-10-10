@@ -141,4 +141,28 @@ public class SdpUtils {
         return isWebRTC;
     }
 
+    public static boolean isAudioSDP(final String contentType, final byte[] data) throws SdpParseException {
+        boolean isAudioSdp = false;
+        if (contentType.equalsIgnoreCase("application/sdp")) {
+            String sdp = getSdp(contentType, data);
+            if (sdp != null && sdp.contains("m=audio") || sdp.contains("m=AUDIO")
+                    || sdp.contains("m=Audio")) {
+                isAudioSdp = true;
+            }
+        }
+        return isAudioSdp;
+    }
+
+    public static boolean isVideoSDP(final String contentType, final byte[] data) throws SdpParseException {
+        boolean isVideoSdp = false;
+        if (contentType.equalsIgnoreCase("application/sdp")) {
+            String sdp = getSdp(contentType, data);
+            if (sdp != null && sdp.contains("m=video") || sdp.contains("m=VIDEO")
+                    || sdp.contains("m=Video")) {
+                isVideoSdp = true;
+            }
+        }
+        return isVideoSdp;
+    }
+
 }

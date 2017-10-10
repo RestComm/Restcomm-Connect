@@ -33,6 +33,9 @@
     SELECT * FROM restcomm_incoming_phone_numbers;
   </select>
 
+  <select id="getIncomingPhoneNumbersRegex"  resultType="hashmap">
+    SELECT * FROM restcomm_incoming_phone_numbers WHERE phone_number like '%*%' or phone_number like '%#%' or phone_number like '%^%' or phone_number like '%|%' or phone_number like '%.%' or phone_number like '%$%' or phone_number like '%\%' or phone_number like '%[%' or phone_number like '%]%' ;
+  </select>
   <!--
   <select id="getIncomingPhoneNumbersByFriendlyName" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_incoming_phone_numbers WHERE account_sid=#{accountSid}

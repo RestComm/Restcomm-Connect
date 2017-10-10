@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.telephony.api.BridgeStateChanged;
 import org.restcomm.connect.telephony.api.JoinCalls;
 import org.restcomm.connect.telephony.api.StartBridge;
@@ -83,7 +84,10 @@ public class Bridge extends UntypedActor {
     // Observer pattern
     private final List<ActorRef> observers;
 
-    public Bridge(final ActorRef mscontroller) {
+    // Media
+    private final MediaAttributes mediaAttributes;
+
+    public Bridge(final ActorRef mscontroller, final MediaAttributes mediaAttributes) {
         final ActorRef source = self();
 
         // Media Server Controller
@@ -120,6 +124,9 @@ public class Bridge extends UntypedActor {
 
         // Observer pattern
         this.observers = new ArrayList<ActorRef>(3);
+
+        // Media
+        this.mediaAttributes = mediaAttributes;
     }
 
     private boolean is(final State state) {
@@ -271,7 +278,7 @@ public class Bridge extends UntypedActor {
             mscontroller.tell(observe, super.source);
 
             // Initialize the MS Controller
-            final CreateMediaSession createMediaSession = new CreateMediaSession();
+            final CreateMediaSession createMediaSession = new CreateMediaSession(mediaAttributes);
             mscontroller.tell(createMediaSession, super.source);
         }
 
