@@ -20,6 +20,7 @@
 package org.restcomm.connect.dao.entities;
 
 import java.net.URI;
+import java.util.List;
 
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
@@ -43,10 +44,17 @@ public final class Application {
     private final URI uri;
     private final URI rcmlUrl;
     private final Kind kind;
+    private List<ApplicationNumberSummary> numbers;
 
     public Application(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
             final Sid accountSid, final String apiVersion, final Boolean hasVoiceCallerIdLookup, final URI uri,
             final URI rcmlUrl, Kind kind) {
+        this(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion,hasVoiceCallerIdLookup,uri,rcmlUrl,kind,null);
+    }
+
+    public Application(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
+                       final Sid accountSid, final String apiVersion, final Boolean hasVoiceCallerIdLookup, final URI uri,
+                       final URI rcmlUrl, Kind kind, List<ApplicationNumberSummary> numbers) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -58,6 +66,7 @@ public final class Application {
         this.uri = uri;
         this.rcmlUrl = rcmlUrl;
         this.kind = kind;
+        this.numbers = numbers;
     }
 
     public static Builder builder() {
@@ -104,6 +113,10 @@ public final class Application {
         return kind;
     }
 
+    public List<ApplicationNumberSummary> getNumbers() {
+        return numbers;
+    }
+
     public Application setFriendlyName(final String friendlyName) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
                 uri, rcmlUrl, kind);
@@ -122,6 +135,10 @@ public final class Application {
     public Application setKind(final Kind kind) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
                 uri, rcmlUrl, kind);
+    }
+
+    public void setNumbers(List<ApplicationNumberSummary> numbers) {
+        this.numbers = numbers;
     }
 
     public enum Kind {

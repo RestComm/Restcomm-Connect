@@ -22,6 +22,28 @@
   <select id="getApplications" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_applications WHERE account_sid=#{account_sid} or account_sid is null;
   </select>
+
+  <select id="getApplicationsAndNumbers" parameterType="string" resultType="hashmap">
+    SELECT
+    app.*,
+    num.sid num_sid,
+    num.friendly_name num_friendly_name,
+    num.phone_number num_phone_number,
+    num.voice_application_sid num_voice_application_sid,
+    num.sms_application_sid num_sms_application_sid,
+    num.ussd_application_sid num_ussd_application_sid,
+    num.refer_application_sid num_refer_application_sid
+    FROM restcomm_applications app
+    LEFT OUTER JOIN (
+      SELECT * from restcomm_incoming_phone_numbers nums WHERE nums.account_sid=#{account_sid}
+    ) num
+    ON num.voice_application_sid = app.sid
+    OR num.sms_application_sid = app.sid
+    OR num.ussd_application_sid = app.sid
+    OR num.refer_application_sid = app.sid
+    WHERE (app.account_sid=#{account_sid} or app.account_sid is null)
+    ORDER BY app.date_created, app.sid;
+  </select>
   
   <delete id="removeApplication" parameterType="string">
     DELETE FROM restcomm_applications WHERE sid=#{sid};

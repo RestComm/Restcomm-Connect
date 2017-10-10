@@ -31,6 +31,7 @@ import java.util.Locale;
 
 import javax.ws.rs.core.MultivaluedMap;
 
+import junit.framework.Assert;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
@@ -115,6 +116,20 @@ public class ApplicationsEndpointTest {
         assertTrue(applicationJson.get("voice_caller_id_lookup").getAsString().equals(voiceCallerIdLookup));
         assertTrue(applicationJson.get("rcml_url").getAsString().equals(rcmlUrl));
         assertTrue(applicationJson.get("kind").getAsString().equals(kind));
+    }
+
+    @Test
+    public void testGetApplicationAndNumbers() throws ParseException, IllegalArgumentException, IOException {
+        // Define application attributes
+        String friendlyName, voiceCallerIdLookup, rcmlUrl, kind;
+
+        // Test asserts via GET to a single application
+        JsonArray applicationJson = RestcommApplicationsTool.getInstance().getApplications(deploymentUrl.toString(), adminUsername,
+                adminAuthToken, adminAccountSid, true);
+        Assert.assertNotNull(applicationJson.get(0).getAsJsonObject().get("numbers"));
+        JsonObject number = applicationJson.get(0).getAsJsonObject().get("numbers").getAsJsonArray().get(0).getAsJsonObject();
+        Assert.assertEquals("+1240",number.get("phone_number").getAsString());
+        Assert.assertEquals("AP73926e7113fa4d95981aa96b76eca854", number.get("voice_application_sid").getAsString());
     }
 
     @Test
@@ -218,7 +233,7 @@ public class ApplicationsEndpointTest {
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("restcomm.script-applications", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");
         return archive;
     }
