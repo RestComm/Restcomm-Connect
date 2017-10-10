@@ -4,7 +4,7 @@
 	<Play>/restcomm/audio/demo-prompt.wav</Play>
 	<Dial>
 		<Client name="alice">
-			<Video enable="true" overlay="text"></Video>
+			<Video enable="true" resolution="720p" overlay="text"></Video>
 		</Client>
 	</Dial>
 </Response>
