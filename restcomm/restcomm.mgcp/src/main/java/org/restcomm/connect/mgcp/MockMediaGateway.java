@@ -94,7 +94,6 @@ public class MockMediaGateway extends RestcommUntypedActor {
     private RevolvingCounter connectionIdPool;
     private RevolvingCounter endpointIdPool;
 
-    private Map<ActorRef, ActorRef> connectionToEndpointMap;
     private Map<String, String> connEndpointMap;
 
     private ActorRef monitoringService;
@@ -104,7 +103,6 @@ public class MockMediaGateway extends RestcommUntypedActor {
     public MockMediaGateway() {
         super();
         system = context().system();
-        connectionToEndpointMap = new ConcurrentHashMap<ActorRef, ActorRef>();
         connEndpointMap = new ConcurrentHashMap<String, String>();
     }
 
@@ -450,6 +448,8 @@ public class MockMediaGateway extends RestcommUntypedActor {
         } else {
             connEndpointMap.remove(dlcx.getConnectionIdentifier().toString());
             monitoringService.tell(new MgcpConnectionDeleted(dlcx.getConnectionIdentifier().toString(), null), self());
+            //If all connections have been removed for a given Endpoint, we can consider that the endpoint is stopped (this is the RMS behavior)
+            //Here check if we have Endpoint ID on the map, and if not, tell MonitoringService that the endpoint stopped.
             if (!connEndpointMap.values().contains(dlcx.getEndpointIdentifier().getLocalEndpointName())) {
                 monitoringService.tell(new MgcpEndpointDeleted(dlcx.getEndpointIdentifier().getLocalEndpointName()), self());
                 if (logger.isInfoEnabled()) {
