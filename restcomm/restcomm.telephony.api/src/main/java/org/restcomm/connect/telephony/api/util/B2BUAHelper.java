@@ -507,7 +507,11 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
          SipServletResponse clonedResponse = linkedRequest.createResponse(response.getStatus());
          SipURI originalURI = null;
          try {
-             if(response.getAddressHeader("Contact") != null && response.getAddressHeader("Contact").getURI() != null){
+             //only fix Contact if necessary, some requests like MESSAGE
+             //doesn't need Contact header
+             if(clonedResponse.getAddressHeader("Contact") != null &&
+                     response.getAddressHeader("Contact") != null &&
+                     response.getAddressHeader("Contact").getURI() != null) {
                  originalURI = (SipURI) response.getAddressHeader("Contact").getURI();
                  if (originalURI != null && originalURI.getUser() != null && !originalURI.getUser().isEmpty()) {
                      ((SipURI) clonedResponse.getAddressHeader("Contact").getURI()).setUser(originalURI.getUser());
