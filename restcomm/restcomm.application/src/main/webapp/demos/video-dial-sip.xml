@@ -3,7 +3,7 @@
 <Response>
 	<Dial timeLimit="10" timeout="10">
 	  <Sip name="sip:username@ipaddress:port">
-	  	<Video enable="true" overlay="text"></Video>
+	  	<Video enable="true" resolution="720p"  overlay="text"></Video>
 	  </Sip>
 	</Dial>
 </Response>
