@@ -17,10 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
+
 package org.restcomm.connect.http.converter;
 
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
@@ -33,6 +35,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import org.restcomm.connect.dao.entities.ApplicationNumberSummary;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -63,6 +66,7 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
         writeUri(application.getUri(), writer);
         writeRcmlUrl(application.getRcmlUrl(), writer);
         writeKind(application.getKind(), writer);
+        writeNumbers(application.getNumbers(), writer, context);
         writer.endNode();
     }
 
@@ -79,6 +83,7 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
         writeUri(application.getUri(), object);
         writeRcmlUrl(application.getRcmlUrl(), object);
         writeKind(application.getKind(), object);
+        object.add("numbers",context.serialize(application.getNumbers()));
         return object;
     }
 
@@ -111,6 +116,14 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
             object.addProperty("kind", kind.toString());
         } else {
             object.add("kind", JsonNull.INSTANCE);
+        }
+    }
+
+    private void writeNumbers(final List<ApplicationNumberSummary> numbers, final HierarchicalStreamWriter writer, final MarshallingContext context) {
+        if (numbers != null) {
+            writer.startNode("Numbers");
+            context.convertAnother(numbers);
+            writer.endNode();
         }
     }
 
