@@ -74,7 +74,6 @@ import org.restcomm.connect.mscontrol.api.messages.CloseMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.Collect;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.JoinBridge;
-import org.restcomm.connect.mscontrol.api.messages.JoinBridgeNoMixer;
 import org.restcomm.connect.mscontrol.api.messages.JoinComplete;
 import org.restcomm.connect.mscontrol.api.messages.JoinConference;
 import org.restcomm.connect.mscontrol.api.messages.Leave;
@@ -87,7 +86,6 @@ import org.restcomm.connect.mscontrol.api.messages.MediaSessionInfo;
 import org.restcomm.connect.mscontrol.api.messages.Mute;
 import org.restcomm.connect.mscontrol.api.messages.Play;
 import org.restcomm.connect.mscontrol.api.messages.Record;
-import org.restcomm.connect.mscontrol.api.messages.ShareBridgeNetworkConnection;
 import org.restcomm.connect.mscontrol.api.messages.StartRecording;
 import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
@@ -454,12 +452,8 @@ public class Jsr309CallController extends MediaServerController {
             onCollect((Collect) message, self, sender);
         } else if (Record.class.equals(klass)) {
             onRecord((Record) message, self, sender);
-        } else if (ShareBridgeNetworkConnection.class.equals(klass)){
-            onShareBridgeNetworkConnection((ShareBridgeNetworkConnection) message, self, sender);
         } else if (JoinBridge.class.equals(klass)) {
             onJoinBridge((JoinBridge) message, self, sender);
-        } else if (JoinBridgeNoMixer.class.equals(klass)) {
-            onJoinBridgeNoMixer((JoinBridgeNoMixer) message, self, sender);
         } else if (JoinConference.class.equals(klass)) {
             onJoinConference((JoinConference) message, self, sender);
         } else if (Stop.class.equals(klass)) {
@@ -727,15 +721,10 @@ public class Jsr309CallController extends MediaServerController {
         }
     }
 
-    private void onShareBridgeNetworkConnection(ShareBridgeNetworkConnection message, ActorRef self, ActorRef sender) throws Exception {
-        final JoinBridgeNoMixer joinBridgeNoMixer = new JoinBridgeNoMixer(message.getEndpoint(), message.getConnectionMode(), networkConnection);
-        message.getCall().tell(joinBridgeNoMixer, sender);
-    }
-
     private void onJoinBridge(JoinBridge message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active)) {
             try {
-                // join call leg to bridge using mixer
+                // join call leg to bridge
                 this.bridge = sender;
                 this.mediaMixer = (MediaMixer) message.getEndpoint();
                 this.networkConnection.join(Direction.DUPLEX, mediaMixer);
@@ -743,27 +732,7 @@ public class Jsr309CallController extends MediaServerController {
                 // alert call has joined successfully
                 this.call.tell(new JoinComplete(), self);
             } catch (MsControlException e) {
-                logger.error("Call bridging using mixer failed: " + e.getMessage());
-                fsm.transition(e, failed);
-            }
-        }
-    }
-
-    private void onJoinBridgeNoMixer(JoinBridgeNoMixer message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active)) {
-            try {
-                // join call leg to bridge using network connection
-                this.bridge = sender;
-                final NetworkConnection bridgeNetworkConnection = (NetworkConnection) message.getNetworkConnection();
-                this.networkConnection.join(Direction.DUPLEX, bridgeNetworkConnection);
-                //this.networkConnection.getJoinableStream(JoinableStream.StreamType.audio).join(Direction.DUPLEX, bridgeNetworkConnection.getJoinableStream(JoinableStream.StreamType.audio));
-                //this.networkConnection.getJoinableStream(JoinableStream.StreamType.video).join(Direction.DUPLEX, bridgeNetworkConnection.getJoinableStream(JoinableStream.StreamType.video));
-                //this.networkConnection.joinInitiate(Direction.DUPLEX, bridgeNetworkConnection, null);
-
-                // alert call has joined successfully
-                this.call.tell(new JoinComplete(), self);
-            } catch (MsControlException e) {
-                logger.error("Call bridging using network connection failed: " + e.getMessage());
+                logger.error("Call bridging failed: " + e.getMessage());
                 fsm.transition(e, failed);
             }
         }

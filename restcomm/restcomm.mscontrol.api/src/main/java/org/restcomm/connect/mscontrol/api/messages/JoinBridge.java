@@ -21,7 +21,6 @@
 
 package org.restcomm.connect.mscontrol.api.messages;
 
-import akka.actor.ActorRef;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
@@ -35,18 +34,10 @@ public final class JoinBridge {
 
     private final Object endpoint;
     private final ConnectionMode connectionMode;
-    private final ActorRef call;
-    private final boolean usingMixer; // true if call controller should join using mixer, false to join using network
 
     public JoinBridge(final Object endpoint, final ConnectionMode connectionMode) {
-        this(endpoint, connectionMode, null, true);
-    }
-
-    public JoinBridge(final Object endpoint, final ConnectionMode connectionMode, final ActorRef call, final boolean usingMixer) {
         this.endpoint = endpoint;
         this.connectionMode = connectionMode;
-        this.call = call;
-        this.usingMixer = usingMixer;
     }
 
     public Object getEndpoint() {
@@ -56,8 +47,4 @@ public final class JoinBridge {
     public ConnectionMode getConnectionMode() {
         return connectionMode;
     }
-
-    public ActorRef getCall() { return call; }
-
-    public boolean isUsingMixer() { return usingMixer; }
 }
