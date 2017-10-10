@@ -22,12 +22,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.monitoringservice.MonitoringMetrics;
 import org.restcomm.connect.testsuite.http.RestcommConferenceParticipantsTool;
 import org.restcomm.connect.testsuite.http.RestcommConferenceTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.sip.message.Response;
 import java.net.URL;
+import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -35,6 +37,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -223,6 +226,14 @@ public class DialConferenceTest {
         assertTrue(liveCalls == 2);
         assertTrue(liveCallsArraySize == 2);
 
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertTrue(mgcpEndpoints>0);
+        assertTrue(mgcpConnections>0);
+
         // Wait for the media to play and the call to hangup.
         bobCall.listenForDisconnect();
         georgeCall.listenForDisconnect();
@@ -239,6 +250,14 @@ public class DialConferenceTest {
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertTrue(liveCalls == 0);
         assertTrue(liveCallsArraySize == 0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     private final String confRoom2 = "confRoom2";
@@ -298,6 +317,14 @@ public class DialConferenceTest {
         logger.info("Number of participants: "+numOfParticipants);
         assertTrue(numOfParticipants==2);
 
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertTrue(mgcpEndpoints>0);
+        assertTrue(mgcpConnections>0);
+
         Thread.sleep(3000);
 
         georgeCall.disconnect();
@@ -314,9 +341,91 @@ public class DialConferenceTest {
         int confRoom2Participants = getParticipantsSize(confRoom2);
         logger.info("&&&&& ConfRoom2Participants: "+confRoom2Participants);
         assertTrue(confRoom2Participants==0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     private final String confRoom3 = "confRoom3";
+    private String dialConfernceRcml3 = "<Response><Dial><Conference>"+confRoom3+"</Conference></Dial></Response>";
+    @Test
+    public synchronized void testDialConferenceSingleClient() throws InterruptedException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialConfernceRcml3)));
+
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        Thread.sleep(3000);
+
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls == 1);
+        assertTrue(liveCallsArraySize == 1);
+        assertTrue(getConferencesSize()>=1);
+        int numOfParticipants = getParticipantsSize(confRoom3);
+        logger.info("Number of participants: "+numOfParticipants);
+        assertTrue(numOfParticipants==1);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertTrue(mgcpEndpoints>0);
+        assertTrue(mgcpConnections>0);
+
+        Thread.sleep(3000);
+
+        bobCall.disconnect();
+
+        Thread.sleep(5000);
+        liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls == 0);
+        assertTrue(liveCallsArraySize == 0);
+        assertTrue(getConferencesSize()>=1);
+        int confRoom2Participants = getParticipantsSize(confRoom3);
+        logger.info("&&&&& ConfRoom2Participants: "+confRoom2Participants);
+        assertTrue(confRoom2Participants==0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+    }
+
+    private final String confRoom4 = "confRoom4";
     private String dialConfernceRcmlWithWaitUrl = "<Response><Dial><Conference startConferenceOnEnter=\"false\" waitUrl=\"http://127.0.0.1:8090/waitUrl\" waitMethod=\"GET\">"+confRoom3+"</Conference></Dial></Response>";
     private String waitUrlRcml = "<Response><Say>Wait while somebody joins the conference</Say><Play>/restcomm/audio/demo-prompt.wav</Play></Response>";
     @Test @Ignore //TTS is not working on the testsuite
@@ -365,9 +474,18 @@ public class DialConferenceTest {
         assertEquals(1, liveCalls);
         assertEquals(1, liveCallsArraySize);
         assertTrue(getConferencesSize()>=1);
-        int numOfParticipants = getParticipantsSize(confRoom3);
+        int numOfParticipants = getParticipantsSize(confRoom4);
         logger.info("Number of participants: "+numOfParticipants);
         assertTrue(numOfParticipants==1);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertTrue(mgcpEndpoints>0);
+        assertTrue(mgcpConnections>0);
 
 //        final SipCall georgeCall = georgePhone.createSipCall();
 //        georgeCall.initiateOutgoingCall(georgeContact, dialRestcomm, null, body, "application", "sdp", null, null);
@@ -394,17 +512,25 @@ public class DialConferenceTest {
 
         Thread.sleep(1000);
         assertTrue(getConferencesSize()>=1);
-        assertTrue(getParticipantsSize(confRoom3)==0);
+        assertTrue(getParticipantsSize(confRoom4)==0);
         liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertTrue(liveCalls == 0);
         assertTrue(liveCallsArraySize == 0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
-    private final String confRoom4 = "confRoom4";
-    private String dialConfernceRcmlWithTimeLimit10Sec = "<Response><Dial timeLimit=\"10\"><Conference>"+confRoom4+"</Conference></Dial></Response>";
+    private final String confRoom5 = "confRoom5";
+    private String dialConfernceRcmlWithTimeLimit10Sec = "<Response><Dial timeLimit=\"10\"><Conference>"+confRoom5+"</Conference></Dial></Response>";
     @Test
     public synchronized void testDialConferenceClientsDestroy() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
@@ -462,10 +588,19 @@ public class DialConferenceTest {
         assertTrue(liveCalls == 2);
         assertTrue(liveCallsArraySize == 2);
         int confSize = getConferencesSize();
-        int partSize = getParticipantsSize(confRoom4);
+        int partSize = getParticipantsSize(confRoom5);
         logger.info("Conference rooms: "+confSize+", participants: "+partSize);
         assertTrue(confSize>=1);
         assertTrue(partSize==2);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertTrue(mgcpEndpoints>0);
+        assertTrue(mgcpConnections>0);
 
         Thread.sleep(3000);
 
@@ -481,10 +616,93 @@ public class DialConferenceTest {
         assertTrue(liveCalls == 0);
         assertTrue(liveCallsArraySize == 0);
         confSize = getConferencesSize();
-        partSize = getParticipantsSize(confRoom4);
+        partSize = getParticipantsSize(confRoom5);
         logger.info("Conference rooms: "+confSize+", participants: "+partSize);
         assertTrue(confSize>=1);
         assertTrue(partSize==0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+    }
+
+    String waitUrl = "/restcomm/music/electronica/teru_-_110_Downtempo_Electronic_4.wav";
+    private final String confRoom6 = "confRoom6";
+    private String dialConfernceRcmlWithMoh = "<Response><Dial><Conference startConferenceOnEnter=\"false\" waitUrl=\""+waitUrl+"\" >"+confRoom6+"</Conference></Dial></Response>";
+    @Test
+    public synchronized void testDialConferenceSingleClientWithMoh() throws InterruptedException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialConfernceRcmlWithMoh)));
+
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        Thread.sleep(3000);
+
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls == 1);
+        assertTrue(liveCallsArraySize == 1);
+        assertTrue(getConferencesSize()>=1);
+        int numOfParticipants = getParticipantsSize(confRoom6);
+        logger.info("Number of participants: "+numOfParticipants);
+        assertTrue(numOfParticipants==1);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertTrue(mgcpEndpoints>0);
+        assertTrue(mgcpConnections>0);
+
+        Thread.sleep(3000);
+
+        bobCall.disconnect();
+
+        Thread.sleep(5000);
+        liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls == 0);
+        assertTrue(liveCallsArraySize == 0);
+        assertTrue(getConferencesSize()>=1);
+        int confRoom2Participants = getParticipantsSize(confRoom6);
+        logger.info("&&&&& ConfRoom2Participants: "+confRoom2Participants);
+        assertTrue(confRoom2Participants==0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
     @Deployment(name = "DialConferenceTest", managed = true, testable = false)
@@ -506,4 +724,3 @@ public class DialConferenceTest {
     }
 
 }
-

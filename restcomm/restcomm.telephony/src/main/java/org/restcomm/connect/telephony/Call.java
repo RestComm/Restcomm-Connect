@@ -1307,6 +1307,10 @@ public final class Call extends RestcommUntypedActor {
                 outgoingCallRecord = outgoingCallRecord.setRingDuration(seconds);
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
+
+            if(isOutbound()){
+                executeStatusCallback(CallbackState.COMPLETED);
+            }
         }
     }
 
@@ -2077,7 +2081,7 @@ public final class Call extends RestcommUntypedActor {
             } else {
                 // Clean media resources as necessary
                 if (!is(completed))
-                    fsm.transition(message, completed);
+                    fsm.transition(message, stopping);
             }
         } else if ("INFO".equalsIgnoreCase(method)) {
             processInfo(message);
@@ -2239,7 +2243,23 @@ public final class Call extends RestcommUntypedActor {
             logger.debug("Got Hangup: "+message+" for Call, from: "+from+", to: "+to+", state: "+fsm.state()+", conferencing: "+conferencing +", conference: "+conference);
         }
 
-        if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress) || is(waitingForAnswer) || is(completed)) {
+        if (is(completed)) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Got Hangup but already in completed state");
+            }
+            return;
+        }
+
+        // Stop recording if necessary
+        if (recording) {
+            recording = false;
+            if(logger.isInfoEnabled()) {
+                logger.info("Call - Will stop recording now");
+            }
+            msController.tell(new Stop(true), self);
+        }
+
+        if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress) || is(waitingForAnswer)) {
             if (conferencing) {
                 // Tell conference to remove the call from participants list
                 // before moving to a stopping state
@@ -2250,13 +2270,13 @@ public final class Call extends RestcommUntypedActor {
                     sendBye(message);
                 }
 
-                if (!is(stopping)) {
-                    // Move to next state to clean media resources and close session
-                    fsm.transition(message, stopping);
-                }
+                // Move to next state to clean media resources and close session
+                fsm.transition(message, stopping);
             }
         } else if (is(failingNoAnswer)) {
             fsm.transition(message, canceling);
+        } else if (is(stopping)) {
+            fsm.transition(message, completed);
         }
     }
 
@@ -2603,7 +2623,7 @@ public final class Call extends RestcommUntypedActor {
 
             if (!liveCallModification) {
                 // After leaving let the Interpreter know the Call is ready.
-                fsm.transition(message, completed);
+                fsm.transition(message, stopping);
             } else {
                 if (muted) {
                     // Forward to media server controller

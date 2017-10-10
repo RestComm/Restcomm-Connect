@@ -27,4 +27,11 @@ public class MonitoringMetrics {
     public static String COUNTERS_MAP_TEXT_MESSAGE_INBOUND_TO_PROXY_OUT="TextMessageInboundToProxyOut";
     public static String COUNTERS_MAP_TEXT_MESSAGE_NOT_FOUND="TextMessageNotFound";
     public static String COUNTERS_MAP_TEXT_MESSAGE_OUTBOUND="TextMessageOutbound";
+    public static String COUNTERS_MAP_MGCP_CONNECTIONS="MgcpConnections";
+    public static String COUNTERS_MAP_MGCP_LINKS="MgcpLinks";
+    public static String COUNTERS_MAP_MGCP_ENDPOINTS="MgcpEndpoints";
+    public static String COUNTERS_MAP_MGCP_ENDPOINTS_BRIDGE="MgcpEndpointsBridge";
+    public static String COUNTERS_MAP_MGCP_ENDPOINTS_IVR="MgcpEndpointsIvr";
+    public static String COUNTERS_MAP_MGCP_ENDPOINTS_PACKETRELAY="MgcpEndpointsPacketRelay";
+    public static String COUNTERS_MAP_MGCP_ENDPOINTS_CONFERENCE="MgcpEndpointsConference";
 }

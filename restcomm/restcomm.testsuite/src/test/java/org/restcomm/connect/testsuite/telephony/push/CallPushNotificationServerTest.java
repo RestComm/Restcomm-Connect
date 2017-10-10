@@ -60,9 +60,9 @@ import static org.junit.Assert.assertTrue;
  * @author oleg.agafonov@telestax.com (Oleg Agafonov)
  */
 @RunWith(Arquillian.class)
-public class PushNotificationServerTest {
+public class CallPushNotificationServerTest {
 
-    private final static Logger logger = Logger.getLogger(PushNotificationServerTest.class.getName());
+    private final static Logger logger = Logger.getLogger(CallPushNotificationServerTest.class.getName());
 
     private static final String BODY = new String(new byte[]{
             118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
@@ -94,8 +94,8 @@ public class PushNotificationServerTest {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        tool1 = new SipStackTool("PushNotificationServerTest1");
-        tool2 = new SipStackTool("PushNotificationServerTest2");
+        tool1 = new SipStackTool("CallPushNotificationServerTest1");
+        tool2 = new SipStackTool("CallPushNotificationServerTest2");
     }
 
     @Before
@@ -267,7 +267,8 @@ public class PushNotificationServerTest {
         verify(postRequestedFor(urlEqualTo("/api/notifications")));
     }
 
-    @Deployment(name = "PushNotificationServerTest", testable = false)
+    @SuppressWarnings("Duplicates")
+    @Deployment(name = "CallPushNotificationServerTest", testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");

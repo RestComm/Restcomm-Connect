@@ -97,13 +97,13 @@ public class ClientsEndpointTest {
         SipURI reqUri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
         String clientSID = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "RestComm1234",
-                "http://127.0.0.1:8080/restcomm/demos/welcome.xml");
+                deploymentUrl.toString() + "/demos/welcome.xml");
         assertNotNull(clientSID);
 
         Thread.sleep(3000);
 
         String clientSID2 = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "RestComm1234",
-                "http://127.0.0.1:8080/restcomm/demos/welcome.xml");
+                deploymentUrl.toString() + "/demos/welcome.xml");
         assertNotNull(clientSID2);
 
         Thread.sleep(3000);
@@ -213,13 +213,13 @@ public class ClientsEndpointTest {
         Assert.assertEquals(200, response.getStatus());
         
         //try to add same client again in same organization - should not be allowed
-        jersey = getClient(developerUsername, developeerAuthToken);
+        /*jersey = getClient(developerUsername, developeerAuthToken);
         resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
         params = new MultivaluedMapImpl();
         params.add("Login","maria");
         params.add("Password","RestComm1234!");
         response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
-        Assert.assertEquals(409, response.getStatus());
+        Assert.assertEquals(409, response.getStatus());*/
 
         /*
     	 * Add client maria in Organization - org2.restcomm.com
@@ -245,6 +245,25 @@ public class ClientsEndpointTest {
         ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
         Assert.assertEquals(200, response.getStatus());
         Assert.assertTrue("Response should contain 'push_client_identity'", response.getEntity(String.class).contains("push_client_identity"));
+    }
+
+    @Test
+    public void updateClientTestWithIsPushEnabled() throws IOException, ParseException, InterruptedException {
+        String sid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), developerAccountSid, developeerAuthToken, "agafox", "RestComm1234", null);
+        // add push_client_identity
+        Client jersey = getClient(developerUsername, developeerAuthToken);
+        WebResource resource = jersey.resource(getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients/" + sid + ".json" ));
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.putSingle("IsPushEnabled", "true");
+        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, params);
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertTrue("Response should contain 'push_client_identity'", response.getEntity(String.class).contains("push_client_identity"));
+        // remove push_client_identity
+        resource = jersey.resource(getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients/" + sid + ".json"));
+        params.putSingle("IsPushEnabled", "false");
+        response = resource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, params);
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertFalse("Response shouldn't contain 'push_client_identity'", response.getEntity(String.class).contains("push_client_identity"));
     }
 
     protected String getResourceUrl(String suffix) {
