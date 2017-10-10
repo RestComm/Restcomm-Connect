@@ -50,6 +50,7 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
     private boolean useHostnameToResolveRelativeUrls;
     private String hostname;
     private String instanceId;
+    private String apiVersion;
 
     public static final String BYPASS_LB_FOR_CLIENTS = "bypass-lb-for-clients";
     private boolean bypassLbForClients = false;
@@ -92,6 +93,7 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
         this.useHostnameToResolveRelativeUrls = resolveRelativeUrlWithHostname;
         this.hostname = resolveRelativeUrlHostname;
         bypassLbForClients = bypassLb;
+        apiVersion = source.getProperty("runtime-settings.api-version");
     }
 
     public MainConfigurationSetImpl(SslMode sslMode, int responseTimeout, boolean useHostnameToResolveRelativeUrls, String hostname, String instanceId, boolean bypassLbForClients) {
@@ -153,5 +155,9 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
 
     public void setBypassLbForClients(boolean bypassLbForClients) {
         this.bypassLbForClients = bypassLbForClients;
+    }
+
+    public String getApiVersion() {
+        return apiVersion;
     }
 }

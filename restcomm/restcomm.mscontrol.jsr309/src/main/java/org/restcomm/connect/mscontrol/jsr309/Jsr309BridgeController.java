@@ -446,6 +446,9 @@ public class Jsr309BridgeController extends MediaServerController {
         @Override
         public void execute(Object message) throws Exception {
             try {
+                CreateMediaSession msg = (CreateMediaSession) message;
+                MediaAttributes mediaAttributes = msg.mediaAttributes();
+
                 // Create media session
                 mediaSession = msControlFactory.createMediaSession();
 
@@ -453,15 +456,22 @@ public class Jsr309BridgeController extends MediaServerController {
                 mediaGroup = mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
                 mediaGroup.getRecorder().addListener(recorderListener);
 
-                // Set default conference video resolution to 720p
-                // mediaSession.setAttribute("CONFERENCE_VIDEO_SIZE", "720p");
+                if (MediaAttributes.MediaType.VIDEO_ONLY.equals(mediaAttributes.getMediaType())) {
+                    // video only
+                    configureVideoMediaSession(mediaAttributes);
+                    Parameters mixerParams = createMixerParams();
+                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
+                } else if (MediaAttributes.MediaType.AUDIO_VIDEO.equals(mediaAttributes.getMediaType())) {
+                    // audio and video
+                    configureVideoMediaSession(mediaAttributes);
+                    Parameters mixerParams = createMixerParams();
+                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
+                } else {
+                    // audio only
+                    Parameters mixerParams = createMixerParams();
+                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO, mixerParams);
+                }
 
-                // Allow only two participants and one media group
-                Parameters mixerParams = mediaSession.createParameters();
-                mixerParams.put(MediaMixer.MAX_PORTS, 3);
-
-                // Create the bridge
-                mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO, mixerParams);
                 mediaMixer.addListener(mixerAllocationListener);
                 mediaMixer.confirm();
                 // Wait for event confirmation before sending response to the conference
@@ -469,6 +479,18 @@ public class Jsr309BridgeController extends MediaServerController {
                 // Move to a failed state, cleaning all resources and closing media session
                 fsm.transition(e, failed);
             }
+        }
+
+        private void configureVideoMediaSession(final MediaAttributes mediaAttributes) {
+            // resolution configuration
+            mediaSession.setAttribute("NC_VIDEO_SIZE", mediaAttributes.getVideoResolution().toString());
+        }
+
+        private Parameters createMixerParams() {
+            // Allow only two participants and one media group
+            Parameters mixerParams = mediaSession.createParameters();
+            mixerParams.put(MediaMixer.MAX_PORTS, 3);
+            return mixerParams;
         }
 
     }

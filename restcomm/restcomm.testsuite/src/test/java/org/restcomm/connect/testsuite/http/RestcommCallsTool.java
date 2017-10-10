@@ -218,11 +218,20 @@ public class RestcommCallsTool {
     }
 
     public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl) {
-        return createCall(deploymentUrl, username, authToken, from, to, rcmlUrl, null, null, null);
+        return createCall(deploymentUrl, username, authToken, from, to, rcmlUrl, null, null, null, null);
+    }
+
+    public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl, String timeout) {
+        return createCall(deploymentUrl, username, authToken, from, to, rcmlUrl, null, null, null, timeout);
     }
 
     public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl,
                                   final String statusCallback, final String statusCallbackMethod, final String statusCallbackEvent) {
+        return createCall(deploymentUrl, username, authToken, from, to, rcmlUrl, statusCallback, statusCallbackMethod, statusCallbackEvent, null);
+    }
+
+    public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl,
+                                  final String statusCallback, final String statusCallbackMethod, final String statusCallbackEvent, final String timeout) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -242,6 +251,9 @@ public class RestcommCallsTool {
             params.add("StatusCallbackMethod", statusCallbackMethod);
         if (statusCallbackEvent != null)
             params.add("StatusCallbackEvent", statusCallbackEvent);
+
+        if (timeout != null)
+            params.add("Timeout", timeout);
 
         // webResource = webResource.queryParams(params);
         String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);

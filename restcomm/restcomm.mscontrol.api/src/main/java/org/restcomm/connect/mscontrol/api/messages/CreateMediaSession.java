@@ -39,8 +39,7 @@ public final class CreateMediaSession {
     private final String conferenceName;
     private final MediaAttributes mediaAttributes;
 
-    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound, boolean webrtc, Sid callSid,
-            final String conferenceName, final MediaAttributes mediaAttributes) {
+    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound, boolean webrtc, Sid callSid, final String conferenceName, final MediaAttributes mediaAttributes) {
         super();
         this.connectionMode = connectionMode;
         this.sessionDescription = sessionDescription;
@@ -52,7 +51,11 @@ public final class CreateMediaSession {
     }
 
     public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound, boolean webrtc, Sid callSid) {
-        this(connectionMode, sessionDescription, outbound, webrtc, callSid, null, new MediaAttributes());
+        this(connectionMode, sessionDescription, outbound, webrtc, callSid, new MediaAttributes());
+    }
+
+    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound, boolean webrtc, Sid callSid, final MediaAttributes mediaAttributes) {
+        this(connectionMode, sessionDescription, outbound, webrtc, callSid, null, mediaAttributes);
     }
 
     public CreateMediaSession(String connectionMode) {
@@ -67,8 +70,8 @@ public final class CreateMediaSession {
         this("", "", false, false, callSid, null, new MediaAttributes());
     }
 
-    public CreateMediaSession() {
-        this("", "", false, false, null, null, new MediaAttributes());
+    public CreateMediaSession(final MediaAttributes mediaAttributes) {
+        this("", "", false, false, null, null, mediaAttributes);
     }
 
     public String getConnectionMode() {
@@ -95,8 +98,5 @@ public final class CreateMediaSession {
         return conferenceName;
     }
 
-    public MediaAttributes mediaAttributes() {
-        return mediaAttributes;
-    }
-
+    public MediaAttributes mediaAttributes() { return mediaAttributes; }
 }

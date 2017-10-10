@@ -125,8 +125,6 @@ public class Jsr309CallController extends MediaServerController {
     private final State failed;
 
     // JSR-309 runtime stuff
-    private static final String[] CODEC_POLICY_AUDIO = new String[] { "audio", "video" };
-
     private final MsControlFactory msControlFactory;
     private final MediaServerInfo mediaServerInfo;
     private MediaSession mediaSession;
@@ -873,6 +871,9 @@ public class Jsr309CallController extends MediaServerController {
         @Override
         public void execute(Object message) throws Exception {
             try {
+                CreateMediaSession msg = (CreateMediaSession) message;
+                MediaAttributes mediaAttributes = msg.mediaAttributes();
+
                 // Create media session
                 mediaSession = msControlFactory.createMediaSession();
 
@@ -901,7 +902,7 @@ public class Jsr309CallController extends MediaServerController {
                 networkConnection.setParameters(sdpParameters);
 
                 CodecPolicy codecPolicy = new CodecPolicy();
-                codecPolicy.setMediaTypeCapabilities(CODEC_POLICY_AUDIO);
+                codecPolicy.setMediaTypeCapabilities(mediaAttributes.getMediaType().getCodecPolicy());
 
                 networkConnection.getSdpPortManager().setCodecPolicy(codecPolicy);
                 networkConnection.getSdpPortManager().addListener(sdpListener);
@@ -914,7 +915,6 @@ public class Jsr309CallController extends MediaServerController {
                 fsm.transition(e, failed);
             }
         }
-
     }
 
     private final class UpdatingMediaSession extends AbstractAction {

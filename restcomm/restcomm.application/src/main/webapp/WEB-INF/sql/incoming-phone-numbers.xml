@@ -31,6 +31,10 @@
   <select id="getAllIncomingPhoneNumbers" resultType="hashmap">
   	SELECT * FROM "restcomm_incoming_phone_numbers";
   </select>
+<!-- Does a search in the DB and find phone numbers that contain characters different from -->
+    <select id="getIncomingPhoneNumbersRegex"  resultType="hashmap">
+  	SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "phone_number" like '%*%' or "phone_number" like '%#%' or "phone_number" like '%^%' or "phone_number" like '%|%' or "phone_number" like '%.%' or "phone_number" like '%$%' or "phone_number" like '%\%' or "phone_number" like '%[%' or "phone_number" like '%]%' ;
+    </select>
 
   <!--
   <select id="getIncomingPhoneNumbersByFriendlyName" parameterType="string" resultType="hashmap">

@@ -22,6 +22,7 @@
 package org.restcomm.connect.telephony.api;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -30,8 +31,18 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 @Immutable
 public final class CreateBridge {
 
-    public CreateBridge() {
+    private final MediaAttributes mediaAttributes;
+
+    public CreateBridge(final MediaAttributes mediaAttributes) {
         super();
+        this.mediaAttributes = mediaAttributes;
     }
 
+    public CreateBridge() {
+        this(new MediaAttributes());
+    };
+
+    public MediaAttributes mediaAttributes() {
+        return mediaAttributes;
+    }
 }
