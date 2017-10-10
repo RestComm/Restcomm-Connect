@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContext;
 import javax.servlet.sip.SipApplicationSession;
@@ -35,12 +36,14 @@ import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
+import akka.actor.ActorSystem;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.push.PushNotificationServerHelper;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RegistrationsDao;
@@ -68,7 +71,7 @@ import com.google.common.collect.ImmutableMap;
 import akka.actor.ActorRef;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
+import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -78,16 +81,19 @@ public final class SmsSession extends RestcommUntypedActor {
     // Logger
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // Runtime stuff.
+    private final ActorSystem system;
     private final Configuration smsConfiguration;
     private final Configuration configuration;
     private final SipFactory factory;
     private final List<ActorRef> observers;
     private final SipURI transport;
     private final Map<String, Object> attributes;
+
+    // Push notification server
+    private final PushNotificationServerHelper pushNotificationServerHelper;
+
     // Map for custom headers from inbound SIP MESSAGE
     private ConcurrentHashMap<String, String> customRequestHeaderMap = new ConcurrentHashMap<String, String>();
-    // Map for custom headers from HTTP App Server (when creating outbound SIP MESSAGE)
-    private ConcurrentHashMap<String, String> customHttpHeaderMap;
     private TlvSet tlvSet;
 
     private final DaoManager storage;
@@ -109,6 +115,7 @@ public final class SmsSession extends RestcommUntypedActor {
     public SmsSession(final Configuration configuration, final SipFactory factory, final SipURI transport,
                       final DaoManager storage, final ActorRef monitoringService, final ServletContext servletContext, final Sid fromOrganizationSid) {
         super();
+        this.system = getContext().system();
         this.configuration = configuration;
         this.smsConfiguration = configuration.subset("sms-aggregator");
         this.factory = factory;
@@ -138,6 +145,8 @@ public final class SmsSession extends RestcommUntypedActor {
                 logger.error("Error while parsing tlv configuration " + e);
             }
         }
+
+        this.pushNotificationServerHelper = new PushNotificationServerHelper(system, configuration);
     }
 
     private void inbound(final Object message) throws IOException {
@@ -224,7 +233,6 @@ public final class SmsSession extends RestcommUntypedActor {
             final SmsSessionAttribute attribute = (SmsSessionAttribute) message;
             attributes.put(attribute.name(), attribute.value());
         } else if (SmsSessionRequest.class.equals(klass)) {
-            customHttpHeaderMap = ((SmsSessionRequest) message).headers();
             outbound(message);
         } else if (message instanceof SipServletRequest) {
             inbound(message);
@@ -257,7 +265,6 @@ public final class SmsSession extends RestcommUntypedActor {
         if (initial == null) {
             initial = last;
         }
-        final ActorRef self = self();
         final Charset charset;
         if(logger.isInfoEnabled()) {
             logger.info("SMS encoding:  " + last.encoding() );
@@ -285,82 +292,30 @@ public final class SmsSession extends RestcommUntypedActor {
             to = last.to();
         }
         final Client toClient = clients.getClient(to, fromOrganizationSid);
-        Registration toClientRegistration = null;
-        if (toClient != null) {
-            final RegistrationsDao registrations = storage.getRegistrationsDao();
-            toClientRegistration = registrations.getRegistration(toClient.getLogin(), fromOrganizationSid);
-        }
 
-//        // Try to find an application defined for the phone number.
-//        final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-//        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(to);
-
-        //We will send using the SMPP link only if:
-        // 1. This SMS is not for a registered client
-        // 2, SMPP is activated
-        if (toClient == null && smppActivated) {
-            if(logger.isInfoEnabled()) {
-                logger.info("Destination is not a local registered client, therefore, sending through SMPP to: {} " + last.to() );
-            }
-            if (sendUsingSmpp(last.from(), last.to(), last.body(), tlvSet, charset))
-                return;
-        }
-
-        //Turns out that SMS was not send using SMPP so we procedd as usual with SIP MESSAGE
-        final String prefix = smsConfiguration.getString("outbound-prefix");
-        final String service = smsConfiguration.getString("outbound-endpoint");
-        if (service == null) {
-            return;
-        }
-
-        final SipApplicationSession application = factory.createApplicationSession();
-        StringBuilder buffer = new StringBuilder();
-        //buffer.append("sip:").append(from).append("@").append(transport.getHost() + ":" + transport.getPort());
-        buffer.append("sip:").append(last.from()).append("@").append(externalIP + ":" + transport.getPort());
-        final String sender = buffer.toString();
-        buffer = new StringBuilder();
-        if (toClient != null && toClientRegistration != null) {
-            buffer.append(toClientRegistration.getLocation());
-        } else {
-            buffer.append("sip:");
-            if (prefix != null) {
-                buffer.append(prefix);
-            }
-            buffer.append(last.to()).append("@").append(service);
-        }
-        final String recipient = buffer.toString();
-
-        try {
-            application.setAttribute(SmsSession.class.getName(), self);
-            if (last.getOrigRequest() != null) {
-                application.setAttribute(SipServletRequest.class.getName(), last.getOrigRequest());
-            }
-            final SipServletRequest sms = factory.createRequest(application, "MESSAGE", sender, recipient);
-            final SipURI uri = (SipURI) factory.createURI(recipient);
-            sms.pushRoute(uri);
-            sms.setRequestURI(uri);
-            sms.setContent(last.body(), "text/plain");
-            final SipSession session = sms.getSession();
-            session.setHandler("SmsService");
-            if (customHttpHeaderMap != null && !customHttpHeaderMap.isEmpty()) {
-                Iterator<String> iter = customHttpHeaderMap.keySet().iterator();
-                while (iter.hasNext()) {
-                    String headerName = iter.next();
-                    sms.setHeader(headerName, customHttpHeaderMap.get(headerName));
+        long delay = 0;
+        if (toClient == null) {
+            //We will send using the SMPP link only if:
+            // 1. This SMS is not for a registered client
+            // 2, SMPP is activated
+            if (smppActivated) {
+                if(logger.isInfoEnabled()) {
+                    logger.info("Destination is not a local registered client, therefore, sending through SMPP to:  " + last.to() );
                 }
+                if (sendUsingSmpp(last.from(), last.to(), last.body(), tlvSet, charset))
+                    return;
             }
-            sms.send();
-        } catch (final Exception exception) {
-            // Notify the observers.
-            final SmsSessionInfo info = info();
-            final SmsSessionResponse error = new SmsSessionResponse(info, false);
-            for (final ActorRef observer : observers) {
-                observer.tell(error, self);
-            }
-            // Log the exception.
-            logger.error(exception.getMessage(), exception);
+        } else {
+            delay = pushNotificationServerHelper.sendPushNotificationIfNeeded(toClient.getPushClientIdentity());
         }
+        system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
+            @Override
+            public void run() {
+                sendUsingSip(toClient, (SmsSessionRequest) message);
+            }
+        }, system.dispatcher());
     }
+
     private boolean sendUsingSmpp(String from, String to, String body, Charset encoding) {
         return sendUsingSmpp(from, to, body, null, encoding);
     }
@@ -382,6 +337,65 @@ public final class SmsSession extends RestcommUntypedActor {
         return false;
     }
 
+    private void sendUsingSip(Client toClient, SmsSessionRequest request) {
+        Registration toClientRegistration = null;
+        if (toClient != null) {
+            final RegistrationsDao registrations = storage.getRegistrationsDao();
+            toClientRegistration = registrations.getRegistration(toClient.getLogin(), fromOrganizationSid);
+        }
+
+        final SipApplicationSession application = factory.createApplicationSession();
+        StringBuilder buffer = new StringBuilder();
+        //buffer.append("sip:").append(from).append("@").append(transport.getHost() + ":" + transport.getPort());
+        buffer.append("sip:").append(request.from()).append("@").append(externalIP + ":" + transport.getPort());
+        final String sender = buffer.toString();
+        buffer = new StringBuilder();
+        if (toClientRegistration != null) {
+            buffer.append(toClientRegistration.getLocation());
+        } else {
+            final String service = smsConfiguration.getString("outbound-endpoint");
+            if (service == null) {
+                return;
+            }
+            buffer.append("sip:");
+            final String prefix = smsConfiguration.getString("outbound-prefix");
+            if (prefix != null) {
+                buffer.append(prefix);
+            }
+            buffer.append(request.to()).append("@").append(service);
+        }
+        final String recipient = buffer.toString();
+
+        try {
+            application.setAttribute(SmsSession.class.getName(), self());
+            if (request.getOrigRequest() != null) {
+                application.setAttribute(SipServletRequest.class.getName(), request.getOrigRequest());
+            }
+            final SipServletRequest sms = factory.createRequest(application, "MESSAGE", sender, recipient);
+            final SipURI uri = (SipURI) factory.createURI(recipient);
+            sms.pushRoute(uri);
+            sms.setRequestURI(uri);
+            sms.setContent(request.body(), "text/plain");
+            final SipSession session = sms.getSession();
+            session.setHandler("SmsService");
+            Map<String, String> headers = request.headers();
+            if (headers != null) {
+                for (Map.Entry<String, String> header : headers.entrySet()) {
+                    sms.setHeader(header.getKey(), header.getValue());
+                }
+            }
+            sms.send();
+        } catch (final Exception exception) {
+            // Notify the observers.
+            final SmsSessionInfo info = info();
+            final SmsSessionResponse error = new SmsSessionResponse(info, false);
+            for (final ActorRef observer : observers) {
+                observer.tell(error, self());
+            }
+            // Log the exception.
+            logger.error(exception.getMessage(), exception);
+        }
+    }
 
     private void stopObserving(final Object message) {
         final StopObserving request = (StopObserving) message;
