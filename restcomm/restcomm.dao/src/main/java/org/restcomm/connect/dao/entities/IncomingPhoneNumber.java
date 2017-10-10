@@ -733,7 +733,7 @@ public final class IncomingPhoneNumber {
 
         private Sid organizationSid;
 
-        private Builder() {
+        public Builder() {
             super();
         }
 
