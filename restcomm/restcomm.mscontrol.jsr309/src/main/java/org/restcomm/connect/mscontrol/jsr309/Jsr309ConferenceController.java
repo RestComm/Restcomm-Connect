@@ -387,13 +387,8 @@ public class Jsr309ConferenceController extends MediaServerController {
                 mediaGroup = mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
                 mediaGroup.getPlayer().addListener(playerListener);
 
-                if (MediaAttributes.MediaType.VIDEO_ONLY.equals(mediaAttributes.getMediaType())) {
-                    // video only
-                    configureVideoMediaSession(mediaAttributes);
-                    Parameters mixerParams = createMixerParams();
-                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
-                } else if (MediaAttributes.MediaType.AUDIO_VIDEO.equals(mediaAttributes.getMediaType())) {
-                    // audio and video
+                if (!MediaAttributes.MediaType.AUDIO_ONLY.equals(mediaAttributes.getMediaType())) {
+                    // video only or audio and video (video only is controlled by codec policy)
                     configureVideoMediaSession(mediaAttributes);
                     Parameters mixerParams = createMixerParams();
                     mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
