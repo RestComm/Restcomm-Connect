@@ -379,18 +379,9 @@ public class Jsr309BridgeController extends MediaServerController {
     }
 
     private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
-        MediaAttributes.MediaType mediaType = message.getMediaAttributes().getMediaType();
-        if(!mediaType.equals(MediaAttributes.MediaType.AUDIO_ONLY)){
-            // Tell outbound call to share the network connection of its call controller
-            // with the call controller of the inbound call, so the call controller of the inbound call
-            // can proceed joining calls without using a mixer
-            final JoinBridge join = new JoinBridge(this.mediaMixer, message.getConnectionMode(), message.getInboundCall(), false);
-            message.getOutboundCall().tell(join, sender);
-        } else {
-            // Tell inbound call to join bridge by passing reference to the media mixer
-            final JoinBridge join = new JoinBridge(this.mediaMixer, message.getConnectionMode());
-            message.getInboundCall().tell(join, sender);
-        }
+        // Tell call to join bridge by passing reference to the media mixer
+        final JoinBridge join = new JoinBridge(this.mediaMixer, message.getConnectionMode());
+        message.getCall().tell(join, sender);
     }
 
     private void onStop(Stop message, ActorRef self, ActorRef sender) throws Exception {
@@ -468,22 +459,21 @@ public class Jsr309BridgeController extends MediaServerController {
                 if (MediaAttributes.MediaType.VIDEO_ONLY.equals(mediaAttributes.getMediaType())) {
                     // video only
                     configureVideoMediaSession(mediaAttributes);
-                    //Parameters mixerParams = createMixerParams();
-                    //mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
+                    Parameters mixerParams = createMixerParams();
+                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
                 } else if (MediaAttributes.MediaType.AUDIO_VIDEO.equals(mediaAttributes.getMediaType())) {
                     // audio and video
                     configureVideoMediaSession(mediaAttributes);
-                    //Parameters mixerParams = createMixerParams();
-                    //mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
+                    Parameters mixerParams = createMixerParams();
+                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
                 } else {
                     // audio only
-                    //Parameters mixerParams = createMixerParams();
-                    //mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO, mixerParams);
+                    Parameters mixerParams = createMixerParams();
+                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO, mixerParams);
                 }
 
-                //mediaMixer.addListener(mixerAllocationListener);
-                //mediaMixer.confirm();
-                fsm.transition(msg, active);
+                mediaMixer.addListener(mixerAllocationListener);
+                mediaMixer.confirm();
                 // Wait for event confirmation before sending response to the conference
             } catch (MsControlException e) {
                 // Move to a failed state, cleaning all resources and closing media session
