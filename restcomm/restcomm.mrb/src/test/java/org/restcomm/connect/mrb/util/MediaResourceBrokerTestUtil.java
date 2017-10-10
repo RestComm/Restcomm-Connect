@@ -27,6 +27,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.List;
+import org.restcomm.connect.monitoringservice.MonitoringService;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -41,6 +42,7 @@ public class MediaResourceBrokerTestUtil {
     protected MybatisDaoManager daoManager;
     protected ActorRef mediaResourceBrokerNode1;
     protected ActorRef mediaResourceBrokerNode2;
+    protected ActorRef monitoringService;
 
     protected static final String RESTCOMM_CONFIG = "restcomm.xml";
     
@@ -90,6 +92,19 @@ public class MediaResourceBrokerTestUtil {
 			dao.updateConferenceDetailRecordStatus(cdr);
 		}
 	}
+    
+    private ActorRef monitoringService(final Configuration configuration, final DaoManager daoManager, final ClassLoader loader) {
+        final Props props = new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new MonitoringService(daoManager);
+            }
+        });
+        return system.actorOf(props);
+
+    }    
 
 	protected ActorRef mediaResourceBroker(final Configuration configuration, final DaoManager storage, final ClassLoader loader) throws UnknownHostException{
         ActorRef mrb = system.actorOf(new Props(new UntypedActorFactory() {
@@ -101,7 +116,10 @@ public class MediaResourceBrokerTestUtil {
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
         }));
-        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader), null);
+        if (monitoringService == null) {
+            monitoringService = monitoringService(configuration, daoManager,loader);
+        }
+        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader, monitoringService), null);
         return mrb;
 
     }
