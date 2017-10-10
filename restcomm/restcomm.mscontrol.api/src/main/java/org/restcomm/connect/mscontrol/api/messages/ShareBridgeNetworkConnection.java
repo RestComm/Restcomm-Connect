@@ -1,6 +1,6 @@
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2011-2013, Telestax Inc and individual contributors
+ * Copyright 2011-2017, Telestax Inc and individual contributors
  * by the @authors tag.
  *
  * This is free software; you can redistribute it and/or modify it
@@ -23,30 +23,22 @@ package org.restcomm.connect.mscontrol.api.messages;
 
 import akka.actor.ActorRef;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
-
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 /**
- * @author Henrique Rosa (henrique.rosa@telestax.com)
- *
+ * @author guilherme.jansen@telestax.com
  */
 @Immutable
-public final class JoinBridge {
+public final class ShareBridgeNetworkConnection {
 
     private final Object endpoint;
     private final ConnectionMode connectionMode;
     private final ActorRef call;
-    private final boolean usingMixer; // true if call controller should join using mixer, false to join using network
 
-    public JoinBridge(final Object endpoint, final ConnectionMode connectionMode) {
-        this(endpoint, connectionMode, null, true);
-    }
-
-    public JoinBridge(final Object endpoint, final ConnectionMode connectionMode, final ActorRef call, final boolean usingMixer) {
+    public ShareBridgeNetworkConnection(final Object endpoint, final ConnectionMode connectionMode, final ActorRef call) {
         this.endpoint = endpoint;
         this.connectionMode = connectionMode;
         this.call = call;
-        this.usingMixer = usingMixer;
     }
 
     public Object getEndpoint() {
@@ -57,7 +49,5 @@ public final class JoinBridge {
         return connectionMode;
     }
 
-    public ActorRef getCall() { return call; }
-
-    public boolean isUsingMixer() { return usingMixer; }
+    public ActorRef getCall(){ return call; }
 }

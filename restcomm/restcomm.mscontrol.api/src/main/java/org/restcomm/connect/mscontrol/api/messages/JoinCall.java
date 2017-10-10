@@ -27,6 +27,7 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 import akka.actor.ActorRef;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -35,22 +36,34 @@ import org.restcomm.connect.commons.dao.Sid;
 @Immutable
 public final class JoinCall {
 
-    private final ActorRef call;
+    private final ActorRef inboundCall;
+    private final ActorRef outboundCall;
+    private final MediaAttributes mediaAttributes;
     private final ConnectionMode connectionMode;
     private final Sid sid;
 
     public JoinCall(final ActorRef call, final ConnectionMode connectionMode) {
-        this(call, connectionMode, null);
+        this(call, connectionMode, null, null, new MediaAttributes());
     }
 
     public JoinCall(final ActorRef call, final ConnectionMode connectionMode, final Sid sid) {
-        this.call = call;
+        this(call, connectionMode, sid, null, new MediaAttributes());
+    }
+
+    public JoinCall(final ActorRef call, final ConnectionMode connectionMode, final ActorRef outboundCall,  final MediaAttributes mediaAttributes) {
+        this(call, connectionMode, null, outboundCall, mediaAttributes);
+    }
+
+    public JoinCall(final ActorRef call, final ConnectionMode connectionMode, final Sid sid, final ActorRef outboundCall, final MediaAttributes mediaAttributes) {
+        this.inboundCall = call;
+        this.outboundCall = outboundCall;
+        this.mediaAttributes = mediaAttributes;
         this.connectionMode = connectionMode;
         this.sid = sid;
     }
 
-    public ActorRef getCall() {
-        return call;
+    public ActorRef getInboundCall() {
+        return inboundCall;
     }
 
     public ConnectionMode getConnectionMode() {
@@ -60,4 +73,8 @@ public final class JoinCall {
     public Sid getSid () {
         return sid;
     }
+
+    public ActorRef getOutboundCall() { return outboundCall; }
+
+    public MediaAttributes getMediaAttributes() { return mediaAttributes; }
 }
