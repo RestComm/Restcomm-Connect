@@ -223,6 +223,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
     private String conferenceNameWithAccountAndFriendlyName;
     private Sid callSid;
 
+    // Controls if VI will wait MS response to move to the next verb
+    protected boolean msResponsePending;
+
     public VoiceInterpreter(VoiceInterpreterParams params) {
         super();
         final ActorRef source = self();
@@ -353,6 +356,16 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(forking, hangingUp));
         transitions.add(new Transition(forking, finished));
         transitions.add(new Transition(forking, ready));
+        transitions.add(new Transition(forking, checkingCache));
+        transitions.add(new Transition(forking, caching));
+        transitions.add(new Transition(forking, faxing));
+        transitions.add(new Transition(forking, sendingEmail));
+        transitions.add(new Transition(forking, pausing));
+        transitions.add(new Transition(forking, synthesizing));
+        transitions.add(new Transition(forking, redirecting));
+        transitions.add(new Transition(forking, processingGatherChildren));
+        transitions.add(new Transition(forking, creatingRecording));
+        transitions.add(new Transition(forking, creatingSmsSession));
         // transitions.add(new Transition(acquiringOutboundCallInfo, joiningCalls));
         transitions.add(new Transition(acquiringOutboundCallInfo, hangingUp));
         transitions.add(new Transition(acquiringOutboundCallInfo, finished));
@@ -413,6 +426,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(hangingUp, finished));
         transitions.add(new Transition(hangingUp, finishConferencing));
         transitions.add(new Transition(hangingUp, finishDialing));
+        transitions.add(new Transition(hangingUp, ready));
         transitions.add(new Transition(uninitialized, finished));
         transitions.add(new Transition(notFound, finished));
         // Initialize the FSM.
@@ -447,6 +461,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         this.asImsUa = params.isAsImsUa();
         this.imsUaLogin = params.getImsUaLogin();
         this.imsUaPassword = params.getImsUaPassword();
+        this.msResponsePending = false;
     }
 
     public static Props props(final VoiceInterpreterParams params) {
@@ -456,10 +471,6 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 return new VoiceInterpreter(params);
             }
         });
-    }
-
-    private boolean is(State state) {
-        return this.fsm.state().equals(state);
     }
 
     private Notification notification(final int log, final int error, final String message) {
@@ -769,6 +780,8 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
             fsm.transition(message, finishDialing);
         } else if (is(bridging)) {
             fsm.transition(message, finishDialing);
+        } else if (is(playing)) {
+            fsm.transition(message, finished);
         }
     }
 
@@ -807,7 +820,8 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
             } else if (is(creatingRecording)) {
                 logger.info("Will move to finishRecording because of MediaGroupResponse");
                 fsm.transition(message, finishRecording);
-            } // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
+            }
+            // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
             // come later
             else if (is(gathering) || is(continuousGathering) || (is(finishGathering) && !super.dtmfReceived)) {
                 final MediaGroupResponse dtmfResponse = (MediaGroupResponse) message;
@@ -851,6 +865,16 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Finally proceed with call bridging
                 final JoinCalls bridgeCalls = new JoinCalls(call, outboundCall);
                 bridge.tell(bridgeCalls, self());
+            } else if (msResponsePending) {
+                // Move to next verb once media server completed Play
+                msResponsePending = false;
+                final boolean noBranches = dialBranches == null || dialBranches.size() == 0;
+                final boolean activeParser = parser != null;
+                final boolean noDialAction = action == null;
+                if (noBranches && activeParser && noDialAction) {
+                    final GetNextVerb next = new GetNextVerb();
+                    parser.tell(next, self());
+                }
             }
         } else {
             fsm.transition(message, hangingUp);
@@ -1208,6 +1232,11 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                         if (dialBranches != null && dialBranches.contains(sender)) {
                             removeDialBranch(message, sender);
                         }
+                        if (dialBranches == null || dialBranches.size() == 0){
+                            // Stop playing the ringing tone from inbound call
+                            msResponsePending = true;
+                            call.tell(new StopMediaGroup(), self());
+                        }
                         checkDialBranch(message, sender, action);
                         return;
                     }
@@ -1391,7 +1420,10 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (sender != null && !sender.equals(call)) {
                     callManager.tell(new DestroyCall(sender), self());
                 }
-                if (parser != null) {
+                // VI cannot move to next verb if media still being reproduced by media server
+                // GetNextVerb is skipped while StopMediaGroup request is sent to media server
+                // RCML Parser/VI activity continues when media server successful response is received
+                if (parser != null && !msResponsePending) {
                     final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, self());
                 }
@@ -2254,7 +2286,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
             path += "ringing.wav";
             URI uri = null;
             try {
-                uri = UriUtils.resolve(new URI(path));
+                uri = resolve(new URI(path));
             } catch (final Exception exception) {
                 final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                 final NotificationsDao notifications = storage.getNotificationsDao();
@@ -2578,6 +2610,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                             logger.info("Canceled branch: " + branch.path()+", isTerminated: "+branch.isTerminated());
                         }
                     }
+                    // Stop playing the ringing tone from inbound call
+                    msResponsePending = true;
+                    call.tell(new StopMediaGroup(), self());
                 } else if (outboundCall != null) {
                     outboundCall.tell(new Cancel(), source);
                     call.tell(new Hangup(outboundCallResponse), self());

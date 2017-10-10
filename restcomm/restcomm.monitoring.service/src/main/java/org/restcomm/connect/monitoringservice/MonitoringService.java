@@ -29,6 +29,10 @@ import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.InstanceId;
+import org.restcomm.connect.mgcp.stats.MgcpConnectionAdded;
+import org.restcomm.connect.mgcp.stats.MgcpConnectionDeleted;
+import org.restcomm.connect.mgcp.stats.MgcpEndpointAdded;
+import org.restcomm.connect.mgcp.stats.MgcpEndpointDeleted;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
@@ -46,6 +50,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +89,16 @@ public class MonitoringService extends RestcommUntypedActor {
     private final AtomicInteger maxConcurrentCalls;
     private final AtomicInteger maxConcurrentIncomingCalls;
     private final AtomicInteger maxConcurrentOutgoingCalls;
+
+    private final AtomicInteger mgcpEndpointsBridge;
+    private final AtomicInteger mgcpEndpointsIvr;
+    private final AtomicInteger mgcpEndpointsConference;
+    private final AtomicInteger mgcpEndpointsPacketRelay;
+    private final Map<String, String> mgcpEndpointMap;
+    private final Map<String, String> mgcpConnectionMap;
+
+
+
     private InstanceId instanceId;
 
 
@@ -113,6 +128,15 @@ public class MonitoringService extends RestcommUntypedActor {
         maxConcurrentCalls = new AtomicInteger(0);
         maxConcurrentIncomingCalls = new AtomicInteger(0);
         maxConcurrentOutgoingCalls = new AtomicInteger(0);
+
+        mgcpEndpointsBridge = new AtomicInteger(0);
+        mgcpEndpointsIvr = new AtomicInteger(0);
+        mgcpEndpointsConference = new AtomicInteger(0);
+        mgcpEndpointsPacketRelay = new AtomicInteger(0);
+
+        mgcpEndpointMap = new ConcurrentHashMap<String, String>();
+        mgcpConnectionMap = new ConcurrentHashMap<String, String>();
+
         if(logger.isInfoEnabled()){
             logger.info("Monitoring Service started");
         }
@@ -155,6 +179,43 @@ public class MonitoringService extends RestcommUntypedActor {
                 if (logger.isDebugEnabled()) {
                     logger.debug("MonitoringService onGetCall, message is null, sender: "+sender.path());
                 }
+            }
+        } else if (MgcpConnectionAdded.class.equals(klass)) {
+            MgcpConnectionAdded mgcpConnectionAdded = (MgcpConnectionAdded)message;
+            mgcpConnectionMap.put(mgcpConnectionAdded.getConnId(), mgcpConnectionAdded.getEndpointId());
+        } else if (MgcpConnectionDeleted.class.equals(klass)) {
+            MgcpConnectionDeleted mgcpConnectionDeleted = (MgcpConnectionDeleted)message;
+            if (mgcpConnectionDeleted.getConnId() != null) {
+                mgcpConnectionMap.remove(mgcpConnectionDeleted.getConnId());
+            } else {
+                mgcpConnectionMap.values().removeAll(Collections.singleton(mgcpConnectionDeleted.getEndpoint()));
+            }
+        } else if (MgcpEndpointAdded.class.equals(klass)) {
+            MgcpEndpointAdded mgcpEndpointAdded = (MgcpEndpointAdded)message;
+            mgcpEndpointMap.put(mgcpEndpointAdded.getConnId(), mgcpEndpointAdded.getEndpoint());
+            logger.info("MonitoringService: Added endpoint: "+mgcpEndpointAdded.getEndpoint());
+            String endpoint = mgcpEndpointAdded.getEndpoint();
+            if (endpoint.contains("ivr")) {
+                mgcpEndpointsIvr.incrementAndGet();
+            } else if (endpoint.contains("conf")) {
+                mgcpEndpointsConference.incrementAndGet();
+            } else if (endpoint.contains("bridge")) {
+                mgcpEndpointsBridge.incrementAndGet();
+            } else if (endpoint.contains("relay")) {
+                mgcpEndpointsPacketRelay.incrementAndGet();
+            }
+        } else if (MgcpEndpointDeleted.class.equals(klass)) {
+            MgcpEndpointDeleted mgcpEndpointDeleted = (MgcpEndpointDeleted)message;
+            mgcpEndpointMap.values().removeAll(Collections.singleton(mgcpEndpointDeleted.getEndpoint()));
+            String endpoint = mgcpEndpointDeleted.getEndpoint();
+            if (endpoint.contains("ivr")) {
+                mgcpEndpointsIvr.decrementAndGet();
+            } else if (endpoint.contains("conf")) {
+                mgcpEndpointsConference.decrementAndGet();
+            } else if (endpoint.contains("bridge")) {
+                mgcpEndpointsBridge.decrementAndGet();
+            } else if (endpoint.contains("relay")) {
+                mgcpEndpointsPacketRelay.decrementAndGet();
             }
         }
     }
@@ -427,6 +488,17 @@ public class MonitoringService extends RestcommUntypedActor {
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_TEXT_MESSAGE_INBOUND_TO_PROXY_OUT, textInboundToProxyOut.get());
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_TEXT_MESSAGE_NOT_FOUND, textNotFound.get());
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_TEXT_MESSAGE_OUTBOUND, textOutbound.get());
+
+        if (message.isWithMgcpStats()) {
+            countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_CONNECTIONS, mgcpConnectionMap.size());
+            countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS, mgcpEndpointMap.size());
+            if (mgcpEndpointMap.size()>0) {
+                countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_BRIDGE, mgcpEndpointsBridge.get());
+                countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_IVR, mgcpEndpointsIvr.get());
+                countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_CONFERENCE, mgcpEndpointsConference.get());
+                countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_PACKETRELAY, mgcpEndpointsPacketRelay.get());
+            }
+        }
 
         MonitoringServiceResponse callInfoList = null;
         if (message.isWithLiveCallDetails()) {
