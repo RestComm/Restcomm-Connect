@@ -1015,7 +1015,7 @@ public class ReferTest {
         archive.delete("/WEB-INF/classes/application.conf");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm_calllifecycle.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script_referMessageTest", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("restcomm.script_ReferMessageTest", "data/hsql/restcomm.script");
         archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
         logger.info("Packaged Test App");
         return archive;

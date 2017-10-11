@@ -41,7 +41,9 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.UnstableTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -330,6 +332,7 @@ public class TestDialVerbPartThree {
     }
 
     @Test
+    @Category(UnstableTests.class)
 // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     public synchronized void testDialSip() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
