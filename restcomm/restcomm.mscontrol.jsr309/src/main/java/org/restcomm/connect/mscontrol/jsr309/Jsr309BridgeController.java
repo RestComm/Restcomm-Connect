@@ -50,7 +50,6 @@ import javax.media.mscontrol.resource.RTC;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.entities.Recording;
