@@ -115,7 +115,6 @@ public class Jsr309BridgeController extends MediaServerController {
 
     // Media Operations
     private Boolean recording;
-    private DateTime recordingStarted;
     private StartRecording recordingRequest;
 
     // Observers
@@ -234,7 +233,6 @@ public class Jsr309BridgeController extends MediaServerController {
                 }
 
                 recording = Boolean.FALSE;
-                recordingStarted = null;
                 recordingRequest = null;
 
                 super.remote.tell(response, self());
@@ -257,30 +255,30 @@ public class Jsr309BridgeController extends MediaServerController {
                 duration = 0.0;
             }
 
-            if (duration.equals(0.0)) {
+            if (!duration.equals(0.0)) {
+                if(logger.isInfoEnabled()) {
+                    logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
+                }
+
+                final Recording.Builder builder = Recording.builder();
+                builder.setSid(recordingSid);
+                builder.setAccountSid(accountId);
+                builder.setCallSid(callId);
+                builder.setDuration(duration);
+                builder.setApiVersion(runtimeSettings.getString("api-version"));
+                StringBuilder buffer = new StringBuilder();
+                buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
+                        .append(accountId.toString());
+                buffer.append("/Recordings/").append(recordingSid.toString());
+                builder.setUri(URI.create(buffer.toString()));
+                final Recording recording = builder.build();
+                RecordingsDao recordsDao = daoManager.getRecordingsDao();
+                recordsDao.addRecording(recording, MediaAttributes.MediaType.AUDIO_ONLY);
+            } else {
                 if(logger.isInfoEnabled()) {
                     logger.info("Call wraping up recording. File doesn't exist since duration is 0");
                 }
-                final DateTime end = DateTime.now();
-                duration = new Double((end.getMillis() - recordingStarted.getMillis()) / 1000);
-            } else if(logger.isInfoEnabled()) {
-                logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
             }
-
-            final Recording.Builder builder = Recording.builder();
-            builder.setSid(recordingSid);
-            builder.setAccountSid(accountId);
-            builder.setCallSid(callId);
-            builder.setDuration(duration);
-            builder.setApiVersion(runtimeSettings.getString("api-version"));
-            StringBuilder buffer = new StringBuilder();
-            buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
-                    .append(accountId.toString());
-            buffer.append("/Recordings/").append(recordingSid.toString());
-            builder.setUri(URI.create(buffer.toString()));
-            final Recording recording = builder.build();
-            RecordingsDao recordsDao = daoManager.getRecordingsDao();
-            recordsDao.addRecording(recording, MediaAttributes.MediaType.AUDIO_ONLY);
         }
 
     }
@@ -424,7 +422,6 @@ public class Jsr309BridgeController extends MediaServerController {
                 this.mediaGroup.getRecorder().record(message.getRecordingUri(), rtcs, params);
 
                 this.recording = Boolean.TRUE;
-                this.recordingStarted = DateTime.now();
                 this.recordingRequest = message;
             } catch (MsControlException e) {
                 logger.error("Recording failed: " + e.getMessage());

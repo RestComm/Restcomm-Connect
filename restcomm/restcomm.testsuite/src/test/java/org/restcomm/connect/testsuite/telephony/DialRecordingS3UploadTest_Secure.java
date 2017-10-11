@@ -334,7 +334,7 @@ public class DialRecordingS3UploadTest_Secure {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertTrue(duration==3.0);
+		assertEquals(3.0,duration, 0.5);
 		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
 		//Since we are in secure mode the s3_uri shouldn't be here
@@ -554,7 +554,6 @@ public class DialRecordingS3UploadTest_Secure {
 		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
 
 		bobCall.sendInviteOkAck();
-		DateTime start = DateTime.now();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
@@ -570,7 +569,6 @@ public class DialRecordingS3UploadTest_Secure {
 		bobCall.listenForDisconnect();
 		assertTrue(bobCall.waitForDisconnect(70000));
 		assertTrue(bobCall.respondToDisconnect());
-		DateTime end = DateTime.now();
 
 		Thread.sleep(7000);
 
@@ -578,9 +576,8 @@ public class DialRecordingS3UploadTest_Secure {
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
-		double recordedDuration = (end.getMillis() - start.getMillis())/1000;
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(recordedDuration, duration,1.0);
+		assertEquals(3.0, duration,0.5);
 
 		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 

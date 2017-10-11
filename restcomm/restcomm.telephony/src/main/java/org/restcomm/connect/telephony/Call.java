@@ -49,8 +49,8 @@ import org.restcomm.connect.commons.fsm.TransitionRollbackException;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
-import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.telephony.CreateCallType;
+import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -1767,8 +1767,10 @@ public final class Call extends RestcommUntypedActor {
             }
 
             msController.tell(new CloseMediaSession(), source);
-            //Don't wait for ever for the CallController response
-            context().setReceiveTimeout(Duration.create(2000, TimeUnit.SECONDS));
+
+            //Github issue 2261 - https://github.com/RestComm/Restcomm-Connect/issues/2261
+            //Set a ReceivedTimeout duration to make sure call doesn't block waiting for the response from MmsCallController
+            context().setReceiveTimeout(Duration.create(2000, TimeUnit.MILLISECONDS));
         }
     }
 
@@ -1989,22 +1991,29 @@ public final class Call extends RestcommUntypedActor {
             for (final ActorRef observer : observers) {
                 observer.tell(infoResponse, self());
             }
+
         } else if (is(stopping)) {
+            if (logger.isInfoEnabled()) {
+                //Github issue 2261 - https://github.com/RestComm/Restcomm-Connect/issues/2261
+                String msg = "Seems that MmsCallControler response from stopping never arrived, move the FSM accordingly";
+                logger.info(msg);
+            }
+            context().setReceiveTimeout(Duration.Undefined());
             if (fail) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("At Call Stopping state, moving to Failed state");
+                    logger.debug("OnReceiveTimeout - moving to Failed state");
                 }
                 fsm.transition(message, failed);
             } else {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("At Call Stopping state, moving to Completed state");
+                    logger.debug("OnReceiveTimeout - moving to Completed state");
                 }
                 fsm.transition(message, completed);
             }
         } else if(logger.isInfoEnabled()) {
-                logger.info("Timeout received for Call : "+self().path()+" isTerminated(): "+self().isTerminated()+". Sender: " + sender.path().toString() + " State: " + this.fsm.state()
-                        + " Direction: " + direction + " From: " + from + " To: " + to);
-            }
+            logger.info("Timeout received for Call : "+self().path()+" isTerminated(): "+self().isTerminated()+". Sender: " + sender.path().toString() + " State: " + this.fsm.state()
+                + " Direction: " + direction + " From: " + from + " To: " + to);
+        }
     }
 
     private void onSipServletRequest(SipServletRequest message, ActorRef self, ActorRef sender) throws Exception {
@@ -2256,6 +2265,10 @@ public final class Call extends RestcommUntypedActor {
         if (is(completed)) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Got Hangup but already in completed state");
+            }
+            CallStateChanged event = new CallStateChanged(external);
+            for (final ActorRef observer : observers) {
+                observer.tell(event, self());
             }
             return;
         }
@@ -2529,6 +2542,7 @@ public final class Call extends RestcommUntypedActor {
 
             case INACTIVE:
                 if (is(stopping)) {
+                    context().setReceiveTimeout(Duration.Undefined());
                     if (logger.isDebugEnabled()) {
                         String msg = String.format("On MediaServerContollerStateChanged, message: INACTIVE, Call state: %s, Fail: %s", fsm.state(), fail);
                         logger.debug(msg);
@@ -2545,12 +2559,6 @@ public final class Call extends RestcommUntypedActor {
                         }
                         fsm.transition(message, completed);
                     }
-
-//                    if (fail) {
-//                        fsm.transition(message, failed);
-//                    } else {
-//                        fsm.transition(message, completed);
-//                    }
                 } else if (is(canceling)) {
                     fsm.transition(message, canceled);
                 } else if (is(failingBusy)) {

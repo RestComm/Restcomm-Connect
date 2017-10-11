@@ -1897,6 +1897,9 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
+            if (logger.isInfoEnabled()) {
+                logger.info("##### At FinishRecording, message: " + message.getClass());
+            }
             boolean amazonS3Enabled = configuration.subset("amazon-s3").getBoolean("enabled");
 
             final Class<?> klass = message.getClass();
@@ -1919,12 +1922,11 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             // Create a record of the recording.
             Double duration = WavUtils.getAudioDuration(recordingUri);
             if (duration.equals(0.0)) {
-                final DateTime end = DateTime.now();
-                duration = new Double((end.getMillis() - callRecord.getStartTime().getMillis()) / 1000);
-                if (logger.isDebugEnabled()) {
-                    String msg = String.format("Recording duration %s, startTime %s endTime %s", duration, callRecord.getStartTime().getMillis(), end.getMillis());
-                    logger.debug(msg);
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("Recording file %s, duration is 0 and will return",recordingUri);
+                    logger.info(msg);
                 }
+                return;
             } else if(logger.isDebugEnabled()) {
                 logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
             }
