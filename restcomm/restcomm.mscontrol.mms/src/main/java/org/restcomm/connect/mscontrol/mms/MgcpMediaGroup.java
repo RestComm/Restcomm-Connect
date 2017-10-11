@@ -632,9 +632,6 @@ public class MgcpMediaGroup extends MediaGroup {
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
-
-//            // Terminate the actor
-//            getContext().stop(self());
         }
     }
 
