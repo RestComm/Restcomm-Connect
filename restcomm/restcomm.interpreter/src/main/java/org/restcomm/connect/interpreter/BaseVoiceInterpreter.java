@@ -1880,8 +1880,9 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("##### At FinishRecording, message: "+message.getClass());
-
+            if (logger.isInfoEnabled()) {
+                logger.info("##### At FinishRecording, message: " + message.getClass());
+            }
             boolean amazonS3Enabled = configuration.subset("amazon-s3").getBoolean("enabled");
 
             final Class<?> klass = message.getClass();

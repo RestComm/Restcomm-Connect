@@ -114,7 +114,6 @@ public class Jsr309BridgeController extends MediaServerController {
 
     // Media Operations
     private Boolean recording;
-    private DateTime recordingStarted;
     private StartRecording recordingRequest;
 
     // Observers
@@ -233,7 +232,6 @@ public class Jsr309BridgeController extends MediaServerController {
                 }
 
                 recording = Boolean.FALSE;
-                recordingStarted = null;
                 recordingRequest = null;
 
                 super.remote.tell(response, self());
@@ -423,7 +421,6 @@ public class Jsr309BridgeController extends MediaServerController {
                 this.mediaGroup.getRecorder().record(message.getRecordingUri(), rtcs, params);
 
                 this.recording = Boolean.TRUE;
-                this.recordingStarted = DateTime.now();
                 this.recordingRequest = message;
             } catch (MsControlException e) {
                 logger.error("Recording failed: " + e.getMessage());

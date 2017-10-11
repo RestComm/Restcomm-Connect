@@ -21,51 +21,21 @@
 
 package org.restcomm.connect.mscontrol.jsr309;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.media.mscontrol.EventType;
-import javax.media.mscontrol.MediaEvent;
-import javax.media.mscontrol.MediaEventListener;
-import javax.media.mscontrol.MediaSession;
-import javax.media.mscontrol.MsControlException;
-import javax.media.mscontrol.MsControlFactory;
-import javax.media.mscontrol.Parameter;
-import javax.media.mscontrol.Parameters;
-import javax.media.mscontrol.join.Joinable.Direction;
-import javax.media.mscontrol.mediagroup.MediaGroup;
-import javax.media.mscontrol.mediagroup.Player;
-import javax.media.mscontrol.mediagroup.PlayerEvent;
-import javax.media.mscontrol.mediagroup.Recorder;
-import javax.media.mscontrol.mediagroup.RecorderEvent;
-import javax.media.mscontrol.mediagroup.SpeechDetectorConstants;
-import javax.media.mscontrol.mediagroup.signals.SignalDetector;
-import javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent;
-import javax.media.mscontrol.mixer.MediaMixer;
-import javax.media.mscontrol.networkconnection.CodecPolicy;
-import javax.media.mscontrol.networkconnection.NetworkConnection;
-import javax.media.mscontrol.networkconnection.SdpPortManager;
-import javax.media.mscontrol.networkconnection.SdpPortManagerEvent;
-import javax.media.mscontrol.resource.RTC;
-import javax.sound.sampled.UnsupportedAudioFileException;
-
+import akka.actor.ActorRef;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.RecordingsDao;
-import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.util.WavUtils;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.mscontrol.api.MediaServerController;
 import org.restcomm.connect.mscontrol.api.MediaServerInfo;
 import org.restcomm.connect.mscontrol.api.exceptions.MediaServerControllerException;
@@ -91,14 +61,41 @@ import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StopRecording;
 import org.restcomm.connect.mscontrol.api.messages.Unmute;
 import org.restcomm.connect.mscontrol.api.messages.UpdateMediaSession;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
-import org.restcomm.connect.commons.util.WavUtils;
 
-import akka.actor.ActorRef;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import javax.media.mscontrol.EventType;
+import javax.media.mscontrol.MediaEvent;
+import javax.media.mscontrol.MediaEventListener;
+import javax.media.mscontrol.MediaSession;
+import javax.media.mscontrol.MsControlException;
+import javax.media.mscontrol.MsControlFactory;
+import javax.media.mscontrol.Parameter;
+import javax.media.mscontrol.Parameters;
+import javax.media.mscontrol.join.Joinable.Direction;
+import javax.media.mscontrol.mediagroup.MediaGroup;
+import javax.media.mscontrol.mediagroup.Player;
+import javax.media.mscontrol.mediagroup.PlayerEvent;
+import javax.media.mscontrol.mediagroup.Recorder;
+import javax.media.mscontrol.mediagroup.RecorderEvent;
+import javax.media.mscontrol.mediagroup.SpeechDetectorConstants;
+import javax.media.mscontrol.mediagroup.signals.SignalDetector;
+import javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent;
+import javax.media.mscontrol.mixer.MediaMixer;
+import javax.media.mscontrol.networkconnection.CodecPolicy;
+import javax.media.mscontrol.networkconnection.NetworkConnection;
+import javax.media.mscontrol.networkconnection.SdpPortManager;
+import javax.media.mscontrol.networkconnection.SdpPortManagerEvent;
+import javax.media.mscontrol.resource.RTC;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -155,7 +152,6 @@ public class Jsr309CallController extends MediaServerController {
     private Boolean recording;
     private Boolean playing;
     private Boolean collecting;
-    private DateTime recordStarted;
     private DaoManager daoManager;
 
     // Runtime Setting
@@ -574,7 +570,6 @@ public class Jsr309CallController extends MediaServerController {
             if(logger.isInfoEnabled()) {
                 logger.info("Start recording call");
             }
-            this.recordStarted = DateTime.now();
 
             // Tell media group to start recording
             final Record record = new Record(recordingUri, 5, 3600, "1234567890*#");
@@ -777,31 +772,29 @@ public class Jsr309CallController extends MediaServerController {
                         duration = 0.0;
                     }
                     if (!duration.equals(0.0)) {
-                        if(logger.isInfoEnabled()) {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
+                        }
+
+                        final Recording.Builder builder = Recording.builder();
+                        builder.setSid(recordingSid);
+                        builder.setAccountSid(accountId);
+                        builder.setCallSid(callId);
+                        builder.setDuration(duration);
+                        builder.setApiVersion(runtimeSettings.getString("api-version"));
+                        StringBuilder buffer = new StringBuilder();
+                        buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
+                                .append(accountId.toString());
+                        buffer.append("/Recordings/").append(recordingSid.toString());
+                        builder.setUri(URI.create(buffer.toString()));
+                        final Recording recording = builder.build();
+                        RecordingsDao recordsDao = daoManager.getRecordingsDao();
+                        recordsDao.addRecording(recording);
+                    } else {
+                        if (logger.isInfoEnabled()) {
                             logger.info("Call wraping up recording. File doesn't exist since duration is 0");
                         }
-                        final DateTime end = DateTime.now();
-                        duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
-                    } else {
-                        if(logger.isInfoEnabled()) {
-                            logger.info("Call wraping up recording. File already exists, length: "
-                                + (new File(recordingUri).length()));
-                        }
                     }
-                    final Recording.Builder builder = Recording.builder();
-                    builder.setSid(recordingSid);
-                    builder.setAccountSid(accountId);
-                    builder.setCallSid(callId);
-                    builder.setDuration(duration);
-                    builder.setApiVersion(runtimeSettings.getString("api-version"));
-                    StringBuilder buffer = new StringBuilder();
-                    buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
-                            .append(accountId.toString());
-                    buffer.append("/Recordings/").append(recordingSid.toString());
-                    builder.setUri(URI.create(buffer.toString()));
-                    final Recording recording = builder.build();
-                    RecordingsDao recordsDao = daoManager.getRecordingsDao();
-                    recordsDao.addRecording(recording);
                 }
             }
 
