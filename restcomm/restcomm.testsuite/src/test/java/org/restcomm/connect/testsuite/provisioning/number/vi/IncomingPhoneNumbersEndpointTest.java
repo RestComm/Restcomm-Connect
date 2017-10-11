@@ -1316,7 +1316,7 @@ public class IncomingPhoneNumbersEndpointTest {
         formData.add("VoiceMethod", "GET");
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         logger.info("testCreatePureSipPhoneNumber from default org TWICE clientResponse: " + clientResponse.toString());
-        assertTrue(clientResponse.getStatus() == 403);
+        assertEquals(400, clientResponse.getStatus());
         
         /*
          * try to create same number again 
@@ -1334,7 +1334,7 @@ public class IncomingPhoneNumbersEndpointTest {
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        assertTrue(clientResponse.getStatus() == 403);
+        assertEquals(400, clientResponse.getStatus());
         
     }
     
