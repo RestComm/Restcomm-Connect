@@ -52,6 +52,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.BeforeClass;
+import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
 
 /**
@@ -110,6 +111,7 @@ public class RvdProjectsMigratorWorkspaceMigratedTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void checkIncomingPhoneNumbers() {
         JsonArray incomingPhoneNumbersListJson = RestcommRvdProjectsMigratorTool.getInstance().getEntitiesList(
                 deploymentUrl.toString(), adminUsername, adminAuthToken, adminAccountSid,
