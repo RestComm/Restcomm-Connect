@@ -24,12 +24,12 @@ fetchExternalResources() {
 
     	echo "Checking required libraries ..."
 
-    	if [ -f $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/lib/dialogic309-3.2-GA-14621-jboss.jar ]; then
+    	if [ -f $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/lib/dialogic309-3.2-snapshot-jboss.jar ]; then
     		echo "JSR309 library ready"
     	else
     		echo "Downloading JSR309 library ..."
     		cd $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/lib
-    		wget -O dialogic309-3.2-GA-14621-jboss.jar https://www.dialogic.com/files/jsr-309/3.2GA/dialogic309-3.2-GA-14621-jboss.jar
+    		wget -O dialogic309-3.2-snapshot-jboss.jar https://www.dialogic.com/files/jsr-309/3.2GA/3.2Snapshot/dialogic309-3.2-snapshot-jboss.jar
 		fi
 
 		if [ -f $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/lib/dialogicsmiltypes-3.2-GA-14621.jar ]; then
