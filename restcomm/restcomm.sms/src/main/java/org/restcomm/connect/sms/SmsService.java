@@ -431,7 +431,10 @@ public final class SmsService extends RestcommUntypedActor {
         }
         if(application != null){
             final ActorRef session = (ActorRef) application.getAttribute(SmsSession.class.getName());
-            session.tell(response, self);
+            //P2P messaging doesnt include session, check if necessary
+            if (session != null) {
+                session.tell(response, self);
+            }
             final SipServletRequest origRequest = (SipServletRequest) application.getAttribute(SipServletRequest.class.getName());
             if (origRequest != null && origRequest.getSession().isValid()) {
                 SipServletResponse responseToOriginator = origRequest.createResponse(response.getStatus(), response.getReasonPhrase());
