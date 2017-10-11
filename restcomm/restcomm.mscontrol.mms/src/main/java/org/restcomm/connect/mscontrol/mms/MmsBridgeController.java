@@ -208,6 +208,7 @@ public class MmsBridgeController extends MediaServerController {
             if(logger.isInfoEnabled()) {
                 logger.info("Call wraping up recording. File doesn't exist since duration is 0");
             }
+        }
     }
 
     /*
