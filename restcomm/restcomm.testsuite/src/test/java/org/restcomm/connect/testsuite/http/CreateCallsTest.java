@@ -155,7 +155,7 @@ public class CreateCallsTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-number-entry.xml";
 
         JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -218,7 +218,7 @@ public class CreateCallsTest {
 
         String from = "sip:+15126002188@mobicents.org";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-number-entry.xml";
 
         JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -290,7 +290,7 @@ public class CreateCallsTest {
 
         String from = "+15126002188";
         String to = "client:alice";
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-number-entry.xml";
 
         JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -408,7 +408,7 @@ public class CreateCallsTest {
 
         String from = "+15126002188";
         String to = "client:alice";
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-number-entry.xml";
 
         JsonArray callResult = (JsonArray) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -481,7 +481,7 @@ public class CreateCallsTest {
 
         String from = "+15126002188";
         String to = "131313";
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-client-entry.xml";
 
         JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -724,7 +724,7 @@ public class CreateCallsTest {
 
         String from = "+15126002188";
         String to = "131313";
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-client-entry.xml";
 
         JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);

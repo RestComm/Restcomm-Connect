@@ -19,11 +19,11 @@
  */
 package org.restcomm.connect.mscontrol.api;
 
-import akka.actor.UntypedActor;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public abstract class MediaGroup extends UntypedActor {
+public abstract class MediaGroup extends RestcommUntypedActor {
 
 }

@@ -47,16 +47,25 @@ import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.RevolvingCounter;
+import org.restcomm.connect.mgcp.stats.MgcpConnectionAdded;
+import org.restcomm.connect.mgcp.stats.MgcpConnectionDeleted;
+import org.restcomm.connect.mgcp.stats.MgcpEndpointAdded;
+import org.restcomm.connect.mgcp.stats.MgcpEndpointDeleted;
 
+import javax.sdp.SdpFactory;
+import javax.sdp.SdpParseException;
+import javax.sdp.SessionDescription;
 import java.net.InetAddress;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public class MockMediaGateway extends UntypedActor {
+public class MockMediaGateway extends RestcommUntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // Session description for the mock media gateway.
     private static final String sdp = "v=0\n" + "o=- 1362546170756 1 IN IP4 192.168.1.100\n" + "s=Mobicents Media Server\n"
@@ -85,30 +94,16 @@ public class MockMediaGateway extends UntypedActor {
     private RevolvingCounter connectionIdPool;
     private RevolvingCounter endpointIdPool;
 
-    private static Map<MediaSession, ActorRef> endpoints;
-    private static Map<MediaSession, ActorRef> links;
-    private static Map<MediaSession, ActorRef> connections;
+    private Map<String, String> connEndpointMap;
+
+    private ActorRef monitoringService;
 
     private ActorSystem system;
 
     public MockMediaGateway() {
         super();
-        endpoints = new ConcurrentHashMap<MediaSession, ActorRef>();
-        links = new ConcurrentHashMap<MediaSession, ActorRef>();
-        connections = new ConcurrentHashMap<MediaSession, ActorRef>();
         system = context().system();
-    }
-
-    public static Map<MediaSession, ActorRef> getEndpointsMap() {
-        return endpoints;
-    }
-
-    public static Map<MediaSession, ActorRef> getConnections() {
-        return connections;
-    }
-
-    public static Map<MediaSession, ActorRef> getLinks() {
-        return links;
+        connEndpointMap = new ConcurrentHashMap<String, String>();
     }
 
     private ActorRef getConnection(final Object message) {
@@ -123,7 +118,10 @@ public class MockMediaGateway extends UntypedActor {
             }
         });
         ActorRef connection = system.actorOf(props);
-        connections.put(session, connection);
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("MockMediaGateway, Added new Connection, path: %s",connection.path());
+            logger.info(msg);
+        }
         return connection;
     }
 
@@ -140,7 +138,10 @@ public class MockMediaGateway extends UntypedActor {
             }
         });
         ActorRef bridgeEndpoint = system.actorOf(props);
-        endpoints.put(session, bridgeEndpoint);
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("MockMediaGateway, Added Bridge endpoint, path: %s",bridgeEndpoint.path());
+            logger.info(msg);
+        }
         return bridgeEndpoint;
     }
 
@@ -161,7 +162,10 @@ public class MockMediaGateway extends UntypedActor {
             }
         });
         ActorRef conferenceEndpoint = system.actorOf(props);
-        endpoints.put(session, conferenceEndpoint);
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("MockMediaGateway, Added Conference endpoint, path: %s", conferenceEndpoint.path());
+            logger.info(msg);
+        }
         return conferenceEndpoint;
     }
 
@@ -184,7 +188,10 @@ public class MockMediaGateway extends UntypedActor {
             }
         });
         ActorRef ivrEndpoint = system.actorOf(props);
-        endpoints.put(session, ivrEndpoint);
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("MockMediaGateway, Added Ivr endpoint, path: %s",ivrEndpoint.path());
+            logger.info(msg);
+        }
         return ivrEndpoint;
     }
 
@@ -201,7 +208,10 @@ public class MockMediaGateway extends UntypedActor {
             }
         });
         ActorRef link = system.actorOf(props);
-        links.put(session, link);
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("MockMediaGateway, Added new Link, path: %s",link.path());
+            logger.info(msg);
+        }
         return link;
     }
 
@@ -218,7 +228,10 @@ public class MockMediaGateway extends UntypedActor {
             }
         });
         ActorRef packetRelayEndpoint = system.actorOf(props);
-        endpoints.put(session, packetRelayEndpoint);
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("MockMediaGateway, Added PacketRelay endpoint, path: %s",packetRelayEndpoint.path());
+            logger.info(msg);
+        }
         return packetRelayEndpoint;
     }
 
@@ -260,6 +273,7 @@ public class MockMediaGateway extends UntypedActor {
         requestIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
         sessionIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
         transactionIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
+        monitoringService = request.getMonitoringService();
     }
 
     @Override
@@ -294,15 +308,24 @@ public class MockMediaGateway extends UntypedActor {
             sender.tell(new MediaGatewayResponse<ActorRef>(endpoint), self);
         } else if (DestroyConnection.class.equals(klass)) {
             final DestroyConnection request = (DestroyConnection) message;
-            connections.values().remove(request.connection());
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("MockMediaGateway, Connection destroyed, path %s",request.connection().path());
+                logger.info(msg);
+            }
             context.stop(request.connection());
         } else if (DestroyLink.class.equals(klass)) {
             final DestroyLink request = (DestroyLink) message;
-            links.values().remove(request.link());
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("MockMediaGateway, Link destroyed, path %s",request.link().path());
+                logger.info(msg);
+            }
             context.stop(request.link());
         } else if (DestroyEndpoint.class.equals(klass)) {
             final DestroyEndpoint request = (DestroyEndpoint) message;
-            endpoints.values().remove(request.endpoint());
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("MockMediaGateway, Endpoint destroyed, path %s",request.endpoint().path());
+                logger.info(msg);
+            }
             context.stop(request.endpoint());
         } else if (message instanceof JainMgcpCommandEvent) {
             send(message, sender);
@@ -332,14 +355,21 @@ public class MockMediaGateway extends UntypedActor {
             buffer.append(endpointIdPool.get());
             endpointId = new EndpointIdentifier(buffer.toString(), domain);
         }
+        connEndpointMap.put(connId.toString(), endpointId.getLocalEndpointName());
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("About to add connId %s for endpoint %s", connId.toString(), endpointId.getLocalEndpointName());
+            logger.info(msg);
+        }
+        monitoringService.tell(new MgcpEndpointAdded(connId.toString(), endpointId.getLocalEndpointName()), self());
+        monitoringService.tell(new MgcpConnectionAdded(connId.toString(), endpointId.getLocalEndpointName()), self());
         response.setSpecificEndpointIdentifier(endpointId);
         // Create a new secondary end point id if necessary.
         EndpointIdentifier secondaryEndpointId = crcx.getSecondEndpointIdentifier();
         if (secondaryEndpointId != null) {
             buffer = new StringBuilder();
             buffer.append(connectionIdPool.get());
-            connId = new ConnectionIdentifier(buffer.toString());
-            response.setSecondConnectionIdentifier(connId);
+            ConnectionIdentifier secondayConnId = new ConnectionIdentifier(buffer.toString());
+            response.setSecondConnectionIdentifier(secondayConnId);
             endpointName = secondaryEndpointId.getLocalEndpointName();
             if (endpointName.endsWith("$")) {
                 final String[] tokens = endpointName.split("/");
@@ -349,6 +379,13 @@ public class MockMediaGateway extends UntypedActor {
                 buffer.append(endpointIdPool.get());
                 secondaryEndpointId = new EndpointIdentifier(buffer.toString(), domain);
             }
+            connEndpointMap.put(secondayConnId.toString(), secondaryEndpointId.getLocalEndpointName());
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("About to add connId %s for secondary endpoint %s associated with endpont %s", secondayConnId.toString(), secondaryEndpointId.getLocalEndpointName(), endpointId.getLocalEndpointName());
+                logger.info(msg);
+            }
+            monitoringService.tell(new MgcpEndpointAdded(connId.toString(), secondaryEndpointId.getLocalEndpointName()), self());
+            monitoringService.tell(new MgcpConnectionAdded(secondayConnId.toString(), secondaryEndpointId.getLocalEndpointName()));
             response.setSecondEndpointIdentifier(secondaryEndpointId);
         }
         final ConnectionDescriptor descriptor = new ConnectionDescriptor(sdp);
@@ -362,20 +399,66 @@ public class MockMediaGateway extends UntypedActor {
     private void modifyConnection(final Object message, final ActorRef sender) {
         final ActorRef self = self();
         final ModifyConnection mdcx = (ModifyConnection) message;
-        System.out.println(mdcx.toString());
-        final ReturnCode code = ReturnCode.Transaction_Executed_Normally;
-        final ModifyConnectionResponse response = new ModifyConnectionResponse(self, code);
-        final ConnectionDescriptor descriptor = new ConnectionDescriptor(sdp);
-        response.setLocalConnectionDescriptor(descriptor);
-        final int transaction = mdcx.getTransactionHandle();
-        response.setTransactionHandle(transaction);
-        System.out.println(response.toString());
-        sender.tell(response, self);
+        System.out.println("MDCX: \n" +mdcx.toString());
+        if (logger.isInfoEnabled()) {
+            String msg = String.format("Got MDCX for endpoint %s connId %s, mdcx: \n%s", mdcx.getEndpointIdentifier().getLocalEndpointName(), mdcx.getConnectionIdentifier(), mdcx);
+            logger.info(msg);
+        }
+        ReturnCode code;
+        SessionDescription sessionDescription = null;
+        boolean isNonValidSdp = false;
+        if (mdcx.getRemoteConnectionDescriptor()!=null) {
+            try {
+                sessionDescription = SdpFactory.getInstance().createSessionDescription(mdcx.getRemoteConnectionDescriptor().toString());
+                isNonValidSdp = sessionDescription.getSessionName().getValue().contains("NonValidSDP");
+            } catch (SdpParseException e) {
+                logger.error("Error while trying to get SDP from MDCX");
+            }
+        }
+        if (sessionDescription != null && isNonValidSdp) {
+            code = ReturnCode.Protocol_Error;
+            final ModifyConnectionResponse response = new ModifyConnectionResponse(self, code);
+            final int transaction = mdcx.getTransactionHandle();
+            response.setTransactionHandle(transaction);
+            System.out.println(response.toString());
+            sender.tell(response, self);
+        } else {
+            code = ReturnCode.Transaction_Executed_Normally;
+            final ModifyConnectionResponse response = new ModifyConnectionResponse(self, code);
+            final ConnectionDescriptor descriptor = new ConnectionDescriptor(sdp);
+            response.setLocalConnectionDescriptor(descriptor);
+            final int transaction = mdcx.getTransactionHandle();
+            response.setTransactionHandle(transaction);
+            System.out.println(response.toString());
+            sender.tell(response, self);
+        }
     }
 
     private void deleteConnection(final Object message, final ActorRef sender) {
         final ActorRef self = self();
         final DeleteConnection dlcx = (DeleteConnection) message;
+        if (dlcx.getConnectionIdentifier() == null) {
+            connEndpointMap.values().removeAll(Collections.singleton(dlcx.getEndpointIdentifier().getLocalEndpointName()));
+            monitoringService.tell(new MgcpConnectionDeleted(null, dlcx.getEndpointIdentifier().getLocalEndpointName()), self());
+            monitoringService.tell(new MgcpEndpointDeleted(dlcx.getEndpointIdentifier().getLocalEndpointName()), self());
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("Endpoint deleted %s", dlcx.getEndpointIdentifier().getLocalEndpointName());
+                logger.info(msg);
+            }
+        } else {
+            connEndpointMap.remove(dlcx.getConnectionIdentifier().toString());
+            monitoringService.tell(new MgcpConnectionDeleted(dlcx.getConnectionIdentifier().toString(), null), self());
+            //If all connections have been removed for a given Endpoint, we can consider that the endpoint is stopped (this is the RMS behavior)
+            //Here check if we have Endpoint ID on the map, and if not, tell MonitoringService that the endpoint stopped.
+            if (!connEndpointMap.values().contains(dlcx.getEndpointIdentifier().getLocalEndpointName())) {
+                monitoringService.tell(new MgcpEndpointDeleted(dlcx.getEndpointIdentifier().getLocalEndpointName()), self());
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("Endpoint deleted %s since because there are no more connections related to this endpoint", dlcx.getEndpointIdentifier().getLocalEndpointName());
+                    logger.info(msg);
+                }
+            }
+        }
+
         System.out.println(dlcx.toString());
         final ReturnCode code = ReturnCode.Transaction_Executed_Normally;
         final DeleteConnectionResponse response = new DeleteConnectionResponse(self, code);
@@ -430,10 +513,10 @@ public class MockMediaGateway extends UntypedActor {
         final int transaction = rqnt.getTransactionHandle();
         response.setTransactionHandle(transaction);
         try {
-            Thread.sleep(sleepTime);
+            Thread.sleep(sleepTime*10);
         } catch (InterruptedException e) {
         }
-        System.out.println(response.toString());
+        logger.info("About to send MockMediaGateway response: "+response.toString());
         sender.tell(response, self);
     }
 

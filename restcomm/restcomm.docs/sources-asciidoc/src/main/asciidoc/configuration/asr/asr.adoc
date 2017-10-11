@@ -1,0 +1,13 @@
+[[intro]]
+= Automatic Speech Recognition Integration
+
+In order to enable ASR functionality an appropriate configuration has to be added. There are list of available drivers supported by mediaserver and a default one, which can be used by Restcomm. These are environment variables you need to set in restcomm.conf file
+
+[source,shell]
+----
+MG_ASR_DRIVERS="google-api,yahoo-api"
+MG_ASR_DRIVER_DEFAULT="google-api"
+----
+
+**MG_ASR_DRIVERS**: comma separated list of drivers names supported by mediaserver
+**MG_ASR_DRIVER_DEFAULT**: name of the default driver to use

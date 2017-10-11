@@ -66,7 +66,7 @@ public class IncomingPhoneNumbersDaoTest {
     public void createReadUpdateDelete() {
         final Sid sid = Sid.generate(Sid.Type.PHONE_NUMBER);
         Sid account = Sid.generate(Sid.Type.ACCOUNT);
-        Sid application = Sid.generate(Sid.Type.APPLICATION);
+        Sid application = Sid.generate(Sid.Type.APPLICATION);     
         URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
         String method = "GET";
         final IncomingPhoneNumber.Builder builder = IncomingPhoneNumber.builder();
@@ -90,6 +90,7 @@ public class IncomingPhoneNumbersDaoTest {
         builder.setSmsFallbackMethod(method);
         builder.setSmsApplicationSid(application);
         builder.setUri(url);
+        builder.setOrganizationSid(Sid.generate(Sid.Type.ORGANIZATION));
         IncomingPhoneNumber number = builder.build();
         final IncomingPhoneNumbersDao numbers = manager.getIncomingPhoneNumbersDao();
         // Create a new incoming phone number in the data store.
@@ -167,7 +168,7 @@ public class IncomingPhoneNumbersDaoTest {
     @Test
     public void applicationFriendlyNameReturned() {
         final IncomingPhoneNumbersDao dao = manager.getIncomingPhoneNumbersDao();
-        IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter("ACae6e420f425248d6a26948c17a9e2acf", null, null);
+        IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter("ACae6e420f425248d6a26948c17a9e2acf", null, null,"phone_number","ASC",50,0);
         List<IncomingPhoneNumber> phoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
         Assert.assertEquals("Only a single phone number expected",1, phoneNumbers.size());
         IncomingPhoneNumber number = phoneNumbers.get(0);
@@ -203,12 +204,17 @@ public class IncomingPhoneNumbersDaoTest {
         builder.setSmsFallbackMethod(method);
         builder.setSmsApplicationSid(application);
         builder.setUri(url);
+        builder.setOrganizationSid(Sid.generate(Sid.Type.ORGANIZATION));
         IncomingPhoneNumber number = builder.build();
         final IncomingPhoneNumbersDao numbers = manager.getIncomingPhoneNumbersDao();
         // Create a new incoming phone number in the data store.
         numbers.addIncomingPhoneNumber(number);
         // Read the incoming phone number from the data store.
-        IncomingPhoneNumber result = numbers.getIncomingPhoneNumber("+12223334444");
+        List<IncomingPhoneNumber> incomingPhoneNumbers = numbers.getIncomingPhoneNumber("+12223334444");
+        assert (incomingPhoneNumbers != null);
+        assert (!incomingPhoneNumbers.isEmpty());
+        assert (incomingPhoneNumbers.size()==1);
+        IncomingPhoneNumber result = incomingPhoneNumbers.get(0);
         assert (result != null);
         assertTrue(result.getSid().equals(number.getSid()));
         // Delete the incoming phone number.
@@ -244,6 +250,7 @@ public class IncomingPhoneNumbersDaoTest {
         builder.setSmsFallbackMethod(method);
         builder.setSmsApplicationSid(application);
         builder.setUri(url);
+        builder.setOrganizationSid(Sid.generate(Sid.Type.ORGANIZATION));
         IncomingPhoneNumber number = builder.build();
         final IncomingPhoneNumbersDao numbers = manager.getIncomingPhoneNumbersDao();
         // Create a new incoming phone number in the data store.

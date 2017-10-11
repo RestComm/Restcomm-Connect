@@ -72,4 +72,6 @@ public interface DaoManager extends Configurable, LifeCycle {
 
     GeolocationDao getGeolocationDao();
 
+    OrganizationsDao getOrganizationsDao();
+
 }

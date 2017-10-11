@@ -25,6 +25,7 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.MediaAttributes;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -44,7 +45,7 @@ public final class InitializeOutbound {
     private final boolean isFromApi;
     private final String apiVersion;
     private final Sid accountId;
-    private final CreateCall.Type type;
+    private final CreateCallType type;
     private final DaoManager daoManager;
     private Sid parentCallSid;
     private final boolean webrtc;
@@ -56,23 +57,24 @@ public final class InitializeOutbound {
     private int imsProxyPort;
 
     public InitializeOutbound(final String name, final SipURI from, final SipURI to, final String username,
-            final String password, final long timeout, final boolean isFromApi, final String apiVersion, final Sid accountId,
-            final CreateCall.Type type, final DaoManager daoManager, final boolean webrtc) {
-        this(name, from, to, username, password, timeout, isFromApi, apiVersion, accountId, type, daoManager, webrtc, false,
-                null, 0, new MediaAttributes());
+            final String password, final long timeout, final boolean isFromApi, final String apiVersion,
+            final Sid accountId, final CreateCallType type, final DaoManager daoManager, final boolean webrtc,
+            final boolean outboundToIms, final String imsProxyAddress, final int imsProxyPort, final MediaAttributes mediaAttributes) {
+        this(name, from, to, username, password, timeout, isFromApi, apiVersion, accountId, type, daoManager, webrtc, mediaAttributes);
+        this.outboundToIms = outboundToIms;
+        this.imsProxyAddress = imsProxyAddress;
+        this.imsProxyPort = imsProxyPort;
     }
 
     public InitializeOutbound(final String name, final SipURI from, final SipURI to, final String username,
-            final String password, final long timeout, final boolean isFromApi, final String apiVersion, final Sid accountId,
-            final CreateCall.Type type, final DaoManager daoManager, final boolean webrtc, final MediaAttributes mediaAttributes) {
-        this(name, from, to, username, password, timeout, isFromApi, apiVersion, accountId, type, daoManager, webrtc, false,
-                null, 0, mediaAttributes);
+                              final String password, final long timeout, final boolean isFromApi, final String apiVersion,
+                              final Sid accountId, final CreateCallType type, final DaoManager daoManager, final boolean webrtc) {
+        this(name, from, to, username, password, timeout, isFromApi, apiVersion, accountId, type, daoManager, webrtc, new MediaAttributes());
     }
 
     public InitializeOutbound(final String name, final SipURI from, final SipURI to, final String username,
-            final String password, final long timeout, final boolean isFromApi, final String apiVersion, final Sid accountId,
-            final CreateCall.Type type, final DaoManager daoManager, final boolean webrtc, final boolean outboundToIms,
-            final String imsProxyAddress, final int imsProxyPort, final MediaAttributes mediaAttributes) {
+            final String password, final long timeout, final boolean isFromApi, final String apiVersion,
+            final Sid accountId, final CreateCallType type, final DaoManager daoManager, final boolean webrtc, final MediaAttributes mediaAttributes) {
         super();
         this.name = name;
         this.from = from;
@@ -90,7 +92,6 @@ public final class InitializeOutbound {
         this.imsProxyAddress = imsProxyAddress;
         this.imsProxyPort = imsProxyPort;
         this.mediaAttributes = mediaAttributes;
-
     }
 
     public String name() {
@@ -129,7 +130,7 @@ public final class InitializeOutbound {
         return password;
     }
 
-    public CreateCall.Type type() {
+    public CreateCallType type() {
         return type;
     }
 

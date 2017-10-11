@@ -109,10 +109,16 @@ public class RestcommApplicationsTool {
     }
 
     public JsonArray getApplications(String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid) {
+        return getApplications(deploymentUrl, adminUsername, adminAuthToken, adminAccountSid, false);
+    }
+
+    public JsonArray getApplications(String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid, boolean includeNumbers) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
         String url = getApplicationsUrl(deploymentUrl, adminAccountSid, false);
         WebResource webResource = jerseyClient.resource(url);
+        if (includeNumbers)
+            webResource = webResource.queryParam("includeNumbers", "true");
         String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();

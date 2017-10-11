@@ -66,6 +66,7 @@ public class ClientConverter extends AbstractConverter implements JsonSerializer
         writeVoiceFallbackMethod(client.getVoiceFallbackMethod(), writer);
         writeVoiceApplicationSid(client.getVoiceApplicationSid(), writer);
         writeUri(client.getUri(), writer);
+        writePushClientIdentity(client.getPushClientIdentity(), writer);
         writer.endNode();
     }
 
@@ -87,6 +88,7 @@ public class ClientConverter extends AbstractConverter implements JsonSerializer
         writeVoiceFallbackMethod(client.getVoiceFallbackMethod(), object);
         writeVoiceApplicationSid(client.getVoiceApplicationSid(), object);
         writeUri(client.getUri(), object);
+        writePushClientIdentity(client.getPushClientIdentity(), object);
         return object;
     }
 

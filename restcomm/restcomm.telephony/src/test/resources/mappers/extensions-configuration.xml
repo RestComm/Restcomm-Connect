@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~  TeleStax, Open Source Cloud Communications
+  ~  Copyright 2011-2016, Telestax Inc and individual contributors
+  ~  by the @authors tag.
+  ~
+  ~  This program is free software: you can redistribute it and/or modify
+  ~  under the terms of the GNU Affero General Public License as
+  ~  published by the Free Software Foundation; either version 3 of
+  ~  the License, or (at your option) any later version.
+  ~
+  ~  This program is distributed in the hope that it will be useful,
+  ~  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~  GNU Affero General Public License for more details.
+  ~
+  ~  You should have received a copy of the GNU Affero General Public License
+  ~  along with this program.  If not, see <http://www.gnu.org/licenses/>
+  -->
+
+        <!--sid VARCHAR(34) NOT NULL PRIMARY KEY,-->
+        <!--extension VARCHAR(255) NOT NULL,-->
+        <!--configuration_data VARBINARY NOT NULL,-->
+        <!--date_created DATETIME NOT NULL,-->
+        <!--date_updated DATETIME-->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author gvagenas@telestax.com (George Vagenas)
+-->
+<mapper namespace="org.restcomm.connect.dao.ExtensionsConfigurationDao">
+    <insert id="addConfiguration" parameterType="map">
+        INSERT INTO "restcomm_extensions_configuration" ("sid", "extension", "configuration_data", "configuration_type",
+        "date_created", "date_updated") VALUES (#{sid}, #{extension}, #{configuration_data}, #{configuration_type},
+        #{date_created}, #{date_updated});
+    </insert>
+
+    <update id="updateConfiguration" parameterType="map">
+        UPDATE "restcomm_extensions_configuration" SET "configuration_data"=#{configuration_data}, "configuration_type"=#{configuration_type}, "date_updated"=#{date_updated}
+        WHERE "extension"=#{extension}
+    </update>
+
+    <select id="getConfigurationByName" parameterType="map" resultType="hashmap">
+        SELECT * FROM "restcomm_extensions_configuration" WHERE "extension"=#{extension};
+    </select>
+
+    <select id="getConfigurationBySid" parameterType="map" resultType="hashmap">
+        SELECT * FROM "restcomm_extensions_configuration" WHERE "sid"=#{sid};
+    </select>
+
+    <select id="getAllConfiguration" parameterType="map" resultType="hashmap">
+        SELECT * FROM "restcomm_extensions_configuration";
+    </select>
+
+    <delete id="deleteConfigurationBySid" parameterType="string">
+        DELETE FROM "restcomm_extensions_configuration" WHERE "sid"=#{sid};
+    </delete>
+
+    <delete id="deleteConfigurationByName" parameterType="string">
+        DELETE FROM "restcomm_extensions_configuration" WHERE "extension"=#{extension};
+    </delete>
+
+    <select id="getDateUpdatedByName" parameterType="String" resultType="date">
+        SELECT "date_updated" FROM "restcomm_extensions_configuration" WHERE "extension"=#{extension};
+    </select>
+
+    <select id="getDateUpdatedBySid" parameterType="String" resultType="date">
+        SELECT "date_updated" FROM "restcomm_extensions_configuration" WHERE "sid"=#{sid};
+    </select>
+</mapper>

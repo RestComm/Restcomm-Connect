@@ -29,6 +29,8 @@ import org.restcomm.connect.sms.smpp.SmppInboundMessageEntity;
 
 import javax.sip.address.SipURI;
 import javax.sip.message.Request;
+import javax.sip.message.Response;
+
 import java.io.IOException;
 import java.text.ParseException;
 
@@ -69,6 +71,21 @@ public class SmppTests {
 	private SipPhone bobPhone;
 	private String bobContact = "sip:bob@127.0.0.1:5093";
 
+	private static SipStackTool tool5;
+	private SipStack mariaSipStack;
+	private SipPhone mariaPhone;
+	private String mariaContact = "sip:maria@org2.restcomm.com";
+
+	private static SipStackTool tool6;
+	private SipStack shoaibSipStack;
+	private SipPhone shoaibPhone;
+	private String shoaibContact = "sip:shoaib@org2.restcomm.com";
+
+	private static SipStackTool tool4;
+	private SipStack mariaOrg3SipStack;
+	private SipPhone mariaOrg3Phone;
+	private String mariaOrg3Contact = "sip:maria@org3.restcomm.com";
+
 	private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
 	private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
@@ -76,6 +93,9 @@ public class SmppTests {
 	public static void prepare() throws SmppChannelException, InterruptedException {
 		tool2 = new SipStackTool("SmppTest2");
 		tool3 = new SipStackTool("SmppTest3");
+		tool4 = new SipStackTool("SmppTest4");
+		tool5 = new SipStackTool("SmppTest5");
+		tool6 = new SipStackTool("SmppTest6");
 
 		mockSmppServer = new MockSmppServer();
 		logger.info("Will wait for the SMPP link to be established");
@@ -93,6 +113,15 @@ public class SmppTests {
 
 		bobSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5093", "127.0.0.1:5080");
 		bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
+
+		mariaSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5095", "127.0.0.1:5080");
+		mariaPhone = mariaSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, mariaContact);
+
+		shoaibSipStack = tool6.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5096", "127.0.0.1:5080");
+		shoaibPhone = shoaibSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, shoaibContact);
+
+		mariaOrg3SipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
+		mariaOrg3Phone = mariaOrg3SipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, mariaOrg3Contact);
 
 		mockSmppServer.cleanup();
 		Thread.sleep(5000);
@@ -117,6 +146,26 @@ public class SmppTests {
 		}
 		if (aliceSipStack != null) {
 			aliceSipStack.dispose();
+		}
+		if (shoaibPhone != null) {
+			shoaibPhone.dispose();
+		}
+		if (shoaibSipStack != null) {
+			shoaibSipStack.dispose();
+		}
+
+		if (mariaPhone != null) {
+			mariaPhone.dispose();
+		}
+		if (mariaSipStack != null) {
+			mariaSipStack.dispose();
+		}
+
+		if (mariaOrg3Phone != null) {
+			mariaOrg3Phone.dispose();
+		}
+		if (mariaOrg3SipStack != null) {
+			mariaOrg3SipStack.dispose();
 		}
 		Thread.sleep(2000);
         wireMockRule.resetRequests();
@@ -217,6 +266,57 @@ public class SmppTests {
 		assertTrue(inboundMessageEntity.getSmppTo().equals("9999"));
 		assertTrue(inboundMessageEntity.getSmppFrom().equals("alice"));
 		assertTrue(inboundMessageEntity.getSmppContent().equals("Test Message from Alice"));
+	}
+
+	@Test
+	public void testClientSentToOtherClientDifferentOrganization () throws ParseException {
+
+		SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+		assertTrue(mariaPhone.register(uri, "maria", "qwerty1234RT", "sip:maria@127.0.0.1:5095", 3600, 3600));
+		Credential mariaCred = new Credential("org3.restcomm.com","maria","qwerty1234RT");
+		mariaPhone.addUpdateCredential(mariaCred);
+
+		assertTrue(mariaOrg3Phone.register(uri,"maria","1234","sip:maria@127.0.0.1:5094", 3600, 3600));
+		Credential mariaOrg3Cread = new Credential("org3.restcomm.com","maria","1234");
+		mariaOrg3Phone.addUpdateCredential(mariaOrg3Cread);
+
+		SipCall mariaOrg3Call = mariaOrg3Phone.createSipCall();
+		mariaOrg3Call.listenForMessage();
+
+		SipCall mariaCall = mariaPhone.createSipCall();
+		assertTrue(mariaCall.initiateOutgoingMessage(mariaOrg3Contact, null, "Test Message from maria"));
+		assertTrue(mariaCall.waitForAuthorisation(5000));
+		assertTrue(mariaCall.waitOutgoingMessageResponse(5000));
+
+		int responseMariaCall = mariaCall.getLastReceivedResponse().getStatusCode();
+        logger.info("responseMariaCall: "+responseMariaCall);
+        assertTrue(responseMariaCall == Response.NOT_FOUND);
+
+	}
+
+	@Test
+	public void testClientSentToOtherClientSameOrganization () throws ParseException {
+
+		SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+		assertTrue(mariaPhone.register(uri, "maria", "qwerty1234RT", "sip:maria@127.0.0.1:5095", 3600, 3600));
+		Credential mariaCred = new Credential("org2.restcomm.com","maria","qwerty1234RT");
+		mariaPhone.addUpdateCredential(mariaCred);
+
+		assertTrue(shoaibPhone.register(uri,"shoaib","qwerty1234RT","sip:shoaib@127.0.0.1:5096", 3600, 3600));
+		Credential shoaibCread = new Credential("org2.restcomm.com","shoaib","qwerty1234RT");
+		shoaibPhone.addUpdateCredential(shoaibCread);
+
+		SipCall shoaibCall = shoaibPhone.createSipCall();
+		shoaibCall.listenForMessage();
+
+		SipCall mariaCall = mariaPhone.createSipCall();
+		assertTrue(mariaCall.initiateOutgoingMessage(shoaibContact, null, "Test Message from maria"));
+		assertTrue(mariaCall.waitForAuthorisation(5000));
+		assertTrue(mariaCall.waitOutgoingMessageResponse(5000));
+
+		assertTrue(shoaibCall.waitForMessage(5000));
+		Request msgReceived = shoaibCall.getLastReceivedMessageRequest();
+		assertTrue(new String(msgReceived.getRawContent()).equals("Test Message from maria"));
 	}
 
 	@Deployment(name = "SmppTests", managed = true, testable = false)

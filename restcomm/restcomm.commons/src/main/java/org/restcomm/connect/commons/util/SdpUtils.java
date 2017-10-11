@@ -101,7 +101,7 @@ public class SdpUtils {
                 if (Connection.IP4.equals(origin.getAddressType())) {
                     final InetAddress address;
                     try {
-                        address = InetAddress.getByName(origin.getAddress());
+                        address = DNSUtils.getByName(origin.getAddress());
                         final String ip = address.getHostAddress();
                         if (!IPUtils.isRoutableAddress(ip)) {
                             origin.setAddress(externalIp);
@@ -119,7 +119,7 @@ public class SdpUtils {
         if (connection != null) {
             if (Connection.IN.equals(connection.getNetworkType())) {
                 if (Connection.IP4.equals(connection.getAddressType())) {
-                    final InetAddress address = InetAddress.getByName(connection.getAddress());
+                    final InetAddress address = DNSUtils.getByName(connection.getAddress());
                     final String ip = address.getHostAddress();
                     if (!IPUtils.isRoutableAddress(ip)) {
                         connection.setAddress(externalIp);

@@ -51,8 +51,58 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $uibModal, $dialog,
   $scope.confirmNumberDelete = function(phone) {
     confirmNumberDelete(phone, $dialog, $scope, RCommNumbers, Notifications);
   };
+  
+//pagination support ----------------------------------------------------------------------------------------------
 
-  $scope.numbersList = RCommNumbers.query({accountSid: $scope.sid});
+  $scope.currentPage = 1; //current page
+  $scope.maxSize = 5; //pagination max size
+  $scope.entryLimit = 10; //max rows for data table
+  $scope.noOfPages = 1; //max rows for data table
+  $scope.reverse = false;
+  $scope.predicate = "phone_number";
+
+  $scope.setEntryLimit = function(limit) {
+    $scope.entryLimit = limit;
+    $scope.currentPage = 1;
+    $scope.getNumbersList($scope.currentPage-1);
+  };
+
+  $scope.pageChanged = function() {
+    $scope.getNumbersList($scope.currentPage-1);
+  };
+
+  $scope.getNumbersList = function(page) {
+   var params = createSearchParams();
+    RCommNumbers.get($.extend({accountSid: $scope.sid, Page: page, PageSize: $scope.entryLimit}, params), function(data) {	
+      $scope.numbersList = data.incomingPhoneNumbers;
+      $scope.totalNumbers = data.total;
+      $scope.noOfPages = data.num_pages;
+      $scope.start = parseInt(data.start) + 1;
+      $scope.end = parseInt(data.end)
+      if($scope.end!=$scope.totalNumbers){
+    	  ++$scope.end;
+      }
+    });
+  }
+ var createSearchParams = function() {
+    var params = {};
+    params["SortBy"] = $scope.predicate;
+    params["Reverse"] = $scope.reverse;
+
+    return params;
+  }
+ 
+ $scope.sortBy = function(field) {
+     if ($scope.predicate != field) {
+         $scope.predicate = field;
+         $scope.reverse = false;
+     } else {
+         $scope.reverse = !$scope.reverse;
+     }
+ };
+ 
+  $scope.getNumbersList(0);
+
 });
 
 // Numbers : Incoming : Details (also used for Modal) --------------------------

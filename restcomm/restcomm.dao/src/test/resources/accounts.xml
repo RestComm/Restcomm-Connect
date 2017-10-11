@@ -5,8 +5,8 @@
 -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.AccountsDao">
   <insert id="addAccount" parameterType="map">
-    INSERT INTO "restcomm_accounts" ("sid", "date_created", "date_updated", "email_address", "friendly_name", "parent_sid", "type", "status", "auth_token", "role", "uri")
-    VALUES(#{sid}, #{date_created}, #{date_updated}, #{email_address}, #{friendly_name}, #{parent_sid}, #{type}, #{status}, #{auth_token}, #{role}, #{uri});
+    INSERT INTO "restcomm_accounts" ("sid", "date_created", "date_updated", "email_address", "friendly_name", "parent_sid", "type", "status", "auth_token", "role", "uri", "organization_sid")
+    VALUES(#{sid}, #{date_created}, #{date_updated}, #{email_address}, #{friendly_name}, #{parent_sid}, #{type}, #{status}, #{auth_token}, #{role}, #{uri}, #{organization_sid});
   </insert>
   
   <select id="getAccount" parameterType="string" resultType="hashmap">

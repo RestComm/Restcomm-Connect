@@ -215,7 +215,7 @@ public class DialRecordingS3UploadTest_NoneSecurity {
 
 		bobCall.sendInviteOkAck();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
 		assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
 		assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
@@ -252,6 +252,8 @@ public class DialRecordingS3UploadTest_NoneSecurity {
 		Thread.sleep(1000);
 
 		assertEquals(200, connection.getResponseCode());
+
+		Thread.sleep(6000);
 
 		//Verify S3 Upload
 		List<LoggedRequest> requests = findAll(putRequestedFor(urlMatching("/s3/.*")));
@@ -305,7 +307,7 @@ public class DialRecordingS3UploadTest_NoneSecurity {
 
 		bobCall.sendInviteOkAck();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim().split("-")[1];
+		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
 		assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
 		assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
@@ -322,6 +324,8 @@ public class DialRecordingS3UploadTest_NoneSecurity {
 
 		assertTrue(bobCall.waitForDisconnect(30 * 1000));
 		assertTrue(bobCall.respondToDisconnect());
+
+		Thread.sleep(7000);
 
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);

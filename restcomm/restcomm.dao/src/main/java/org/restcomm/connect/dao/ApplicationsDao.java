@@ -36,6 +36,9 @@ public interface ApplicationsDao {
 
     List<Application> getApplications(Sid accountSid);
 
+    // this may optionally return related numbers as part of an Application
+    List<Application> getApplicationsWithNumbers(Sid accountSid);
+
     void removeApplication(Sid sid);
 
     void removeApplications(Sid accountSid);

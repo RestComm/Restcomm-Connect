@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author maria.farooq@telestax.com (Maria Farooq)
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.MediaServersDao">
+
+  <insert id="addMediaServer" parameterType="map">
+    INSERT INTO "restcomm_media_servers" ("local_ip", "local_port", "remote_ip", "remote_port", "compatibility", "response_timeout", "external_address")
+    VALUES (#{local_ip}, #{local_port}, #{remote_ip}, #{remote_port}, #{compatibility}, #{response_timeout}, #{external_address});
+  </insert>
+  
+  <select id="getMediaServerEntityByIP" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_media_servers" WHERE "remote_ip"=#{remote_ip};
+  </select>
+  
+  <select id="getMediaServers" resultType="hashmap">
+    SELECT * FROM "restcomm_media_servers";
+  </select>
+  
+  <select id="getMediaServer" resultType="hashmap" parameterType="string">
+    SELECT * FROM "restcomm_media_servers" where "ms_id"=#{ms_id};
+  </select>
+  
+  <delete id="removeMediaServerEntity" parameterType="string">
+    DELETE FROM "restcomm_media_servers" WHERE "ms_id"=#{ms_id};
+  </delete>
+  
+  <update id="updateMediaServer" parameterType="map">
+    UPDATE "restcomm_media_servers" 
+    	SET "local_ip"=#{local_ip}, "local_port"=#{local_port}, "remote_ip"=#{remote_ip}, "remote_port"=#{remote_port}, 
+    	"compatibility"=#{compatibility}, "response_timeout"=#{response_timeout}, "external_address"=#{external_address}
+    WHERE "ms_id"=#{ms_id};
+  </update>
+
+</mapper>
