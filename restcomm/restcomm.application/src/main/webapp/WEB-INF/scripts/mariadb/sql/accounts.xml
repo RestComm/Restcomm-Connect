@@ -5,9 +5,9 @@
 	<insert id="addAccount" parameterType="map">
 		INSERT INTO restcomm_accounts (sid, date_created, date_updated,
 		email_address, friendly_name, parent_sid, type, status, auth_token,
-		role, uri)
+		role, uri, organization_sid)
 		VALUES(#{sid}, #{date_created}, #{date_updated}, #{email_address}, #{friendly_name},
-		#{parent_sid}, #{type}, #{status}, #{auth_token}, #{role}, #{uri});
+		#{parent_sid}, #{type}, #{status}, #{auth_token}, #{role}, #{uri}, #{organization_sid});
 	</insert>
 
 	<select id="getAccount" parameterType="string" resultType="hashmap">
@@ -26,6 +26,10 @@
 
 	<select id="getChildAccounts" parameterType="string" resultType="hashmap">
 		SELECT * FROM restcomm_accounts WHERE parent_sid=#{parent_sid};
+	</select>
+
+	<select id="getAccountsByOrganization" parameterType="string" resultType="hashmap">
+		SELECT * FROM restcomm_accounts WHERE organization_sid=#{organization_sid};
 	</select>
 
 	<delete id="removeAccount" parameterType="string">

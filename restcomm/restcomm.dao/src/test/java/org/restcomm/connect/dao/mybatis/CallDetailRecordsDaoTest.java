@@ -19,8 +19,9 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
-import static org.junit.Assert.*;
-
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+        
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -30,22 +31,27 @@ import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
 
-import junit.framework.Assert;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
-import org.restcomm.connect.commons.dao.Sid;
+
+import junit.framework.Assert;
+import org.junit.Rule;
+import org.junit.rules.TestName;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public class CallDetailRecordsDaoTest extends DaoTest {
+    @Rule public TestName name = new TestName();
+    
     private static MybatisDaoManager manager;
 
     public CallDetailRecordsDaoTest() {
@@ -54,7 +60,8 @@ public class CallDetailRecordsDaoTest extends DaoTest {
 
     @Before
     public void before() throws Exception {
-        sandboxRoot = createTempDir("cdrTest");
+        //use testmethod name to further ensure uniqueness of tmp dir
+        sandboxRoot = createTempDir("cdrTest" + name.getMethodName());
         String mybatisFilesPath = getClass().getResource("/callDetailRecordsDao").getFile();
         setupSandbox(mybatisFilesPath, sandboxRoot);
 
@@ -75,14 +82,13 @@ public class CallDetailRecordsDaoTest extends DaoTest {
     @Test
     public void createReadUpdateDelete() {
         final Sid sid = Sid.generate(Sid.Type.CALL);
-        final String instanceId = Sid.generate(Sid.Type.INSTANCE).toString();
         final Sid account = Sid.generate(Sid.Type.ACCOUNT);
         final Sid parent = Sid.generate(Sid.Type.CALL);
         final Sid phone = Sid.generate(Sid.Type.PHONE_NUMBER);
         final URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
         final CallDetailRecord.Builder builder = CallDetailRecord.builder();
         builder.setSid(sid);
-        builder.setInstanceId(instanceId);
+        builder.setInstanceId(instanceId.toString());
         builder.setParentCallSid(parent);
         builder.setDateCreated(DateTime.now());
         builder.setAccountSid(account);
@@ -364,11 +370,11 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         builder.setUri(url);
         CallDetailRecord cdr = builder.build();
         final CallDetailRecordsDao cdrs = manager.getCallDetailRecordsDao();
+        int beforeAdding = cdrs.getCallDetailRecordsByEndTime(now).size();
         // Create a new CDR in the data store.
         cdrs.addCallDetailRecord(cdr);
-        // Validate the results.
-        assertTrue(cdrs.getCallDetailRecordsByEndTime(now).size() == 1);
-        assertTrue(cdrs.getCallDetailRecordsByStarTimeAndEndTime(now).size() == 1);
+        // Validate the results, including the ones matching in the script(10)
+        assertEquals(beforeAdding + 1, cdrs.getCallDetailRecordsByEndTime(now).size());
         // Delete the CDR.
         cdrs.removeCallDetailRecord(sid);
         // Validate that the CDRs were removed.

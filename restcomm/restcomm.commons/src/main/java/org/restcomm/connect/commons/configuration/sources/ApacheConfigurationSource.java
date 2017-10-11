@@ -41,4 +41,9 @@ public class ApacheConfigurationSource implements ConfigurationSource {
         return apacheConfiguration.getString(key);
     }
 
+    @Override
+    public String getProperty (String key, String defValue) {
+        return apacheConfiguration.getString(key, defValue);
+    }
+
 }

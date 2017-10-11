@@ -26,6 +26,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.MediaAttributes;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -35,7 +36,7 @@ import org.restcomm.connect.dao.entities.MediaAttributes;
 public final class CallInfo {
     private final Sid sid;
     private CallStateChanged.State state;
-    private final CreateCall.Type type;
+    private final CreateCallType type;
     private final String direction;
     private final DateTime dateCreated;
     private final DateTime dateConUpdated;
@@ -50,7 +51,7 @@ public final class CallInfo {
     private boolean isFromApi;
     private final MediaAttributes mediaAttributes;
 
-    public CallInfo(final Sid sid, final CallStateChanged.State state, final CreateCall.Type type, final String direction,
+    public CallInfo(final Sid sid, final CallStateChanged.State state, final CreateCallType type, final String direction,
                     final DateTime dateCreated, final String forwardedFrom, final String fromName, final String from, final String to,
                     final SipServletRequest invite, final SipServletResponse lastResponse, final boolean webrtc, final boolean muted, final boolean isFromApi, final DateTime dateConUpdated, final MediaAttributes mediaAttributes) {
         super();
@@ -84,7 +85,7 @@ public final class CallInfo {
         return direction;
     }
 
-    public CreateCall.Type type() {
+    public CreateCallType type() {
         return type;
     }
 

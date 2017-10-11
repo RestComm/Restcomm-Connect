@@ -19,17 +19,16 @@
  */
 package org.restcomm.connect.mscontrol.api;
 
-import org.restcomm.connect.commons.fsm.Action;
-
 import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
+import org.restcomm.connect.commons.fsm.Action;
 
 /**
  * Controls the flow of media sessions.
  *
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  */
-public abstract class MediaServerController extends UntypedActor {
+public abstract class MediaServerController extends RestcommUntypedActor {
 
     protected MediaServerController() {
         super();

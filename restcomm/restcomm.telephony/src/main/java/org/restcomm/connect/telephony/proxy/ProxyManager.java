@@ -19,13 +19,17 @@
  */
 package org.restcomm.connect.telephony.proxy;
 
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
-import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
-
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import akka.actor.ActorContext;
+import akka.actor.ReceiveTimeout;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.GatewaysDao;
+import org.restcomm.connect.dao.entities.Gateway;
+import org.restcomm.connect.telephony.api.RegisterGateway;
+import scala.concurrent.duration.Duration;
 
 import javax.servlet.ServletContext;
 import javax.servlet.sip.Address;
@@ -37,25 +41,17 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-import org.joda.time.DateTime;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.GatewaysDao;
-import org.restcomm.connect.dao.entities.Gateway;
-import org.restcomm.connect.telephony.api.RegisterGateway;
-
-import scala.concurrent.duration.Duration;
-import akka.actor.ActorContext;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author gvagenas@gmail.com
  */
-public final class ProxyManager extends UntypedActor {
+public final class ProxyManager extends RestcommUntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     private static final int ttl = 1800;

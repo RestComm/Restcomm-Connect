@@ -22,7 +22,6 @@
 package org.restcomm.connect.mscontrol.mms;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -75,6 +74,7 @@ import java.util.Set;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  *
  */
 public class MmsBridgeController extends MediaServerController {
@@ -82,7 +82,6 @@ public class MmsBridgeController extends MediaServerController {
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final ActorSystem system;
     // Finite State Machine
     private final FiniteStateMachine fsm;
     private final State uninitialized;
@@ -116,9 +115,8 @@ public class MmsBridgeController extends MediaServerController {
 
     private Sid callSid;
 
-    public MmsBridgeController(final ActorRef mrb, final ActorSystem system) {
+    public MmsBridgeController(final ActorRef mrb) {
         final ActorRef self = self();
-        this.system = system;
 
         // Finite states
         this.uninitialized = new State("uninitialized", null, null);
@@ -348,7 +346,9 @@ public class MmsBridgeController extends MediaServerController {
 
     private void onEndpointStateChanged(EndpointStateChanged message, ActorRef self, ActorRef sender) throws Exception {
         if (is(stopping)) {
-            if (sender.equals(this.endpoint) && EndpointState.DESTROYED.equals(message.getState())) {
+            if (sender.equals(this.endpoint) && (EndpointState.DESTROYED.equals(message.getState()) || EndpointState.FAILED.equals(message.getState()))) {
+                if(EndpointState.FAILED.equals(message.getState()))
+                    logger.error("Could not destroy endpoint on media server. corresponding actor path is: " + this.endpoint.path());
                 this.endpoint.tell(new StopObserving(self), self);
                 context().stop(endpoint);
                 endpoint = null;
@@ -443,7 +443,7 @@ public class MmsBridgeController extends MediaServerController {
                     return new MgcpMediaGroup(mediaGateway, mediaSession, endpoint);
                 }
             });
-            return system.actorOf(props);
+            return getContext().actorOf(props);
         }
 
         @Override

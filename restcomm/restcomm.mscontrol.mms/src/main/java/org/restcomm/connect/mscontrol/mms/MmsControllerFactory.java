@@ -23,7 +23,6 @@ package org.restcomm.connect.mscontrol.mms;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActorFactory;
 import org.apache.log4j.Logger;
@@ -38,15 +37,13 @@ import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 public class MmsControllerFactory implements MediaServerControllerFactory {
 
     private static Logger logger = Logger.getLogger(MmsControllerFactory.class);
-    private final ActorSystem system;
     private final CallControllerFactory callControllerFactory;
     private final ConferenceControllerFactory conferenceControllerFactory;
     private final BridgeControllerFactory bridgeControllerFactory;
     private final ActorRef mrb;
 
-    public MmsControllerFactory(ActorSystem system, ActorRef mrb) {
+    public MmsControllerFactory(ActorRef mrb) {
         super();
-        this.system = system;
         this.callControllerFactory = new CallControllerFactory();
         this.conferenceControllerFactory = new ConferenceControllerFactory();
         this.bridgeControllerFactory = new BridgeControllerFactory();
@@ -54,21 +51,18 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
     }
 
     @Override
-    public ActorRef provideCallController() {
-        final Props props = new Props(this.callControllerFactory);
-        return system.actorOf(props);
+    public Props provideCallControllerProps() {
+        return new Props(this.callControllerFactory);
     }
 
     @Override
-    public ActorRef provideConferenceController() {
-        final Props props = new Props(this.conferenceControllerFactory);
-        return system.actorOf(props);
+    public Props provideConferenceControllerProps() {
+        return new Props(this.conferenceControllerFactory);
     }
 
     @Override
-    public ActorRef provideBridgeController() {
-        final Props props = new Props(this.bridgeControllerFactory);
-        return system.actorOf(props);
+    public Props provideBridgeControllerProps() {
+        return new Props(this.bridgeControllerFactory);
     }
 
     private final class CallControllerFactory implements UntypedActorFactory {
@@ -77,7 +71,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            return new MmsCallController(mrb, system);
+            return new MmsCallController(mrb);
         }
 
     }
@@ -100,7 +94,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            return new MmsBridgeController(mrb, system);
+            return new MmsBridgeController(mrb);
         }
 
     }

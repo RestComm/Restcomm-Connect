@@ -1,0 +1,25 @@
+[plantuml, routing, png]
+--
+
+:HTTPS / SIP\n    Traffic;
+split
+ :organization1.restcomm.com;
+split again
+ :organization2.restcomm.com;
+split again
+ :organization3.restcomm.com;
+split again
+ :organization4.restcomm.com;
+end split
+:DNS;
+:Restcomm LoadBalancer;
+split
+ :Restcomm node 1;
+split again
+ :Restcomm node 2;
+split again
+ :Restcomm node 3;
+split again
+ :Restcomm node N;
+end split
+--

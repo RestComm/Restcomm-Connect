@@ -2,7 +2,6 @@ package org.restcomm.connect.interpreter;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
@@ -24,6 +23,7 @@ import org.restcomm.connect.commons.cache.DiskCacheRequest;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
 import org.restcomm.connect.commons.cache.HashGenerator;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -73,7 +73,7 @@ import java.util.Set;
 import static org.restcomm.connect.interpreter.rcml.Verbs.play;
 import static org.restcomm.connect.interpreter.rcml.Verbs.say;
 
-public class ConfVoiceInterpreter extends UntypedActor {
+public class ConfVoiceInterpreter extends RestcommUntypedActor {
     private static final int ERROR_NOTIFICATION = 0;
     private static final int WARNING_NOTIFICATION = 1;
     static String EMAIL_SENDER;
@@ -146,15 +146,10 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
     private ActorRef originalInterpreter;
 
-    private ActorSystem system;
-
-    public ConfVoiceInterpreter(final Configuration configuration, final Sid account, final String version, final URI url,
-            final String method, final String emailAddress, final ActorRef conference, final DaoManager storage,
-            final CallInfo callInfo) {
+    public ConfVoiceInterpreter(final ConfVoiceInterpreterParams params) {
 
         super();
 
-        this.system = context().system();
         source = self();
         uninitialized = new State("uninitialized", null, null);
 
@@ -233,14 +228,14 @@ public class ConfVoiceInterpreter extends UntypedActor {
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
         // Initialize the runtime stuff.
-        this.accountId = account;
-        this.version = version;
-        this.url = url;
-        this.method = method;
-        this.emailAddress = emailAddress;
-        this.configuration = configuration;
+        this.accountId = params.getAccount();
+        this.version = params.getVersion();
+        this.url = params.getUrl();
+        this.method = params.getMethod();
+        this.emailAddress = params.getEmailAddress();
+        this.configuration = params.getConfiguration();
 
-        this.storage = storage;
+        this.storage = params.getStorage();
         this.synthesizer = tts(configuration.subset("speech-synthesizer"));
         final Configuration runtime = configuration.subset("runtime-settings");
         String path = runtime.getString("cache-path");
@@ -257,8 +252,17 @@ public class ConfVoiceInterpreter extends UntypedActor {
         this.cache = cache(path, uri);
         this.downloader = downloader();
 
-        this.callInfo = callInfo;
-        this.conference = conference;
+        this.callInfo = params.getCallInfo();
+        this.conference = params.getConference();
+    }
+
+    public static Props props(final ConfVoiceInterpreterParams params) {
+        return new Props(new UntypedActorFactory() {
+            @Override
+            public Actor create() throws Exception {
+                return new ConfVoiceInterpreter(params);
+            }
+        });
     }
 
     private ActorRef cache(final String path, final String uri) {
@@ -270,7 +274,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 return new DiskCacheFactory(configuration).getDiskCache(path, uri);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private ActorRef downloader() {
@@ -282,7 +286,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 return new Downloader();
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private String e164(final String number) {
@@ -311,7 +315,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 return new EmailService(configuration);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private Notification notification(final int log, final int error, final String message) {
@@ -510,7 +514,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 return new Parser(xml, self());
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private void postCleanup() {
@@ -584,7 +588,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(configuration);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private abstract class AbstractAction implements Action {

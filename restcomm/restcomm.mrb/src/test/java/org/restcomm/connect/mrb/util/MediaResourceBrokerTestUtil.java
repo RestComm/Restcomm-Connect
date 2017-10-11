@@ -15,6 +15,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.loader.ObjectFactory;
+import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
@@ -26,6 +27,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.List;
+import org.restcomm.connect.monitoringservice.MonitoringService;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -40,7 +42,10 @@ public class MediaResourceBrokerTestUtil {
     protected MybatisDaoManager daoManager;
     protected ActorRef mediaResourceBrokerNode1;
     protected ActorRef mediaResourceBrokerNode2;
+    protected ActorRef monitoringService;
 
+    protected static final String RESTCOMM_CONFIG = "restcomm.xml";
+    
     protected static final String CONFIG_PATH_NODE_1 = "/restcomm.xml";
     protected static final String CONFIG_PATH_NODE_2 = "/restcomm-node2.xml";
     protected static final String CONFIG_PATH_DAO_MANAGER = "/dao-manager.xml";
@@ -55,6 +60,12 @@ public class MediaResourceBrokerTestUtil {
     public static void beforeClass() throws Exception {
         Config config = ConfigFactory.load("akka_fault_tolerance_application.conf");
         system = ActorSystem.create("test", config );
+        XMLConfiguration rectommXML = new XMLConfiguration();
+        rectommXML.setDelimiterParsingDisabled(true);
+        rectommXML.setAttributeSplittingDisabled(true);
+        rectommXML.load(RESTCOMM_CONFIG);
+        // initialize DnsUtilImpl ClassName
+        DNSUtils.initializeDnsUtilImplClassName(rectommXML);
     }
 
     @AfterClass
@@ -81,6 +92,19 @@ public class MediaResourceBrokerTestUtil {
 			dao.updateConferenceDetailRecordStatus(cdr);
 		}
 	}
+    
+    private ActorRef monitoringService(final Configuration configuration, final DaoManager daoManager, final ClassLoader loader) {
+        final Props props = new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new MonitoringService(daoManager);
+            }
+        });
+        return system.actorOf(props);
+
+    }    
 
 	protected ActorRef mediaResourceBroker(final Configuration configuration, final DaoManager storage, final ClassLoader loader) throws UnknownHostException{
         ActorRef mrb = system.actorOf(new Props(new UntypedActorFactory() {
@@ -92,7 +116,10 @@ public class MediaResourceBrokerTestUtil {
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
         }));
-        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader), null);
+        if (monitoringService == null) {
+            monitoringService = monitoringService(configuration, daoManager,loader);
+        }
+        mrb.tell(new StartMediaResourceBroker(configuration, storage, loader, monitoringService), null);
         return mrb;
 
     }
@@ -100,7 +127,7 @@ public class MediaResourceBrokerTestUtil {
 	protected void startDaoManager() throws ConfigurationException, MalformedURLException{
         daoManagerConf = (XMLConfiguration)createDaoManagerCfg(CONFIG_PATH_DAO_MANAGER);
         daoManager = new MybatisDaoManager();
-        daoManager.configure(configurationNode1, daoManagerConf );
+        daoManager.configure(configurationNode1, daoManagerConf, null);
         daoManager.start();
 	}
 

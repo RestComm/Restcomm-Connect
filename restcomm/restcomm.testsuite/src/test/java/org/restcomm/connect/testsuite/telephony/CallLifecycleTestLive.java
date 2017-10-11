@@ -24,6 +24,7 @@ import java.net.URL;
 import java.text.ParseException;
 
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -47,7 +48,7 @@ import static org.junit.Assert.assertTrue;
     @ArquillianResource
     URL deploymentUrl;
 
-    //Dial Action URL: http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@192.168.1.151:8080/restcomm/2012-04-24/DialAction Method: POST
+    //Dial Action URL: http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@192.168.1.190:8080/restcomm/2012-04-24/DialAction Method: POST
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
 
@@ -59,23 +60,23 @@ import static org.junit.Assert.assertTrue;
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
     private SipPhone bobPhone;
-    private String bobContact = "sip:bob@192.168.1.151:5090";
+    private String bobContact = "sip:bob@192.168.1.190:5090";
 
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
     // of the VoiceURL will be executed.
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
-    private String aliceContact = "sip:alice@192.168.1.151:5091";
+    private String aliceContact = "sip:alice@192.168.1.190:5091";
 
     // Henrique is a simple SIP Client. Will not register with Restcomm
     private SipStack henriqueSipStack;
     private SipPhone henriquePhone;
-    private String henriqueContact = "sip:henrique@192.168.1.151:5092";
+    private String henriqueContact = "sip:henrique@192.168.1.190:5092";
 
     // George is a simple SIP Client. Will not register with Restcomm
     private SipStack georgeSipStack;
     private SipPhone georgePhone;
-    private String georgeContact = "sip:+131313@192.168.1.151:5070";
+    private String georgeContact = "sip:+131313@192.168.1.190:5070";
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
@@ -91,17 +92,17 @@ import static org.junit.Assert.assertTrue;
 
     @Before
     public void before() throws Exception {
-        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "192.168.1.151", "5090", "192.168.1.151:5080");
-        bobPhone = bobSipStack.createSipPhone("192.168.1.151", SipStack.PROTOCOL_UDP, 5080, bobContact);
+        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "192.168.1.190", "5090", "192.168.1.190:5080");
+        bobPhone = bobSipStack.createSipPhone("192.168.1.190", SipStack.PROTOCOL_UDP, 5080, bobContact);
 
-        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "192.168.1.151", "5091", "192.168.1.151:5080");
-        alicePhone = aliceSipStack.createSipPhone("192.168.1.151", SipStack.PROTOCOL_UDP, 5080, aliceContact);
+        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "192.168.1.190", "5091", "192.168.1.190:5080");
+        alicePhone = aliceSipStack.createSipPhone("192.168.1.190", SipStack.PROTOCOL_UDP, 5080, aliceContact);
 
-        henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "192.168.1.151", "5092", "192.168.1.151:5080");
-        henriquePhone = henriqueSipStack.createSipPhone("192.168.1.151", SipStack.PROTOCOL_UDP, 5080, henriqueContact);
+        henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "192.168.1.190", "5092", "192.168.1.190:5080");
+        henriquePhone = henriqueSipStack.createSipPhone("192.168.1.190", SipStack.PROTOCOL_UDP, 5080, henriqueContact);
 
-        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "192.168.1.151", "5070", "192.168.1.151:5080");
-        georgePhone = georgeSipStack.createSipPhone("192.168.1.151", SipStack.PROTOCOL_UDP, 5080, georgeContact);
+        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "192.168.1.190", "5070", "192.168.1.190:5080");
+        georgePhone = georgeSipStack.createSipPhone("192.168.1.190", SipStack.PROTOCOL_UDP, 5080, georgeContact);
     }
 
     @After
@@ -137,16 +138,16 @@ import static org.junit.Assert.assertTrue;
         wireMockRule.resetRequests();
         Thread.sleep(2000);
     }
-    
+
     @Test @Ignore
     public void testDialCancelBeforeDialingClientAliceAfterTryingLive() throws ParseException, InterruptedException, MalformedURLException {
 
-        Credential c = new Credential("192.168.1.151","bob","1234");
+        Credential c = new Credential("192.168.1.190","bob","1234");
         bobPhone.addUpdateCredential(c);
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1234@192.168.1.151:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1234@192.168.1.190:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitForAuthorisation(5 * 1000));
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -166,20 +167,29 @@ import static org.junit.Assert.assertTrue;
     @Test @Ignore
     public void testDialCancelBeforeDialingClientAliceAfterRinging() throws ParseException, InterruptedException, MalformedURLException {
 
-        Credential c = new Credential("192.168.1.151","bob","1234");
+        Credential c = new Credential("192.168.1.190","bob","1234");
         bobPhone.addUpdateCredential(c);
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1234@192.168.1.151:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1234@192.168.1.190:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitForAuthorisation(5 * 1000));
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING);
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+//        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+//        assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.OK);
+//        bobCall.sendInviteOkAck();
+
+        Thread.sleep(15);
 
         SipTransaction cancelTransaction = bobCall.sendCancel();
         assertNotNull(cancelTransaction);

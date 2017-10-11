@@ -20,12 +20,12 @@
 package org.restcomm.connect.commons.cache;
 
 import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.crypto.hash.Sha256Hash;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -39,7 +39,7 @@ import java.nio.file.Paths;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class DiskCache extends UntypedActor {
+public final class DiskCache extends RestcommUntypedActor {
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -146,11 +146,20 @@ public final class DiskCache extends UntypedActor {
         }
 
         final String extension = extension(uri).toLowerCase();
-        final File path = new File(cacheDir + hash + "." + extension);
-        if (!path.exists()) {
-            downloader.download(uri, path);
+        File path = null;
+        if (extension.equalsIgnoreCase("wav")) {
+            path = new File(cacheDir + hash + "." + extension);
+            if (!path.exists()) {
+                downloader.download(uri, path);
+            }
+            return URI.create(this.cacheUri + hash + "." + extension);
+        } else {
+            path = new File(cacheDir + hash + ".wav" );
+            if (!path.exists()) {
+                downloader.download(uri, path);
+            }
+            return URI.create(this.cacheUri + hash + ".wav");
         }
-        return URI.create(this.cacheUri + hash + "." + extension);
     }
 
     @Override

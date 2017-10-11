@@ -86,6 +86,7 @@ public class MockMediaResourceBroker extends MediaResourceBrokerGeneric {
         this.configuration = message.configuration();
         this.storage = message.storage();
         this.loader = message.loader();
+        this.monitoringService = message.getMonitoringService();
 
         localMediaServerEntity = uploadLocalMediaServersInDataBase();
         this.localMediaGateway = turnOnMediaGateway(localMediaServerEntity);

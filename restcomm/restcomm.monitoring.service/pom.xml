@@ -80,5 +80,11 @@
 			<version>${jain-sip-api.version}</version>
 			<scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.mgcp</artifactId>
+			<version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

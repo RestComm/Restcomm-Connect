@@ -2,7 +2,6 @@ package org.restcomm.connect.sms.smpp;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -20,6 +19,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -69,11 +69,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.restcomm.connect.interpreter.rcml.Verbs.email;
-import static org.restcomm.connect.interpreter.rcml.Verbs.redirect;
-import static org.restcomm.connect.interpreter.rcml.Verbs.sms;
+import static org.restcomm.connect.interpreter.rcml.Verbs.*;
 
-public class SmppInterpreter extends UntypedActor  {
+public class SmppInterpreter extends RestcommUntypedActor {
 
 
     private static final int ERROR_NOTIFICATION = 0;
@@ -84,7 +82,6 @@ public class SmppInterpreter extends UntypedActor  {
     // private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // States for the FSM.
 
-    private final ActorSystem system;
     private final State uninitialized;
     private final State acquiringLastSmsRequest;
     private final State downloadingRcml;
@@ -131,11 +128,8 @@ public class SmppInterpreter extends UntypedActor  {
     private ConcurrentHashMap<String, String> customHttpHeaderMap = new ConcurrentHashMap<String, String>();
     private ConcurrentHashMap<String, String> customRequestHeaderMap;
 
-    public SmppInterpreter(final ActorRef smppMessageHandler, final Configuration configuration, final DaoManager storage,
-            final Sid accountId, final String version, final URI url, final String method, final URI fallbackUrl,
-            final String fallbackMethod) {
+    public SmppInterpreter(final SmppInterpreterParams params) {
         super();
-        system = context().system();
         final ActorRef source = self();
         uninitialized = new State("uninitialized", null, null);
         acquiringLastSmsRequest = new State("acquiring last sms event", new AcquiringLastSmsEvent(source), null);
@@ -192,19 +186,28 @@ public class SmppInterpreter extends UntypedActor  {
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
         // Initialize the runtime stuff.
-        this.smppMessageHandler = smppMessageHandler;
+        this.smppMessageHandler = params.getSmsService();
         this.downloader = downloader();
-        this.storage = storage;
-        this.runtime = configuration.subset("runtime-settings");
-        this.configuration = configuration.subset("sms-aggregator");
-        this.accountId = accountId;
-        this.version = version;
-        this.url = url;
-        this.method = method;
-        this.fallbackUrl = fallbackUrl;
-        this.fallbackMethod = fallbackMethod;
+        this.storage = params.getStorage();
+        this.runtime = params.getConfiguration().subset("runtime-settings");
+        this.configuration = params.getConfiguration().subset("sms-aggregator");
+        this.accountId = params.getAccountId();
+        this.version = params.getVersion();
+        this.url = params.getUrl();
+        this.method = params.getMethod();
+        this.fallbackUrl = params.getFallbackUrl();
+        this.fallbackMethod = params.getFallbackMethod();
         this.sessions = new HashMap<Sid, ActorRef>();
         this.normalizeNumber = runtime.getBoolean("normalize-numbers-for-outbound-calls");
+    }
+
+    public static Props props(final SmppInterpreterParams params) {
+        return new Props(new UntypedActorFactory() {
+            @Override
+            public Actor create() throws Exception {
+                return new SmppInterpreter(params);
+            }
+        });
     }
 
     private ActorRef downloader() {
@@ -215,7 +218,7 @@ public class SmppInterpreter extends UntypedActor  {
                 return new Downloader();
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     ActorRef mailer(final Configuration configuration) {
@@ -226,7 +229,7 @@ public class SmppInterpreter extends UntypedActor  {
                 return new EmailService(configuration);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     protected String format(final String number) {
@@ -420,7 +423,7 @@ public class SmppInterpreter extends UntypedActor  {
                 return new Parser(xml, self());
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private void response(final Object message) {
