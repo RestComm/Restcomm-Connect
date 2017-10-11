@@ -488,16 +488,10 @@ public class MmsCallController extends MediaServerController {
         fsm.transition(message, acquiringMediaGateway);
     }
 
-    private void onCloseMediaSession(CloseMediaSession message, ActorRef self, ActorRef sender) throws Exception {
-        if (this.recording) {
-            stopRecordingCall(new Stop(false));
-        } else if (this.collecting) {
-            stopCollect(new Stop(false));
-        } else {
-            if (is(pending) || is(updatingRemoteConnection) || is(active) || is(acquiringInternalLink) || is(updatingInternalLink)
-                    || is(creatingMediaGroup) || is(acquiringBridge) || is(acquiringMediaSession)) {
-                fsm.transition(message, stopping);
-            }
+    private void onCloseMediaSession (CloseMediaSession message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(pending) || is(updatingRemoteConnection) || is(active) || is(acquiringInternalLink) || is(updatingInternalLink)
+                || is(creatingMediaGroup) || is(acquiringBridge) || is(acquiringMediaSession)) {
+            fsm.transition(message, stopping);
         }
     }
 
