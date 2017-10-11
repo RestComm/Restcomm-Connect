@@ -351,7 +351,9 @@ public class IncomingPhoneNumbersEndpointTest {
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        assertTrue(clientResponse.getStatus() == 400);
+        if(logger.isDebugEnabled())
+        	logger.debug("clientResponse for buying unavailable number: " + clientResponse);
+        assertEquals(400, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
@@ -442,7 +444,9 @@ public class IncomingPhoneNumbersEndpointTest {
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        assertTrue(clientResponse.getStatus() == 400);
+        if(logger.isDebugEnabled())
+        	logger.debug("clientResponse for buying unavailable number: " + clientResponse);
+        assertEquals(400, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
@@ -533,7 +537,9 @@ public class IncomingPhoneNumbersEndpointTest {
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        assertTrue(clientResponse.getStatus() == 400);
+        if(logger.isDebugEnabled())
+        	logger.debug("clientResponse for buying unavailable number: " + clientResponse);
+        assertEquals(400, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
@@ -624,7 +630,9 @@ public class IncomingPhoneNumbersEndpointTest {
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        assertTrue(clientResponse.getStatus() == 400);
+        if(logger.isDebugEnabled())
+        	logger.debug("clientResponse for buying unavailable number: " + clientResponse);
+        assertEquals(400, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
