@@ -108,7 +108,7 @@ public class DialRecordingAnswerDelayTest {
     private static int restcommPort = 5080;
     private static int restcommHTTPPort = 8080;
     private static String restcommContact = "127.0.0.1:" + restcommPort;
-    private String dialRestcomm = "sip:1111@" + restcommContact;    
+    private String dialRestcomm = "sip:1111@" + restcommContact;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -233,13 +233,13 @@ public class DialRecordingAnswerDelayTest {
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
         assertTrue(aliceCall.respondToDisconnect());
 
-        //Check recording
-        JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
-        assertNotNull(recording);
-        assertEquals(1, recording.size());
-        double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-        assertTrue(duration == 3.0);
-    }
+		//Check recording
+		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
+		assertNotNull(recording);
+		assertEquals(1, recording.size());
+		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
+		assertEquals(3.0, duration, 0.5);
+	}
 
     @Test
     public synchronized void testDialClientAlice_AliceDisconnects() throws InterruptedException, ParseException {
@@ -293,13 +293,13 @@ public class DialRecordingAnswerDelayTest {
         assertTrue(bobCall.waitForDisconnect(30 * 1000));
         assertTrue(bobCall.respondToDisconnect());
 
-        //Check recording
-        JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
-        assertNotNull(recording);
-        assertEquals(1, recording.size());
-        double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-        assertTrue(duration == 3.0);
-    }
+		//Check recording
+		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
+		assertNotNull(recording);
+		assertEquals(1, recording.size());
+		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
+		assertEquals(3.0, duration, 0.5);
+	}
 
     @Deployment(name = "DialRecordingTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
@@ -307,7 +307,7 @@ public class DialRecordingAnswerDelayTest {
         reconfigurePorts();
 
         Map<String, String> replacements = new HashMap();
-        //replace mediaport 2727 
+        //replace mediaport 2727
         replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("8090", String.valueOf(mockPort));
@@ -320,6 +320,6 @@ public class DialRecordingAnswerDelayTest {
         List<String> resources = new ArrayList();
         return WebArchiveUtil.createWebArchiveNoGw("restcomm-delay.xml",
                 "restcomm.script_dialTest_new", resources, replacements);
-    }    
+    }
 
 }

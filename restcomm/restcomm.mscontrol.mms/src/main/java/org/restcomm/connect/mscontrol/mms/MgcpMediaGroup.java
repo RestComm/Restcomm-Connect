@@ -335,6 +335,9 @@ public class MgcpMediaGroup extends MediaGroup {
                 }
             }
         } else if (StopMediaGroup.class.equals(klass)) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Got StopMediaGroup, current state: "+fsm.state().toString());
+            }
             if (acquiringLink.equals(state) || initializingLink.equals(state)) {
                 fsm.transition(message, inactive);
             } else if (active.equals(state) || openingLink.equals(state) || updatingLink.equals(state)) {
@@ -411,7 +414,6 @@ public class MgcpMediaGroup extends MediaGroup {
             final ActorRef self = self();
             ivr.tell(new StopEndpoint(signal), self);
             ivrInUse = false;
-            originator = null;
         }
     }
 
@@ -630,9 +632,6 @@ public class MgcpMediaGroup extends MediaGroup {
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
-
-//            // Terminate the actor
-//            getContext().stop(self());
         }
     }
 

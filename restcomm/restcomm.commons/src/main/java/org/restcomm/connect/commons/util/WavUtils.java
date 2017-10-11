@@ -19,6 +19,7 @@
  */
 package org.restcomm.connect.commons.util;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -58,7 +59,10 @@ public final class WavUtils {
             int sampleSize = 16;
             int channels = 1;
             return wavFile.length() / (sampleRate / 8.0) / sampleSize / channels;
-        } finally {
+        } catch (EOFException e) {
+            return 0;
+        }
+        finally {
             if (audio != null) {
                 audio.close();
             }

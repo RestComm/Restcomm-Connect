@@ -311,7 +311,7 @@ public class TestDialVerbPartTwo {
 
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
-        assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(0)).get("duration").getAsString()));
+        assertEquals(3.0, ((JsonObject)recordings.get(0)).get("duration").getAsDouble(), 0.5);
         assertNotNull(((JsonObject)recordings.get(0)).get("uri").getAsString());
     }
 
@@ -384,7 +384,7 @@ public class TestDialVerbPartTwo {
 
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
-        assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(0)).get("duration").getAsString()));
+        assertEquals(3.0, ((JsonObject)recordings.get(0)).get("duration").getAsDouble(), 0.5);
         assertNotNull(((JsonObject)recordings.get(0)).get("uri").getAsString());
     }
 
@@ -663,7 +663,7 @@ public class TestDialVerbPartTwo {
 
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
-        assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(0)).get("duration").getAsString()));
+        assertEquals(3.0, ((JsonObject)recordings.get(0)).get("duration").getAsDouble(), 0.5);
         assertNotNull(((JsonObject)recordings.get(0)).get("uri").getAsString());
 
         logger.info("About to check the Status Callback Requests");
@@ -768,7 +768,7 @@ public class TestDialVerbPartTwo {
         int recordingsSize = recordings.size();
         logger.info("Recording Size: "+recordingsSize);
         assertTrue(recordingsSize >= 1 || recordingsSize <= 3);
-        assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(0)).get("duration").getAsString()));
+        assertEquals(3.0, ((JsonObject)recordings.get(0)).get("duration").getAsDouble(), 0.5);
         assertNotNull(((JsonObject)recordings.get(0)).get("uri").getAsString());
 
         /*
@@ -825,7 +825,8 @@ public class TestDialVerbPartTwo {
         recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
         assertTrue(recordings.size() >= 2);
-        assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(1)).get("duration").getAsString()));
+        double duration = recordings.get(1).getAsJsonObject().get("duration").getAsDouble();
+        assertEquals(3.0, duration, 0.5);
         assertNotNull(((JsonObject)recordings.get(1)).get("uri").getAsString());
 
         /*
