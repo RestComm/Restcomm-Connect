@@ -190,7 +190,7 @@ public class DialRecordingTest {
         }
         Thread.sleep(1000);
         wireMockRule.resetRequests();
-        wireMockRule.resetMappings();
+        //do not use this as it requires Java8 wireMockRule.resetMappings();
         Thread.sleep(4000);
     }
 
