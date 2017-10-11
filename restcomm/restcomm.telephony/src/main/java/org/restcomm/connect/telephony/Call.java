@@ -1749,23 +1749,6 @@ public final class Call extends RestcommUntypedActor {
 
             msController.tell(new CloseMediaSession(), source);
 
-//            if (recording) {
-//                if (!direction.contains("outbound")) {
-//                    // Initial Call sent BYE
-//                    recording = false;
-//                    if (logger.isInfoEnabled()) {
-//                        logger.info("Call Direction: " + direction);
-//                        logger.info("Initial Call - Will stop recording now");
-//                    }
-//                    msController.tell(new Stop(false), self());
-//                    // VoiceInterpreter will take care to prepare the Recording object
-//                } else if (direction.equalsIgnoreCase("outbound-api")) {
-//                    //REST API Outgoing call, calculate recording
-//                    recordingDuration = (DateTime.now().getMillis() - recordingStart.getMillis()) / 1000;
-//                }
-//            } else {
-//            }
-
             //Github issue 2261 - https://github.com/RestComm/Restcomm-Connect/issues/2261
             //Set a ReceivedTimeout duration to make sure call doesn't block waiting for the response from MmsCallController
             context().setReceiveTimeout(Duration.create(2000, TimeUnit.MILLISECONDS));
@@ -2263,6 +2246,10 @@ public final class Call extends RestcommUntypedActor {
         if (is(completed)) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Got Hangup but already in completed state");
+            }
+            CallStateChanged event = new CallStateChanged(external);
+            for (final ActorRef observer : observers) {
+                observer.tell(event, self());
             }
             return;
         }

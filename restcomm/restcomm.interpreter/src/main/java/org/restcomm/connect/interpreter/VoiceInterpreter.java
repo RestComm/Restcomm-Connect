@@ -1312,7 +1312,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
 //                        logger.info("Will move to finishDialing because of callStateChanged");
 //                        fsm.transition(message, finishDialing);
 //                        call.tell(new StopMediaGroup(), null);
-//                        fsm.transition(message, finishRecording);
+                        fsm.transition(message, finishRecording);
                     } else if ((is(bridged) || is(forking)) && call == sender()) {
                         if (!dialActionExecuted) {
                             fsm.transition(message, finishDialing);

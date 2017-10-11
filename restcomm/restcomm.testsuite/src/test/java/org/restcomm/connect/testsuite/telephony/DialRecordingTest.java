@@ -190,6 +190,7 @@ public class DialRecordingTest {
         }
         Thread.sleep(1000);
         wireMockRule.resetRequests();
+        wireMockRule.resetMappings();
         Thread.sleep(4000);
     }
 
@@ -611,7 +612,7 @@ public class DialRecordingTest {
 		assertEquals(0, recording.size());
 	}
 
-	final String recordCallWithAction = "<Response><Record timeout=\"15\" maxLength=\"60\" action=\"http://127.0.0.1:8090/record-action\"/></Response>";
+	final String recordCallWithAction = "<Response><Record timeout=\"15\" maxLength=\"60\" action=\"http://127.0.0.1:"+mockPort+"/record-action\"/></Response>";
 	final String hangupRcml = "<Response><Hangup/></Response>";
 	@Test
 	public synchronized void testRecordCallWithAction() throws InterruptedException, ParseException {
@@ -670,7 +671,7 @@ public class DialRecordingTest {
 		assertEquals(3.0, duration,0.5);
 
 
-		Thread.sleep(2000);
+		Thread.sleep(3000);
 
         logger.info("\n\n &&&&&& About to check liveCalls &&&&&& \n");
 
@@ -718,6 +719,8 @@ public class DialRecordingTest {
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
+        bobCall.listenForDisconnect();
+
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(metrics);
         int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
@@ -727,8 +730,8 @@ public class DialRecordingTest {
         assertEquals(1, liveCalls);
         assertEquals(1, liveCallsArraySize);
 
-		bobCall.listenForDisconnect();
 		assertTrue(bobCall.waitForDisconnect(70000));
+
 		assertTrue(bobCall.respondToDisconnect());
 
         Thread.sleep(500);
