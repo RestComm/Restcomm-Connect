@@ -383,6 +383,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
 
                 org.restcomm.connect.provisioning.number.api.PhoneNumber phoneNumber = convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber);
                 boolean hasSuceeded = false;
+                boolean allowed = true;
                 if(phoneNumberProvisioningManager != null && isSIP == null) {
                     ApiRequest apiRequest = new ApiRequest(accountSid, data, ApiRequest.Type.INCOMINGPHONENUMBER);
                     //Before proceed to buy the DID, check with the extensions if the purchase is allowed or not
@@ -392,14 +393,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                         hasSuceeded = phoneNumberProvisioningManager.buyNumber(phoneNumber, phoneNumberParameters);
                     } else {
                         //Extensions didn't allowed this API action
-                        hasSuceeded = false;
+                        allowed = false;
                         if (logger.isInfoEnabled()) {
                             logger.info("DID purchase is now allowed for this account");
                         }
                     }
                     executePostApiAction(apiRequest);
                     //If Extension blocked the request, return the proper error response
-                    if (!hasSuceeded) {
+                    if (!allowed) {
                         String msg = "DID purchase is now allowed for this account";
                         String error = "DID_QUOTA_EXCEEDED";
                         return status(FORBIDDEN).entity(buildErrorResponseBody(msg, error, responseType)).build();
