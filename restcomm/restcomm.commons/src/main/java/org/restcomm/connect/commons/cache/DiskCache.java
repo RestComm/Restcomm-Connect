@@ -147,7 +147,7 @@ public final class DiskCache extends RestcommUntypedActor {
 
         final String extension = extension(uri).toLowerCase();
         File path = null;
-        if (extension.equalsIgnoreCase("wav")) {
+        if (!extension.equalsIgnoreCase("wav")) {
             path = new File(cacheDir + hash + "." + extension);
             if (!path.exists()) {
                 downloader.download(uri, path);
