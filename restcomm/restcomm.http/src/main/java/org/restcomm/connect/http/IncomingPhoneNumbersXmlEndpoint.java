@@ -28,9 +28,10 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
@@ -87,9 +88,8 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
     }
 
     @GET
-    public Response getIncomingPhoneNumbers(@PathParam("accountSid") final String accountSid,
-            @QueryParam("PhoneNumber") final String phoneNumber, @QueryParam("FriendlyName") final String friendlyName) {
-        return getIncomingPhoneNumbers(accountSid, phoneNumber, friendlyName, PhoneNumberType.Global, APPLICATION_XML_TYPE);
+    public Response getIncomingPhoneNumbers(@PathParam("accountSid") final String accountSid,@Context UriInfo info) {
+        return getIncomingPhoneNumbers(accountSid, PhoneNumberType.Global,info, APPLICATION_XML_TYPE);
     }
 
     @POST
@@ -130,9 +130,8 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
 
     @Path("/Local")
     @GET
-    public Response getIncomingLocalPhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,
-            @QueryParam("PhoneNumber") final String phoneNumber, @QueryParam("FriendlyName") final String friendlyName) {
-        return getIncomingPhoneNumbers(accountSid, phoneNumber, friendlyName, PhoneNumberType.Local, APPLICATION_XML_TYPE);
+    public Response getIncomingLocalPhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,@Context UriInfo info) {
+        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.Local,info, APPLICATION_XML_TYPE);
     }
 
     @Path("/Local")
@@ -144,9 +143,8 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
 
     @Path("/Local.json")
     @GET
-    public Response getIncomingLocalPhoneNumbersAsJSon(@PathParam("accountSid") final String accountSid,
-            @QueryParam("PhoneNumber") final String phoneNumber, @QueryParam("FriendlyName") final String friendlyName) {
-        return getIncomingPhoneNumbers(accountSid, phoneNumber, friendlyName, PhoneNumberType.Local, APPLICATION_JSON_TYPE);
+    public Response getIncomingLocalPhoneNumbersAsJSon(@PathParam("accountSid") final String accountSid,@Context UriInfo info) {
+        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.Local,info, APPLICATION_JSON_TYPE);
     }
 
     @Path("/Local.json")
@@ -160,9 +158,8 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
 
     @Path("/TollFree")
     @GET
-    public Response getIncomingTollFreePhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,
-            @QueryParam("PhoneNumber") final String phoneNumber, @QueryParam("FriendlyName") final String friendlyName) {
-        return getIncomingPhoneNumbers(accountSid, phoneNumber, friendlyName, PhoneNumberType.TollFree, APPLICATION_XML_TYPE);
+    public Response getIncomingTollFreePhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,@Context UriInfo info) {
+        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.TollFree,info, APPLICATION_XML_TYPE);
     }
 
     @Path("/TollFree")
@@ -174,9 +171,8 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
 
     @Path("/TollFree.json")
     @GET
-    public Response getIncomingTollFreePhoneNumbersAsJSon(@PathParam("accountSid") final String accountSid,
-            @QueryParam("PhoneNumber") final String phoneNumber, @QueryParam("FriendlyName") final String friendlyName) {
-        return getIncomingPhoneNumbers(accountSid, phoneNumber, friendlyName, PhoneNumberType.TollFree, APPLICATION_JSON_TYPE);
+    public Response getIncomingTollFreePhoneNumbersAsJSon(@PathParam("accountSid") final String accountSid,@Context UriInfo info) {
+        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.TollFree,info, APPLICATION_JSON_TYPE);
     }
 
     @Path("/TollFree.json")
@@ -190,9 +186,8 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
 
     @Path("/Mobile")
     @GET
-    public Response getIncomingMobilePhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,
-            @QueryParam("PhoneNumber") final String phoneNumber, @QueryParam("FriendlyName") final String friendlyName) {
-        return getIncomingPhoneNumbers(accountSid, phoneNumber, friendlyName, PhoneNumberType.Mobile, APPLICATION_XML_TYPE);
+    public Response getIncomingMobilePhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,@Context UriInfo info) {
+        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.Mobile,info, APPLICATION_XML_TYPE);
     }
 
     @Path("/Mobile")
@@ -204,9 +199,8 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
 
     @Path("/Mobile.json")
     @GET
-    public Response getIncomingMobilePhoneNumbersAsJSon(@PathParam("accountSid") final String accountSid,
-            @QueryParam("PhoneNumber") final String phoneNumber, @QueryParam("FriendlyName") final String friendlyName) {
-        return getIncomingPhoneNumbers(accountSid, phoneNumber, friendlyName, PhoneNumberType.Mobile, APPLICATION_JSON_TYPE);
+    public Response getIncomingMobilePhoneNumbersAsJSon(@PathParam("accountSid") final String accountSid,@Context UriInfo info) {
+        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.Mobile,info, APPLICATION_JSON_TYPE);
     }
 
     @Path("/Mobile.json")

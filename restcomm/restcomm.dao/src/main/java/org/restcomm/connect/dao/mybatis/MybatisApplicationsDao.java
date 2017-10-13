@@ -26,6 +26,7 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.ApplicationNumberSummary;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -94,6 +95,36 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
     }
 
     @Override
+    public List<Application> getApplicationsWithNumbers(Sid accountSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getApplicationsAndNumbers", accountSid.toString());
+            final List<Application> applications = new ArrayList<Application>();
+            if (results != null && !results.isEmpty()) {
+                Application previousApp = null;
+                Application app = null;
+                for (final Map<String, Object> result : results) {
+                    app = toApplication(result);
+                    if (previousApp != null && previousApp.getSid().equals(app.getSid()) )
+                        app = previousApp;
+                    // if there is a number bound to this application populate the latter with the number details
+                    if (result.get("num_sid") != null) {
+                        populateApplicationWithNumber(app, result, "num_");
+                    }
+                    if (previousApp == null || !previousApp.getSid().equals(app.getSid())) {
+                        // is this is a new application in the result map add it to the list. Remember, the same app can be returned many times if it's related to many numbers
+                        applications.add(app);
+                    }
+                    previousApp = app;
+                }
+            }
+            return applications;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public List<Application> getApplications(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
@@ -154,6 +185,35 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
         final Application.Kind kind = readApplicationKind(map.get("kind"));
         return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
                 uri, rcmlUrl, kind);
+    }
+
+    /**
+     * Populates application.numbers field with information of one or more numbers. The 'numbers' list is created if
+     * already null and an IncomingPhoneNumber is added into it based on information from the map. Invoking the same method
+     * several times to add more numbers to the same list is possible.
+     *
+     * @param application
+     * @param map
+     * @param field_prefix
+     * @return
+     */
+    private void populateApplicationWithNumber(Application application, final Map<String, Object> map, String field_prefix) {
+        // first create the number
+        ApplicationNumberSummary number = new ApplicationNumberSummary(
+                readString(map.get(field_prefix + "sid")),
+                readString(map.get(field_prefix + "friendly_name")),
+                readString(map.get(field_prefix + "phone_number")),
+                readString(map.get(field_prefix + "voice_application_sid")),
+                readString(map.get(field_prefix + "sms_application_sid")),
+                readString(map.get(field_prefix + "ussd_application_sid")),
+                readString(map.get(field_prefix + "refer_application_sid"))
+        );
+        List<ApplicationNumberSummary> numbers = application.getNumbers();
+        if (numbers == null) {
+            numbers = new ArrayList<ApplicationNumberSummary>();
+            application.setNumbers(numbers);
+        }
+        numbers.add(number);
     }
 
     private Map<String, Object> toMap(final Application application) {

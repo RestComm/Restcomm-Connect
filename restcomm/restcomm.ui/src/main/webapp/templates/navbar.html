@@ -1,12 +1,12 @@
 <div class="logo-container" ng-if="!!!loggedAccount">
-    <img src="resources/img/v2/restcomm-dashboard.png" class="restcomm-dashboard">
+    <img src="resources/img/v2/restcomm-console.png" class="restcomm-dashboard">
     <button class="sign-up-btn" type="submit" ng-show="false">Sign up</button>
 </div>
 
 <div class="logo-container-inside container-fluid" ng-if="!!loggedAccount" ng-controller="UserMenuCtrl">
     <div class="row">
         <div class="col-md-6 restcomm-dashboard-inside">
-            <img src="resources/img/v2/restcomm-dashboard-inside.png">
+            <img src="resources/img/v2/restcomm-console-inside.png">
         </div>
         <div class="col-md-6">
             <ul class="nav navbar-nav pull-right">
@@ -41,7 +41,7 @@
                 <a href="/olympus" target="_blank"><img src="resources/img/v2/icons-navbar/d-r-icon-olympus.png"> Olympus</a>
             </span>
             <span>
-                <a id="rvd-link" href="/restcomm-rvd" target="_blank"><img src="resources/img/v2/icons-navbar/d-r-icon-v-d.png"> Visual Designer</a>
+                <a id="rvd-link" href="/restcomm-rvd/" target="_blank"><img src="resources/img/v2/icons-navbar/d-r-icon-v-d.png"> Visual Designer</a>
             </span>
             <span>
                 <a ng-href="#/logs"><img src="resources/img/v2/icons-navbar/d-r-icon-logs.png"> Logs</a>

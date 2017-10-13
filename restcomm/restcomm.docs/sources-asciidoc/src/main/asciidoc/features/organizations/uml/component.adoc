@@ -1,0 +1,25 @@
+[plantuml, component, png]
+--
+node "Restcomm" {
+node "Organization1" {
+    [Org1-Accounts]
+    [Org1-Numbers]
+    [Org1-Clients]
+    [Org1-Applications]
+} 
+
+node "Organization2" {
+    [Org2-Accounts]
+    [Org2-Numbers]
+    [Org2-Clients]
+    [Org2-Applications]
+} 
+}
+    interface org1.restcomm.com as org1
+    interface org2.restcomm.com as org2
+    
+DNS -down- org1
+DNS -down- org2
+Organization1 -up- org1
+Organization2 -up- org2
+--

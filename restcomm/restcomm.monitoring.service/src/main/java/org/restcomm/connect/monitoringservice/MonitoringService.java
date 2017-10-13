@@ -20,40 +20,47 @@
  */
 package org.restcomm.connect.monitoringservice;
 
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.servlet.sip.ServletParseException;
-import javax.sip.header.ContactHeader;
-
+import akka.actor.ActorRef;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.InstanceId;
+import org.restcomm.connect.mgcp.stats.MgcpConnectionAdded;
+import org.restcomm.connect.mgcp.stats.MgcpConnectionDeleted;
+import org.restcomm.connect.mgcp.stats.MgcpEndpointAdded;
+import org.restcomm.connect.mgcp.stats.MgcpEndpointDeleted;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
 import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.GetLiveCalls;
+import org.restcomm.connect.telephony.api.GetStatistics;
 import org.restcomm.connect.telephony.api.MonitoringServiceResponse;
 import org.restcomm.connect.telephony.api.TextMessage;
 import org.restcomm.connect.telephony.api.UserRegistration;
 
-import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import javax.servlet.sip.ServletParseException;
+import javax.sip.header.ContactHeader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
-public class MonitoringService extends UntypedActor{
+public class MonitoringService extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private DaoManager daoManager;
@@ -82,6 +89,16 @@ public class MonitoringService extends UntypedActor{
     private final AtomicInteger maxConcurrentCalls;
     private final AtomicInteger maxConcurrentIncomingCalls;
     private final AtomicInteger maxConcurrentOutgoingCalls;
+
+    private final AtomicInteger mgcpEndpointsBridge;
+    private final AtomicInteger mgcpEndpointsIvr;
+    private final AtomicInteger mgcpEndpointsConference;
+    private final AtomicInteger mgcpEndpointsPacketRelay;
+    private final Map<String, String> mgcpEndpointMap;
+    private final Map<String, String> mgcpConnectionMap;
+
+
+
     private InstanceId instanceId;
 
 
@@ -111,6 +128,15 @@ public class MonitoringService extends UntypedActor{
         maxConcurrentCalls = new AtomicInteger(0);
         maxConcurrentIncomingCalls = new AtomicInteger(0);
         maxConcurrentOutgoingCalls = new AtomicInteger(0);
+
+        mgcpEndpointsBridge = new AtomicInteger(0);
+        mgcpEndpointsIvr = new AtomicInteger(0);
+        mgcpEndpointsConference = new AtomicInteger(0);
+        mgcpEndpointsPacketRelay = new AtomicInteger(0);
+
+        mgcpEndpointMap = new ConcurrentHashMap<String, String>();
+        mgcpConnectionMap = new ConcurrentHashMap<String, String>();
+
         if(logger.isInfoEnabled()){
             logger.info("Monitoring Service started");
         }
@@ -122,7 +148,7 @@ public class MonitoringService extends UntypedActor{
         final ActorRef self = self();
         final ActorRef sender = sender();
         if(logger.isInfoEnabled()){
-            logger.info("MonitoringService Processing Message: \"" + klass.getName() + " sender : "+ sender.getClass()+" self is terminated: "+self.isTerminated());
+            logger.info("MonitoringService, path: \""+self.path()+"\" Processing Message: \"" + klass.getName() + "\" sender : "+ sender.getClass()+"\" self is terminated: "+self.isTerminated()+"\"");
         }
 
         if (InstanceId.class.equals(klass)) {
@@ -138,6 +164,8 @@ public class MonitoringService extends UntypedActor{
             onCallResponse((CallResponse<CallInfo>)message, self, sender);
         } else if (CallStateChanged.class.equals(klass)) {
             onCallStateChanged((CallStateChanged)message, self, sender);
+        } else if (GetStatistics.class.equals(klass)) {
+            onGetStatistics((GetStatistics) message, self, sender);
         } else if (GetLiveCalls.class.equals(klass)) {
             onGetLiveCalls((GetLiveCalls)message, self, sender);
         } else if (UserRegistration.class.equals(klass)) {
@@ -151,6 +179,43 @@ public class MonitoringService extends UntypedActor{
                 if (logger.isDebugEnabled()) {
                     logger.debug("MonitoringService onGetCall, message is null, sender: "+sender.path());
                 }
+            }
+        } else if (MgcpConnectionAdded.class.equals(klass)) {
+            MgcpConnectionAdded mgcpConnectionAdded = (MgcpConnectionAdded)message;
+            mgcpConnectionMap.put(mgcpConnectionAdded.getConnId(), mgcpConnectionAdded.getEndpointId());
+        } else if (MgcpConnectionDeleted.class.equals(klass)) {
+            MgcpConnectionDeleted mgcpConnectionDeleted = (MgcpConnectionDeleted)message;
+            if (mgcpConnectionDeleted.getConnId() != null) {
+                mgcpConnectionMap.remove(mgcpConnectionDeleted.getConnId());
+            } else {
+                mgcpConnectionMap.values().removeAll(Collections.singleton(mgcpConnectionDeleted.getEndpoint()));
+            }
+        } else if (MgcpEndpointAdded.class.equals(klass)) {
+            MgcpEndpointAdded mgcpEndpointAdded = (MgcpEndpointAdded)message;
+            mgcpEndpointMap.put(mgcpEndpointAdded.getConnId(), mgcpEndpointAdded.getEndpoint());
+            logger.info("MonitoringService: Added endpoint: "+mgcpEndpointAdded.getEndpoint());
+            String endpoint = mgcpEndpointAdded.getEndpoint();
+            if (endpoint.contains("ivr")) {
+                mgcpEndpointsIvr.incrementAndGet();
+            } else if (endpoint.contains("conf")) {
+                mgcpEndpointsConference.incrementAndGet();
+            } else if (endpoint.contains("bridge")) {
+                mgcpEndpointsBridge.incrementAndGet();
+            } else if (endpoint.contains("relay")) {
+                mgcpEndpointsPacketRelay.incrementAndGet();
+            }
+        } else if (MgcpEndpointDeleted.class.equals(klass)) {
+            MgcpEndpointDeleted mgcpEndpointDeleted = (MgcpEndpointDeleted)message;
+            mgcpEndpointMap.values().removeAll(Collections.singleton(mgcpEndpointDeleted.getEndpoint()));
+            String endpoint = mgcpEndpointDeleted.getEndpoint();
+            if (endpoint.contains("ivr")) {
+                mgcpEndpointsIvr.decrementAndGet();
+            } else if (endpoint.contains("conf")) {
+                mgcpEndpointsConference.decrementAndGet();
+            } else if (endpoint.contains("bridge")) {
+                mgcpEndpointsBridge.decrementAndGet();
+            } else if (endpoint.contains("relay")) {
+                mgcpEndpointsPacketRelay.decrementAndGet();
             }
         }
     }
@@ -167,14 +232,14 @@ public class MonitoringService extends UntypedActor{
                 // required in case the Contact Header of the INVITE doesn't contain any user part
                 // as it is the case for Restcomm SDKs
                 if (logger.isDebugEnabled()) {
-                    logger.debug("onGetCall Another try on removing the user part from " + location);
+                    logger.debug("MonitoringService onGetCall Another try on removing the user part from " + location);
                 }
                 int indexOfAt = location.indexOf("@");
                 int indexOfColumn = location.indexOf(":");
                 String newLocation = location.substring(0, indexOfColumn+1).concat(location.substring(indexOfAt+1));
                 call = callLocationMap.get(newLocation);
                 if (logger.isDebugEnabled()) {
-                    logger.debug("onGetCall call " + call + " found for new Location " + newLocation);
+                    logger.debug("MonitoringService onGetCall call " + call + " found for new Location " + newLocation);
                 }
             }
             if (call != null) {
@@ -223,22 +288,22 @@ public class MonitoringService extends UntypedActor{
     private void onUserRegistration(UserRegistration userRegistration, ActorRef self, ActorRef sender) {
         if (userRegistration.getRegistered()) {
             try {
-                registeredUsers.put(userRegistration.getUser(), userRegistration.getAddress());
+                registeredUsers.put(userRegistration.getUserPlusOrganizationsSid(), userRegistration.getAddress());
             } catch (Exception e) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("There was an issue during the process of UserRegistration message, "+e);
+                    logger.debug("MonitoringService There was an issue during the process of UserRegistration message, "+e);
                 }
             }
         } else {
-            if (registeredUsers.containsKey(userRegistration.getUser())) {
-                registeredUsers.remove(userRegistration.getUser());
+            if (registeredUsers.containsKey(userRegistration.getUserPlusOrganizationsSid())) {
+                registeredUsers.remove(userRegistration.getUserPlusOrganizationsSid());
                 if (logger.isDebugEnabled()) {
-                    String msg = String.format("User %s removed from registered users", userRegistration.getUser());
+                    String msg = String.format("MonitoringService User %s removed from registered users", userRegistration.getUserPlusOrganizationsSid());
                     logger.debug(msg);
                 }
             } else {
                 if (logger.isDebugEnabled()) {
-                    String msg = String.format("User %s was not removed  because is not in the registered users", userRegistration.getUser());
+                    String msg = String.format("MonitoringService User %s was not removed  because is not in the registered users", userRegistration.getUserPlusOrganizationsSid());
                     logger.debug(msg);
                 }
             }
@@ -271,12 +336,14 @@ public class MonitoringService extends UntypedActor{
         }
         if (callInfo.direction().equalsIgnoreCase("inbound")) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Removed inbound call from: "+callInfo.from()+"  to: "+callInfo.to());
+                String msg = String.format("MonitoringService Removed inbound call from: %s to: %s, currently liveCalls: %d", callInfo.from(), callInfo.to(),callDetailsMap.size());
+                logger.debug(msg);
             }
             incomingCallDetailsMap.remove(senderPath);
         } else {
             if (logger.isDebugEnabled()) {
-                logger.debug("Removed outbound call from: "+callInfo.from()+"  to: "+callInfo.to());
+                String msg = String.format("MonitoringService Removed outbound call from: %s to: %s, currently liveCallS: %d ", callInfo.from(), callInfo.to(),callDetailsMap.size());
+                logger.debug(msg);
             }
             outgoingCallDetailsMap.remove(senderPath);
         }
@@ -297,13 +364,13 @@ public class MonitoringService extends UntypedActor{
         }
         if (callInfo.direction().equalsIgnoreCase("inbound")) {
             if (logger.isDebugEnabled()) {
-                logger.debug("New inbound call from: "+callInfo.from()+"  to: "+callInfo.to());
+                logger.debug("MonitoringService New inbound call from: "+callInfo.from()+"  to: "+callInfo.to());
             }
             incomingCallDetailsMap.put(senderPath, callInfo);
             incomingCallsUpToNow.incrementAndGet();
         } else {
             if (logger.isDebugEnabled()) {
-                logger.debug("New outbound call from: "+callInfo.from()+"  to: "+callInfo.to());
+                logger.debug("MonitoringService New outbound call from: "+callInfo.from()+"  to: "+callInfo.to());
             }
             outgoingCallDetailsMap.put(senderPath, callInfo);
             outgoingCallsUpToNow.incrementAndGet();
@@ -347,7 +414,7 @@ public class MonitoringService extends UntypedActor{
                     notFoundCalls.incrementAndGet();
                 }
             } else if(logger.isInfoEnabled()){
-                logger.info("CallInfo was not in the store for Call: "+senderPath);
+                logger.info("MonitoringService CallInfo was not in the store for Call: "+senderPath);
             }
         } else {
             logger.error("MonitoringService, SenderPath or storage is null.");
@@ -359,7 +426,8 @@ public class MonitoringService extends UntypedActor{
      * @param self
      * @param sender
      */
-    private void onGetLiveCalls(GetLiveCalls message, ActorRef self, ActorRef sender) throws ParseException {
+    private void onGetStatistics (GetStatistics message, ActorRef self, ActorRef sender) throws ParseException {
+
         List<CallInfo> callDetailsList = new ArrayList<CallInfo>(callDetailsMap.values());
         Map<String, Integer> countersMap = new HashMap<String, Integer>();
         Map<String, Double> durationMap = new HashMap<String, Double>();
@@ -371,7 +439,7 @@ public class MonitoringService extends UntypedActor{
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_INCOMING_CALLS_SINCE_UPTIME, incomingCallsUpToNow.get());
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_OUTGOING_CALL_SINCE_UPTIME, outgoingCallsUpToNow.get());
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_REGISTERED_USERS, registeredUsers.size());
-        countersMap.put(MonitoringMetrics.COUNTERS_MAP_LIVE_CALLS, callDetailsList.size());
+        countersMap.put(MonitoringMetrics.COUNTERS_MAP_LIVE_CALLS, callDetailsMap.size());
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_MAXIMUM_CONCURRENT_CALLS, maxConcurrentCalls.get());
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_MAXIMUM_CONCURRENT_INCOMING_CALLS, maxConcurrentIncomingCalls.get());
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_MAXIMUM_CONCURRENT_OUTGOING_CALLS, maxConcurrentOutgoingCalls.get());
@@ -384,7 +452,7 @@ public class MonitoringService extends UntypedActor{
             averageCallDurationLastHour = daoManager.getCallDetailRecordsDao().getAverageCallDurationLastHour(instanceId.getId());
         } catch (Exception e) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Exception during the query for AVG Call Duration: "+e.getStackTrace());
+                logger.debug("MonitoringService Exception during the query for AVG Call Duration: "+e.getStackTrace());
             }
         }
 
@@ -421,8 +489,40 @@ public class MonitoringService extends UntypedActor{
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_TEXT_MESSAGE_NOT_FOUND, textNotFound.get());
         countersMap.put(MonitoringMetrics.COUNTERS_MAP_TEXT_MESSAGE_OUTBOUND, textOutbound.get());
 
-        MonitoringServiceResponse callInfoList = new MonitoringServiceResponse(instanceId, callDetailsList, countersMap, durationMap);
+        if (message.isWithMgcpStats()) {
+            countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_CONNECTIONS, mgcpConnectionMap.size());
+            countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS, mgcpEndpointMap.size());
+            if (mgcpEndpointMap.size()>0) {
+                countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_BRIDGE, mgcpEndpointsBridge.get());
+                countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_IVR, mgcpEndpointsIvr.get());
+                countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_CONFERENCE, mgcpEndpointsConference.get());
+                countersMap.put(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_PACKETRELAY, mgcpEndpointsPacketRelay.get());
+            }
+        }
+
+        MonitoringServiceResponse callInfoList = null;
+        if (message.isWithLiveCallDetails()) {
+            callInfoList = new MonitoringServiceResponse(instanceId, callDetailsList, countersMap, durationMap, true, null);
+        } else {
+            URI callDetailsUri = null;
+            try {
+                callDetailsUri = new URI(String.format("/restcomm/%s/Accounts/%s/Supervisor.json/livecalls", RestcommConfiguration.getInstance().getMain().getApiVersion(), message.getAccountSid()));
+            } catch (URISyntaxException e) {
+                logger.error("MonitoringService Problem while trying to create the LiveCalls detail URI");
+            }
+            callInfoList = new MonitoringServiceResponse(instanceId, null, countersMap, durationMap, false, callDetailsUri);
+        }
         sender.tell(callInfoList, self);
+    }
+
+    /**
+     * @param message
+     * @param self
+     * @param sender
+     */
+    private void onGetLiveCalls (GetLiveCalls message, ActorRef self, ActorRef sender) throws ParseException {
+        List<CallInfo> callDetailsList = new ArrayList<CallInfo>(callDetailsMap.values());
+        sender.tell(new LiveCallsDetails(callDetailsList), self());
     }
 
     @Override

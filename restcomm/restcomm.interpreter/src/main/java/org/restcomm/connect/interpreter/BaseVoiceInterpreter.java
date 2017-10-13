@@ -21,7 +21,6 @@ package org.restcomm.connect.interpreter;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -46,7 +45,9 @@ import org.restcomm.connect.commons.cache.DiskCacheFactory;
 import org.restcomm.connect.commons.cache.DiskCacheRequest;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
 import org.restcomm.connect.commons.cache.HashGenerator;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
@@ -61,6 +62,7 @@ import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.TranscriptionsDao;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.dao.entities.SmsMessage;
@@ -83,7 +85,9 @@ import org.restcomm.connect.interpreter.rcml.Parser;
 import org.restcomm.connect.interpreter.rcml.ParserFailed;
 import org.restcomm.connect.interpreter.rcml.Tag;
 import org.restcomm.connect.interpreter.rcml.Verbs;
+import org.restcomm.connect.interpreter.rcml.domain.GatherAttributes;
 import org.restcomm.connect.mscontrol.api.messages.Collect;
+import org.restcomm.connect.mscontrol.api.messages.CollectedResult;
 import org.restcomm.connect.mscontrol.api.messages.MediaGroupResponse;
 import org.restcomm.connect.mscontrol.api.messages.Play;
 import org.restcomm.connect.mscontrol.api.messages.Record;
@@ -115,13 +119,16 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import org.apache.commons.lang.StringUtils;
 
 import static akka.pattern.Patterns.ask;
 
@@ -131,7 +138,7 @@ import static akka.pattern.Patterns.ask;
  * @author gvagenas@telestax.com
  * @author pavel.slegr@telestax.com
  */
-public abstract class BaseVoiceInterpreter extends UntypedActor {
+public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -139,8 +146,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
     static String EMAIL_SENDER = "restcomm@restcomm.org";
-
-    protected final ActorSystem system;
 
     // States for the FSM.
     // ==========================
@@ -165,6 +170,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     final State sendingSms;
     final State hangingUp;
     final State sendingEmail;
+    final State continuousGathering;
     // final State finished;
 
     // FSM.
@@ -221,6 +227,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     Sid recordingSid = null;
     URI recordingUri = null;
     URI publicRecordingUri = null;
+    MediaAttributes.MediaType recordingMediaType = null;
     // Information to reach the application that will be executed
     // by this interpreter.
     Sid accountId;
@@ -251,16 +258,19 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     String finishOnKey;
     int numberOfDigits = Short.MAX_VALUE;
     StringBuffer collectedDigits;
+    String speechResult;
     //Monitoring service
     ActorRef monitoring;
 
     final Set<Transition> transitions = new HashSet<Transition>();
     int recordingDuration = -1;
 
+    protected RestcommConfiguration restcommConfiguration;
+
     public BaseVoiceInterpreter() {
         super();
+        restcommConfiguration = RestcommConfiguration.getInstance();
         final ActorRef source = self();
-        this.system = context().system();
         // 20 States in common
         uninitialized = new State("uninitialized", null, null);
         acquiringAsrInfo = new State("acquiring asr info", new AcquiringAsrInfo(source), null);
@@ -283,6 +293,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         sendingSms = new State("sending sms", new SendingSms(source), null);
         hangingUp = new State("hanging up", new HangingUp(source), null);
         sendingEmail = new State("sending Email", new SendingEmail(source), null);
+        continuousGathering = new State("push partial result", new PartialGathering(source), null);
 
         // Initialize the transitions for the FSM.
         transitions.add(new Transition(uninitialized, acquiringAsrInfo));
@@ -362,8 +373,14 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         transitions.add(new Transition(processingGatherChildren, gathering));
         transitions.add(new Transition(processingGatherChildren, synthesizing));
         transitions.add(new Transition(processingGatherChildren, hangingUp));
+
         transitions.add(new Transition(gathering, finishGathering));
         transitions.add(new Transition(gathering, hangingUp));
+        transitions.add(new Transition(gathering, continuousGathering));
+
+        transitions.add(new Transition(continuousGathering, continuousGathering));
+        transitions.add(new Transition(continuousGathering, finishGathering));
+
         transitions.add(new Transition(finishGathering, faxing));
         transitions.add(new Transition(finishGathering, sendingEmail));
         transitions.add(new Transition(finishGathering, pausing));
@@ -394,6 +411,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     abstract List<NameValuePair> parameters();
 
+    protected URI resolve(URI uri){
+        return UriUtils.resolve(uri);
+    }
+
     public ActorRef getAsrService() {
         if (asrService == null || (asrService != null && asrService.isTerminated())) {
             asrService = asr(configuration.subset("speech-recognizer"));
@@ -418,7 +439,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new ISpeechAsr(configuration);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     @SuppressWarnings("unchecked")
@@ -467,31 +488,39 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new InterfaxService(configuration);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
+
+    LinkedList<String> states = new LinkedList<String>(Arrays.asList("queued", "ringing", "in-progress", "completed", "busy", "failed", "no-answer", "canceled"));
 
     //Callback using the Akka ask pattern (http://doc.akka.io/docs/akka/2.2.5/java/untyped-actors.html#Ask__Send-And-Receive-Future) will force VoiceInterpter to wait until
     //Downloader finish with this callback before shutdown everything. Issue https://github.com/Mobicents/RestComm/issues/437
     void callback(boolean ask) {
         if (viStatusCallback != null) {
-            if(logger.isInfoEnabled()){
-                logger.info("About to execute viStatusCallback: "+ viStatusCallback.toString());
-            }
-            if (viStatusCallbackMethod == null) {
-                viStatusCallbackMethod = "POST";
-            }
-            final List<NameValuePair> parameters = parameters();
-            requestCallback = new HttpRequestDescriptor(viStatusCallback, viStatusCallbackMethod, parameters);
-            if (!ask) {
-                downloader.tell(requestCallback, null);
-            } else if (ask) {
-                final Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
-                Future<Object> future = (Future<Object>) ask(downloader, requestCallback, timeout);
-                DownloaderResponse downloaderResponse = null;
-                try {
-                    downloaderResponse = (DownloaderResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
-                } catch (Exception e) {
-                    logger.error("Exception during callback with ask pattern");
+            if (states.remove(callState.toString().toLowerCase())) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("About to execute viStatusCallback: " + viStatusCallback.toString());
+                }
+                if (viStatusCallbackMethod == null) {
+                    viStatusCallbackMethod = "POST";
+                }
+                final List<NameValuePair> parameters = parameters();
+                requestCallback = new HttpRequestDescriptor(viStatusCallback, viStatusCallbackMethod, parameters);
+                if (!ask) {
+                    downloader.tell(requestCallback, null);
+                } else if (ask) {
+                    final Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
+                    Future<Object> future = (Future<Object>) ask(downloader, requestCallback, timeout);
+                    DownloaderResponse downloaderResponse = null;
+                    try {
+                        downloaderResponse = (DownloaderResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+                    } catch (Exception e) {
+                        logger.error("Exception during callback with ask pattern");
+                    }
+                }
+            } else {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Status Callback has been already executed for state: ",callState.toString());
                 }
             }
         } else if(logger.isInfoEnabled()){
@@ -528,7 +557,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         return cache;
     }
 
-    ActorRef cache(final String path, final String uri) {
+    protected ActorRef cache(final String path, final String uri) {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
             @Override
@@ -536,10 +565,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new DiskCacheFactory(configuration).getDiskCache(path, uri);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
-    ActorRef downloader() {
+    protected ActorRef downloader() {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
@@ -548,7 +577,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new Downloader();
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     String e164(final String number) {
@@ -581,7 +610,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return new EmailService(configuration);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     private Notification notification(final int log, final int error, final String message) {
@@ -646,18 +675,18 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     return new Parser(xml, self());
                 }
             });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     void postCleanup() {
         if (smsSessions.isEmpty() && outstandingAsrRequests == 0) {
             final UntypedActorContext context = getContext();
             if (parser != null)
-                system.stop(parser);
+                getContext().stop(parser);
             context.stop(self());
         }
         if (downloader != null && !downloader.isTerminated()) {
-            system.stop(downloader);
+            getContext().stop(downloader);
         }
     }
 
@@ -806,7 +835,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     ActorRef tts(final Configuration ttsConf) {
         final String classpath = ttsConf.getString("[@class]");
-
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
@@ -815,7 +843,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(ttsConf);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
+    }
+
+    protected boolean is(State state) {
+        return this.fsm.state().equals(state);
     }
 
     abstract class AbstractAction implements Action {
@@ -1184,7 +1216,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         }
         // Parse the language attribute.
         String language = "en";
-        attribute = verb.attribute("language");
+        attribute = verb.attribute(GatherAttributes.ATTRIBUTE_LANGUAGE);
         if (attribute != null) {
             language = attribute.value();
             if (language != null && !language.isEmpty()) {
@@ -1277,7 +1309,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
             final NotificationsDao notifications = storage.getNotificationsDao();
             String method = "POST";
-            Attribute attribute = verb.attribute("method");
+            Attribute attribute = verb.attribute(GatherAttributes.ATTRIBUTE_METHOD);
             if (attribute != null) {
                 method = attribute.value();
                 if (method != null && !method.isEmpty()) {
@@ -1325,7 +1357,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
         protected String finishOnKey(final Tag container) {
             String finishOnKey = "#";
-            Attribute attribute = container.attribute("finishOnKey");
+            Attribute attribute = container.attribute(GatherAttributes.ATTRIBUTE_FINISH_ON_KEY);
             if (attribute != null) {
                 finishOnKey = attribute.value();
                 if (finishOnKey != null && !finishOnKey.isEmpty()) {
@@ -1517,14 +1549,40 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
+
+            // check mandatory attribute partialResultCallback
+            Attribute partialResultCallbackAttr = verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK);
             final NotificationsDao notifications = storage.getNotificationsDao();
+            // parse attribute "input"
+            Attribute typeAttr = verb.attribute(GatherAttributes.ATTRIBUTE_INPUT);
+            Collect.Type inputType = null;
+            if (typeAttr == null) {
+                inputType = Collect.Type.DTMF;
+            } else {
+                inputType = Collect.Type.parseOrDefault(typeAttr.value(), Collect.Type.DTMF);
+            }
+
+            // parse attribute "language"
+            Attribute langAttr = verb.attribute(GatherAttributes.ATTRIBUTE_LANGUAGE);
+            String defaultLang = restcommConfiguration.getMgAsr().getDefaultLanguage();
+            String lang = parseAttrLanguage(langAttr, defaultLang);
+
+            // parse attribute "hints"
+            String hints = null;
+            Attribute hintsAttr = verb.attribute(GatherAttributes.ATTRIBUTE_HINTS);
+            if (hintsAttr != null && !StringUtils.isEmpty(hintsAttr.value())) {
+                hints = hintsAttr.value();
+            } else if (inputType != Collect.Type.DTMF) {
+                logger.warning("'{}' attribute is null or empty", GatherAttributes.ATTRIBUTE_HINTS);
+            }
+
             // Parse finish on key.
             finishOnKey = finishOnKey(verb);
             // Parse the number of digits.
-            Attribute attribute = verb.attribute("numDigits");
+            Attribute attribute = verb.attribute(GatherAttributes.ATTRIBUTE_NUM_DIGITS);
             if (attribute != null) {
                 final String value = attribute.value();
-                if (value != null && !value.isEmpty()) {
+                if (!StringUtils.isEmpty(value)) {
                     try {
                         numberOfDigits = Integer.parseInt(value);
                     } catch (final NumberFormatException exception) {
@@ -1535,11 +1593,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
             }
             // Parse timeout.
-            int timeout = 5;
-            attribute = verb.attribute("timeout");
+            int timeout = restcommConfiguration.getMgAsr().getDefaultGatheringTimeout();
+            attribute = verb.attribute(GatherAttributes.ATTRIBUTE_TIME_OUT);
             if (attribute != null) {
                 final String value = attribute.value();
-                if (value != null && !value.isEmpty()) {
+                if (!StringUtils.isEmpty(value)) {
                     try {
                         timeout = Integer.parseInt(value);
                     } catch (final NumberFormatException exception) {
@@ -1550,7 +1608,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
             }
             // Start gathering.
-            final Collect collect = new Collect(gatherPrompts, null, timeout, finishOnKey, numberOfDigits);
+            final Collect collect = new Collect(restcommConfiguration.getMgAsr().getDefaultDriver(), inputType, gatherPrompts,
+                    null, timeout, finishOnKey, numberOfDigits, lang, hints, partialResultCallbackAttr != null && !StringUtils.isEmpty(partialResultCallbackAttr.value()));
             call.tell(collect, source);
             // Some clean up.
             gatherChildren = null;
@@ -1558,10 +1617,79 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             dtmfReceived = false;
             collectedDigits = new StringBuffer("");
         }
+
+        private String parseAttrLanguage(Attribute langAttr, String defaultLang) {
+            if (langAttr != null && !StringUtils.isEmpty(langAttr.value())) {
+                return restcommConfiguration.getMgAsr().getLanguages().contains(langAttr.value()) ? langAttr.value() : defaultLang;
+            } else {
+                logger.warning("Illegal or unsupported attribute value: '{}'. Will be use default value '{}'", langAttr,
+                        defaultLang);
+                return defaultLang;
+            }
+        }
     }
 
-    final class FinishGathering extends AbstractGatherAction {
-//        StringBuffer collectedDigits = new StringBuffer("");
+    private abstract class CallbackGatherAction extends AbstractGatherAction {
+
+        public CallbackGatherAction(ActorRef source) {
+            super(source);
+        }
+
+        protected void execHttpRequest(final NotificationsDao notifications,
+                                       final Attribute callbackAttr, final Attribute methodAttr,
+                                       final List<NameValuePair> parameters) {
+            if (callbackAttr == null) {
+                final Notification notification = notification(ERROR_NOTIFICATION, 11101, "Callback attribute is null");
+                notifications.addNotification(notification);
+                sendMail(notification);
+                final StopInterpreter stop = new StopInterpreter();
+                source.tell(stop, source);
+                logger.error("CallbackAttribute is null, CallbackGatherAction failed");
+            }
+            String action = callbackAttr.value();
+            if (StringUtils.isEmpty(action)) {
+                final Notification notification = notification(ERROR_NOTIFICATION, 11101, "Callback attribute value is null or empty");
+                notifications.addNotification(notification);
+                sendMail(notification);
+                final StopInterpreter stop = new StopInterpreter();
+                source.tell(stop, source);
+                logger.error("Action url is null or empty");
+            }
+            URI target;
+            try {
+                target = URI.create(action);
+            } catch (final Exception exception) {
+                final Notification notification = notification(ERROR_NOTIFICATION, 11100, action
+                        + " is an invalid URI.");
+                notifications.addNotification(notification);
+                sendMail(notification);
+                final StopInterpreter stop = new StopInterpreter();
+                source.tell(stop, source);
+                return;
+            }
+            String method = "POST";
+            if (methodAttr != null) {
+                method = methodAttr.value();
+                if (!StringUtils.isEmpty(method)) {
+                    if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
+                        final Notification notification = notification(WARNING_NOTIFICATION, 14104, method
+                                + " is not a valid HTTP method for <Gather>");
+                        notifications.addNotification(notification);
+                        method = "POST";
+                    }
+                } else {
+                    method = "POST";
+                }
+            }
+            final URI base = request.getUri();
+            final URI uri = UriUtils.resolve(base, target);
+            request = new HttpRequestDescriptor(uri, method, parameters);
+            downloader.tell(request, source);
+        }
+    }
+
+    final class FinishGathering extends CallbackGatherAction {
+
         public FinishGathering(final ActorRef source) {
             super(source);
         }
@@ -1569,16 +1697,16 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             final NotificationsDao notifications = storage.getNotificationsDao();
-            Attribute attribute = verb.attribute("action");
+
             String digits = collectedDigits.toString();
             collectedDigits = new StringBuffer();
-            if(logger.isInfoEnabled()){
-                logger.info("Digits collected: "+digits);
+            if (logger.isInfoEnabled()) {
+                logger.info("Digits collected: " + digits);
             }
-            if (digits.equals(finishOnKey)){
+            if (digits.equals(finishOnKey)) {
                 digits = "";
             }
-            if (logger.isDebugEnabled()){
+            if (logger.isDebugEnabled()) {
                 logger.debug("Digits collected : " + digits);
             }
             // https://bitbucket.org/telestax/telscale-restcomm/issue/150/verb-is-looping-by-default-and-never
@@ -1586,57 +1714,50 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             // before entering any other digits, Twilio will not make a request to the 'action' URL but instead continue
             // processing
             // the current TwiML document with the verb immediately following the <Gather>
-            if (attribute != null && (digits != null && !digits.trim().isEmpty())) {
-                String action = attribute.value();
-                if (action != null && !action.isEmpty()) {
-                    URI target = null;
-                    try {
-                        target = URI.create(action);
-                    } catch (final Exception exception) {
-                        final Notification notification = notification(ERROR_NOTIFICATION, 11100, action
-                                + " is an invalid URI.");
-                        notifications.addNotification(notification);
-                        sendMail(notification);
-                        final StopInterpreter stop = new StopInterpreter();
-                        source.tell(stop, source);
-                        return;
-                    }
-                    final URI base = request.getUri();
-                    final URI uri = UriUtils.resolve(base, target);
-                    // Parse "method".
-                    String method = "POST";
-                    attribute = verb.attribute("method");
-                    if (attribute != null) {
-                        method = attribute.value();
-                        if (method != null && !method.isEmpty()) {
-                            if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
-                                final Notification notification = notification(WARNING_NOTIFICATION, 14104, method
-                                        + " is not a valid HTTP method for <Gather>");
-                                notifications.addNotification(notification);
-                                method = "POST";
-                            }
-                        } else {
-                            method = "POST";
-                        }
-                    }
-                    // Redirect to the action url.
-                    if (digits.endsWith(finishOnKey)) {
-                        final int finishOnKeyIndex = digits.lastIndexOf(finishOnKey);
-                        digits = digits.substring(0, finishOnKeyIndex);
-                    }
-                    final List<NameValuePair> parameters = parameters();
-                    parameters.add(new BasicNameValuePair("Digits", digits));
-                    request = new HttpRequestDescriptor(uri, method, parameters);
-                    downloader.tell(request, source);
-                    return;
+            Attribute action = verb.attribute(GatherAttributes.ATTRIBUTE_ACTION);
+            if (action != null && (!digits.trim().isEmpty() || !StringUtils.isEmpty(speechResult))) {
+                // Redirect to the action url.
+                if (digits.endsWith(finishOnKey)) {
+                    final int finishOnKeyIndex = digits.lastIndexOf(finishOnKey);
+                    digits = digits.substring(0, finishOnKeyIndex);
                 }
+                final List<NameValuePair> parameters = parameters();
+                parameters.add(new BasicNameValuePair("Digits", digits));
+                parameters.add(new BasicNameValuePair("SpeechResult", speechResult));
+
+                execHttpRequest(notifications, action, verb.attribute(GatherAttributes.ATTRIBUTE_METHOD), parameters);
+                speechResult = null;
+                return;
             }
-            if(logger.isInfoEnabled()){
+            if (logger.isInfoEnabled()) {
                 logger.info("Attribute, Action or Digits is null, FinishGathering failed, moving to the next available verb");
             }
+            speechResult = null;
             // Ask the parser for the next action to take.
             final GetNextVerb next = new GetNextVerb();
             parser.tell(next, source);
+        }
+    }
+
+    final class PartialGathering extends CallbackGatherAction {
+
+        public PartialGathering(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            if (verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK) != null
+                    && !StringUtils.isEmpty(verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK).value())) {
+                final MediaGroupResponse<CollectedResult> asrResponse = (MediaGroupResponse<CollectedResult>) message;
+
+                final List<NameValuePair> parameters = parameters();
+                parameters.add(new BasicNameValuePair("UnstableSpeechResult", asrResponse.get().getResult()));
+
+                final NotificationsDao notifications = storage.getNotificationsDao();
+                execHttpRequest(notifications, verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK),
+                        verb.attribute(GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK_METHOD), parameters);
+            }
         }
     }
 
@@ -1653,7 +1774,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
             final NotificationsDao notifications = storage.getNotificationsDao();
             String finishOnKey = "1234567890*#";
-            Attribute attribute = verb.attribute("finishOnKey");
+            Attribute attribute = verb.attribute(GatherAttributes.ATTRIBUTE_FINISH_ON_KEY);
             if (attribute != null) {
                 finishOnKey = attribute.value();
                 if (finishOnKey != null && !finishOnKey.isEmpty()) {
@@ -1695,7 +1816,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
             }
             int timeout = 5;
-            attribute = verb.attribute("timeout");
+            attribute = verb.attribute(GatherAttributes.ATTRIBUTE_TIME_OUT);
             if (attribute != null) {
                 final String value = attribute.value();
                 if (value != null && !value.isEmpty()) {
@@ -1704,6 +1825,20 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     } catch (final NumberFormatException exception) {
                         final Notification notification = notification(WARNING_NOTIFICATION, 13612, timeout
                                 + " is not a valid timeout value");
+                        notifications.addNotification(notification);
+                    }
+                }
+            }
+            recordingMediaType = MediaAttributes.MediaType.AUDIO_ONLY;
+            attribute = verb.attribute("media");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    try {
+                        recordingMediaType = MediaAttributes.MediaType.getValueOf(value);
+                    } catch (final IllegalArgumentException exception) {
+                        final Notification notification = notification(WARNING_NOTIFICATION, 13612, value
+                                + " is not a valid media value");
                         notifications.addNotification(notification);
                     }
                 }
@@ -1718,8 +1853,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (!httpRecordingUri.endsWith("/")) {
                 httpRecordingUri += "/";
             }
-            path += recordingSid.toString() + ".wav";
-            httpRecordingUri += recordingSid.toString() + ".wav";
+            String fileExtension = recordingMediaType.equals(MediaAttributes.MediaType.AUDIO_ONLY) ? ".wav" : ".mp4";
+            path += recordingSid.toString() + fileExtension;
+            httpRecordingUri += recordingSid.toString() + fileExtension;
             recordingUri = URI.create(path);
             try {
                 publicRecordingUri = UriUtils.resolve(new URI(httpRecordingUri));
@@ -1744,9 +1880,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     source.tell(stop, source);
                     return;
                 }
-                record = new Record(recordingUri, prompts, timeout, maxLength, finishOnKey);
+                record = new Record(recordingUri, prompts, timeout, maxLength, finishOnKey, recordingMediaType);
             } else {
-                record = new Record(recordingUri, timeout, maxLength, finishOnKey);
+                record = new Record(recordingUri, timeout, maxLength, finishOnKey, recordingMediaType);
             }
 
             call.tell(record, source);
@@ -1761,6 +1897,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
+            if (logger.isInfoEnabled()) {
+                logger.info("##### At FinishRecording, message: " + message.getClass());
+            }
+            boolean amazonS3Enabled = configuration.subset("amazon-s3").getBoolean("enabled");
+
             final Class<?> klass = message.getClass();
             if (CallStateChanged.class.equals(klass)) {
                 final CallStateChanged event = (CallStateChanged) message;
@@ -1781,10 +1922,17 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             // Create a record of the recording.
             Double duration = WavUtils.getAudioDuration(recordingUri);
             if (duration.equals(0.0)) {
-                final DateTime end = DateTime.now();
-                duration = new Double((end.getMillis() - callRecord.getStartTime().getMillis()) / 1000);
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("Recording file %s, duration is 0 and will return",recordingUri);
+                    logger.info(msg);
+                }
+                return;
             } else if(logger.isDebugEnabled()) {
                 logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
+            }
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Recording duration: "+duration);
             }
 
             final Recording.Builder builder = Recording.builder();
@@ -1799,72 +1947,79 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             builder.setUri(URI.create(buffer.toString()));
             final Recording recording = builder.build();
             final RecordingsDao recordings = storage.getRecordingsDao();
-            recordings.addRecording(recording);
-            // Start transcription.
-            URI transcribeCallback = null;
-            Attribute attribute = verb.attribute("transcribeCallback");
-            if (attribute != null) {
-                final String value = attribute.value();
-                if (value != null && !value.isEmpty()) {
-                    try {
-                        transcribeCallback = URI.create(value);
-                    } catch (final Exception exception) {
-                        final Notification notification = notification(ERROR_NOTIFICATION, 11100, transcribeCallback
-                                + " is an invalid URI.");
-                        notifications.addNotification(notification);
-                        sendMail(notification);
-                        final StopInterpreter stop = new StopInterpreter();
-                        source.tell(stop, source);
-                        return;
-                    }
-                }
-            }
-            boolean transcribe = false;
-            if (transcribeCallback != null) {
-                transcribe = true;
-            } else {
-                attribute = verb.attribute("transcribe");
+            recordings.addRecording(recording, recordingMediaType);
+
+            Attribute attribute = null;
+
+            if (checkAsrService()) {
+                // ASR service is enabled. Start transcription.
+                URI transcribeCallback = null;
+                attribute = verb.attribute("transcribeCallback");
                 if (attribute != null) {
                     final String value = attribute.value();
                     if (value != null && !value.isEmpty()) {
-                        transcribe = Boolean.parseBoolean(value);
+                        try {
+                            transcribeCallback = URI.create(value);
+                        } catch (final Exception exception) {
+                            final Notification notification = notification(ERROR_NOTIFICATION, 11100, transcribeCallback
+                                    + " is an invalid URI.");
+                            notifications.addNotification(notification);
+                            sendMail(notification);
+                            final StopInterpreter stop = new StopInterpreter();
+                            source.tell(stop, source);
+                            return;
+                        }
                     }
                 }
-            }
-            if (transcribe && checkAsrService()) {
-                final Sid sid = Sid.generate(Sid.Type.TRANSCRIPTION);
-                final Transcription.Builder otherBuilder = Transcription.builder();
-                otherBuilder.setSid(sid);
-                otherBuilder.setAccountSid(accountId);
-                otherBuilder.setStatus(Transcription.Status.IN_PROGRESS);
-                otherBuilder.setRecordingSid(recordingSid);
-                otherBuilder.setTranscriptionText("Transcription Text not available");
-                otherBuilder.setDuration(duration);
-                otherBuilder.setPrice(new BigDecimal("0.00"));
-                buffer = new StringBuilder();
-                buffer.append("/").append(version).append("/Accounts/").append(accountId.toString());
-                buffer.append("/Transcriptions/").append(sid.toString());
-                final URI uri = URI.create(buffer.toString());
-                otherBuilder.setUri(uri);
-                final Transcription transcription = otherBuilder.build();
-                final TranscriptionsDao transcriptions = storage.getTranscriptionsDao();
-                transcriptions.addTranscription(transcription);
-                try {
-                    final Map<String, Object> attributes = new HashMap<String, Object>();
-                    attributes.put("callback", transcribeCallback);
-                    attributes.put("transcription", transcription);
-                    getAsrService().tell(new AsrRequest(new File(recordingUri), "en", attributes), source);
-                    outstandingAsrRequests++;
-                } catch (final Exception exception) {
-                    logger.error(exception.getMessage(), exception);
+                boolean transcribe = false;
+                if (transcribeCallback != null) {
+                    transcribe = true;
+                } else {
+                    attribute = verb.attribute("transcribe");
+                    if (attribute != null) {
+                        final String value = attribute.value();
+                        if (value != null && !value.isEmpty()) {
+                            transcribe = Boolean.parseBoolean(value);
+                        }
+                    }
                 }
-            } else if(logger.isInfoEnabled()){
-                logger.info("AsrService activated but not properly configured. Please set api-key for AsrService");
-        }
+                if (transcribe && checkAsrService()) {
+                    final Sid sid = Sid.generate(Sid.Type.TRANSCRIPTION);
+                    final Transcription.Builder otherBuilder = Transcription.builder();
+                    otherBuilder.setSid(sid);
+                    otherBuilder.setAccountSid(accountId);
+                    otherBuilder.setStatus(Transcription.Status.IN_PROGRESS);
+                    otherBuilder.setRecordingSid(recordingSid);
+                    otherBuilder.setTranscriptionText("Transcription Text not available");
+                    otherBuilder.setDuration(duration);
+                    otherBuilder.setPrice(new BigDecimal("0.00"));
+                    buffer = new StringBuilder();
+                    buffer.append("/").append(version).append("/Accounts/").append(accountId.toString());
+                    buffer.append("/Transcriptions/").append(sid.toString());
+                    final URI uri = URI.create(buffer.toString());
+                    otherBuilder.setUri(uri);
+                    final Transcription transcription = otherBuilder.build();
+                    final TranscriptionsDao transcriptions = storage.getTranscriptionsDao();
+                    transcriptions.addTranscription(transcription);
+                    try {
+                        final Map<String, Object> attributes = new HashMap<String, Object>();
+                        attributes.put("callback", transcribeCallback);
+                        attributes.put("transcription", transcription);
+                        getAsrService().tell(new AsrRequest(new File(recordingUri), "en", attributes), source);
+                        outstandingAsrRequests++;
+                    } catch (final Exception exception) {
+                        logger.error(exception.getMessage(), exception);
+                    }
+                }
+            } else {
+                if(logger.isDebugEnabled()){
+                    logger.debug("AsrService is not enabled");
+                }
+            }
 
             // If action is present redirect to the action URI.
             String action = null;
-            attribute = verb.attribute("action");
+            attribute = verb.attribute(GatherAttributes.ATTRIBUTE_ACTION);
             if (attribute != null) {
                 action = attribute.value();
                 if (action != null && !action.isEmpty()) {
@@ -1884,7 +2039,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     final URI uri = UriUtils.resolve(base, target);
                     // Parse "method".
                     String method = "POST";
-                    attribute = verb.attribute("method");
+                    attribute = verb.attribute(GatherAttributes.ATTRIBUTE_METHOD);
                     if (attribute != null) {
                         method = attribute.value();
                         if (method != null && !method.isEmpty()) {
@@ -1899,7 +2054,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         }
                     }
                     final List<NameValuePair> parameters = parameters();
-                    boolean amazonS3Enabled = configuration.subset("amazon-s3").getBoolean("enabled");
                     if (amazonS3Enabled) {
                         //If Amazon S3 is enabled the Recordings DAO uploaded the wav file to S3 and changed the URI
                         parameters.add(new BasicNameValuePair("RecordingUrl", recording.getFileUri().toURL().toString()));
@@ -1910,24 +2064,28 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         if (!httpRecordingUri.endsWith("/")) {
                             httpRecordingUri += "/";
                         }
-                        httpRecordingUri += recordingSid.toString() + ".wav";
+                        String fileExtension = recordingMediaType.equals(MediaAttributes.MediaType.AUDIO_ONLY) ? ".wav" : ".mp4";
+                        httpRecordingUri += recordingSid.toString() + fileExtension;
                         URI publicRecordingUri = UriUtils.resolve(new URI(httpRecordingUri));
                         parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
                         parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUri.toString()));
                     }
                     parameters.add(new BasicNameValuePair("RecordingDuration", Double.toString(duration)));
                     if (MediaGroupResponse.class.equals(klass)) {
-                        final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
-                        parameters.add(new BasicNameValuePair("Digits", response.get()));
+                        final MediaGroupResponse response = (MediaGroupResponse) message;
+                        Object data = response.get();
+                        if (data instanceof CollectedResult) {
+                            parameters.add(new BasicNameValuePair("Digits", ((CollectedResult)data).getResult()));
+                        } else if(data instanceof String) {
+                            parameters.add(new BasicNameValuePair("Digits", (String)data));
+                        } else {
+                            logger.error("unidentified response recived in MediaGroupResponse: "+response);
+                        }
                         request = new HttpRequestDescriptor(uri, method, parameters);
                         if (logger.isInfoEnabled()){
                             logger.info("About to execute Record action to: "+uri);
                         }
                         downloader.tell(request, self());
-                        // A little clean up.
-                        recordingSid = null;
-                        recordingUri = null;
-                        return;
                     } else if (CallStateChanged.class.equals(klass)) {
                         parameters.add(new BasicNameValuePair("Digits", "hangup"));
                         request = new HttpRequestDescriptor(uri, method, parameters);
@@ -1935,26 +2093,19 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                             logger.info("About to execute Record action to: "+uri);
                         }
                         downloader.tell(request, self());
-                        // A little clean up.
-                        recordingSid = null;
-                        recordingUri = null;
                     }
 //                    final StopInterpreter stop = new StopInterpreter();
 //                    source.tell(stop, source);
                 }
-            }
-            if (CallStateChanged.class.equals(klass) ) {
-                if (action == null || action.isEmpty()) {
-                    source.tell(new StopInterpreter(), source);
-                }
             } else {
-                // Ask the parser for the next action to take.
+                //Action is null here
                 final GetNextVerb next = new GetNextVerb();
                 parser.tell(next, source);
             }
             // A little clean up.
             recordingSid = null;
             recordingUri = null;
+            recordingMediaType = null;
         }
     }
 
@@ -2040,7 +2191,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 // Start observing events from the sms session.
                 session.tell(new Observe(source), source);
                 // Store the status callback in the sms session.
-                attribute = verb.attribute("viStatusCallback");
+                attribute = verb.attribute("statusCallback");
                 if (attribute != null) {
                     String callback = attribute.value();
                     if (callback != null && !callback.isEmpty()) {

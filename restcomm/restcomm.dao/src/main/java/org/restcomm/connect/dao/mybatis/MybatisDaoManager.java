@@ -39,12 +39,14 @@ import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.ExtensionsConfigurationDao;
 import org.restcomm.connect.dao.GatewaysDao;
+import org.restcomm.connect.dao.GeolocationDao;
 import org.restcomm.connect.dao.HttpCookiesDao;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.InstanceIdDao;
 import org.restcomm.connect.dao.MediaResourceBrokerDao;
 import org.restcomm.connect.dao.MediaServersDao;
 import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.OrganizationsDao;
 import org.restcomm.connect.dao.OutgoingCallerIdsDao;
 import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.RegistrationsDao;
@@ -52,10 +54,11 @@ import org.restcomm.connect.dao.ShortCodesDao;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.TranscriptionsDao;
 import org.restcomm.connect.dao.UsageDao;
-import org.restcomm.connect.dao.GeolocationDao;
+import scala.concurrent.ExecutionContext;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
 @ThreadSafe
 public final class MybatisDaoManager implements DaoManager {
@@ -86,16 +89,20 @@ public final class MybatisDaoManager implements DaoManager {
     private MediaResourceBrokerDao mediaResourceBrokerDao;
     private ExtensionsConfigurationDao extensionsConfigurationDao;
     private GeolocationDao geolocationDao;
+    private OrganizationsDao organizationsDao;
+
+    private ExecutionContext ec;
 
     public MybatisDaoManager() {
         super();
     }
 
     @Override
-    public void configure(final Configuration configuration, Configuration daoManagerConfiguration) {
+    public void configure(final Configuration configuration, Configuration daoManagerConfiguration, final ExecutionContext ec) {
         this.configuration = daoManagerConfiguration.subset("dao-manager");
         this.amazonS3Configuration = configuration.subset("amazon-s3");
         this.runtimeConfiguration = configuration.subset("runtime-settings");
+        this.ec = ec;
     }
 
     @Override
@@ -214,6 +221,11 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
+    public OrganizationsDao getOrganizationsDao() {
+        return organizationsDao;
+    }
+
+    @Override
     public void shutdown() {
         // Nothing to do.
     }
@@ -272,7 +284,7 @@ public final class MybatisDaoManager implements DaoManager {
         presenceRecordsDao = new MybatisRegistrationsDao(sessions);
         if (s3AccessTool != null) {
             final String recordingPath = runtimeConfiguration.getString("recordings-path");
-            recordingsDao = new MybatisRecordingsDao(sessions, s3AccessTool, recordingPath);
+            recordingsDao = new MybatisRecordingsDao(sessions, s3AccessTool, recordingPath, ec);
         } else {
             recordingsDao = new MybatisRecordingsDao(sessions);
         }
@@ -286,5 +298,6 @@ public final class MybatisDaoManager implements DaoManager {
         mediaResourceBrokerDao = new MybatisMediaResourceBrokerDao(sessions);
         extensionsConfigurationDao = new MybatisExtensionsConfigurationDao(sessions);
         geolocationDao = new MybatisGeolocationDao(sessions);
+        organizationsDao = new MybatisOrganizationDao(sessions);
     }
 }

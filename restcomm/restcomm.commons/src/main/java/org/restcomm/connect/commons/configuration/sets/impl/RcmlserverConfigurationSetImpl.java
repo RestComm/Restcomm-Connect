@@ -28,11 +28,13 @@ import org.restcomm.connect.commons.configuration.sources.ConfigurationSource;
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 public class RcmlserverConfigurationSetImpl extends ConfigurationSet implements RcmlserverConfigurationSet {
-    private static final String BASE_URL_KEY = "rcmlserver-api.base-url";
-    private static final String NOTIFY_KEY = "rcmlserver-api.notifications";
-    private static final String TIMEOUT_KEY = "rcmlserver-api.timeout";
-    private static final String TIMEOUT_PER_NOTIFICATION_KEY = "rcmlserver-api.timeout-per-notification";
+    private static final String BASE_URL_KEY = "rcmlserver.base-url";
+    private static final String API_PATH_KEY = "rcmlserver.api-path";
+    private static final String NOTIFY_KEY = "rcmlserver.notifications";
+    private static final String TIMEOUT_KEY = "rcmlserver.timeout";
+    private static final String TIMEOUT_PER_NOTIFICATION_KEY = "rcmlserver.timeout-per-notification";
     private String baseUrl = null;
+    private String apiPath = null;
     private Boolean notify = false;
     private Integer timeout = 5000;
     private Integer timeoutPerNotification = 500;
@@ -46,6 +48,14 @@ public class RcmlserverConfigurationSetImpl extends ConfigurationSet implements 
             if (value.endsWith("/")) // remove trailing '/' if present
                 value = value.substring(0,value.length()-2);
             this.baseUrl = value;
+        }
+
+        value = source.getProperty(API_PATH_KEY);
+        if ( !StringUtils.isEmpty(value) ) {
+            value = value.trim();
+            if (value.endsWith("/")) // remove trailing '/' if present
+                value = value.substring(0,value.length()-2);
+            this.apiPath = value;
         }
 
         value = source.getProperty(NOTIFY_KEY);
@@ -75,6 +85,11 @@ public class RcmlserverConfigurationSetImpl extends ConfigurationSet implements 
     @Override
     public String getBaseUrl() {
         return baseUrl;
+    }
+
+    @Override
+    public String getApiPath() {
+        return apiPath;
     }
 
     @Override

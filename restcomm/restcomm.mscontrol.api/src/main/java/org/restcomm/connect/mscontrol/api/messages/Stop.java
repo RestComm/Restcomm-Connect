@@ -41,5 +41,4 @@ public final class Stop {
     public boolean createRecord() {
         return createRecord;
     }
-
 }

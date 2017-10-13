@@ -1,3 +1,4 @@
 {
-    "resetPasswordUrl": ""
+    "resetPasswordUrl": "",
+    "rvdUrl":"/restcomm-rvd"
 }

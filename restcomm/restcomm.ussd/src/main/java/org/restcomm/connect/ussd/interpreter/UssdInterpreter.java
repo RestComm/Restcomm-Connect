@@ -22,13 +22,13 @@ package org.restcomm.connect.ussd.interpreter;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -37,11 +37,13 @@ import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -67,7 +69,6 @@ import org.restcomm.connect.telephony.api.Answer;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
-import org.restcomm.connect.telephony.api.CreateCall;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.ussd.commons.UssdInfoRequest;
 import org.restcomm.connect.ussd.commons.UssdMessageType;
@@ -75,6 +76,8 @@ import org.restcomm.connect.ussd.commons.UssdRestcommResponse;
 
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -89,19 +92,16 @@ import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 
-import static org.restcomm.connect.interpreter.rcml.Verbs.ussdCollect;
-import static org.restcomm.connect.interpreter.rcml.Verbs.ussdLanguage;
-import static org.restcomm.connect.interpreter.rcml.Verbs.ussdMessage;
+import static org.restcomm.connect.interpreter.rcml.Verbs.*;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
-public class UssdInterpreter extends UntypedActor {
+public class UssdInterpreter extends RestcommUntypedActor {
 
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final ActorSystem system;
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
@@ -171,13 +171,12 @@ public class UssdInterpreter extends UntypedActor {
     private final State ready;
     private final State notFound;
 
-    public UssdInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
-                           final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
-                           final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
-                           final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage) {
+    private boolean receivedBye;
+    private boolean sentBye;
+
+    public UssdInterpreter(final UssdInterpreterParams params) {
         super();
         final ActorRef source = self();
-        this.system = context().system();
 
         uninitialized = new State("uninitialized", null, null);
         observeCall = new State("observe call", new ObserveCall(source), null);
@@ -202,9 +201,9 @@ public class UssdInterpreter extends UntypedActor {
         transitions.add(new Transition(downloadingRcml, ready));
         transitions.add(new Transition(downloadingRcml, cancelling));
         transitions.add(new Transition(downloadingRcml, notFound));
-        transitions.add(new Transition(downloadingRcml, downloadingFallbackRcml));
+        transitions.add(new Transition(downloadingRcml, downloadingFallbackRcml));//??????
         transitions.add(new Transition(downloadingRcml, finished));
-        transitions.add(new Transition(downloadingRcml, ready));
+        transitions.add(new Transition(downloadingRcml, ready));//redundant
         transitions.add(new Transition(ready, preparingMessage));
         transitions.add(new Transition(preparingMessage, downloadingRcml));
         transitions.add(new Transition(preparingMessage, processingInfoRequest));
@@ -213,24 +212,27 @@ public class UssdInterpreter extends UntypedActor {
         transitions.add(new Transition(processingInfoRequest, preparingMessage));
         transitions.add(new Transition(processingInfoRequest, ready));
         transitions.add(new Transition(processingInfoRequest, finished));
+        transitions.add(new Transition(processingInfoRequest, disconnecting));
+        transitions.add(new Transition(processingInfoRequest, cancelling));
+        transitions.add(new Transition(processingInfoRequest, notFound));
         transitions.add(new Transition(disconnecting, finished));
 
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
         // Initialize the runtime stuff.
-        this.accountId = account;
-        this.phoneId = phone;
-        this.version = version;
-        this.url = url;
-        this.method = method;
-        this.fallbackUrl = fallbackUrl;
-        this.fallbackMethod = fallbackMethod;
-        this.statusCallback = statusCallback;
-        this.statusCallbackMethod = statusCallbackMethod;
-        this.emailAddress = emailAddress;
-        this.configuration = configuration;
+        this.accountId = params.getAccount();
+        this.phoneId = params.getPhone();
+        this.version = params.getVersion();
+        this.url = params.getUrl();
+        this.method = params.getMethod();
+        this.fallbackUrl = params.getFallbackUrl();
+        this.fallbackMethod = params.getFallbackMethod();
+        this.statusCallback = params.getStatusCallback();
+        this.statusCallbackMethod = params.getStatusCallbackMethod();
+        this.emailAddress = params.getEmailAddress();
+        this.configuration = params.getConfiguration();
 
-        this.storage = storage;
+        this.storage = params.getStorage();
         final Configuration runtime = configuration.subset("runtime-settings");
         String path = runtime.getString("cache-path");
         if (!path.endsWith("/")) {
@@ -238,6 +240,18 @@ public class UssdInterpreter extends UntypedActor {
         }
         path = path + accountId.toString();
         this.downloader = downloader();
+
+        receivedBye = false;
+        sentBye = false;
+    }
+
+    public static Props props(final UssdInterpreterParams params) {
+        return new Props(new UntypedActorFactory() {
+            @Override
+            public Actor create() throws Exception {
+                return new UssdInterpreter(params);
+            }
+        });
     }
 
     private Notification notification(final int log, final int error, final String message) {
@@ -297,7 +311,7 @@ public class UssdInterpreter extends UntypedActor {
                 return new EmailService(configuration);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     ActorRef downloader() {
@@ -308,7 +322,7 @@ public class UssdInterpreter extends UntypedActor {
                 return new Downloader();
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     ActorRef parser(final String xml) {
@@ -320,7 +334,7 @@ public class UssdInterpreter extends UntypedActor {
                 return new Parser(xml, self());
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     void invalidVerb(final Tag verb) {
@@ -359,7 +373,7 @@ public class UssdInterpreter extends UntypedActor {
             final String forwardedFrom = info.forwardedFrom();
             parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
             // logger.info("Type " + callInfo.type());
-            if (CreateCall.Type.SIP == info.type()) {
+            if (CreateCallType.SIP == info.type()) {
                 // Adding SIP OUT Headers and SipCallId for
                 // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
                 SipServletResponse lastResponse = info.lastResponse();
@@ -467,6 +481,7 @@ public class UssdInterpreter extends UntypedActor {
             } else if ("ACK".equalsIgnoreCase(method)) {
                 fsm.transition(message, downloadingRcml);
             } else if ("BYE".equalsIgnoreCase(method)) {
+                receivedBye = true;
                 fsm.transition(message, disconnecting);
             } else if ("CANCEL".equalsIgnoreCase(method)) {
                 fsm.transition(message, cancelling);
@@ -530,22 +545,36 @@ public class UssdInterpreter extends UntypedActor {
             }
         } else if (DownloaderResponse.class.equals(klass)) {
             final DownloaderResponse response = (DownloaderResponse) message;
-            if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Rcml DownloaderResponse success=" + response.succeeded());
+            }
+            //FIXME: what if these ifblocks arent in downloadingRcml?
+            if (response.succeeded()) {
+                int sc = response.get().getStatusCode();
+                //processingInfoRequest
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Rcml URI : " + response.get().getURI() + "response succeeded " + response.succeeded()
-                        + ", statusCode " + response.get().getStatusCode());
+                    logger.debug("Rcml DownloaderResponse URI : " + response.get().getURI()
+                        + ", statusCode=" + response.get().getStatusCode()+" state="+state);
                 }
-                fsm.transition(message, ready);
-            } else if (response.succeeded() && HttpStatus.SC_NOT_FOUND == response.get().getStatusCode()) {
-                fsm.transition(message, notFound);
+                if(HttpStatus.SC_OK == sc){
+                    fsm.transition(message, ready);
+                } else if (HttpStatus.SC_NOT_FOUND == sc){
+                    fsm.transition(message, notFound);
+                }
             } else {
-                if (downloadingRcml.equals(state)) {
-                    if (fallbackUrl != null) {
-                        fsm.transition(message, downloadingFallbackRcml);
-                    } else {
-                        fsm.transition(message, finished);
-                    }
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Rcml DownloaderResponse error : " + response.error()
+                        + ", cause=" +
+                        ((response.cause() != null) ? response.cause().getMessage() : ""));
+                }
+                if (downloadingRcml.equals(state) && fallbackUrl!=null) {
+                    fsm.transition(message, downloadingFallbackRcml);
                 } else {
+                    //unexpected response
+                    if(!sentBye && !receivedBye){
+                        sendBye("UssdInterpreter Stopping. Unexpected State when receiving DownloaderResponse " + response.error());
+                        sentBye = true;
+                    }
                     fsm.transition(message, finished);
                 }
             }
@@ -586,6 +615,40 @@ public class UssdInterpreter extends UntypedActor {
             }
         } else if (End.class.equals(klass)) {
             fsm.transition(message, preparingMessage);
+        }
+    }
+
+    private void sendBye(String message) {
+        CallInfo info = null;
+        if (callInfo != null) {
+            info = callInfo;
+        } else if (outboundCallInfo != null){
+            info = outboundCallInfo;
+        }
+        if (info != null) {
+            final SipSession session = info.invite().getSession();
+            final String sessionState = session.getState().name();
+
+            if (sessionState == SipSession.State.TERMINATED.name()) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("SipSession already TERMINATED, will not send BYE");
+                }
+                return;
+            } else {
+                if (logger.isInfoEnabled()) {
+                    logger.info("About to send BYE, session state: " + sessionState);
+                }
+            }
+            final SipServletRequest bye = session.createRequest("BYE");
+            try {
+                bye.addHeader("Reason",message);
+                bye.send();
+            } catch (Exception e) {
+                if(logger.isErrorEnabled()){
+                    logger.error("Error sending BYE "+e.getMessage());
+                }
+            }
+
         }
     }
 
@@ -901,7 +964,11 @@ public class UssdInterpreter extends UntypedActor {
 
             UssdInfoRequest ussdInfoRequest = new UssdInfoRequest(info);
             String ussdText = ussdInfoRequest.getMessage();
-            if (ussdCollectAction != null && !ussdCollectAction.isEmpty() && ussdText != null) {
+            UssdMessageType ussdMsgType = ussdInfoRequest.getUssdMessageType();
+            if ( !ussdMsgType.equals(UssdMessageType.unstructuredSSNotify_Response) &&
+                  ussdCollectAction != null &&
+                  !ussdCollectAction.isEmpty() &&
+                  ussdText != null) {
                 URI target = null;
                 try {
                     target = URI.create(ussdCollectAction);
@@ -944,7 +1011,7 @@ public class UssdInterpreter extends UntypedActor {
                 ussdLanguageTag = null;
                 ussdMessageTags = new LinkedBlockingQueue<Tag>();
                 return;
-            } else if (ussdInfoRequest.getUssdMessageType().equals(UssdMessageType.unstructuredSSNotify_Response)) {
+            } else if (ussdMsgType.equals(UssdMessageType.unstructuredSSNotify_Response)) {
                 UssdRestcommResponse ussdRestcommResponse = new UssdRestcommResponse();
                 ussdRestcommResponse.setErrorCode("1");
                 ussdRestcommResponse.setIsFinalMessage(true);

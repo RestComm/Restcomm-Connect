@@ -42,4 +42,12 @@ public final class Attribute {
     public String value() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        return "Attribute{" +
+                "name='" + name + '\'' +
+                ", value='" + value + '\'' +
+                '}';
+    }
 }

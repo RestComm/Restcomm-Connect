@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author <a href="mailto:gvagenas@gmail.com">George Vagenas</a>
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.AnnouncementsDao">
+  <insert id="addAnnouncement" parameterType="map">
+    INSERT INTO "restcomm_announcements" ("sid", "date_created", "account_sid", "gender", "language", "text", "uri")
+    VALUES(#{sid}, #{date_created}, #{account_sid}, #{gender}, #{language}, #{text}, #{uri});
+  </insert>
+  
+  <select id="getAnnouncement" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_announcements" WHERE "sid"=#{sid};
+  </select>
+  
+  <select id="getAnnouncements" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_announcements" WHERE "account_sid"=#{account_sid};
+  </select>
+  
+  <delete id="removeAnnouncement" parameterType="string">
+    DELETE FROM "restcomm_announcements" WHERE "sid"=#{sid};
+  </delete>
+</mapper>

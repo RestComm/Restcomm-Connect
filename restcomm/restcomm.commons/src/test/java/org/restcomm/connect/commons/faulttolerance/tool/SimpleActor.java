@@ -1,6 +1,6 @@
 package org.restcomm.connect.commons.faulttolerance.tool;
 
-import akka.actor.UntypedActor;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 
 /**
  * SampleActor: a simple actor to be created
@@ -8,7 +8,7 @@ import akka.actor.UntypedActor;
  * @author mariafarooq
  *
  */
-public class SimpleActor  extends UntypedActor {
+public class SimpleActor  extends RestcommUntypedActor {
 
 	public SimpleActor(){
 	}

@@ -22,13 +22,14 @@
 package org.restcomm.connect.telephony;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.telephony.api.BridgeManagerResponse;
 import org.restcomm.connect.telephony.api.BridgeStateChanged;
@@ -38,29 +39,27 @@ import org.restcomm.connect.telephony.api.CreateBridge;
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *
  */
-public class BridgeManager extends UntypedActor {
+public class BridgeManager extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     private final MediaServerControllerFactory factory;
-    private final ActorSystem system;
 
     public BridgeManager(final MediaServerControllerFactory factory) {
         super();
         this.factory = factory;
-        this.system = context().system();
     }
 
-    private ActorRef createBridge() {
+    private ActorRef createBridge(final MediaAttributes mediaAttributes) {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Bridge(factory.provideBridgeController());
+                return new Bridge(factory, mediaAttributes);
             }
         });
-        return system.actorOf(props);
+        return getContext().actorOf(props);
     }
 
     /*
@@ -82,7 +81,7 @@ public class BridgeManager extends UntypedActor {
 
     private void onCreateBridge(CreateBridge message, ActorRef self, ActorRef sender) {
         // Create a new bridge
-        ActorRef bridge = createBridge();
+        ActorRef bridge = createBridge(message.mediaAttributes());
 
         // Observe state changes in the bridge for termination purposes
         bridge.tell(new Observe(self), self);

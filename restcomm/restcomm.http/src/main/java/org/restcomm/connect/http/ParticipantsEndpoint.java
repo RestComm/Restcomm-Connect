@@ -32,7 +32,6 @@ import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
-import java.text.ParseException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -55,7 +54,6 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
-import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
 import org.restcomm.connect.dao.entities.CallDetailRecordList;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.dao.entities.RestCommResponse;
@@ -66,7 +64,6 @@ import org.restcomm.connect.http.converter.RecordingListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
-import org.restcomm.connect.telephony.api.CallStateChanged;
 import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 
@@ -165,20 +162,11 @@ public abstract class ParticipantsEndpoint extends CallsEndpoint {
             secure(account, "RestComm:Read:Calls");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
-        }
-
-        boolean localInstanceOnly = true;
-        try {
-            String localOnly = info.getQueryParameters().getFirst("localOnly");
-            if (localOnly != null && localOnly.equalsIgnoreCase("false"))
-                localInstanceOnly = false;
         } catch (Exception e) {
         }
 
         String pageSize = info.getQueryParameters().getFirst("PageSize");
         String page = info.getQueryParameters().getFirst("Page");
-
-        String status = CallStateChanged.State.IN_PROGRESS.toString();
 
         if (pageSize == null) {
             pageSize = "50";
@@ -194,40 +182,13 @@ public abstract class ParticipantsEndpoint extends CallsEndpoint {
 
         CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
 
-        CallDetailRecordFilter filterForTotal;
-        try {
-
-            if (localInstanceOnly) {
-                filterForTotal = new CallDetailRecordFilter(accountSid, null, null, null, status, null, null,
-                        null, conferenceSid, null, null);
-            } else {
-                filterForTotal = new CallDetailRecordFilter(accountSid, null, null, null, status, null, null,
-                        null, conferenceSid, null, null, instanceId);
-            }
-        } catch (ParseException e) {
-            return status(BAD_REQUEST).build();
-        }
-
-        final int total = dao.getTotalCallDetailRecords(filterForTotal);
+        final int total = dao.getTotalRunningCallDetailRecordsByConferenceSid(new Sid(conferenceSid));
 
         if (Integer.parseInt(page) > (total / limit)) {
             return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
         }
 
-        CallDetailRecordFilter filter;
-        try {
-            if (localInstanceOnly) {
-                filter = new CallDetailRecordFilter(accountSid, null, null, null, status, null, null,
-                        null, conferenceSid, limit, offset);
-            } else {
-                filter = new CallDetailRecordFilter(accountSid, null, null, null, status, null, null,
-                        null, conferenceSid, limit, offset, instanceId);
-            }
-        } catch (ParseException e) {
-            return status(BAD_REQUEST).build();
-        }
-
-        final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(filter);
+        final List<CallDetailRecord> cdrs = dao.getRunningCallDetailRecordsByConferenceSid(new Sid(conferenceSid));
         if (logger.isDebugEnabled()) {
             final List<CallDetailRecord> allCdrs = dao.getCallDetailRecordsByAccountSid(new Sid(accountSid));
             logger.debug("CDR with filter size: "+ cdrs.size()+", all CDR with no filter size: "+allCdrs.size());

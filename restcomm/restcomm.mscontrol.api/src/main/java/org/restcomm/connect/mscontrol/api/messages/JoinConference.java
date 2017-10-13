@@ -25,6 +25,7 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telesta.com)
@@ -36,11 +37,17 @@ public final class JoinConference {
     private final Object endpoint;
     private final ConnectionMode connectionMode;
     private final Sid sid;
+    private final MediaAttributes mediaAttributes;
 
     public JoinConference(final Object endpoint, final ConnectionMode connectionMode, final Sid sid) {
+        this(endpoint, connectionMode, sid, new MediaAttributes());
+    }
+
+    public JoinConference(final Object endpoint, final ConnectionMode connectionMode, final Sid sid, final MediaAttributes mediaAttributes) {
         this.endpoint = endpoint;
         this.connectionMode = connectionMode;
         this.sid = sid;
+        this.mediaAttributes = mediaAttributes;
     }
 
     public Object getEndpoint() {
@@ -53,5 +60,9 @@ public final class JoinConference {
 
     public Sid getSid () {
         return sid;
+    }
+
+    public MediaAttributes mediaAttributes(){
+        return mediaAttributes;
     }
 }
